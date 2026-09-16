@@ -1,0 +1,25 @@
+{
+  "name": "@vitalos/cms",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas": "./src/schemaTypes/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "sanity": "6.13.1"
+  },
+  "devDependencies": {
+    "@vitalos/typescript-config": "workspace:*",
+    "eslint": "9.35.0",
+    "typescript": "5.9.2",
+    "vitest": "3.2.6"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@vitalos/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.mjs",
+    "./next": "./next.mjs"
+  },
+  "dependencies": {
+    "@eslint/js": "9.35.0",
+    "eslint": "9.35.0",
+    "eslint-config-next": "16.3.4",
+    "typescript-eslint": "8.70.0"
+  }
+}

@@ -1,0 +1,10 @@
+create extension if not exists pgcrypto;
+create table public.enquiries(id uuid primary key default gen_random_uuid(),name text not null check(char_length(name) between 2 and 120),email text not null check(char_length(email)<=254),organisation text check(organisation is null or char_length(organisation)<=160),message text not null check(char_length(message) between 20 and 5000),status text not null default 'received' check(status in('received','acknowledged','actioned','closed')),received_at timestamptz not null default now());
+alter table public.enquiries enable row level security;
+revoke all on table public.enquiries from anon,authenticated;
+create index enquiries_received_at_idx on public.enquiries(received_at desc);
+comment on table public.enquiries is 'Server-written operational enquiry records; never directly writable by public clients.';
+create table public.notification_outbox(id uuid primary key default gen_random_uuid(),enquiry_id uuid not null references public.enquiries(id) on delete restrict,channel text not null check(channel in('email')),state text not null default 'pending' check(state in('pending','processing','sent','failed')),attempts integer not null default 0 check(attempts>=0),available_at timestamptz not null default now(),last_error text,created_at timestamptz not null default now(),sent_at timestamptz);
+alter table public.notification_outbox enable row level security;
+revoke all on table public.notification_outbox from anon,authenticated;
+create index notification_outbox_pending_idx on public.notification_outbox(available_at) where state in('pending','failed');

@@ -1,0 +1,29 @@
+{
+  "name": "@vitalos/storybook",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "lint": "eslint .storybook stories",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@storybook/addon-a11y": "10.6.0",
+    "@storybook/react-vite": "10.6.0",
+    "@vitalos/design-tokens": "workspace:*",
+    "@vitalos/ui": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "storybook": "10.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@vitalos/eslint-config": "workspace:*",
+    "@vitalos/typescript-config": "workspace:*",
+    "eslint": "9.35.0",
+    "typescript": "5.9.2",
+    "vitest": "3.2.6"
+  }
+}
