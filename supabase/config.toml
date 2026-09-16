@@ -1,8 +1,15 @@
 project_id = "kyrfilesutitygmuzvya"
 [api]
 enabled = true
+port = 55321
 schemas = ["public", "graphql_public"]
 [db]
 major_version = 17
+port = 55322
 [studio]
 enabled = true
+port = 55323
+[local_smtp]
+port = 55324
+[analytics]
+port = 55327
