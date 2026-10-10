@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./schemas": "./src/schemaTypes/index.ts",
     "./structure": "./src/structure.ts",
+    "./actions": "./src/actions/index.ts",
     "./queries": "./src/queries/index.ts",
     "./presentation": "./src/presentation.ts",
     "./fixtures": "./src/fixtures/index.ts"

@@ -1,84 +1,22 @@
-import { defineField, defineType } from "sanity";
-const governed = [
-  defineField({
-    name: "owner",
-    title: "Content owner",
-    type: "string",
-    validation: (r) => r.required(),
-  }),
-  defineField({
-    name: "reviewDate",
-    title: "Review date",
-    type: "date",
-    validation: (r) => r.required(),
-  }),
-];
-function entity(name: string, title: string) {
-  return defineType({
-    name,
-    title,
-    type: "document",
-    fields: [
-      defineField({
-        name: "title",
-        title: "Title",
-        type: "string",
-        validation: (r) => r.required(),
-      }),
-      defineField({
-        name: "slug",
-        title: "Slug",
-        type: "slug",
-        options: { source: "title" },
-        validation: (r) => r.required(),
-      }),
-      defineField({
-        name: "summary",
-        title: "Summary",
-        type: "text",
-        validation: (r) => r.max(320),
-      }),
-      ...governed,
-    ],
-  });
-}
-export const schemaTypes = [
-  "practice",
-  "solution",
-  "offer",
-  "industry",
-  "caseStudy",
-  "insight",
-  "person",
-  "job",
-  "siteSettings",
-  "redirect",
-].map((name) => entity(name, name));
-export const labAsset = defineType({
-  name: "labAsset",
-  title: "Lab asset",
-  type: "document",
-  fields: [
-    defineField({ name: "title", type: "string", validation: (r) => r.required() }),
-    defineField({
-      name: "maturity",
-      type: "string",
-      options: {
-        list: ["research", "concept", "prototype", "accelerator", "beta", "production-product"],
-      },
-      validation: (r) => r.required(),
-    }),
-    ...governed,
-  ],
-});
-export const trustItem = defineType({
-  name: "trustItem",
-  title: "Trust item",
-  type: "document",
-  fields: [
-    defineField({ name: "title", type: "string", validation: (r) => r.required() }),
-    defineField({ name: "status", type: "string", validation: (r) => r.required() }),
-    defineField({ name: "evidenceAvailable", type: "boolean", initialValue: false }),
-    ...governed,
-  ],
-});
+/**
+ * Sanity schema set for the Vitalos Studio (`@vitalos/cms/schemas`).
+ *
+ * Studio-only: apps/web must never import this entry (enforced by dependency-cruiser).
+ * Model overview and ERD: docs/cms/content-model.md; decision record: ADR-017.
+ */
+import { documentTypes } from "./documents";
+import { objectTypes } from "./objects";
+
+export const schemaTypes = [...objectTypes, ...documentTypes];
+
+export { documentTypes } from "./documents";
+export { objectTypes } from "./objects";
+export {
+  documentTypeNames,
+  isSingletonType,
+  singletonTypes,
+  studioApiVersion,
+  type DocumentTypeName,
+  type SingletonType,
+} from "./constants";
+export { documentHref, plannedUrlChange } from "./document-href";
