@@ -51,9 +51,14 @@ def totp(secret: str, at: float | None = None) -> str:
     return f"{code % 1_000_000:06d}"
 
 
+class SmokeSkipped(Exception):
+    pass
+
+
 class Smoke:
-    def __init__(self, page: Page, base: str, shots: Path | None):
+    def __init__(self, page: Page, base: str, shots: Path | None, skip_if_enrolled: bool = False):
         self.page = page
+        self.skip_if_enrolled = skip_if_enrolled
         self.base = base.rstrip("/") + "/"
         self.shots = shots
         self.results: list[dict] = []
@@ -95,6 +100,8 @@ class Smoke:
             self.enrolled_secret = secret
         elif "/login/verify/" in self.page.url:
             secret = os.environ.get("SMOKE_TOTP_SECRET", "")
+            if not secret and self.skip_if_enrolled:
+                raise SmokeSkipped("the account already has an authenticator enrolled")
             self.check("TOTP secret supplied for an enrolled account", bool(secret))
             if os.environ.get("SMOKE_WAIT_FRESH_TOTP"):
                 time.sleep(31 - time.time() % 30)  # a code is accepted once; wait for the next window
@@ -292,6 +299,11 @@ def main() -> int:
         "--keep", action="store_true", help="Do not archive smoke records or remove the TOTP device."
     )
     parser.add_argument("--headed", action="store_true")
+    parser.add_argument(
+        "--skip-if-enrolled",
+        action="store_true",
+        help="Exit successfully (skipped) when the account already has a TOTP device and no secret is given.",
+    )
     args = parser.parse_args()
     base = os.environ.get("SMOKE_BASE_URL", "http://localhost:8000")
     email = os.environ["SMOKE_EMAIL"]
@@ -309,7 +321,7 @@ def main() -> int:
             "console",
             lambda msg: console_errors.append(f"{page.url}: {msg.text}") if msg.type == "error" else None,
         )
-        smoke = Smoke(page, base, args.screenshots)
+        smoke = Smoke(page, base, args.screenshots, skip_if_enrolled=args.skip_if_enrolled)
         try:
             smoke.login(email, password)
             smoke.homepage()
@@ -324,6 +336,9 @@ def main() -> int:
             smoke.check("no CSP violations in the browser console", not csp, "; ".join(csp)[:300])
             if not args.keep:
                 smoke.cleanup(names, project, kpi, password)
+        except SmokeSkipped as reason:
+            print(f"SKIPPED: {reason}. Run with SMOKE_TOTP_SECRET to test an enrolled account.")
+            return 0
         except Exception as exc:  # noqa: BLE001 - report and exit non-zero
             traceback.print_exc()
             try:
@@ -335,6 +350,7 @@ def main() -> int:
         finally:
             summary = {"base_url": base, "checks": smoke.results}
             if args.screenshots:
+                args.screenshots.mkdir(parents=True, exist_ok=True)
                 (args.screenshots / "smoke-results.json").write_text(json.dumps(summary, indent=2))
             browser.close()
     print(f"All {len(smoke.results)} smoke checks passed.")

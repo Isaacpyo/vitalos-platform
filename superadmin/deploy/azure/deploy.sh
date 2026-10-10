@@ -41,6 +41,8 @@ trap 'rm -rf "$WORK"' EXIT
 umask 077
 
 log() { printf '\n==> %s\n' "$*"; }
+# In GitHub Actions, register values with the log masker so they can never appear in job output.
+mask() { if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "$1" ]; then printf '::add-mask::%s\n' "$1"; fi; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 quiet() { "$@" --output none --only-show-errors; }
 exists() { "$@" --output none --only-show-errors >/dev/null 2>&1; }
@@ -87,7 +89,12 @@ ensure_kv_secret() {  # name, length
   kv_has "$1" || kv_set_from_file "$1" "$(secret_file "$1" "$2")"
 }
 
-kv_value() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv --only-show-errors; }
+kv_value() {
+  local value
+  value="$(az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv --only-show-errors)"
+  mask "$value"
+  printf '%s' "$value"
+}
 
 assign_role() {  # principal object id, principal type, role, scope (idempotent)
   local output
@@ -202,6 +209,7 @@ exists az monitor log-analytics workspace show -g "$RG" -n "$LOG_WS" ||
 if ! exists az containerapp env show -n "$CAE" -g "$RG"; then
   LOG_CUSTOMER_ID="$(az monitor log-analytics workspace show -g "$RG" -n "$LOG_WS" --query customerId -o tsv)"
   LOG_KEY="$(az monitor log-analytics workspace get-shared-keys -g "$RG" -n "$LOG_WS" --query primarySharedKey -o tsv)"
+  mask "$LOG_KEY"
   quiet az containerapp env create -n "$CAE" -g "$RG" -l "$LOCATION" \
     --logs-workspace-id "$LOG_CUSTOMER_ID" --logs-workspace-key "$LOG_KEY"
 fi
@@ -257,6 +265,7 @@ exists az storage account show -n "$STORAGE" -g "$RG" || quiet az storage accoun
 exists az storage share-rm show --storage-account "$STORAGE" -g "$RG" -n backups ||
   quiet az storage share-rm create --storage-account "$STORAGE" -g "$RG" -n backups --quota 50
 STORAGE_KEY="$(az storage account keys list -n "$STORAGE" -g "$RG" --query '[0].value' -o tsv)"
+mask "$STORAGE_KEY"
 quiet az containerapp env storage set -n "$CAE" -g "$RG" --storage-name backups --access-mode ReadWrite \
   --azure-file-account-name "$STORAGE" --azure-file-account-key "$STORAGE_KEY" --azure-file-share-name backups
 sed -e "s#__LOCATION__#$LOCATION#g" -e "s#__IDENTITY_ID__#$IDENTITY_ID#g" -e "s#__CAE_ID__#$CAE_ID#g" \
@@ -273,15 +282,19 @@ cloudflare() {  # method, path, [json body]
   curl -fsS -X "$1" "https://api.cloudflare.com/client/v4$2" \
     -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" ${3:+--data "$3"}
 }
-upsert_record() {  # type, name, content
-  local zone_id="$1" type="$2" name="$3" content="$4" existing body
+upsert_record() {  # zone id, type, name, content. Never silently replaces a record pointing elsewhere.
+  local zone_id="$1" type="$2" name="$3" content="$4" existing existing_id existing_content body
   existing="$(cloudflare GET "/zones/$zone_id/dns_records?type=$type&name=$name" |
-    python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] if r else "")')"
+    python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] + " " + r[0]["content"].strip(chr(34)) if r else "")')"
+  existing_id="${existing%% *}"
+  existing_content="${existing#* }"
   body="$(python3 -c 'import json,sys; print(json.dumps({"type": sys.argv[1], "name": sys.argv[2], "content": sys.argv[3], "ttl": 300, "proxied": False}))' "$type" "$name" "$content")"
-  if [ -n "$existing" ]; then
-    cloudflare PUT "/zones/$zone_id/dns_records/$existing" "$body" > /dev/null
-  else
+  if [ -z "$existing" ]; then
     cloudflare POST "/zones/$zone_id/dns_records" "$body" > /dev/null
+  elif [ "$existing_content" != "$content" ]; then
+    [ "${DNS_OVERWRITE:-}" = "1" ] ||
+      die "$type $name already points to '$existing_content'. Check what uses it, then re-run with DNS_OVERWRITE=1 to replace it."
+    cloudflare PUT "/zones/$zone_id/dns_records/$existing_id" "$body" > /dev/null
   fi
 }
 if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then

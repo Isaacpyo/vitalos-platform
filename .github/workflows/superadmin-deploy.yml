@@ -10,9 +10,11 @@ on:
         description: Type DEPLOY to deploy the selected ref to https://admin.vitalos.co.uk
         required: true
       smoke_test:
-        description: Run the browser smoke test against the live URL afterwards
+        description: >-
+          Run the live browser smoke test (first deploy only: it signs in as the bootstrap admin,
+          creates and archives "Smoke test" records, and is skipped once a real authenticator exists)
         type: boolean
-        default: true
+        default: false
 permissions:
   contents: read
   id-token: write
@@ -56,7 +58,7 @@ jobs:
           pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
           SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL=superadmin-owner@example.invalid SMOKE_PASSWORD="$password" \
-            python e2e/smoke.py --screenshots "$RUNNER_TEMP/screenshots"
+            python e2e/smoke.py --skip-if-enrolled --screenshots "$RUNNER_TEMP/screenshots"
       - name: Upload screenshots
         if: always() && inputs.smoke_test
         uses: actions/upload-artifact@v4
@@ -64,4 +66,4 @@ jobs:
           name: superadmin-live-smoke-screenshots
           path: ${{ runner.temp }}/screenshots
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: 7
