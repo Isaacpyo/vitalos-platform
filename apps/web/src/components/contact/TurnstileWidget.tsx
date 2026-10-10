@@ -11,12 +11,20 @@ import { useEffect, useRef, useState } from "react";
 
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
+/**
+ * The normal and flexible widgets are at least 300px wide; at 320px the form column is narrower
+ * than that and the widget would push the page sideways (WCAG 1.4.10). The compact widget is
+ * 150px wide, so narrow columns get that one.
+ */
+const MIN_FLEXIBLE_WIDTH = 300;
+
 interface TurnstileApi {
   render(
     container: HTMLElement,
     params: {
       sitekey: string;
       action: string;
+      size: "normal" | "flexible" | "compact";
       "error-callback": () => void;
       "expired-callback": () => void;
     },
@@ -75,6 +83,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
         widgetId.current = turnstile.render(container.current, {
           sitekey: siteKey,
           action: "enquiry",
+          size: container.current.clientWidth < MIN_FLEXIBLE_WIDTH ? "compact" : "flexible",
           "error-callback": () => setFailed(true),
           "expired-callback": () => {
             if (widgetId.current) turnstile.reset(widgetId.current);
@@ -114,7 +123,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
       <p className="text-small text-tone-muted">
         This form uses a security check to keep out automated submissions.
       </p>
-      <div ref={container} data-action="enquiry" className="min-h-16" />
+      <div ref={container} data-action="enquiry" className="min-h-16 max-w-full" />
       <div aria-live="polite" className="text-small">
         {failed ? (
           <p className="text-danger">
