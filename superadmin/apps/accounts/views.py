@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -219,14 +220,15 @@ def user_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
         try:
-            services.set_role(target, data["role"] or None, request.user)
-            services.set_active(target, data["is_active"], request.user)
+            with transaction.atomic():
+                services.set_role(target, data["role"] or None, request.user)
+                services.set_active(target, data["is_active"], request.user)
+                if target.full_name != data["full_name"]:
+                    target.full_name = data["full_name"]
+                    target.save(update_fields=["full_name"])
         except ValidationError as exc:
             form.add_error(None, exc)
         else:
-            if target.full_name != data["full_name"]:
-                target.full_name = data["full_name"]
-                target.save(update_fields=["full_name"])
             return close_modal_response(
                 request, reverse("accounts:settings_users"), f"{target.email} updated."
             )

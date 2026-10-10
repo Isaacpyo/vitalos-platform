@@ -164,3 +164,29 @@ def test_activity_page_filters(tree, superadmin, client_for):
 @pytest.mark.django_db
 def test_confidential_classification_default_for_project(seeded):
     assert Project(service_line=seeded["labs"], name="x").classification == Classification.CONFIDENTIAL
+
+
+@pytest.mark.django_db
+def test_reclassified_record_history_is_hidden(tree, superadmin, viewer):
+    assert any(e.object_label == "Platform Engineering" for e in activity.feed(viewer, limit=50))
+    tree.classification = Classification.RESTRICTED
+    services.save_record(tree, superadmin)
+    assert not any(e.object_label == "Platform Engineering" for e in activity.feed(viewer, limit=50))
+    assert any(e.object_label == "Platform Engineering" for e in activity.feed(superadmin, limit=50))
+
+
+@pytest.mark.django_db
+def test_activity_hides_names_of_invisible_related_records(seeded, superadmin, viewer):
+    hidden = services.save_record(
+        TeamMember(name="Covert Lead", classification=Classification.RESTRICTED), superadmin
+    )
+    project = services.save_record(
+        Project(service_line=seeded["labs"], name="Open experiment", classification=Classification.INTERNAL),
+        superadmin,
+    )
+    project.lead = hidden
+    services.save_record(project, superadmin)
+    changes = [c for e in activity.feed(viewer, model_key="project") for c in e.changes]
+    assert ("Lead", "—", "(restricted)") in changes
+    admin_changes = [c for e in activity.feed(superadmin, model_key="project") for c in e.changes]
+    assert ("Lead", "—", "Covert Lead") in admin_changes

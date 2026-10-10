@@ -50,12 +50,16 @@ class Command(BaseCommand):
                 raise CommandError("Bootstrap password rejected: " + " ".join(exc.messages)) from exc
         if created:
             user = User.objects.create_superuser(email=email, password=raw)
-        else:
-            if password:
-                user.set_password(raw)
-            user.is_active = user.is_staff = user.is_superuser = True
-            user.save()
-        if not user.groups.filter(name=SUPERADMIN).exists():
             set_role(user, SUPERADMIN, actor=None)
-        action = "Created" if created else ("Updated password for" if password else "Confirmed")
-        self.stdout.write(self.style.SUCCESS(f"{action} SuperAdmin {email}."))
+            self.stdout.write(self.style.SUCCESS(f"Created SuperAdmin {email}."))
+            return
+        # Runs on every release: an existing account is never re-activated, re-promoted or otherwise
+        # changed, so deliberate deactivation or demotion in the app survives redeploys.
+        if password:
+            user.set_password(raw)
+            user.save(update_fields=["password"])
+            self.stdout.write(
+                self.style.SUCCESS(f"Updated password for {email}; roles and status unchanged.")
+            )
+        else:
+            self.stdout.write(self.style.SUCCESS(f"{email} already exists; left unchanged."))

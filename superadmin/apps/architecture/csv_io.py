@@ -30,7 +30,7 @@ from .models import (
     Solution,
     TeamMember,
 )
-from .selectors import visible
+from .selectors import can_view, visible
 
 FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
@@ -82,11 +82,15 @@ def _decimal(value: str, column: str, required=False) -> Decimal | None:
         raise RowError(f"{column}: {value!r} is not a number.") from exc
 
 
+def _is_number(value: str) -> bool:
+    return value.isascii() and value.isdigit()
+
+
 def _int(value: str, column: str) -> int:
     value = (value or "").strip()
     if not value:
         return 0
-    if not value.isdigit():
+    if not _is_number(value):
         raise RowError(f"{column}: {value!r} is not a whole number.")
     return int(value)
 
@@ -111,6 +115,12 @@ def _get(model, column, **lookup):
         raise RowError(f"{column}: no {model._meta.verbose_name} matches {shown!r}.") from exc
 
 
+def _classification(row: dict, instance, default) -> str:
+    """Blank keeps an existing record's classification (never silently downgrades it)."""
+    current = default if instance is None or instance._state.adding else instance.classification
+    return _choice(row.get("classification"), Classification.choices, "classification", current)
+
+
 def _apply(instance, values: dict) -> bool:
     """Set attributes; return True when anything actually changed."""
     changed = instance._state.adding
@@ -125,7 +135,11 @@ def _apply(instance, values: dict) -> bool:
     return changed
 
 
-def _archive_flag(instance, archived: bool) -> bool:
+def _archive_flag(instance, row: dict) -> bool:
+    """Apply the is_archived column when present; a file without it leaves archive state alone."""
+    if "is_archived" not in row:
+        return False
+    archived = _bool(row["is_archived"])
     if instance.is_archived == archived:
         return False
     instance.is_archived = archived
@@ -173,7 +187,7 @@ class Resource:
     def queryset(self, user):
         return visible(self.model.objects.all(), user)
 
-    def export_row(self, obj) -> dict:
+    def export_row(self, obj, user) -> dict:
         raise NotImplementedError
 
     def import_row(self, row: dict, user) -> tuple[str, str]:
@@ -191,7 +205,7 @@ class Resource:
 class OfferingResource(Resource):
     numeric_columns = {"order"}
 
-    def _offering_values(self, row):
+    def _offering_values(self, row, instance):
         name = row.get("name", "")
         if not name:
             raise RowError("name is required.")
@@ -200,9 +214,7 @@ class OfferingResource(Resource):
             "summary": row.get("summary", ""),
             "status": _choice(row.get("status"), OfferingStatus.choices, "status", OfferingStatus.DRAFT),
             "maturity": _choice(row.get("maturity"), Maturity.choices, "maturity", Maturity.EMERGING),
-            "classification": _choice(
-                row.get("classification"), Classification.choices, "classification", Classification.INTERNAL
-            ),
+            "classification": _classification(row, instance, Classification.INTERNAL),
             "order": _int(row.get("order"), "order"),
         }
 
@@ -234,16 +246,16 @@ class PracticeResource(OfferingResource):
             .order_by("service_line__order", "order", "name")
         )
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {"service_line": obj.service_line.slug, **self._common_export(obj)}
 
     def import_row(self, row, user):
         line = _get(ServiceLine, "service_line", slug=row.get("service_line", ""))
-        values = self._offering_values(row)
         slug = row.get("slug") or None
         instance = Practice.objects.filter(service_line=line, slug=slug).first() if slug else None
         instance = instance or Practice(service_line=line, slug=slug or "")
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        values = self._offering_values(row, instance)
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         return self._save(instance, changed, user), instance.name
 
 
@@ -259,7 +271,7 @@ class SolutionResource(OfferingResource):
             .order_by("practice__service_line__order", "practice__order", "order", "name")
         )
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {
             "service_line": obj.practice.service_line.slug,
             "practice": obj.practice.slug,
@@ -270,11 +282,11 @@ class SolutionResource(OfferingResource):
         practice = _get(
             Practice, "practice", service_line__slug=row.get("service_line", ""), slug=row.get("practice", "")
         )
-        values = self._offering_values(row)
         slug = row.get("slug") or None
         instance = Solution.objects.filter(practice=practice, slug=slug).first() if slug else None
         instance = instance or Solution(practice=practice, slug=slug or "")
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        values = self._offering_values(row, instance)
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         return self._save(instance, changed, user), instance.name
 
 
@@ -295,7 +307,7 @@ class OfferResource(OfferingResource):
             )
         )
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {
             "service_line": obj.solution.practice.service_line.slug,
             "practice": obj.solution.practice.slug,
@@ -311,11 +323,11 @@ class OfferResource(OfferingResource):
             practice__slug=row.get("practice", ""),
             slug=row.get("solution", ""),
         )
-        values = self._offering_values(row)
         slug = row.get("slug") or None
         instance = Offer.objects.filter(solution=solution, slug=slug).first() if slug else None
         instance = instance or Offer(solution=solution, slug=slug or "")
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        values = self._offering_values(row, instance)
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         return self._save(instance, changed, user), instance.name
 
 
@@ -339,7 +351,7 @@ class ProjectResource(Resource):
     def queryset(self, user):
         return super().queryset(user).select_related("service_line", "lead").order_by("pk")
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {
             "id": obj.pk,
             "service_line": obj.service_line.slug,
@@ -348,7 +360,7 @@ class ProjectResource(Resource):
             "status": obj.status,
             "start_date": obj.start_date.isoformat() if obj.start_date else "",
             "end_date": obj.end_date.isoformat() if obj.end_date else "",
-            "lead_email": obj.lead.email if obj.lead else "",
+            "lead_email": obj.lead.email if obj.lead and can_view(user, obj.lead) else "",
             "value": "" if obj.value is None else f"{obj.value:.2f}",
             "classification": obj.classification,
             "is_archived": "true" if obj.is_archived else "false",
@@ -364,7 +376,7 @@ class ProjectResource(Resource):
         raw_id = row.get("id", "")
         instance = None
         if raw_id:
-            if not raw_id.isdigit():
+            if not _is_number(raw_id):
                 raise RowError(f"id: {raw_id!r} is not a number.")
             instance = _get(Project, "id", pk=int(raw_id))
         instance = instance or Project()
@@ -378,16 +390,11 @@ class ProjectResource(Resource):
             "end_date": _date(row.get("end_date"), "end_date"),
             "lead": lead,
             "value": _decimal(row.get("value"), "value"),
-            "classification": _choice(
-                row.get("classification"),
-                Classification.choices,
-                "classification",
-                Classification.CONFIDENTIAL,
-            ),
+            "classification": _classification(row, instance, Classification.CONFIDENTIAL),
         }
         if not instance._state.adding:
             services.ensure_can_edit(user, instance)  # cannot move a project out of a line you cannot edit
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         action = self._save(instance, changed, user)
         if action == "updated" and previous_status is not None:
             services.notify_project_status(instance, previous_status, user)
@@ -407,7 +414,7 @@ class KPIValueResource(Resource):
             .order_by("kpi__service_line__order", "kpi__name", "date")
         )
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {
             "service_line": obj.kpi.service_line.slug,
             "kpi": obj.kpi.name,
@@ -426,11 +433,9 @@ class KPIValueResource(Resource):
         instance = KPIValue.objects.filter(kpi=kpi, date=on).first() or KPIValue(kpi=kpi, date=on)
         values = {
             "value": value,
-            "classification": _choice(
-                row.get("classification"), Classification.choices, "classification", kpi.classification
-            ),
+            "classification": _classification(row, instance, kpi.classification),
         }
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         action = self._save(instance, changed, user)
         if action != "unchanged":
             services.notify_kpi_breach(instance)
@@ -445,7 +450,7 @@ class TeamMemberResource(Resource):
     def queryset(self, user):
         return super().queryset(user).prefetch_related("service_lines").order_by("name", "pk")
 
-    def export_row(self, obj):
+    def export_row(self, obj, user):
         return {
             "id": obj.pk,
             "name": obj.name,
@@ -462,7 +467,7 @@ class TeamMemberResource(Resource):
         email = (row.get("email") or "").strip().lower()
         instance = None
         if row.get("id"):
-            if not row["id"].isdigit():
+            if not _is_number(row["id"]):
                 raise RowError(f"id: {row['id']!r} is not a number.")
             instance = _get(TeamMember, "id", pk=int(row["id"]))
         elif email:
@@ -477,11 +482,9 @@ class TeamMemberResource(Resource):
             "name": row["name"],
             "role_title": row.get("role_title", ""),
             "email": email,
-            "classification": _choice(
-                row.get("classification"), Classification.choices, "classification", Classification.INTERNAL
-            ),
+            "classification": _classification(row, instance, Classification.INTERNAL),
         }
-        changed = _apply(instance, values) | _archive_flag(instance, _bool(row.get("is_archived")))
+        changed = _apply(instance, values) | _archive_flag(instance, row)
         current = (
             set() if instance._state.adding else set(instance.service_lines.values_list("pk", flat=True))
         )
@@ -512,7 +515,7 @@ def export_csv(resource: Resource, user) -> str:
     writer = csv.DictWriter(buffer, fieldnames=resource.columns, lineterminator="\n")
     writer.writeheader()
     for obj in resource.queryset(user):
-        row = resource.export_row(obj)
+        row = resource.export_row(obj, user)
         writer.writerow(
             {
                 column: row.get(column, "")

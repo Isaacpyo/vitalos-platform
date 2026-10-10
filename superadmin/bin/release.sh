@@ -4,6 +4,6 @@ set -eu
 cd "$(dirname "$0")/.."
 python manage.py migrate --noinput
 python manage.py seed_architecture
-# Creates the bootstrap SuperAdmin on first release (password from $BOOTSTRAP_ADMIN_PASSWORD);
-# afterwards it only confirms the account and never changes the password.
+# Creates the bootstrap SuperAdmin only if missing (password from $BOOTSTRAP_ADMIN_PASSWORD);
+# an existing account is never re-activated, re-promoted or otherwise changed.
 python manage.py create_superadmin

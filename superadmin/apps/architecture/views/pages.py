@@ -37,7 +37,7 @@ def _partial(request, target: str) -> bool:
 def home(request):
     user = request.user
     context = {
-        "company": selectors.company(),
+        "company": selectors.company(user),
         "service_lines": selectors.service_lines_for_home(user),
         "recent_activity": activity.feed(user, limit=8),
     }
@@ -152,7 +152,7 @@ def architecture(request):
         member_total=Count("team_members", filter=Q(team_members__is_archived=False), distinct=True),
     )
     context = {
-        "company": selectors.company(),
+        "company": selectors.company(user),
         "lines": lines,
         "show_archived": archived,
         "can_manage": is_superadmin(user),

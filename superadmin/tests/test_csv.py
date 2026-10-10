@@ -154,3 +154,38 @@ def test_import_view_round_trip(data, make_user, client_for):
     response = client.post("/settings/data/", {"resource": "offers", "file": upload, "dry_run": "on"})
     assert response.status_code == 200
     assert b'data-testid="import-report"' in response.content and b"Dry run" in response.content
+
+
+@pytest.mark.django_db
+def test_import_without_archive_column_keeps_archive_state(data, superadmin):
+    practice = Practice.objects.get(name="Cloud")
+    services.archive(practice, superadmin)
+    content = "service_line,slug,name,summary,status,maturity,classification,order\nconsulting,cloud,Cloud,,draft,emerging,internal,0\n"
+    report = csv_io.run_import(csv_io.RESOURCES["practices"], content.encode(), superadmin, dry_run=False)
+    assert report.committed
+    practice.refresh_from_db()
+    assert practice.is_archived
+
+
+@pytest.mark.django_db
+def test_blank_classification_never_downgrades(data, superadmin):
+    project = Project.objects.get(name="Foundation")
+    project.classification = "restricted"
+    services.save_record(project, superadmin)
+    content = (
+        "id,service_line,name,client,status,start_date,end_date,lead_email,value,classification,is_archived\n"
+        f"{project.pk},consulting,Foundation,-Acme,pipeline,2026-01-05,,sam@example.test,1250.50,,false\n"
+    )
+    report = csv_io.run_import(csv_io.RESOURCES["projects"], content.encode(), superadmin, dry_run=False)
+    assert report.committed and report.summary["unchanged"] == 1
+    project.refresh_from_db()
+    assert project.classification == "restricted"
+
+
+@pytest.mark.django_db
+def test_non_ascii_digits_are_a_row_error_not_a_crash(data, superadmin):
+    content = (
+        "id,name,role_title,email,service_lines,classification,is_archived\n²,Jo,Engineer,,,internal,false\n"
+    )
+    report = csv_io.run_import(csv_io.RESOURCES["team_members"], content.encode(), superadmin, dry_run=True)
+    assert report.summary["error"] == 1 and "not a number" in report.rows[0].errors[0]

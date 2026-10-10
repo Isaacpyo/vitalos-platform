@@ -155,3 +155,15 @@ def test_session_and_cookie_settings(settings):
     assert settings.SESSION_COOKIE_HTTPONLY and settings.CSRF_COOKIE_HTTPONLY
     min_length = [v for v in settings.AUTH_PASSWORD_VALIDATORS if "MinimumLength" in v["NAME"]][0]
     assert min_length["OPTIONS"]["min_length"] == 12
+
+
+@pytest.mark.django_db
+def test_superuser_role_cannot_be_changed_in_the_app(seeded, superadmin, make_user, client_for):
+    root = make_user(None, is_superuser=True, is_staff=True)
+    response = client_for(superadmin).post(
+        f"/settings/users/{root.pk}/edit/",
+        {"full_name": "", "role": "Viewer", "is_active": "on"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert response.status_code == 200 and b"Django superuser" in response.content
+    assert not root.groups.filter(name="Viewer").exists()

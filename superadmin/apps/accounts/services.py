@@ -26,6 +26,9 @@ def set_role(user, role: str | None, actor) -> bool:
         raise ValidationError(f"Unknown role {role!r}.")
     if actor is not None and actor.pk == user.pk and role != SUPERADMIN and is_superadmin(actor):
         raise ValidationError("You cannot remove your own SuperAdmin role.")
+    if user.is_superuser and role != SUPERADMIN:
+        # A Django superuser is always SuperAdmin; showing another role would be misleading.
+        raise ValidationError("This account is a Django superuser. Remove that flag in Django admin first.")
     ensure_roles()
     previous = set(user.groups.filter(name__in=ROLES).values_list("name", flat=True))
     target = {role} if role else set()

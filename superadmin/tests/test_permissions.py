@@ -256,3 +256,52 @@ def test_hidden_service_line_dashboard_404_for_viewer(seeded, superadmin, viewer
     )
     assert client_for(viewer, verified=False).get(f"/s/{secret.slug}/").status_code == 404
     assert client_for(superadmin).get(f"/s/{secret.slug}/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_lead_cannot_touch_restricted_records_in_own_line(seeded, superadmin, lead, client_for):
+    line = seeded["consulting"]
+    secret_project = services.save_record(
+        Project(service_line=line, name="Board-only bid", classification=Classification.RESTRICTED),
+        superadmin,
+    )
+    secret_kpi = services.save_record(
+        KPI(service_line=line, name="Margin", target=Decimal("30"), classification=Classification.RESTRICTED),
+        superadmin,
+    )
+    client = client_for(lead, verified=False)
+    assert client.post(f"/e/project/{secret_project.pk}/archive/", **HX).status_code == 403
+    assert (
+        client.post(f"/projects/{secret_project.pk}/status/", {"status": "active"}, **HX).status_code == 403
+    )
+    assert client.get(f"/e/project/{secret_project.pk}/edit/").status_code == 403
+    response = client.post(
+        f"/e/kpivalue/new/?kpi={secret_kpi.pk}", {"date": "2026-10-01", "value": "5"}, **HX
+    )
+    assert response.status_code == 403 and b"Margin" not in response.content
+    # Nor can they create a Restricted record.
+    created = client.post(
+        "/e/practice/new/?service_line=consulting",
+        {
+            "name": "Hidden",
+            "status": "draft",
+            "maturity": "emerging",
+            "order": 1,
+            "classification": "restricted",
+        },
+        **HX,
+    )
+    assert created.status_code == 403
+    secret_project.refresh_from_db()
+    assert secret_project.status == "pipeline" and not secret_project.is_archived
+
+
+@pytest.mark.django_db
+def test_restricted_company_profile_is_hidden_from_viewers(seeded, superadmin, viewer, client_for):
+    from apps.architecture.models import Company
+
+    company = Company.load()
+    company.classification = Classification.RESTRICTED
+    company.save()
+    assert "From strategy to production." not in client_for(viewer, verified=False).get("/").content.decode()
+    assert "From strategy to production." in client_for(superadmin).get("/").content.decode()

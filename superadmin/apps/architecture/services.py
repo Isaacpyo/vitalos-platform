@@ -14,6 +14,7 @@ from apps.notifications.models import Notification
 from apps.notifications.services import notify
 
 from .models import KPI, Company, KPIValue, Project, ServiceLine, TeamMember
+from .selectors import can_view
 
 
 def superadmins():
@@ -33,13 +34,14 @@ def can_edit(user, obj) -> bool:
     """Whether ``user`` may create/change/archive ``obj``.
 
     Service lines, the company profile and team members span the company, so only SuperAdmin edits
-    them; everything else follows ``has_service_access`` for its service line.
+    them. Everything else needs ``has_service_access`` for its service line *and* read access to the
+    record's classification, so a ServiceLead can never act on (or create) a Restricted record.
     """
     if is_superadmin(user):
         return True
     if isinstance(obj, ServiceLine | Company | TeamMember):
         return False
-    return has_service_access(user, service_line_of(obj))
+    return has_service_access(user, service_line_of(obj)) and can_view(user, obj)
 
 
 def ensure_can_edit(user, obj) -> None:

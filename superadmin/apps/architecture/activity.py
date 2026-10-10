@@ -18,7 +18,7 @@ from .models import (
     Solution,
     TeamMember,
 )
-from .selectors import visibility_q
+from .selectors import can_view, visibility_q
 
 #: key → (model, label, history-row path to its service line, or None for company-wide records)
 FEED_MODELS = {
@@ -64,12 +64,15 @@ def _history_queryset(key, user, service_line=None):
             lookup = "id" if path == "id" else f"{path}_id"
             queryset = queryset.filter(**{lookup: service_line.pk})
     if not is_superadmin(user):
-        # History rows keep the classification the record had at the time of the change.
+        # A row must be visible both as it was then (its own classification) and as the record is now:
+        # reclassifying a record upwards also hides its earlier history.
         queryset = queryset.filter(visibility_q(user, path))
+        hidden_now = model.objects.exclude(visibility_q(user, model.service_line_path)).values("pk")
+        queryset = queryset.exclude(id__in=hidden_now)
     return queryset.order_by("-history_date", "-history_id")
 
 
-def _display(record, field_name, value):
+def _display(record, field_name, value, user):
     try:
         model_field = record.instance._meta.get_field(field_name)
     except Exception:  # noqa: BLE001 - history-only fields
@@ -82,11 +85,15 @@ def _display(record, field_name, value):
         return ", ".join(map(str, value)) or "—"
     if model_field.is_relation:
         related = model_field.related_model.objects.filter(pk=value).first()
-        return str(related) if related else f"#{value}"
+        if related is None:
+            return f"#{value}"
+        if hasattr(related, "classification") and not can_view(user, related):
+            return "(restricted)"
+        return str(related)
     return str(value)
 
 
-def _entry(key, record) -> ActivityEntry:
+def _entry(key, record, user) -> ActivityEntry:
     _, label, _ = FEED_MODELS[key]
     action = {"+": "created", "~": "updated", "-": "deleted"}[record.history_type]
     reason = record.history_change_reason or ""
@@ -102,8 +109,8 @@ def _entry(key, record) -> ActivityEntry:
                 changes.append(
                     (
                         record.instance._meta.get_field(change.field).verbose_name.capitalize(),
-                        _display(record, change.field, change.old),
-                        _display(record, change.field, change.new),
+                        _display(record, change.field, change.old, user),
+                        _display(record, change.field, change.new, user),
                     )
                 )
     if reason in {"Retired", "Reactivated", "Reordered", "Status changed"}:
@@ -142,7 +149,7 @@ def feed(user, service_line=None, model_key: str | None = None, limit: int = 30,
     merged = heapq.merge(*streams, key=lambda item: item[1].history_date, reverse=True)
     entries = []
     for key, record in merged:
-        entries.append(_entry(key, record))
+        entries.append(_entry(key, record, user))
         if len(entries) >= limit:
             break
     return entries

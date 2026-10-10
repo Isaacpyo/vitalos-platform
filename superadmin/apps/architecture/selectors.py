@@ -65,8 +65,9 @@ def can_view(user, obj) -> bool:
     return service_line is not None and service_line.pk in ids
 
 
-def company() -> Company | None:
-    return Company.load()
+def company(user) -> Company | None:
+    profile = Company.load()
+    return profile if profile is not None and can_view(user, profile) else None
 
 
 def service_lines_for_home(user):
