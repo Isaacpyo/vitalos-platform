@@ -28,6 +28,7 @@
     "check:boundaries": "dependency-cruiser --config dependency-cruiser.cjs apps packages services workers",
     "check:raw-colours": "node tooling/scripts/check-raw-colours.mjs",
     "check:bundle-secrets": "node tooling/scripts/check-client-bundle-secrets.mjs",
+    "check:cms-types": "node tooling/scripts/check-cms-types.mjs",
     "check:security": "node tooling/scripts/check-secrets.mjs && corepack pnpm audit --audit-level high",
     "check": "corepack pnpm format:check && corepack pnpm check:raw-colours && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm check:boundaries"
   },
