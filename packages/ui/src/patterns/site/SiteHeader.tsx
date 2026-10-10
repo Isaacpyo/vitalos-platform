@@ -1,19 +1,19 @@
-import { cx } from "../../primitives/_internal/cx";
 import { Button } from "../../primitives/Button";
 import { Container } from "../../primitives/Container";
 import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import type { PatternLink } from "../_internal/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileNav } from "./MobileNav";
+import { StickyHeader } from "./StickyHeader";
 import { topLevelLinkClasses, utilityLinkClasses } from "./nav-styles";
 import type { SiteNavItem, SiteNavLink } from "./types";
 
 export interface SiteHeaderProps {
   /** Primary navigation, already filtered by publication gates. */
   items: readonly SiteNavItem[];
-  /** Lower-emphasis utility links (the Trust Centre). Shown from the xl breakpoint; always in MobileNav. */
+  /** Lower-emphasis utility links (the Trust Centre). In the bar from lg; in MobileNav below it. */
   utility?: readonly SiteNavLink[] | undefined;
-  /** The primary action. Shown on desktop, beside the menu trigger on compact screens. */
+  /** The primary action. In the bar at every width (beside the menu trigger on compact screens). */
   cta?: PatternLink | undefined;
   /** Key of the current section: underlined, bold and `aria-current` (never colour alone). */
   activeSection?: string | undefined;
@@ -26,14 +26,17 @@ export interface SiteHeaderProps {
   menuLabel?: string | undefined;
   /** Accessible names of the two navigation landmarks. */
   navLabel?: string | undefined;
+  /** Render the scrolled (condensed) state on first paint (Storybook, documentation). */
+  defaultCondensed?: boolean | undefined;
   className?: string | undefined;
 }
 
 /**
- * Sticky site header: wordmark, primary links (What We Do opens a MegaMenu island), utility link
- * and primary action; the compact viewport swaps the links for MobileNav. A hairline always
- * separates the bar from content scrolling beneath it, on an opaque surface. Every label comes
- * from props.
+ * Sticky site header: wordmark, primary links (What We Do opens a MegaMenu island), the utility
+ * link and the primary action; below lg the links move into MobileNav (a sheet), while the
+ * primary action stays in the bar at every width. A hairline always separates the bar from the
+ * content; once the page scrolls the bar condenses and blurs what passes beneath (StickyHeader,
+ * no layout shift). Every label comes from props.
  */
 export function SiteHeader({
   items,
@@ -45,17 +48,13 @@ export function SiteHeader({
   wordmarkText,
   menuLabel,
   navLabel = "Primary",
+  defaultCondensed,
   className,
 }: SiteHeaderProps) {
   return (
-    <header
-      className={cx(
-        "sticky top-0 z-40 border-b border-tone-border bg-tone-bg text-tone-text",
-        className,
-      )}
-    >
+    <StickyHeader className={className} defaultCondensed={defaultCondensed}>
       <Container size="wide">
-        <div className="flex h-(--size-header) items-center gap-(--space-4) lg:gap-(--space-5)">
+        <div className="flex h-(--header-h) items-center gap-(--space-3) transition-[height] duration-(--duration-reveal) ease-(--ease-standard) sm:gap-(--space-4) lg:gap-(--space-5)">
           <Wordmark
             href={homeHref}
             {...(logo ? { logo } : {})}
@@ -89,9 +88,9 @@ export function SiteHeader({
               )}
             </ul>
           </nav>
-          <div className="ml-auto flex items-center gap-(--space-3) lg:ml-0">
+          <div className="ml-auto flex items-center gap-(--space-2) sm:gap-(--space-3) lg:ml-0">
             {utility && utility.length > 0 ? (
-              <ul className="m-0 hidden list-none gap-(--space-4) p-0 xl:flex">
+              <ul className="m-0 hidden list-none gap-(--space-4) p-0 lg:flex">
                 {utility.map((link) => (
                   <li key={link.href}>
                     <a href={link.href} className={utilityLinkClasses}>
@@ -121,6 +120,6 @@ export function SiteHeader({
           </div>
         </div>
       </Container>
-    </header>
+    </StickyHeader>
   );
 }

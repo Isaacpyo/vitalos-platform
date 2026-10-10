@@ -39,6 +39,8 @@ export function Breadcrumb({
                   href={item.href}
                   className={cx(
                     "text-tone-link underline underline-offset-4 hover:text-tone-link-hover",
+                    // A 44px touch target below lg without changing the line's look.
+                    "inline-flex min-h-11 items-center lg:min-h-0",
                   )}
                 >
                   {item.label}

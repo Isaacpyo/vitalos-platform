@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Reveal } from "../../motion/Reveal";
 import { Button } from "../../primitives/Button";
 import { Container } from "../../primitives/Container";
 import { CTAGroup } from "../../primitives/CTAGroup";
@@ -23,6 +24,8 @@ export interface TerminalCTAProps {
 /**
  * Closing call to action of a page, as the owner comp's closing band: heading, an optional line
  * of context and one primary action in a single row on wide screens, stacked on compact ones.
+ * The band rises in once when it first scrolls into view (Reveal: static without JavaScript,
+ * under reduced motion and when it is already on screen).
  */
 export function TerminalCTA({
   heading,
@@ -45,7 +48,7 @@ export function TerminalCTA({
       {...(className ? { className } : {})}
     >
       <Container size="wide">
-        <div className="grid gap-x-(--space-8) gap-y-(--space-5) lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-center">
+        <Reveal className="grid gap-x-(--space-8) gap-y-(--space-5) lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-center">
           <Heading id={headingId} level={headingLevel} size="h2" className="lg:max-w-[16ch]">
             {heading}
           </Heading>
@@ -66,7 +69,7 @@ export function TerminalCTA({
               </Button>
             ) : null}
           </CTAGroup>
-        </div>
+        </Reveal>
       </Container>
     </Section>
   );

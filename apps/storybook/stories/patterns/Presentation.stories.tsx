@@ -9,9 +9,11 @@ import {
   MediaPlaceholder,
   PageHero,
   ProcessJourney,
+  Parallax,
   Reveal,
-  RevealController,
+  RevealItem,
   Section,
+  SettleText,
   SectionHeading,
   SolutionCard,
 } from "@vitalos/ui";
@@ -162,7 +164,7 @@ export const CardsWithIcons: Story = {
 const carouselItems = Array.from({ length: 7 }, (_, index) => index + 1);
 
 export const CarouselRow: Story = {
-  name: "Carousel (row from md, vertical list on phones)",
+  name: "Carousel (row with drag and arrow-key paging from lg; stacked list below)",
   render: () => (
     <Frame>
       <Carousel
@@ -226,7 +228,6 @@ export const Entrances: Story = {
   name: "Reveal (scroll down; nothing hides under reduced motion)",
   render: () => (
     <div>
-      <RevealController />
       {[1, 2, 3, 4].map((n) => (
         <Section key={n} as="div" tone={n % 2 ? "light" : "muted"}>
           <Container size="wide">
@@ -239,6 +240,73 @@ export const Entrances: Story = {
           </Container>
         </Section>
       ))}
+    </div>
+  ),
+};
+
+export const StaggeredCards: Story = {
+  name: "Reveal stagger (cards enter in sequence below the fold)",
+  render: () => (
+    <div>
+      <Section as="div" tone="muted" className="min-h-[110vh]">
+        <Container size="wide">
+          <SectionHeading title="Example spacer section, scroll down (fixture)" />
+        </Container>
+      </Section>
+      <Section as="div" tone="light">
+        <Container size="wide">
+          <Reveal
+            as="ul"
+            stagger
+            className="m-0 grid list-none grid-cols-1 gap-5 p-0 md:grid-cols-2 lg:grid-cols-3"
+          >
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <RevealItem as="li" key={n} className="min-w-0">
+                <SolutionCard
+                  title={`Example card ${n} (fixture)`}
+                  summary={text.shortSummary}
+                  href={url(`card-${n}`)}
+                  icon="workflow"
+                />
+              </RevealItem>
+            ))}
+          </Reveal>
+        </Container>
+      </Section>
+    </div>
+  ),
+};
+
+export const HeadlineSettle: Story = {
+  name: "Headline settle (words rise into place in under 400ms; text never hidden)",
+  render: () => (
+    <Frame>
+      <h1 className="text-display-xl text-tone-heading text-balance">
+        <SettleText
+          parts={[
+            { text: "Example fixture headline that wraps over several lines and " },
+            { text: "ends in an accent.", accent: true },
+          ]}
+        />
+      </h1>
+    </Frame>
+  ),
+};
+
+export const ParallaxPlane: Story = {
+  name: "Parallax (one decorative plane; static under reduced motion)",
+  render: () => (
+    <div className="min-h-[200vh]">
+      <Section as="div" tone="light">
+        <Container size="wide">
+          <div className="relative h-80 overflow-hidden rounded-xl border border-tone-border">
+            <Parallax className="absolute inset-y-[10%] left-[10%] w-1/2" travel={-40}>
+              <div className="h-full w-full -skew-x-12 rounded-xl bg-linear-160 from-blue-100 to-blue-50" />
+            </Parallax>
+          </div>
+          <p className="mt-6 text-body text-tone-text">{text.summary}</p>
+        </Container>
+      </Section>
     </div>
   ),
 };

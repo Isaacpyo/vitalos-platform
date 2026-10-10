@@ -1,7 +1,7 @@
-import type { CSSProperties } from "react";
 import { cx } from "../../primitives/_internal/cx";
 import { Icon } from "../../primitives/Icon";
 import { Heading } from "../../primitives/Heading";
+import { Reveal, RevealItem } from "../../motion/Reveal";
 import { hasText, isNonEmpty, type ItemHeadingLevel, type NonEmptyArray } from "../_internal/types";
 
 export interface JourneyStage {
@@ -42,16 +42,15 @@ const stepColumns: Record<number, string> = {
   5: "lg:grid-cols-5",
 };
 
-const pending = "group-data-[reveal-state=pending]/journey";
-
 /**
  * Stage-by-stage journey (the AI journey, How We Work), in the owner comp's step style: a
  * numbered node per stage, joined by a connector. An ordered list throughout.
  *
  * - Up to five stages: a vertical timeline on compact screens and one row of steps from lg, with
- *   arrowed connectors that draw in sequence when the list scrolls into view (diagram motion,
- *   Stage 9 section 11; driven by RevealController, so it never runs without JavaScript or under
- *   reduced motion, and the stages are fully visible either way).
+ *   arrowed connectors. When the list scrolls into view the numbered nodes and the connectors
+ *   draw in sequence (diagram motion, Stage 9 section 11: each connector over 600ms). Only the
+ *   decorative nodes and connectors move; the stage text never does. Nothing moves without
+ *   JavaScript, under reduced motion or when the list is already on screen (`Reveal stagger`).
  * - More than five: a two- and three-column grid of numbered stages, without connectors.
  *
  * Each stage can state deliverables, evidence and a decision gate. Stage names come from the
@@ -68,8 +67,9 @@ export function ProcessJourney({
   const steps = stages.length <= 5;
   const last = stages.length - 1;
   return (
-    <ol
-      data-reveal=""
+    <Reveal
+      as="ol"
+      stagger={0.12}
       {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
       className={cx(
         "group/journey m-0 grid list-none grid-cols-1 gap-y-(--space-6) p-0",
@@ -81,11 +81,9 @@ export function ProcessJourney({
     >
       {stages.map((stage, index) => {
         const deliverables = (stage.deliverables ?? []).filter(hasText);
-        const style = { "--step": index } as CSSProperties;
         return (
           <li
             key={`${stage.title}-${index}`}
-            style={style}
             className={cx(
               "relative flex min-w-0 gap-(--space-4)",
               steps ? "lg:block" : "md:block",
@@ -96,28 +94,24 @@ export function ProcessJourney({
             )}
           >
             <div className="relative shrink-0">
-              <span
+              <RevealItem
+                as="span"
+                effect="pop"
                 aria-hidden="true"
-                className={cx(
-                  "relative inline-flex size-14 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg ring-1 ring-tone-border",
-                  "transition-[scale] duration-(--duration-reveal) ease-(--ease-emphasis) [transition-delay:calc(var(--step)*160ms)]",
-                  `${pending}:scale-0`,
-                )}
+                className="relative inline-flex size-14 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg ring-1 ring-tone-border"
               >
                 {String(index + 1).padStart(2, "0")}
-              </span>
+              </RevealItem>
               {steps && index < last ? (
-                <span
+                <RevealItem
+                  as="span"
+                  effect="draw"
                   aria-hidden="true"
-                  className={cx(
-                    "absolute top-7 right-(--space-2) left-[calc(3.5rem+var(--space-3))] hidden -translate-y-1/2 origin-left items-center text-tone-eyebrow lg:flex",
-                    "transition-[scale] duration-(--duration-diagram) ease-(--ease-emphasis) [transition-delay:calc(var(--step)*160ms+120ms)]",
-                    `${pending}:scale-x-0`,
-                  )}
+                  className="absolute top-7 right-(--space-2) left-[calc(3.5rem+var(--space-3))] hidden -translate-y-1/2 origin-left items-center text-tone-eyebrow lg:flex"
                 >
                   <span className="h-px flex-1 bg-current" />
                   <Icon name="chevron-right" size={16} className="-ml-2.5" />
-                </span>
+                </RevealItem>
               ) : null}
             </div>
             <div
@@ -166,6 +160,6 @@ export function ProcessJourney({
           </li>
         );
       })}
-    </ol>
+    </Reveal>
   );
 }

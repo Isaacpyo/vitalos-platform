@@ -8,7 +8,7 @@ export interface SlideArrowProps {
 }
 
 const arrow =
-  "absolute inset-0 transition-transform duration-(--duration-reveal) ease-(--ease-emphasis)";
+  "absolute inset-0 transition-transform duration-(--duration-feedback) ease-(--ease-emphasis)";
 
 /**
  * Directional arrow for buttons, links and cards. On hover or keyboard focus of the nearest

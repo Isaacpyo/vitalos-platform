@@ -20,6 +20,8 @@ export const component = {
   },
   header: {
     height: 72,
+    /** After the page scrolls (ADR-024): reduced by less than a third, still a 44px+ bar. */
+    condensedHeight: 56,
   },
   focus: {
     outlineWidth: 3,

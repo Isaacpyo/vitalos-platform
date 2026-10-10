@@ -68,10 +68,11 @@ export function PersonCard({
       data-kind="person"
       className={cx("group relative flex h-full min-w-0 flex-col gap-(--space-4)", className)}
     >
+      {/* A single-column phone layout caps the portrait so one card does not fill the screen. */}
       {portrait ? (
-        <PatternMedia image={portrait} className="aspect-[4/5] rounded-md" />
+        <PatternMedia image={portrait} className="aspect-[4/5] max-w-64 rounded-md sm:max-w-none" />
       ) : (
-        <Monogram name={name} />
+        <Monogram name={name} className="max-w-64 sm:max-w-none" />
       )}
       <div className="min-w-0">
         <Heading level={headingLevel} size="h4" className="min-w-0">

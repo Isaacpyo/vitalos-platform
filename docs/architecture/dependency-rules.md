@@ -32,16 +32,17 @@ flowchart LR
 
 ## Enforced rules (dependency-cruiser)
 
-| Rule                          | Meaning                                                                                                                    |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `no-circular`                 | No import cycles anywhere                                                                                                  |
-| `no-app-to-app`               | An app never imports another app's source                                                                                  |
-| `no-package-to-app`           | Shared packages never import apps                                                                                          |
-| `no-domain-to-ui`             | Code under `domain/` or `features/` never imports `packages/ui`                                                            |
-| `web-no-sanity`               | `apps/web` never imports the `sanity` Studio SDK (it uses `next-sanity`, `@sanity/client` and `@vitalos/cms`)              |
-| `web-no-cms-studio-internals` | `apps/web` never imports `@vitalos/cms` schemas, structure, actions or presentation                                        |
-| `cms-public-entry-no-sanity`  | The `@vitalos/cms` root entry, routes, navigation, locked copy and `content/` never import `sanity`, `groq` or `@sanity/*` |
-| `ui-no-framework-or-platform` | `packages/ui` is presentation only: no `next`, `@supabase`, `@vitalos/cms` or `@vitalos/config`; links are plain anchors   |
+| Rule                          | Meaning                                                                                                                     |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `no-circular`                 | No import cycles anywhere                                                                                                   |
+| `no-app-to-app`               | An app never imports another app's source                                                                                   |
+| `no-package-to-app`           | Shared packages never import apps                                                                                           |
+| `no-domain-to-ui`             | Code under `domain/` or `features/` never imports `packages/ui`                                                             |
+| `web-no-sanity`               | `apps/web` never imports the `sanity` Studio SDK (it uses `next-sanity`, `@sanity/client` and `@vitalos/cms`)               |
+| `web-no-cms-studio-internals` | `apps/web` never imports `@vitalos/cms` schemas, structure, actions or presentation                                         |
+| `cms-public-entry-no-sanity`  | The `@vitalos/cms` root entry, routes, navigation, locked copy and `content/` never import `sanity`, `groq` or `@sanity/*`  |
+| `ui-no-framework-or-platform` | `packages/ui` is presentation only: no `next`, `@supabase`, `@vitalos/cms` or `@vitalos/config`; links are plain anchors    |
+| `motion-only-in-ui`           | Only `packages/ui` imports `motion`, `framer-motion`, `motion-dom` or `motion-utils` (ADR-024); apps use its client islands |
 
 ## Conventions (reviewed, partly tested)
 

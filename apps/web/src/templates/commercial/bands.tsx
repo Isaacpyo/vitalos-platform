@@ -1,5 +1,5 @@
-import { Fragment, useId } from "react";
-import type { ReactNode } from "react";
+import { Children, Fragment, isValidElement, useId } from "react";
+import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
 import {
   Breadcrumb,
   Button,
@@ -9,10 +9,11 @@ import {
   Icon,
   PageHero,
   Reveal,
+  RevealItem,
   Section,
   SectionHeading,
 } from "@vitalos/ui";
-import type { PatternLink, SectionSpacing, SectionTone } from "@vitalos/ui";
+import type { PatternLink, RevealItemProps, SectionSpacing, SectionTone } from "@vitalos/ui";
 import { crumbsToUi } from "../../lib/view-mapping/breadcrumbs";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
 
@@ -102,7 +103,9 @@ export function Band({
             />
           </Reveal>
         ) : null}
-        <Reveal delay={heading ? 1 : 0} className={heading ? "mt-(--space-7)" : undefined}>
+        {/* A stagger group: the cards and rows inside (CardGrid, RowList, StatementList) enter one
+            after another once the band scrolls into view; other content stays still. */}
+        <Reveal stagger delay={heading ? 1 : 0} className={heading ? "mt-(--space-7)" : undefined}>
           {children}
         </Reveal>
       </Container>
@@ -118,9 +121,14 @@ export function StatementList({ items }: Readonly<{ items: readonly string[] }>)
   const shown = items.filter((item) => item.trim() !== "");
   if (shown.length === 0) return null;
   return (
-    <ul className="m-0 grid list-none grid-cols-1 gap-x-(--space-7) p-0 md:grid-cols-2">
+    // Two columns only when there are two or more statements: a lone statement keeps a full-width
+    // rule instead of a half-width one.
+    <ul
+      className={`m-0 grid list-none grid-cols-1 gap-x-(--space-7) p-0 ${shown.length > 1 ? "md:grid-cols-2" : ""}`}
+    >
       {shown.map((item, index) => (
-        <li
+        <RevealItem
+          as="li"
           key={`${item}-${index}`}
           className="flex min-w-0 items-start gap-(--space-4) border-t border-tone-border py-(--space-5) text-body-l text-tone-text text-pretty"
         >
@@ -131,15 +139,38 @@ export function StatementList({ items }: Readonly<{ items: readonly string[] }>)
             <Icon name="check" size={16} />
           </span>
           <span className="min-w-0">{item}</span>
-        </li>
+        </RevealItem>
       ))}
     </ul>
   );
 }
 
+/**
+ * Marks each item of a list as a member of the surrounding Band's entrance sequence. In a list
+ * (`ul`), an `<li>` becomes a RevealItem rendered as `li` with every one of its props kept; any
+ * other child is left as it is (a `<div>` is never put inside a `<ul>`). In a block, each child is
+ * wrapped. Outside a Band (no group above it) the items never move.
+ */
+function asRevealItems(children: ReactNode, container: "list" | "block"): ReactNode {
+  return Children.map(children, (child) => {
+    if (!isValidElement(child)) return child;
+    if (child.type === "li") {
+      const { children: content, ...props } = (
+        child as ReactElement<ComponentPropsWithoutRef<"li">>
+      ).props;
+      return (
+        <RevealItem as="li" {...(props as RevealItemProps)}>
+          {content}
+        </RevealItem>
+      );
+    }
+    return container === "list" ? child : <RevealItem>{child}</RevealItem>;
+  });
+}
+
 /** Rows (PracticeRow, OfferRow, ...) closed by a rule, so the last row has its own bottom edge. */
 export function RowList({ children }: Readonly<{ children: ReactNode }>) {
-  return <div className="border-b border-tone-border">{children}</div>;
+  return <div className="border-b border-tone-border">{asRevealItems(children, "block")}</div>;
 }
 
 const cardColumns = {
@@ -156,7 +187,7 @@ export function CardGrid({
 }: Readonly<{ children: ReactNode; columns?: keyof typeof cardColumns }>) {
   return (
     <ul className={`m-0 grid list-none grid-cols-1 gap-(--space-5) p-0 ${cardColumns[columns]}`}>
-      {children}
+      {asRevealItems(children, "list")}
     </ul>
   );
 }

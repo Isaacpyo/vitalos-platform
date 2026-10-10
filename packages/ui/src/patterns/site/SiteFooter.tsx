@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Reveal, RevealItem } from "../../motion/Reveal";
 import { cx } from "../../primitives/_internal/cx";
 import { Container } from "../../primitives/Container";
 import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
@@ -49,7 +50,11 @@ export interface SiteFooterProps {
   className?: string | undefined;
 }
 
-/** Midnight institutional close of the page. Every string comes from props. */
+/**
+ * Midnight institutional close of the page. Every string comes from props. The brand block and
+ * the link columns rise in, in sequence, the first time they scroll into view (Reveal; static
+ * without JavaScript and under reduced motion). Below lg every link is a 44px row.
+ */
 export function SiteFooter({
   brand,
   columns,
@@ -75,9 +80,12 @@ export function SiteFooter({
       )}
     >
       <Container size="wide">
-        <div className="grid gap-x-(--space-7) gap-y-(--space-7) lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)]">
+        <Reveal
+          stagger={0.05}
+          className="grid gap-x-(--space-7) gap-y-(--space-7) lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)]"
+        >
           {showBrand ? (
-            <div className="min-w-0">
+            <RevealItem className="min-w-0">
               <Wordmark
                 {...(brand?.homeHref ? { href: brand.homeHref } : {})}
                 {...(brand?.logo ? { logo: brand.logo } : {})}
@@ -93,7 +101,7 @@ export function SiteFooter({
                   {brand.proposition}
                 </p>
               ) : null}
-            </div>
+            </RevealItem>
           ) : null}
           {visibleColumns.length > 0 ? (
             <nav aria-label={navLabel} className="min-w-0">
@@ -101,7 +109,7 @@ export function SiteFooter({
                 {visibleColumns.map((column) => {
                   const headingId = `${footerId}-${column.key}`;
                   return (
-                    <div
+                    <RevealItem
                       key={column.key}
                       className="min-w-0 md:border-l md:border-tone-border md:pl-(--space-5)"
                     >
@@ -115,7 +123,7 @@ export function SiteFooter({
                               href={link.href}
                               className={cx(
                                 quietLinkClasses,
-                                "block py-(--space-1) text-body lg:text-small",
+                                "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
                               )}
                             >
                               {link.label}
@@ -123,13 +131,13 @@ export function SiteFooter({
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </RevealItem>
                   );
                 })}
               </div>
             </nav>
           ) : null}
-        </div>
+        </Reveal>
         {showContact || identityLines.length > 0 ? (
           <div className="mt-(--space-8) grid gap-x-(--space-7) gap-y-(--space-6) border-t border-tone-border pt-(--space-6) md:grid-cols-2">
             {showContact && contact ? (
@@ -142,7 +150,7 @@ export function SiteFooter({
                         href={`mailto:${email}`}
                         className={cx(
                           quietLinkClasses,
-                          "block py-(--space-1) text-body lg:text-small",
+                          "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
                         )}
                       >
                         {email}
@@ -155,7 +163,7 @@ export function SiteFooter({
                         href={link.href}
                         className={cx(
                           quietLinkClasses,
-                          "block py-(--space-1) text-body lg:text-small",
+                          "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
                         )}
                       >
                         {link.label}

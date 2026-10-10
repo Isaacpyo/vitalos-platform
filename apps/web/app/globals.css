@@ -35,6 +35,34 @@
   }
 }
 
+/*
+ * Route transition (ADR-024). Every link on the site is a plain <a>, so a route change is a full
+ * document navigation; the browser's cross-document View Transition crossfades the old page into
+ * the new one in 150ms ("page transition: minimal", Stage 9 section 11). Declared in the
+ * stylesheet only: no script, no inline <style>, nothing hidden in the server HTML, and the new
+ * page is interactive as soon as it would be without it. The header keeps its own name, so it
+ * stays put while the content below it changes. Browsers without support navigate as before;
+ * under reduced motion there is no transition at all.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 150ms;
+    animation-timing-function: var(--ease-standard);
+  }
+  body > header.sticky {
+    view-transition-name: site-header;
+  }
+  ::view-transition-group(site-header),
+  ::view-transition-old(site-header),
+  ::view-transition-new(site-header) {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

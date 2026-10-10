@@ -19,6 +19,36 @@ export const Header: Story = {
   ),
 };
 
+export const HeaderCondensed: Story = {
+  name: "Header (condensed after scroll, backdrop blur)",
+  render: () => (
+    <div className="bg-tone-bg">
+      <SiteHeader
+        items={navItems}
+        utility={utilityLinks}
+        cta={cta}
+        activeSection="section-two"
+        defaultCondensed
+      />
+      <p className="px-4 py-6 text-body text-tone-text">{text.summary}</p>
+    </div>
+  ),
+};
+
+export const HeaderScrolling: Story = {
+  name: "Header (scroll the page: condenses with no layout shift)",
+  render: () => (
+    <div className="min-h-[300vh]">
+      <SiteHeader items={navItems} utility={utilityLinks} cta={cta} />
+      {[1, 2, 3].map((n) => (
+        <p key={n} className="px-4 py-12 text-body text-tone-text">
+          {text.summary}
+        </p>
+      ))}
+    </div>
+  ),
+};
+
 export const HeaderMinimal: Story = {
   name: "Header (no items, no action)",
   render: () => <SiteHeader items={[]} wordmarkText="EXAMPLE (fixture)" />,
@@ -93,7 +123,7 @@ export const MobileNavClosed: Story = {
 };
 
 export const MobileNavOpen: Story = {
-  name: "Mobile nav (open, native details)",
+  name: "Mobile nav (open sheet; two columns from md)",
   render: () => (
     <div className="relative min-h-[40rem]">
       <header className="relative border-b border-tone-border bg-tone-bg px-4 py-3">

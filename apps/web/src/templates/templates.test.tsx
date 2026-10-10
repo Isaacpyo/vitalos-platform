@@ -80,10 +80,17 @@ describe("homepage sections", () => {
     const markup = html(<HomeTemplate home={null} gates={closedGates} />);
     expect(count(markup, /<h1/g)).toBe(1);
     expect(count(markup, /<h2/g)).toBe(0);
-    // The h1 is exactly the locked proposition; its closing clause sits in a colour span.
-    expect(markup).toMatch(
-      /<h1[^>]*>We help ambitious organisations modernise operations, build digital products and <span[^>]*>adopt AI\.<\/span><\/h1>/,
+    // The h1 is exactly the locked proposition (its words are settle spans, ADR-024); only the
+    // closing clause, "adopt AI.", is in the colour of a link.
+    const h1 = /<h1[^>]*>(.*?)<\/h1>/.exec(markup)?.[1] ?? "";
+    expect(h1.split(/<[^>]*>/).join("")).toBe(
+      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
     );
+    const accented = [...h1.matchAll(/<span[^>]*text-tone-link[^>]*>([^<]*)<\/span>/g)].map(
+      (match) => match[1],
+    );
+    expect(accented).toEqual(["adopt", "AI."]);
+    expect(h1).not.toMatch(/opacity/);
     expect(markup).toContain("From strategy to production.");
     expect(markup).toContain('href="/contact"');
     expect(markup).toContain('href="/what-we-do"');
@@ -92,7 +99,8 @@ describe("homepage sections", () => {
   it("uses the locked proposition as the only h1 and the brand line as supporting text", () => {
     const markup = html(<HomeTemplate home={fullHome} gates={openGates} howWeWorkIntro="x" />);
     expect(count(markup, /<h1/g)).toBe(1);
-    expect(markup).toMatch(/<h1[^>]*>We help ambitious organisations/);
+    const h1 = /<h1[^>]*>(.*?)<\/h1>/.exec(markup)?.[1] ?? "";
+    expect(h1.split(/<[^>]*>/).join("")).toMatch(/^We help ambitious organisations/);
     expect(markup).not.toMatch(/<h1[^>]*>From strategy to production/);
   });
 

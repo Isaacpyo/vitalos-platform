@@ -26,11 +26,13 @@ export function MetaRow({ items, className, ...props }: MetaRowProps) {
       {...props}
     >
       {items.map((item) => (
-        <div key={item.label} className="flex gap-(--space-1)">
-          <dt className={item.hideLabel ? undefined : "font-medium"}>
+        // Label and value flow as one line of text and wrap between words; as two flex items the
+        // label was squeezed and broke mid-word on narrow screens ("Engageme / nt" at 320px).
+        <div key={item.label} className="min-w-0">
+          <dt className={cx("inline", !item.hideLabel && "font-medium")}>
             {item.hideLabel ? <VisuallyHidden>{item.label}</VisuallyHidden> : <>{item.label}:</>}
-          </dt>
-          <dd className="m-0 text-tone-text">{item.value}</dd>
+          </dt>{" "}
+          <dd className="m-0 inline text-tone-text">{item.value}</dd>
         </div>
       ))}
     </dl>

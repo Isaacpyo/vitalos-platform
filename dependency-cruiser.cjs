@@ -62,6 +62,14 @@ module.exports = {
       from: { path: "^packages/ui/" },
       to: { path: `${pkg("next|@supabase|@vitalos/cms|@vitalos/config")}|^packages/(cms|config)/` },
     },
+    {
+      name: "motion-only-in-ui",
+      comment:
+        "Motion for React is used only inside @vitalos/ui client islands (ADR-024): apps and other packages use the islands, so every animation keeps the shared reduced-motion, LazyMotion and no-hidden-server-HTML rules.",
+      severity: "error",
+      from: { path: "^(apps|packages|services|workers)/", pathNot: "^packages/ui/" },
+      to: { path: pkg("motion|framer-motion|motion-dom|motion-utils") },
+    },
   ],
   options: {
     doNotFollow: { path: "node_modules" },

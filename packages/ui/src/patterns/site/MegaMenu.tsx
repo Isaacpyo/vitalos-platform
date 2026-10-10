@@ -9,6 +9,9 @@ import {
   type FocusEvent,
   type PointerEvent,
 } from "react";
+import type { Variants } from "motion/react";
+import * as m from "motion/react-m";
+import { EASE_EMPHASIS, MotionIsland, useMotionAllowed } from "../../motion/_internal/island";
 import { cx } from "../../primitives/_internal/cx";
 import { Container } from "../../primitives/Container";
 import { Icon } from "../../primitives/Icon";
@@ -19,6 +22,24 @@ import type { MegaMenuColumn } from "./types";
 const HOVER_OPEN_DELAY_MS = 120;
 /** Grace period for crossing the gap between the trigger and the panel. */
 const HOVER_CLOSE_DELAY_MS = 220;
+
+/**
+ * Panel reveal within Stage 9's 160 to 240ms menu budget: the panel fades and drops 6px over
+ * 160ms while its columns follow 25ms apart, so four columns finish by 235ms. Only on an opening
+ * the visitor caused; never on first paint, never under reduced motion.
+ */
+const panelVariants: Variants = {
+  closed: { opacity: 0, y: -6 },
+  open: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.16, ease: EASE_EMPHASIS, staggerChildren: 0.025 },
+  },
+};
+const columnVariants: Variants = {
+  closed: { opacity: 0, y: -4 },
+  open: { opacity: 1, y: 0, transition: { duration: 0.16, ease: EASE_EMPHASIS } },
+};
 
 export interface MegaMenuProps {
   /** Top-level label, for example the section name. It is a real link to `href`. */
@@ -54,6 +75,8 @@ function hasFinePointer(): boolean {
  *   and keyboard use the button. Clicking the button while the panel is hover-open pins it.
  * - Escape closes (also for hover-opened content, WCAG 1.4.13) and returns focus to the button.
  * - The panel is in DOM order straight after the button: Tab moves label, button, panel links.
+ * - Opening reveals the panel with a short fade and drop and the columns in a 25ms stagger, all
+ *   within 240ms (Stage 9 section 11); instant under reduced motion. Closing is instant.
  * - Without JavaScript the panel stays closed and the label link still works.
  */
 export function MegaMenu({
@@ -73,6 +96,15 @@ export function MegaMenu({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openedByHover = useRef(false);
+  const motionAllowed = useMotionAllowed();
+  // Counts openings since mount: each one remounts the animated panel body so it plays again. It
+  // is bumped in the same state update that opens the panel (never in an effect afterwards), so
+  // the first open frame already starts from the reveal's initial state: no flash of the panel.
+  const [openings, setOpenings] = useState(0);
+  const openPanel = useCallback(() => {
+    setOpenings((count) => count + 1);
+    setOpen(true);
+  }, []);
 
   const clearTimer = useCallback(() => {
     if (timer.current !== null) {
@@ -133,7 +165,7 @@ export function MegaMenu({
     timer.current = setTimeout(() => {
       timer.current = null;
       openedByHover.current = true;
-      setOpen(true);
+      openPanel();
     }, HOVER_OPEN_DELAY_MS);
   };
 
@@ -158,7 +190,8 @@ export function MegaMenu({
       return;
     }
     openedByHover.current = false;
-    setOpen((value) => !value);
+    if (open) setOpen(false);
+    else openPanel();
   };
 
   return (
@@ -183,7 +216,7 @@ export function MegaMenu({
         aria-controls={panelId}
         aria-label={toggleLabel ?? `${label} menu`}
         onClick={onToggle}
-        className="group inline-flex min-h-(--size-button-md) min-w-(--size-button-sm) items-center justify-center text-tone-heading"
+        className="group ml-2 inline-flex min-h-(--size-button-md) min-w-(--size-button-sm) items-center justify-center text-tone-heading"
       >
         <Icon
           name="chevron-down"
@@ -196,14 +229,24 @@ export function MegaMenu({
         hidden={!open}
         role="group"
         aria-label={label}
-        className="absolute inset-x-0 top-full max-h-[calc(100dvh-var(--size-header))] overflow-y-auto border-b border-tone-border bg-tone-bg shadow-floating"
+        className="absolute inset-x-0 top-full max-h-[calc(100dvh-var(--header-h,var(--size-header)))] overflow-y-auto border-b border-tone-border bg-tone-bg shadow-floating"
       >
         <Container size="wide">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-(--space-6) gap-y-(--space-5) py-(--space-6)">
-            {visibleColumns.map((column) => (
-              <MenuColumn key={column.key} column={column} panelId={panelId} />
-            ))}
-          </div>
+          <MotionIsland>
+            <m.div
+              key={openings}
+              initial={motionAllowed && openings > 0 ? "closed" : false}
+              animate="open"
+              variants={panelVariants}
+              className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-(--space-6) gap-y-(--space-5) py-(--space-6)"
+            >
+              {visibleColumns.map((column) => (
+                <m.div key={column.key} variants={columnVariants} className="min-w-0">
+                  <MenuColumn column={column} panelId={panelId} />
+                </m.div>
+              ))}
+            </m.div>
+          </MotionIsland>
         </Container>
       </div>
     </li>

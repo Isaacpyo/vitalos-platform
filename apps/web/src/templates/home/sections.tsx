@@ -34,7 +34,9 @@ import {
   ProofStrip,
   Reveal,
   Section,
+  RevealItem,
   SectionHeading,
+  SettleText,
   SolutionCard,
   TerminalCTA,
   TrustTopicRow,
@@ -78,17 +80,20 @@ const heading = (context: HomeContext, key: HomeSectionKey) => context.home.head
 
 /**
  * The proposition with its closing clause in the brand colour, as the comp sets the end of its
- * headline. Presentation only: the text (and so the accessible name) is the locked string.
+ * headline, its words settling into place on load. Presentation only: the text (and so the
+ * accessible name) is the locked string.
  */
 function PropositionTitle() {
   const split = proposition.lastIndexOf(" and ");
-  if (split === -1) return <>{proposition}</>;
-  return (
-    <>
-      {proposition.slice(0, split + 5)}
-      <span className="text-tone-link">{proposition.slice(split + 5)}</span>
-    </>
-  );
+  const parts =
+    split === -1
+      ? [{ text: proposition }]
+      : [
+          { text: proposition.slice(0, split + 5) },
+          { text: proposition.slice(split + 5), accent: true },
+        ];
+  // The words settle into place in under 400ms, drawn at full colour from the first paint (CSS).
+  return <SettleText parts={parts} />;
 }
 
 /**
@@ -120,7 +125,7 @@ export function HeroSection(): ReactNode {
         </div>
         <HeroVisual
           steps={aiJourneyStages}
-          className="aspect-[4/3] w-full sm:aspect-[3/2] lg:aspect-[4/5] lg:max-h-[36rem]"
+          className="aspect-[4/3] w-full sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>
     </Section>
@@ -196,7 +201,7 @@ function StrategyBand({
     <Section tone={tone} aria-labelledby={headingId}>
       <Container
         size="wide"
-        className="grid gap-x-(--space-8) gap-y-(--space-7) lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center"
+        className="grid gap-x-(--space-8) gap-y-(--space-7) xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:items-center"
       >
         <Reveal>
           <SectionHeading id={headingId} eyebrow={navLabels.howWeWork} title={title} />
@@ -207,26 +212,31 @@ function StrategyBand({
             </Button>
           </CTAGroup>
         </Reveal>
-        <Reveal delay={1}>
-          <ol
-            aria-label={navLabels.howWeWork}
-            className="m-0 grid list-none grid-cols-2 gap-x-(--space-5) gap-y-(--space-4) p-0 sm:grid-cols-3"
-          >
-            {howWeWorkStages.map((stage, index) => (
-              <li
-                key={stage}
-                className="flex min-w-0 items-center gap-(--space-3) border-t border-tone-border pt-(--space-4)"
+        {/* The delivery stages in order: their numbers pop in one after another (diagram
+            sequence, Stage 9 section 11); the stage names never move. */}
+        <Reveal
+          as="ol"
+          stagger={0.07}
+          delay={1}
+          aria-label={navLabels.howWeWork}
+          className="m-0 grid list-none grid-cols-2 gap-x-(--space-5) gap-y-(--space-4) p-0 sm:grid-cols-3"
+        >
+          {howWeWorkStages.map((stage, index) => (
+            <li
+              key={stage}
+              className="flex min-w-0 items-center gap-(--space-3) border-t border-tone-border pt-(--space-4)"
+            >
+              <RevealItem
+                as="span"
+                effect="pop"
+                aria-hidden="true"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg"
               >
-                <span
-                  aria-hidden="true"
-                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="min-w-0 text-body font-semibold text-tone-heading">{stage}</span>
-              </li>
-            ))}
-          </ol>
+                {String(index + 1).padStart(2, "0")}
+              </RevealItem>
+              <span className="min-w-0 text-body font-semibold text-tone-heading">{stage}</span>
+            </li>
+          ))}
         </Reveal>
       </Container>
     </Section>

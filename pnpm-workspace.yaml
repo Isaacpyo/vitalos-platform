@@ -14,3 +14,8 @@ overrides:
   smol-toml@<1.7.1: 1.7.1
   # pnpm 12 cannot re-resolve sanity's `ui5` npm alias (404s on "ui5"); pin it explicitly.
   ui5: npm:@sanity/ui@5.0.0-alpha.14
+  # motion is pinned exact (ADR-024); its own caret ranges would pull releases younger than two weeks.
+  motion@13.4.4>framer-motion: 13.4.4
+  framer-motion@13.4.4>motion-dom: 13.4.4
+  framer-motion@13.4.4>motion-utils: 13.3.0
+  motion-dom@13.4.4>motion-utils: 13.3.0

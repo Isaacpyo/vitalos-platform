@@ -88,6 +88,7 @@ export function renderThemeCss(): string {
   root.push(`  --size-button-lg: ${rem(b.heightLg)};`);
   root.push(`  --size-control: ${rem(component.control.height)};`);
   root.push(`  --size-header: ${rem(component.header.height)};`);
+  root.push(`  --size-header-condensed: ${rem(component.header.condensedHeight)};`);
   root.push(`  --focus-width: ${component.focus.outlineWidth}px;`);
   root.push(`  --focus-offset: ${component.focus.outlineOffset}px;`);
 
@@ -123,6 +124,32 @@ html {
 @keyframes hero-panel {
   from {
     translate: 0 0.75rem;
+  }
+}
+
+/* Hero headline settle (ADR-024): each word is visible from the first frame and only rises a
+   little into place (no opacity, no clip), so the largest text paints at once and stays legible. */
+@keyframes hero-word {
+  from {
+    translate: 0 0.3em;
+  }
+}
+
+/* Slow drift of the floating hero panel (ADR-024). Decorative, aria-hidden, behind motion-safe. */
+@keyframes hero-drift {
+  50% {
+    translate: 0 -0.375rem;
+  }
+}
+
+/* Print and reduced motion (ADR-024): an entrance that has not run yet (content never scrolled
+   to) or is mid-way must never clip or shift content on paper, nor once the visitor switches on
+   reduced motion while the page is open. Overrides the inline styles the Reveal islands set. */
+@media print, (prefers-reduced-motion: reduce) {
+  [data-reveal-state],
+  [data-reveal-item] {
+    clip-path: none !important;
+    transform: none !important;
   }
 }
 

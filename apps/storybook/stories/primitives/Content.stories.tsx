@@ -66,6 +66,20 @@ export const TagsAndMeta: Story = {
   ),
 };
 
+export const MetaRowNarrow: Story = {
+  name: "Meta row (320px, long labels wrap between words)",
+  render: () => (
+    <Frame width={240}>
+      <MetaRow
+        items={[
+          { label: "Engagement", value: "Example long engagement description (fixture)" },
+          { label: "Client", value: "Example client (fixture)" },
+        ]}
+      />
+    </Frame>
+  ),
+};
+
 export const Stats: Story = {
   render: () => (
     <OnEveryTone>

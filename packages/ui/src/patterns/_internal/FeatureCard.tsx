@@ -64,8 +64,12 @@ export function FeatureCard({
       {...(kind ? { "data-kind": kind } : {})}
       className={cx(
         "group relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-tone-border bg-tone-bg",
-        "transition-[border-color,translate] duration-(--duration-reveal) ease-(--ease-emphasis)",
-        "hover:-translate-y-1 hover:border-tone-action focus-within:border-tone-action motion-reduce:hover:translate-y-0",
+        // Hover and keyboard focus feedback alike (Stage 9 section 11: 100 to 180ms): a 4px lift,
+        // the action-coloured edge and the arrow sliding through its disc. Colour only under
+        // reduced motion.
+        "transition-[border-color,translate] duration-(--duration-feedback) ease-(--ease-emphasis)",
+        "hover:-translate-y-1 hover:border-tone-action focus-within:-translate-y-1 focus-within:border-tone-action",
+        "motion-reduce:hover:translate-y-0 motion-reduce:focus-within:translate-y-0",
         className,
       )}
     >
