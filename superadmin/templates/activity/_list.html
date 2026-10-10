@@ -1,0 +1,4 @@
+<ul id="activity-list" class="divide-y divide-slate-100 dark:divide-slate-800" data-testid="activity-feed">
+  {% include "activity/_page.html" %}
+  {% if not entries %}<li class="muted py-6 text-center text-sm">No activity matches these filters.</li>{% endif %}
+</ul>

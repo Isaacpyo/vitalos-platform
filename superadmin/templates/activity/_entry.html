@@ -1,0 +1,17 @@
+{% load humanize %}
+<li class="flex gap-3 py-3">
+  <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200" aria-hidden="true">{% if entry.actor %}{{ entry.actor.get_short_name|first|upper }}{% else %}·{% endif %}</span>
+  <div class="min-w-0 flex-1 text-sm">
+    <p>
+      <span class="font-medium">{% if entry.actor %}{{ entry.actor }}{% else %}System{% endif %}</span>
+      {{ entry.action }} {{ entry.model_label|lower }}
+      {% if entry.url %}<a href="{{ entry.url }}" class="font-medium text-vitalos-blue hover:underline dark:text-blue-400">{{ entry.object_label }}</a>{% else %}<span class="font-medium">{{ entry.object_label }}</span>{% endif %}
+    </p>
+    {% if entry.changes %}
+      <ul class="muted mt-1 space-y-0.5 text-xs">
+        {% for field, old, new in entry.changes|slice:":4" %}<li><span class="font-medium">{{ field }}</span>: {{ old|truncatechars:40 }} → {{ new|truncatechars:40 }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    <p class="muted mt-0.5 text-xs"><time datetime="{{ entry.when|date:'c' }}" title="{{ entry.when }}">{{ entry.when|naturaltime }}</time>{% if entry.reason and entry.reason not in "Archived Restored" %} · {{ entry.reason }}{% endif %}</p>
+  </div>
+</li>
