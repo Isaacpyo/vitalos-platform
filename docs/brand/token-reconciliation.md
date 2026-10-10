@@ -43,7 +43,7 @@ Spec aqua-600 `#007E76` is a data and intelligence accent, 4.9:1 on white and 4.
   - Sans (interface and brand): Geist, variable.
   - Serif (long-form thought leadership, `Prose serif`): Source Serif 4.
   - Mono (technical artefacts): Geist Mono.
-- Fallbacks follow the stack in `primitives.ts`: `ui-sans-serif`, `system-ui`, Segoe UI, Aptos (the Stage 7 office fallback), then generic families. The web app loads fonts through `next/font` and sets `--font-geist-sans`, `--font-geist-mono` and `--font-source-serif`; Storybook uses `@font-face` for Geist from the `geist` package and shows a system serif where Source Serif 4 is not bundled.
+- Fallbacks follow the stack in `primitives.ts`: `ui-sans-serif`, `system-ui`, Segoe UI, Aptos (the Stage 7 office fallback), then generic families. The web app loads Geist Sans and Geist Mono through `next/font` (the installed `geist` package, self-hosted) and sets `--font-geist-sans` and `--font-geist-mono`. **Source Serif 4 is not loaded in the web app yet** (`--font-source-serif` is unset, so `Prose serif` falls back to the system serif stack): `next/font/google` would download the font at build time, which this repository avoids until the owner confirms the typeface and its hosting. Storybook uses `@font-face` for Geist from the `geist` package and shows a system serif where Source Serif 4 is not bundled.
 - Needed from the owner: confirm the families, confirm licences (both families are published under open-source licences; verify the terms before launch), and approve rendering at the Stage 9 type roles. Changing families is a token and loader change, not a component change.
 
 ## Open: logo and favicon

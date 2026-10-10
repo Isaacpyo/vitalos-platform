@@ -39,3 +39,7 @@ Token changes require design review (ADR 008) and a passing contrast test. The b
 ## Revisit triggers
 
 The owner confirms or replaces `#2457FF` or the typefaces; Figma styles are reconciled and exported; a dark-mode or user-selectable theme becomes a requirement; token count or review load justifies an automated Figma-to-token pipeline (ADR 008).
+
+## Clarification (workstream G1)
+
+Decision 6 lists Source Serif 4 as part of the provisional set. In the web app only Geist Sans and Geist Mono are loaded (through the installed `geist` package and `next/font`); `--font-source-serif` is not set, so serif prose uses the stack's system fallback until the owner confirms the typeface and a build-time download or a bundled font file is approved. See `docs/brand/token-reconciliation.md`.
