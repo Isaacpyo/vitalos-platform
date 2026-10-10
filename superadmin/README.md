@@ -58,7 +58,7 @@ Or run `docker compose up --build`, which gives PostgreSQL 17 plus the app on ht
 
 ```sh
 ruff check . && ruff format --check .
-pytest                                          # 101 tests; DATABASE_URL=postgres://… to match CI
+pytest                                          # 110 tests; DATABASE_URL=postgres://… to match CI
 DJANGO_SETTINGS_MODULE=config.settings.prod … python manage.py check --deploy --fail-level WARNING
 pip-audit --strict -r requirements.txt
 bandit -r apps config -c pyproject.toml
@@ -69,6 +69,6 @@ CI also builds the image, runs the release job twice, checks a backup, and drive
 ## Management commands
 
 - `seed_architecture` loads the company profile, roles and six service lines. It is idempotent and never overwrites edits.
-- `create_superadmin [--email EMAIL] [--password]` creates or confirms the bootstrap SuperAdmin. The password is read **only** from `$BOOTSTRAP_ADMIN_PASSWORD`. `--password` is a flag that resets an existing account's password from that variable.
+- `create_superadmin [--email EMAIL] [--password]` creates the bootstrap SuperAdmin if it is missing, and otherwise leaves the account unchanged. The password is read **only** from `$BOOTSTRAP_ADMIN_PASSWORD`. `--password` is a flag that resets only an existing account's password from that variable.
 
 Decisions and assumptions: [docs/DECISIONS.md](docs/DECISIONS.md). Next phase: [docs/PHASE2.md](docs/PHASE2.md).

@@ -100,11 +100,11 @@ In GitHub, open **Settings → Environments → New environment `production`**. 
 - Secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `CLOUDFLARE_API_TOKEN`, and optionally `SENTRY_DSN`.
 - Variable: `AZURE_DEPLOYER_OBJECT_ID`.
 
-Merge the PR, then open **Actions → Super Admin deploy → Run workflow** on `main`. Type `DEPLOY` and keep **smoke test** ticked. Approve the environment gate.
+Merge the PR, then open **Actions → Super Admin deploy → Run workflow** on `main`. Type `DEPLOY`, and tick **smoke test** on this first run only. Approve the environment gate.
 
 The workflow provisions everything, deploys and waits for valid HTTPS. It then runs `e2e/smoke.py` against the live URL and uploads screenshots as an artifact. Copy those screenshots into `superadmin/docs/screenshots/live/`.
 
-Run the live smoke test **before** your own first sign-in. It enrols a temporary authenticator on the bootstrap account and removes it at the end, so that your first sign-in enrols your own. After you have enrolled, run later deploys with **smoke test** unticked.
+Run the live smoke test **before** your own first sign-in. It enrols a temporary authenticator on the bootstrap account and removes it at the end, so that your first sign-in enrols your own. Once a real authenticator exists, the smoke step reports *skipped* rather than failing. Screenshot artifacts are kept for 7 days. Leave **smoke test** unticked for later deploys, so that screenshots of real (possibly Confidential) data are never captured.
 
 ### 2.2 Option B: run the script yourself
 
@@ -129,10 +129,10 @@ Optional overrides: `AZ_NAME_PREFIX`, `AZ_RESOURCE_GROUP`, `AZ_LOCATION`, `CUSTO
 3. Creates `az postgres flexible-server create --version 17 --tier Burstable --sku-name Standard_B1ms --storage-size 32 --backup-retention 14 --public-access 0.0.0.0` (Azure services only), then the `superadmin` database. It stores `database-url` as `postgres://vitalosadmin:…@psql-vitalossa.postgres.database.azure.com:5432/superadmin?sslmode=require`.
 4. Builds and pushes the image with `docker buildx build --platform linux/amd64 --push`, tagged `<registry>/superadmin:<git sha>`.
 5. Creates Log Analytics and the Container Apps environment.
-6. Creates and runs the **release job** `/app/bin/release.sh` and waits for `Succeeded`. Migrations always run before the new code takes traffic.
+6. Creates and runs the **release job** `/app/bin/release.sh` and waits for `Succeeded`. Migrations always run before the new code takes traffic. `create_superadmin` only creates the bootstrap account if it is missing. It never re-activates, re-promotes or changes an existing account, so a deliberate deactivation survives redeploys.
 7. Creates or updates the **container app** with the new image.
 8. Creates the storage account and `backups` share, mounts it in the environment and creates the **backup job** from `deploy/azure/backup-job.yaml`.
-9. Writes the DNS records. Without a Cloudflare token it prints them and exits; create them, then re-run:
+9. Writes the DNS records. If a record with the same name already points somewhere else, the script stops rather than overwrite it; check what uses that record, then re-run with `DNS_OVERWRITE=1`. Without a Cloudflare token it prints the records and exits; create them, then re-run:
 
    | Type  | Name          | Value                                                                           |
    | ----- | ------------- | ------------------------------------------------------------------------------- |

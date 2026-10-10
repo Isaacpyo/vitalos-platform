@@ -56,7 +56,7 @@ Each integration is a provider adapter behind an interface. It uses server-side 
 ## Platform hardening carried over from Phase 1
 
 - Convert `deploy/azure/deploy.sh` to Terraform under `infra/`, as ADR-012 requires, before adding a staging environment. Add a staging environment with copied seed data only.
-- Private networking: Container Apps VNet integration and a PostgreSQL private endpoint, then remove the Azure-services firewall rule.
+- Private networking: Container Apps VNet integration and a PostgreSQL private endpoint, then remove the Azure-services firewall rule. Connect as a least-privilege application role, keeping the server admin for break-glass only.
 - GIN indexes on the search vectors when data volume warrants it. Track M2M history for team membership.
 - Optional WAF and rate limiting at the edge, after testing with Cloudflare (ADR-007).
 - Enable repository code scanning (CodeQL) so that the existing `analyze` job turns green.
