@@ -1,33 +1,17 @@
 @import "tailwindcss";
 @import "@vitalos/design-tokens/theme.css";
+@import "@vitalos/design-tokens/tailwind-theme.css";
 
 /* Tailwind scans the shared UI package for utility classes (apps and packages are separate roots). */
 @source "../../../packages/ui/src";
-
-/*
- * Tailwind theme, mapped onto the design-token CSS variables from @vitalos/design-tokens.
- * `inline` keeps utilities pointing at the variables so the token package stays the single
- * source of values. Workstream A replaces this block with the generated tailwind-theme.css.
- */
-@theme inline {
-  --color-midnight: var(--color-midnight);
-  --color-blue: var(--color-blue);
-  --color-aqua: var(--color-aqua);
-  --color-cloud: var(--color-cloud);
-  --color-slate: var(--color-slate);
-  --color-surface: var(--color-surface);
-  --color-ink: var(--color-text);
-  --color-hairline: var(--color-border);
-  --font-sans: var(--font-sans);
-}
 
 @layer base {
   html {
     scroll-behavior: smooth;
   }
   body {
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: var(--tone-bg);
+    color: var(--tone-text);
     font-family: var(--font-sans);
     line-height: 1.6;
   }
@@ -41,8 +25,8 @@
   .skip-link:focus {
     left: 1rem;
     top: 1rem;
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: var(--tone-bg);
+    color: var(--tone-text);
     padding: 0.75rem;
     z-index: 10;
   }
