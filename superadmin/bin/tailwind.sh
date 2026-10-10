@@ -35,6 +35,6 @@ if [ ! -x "$BIN" ] || [ "$(cat bin/.tailwind-version 2>/dev/null)" != "$VERSION-
 fi
 
 if [ "${1:-}" = "--watch" ]; then
-  exec "$BIN" -i static/css/input.css -o static/css/app.css --watch
+  exec "$BIN" -i assets/tailwind.css -o static/css/app.css --watch
 fi
-exec "$BIN" -i static/css/input.css -o static/css/app.css --minify
+exec "$BIN" -i assets/tailwind.css -o static/css/app.css --minify

@@ -15,9 +15,12 @@ CSRF_TRUSTED_ORIGINS = env.list(
 def _local_secret_key() -> str:
     """Keep a per-checkout random key in an ignored file so sessions survive restarts."""
     path = BASE_DIR / ".dev_secret_key"
-    if not path.exists():
-        path.write_text(secrets.token_urlsafe(50))
-    return path.read_text().strip()
+    try:
+        if not path.exists():
+            path.write_text(secrets.token_urlsafe(50))
+        return path.read_text().strip()
+    except OSError:  # read-only checkout (e.g. a container mount): sessions reset on restart
+        return secrets.token_urlsafe(50)
 
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="") or _local_secret_key()

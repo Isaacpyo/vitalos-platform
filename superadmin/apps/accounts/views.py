@@ -55,7 +55,7 @@ def _second_factor_redirect(request, user):
     return HttpResponseRedirect(f"{reverse(name)}?{urlencode({'next': _next_url(request)})}")
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "HEAD", "POST"])
 def login_view(request):
     user = request.user
     if user.is_authenticated:

@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 /* Scan templates and Python (form widgets, badge helpers) for class names. */
-@source "../../templates";
-@source "../../apps";
-@source "../js";
+@source "../templates";
+@source "../apps";
+@source "../static/js";
 
 @theme {
   --color-vitalos-blue: #2457ff;
