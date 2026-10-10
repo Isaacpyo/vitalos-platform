@@ -9,6 +9,7 @@ Private production-platform monorepo for **Vitalos — Technology Consulting, En
 - `apps/storybook`: private-by-default shared-component workbench.
 - `packages/*`: tokens, UI, validated configuration/input, CMS, security, observability and test fixtures.
 - `supabase`: local PostgreSQL 17 configuration and locked-down enquiry/outbox migration.
+- `superadmin`: internal Django Super Admin for the Vitalos company architecture (`admin.vitalos.co.uk`); see `superadmin/README.md` and ADR-016.
 
 No production site, DNS, CMS dataset, database or deployment is changed by this repository.
 
