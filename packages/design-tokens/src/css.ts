@@ -157,13 +157,6 @@ export function renderTailwindThemeCss(): string {
 
   // Inline: utilities must resolve per element, so they keep the var() reference.
   const inline: string[] = [];
-  inline.push("  /* Legacy aliases (interim homepage); remove when G2a lands. */");
-  inline.push("  --color-midnight: var(--color-midnight-950);");
-  inline.push("  --color-blue: var(--color-blue-600);");
-  inline.push("  --color-aqua: var(--color-aqua-600);");
-  inline.push("  --color-cloud: var(--color-cloud-50);");
-  inline.push("  --color-slate: var(--color-slate-700);");
-  inline.push("  --color-hairline: var(--color-border);");
   inline.push("  /* Tone roles: bg-tone-bg, text-tone-heading, border-tone-border, ... */");
   for (const role of Object.keys(tones.light) as ToneRoleName[]) {
     inline.push(`  --color-tone-${kebab(role)}: var(${toneVar(role)});`);

@@ -78,13 +78,6 @@
 }
 
 @theme inline {
-  /* Legacy aliases (interim homepage); remove when G2a lands. */
-  --color-midnight: var(--color-midnight-950);
-  --color-blue: var(--color-blue-600);
-  --color-aqua: var(--color-aqua-600);
-  --color-cloud: var(--color-cloud-50);
-  --color-slate: var(--color-slate-700);
-  --color-hairline: var(--color-border);
   /* Tone roles: bg-tone-bg, text-tone-heading, border-tone-border, ... */
   --color-tone-bg: var(--tone-bg);
   --color-tone-text: var(--tone-text);

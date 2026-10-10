@@ -94,11 +94,11 @@ test.describe("work", () => {
   test("filters client-side without changing the URL or adding query pages", async ({ page }) => {
     await page.goto("/work");
     const url = page.url();
-    const solution = page.getByLabel("Solution");
+    const solution = page.locator("main").getByLabel("Solution");
     await expect(solution).toBeVisible();
     await solution.selectOption({ index: 1 });
     await expect(page.locator("main li[hidden]")).toHaveCount(1);
-    await expect(page.getByRole("status")).toContainText("Showing 1 of 2");
+    await expect(page.locator("main").getByRole("status")).toContainText("Showing 1 of 2");
     expect(page.url()).toBe(url);
     await solution.selectOption("");
     await expect(page.locator("main li[hidden]")).toHaveCount(0);
@@ -174,17 +174,16 @@ test.describe("people", () => {
     await expect(page.locator('[data-kind="person-hero"] img')).toHaveCount(0);
     await expect(page.getByText("Example role (fixture)")).toBeVisible();
     await expect(page.getByText("Artificial biography paragraph")).toBeVisible();
-    await expect(page.getByRole("link", { name: "example.invalid" })).toHaveAttribute(
-      "href",
-      /^https:\/\/example\.invalid\//,
-    );
+    await expect(
+      page.locator("main").getByRole("link", { name: "example.invalid" }),
+    ).toHaveAttribute("href", /^https:\/\/example\.invalid\//);
     const profile = await jsonLd(page, "ProfilePage");
     expect(JSON.stringify(profile)).toContain("Example Person");
   });
 
   test("a bare profile shows no empty sections and no unverified links", async ({ page }) => {
     await page.goto(PERSON_BARE);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(0);
+    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
     await expect(page.locator('main a[href^="https://"]')).toHaveCount(0);
   });
 
@@ -206,7 +205,7 @@ test.describe("labs", () => {
     const url = page.url();
     await page.getByLabel("Maturity").selectOption("prototype");
     await expect(page.locator("main li[hidden]")).toHaveCount(1);
-    await expect(page.getByRole("status")).toContainText("Showing 1 of 2");
+    await expect(page.locator("main").getByRole("status")).toContainText("Showing 1 of 2");
     expect(page.url()).toBe(url);
   });
 

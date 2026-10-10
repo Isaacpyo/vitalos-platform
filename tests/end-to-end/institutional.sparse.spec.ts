@@ -72,7 +72,7 @@ test.describe("sparse content", () => {
     await page.goto("/trust/security");
     await expect(page.getByRole("heading", { name: "Certifications" })).toHaveCount(0);
     await expect(page.getByRole("table")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(0);
+    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
   });
 
   test("the trust overview still offers the controlled evidence request", async ({ page }) => {

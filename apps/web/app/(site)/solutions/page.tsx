@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { routes } from "@vitalos/cms";
+import { JsonLd } from "../../../src/components/json-ld";
+import { loadChromeContent } from "../../../src/components/site-chrome/load";
+import { isDraftModeEnabled } from "../../../src/lib/cms/draft";
+import { structuralLabels } from "../../../src/lib/view-mapping/labels";
+import { loadRoutePage } from "../../../src/templates/commercial/load";
+import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import {
+  SolutionIndexTemplate,
+  solutionsTrail,
+} from "../../../src/templates/solution/SolutionIndexTemplate";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await loadRoutePage("solutions");
+  return pageMetadata({
+    path: routes.solutions(),
+    title: page?.heading ?? structuralLabels.solutions,
+    seo: page?.seo,
+  });
+}
+
+export default async function SolutionsPage() {
+  const [page, { solutions }, draft] = await Promise.all([
+    loadRoutePage("solutions"),
+    loadChromeContent(),
+    isDraftModeEnabled(),
+  ]);
+  if (!page && solutions.length === 0 && !draft) notFound();
+  return (
+    <>
+      <JsonLd data={breadcrumbNode(solutionsTrail())} />
+      <SolutionIndexTemplate page={page} solutions={solutions} draft={draft} />
+    </>
+  );
+}

@@ -15,6 +15,10 @@ test("corporate shell shows the locked hero hierarchy and navigation", async ({ 
   await expect(page.getByText("From strategy to production.", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Talk to Vitalos" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Explore what we do" })).toBeVisible();
+  // The compact viewport keeps the navigation behind the Menu disclosure (MobileNav).
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+  }
   await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
 });
 

@@ -57,10 +57,12 @@ test.describe("about and leadership", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Example about heading (fixture)",
     );
-    await expect(page.getByRole("link", { name: "Example Person (fixture)" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Trust Centre" })).toBeVisible();
+    await expect(
+      page.locator("main").getByRole("link", { name: "Example Person (fixture)" }),
+    ).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: "Trust Centre" })).toBeVisible();
     // Careers has open roles in the full set, so it is linked.
-    await expect(page.getByRole("link", { name: "Careers" })).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: "Careers" })).toBeVisible();
   });
 
   test("leadership lists leadership profiles only", async ({ page }) => {

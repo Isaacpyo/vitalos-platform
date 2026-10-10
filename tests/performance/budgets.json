@@ -1,4 +1,13 @@
 {
+  "_rationale": "G2a measured (gzip, fixtures, chromium): / 145287; /offers/*, /industries/* 145287; /what-we-do, /what-we-do/*, /solutions/*, /how-we-work 151639 (adds the RichText/CmsImage client chunk). The shell adds only the active-section header and the MegaMenu island. Budgets are the measured value plus about 8 percent headroom.",
   "default": { "maxJsGzipBytes": 175000 },
-  "routes": { "/": { "maxJsGzipBytes": 160000 } }
+  "routes": {
+    "/": { "maxJsGzipBytes": 160000 },
+    "/what-we-do": { "maxJsGzipBytes": 165000 },
+    "/what-we-do/example-practice": { "maxJsGzipBytes": 165000 },
+    "/solutions/example-solution": { "maxJsGzipBytes": 165000 },
+    "/offers/example-offer": { "maxJsGzipBytes": 160000 },
+    "/industries/example-industry": { "maxJsGzipBytes": 160000 },
+    "/how-we-work": { "maxJsGzipBytes": 165000 }
+  }
 }
