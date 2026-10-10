@@ -18,13 +18,13 @@
     "@vitalos/validation": "workspace:*",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.2.8",
+    "react-dom": "19.3.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.2.7",
+    "@types/react-dom": "19.3.0",
     "@vitalos/eslint-config": "workspace:*",
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",

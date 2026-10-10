@@ -12,7 +12,7 @@
   "dependencies": {
     "@vitalos/cms": "workspace:*",
     "react": "19.3.0",
-    "react-dom": "19.2.8",
+    "react-dom": "19.3.0",
     "sanity": "6.18.0",
     "styled-components": "6.5.3"
   },

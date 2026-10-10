@@ -15,7 +15,7 @@
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/ui": "workspace:*",
     "react": "19.3.0",
-    "react-dom": "19.2.8",
+    "react-dom": "19.3.0",
     "storybook": "10.6.1"
   },
   "devDependencies": {
