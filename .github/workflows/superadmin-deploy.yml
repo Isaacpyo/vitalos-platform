@@ -1,0 +1,67 @@
+name: Super Admin deploy
+# Manual production deploy of superadmin/ to Azure Container Apps (UK South) and admin.vitalos.co.uk.
+# Never runs automatically. Requires the "production" GitHub environment (with required reviewers)
+# holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC federated credential) and
+# CLOUDFLARE_API_TOKEN secrets plus the AZURE_DEPLOYER_OBJECT_ID variable. See superadmin/docs/DEPLOY.md.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type DEPLOY to deploy the selected ref to https://admin.vitalos.co.uk
+        required: true
+      smoke_test:
+        description: Run the browser smoke test against the live URL afterwards
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: superadmin-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://admin.vitalos.co.uk
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Provision and deploy
+        env:
+          AZ_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_DEPLOYER_OBJECT_ID: ${{ vars.AZURE_DEPLOYER_OBJECT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: superadmin/deploy/azure/deploy.sh
+      - uses: actions/setup-python@v6
+        if: inputs.smoke_test
+        with:
+          python-version: "3.12"
+      - name: Live smoke test
+        if: inputs.smoke_test
+        working-directory: superadmin
+        run: |
+          password="$(az keyvault secret show --vault-name "${AZ_KEY_VAULT:-kv-vitalossa}" --name bootstrap-admin-password --query value -o tsv)"
+          echo "::add-mask::$password"
+          pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+          SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL=superadmin-owner@example.invalid SMOKE_PASSWORD="$password" \
+            python e2e/smoke.py --screenshots "$RUNNER_TEMP/screenshots"
+      - name: Upload screenshots
+        if: always() && inputs.smoke_test
+        uses: actions/upload-artifact@v4
+        with:
+          name: superadmin-live-smoke-screenshots
+          path: ${{ runner.temp }}/screenshots
+          if-no-files-found: ignore
+          retention-days: 30

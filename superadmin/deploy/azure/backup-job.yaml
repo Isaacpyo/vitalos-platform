@@ -1,0 +1,48 @@
+# Scheduled Container Apps job: nightly pg_dump to the "backups" Azure Files share (bin/backup.sh).
+# Placeholders (__NAME__) are filled in by deploy.sh. The cron schedule is in UTC.
+location: __LOCATION__
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    __IDENTITY_ID__: {}
+properties:
+  environmentId: __CAE_ID__
+  configuration:
+    triggerType: Schedule
+    replicaTimeout: 1800
+    replicaRetryLimit: 1
+    scheduleTriggerConfig:
+      cronExpression: "15 2 * * *"
+      parallelism: 1
+      replicaCompletionCount: 1
+    registries:
+      - server: __ACR_SERVER__
+        identity: __IDENTITY_ID__
+    secrets:
+      - name: database-url
+        keyVaultUrl: __KV_URI__/secrets/database-url
+        identity: __IDENTITY_ID__
+  template:
+    containers:
+      - name: backup
+        image: __IMAGE__
+        command: ["/app/bin/backup.sh"]
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+        env:
+          - name: DATABASE_URL
+            secretRef: database-url
+          - name: BACKUP_DIR
+            value: /backups
+          - name: BACKUP_RETENTION_DAYS
+            value: "14"
+        volumeMounts:
+          - volumeName: backups
+            mountPath: /backups
+    volumes:
+      - name: backups
+        storageType: AzureFile
+        storageName: backups
+        # The image runs as uid/gid 10001; SMB mounts need explicit ownership to be writable.
+        mountOptions: "uid=10001,gid=10001,dir_mode=0750,file_mode=0640"
