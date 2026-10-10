@@ -27,6 +27,7 @@
     "check": "corepack pnpm format:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm check:boundaries"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
     "@vitalos/eslint-config": "workspace:*",
     "dependency-cruiser": "17.1.0",

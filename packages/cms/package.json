@@ -5,7 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schemas": "./src/schemaTypes/index.ts"
+    "./schemas": "./src/schemaTypes/index.ts",
+    "./structure": "./src/structure.ts",
+    "./queries": "./src/queries/index.ts",
+    "./presentation": "./src/presentation.ts",
+    "./fixtures": "./src/fixtures/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -14,9 +18,12 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@sanity/client": "8.9.0",
+    "groq": "6.18.0",
     "sanity": "6.18.0"
   },
   "devDependencies": {
+    "@types/node": "24.19.1",
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",
     "typescript": "5.9.2",

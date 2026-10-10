@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import "./styles.css";
+import { descriptor, brandName } from "@vitalos/cms";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Vitalos", template: "%s | Vitalos" },
-  description: "Technology Consulting, Engineering & Digital Transformation",
+  title: { default: brandName, template: `%s | ${brandName}` },
+  description: descriptor,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

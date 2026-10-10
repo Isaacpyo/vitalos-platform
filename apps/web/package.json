@@ -11,17 +11,26 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@sanity/client": "8.9.0",
+    "@sanity/image-url": "2.1.1",
+    "@supabase/supabase-js": "2.117.3",
+    "@vitalos/cms": "workspace:*",
     "@vitalos/config": "workspace:*",
     "@vitalos/design-tokens": "workspace:*",
+    "@vitalos/observability": "workspace:*",
     "@vitalos/security": "workspace:*",
     "@vitalos/ui": "workspace:*",
     "@vitalos/validation": "workspace:*",
+    "geist": "1.7.2",
     "next": "16.4.0",
+    "next-sanity": "13.3.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "styled-components": "6.5.3",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -29,6 +38,7 @@
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",
     "eslint-config-next": "16.4.0",
+    "tailwindcss": "4.3.3",
     "typescript": "5.9.2",
     "vitest": "3.2.6"
   }

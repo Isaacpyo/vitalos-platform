@@ -14,15 +14,18 @@
     "@storybook/react-vite": "10.6.1",
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/ui": "workspace:*",
+    "geist": "1.7.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "storybook": "10.6.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",
     "@vitalos/eslint-config": "workspace:*",
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",
+    "tailwindcss": "4.3.3",
     "typescript": "5.9.2",
     "vitest": "3.2.6"
   }

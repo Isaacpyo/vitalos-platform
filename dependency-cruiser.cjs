@@ -1,3 +1,9 @@
+/**
+ * Matches an npm package whether dependency-cruiser resolved it into node_modules or left it
+ * unresolved (some ESM-only packages stay unresolved but keep their bare module name).
+ */
+const pkg = (names) => `(^|/)node_modules/(${names})(/|$)|^(${names})(/|$)`;
+
 module.exports = {
   forbidden: [
     { name: "no-circular", severity: "error", from: {}, to: { circular: true } },
@@ -13,10 +19,60 @@ module.exports = {
       from: { path: "/(domain|features)/" },
       to: { path: "packages/ui" },
     },
+    {
+      name: "no-package-to-app",
+      comment: "Shared packages must not depend on applications.",
+      severity: "error",
+      from: { path: "^packages/" },
+      to: { path: "^apps/" },
+    },
+    {
+      name: "web-no-sanity",
+      comment:
+        "The public web app must never import the Sanity Studio SDK. Use @vitalos/cms (view models, ContentSource) and next-sanity.",
+      severity: "error",
+      from: { path: "^apps/web/" },
+      to: { path: pkg("sanity") },
+    },
+    {
+      name: "web-no-cms-studio-internals",
+      comment:
+        "apps/web may only use the Sanity-free @vitalos/cms entry, never schemas, structure or presentation.",
+      severity: "error",
+      from: { path: "^apps/web/" },
+      to: {
+        path: "^packages/cms/src/(schemaTypes|structure|presentation|actions)(/|\\.|$)",
+      },
+    },
+    {
+      name: "cms-public-entry-no-sanity",
+      comment:
+        "The @vitalos/cms root entry (routes, navigation, locked copy, content types) must stay free of Sanity so it is safe in web bundles.",
+      severity: "error",
+      from: {
+        path: "^packages/cms/src/(index|routes|navigation|locked-copy)\\.ts$|^packages/cms/src/content/",
+      },
+      to: { path: pkg("sanity|groq|@sanity") },
+    },
+    {
+      name: "ui-no-framework-or-platform",
+      comment:
+        "packages/ui is presentation only: no Next.js, CMS, config or Supabase. Links are plain anchors.",
+      severity: "error",
+      from: { path: "^packages/ui/" },
+      to: { path: `${pkg("next|@supabase|@vitalos/cms|@vitalos/config")}|^packages/(cms|config)/` },
+    },
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    exclude: "(^|/)(node_modules|.next|storybook-static|dist)(/|$)",
+    // node_modules stays in the graph (as unfollowed leaves) so rules can forbid specific packages.
+    exclude: "(^|/)(\\.next|storybook-static|dist)(/|$)",
     tsPreCompilationDeps: true,
+    // Resolve workspace packages through their `exports` map (e.g. @vitalos/cms/schemas) so
+    // rules see real file paths instead of unresolved bare module names.
+    enhancedResolveOptions: {
+      exportsFields: ["exports"],
+      conditionNames: ["import", "require", "node", "default"],
+    },
   },
 };

@@ -4,7 +4,13 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./redact": "./src/redact.ts",
+    "./url": "./src/url.ts",
+    "./headers": "./src/headers.ts",
+    "./csp": "./src/csp.ts",
+    "./turnstile": "./src/turnstile.ts",
+    "./rate-limit": "./src/rate-limit.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
