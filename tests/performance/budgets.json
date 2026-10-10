@@ -1,0 +1,4 @@
+{
+  "default": { "maxJsGzipBytes": 175000 },
+  "routes": { "/": { "maxJsGzipBytes": 160000 } }
+}
