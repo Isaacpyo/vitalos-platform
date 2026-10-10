@@ -177,6 +177,7 @@ describe("buildSitemap", () => {
     { path: "/work/example", kind: "caseStudy" },
     { path: "/insights/example", kind: "insight" },
     { path: "/labs/research/example", kind: "labAsset" },
+    { path: "/labs/research", kind: "route", lastModified: "2026-03-01" },
     { path: "/industries/example", kind: "industry" },
     { path: "/careers/example", kind: "job" },
     { path: "/people/example", kind: "person" },
@@ -198,6 +199,10 @@ describe("buildSitemap", () => {
     expect(urls(sitemap)).toContain("https://www.example.invalid/work/example");
     expect(urls(sitemap)).toContain("https://www.example.invalid/about/leadership");
     expect(urls(sitemap)).toContain("https://www.example.invalid/legal/privacy");
+    expect(urls(sitemap)).toContain("https://www.example.invalid/labs/research");
+    expect(sitemap.find((e) => e.url.endsWith("/labs/research"))?.lastModified).toEqual(
+      new Date("2026-03-01T00:00:00Z"),
+    );
     expect(sitemap.find((e) => e.url.endsWith("/what-we-do/consulting"))?.lastModified).toEqual(
       new Date("2026-02-01T00:00:00Z"),
     );
@@ -226,6 +231,19 @@ describe("buildSitemap", () => {
     expect(list).toContain("https://www.example.invalid/work");
     expect(list).toContain("https://www.example.invalid/work/example");
     expect(list.some((url) => url.includes("/insights"))).toBe(false);
+    expect(list.some((url) => url.includes("/labs"))).toBe(false);
+  });
+
+  it("lists /labs/<type> only while the Labs gate is open", () => {
+    const labsOnly = evaluateGates({ labs: 1 });
+    const open = urls(
+      buildSitemap({ siteUrl, gates: labsOnly, hasHome: true, routePages: all, entries }),
+    );
+    expect(open).toContain("https://www.example.invalid/labs/research");
+    const closed = urls(
+      buildSitemap({ siteUrl, gates: closedGates, hasHome: true, routePages: all, entries }),
+    );
+    expect(closed.some((url) => url.includes("/labs"))).toBe(false);
   });
 
   it("does not list pages that have no document (empty content yields an empty sitemap)", () => {

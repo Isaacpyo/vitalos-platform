@@ -2,6 +2,7 @@
  * Mappers for site chrome, route pages, the homepage, gate counts, summaries lists and the sitemap.
  */
 import { evaluateGates, gateForKind, gateKeys, isSitemapEligible } from "../gates";
+import { isJobSitemapEligible, labTypeSitemapEntries } from "../sitemap-rules";
 import type { GateKey, PublicationGates } from "../gates";
 import { homeSections } from "../../locked-copy";
 import type { HomeSectionKey } from "../../locked-copy";
@@ -289,6 +290,7 @@ export function mapSitemap(
   ctx: MapContext,
 ): SitemapEntry[] {
   const entries: SitemapEntry[] = [];
+  const labAssets: { labType: string; updatedAt: string | undefined }[] = [];
   const seen = new Set<string>();
   for (const kind of sitemapKinds) {
     if (!isSitemapEligible(gateForKind(kind), gates)) continue;
@@ -300,6 +302,8 @@ export function mapSitemap(
       ) {
         continue;
       }
+      // Closed or expired roles keep their page but are not listed.
+      if (kind === "job" && !isJobSitemapEligible(entry, ctx.today)) continue;
       const ref = refFor(kind, entry as Record<string, unknown>);
       if (ref === undefined) continue;
       const path = hrefForDocument(ref);
@@ -307,6 +311,15 @@ export function mapSitemap(
       seen.add(path);
       const lastModified = text(entry.updatedAt);
       entries.push(clean<SitemapEntry>({ path, kind, lastModified }));
+      if (ref.kind === "labAsset")
+        labAssets.push({ labType: ref.labType, updatedAt: lastModified });
+    }
+  }
+  // `/labs/<type>` category pages: gate open and at least one listed asset of the type.
+  for (const entry of labTypeSitemapEntries(labAssets, gates)) {
+    if (!seen.has(entry.path)) {
+      seen.add(entry.path);
+      entries.push(entry);
     }
   }
   return entries;

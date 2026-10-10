@@ -693,7 +693,68 @@ describe("pages", () => {
       "/work/c1",
       "/labs/research/l1",
       "/trust/security",
+      "/labs/research",
     ]);
+  });
+
+  it("leaves closed and expired jobs out of the sitemap (closing today is still open)", () => {
+    const job = (slug: string, extra: Record<string, unknown> = {}) => ({
+      slug,
+      updatedAt: "2026-01-01",
+      editorialStatus: "approved",
+      status: "open",
+      ...extra,
+    });
+    const raw = {
+      job: [
+        job("open-no-date"),
+        job("open-future", { validThrough: "2026-12-31" }),
+        job("closes-today", { validThrough: "2026-10-10" }),
+        job("closes-today-datetime", { validThrough: "2026-10-10T23:59:00Z" }),
+        job("expired", { validThrough: "2026-10-09" }),
+        job("closed", { status: "closed" }),
+        job("no-status", { status: null }),
+      ],
+    };
+    const paths = mapSitemap(raw, evaluateGates({ careers: 1 }), ctx).map((e) => e.path);
+    expect(paths).toEqual([
+      "/careers/open-no-date",
+      "/careers/open-future",
+      "/careers/closes-today",
+      "/careers/closes-today-datetime",
+    ]);
+  });
+
+  it("adds /labs/<type> only for types with a listed asset and only while Labs is open", () => {
+    const asset = (slug: string, labType: string, extra: Record<string, unknown> = {}) => ({
+      slug,
+      labType,
+      updatedAt: "2026-01-01",
+      editorialStatus: "approved",
+      classification: "public",
+      ...extra,
+    });
+    const raw = {
+      labAsset: [
+        asset("a", "experiments", { updatedAt: "2026-03-01" }),
+        asset("b", "experiments", { updatedAt: "2026-02-01" }),
+        asset("c", "research", { noindex: true }),
+        asset("d", "demonstrators", { classification: "controlled" }),
+        asset("e", "not-a-type"),
+      ],
+    };
+    const open = mapSitemap(raw, evaluateGates({ labs: 1 }), ctx);
+    expect(open.map((e) => e.path)).toEqual([
+      "/labs/experiments/a",
+      "/labs/experiments/b",
+      "/labs/experiments",
+    ]);
+    expect(open.at(-1)).toEqual({
+      path: "/labs/experiments",
+      kind: "route",
+      lastModified: "2026-03-01",
+    });
+    expect(mapSitemap(raw, evaluateGates(), ctx)).toEqual([]);
   });
 });
 

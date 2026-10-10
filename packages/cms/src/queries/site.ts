@@ -77,7 +77,8 @@ export const homePageQuery = defineQuery(`*[_type == "homePage" && ${ok}][0]{
 
 /**
  * Every public document that has a detail route, for the sitemap. The source drops documents of a
- * closed gate and anything marked `noindex`.
+ * closed gate, anything marked `noindex`, and closed or expired jobs (`status` and
+ * `validThrough` are projected so the shared `isJobOpenOn` rule decides).
  */
 export const sitemapQuery = defineQuery(`{
   "practice": *[_type == "practice" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
@@ -89,6 +90,6 @@ export const sitemapQuery = defineQuery(`{
   "person": *[_type == "person" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "labAsset": *[_type == "labAsset" && ${okLab}]{ "slug": slug.current, labType, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus, "classification": evidence.classification },
   "trustItem": *[_type == "trustItem" && ${okEvidence}]{ topic, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus, "classification": evidence.classification },
-  "job": *[_type == "job" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
+  "job": *[_type == "job" && ${ok}]{ "slug": slug.current, status, validThrough, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "legalPage": *[_type == "legalPage" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus }
 }`);

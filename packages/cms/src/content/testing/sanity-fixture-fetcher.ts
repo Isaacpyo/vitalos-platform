@@ -458,6 +458,9 @@ export function createFixtureSanityFetcher(set: FixtureSet): SanityFetcher {
                     slug: doc.slug ?? null,
                     topic: doc.topic ?? null,
                     labType: doc.labType ?? null,
+                    // Jobs only in the GROQ; the mapper ignores them for other kinds.
+                    status: kind === "job" ? (doc.status ?? null) : null,
+                    validThrough: kind === "job" ? (doc.validThrough ?? null) : null,
                     updatedAt: doc.updatedAt ?? null,
                     noindex: seo.noindex ?? null,
                     editorialStatus: APPROVED,

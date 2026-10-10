@@ -2,6 +2,7 @@
  * Detail mappers: raw projected document -> public view model, or `null` when the document may
  * not be public (wrong status, controlled, incomplete in a published read).
  */
+import { isJobOpenOn } from "../sitemap-rules";
 import { labTypes, legalSlugs, trustTopics } from "../../routes";
 import { labMaturities } from "../types";
 import type {
@@ -333,14 +334,12 @@ export function mapTrustItem(raw: Maybe<RawTrustItem>, ctx: MapContext): TrustTo
   });
 }
 
-/** A job is open only while its status is open and `validThrough` has not passed. */
+/** A job is open only while its status is open and `validThrough` has not passed (inclusive). */
 export function isJobOpen(
   raw: { status?: Maybe<string>; validThrough?: Maybe<string> },
   ctx: MapContext,
 ): boolean {
-  if (raw.status !== "open") return false;
-  const validThrough = text(raw.validThrough);
-  return validThrough === undefined || datePart(validThrough) >= ctx.today;
+  return isJobOpenOn(raw, ctx.today);
 }
 
 export function mapJob(raw: Maybe<RawJob>, ctx: MapContext): JobView | null {

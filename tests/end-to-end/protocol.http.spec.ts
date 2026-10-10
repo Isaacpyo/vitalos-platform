@@ -72,12 +72,32 @@ test.describe("retired paths answer 410 Gone (ADR-018)", () => {
 
 test.describe("404 page", () => {
   test("unknown URLs answer 404 with the not-found page, not a soft 200", async ({ request }) => {
-    for (const path of ["/this-page-does-not-exist", "/what-we-do/no-such-practice", "/a/b/c/d"]) {
+    // Unmatched URLs are answered by the root not-found, which carries the site header and footer
+    // in the server-rendered HTML.
+    for (const path of ["/this-page-does-not-exist", "/a/b/c/d"]) {
       const response = await request.get(path, noFollow);
       expect(response.status(), path).toBe(404);
       const html = await response.text();
       expect(html, path).toContain("Page not found");
       // Next.js marks 404s noindex in the document as well as in the header.
+      expect(html, path).toMatch(/<meta name="robots" content="noindex/);
+      expect(html, `${path} has the site header`).toMatch(/<header[\s>]/);
+      expect(html, `${path} has the site footer`).toMatch(/<footer[\s>]/);
+      expect(html.match(/<main[\s>]/g) ?? [], `${path} has one main landmark`).toHaveLength(1);
+    }
+    // notFound() from dynamic routes (unknown slug, lab type, lab asset, legal page): same status
+    // and noindex. Next.js renders these on the client from the streamed payload, so the site
+    // shell for them is asserted in a browser (not-found.spec.ts).
+    for (const path of [
+      "/what-we-do/no-such-practice",
+      "/labs/not-a-lab-type",
+      "/labs/research/no-such-asset",
+      "/legal/no-such-page",
+    ]) {
+      const response = await request.get(path, noFollow);
+      expect(response.status(), path).toBe(404);
+      const html = await response.text();
+      expect(html, path).toContain("Page not found");
       expect(html, path).toMatch(/<meta name="robots" content="noindex/);
     }
   });

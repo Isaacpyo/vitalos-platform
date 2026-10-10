@@ -40,6 +40,19 @@ test("content that is not publishable is neither listed nor served", async ({
   expect(paths).toContain("/legal/privacy");
 });
 
+test("closed roles are not listed but keep their page; open roles and lab types are listed", async ({
+  request,
+  baseURL,
+}) => {
+  const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
+  expect(paths).toContain("/careers/example-role");
+  expect(paths).not.toContain("/careers/example-closed-role");
+  expect((await request.get("/careers/example-closed-role")).status()).toBe(200);
+  // The Labs gate is open and the type has assets, so its category page is listed (and serves 200,
+  // which fetchAndCheckSitemap asserts for every listed URL).
+  expect(paths).toContain("/labs/open-source");
+});
+
 test("every internal link reachable from the home page and the sitemap resolves", async ({
   request,
   baseURL,

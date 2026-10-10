@@ -68,6 +68,8 @@ describe("query set", () => {
     expect(all.siteSettingsQuery).toContain('logo.rightsStatus == "approved"');
     expect(all.trustItemQuery).toContain("expiresAt >= $today");
     expect(all.trustItemQuery).toContain('evidence.evidenceStatus == "verified"');
+    // The sitemap projects what the shared isJobOpenOn rule needs to drop closed or expired roles.
+    expect(all.sitemapQuery).toMatch(/"job": \*\[_type == "job"[^\n]*status, validThrough/);
     expect(all.gateCountsQuery).toContain('status == "open"');
     expect(all.gateCountsQuery).toContain("validThrough >= $today");
     expect(all.gateCountsQuery).toContain('evidence.evidenceStatus == "verified"');

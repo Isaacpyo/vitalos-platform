@@ -8,7 +8,8 @@
  */
 import { evaluateGates, gateForKind, isSitemapEligible } from "./gates";
 import type { PublicationGates } from "./gates";
-import { clean, datePart, paramsFromSummaries } from "./mappers";
+import { isJobOpenOn, isJobSitemapEligible, labTypeSitemapEntries } from "./sitemap-rules";
+import { clean, paramsFromSummaries } from "./mappers";
 import type { ContentSource, GetDocumentArgs, ReadOpts, SlugFor } from "./source";
 import { hrefForDocument } from "../routes";
 import type { DocumentRef, LabType, RoutePageKey } from "../routes";
@@ -136,8 +137,7 @@ const kinds: readonly DocKind[] = [
   "legalPage",
 ];
 
-const jobIsOpen = (job: JobView, today: string): boolean =>
-  job.status === "open" && (job.validThrough === undefined || datePart(job.validThrough) >= today);
+const jobIsOpen = (job: JobView, today: string): boolean => isJobOpenOn(job, today);
 
 export function createFixtureSource(
   set: FixtureSet,
@@ -210,7 +210,9 @@ export function createFixtureSource(
     },
     getSitemapEntries(): Promise<SitemapEntry[]> {
       const open = gates();
+      const t = today();
       const entries: SitemapEntry[] = [];
+      const labAssets: { labType: string; updatedAt: string | undefined }[] = [];
       for (const kind of kinds) {
         if (!isSitemapEligible(gateForKind(kind), open)) continue;
         for (const view of views(kind)) {
@@ -223,7 +225,14 @@ export function createFixtureSource(
           ) {
             continue;
           }
+          if (kind === "job" && !isJobSitemapEligible(doc as ViewFor<"job">, t)) continue;
           const ref = documentRef(kind, doc);
+          if (ref.kind === "labAsset") {
+            labAssets.push({
+              labType: ref.labType,
+              updatedAt: (doc as ViewFor<"labAsset">).updatedAt,
+            });
+          }
           entries.push(
             clean<SitemapEntry>({
               path: hrefForDocument(ref),
@@ -233,6 +242,7 @@ export function createFixtureSource(
           );
         }
       }
+      entries.push(...labTypeSitemapEntries(labAssets, open));
       return Promise.resolve(entries);
     },
     getPublicationGates(): Promise<PublicationGates> {

@@ -36,7 +36,7 @@ export const TEMPLATES: readonly TemplateRoute[] = [
   { name: "article", path: "/insights/example-insight-1", pattern: "/insights/:slug" },
   { name: "person", path: "/people/example-person", pattern: "/people/:slug" },
   { name: "labs index", path: "/labs", pattern: "/labs" },
-  { name: "labs category", path: "/labs/open-source", pattern: "/labs/:slug", inSitemap: false },
+  { name: "labs category", path: "/labs/open-source", pattern: "/labs/:slug" },
   {
     name: "lab asset",
     path: "/labs/open-source/example-open-source-tool",

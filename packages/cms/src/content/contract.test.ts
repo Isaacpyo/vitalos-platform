@@ -124,6 +124,24 @@ describe("fixture sets", () => {
     expect(await later.listParams("job")).toHaveLength(2);
   });
 
+  it("sitemap lists open roles and lab types, never closed or expired roles", async () => {
+    const paths = async (now?: Date) =>
+      (
+        await createFixtureContentSource(
+          fullFixtureSet,
+          now ? { now: () => now } : {},
+        ).getSitemapEntries()
+      ).map((entry) => entry.path);
+    const current = await paths(new Date("2026-10-10T12:00:00Z"));
+    expect(current).toContain("/careers/example-role");
+    expect(current).not.toContain("/careers/example-closed-role");
+    expect(current.some((path) => /^\/labs\/[^/]+$/.test(path))).toBe(true);
+    // Past the validity date the formerly open role leaves the sitemap too (page stays served).
+    const later = await paths(new Date("2100-06-01T00:00:00Z"));
+    expect(later).not.toContain("/careers/example-role");
+    expect(later.some((path) => path.startsWith("/careers/"))).toBe(false);
+  });
+
   it("sparse excludes documents of closed gates from the sitemap", async () => {
     const sitemap = await fixtureSource(sparseFixtureSet).getSitemapEntries();
     const kinds = new Set(sitemap.map((entry) => entry.kind));

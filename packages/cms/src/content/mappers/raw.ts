@@ -370,5 +370,8 @@ export interface RawSitemapEntry {
   noindex?: Maybe<boolean>;
   editorialStatus?: Maybe<string>;
   classification?: Maybe<string>;
+  /** Jobs only: a closed or expired role is left out of the sitemap. */
+  status?: Maybe<string>;
+  validThrough?: Maybe<string>;
 }
 export type RawSitemap = Partial<Record<string, Maybe<readonly Maybe<RawSitemapEntry>[]>>>;
