@@ -1,7 +1,7 @@
 import type { RichText as RichTextValue } from "@vitalos/cms";
 import { normaliseRichText } from "../lib/cms/rich-text";
 import type { InlineNode, ListNode, RichTextNode } from "../lib/cms/rich-text";
-import { Callout, Prose, Quote } from "@vitalos/ui";
+import { Callout, EvaluationTable, Prose, Quote } from "@vitalos/ui";
 import { CmsImage } from "./cms-image";
 
 export interface RichTextProps {
@@ -91,6 +91,20 @@ function Node({ node }: Readonly<{ node: RichTextNode }>) {
           {node.caption ? <figcaption>{node.caption}</figcaption> : null}
         </figure>
       );
+    case "dataTable": {
+      const [dimensionHeading, ...columns] = node.columns;
+      return (
+        <EvaluationTable
+          caption={node.caption}
+          dimensionHeading={dimensionHeading}
+          columns={columns as [string, ...string[]]}
+          rows={node.rows.map(([dimension, ...values]) => ({
+            dimension: dimension as string,
+            values,
+          }))}
+        />
+      );
+    }
   }
 }
 

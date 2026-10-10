@@ -55,7 +55,7 @@ export function DataTable({ caption, columns, rows, className }: DataTableProps)
                     "block px-0 py-(--space-1) align-top text-body md:table-cell md:px-(--space-3) md:py-(--space-4) md:first:pl-0",
                     first ? "font-semibold text-tone-heading" : "text-tone-text",
                     !first &&
-                      "before:block before:text-small before:font-medium before:text-tone-muted before:content-[attr(data-label)] md:before:hidden",
+                      "before:block before:text-small before:font-medium before:text-tone-muted before:content-[attr(data-label)_/_''] md:before:hidden",
                   )}
                 >
                   {content}

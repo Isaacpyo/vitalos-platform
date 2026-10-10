@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ImageView, RichText as RichTextValue } from "@vitalos/cms";
 import { CmsImage } from "./cms-image";
 import { JsonLd } from "./json-ld";
@@ -145,5 +145,36 @@ describe("RichText", () => {
     );
     expect(html).not.toContain("<img");
     expect(html).toContain("&lt;img");
+  });
+
+  describe("dataTable", () => {
+    const tableValue: RichTextValue = [
+      {
+        _type: "dataTable",
+        _key: "t",
+        caption: "Example table (fixture)",
+        columns: ["Dimension", "Target"],
+        rows: [{ cells: ["Quality", "00"] }, { cells: ["Latency", "00 ms"] }],
+      },
+    ];
+
+    it("renders a captioned table with column and row headers and stacking labels", () => {
+      const html = renderToStaticMarkup(<RichText value={tableValue} />);
+      expect(html).toContain("<table");
+      expect(html).toMatch(/<caption[^>]*>Example table \(fixture\)<\/caption>/);
+      expect(html.match(/<th[^>]*scope="col"/g)).toHaveLength(2);
+      expect(html.match(/<th[^>]*scope="row"/g)).toHaveLength(2);
+      expect(html).toContain('data-label="Target"');
+      expect(html).toContain(">00 ms<");
+    });
+
+    it("renders nothing for a table without a caption", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { caption: _caption, ...noCaption } = tableValue[0] as Record<string, unknown>;
+      expect(
+        renderToStaticMarkup(<RichText value={[noCaption] as unknown as RichTextValue} />),
+      ).toBe("");
+      warn.mockRestore();
+    });
   });
 });

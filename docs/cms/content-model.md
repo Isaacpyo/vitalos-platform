@@ -49,10 +49,12 @@ Every document also has `governance`, `locale` (hidden, `en-GB`) and, except `re
 | `figure`        | `kind` (image, diagram), `image`, `caption`, `textAlternative` (required for diagrams)                                                                                                |
 | `codeBlock`     | `language`, `filename`, `code`                                                                                                                                                        |
 | `dataTable`     | `caption` (required), `columns` (2-8), `rows[].cells` (must match columns)                                                                                                            |
-| `stat`          | `value`, `descriptor`, `source` (required), `evidence` (required)                                                                                                                     |
-| `outcomeMetric` | as `stat` plus `context` (required), `timeframe`                                                                                                                                      |
-| `testimonial`   | `quote`, `attribution` (required), `role`, `permissionStatus` (granted, pending), `permissionEvidence` (verified when granted)                                                        |
-| `hero`          | `eyebrow`, `image`, `primaryCta` (optional supporting elements; the homepage hero copy is locked in code)                                                                             |
+
+Rendering note: the web RichText renders `dataTable` through `@vitalos/ui` `EvaluationTable` (real `<table>`, `<caption>`, column headers, first cell of each row as the row header, stacked labelled rows below `md`). A table with no caption, fewer than two column headings, a ragged row, a blank row header or no rows is not rendered (logged outside production).
+| `stat` | `value`, `descriptor`, `source` (required), `evidence` (required) |
+| `outcomeMetric` | as `stat` plus `context` (required), `timeframe` |
+| `testimonial` | `quote`, `attribution` (required), `role`, `permissionStatus` (granted, pending), `permissionEvidence` (verified when granted) |
+| `hero` | `eyebrow`, `image`, `primaryCta` (optional supporting elements; the homepage hero copy is locked in code) |
 
 ## Documents
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { RichText } from "@vitalos/cms";
 import { isSafeLink, normaliseRichText, richTextToPlainText } from "./rich-text";
 
@@ -101,9 +101,7 @@ describe("normaliseRichText", () => {
   });
 
   it("drops empty blocks and unknown block types", () => {
-    expect(
-      normaliseRichText([block(""), { _type: "dataTable", rows: [] }, { _type: "somethingNew" }]),
-    ).toEqual([]);
+    expect(normaliseRichText([block(""), { _type: "somethingNew" }])).toEqual([]);
     expect(normaliseRichText(undefined)).toEqual([]);
     expect(normaliseRichText(null)).toEqual([]);
   });
@@ -147,5 +145,51 @@ describe("richTextToPlainText", () => {
     expect(
       richTextToPlainText([block("First", {}, ["strong"]), block("Second"), { _type: "figure" }]),
     ).toBe("First\n\nSecond");
+  });
+
+  describe("dataTable", () => {
+    const table = (over: Record<string, unknown> = {}) => ({
+      _type: "dataTable",
+      _key: "t1",
+      caption: "Example table (fixture)",
+      columns: ["Dimension", "Target", "Method"],
+      rows: [
+        { cells: ["Quality", "00", "Example (fixture)"] },
+        { cells: ["Latency", "00 ms", "Example (fixture)"] },
+      ],
+      ...over,
+    });
+
+    it("normalises a valid table", () => {
+      const nodes = normaliseRichText([table()]);
+      expect(nodes).toEqual([
+        {
+          type: "dataTable",
+          key: "t1",
+          caption: "Example table (fixture)",
+          columns: ["Dimension", "Target", "Method"],
+          rows: [
+            ["Quality", "00", "Example (fixture)"],
+            ["Latency", "00 ms", "Example (fixture)"],
+          ],
+        },
+      ]);
+    });
+
+    it.each([
+      ["missing caption", { caption: undefined }],
+      ["blank caption", { caption: "  " }],
+      ["one column", { columns: ["Only"], rows: [{ cells: ["a"] }] }],
+      ["blank column heading", { columns: ["A", "", "C"] }],
+      ["no rows", { rows: [] }],
+      ["ragged row", { rows: [{ cells: ["a", "b"] }] }],
+      ["blank row header", { rows: [{ cells: ["", "b", "c"] }] }],
+      ["non-array rows", { rows: "nope" }],
+    ])("drops a table with %s and warns outside production", (_name, over) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      expect(normaliseRichText([table(over)])).toEqual([]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      warn.mockRestore();
+    });
   });
 });

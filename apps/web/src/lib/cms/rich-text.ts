@@ -11,7 +11,10 @@ import { classifyImageUrl } from "./images";
  * keeps exactly one h1), blockquote, bullet/number lists (nested), and the custom blocks
  * `callout`, `pullQuote` (attribution required), `codeBlock` and `figure` (alt required).
  * Marks: strong, em, code, links (https or same-site paths only).
- * Not yet supported (dropped): dataTable. TODO(C2/G2b): add once the mapper shape is final.
+ * `dataTable` is supported: the caption is required (it is the table's accessible name), there must
+ * be at least two non-blank column headings, every row needs exactly one cell per column, and the
+ * first cell of each row must be non-blank because it becomes the row header. A table that fails
+ * any of these is dropped (never rendered unlabelled or ragged) and, outside production, logged.
  */
 
 export interface InlineNode {
@@ -42,7 +45,18 @@ export type RichTextNode =
   | { type: "callout"; key: string; title?: string; text: string }
   | { type: "pullQuote"; key: string; quote: string; attribution: string }
   | { type: "codeBlock"; key: string; code: string; language?: string }
-  | { type: "figure"; key: string; image: ImageView; caption?: string };
+  | { type: "figure"; key: string; image: ImageView; caption?: string }
+  | DataTableNode;
+
+export interface DataTableNode {
+  type: "dataTable";
+  key: string;
+  caption: string;
+  /** At least two headings; the first heads the row-header column. */
+  columns: [string, string, ...string[]];
+  /** One entry per row, each with exactly `columns.length` cells; cell 0 is the row header. */
+  rows: string[][];
+}
 
 const asString = (value: unknown): string | undefined =>
   typeof value === "string" && value.trim() !== "" ? value : undefined;
@@ -103,6 +117,42 @@ export function richTextToPlainText(blocks: RichText): string {
     }
   }
   return parts.join("\n\n");
+}
+
+function devWarn(message: string) {
+  if (process.env["NODE_ENV"] !== "production") console.warn(`[rich-text] ${message}`);
+}
+
+function dataTableNode(block: RichTextBlock, key: string): DataTableNode | undefined {
+  const caption = asString(block["caption"])?.trim();
+  if (!caption) {
+    devWarn(`dataTable "${key}" skipped: a caption is required.`);
+    return undefined;
+  }
+  const rawColumns = Array.isArray(block["columns"]) ? (block["columns"] as unknown[]) : [];
+  const columns = rawColumns.map((column) => asString(column)?.trim() ?? "");
+  if (columns.length < 2 || columns.some((column) => column === "")) {
+    devWarn(`dataTable "${key}" skipped: needs at least two non-blank column headings.`);
+    return undefined;
+  }
+  const rawRows = Array.isArray(block["rows"]) ? (block["rows"] as unknown[]) : [];
+  const rows: string[][] = [];
+  for (const rawRow of rawRows) {
+    const rawCells = asRecord(rawRow)?.["cells"];
+    const cells = Array.isArray(rawCells)
+      ? rawCells.map((cell) => (typeof cell === "string" ? cell.trim() : ""))
+      : [];
+    if (cells.length !== columns.length || cells[0] === "") {
+      devWarn(`dataTable "${key}" skipped: every row needs one cell per column and a row header.`);
+      return undefined;
+    }
+    rows.push(cells);
+  }
+  if (rows.length === 0) {
+    devWarn(`dataTable "${key}" skipped: no rows.`);
+    return undefined;
+  }
+  return { type: "dataTable", key, caption, columns: columns as DataTableNode["columns"], rows };
 }
 
 function blockKey(block: RichTextBlock, index: number): string {
@@ -212,6 +262,11 @@ export function normaliseRichText(blocks: RichText | undefined | null): RichText
           image: { url, alt, width, height },
           ...(caption ? { caption } : {}),
         });
+        return;
+      }
+      case "dataTable": {
+        const table = dataTableNode(block, key);
+        if (table) out.push(table);
         return;
       }
       default:

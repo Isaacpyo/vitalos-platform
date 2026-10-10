@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   EvaluationTable,
   LabAssetRow,
+  Prose,
   MaturityBadge,
   ResourceLinks,
   TechnicalFigure,
@@ -162,6 +163,36 @@ export const Evaluation320: Story = {
       />
     </Frame>
   ),
+};
+
+/**
+ * How a CMS `dataTable` block renders inside RichText (apps/web maps it to EvaluationTable:
+ * first column is the row header). Shown here in Prose, at desktop width and at 320px.
+ */
+const richTextTable = (
+  <Prose>
+    <p>Example paragraph before the table (fixture).</p>
+    <EvaluationTable
+      caption="Example data table (fixture)"
+      dimensionHeading="Example item (fixture)"
+      columns={["Example value (fixture)", "Example note (fixture)"]}
+      rows={[
+        { dimension: "Example row one (fixture)", values: ["00", "Example note (fixture)"] },
+        { dimension: "Example row two (fixture)", values: ["00 ms", text.longWord] },
+      ]}
+    />
+    <p>Example paragraph after the table (fixture).</p>
+  </Prose>
+);
+
+export const RichTextDataTable: Story = {
+  name: "RichText data table (in Prose)",
+  render: () => <Frame>{richTextTable}</Frame>,
+};
+
+export const RichTextDataTable320: Story = {
+  name: "RichText data table (320px, stacks)",
+  render: () => <Frame width={320}>{richTextTable}</Frame>,
 };
 
 export const Resources: Story = {
