@@ -88,3 +88,8 @@ const engagementLabels: Readonly<Record<EngagementBasis, string>> = {
 export function engagementBasisLabel(basis: EngagementBasis): string {
   return engagementLabels[basis];
 }
+
+/** Accessible names of a carousel's paging buttons, from the carousel's own name. Structural. */
+export function carouselLabels(label: string): { previousLabel: string; nextLabel: string } {
+  return { previousLabel: `Previous: ${label}`, nextLabel: `Next: ${label}` };
+}

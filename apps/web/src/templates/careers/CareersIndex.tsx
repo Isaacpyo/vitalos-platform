@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, Stack } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { JobRow } from "./JobRow";
 import type { CareersIndexData } from "./load";
@@ -12,10 +12,15 @@ export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
   const { page, jobs, draft } = data;
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={
+          <Breadcrumbs trail={[homeCrumb, { name: navLabels.careers, path: routes.careers() }]} />
+        }
+        title={page?.heading ?? navLabels.careers}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.careers, path: routes.careers() }]} />
-          <PageHeader title={page?.heading ?? navLabels.careers} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page}

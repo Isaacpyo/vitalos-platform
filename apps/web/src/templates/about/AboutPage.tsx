@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, PersonCard, Stack, TextLink } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { AboutData } from "./load";
 import { aboutLinks, exploreHeading, leaderCardProps } from "./map";
@@ -16,10 +16,15 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
   const { page, leaders, gates, draft } = data;
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={
+          <Breadcrumbs trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]} />
+        }
+        title={page?.heading ?? navLabels.about}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]} />
-          <PageHeader title={page?.heading ?? navLabels.about} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page}

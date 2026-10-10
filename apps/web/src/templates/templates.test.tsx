@@ -80,8 +80,9 @@ describe("homepage sections", () => {
     const markup = html(<HomeTemplate home={null} gates={closedGates} />);
     expect(count(markup, /<h1/g)).toBe(1);
     expect(count(markup, /<h2/g)).toBe(0);
-    expect(markup).toContain(
-      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
+    // The h1 is exactly the locked proposition; its closing clause sits in a colour span.
+    expect(markup).toMatch(
+      /<h1[^>]*>We help ambitious organisations modernise operations, build digital products and <span[^>]*>adopt AI\.<\/span><\/h1>/,
     );
     expect(markup).toContain("From strategy to production.");
     expect(markup).toContain('href="/contact"');

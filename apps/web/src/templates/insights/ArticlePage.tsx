@@ -11,7 +11,7 @@ import { JsonLd } from "../../components/json-ld";
 import { getSeoContext } from "../../features/seo/context";
 import { articleJsonLd } from "../../features/seo/json-ld";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import { ArticleBody } from "./ArticleBody";
@@ -35,8 +35,8 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
   return (
     <PageMain>
       <JsonLd data={articleJsonLd(insight, { siteUrl: getSeoContext().siteUrl })} />
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -47,18 +47,19 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
               { name: insight.title, path: routes.insight(insight.slug) },
             ]}
           />
-          <PageHeader
-            title={insight.title}
-            eyebrow={formatLabel(insight.format)}
-            lead={insight.summary}
-          >
-            <AuthorMeta
-              authors={authorLinks(insight.authors)}
-              publishedAt={insight.publishedAt}
-              updatedAt={insight.updatedAt}
-            />
-          </PageHeader>
-
+        }
+        title={insight.title}
+        eyebrow={formatLabel(insight.format)}
+        lead={insight.summary}
+      >
+        <AuthorMeta
+          authors={authorLinks(insight.authors)}
+          publishedAt={insight.publishedAt}
+          updatedAt={insight.updatedAt}
+        />
+      </PageHeroBand>
+      <PageBand>
+        <Stack gap={8}>
           <div className="grid min-w-0 gap-(--space-7) lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]">
             {toc.length > 0 ? (
               <div className="min-w-0 lg:order-first">

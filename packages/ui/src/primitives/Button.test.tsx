@@ -13,6 +13,18 @@ describe("Button", () => {
     expect(link.getAttribute("type")).toBeNull();
   });
 
+  it("adds a decorative arrow that does not change the accessible name", () => {
+    render(
+      <Button href="/contact" arrow>
+        Talk to Vitalos
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "Talk to Vitalos" });
+    const arrow = link.querySelector('[aria-hidden="true"]');
+    expect(arrow).not.toBeNull();
+    expect(arrow?.querySelectorAll("svg")).toHaveLength(2);
+  });
+
   it("renders a button of type=button by default so it never submits a form by accident", () => {
     render(<Button>Example action (fixture)</Button>);
     const button = screen.getByRole("button", { name: "Example action (fixture)" });

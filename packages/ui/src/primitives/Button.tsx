@@ -1,5 +1,7 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from "react";
+import type { ReactNode } from "react";
 import { cx } from "./_internal/cx";
+import { SlideArrow } from "./SlideArrow";
 
 export type ButtonVariant = "primary" | "secondary" | "text";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -14,6 +16,11 @@ interface ButtonOwnProps {
    * Section: the button already follows the section tone.
    */
   theme?: ButtonTheme;
+  /**
+   * Adds the directional slide arrow after the label (decorative). Use on navigation actions
+   * such as "Talk to Vitalos"; leave off form submits.
+   */
+  arrow?: boolean;
 }
 
 export type ButtonAsLinkProps = ButtonOwnProps &
@@ -25,7 +32,7 @@ export type ButtonAsButtonProps = ButtonOwnProps &
 export type ButtonProps = ButtonAsLinkProps | ButtonAsButtonProps;
 
 const base =
-  "inline-flex items-center justify-center gap-(--space-2) rounded-sm font-semibold no-underline " +
+  "group inline-flex items-center justify-center gap-(--space-3) rounded-md font-semibold no-underline " +
   "transition-colors duration-(--duration-feedback) ease-(--ease-standard) select-none";
 
 const sizes: Record<ButtonSize, string> = {
@@ -57,7 +64,7 @@ const variants: Record<ButtonVariant, string> = {
  * states. There is no disabled link: unavailable navigation should not be published.
  */
 export function Button(props: ButtonProps) {
-  const { variant = "primary", size = "md", theme, className, ...rest } = props;
+  const { variant = "primary", size = "md", theme, arrow = false, className, ...rest } = props;
   const classes = cx(
     base,
     variant !== "text" && sizes[size],
@@ -66,12 +73,34 @@ export function Button(props: ButtonProps) {
     className,
   );
   if (rest.href !== undefined) {
-    const { href, ...anchor } = rest as Omit<ButtonAsLinkProps, keyof ButtonOwnProps | "className">;
-    return <a href={href} data-tone={theme} className={classes} {...anchor} />;
+    const { href, children, ...anchor } = rest as Omit<
+      ButtonAsLinkProps,
+      keyof ButtonOwnProps | "className"
+    >;
+    return (
+      <a href={href} data-tone={theme} className={classes} {...anchor}>
+        {withArrow(children, arrow)}
+      </a>
+    );
   }
-  const { type = "button", ...button } = rest as Omit<
-    ButtonAsButtonProps,
-    keyof ButtonOwnProps | "className"
-  >;
-  return <button type={type} data-tone={theme} className={classes} {...button} />;
+  const {
+    type = "button",
+    children,
+    ...button
+  } = rest as Omit<ButtonAsButtonProps, keyof ButtonOwnProps | "className">;
+  return (
+    <button type={type} data-tone={theme} className={classes} {...button}>
+      {withArrow(children, arrow)}
+    </button>
+  );
+}
+
+function withArrow(children: ReactNode, arrow: boolean): ReactNode {
+  if (!arrow) return children;
+  return (
+    <>
+      <span>{children}</span>
+      <SlideArrow size={16} />
+    </>
+  );
 }

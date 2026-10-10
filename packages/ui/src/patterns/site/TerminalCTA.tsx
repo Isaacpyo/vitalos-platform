@@ -20,7 +20,10 @@ export interface TerminalCTAProps {
   className?: string | undefined;
 }
 
-/** Closing call to action of a page: heading, optional line of context, one primary action. */
+/**
+ * Closing call to action of a page, as the owner comp's closing band: heading, an optional line
+ * of context and one primary action in a single row on wide screens, stacked on compact ones.
+ */
 export function TerminalCTA({
   heading,
   body,
@@ -37,20 +40,24 @@ export function TerminalCTA({
   return (
     <Section
       tone={tone}
-      spacing="large"
+      spacing="compact"
       aria-labelledby={headingId}
       {...(className ? { className } : {})}
     >
-      <Container>
-        <div className="max-w-(--container-prose)">
-          <Heading id={headingId} level={headingLevel} size="h2">
+      <Container size="wide">
+        <div className="grid gap-x-(--space-8) gap-y-(--space-5) lg:grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] lg:items-center">
+          <Heading id={headingId} level={headingLevel} size="h2" className="lg:max-w-[16ch]">
             {heading}
           </Heading>
           {hasText(body) ? (
-            <p className="mt-(--space-4) text-body-l text-tone-text text-pretty">{body}</p>
-          ) : null}
-          <CTAGroup className="mt-(--space-6)">
-            <Button href={primary.href} size="lg">
+            <p className="m-0 max-w-(--container-prose) text-body text-tone-text text-pretty">
+              {body}
+            </p>
+          ) : (
+            <span aria-hidden="true" className="hidden lg:block" />
+          )}
+          <CTAGroup>
+            <Button href={primary.href} size="lg" arrow>
               {primary.label}
             </Button>
             {secondary ? (

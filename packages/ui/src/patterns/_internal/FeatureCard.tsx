@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { cx } from "../../primitives/_internal/cx";
-import { Icon } from "../../primitives/Icon";
+import { CircleArrow } from "../../primitives/CircleArrow";
+import type { HeadingSize } from "../../primitives/Heading";
+import type { IconName } from "../../primitives/Icon";
+import { IconTile } from "../../primitives/IconTile";
 import { MetaRow, type MetaItem } from "../../primitives/MetaRow";
+import { MediaPlaceholder, type MediaPlaceholderVariant } from "../media/MediaPlaceholder";
 import { CardTitle } from "./CardTitle";
 import { PatternMedia } from "./Media";
 import { hasText, type ItemHeadingLevel, type PatternImage } from "./types";
@@ -16,6 +20,15 @@ export interface CardBaseProps {
   meta?: readonly MetaItem[] | undefined;
   /** Optional. The card is complete without an image. */
   image?: PatternImage | undefined;
+  /**
+   * Without an image, shows the decorative token placeholder in the image slot (the comp's
+   * photo cards). Omit for a card with no media area.
+   */
+  placeholder?: MediaPlaceholderVariant | undefined;
+  /** Decorative subject icon on a tinted tile, above the title. */
+  icon?: IconName | undefined;
+  /** h3 (default) or h4 for dense grids of four or more. */
+  titleSize?: Extract<HeadingSize, "h3" | "h4"> | undefined;
   headingLevel?: ItemHeadingLevel | undefined;
   className?: string | undefined;
 }
@@ -25,7 +38,12 @@ interface FeatureCardProps extends CardBaseProps {
   children?: ReactNode;
 }
 
-/** Bordered card with one stretched link. Fills its grid cell; content decides the height. */
+/**
+ * Bordered card with one stretched link (the title), from the owner comp: optional media or a
+ * token placeholder, an icon tile, the title, a short summary and an arrow disc. Hover lifts the
+ * card slightly and colours the edge; no resting shadow (Stage 9 section 8). Fills its grid
+ * cell; content decides the height.
+ */
 export function FeatureCard({
   title,
   href,
@@ -33,6 +51,9 @@ export function FeatureCard({
   eyebrow,
   meta,
   image,
+  placeholder,
+  icon,
+  titleSize = "h3",
   headingLevel = 3,
   className,
   kind,
@@ -42,29 +63,48 @@ export function FeatureCard({
     <article
       {...(kind ? { "data-kind": kind } : {})}
       className={cx(
-        "group relative flex h-full min-w-0 flex-col overflow-hidden rounded-md border border-tone-border bg-tone-bg",
-        "transition-colors duration-(--duration-feedback) ease-(--ease-standard) hover:border-tone-heading",
+        "group relative flex h-full min-w-0 flex-col overflow-hidden rounded-lg border border-tone-border bg-tone-bg",
+        "transition-[border-color,translate] duration-(--duration-reveal) ease-(--ease-emphasis)",
+        "hover:-translate-y-1 hover:border-tone-action focus-within:border-tone-action motion-reduce:hover:translate-y-0",
         className,
       )}
     >
-      {image ? <PatternMedia image={image} className="aspect-[3/2]" /> : null}
+      {image ? (
+        <PatternMedia image={image} className="aspect-[3/2]" />
+      ) : placeholder !== undefined ? (
+        <MediaPlaceholder variant={placeholder} className="aspect-[16/9]" />
+      ) : null}
       <div className="flex min-w-0 flex-1 flex-col gap-(--space-3) p-(--space-5)">
+        {icon ? (
+          <IconTile
+            name={icon}
+            className={cx(
+              "mb-(--space-1)",
+              placeholder !== undefined && !image && "relative -mt-11 border-4 border-tone-bg",
+            )}
+          />
+        ) : null}
         {hasText(eyebrow) ? (
           <p className="text-eyebrow text-tone-muted uppercase">{eyebrow}</p>
         ) : null}
-        <CardTitle level={headingLevel} size="h3" href={href}>
+        <CardTitle level={headingLevel} size={titleSize} href={href}>
           {title}
         </CardTitle>
         {hasText(summary) ? (
-          <p className="text-body text-tone-text text-pretty">{summary}</p>
+          <p
+            className={cx(
+              "text-tone-text text-pretty",
+              titleSize === "h4" ? "text-small" : "text-body",
+            )}
+          >
+            {summary}
+          </p>
         ) : null}
         {meta && meta.length > 0 ? <MetaRow items={meta} /> : null}
         {children}
-        <Icon
-          name="arrow-right"
-          size={20}
-          className="mt-auto self-start pt-0 text-tone-heading transition-transform duration-(--duration-feedback) ease-(--ease-standard) group-hover:translate-x-1"
-        />
+        <div className="mt-auto pt-(--space-2)">
+          <CircleArrow />
+        </div>
       </div>
     </article>
   );

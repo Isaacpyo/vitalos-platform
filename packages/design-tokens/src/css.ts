@@ -6,15 +6,15 @@
 import { component } from "./component";
 import {
   breakpoints,
-  colors,
   durations,
   easing,
   elevation,
   fonts,
+  palette,
   radii,
   space,
   typeRoles,
-  type ColorToken,
+  type PaletteToken,
 } from "./primitives";
 import { responsive } from "./responsive";
 import { tones, type Tone, type ToneRoleName } from "./semantic";
@@ -42,7 +42,7 @@ export function fluid(minPx: number, maxPx: number): string {
 }
 
 const toneVar = (role: ToneRoleName): string => `--tone-${kebab(role)}`;
-const colorVar = (token: ColorToken): string => `--color-${kebab(token)}`;
+const colorVar = (token: PaletteToken): string => `--color-${kebab(token)}`;
 
 function toneBlock(selector: string, tone: Tone): string {
   const roles = tones[tone];
@@ -54,15 +54,15 @@ function toneBlock(selector: string, tone: Tone): string {
 
 export function renderThemeCss(): string {
   const root: string[] = [];
-  for (const [key, value] of Object.entries(colors)) {
-    root.push(`  ${colorVar(key as ColorToken)}: ${value};`);
+  for (const [key, value] of Object.entries(palette)) {
+    root.push(`  ${colorVar(key as PaletteToken)}: ${value};`);
   }
   for (const [key, px] of Object.entries(space)) root.push(`  --space-${key}: ${rem(px)};`);
   for (const [key, px] of Object.entries(radii)) root.push(`  --radius-${key}: ${rem(px)};`);
   for (const [key, ms] of Object.entries(durations)) {
     root.push(`  --duration-${kebab(key)}: ${ms}ms;`);
   }
-  root.push(`  --ease-standard: ${easing.standard};`);
+  for (const [key, curve] of Object.entries(easing)) root.push(`  --ease-${kebab(key)}: ${curve};`);
   root.push(`  --shadow-floating: ${elevation.floating};`);
   root.push(`  --font-sans: ${fonts.sans};`);
   root.push(`  --font-serif: ${fonts.serif};`);
@@ -111,6 +111,21 @@ html {
   overflow-wrap: anywhere;
 }
 
+/* Entrance keyframes for the decorative hero visual (ADR-023). Used only behind motion-safe. The
+   panel carries text, so it only moves (never fades) and its contrast holds at every frame. */
+@keyframes hero-plane {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes hero-panel {
+  from {
+    translate: 0 0.75rem;
+  }
+}
+
 /* Reduced motion: keep state changes, drop transitions and smooth scrolling. */
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -135,15 +150,17 @@ html {
 export function renderTailwindThemeCss(): string {
   // Literal (non-inline) theme values: identical to theme.css, but never self-referencing.
   const literal: string[] = [];
-  for (const [key, value] of Object.entries(colors)) {
-    literal.push(`  ${colorVar(key as ColorToken)}: ${value};`);
+  for (const [key, value] of Object.entries(palette)) {
+    literal.push(`  ${colorVar(key as PaletteToken)}: ${value};`);
   }
   literal.push(`  --font-sans: ${fonts.sans};`);
   literal.push(`  --font-serif: ${fonts.serif};`);
   literal.push(`  --font-mono: ${fonts.mono};`);
   for (const [key, px] of Object.entries(radii)) literal.push(`  --radius-${key}: ${rem(px)};`);
   literal.push(`  --shadow-floating: ${elevation.floating};`);
-  literal.push(`  --ease-standard: ${easing.standard};`);
+  for (const [key, curve] of Object.entries(easing)) {
+    literal.push(`  --ease-${kebab(key)}: ${curve};`);
+  }
   for (const [name, role] of Object.entries(typeRoles)) {
     const k = kebab(name);
     literal.push(`  --text-${k}: ${fluid(role.mobile, role.desktop)};`);

@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, Stack, TextLink } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { LabList } from "./LabList";
 import type { LabsIndexData } from "./load";
@@ -17,10 +17,13 @@ export function LabsIndex({ data }: Readonly<{ data: LabsIndexData }>) {
   const types = typesWithAssets(assets);
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={<Breadcrumbs trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]} />}
+        title={page?.heading ?? navLabels.labs}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]} />
-          <PageHeader title={page?.heading ?? navLabels.labs} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page}

@@ -69,7 +69,10 @@ export function SiteFooter({
   return (
     <footer
       data-tone="dark"
-      className={cx("bg-tone-bg text-tone-text py-(--section-default)", className)}
+      className={cx(
+        "border-t border-tone-border bg-tone-bg pt-(--section-default) pb-(--section-default) text-tone-text lg:pt-(--section-compact) lg:pb-(--space-7)",
+        className,
+      )}
     >
       <Container size="wide">
         <div className="grid gap-x-(--space-7) gap-y-(--space-7) lg:grid-cols-[minmax(0,2fr)_minmax(0,5fr)]">
@@ -81,7 +84,7 @@ export function SiteFooter({
                 {...(brand?.wordmarkText ? { text: brand.wordmarkText } : {})}
               />
               {hasText(brand?.descriptor) ? (
-                <p className="mt-(--space-4) text-eyebrow text-tone-muted uppercase">
+                <p className="mt-(--space-4) max-w-xs text-small text-tone-muted">
                   {brand.descriptor}
                 </p>
               ) : null}
@@ -94,12 +97,15 @@ export function SiteFooter({
           ) : null}
           {visibleColumns.length > 0 ? (
             <nav aria-label={navLabel} className="min-w-0">
-              <div className="grid grid-cols-1 gap-x-(--space-6) gap-y-(--space-6) sm:grid-cols-2 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-x-(--space-6) gap-y-(--space-6) sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
                 {visibleColumns.map((column) => {
                   const headingId = `${footerId}-${column.key}`;
                   return (
-                    <div key={column.key} className="min-w-0">
-                      <h2 id={headingId} className="text-eyebrow text-tone-muted uppercase">
+                    <div
+                      key={column.key}
+                      className="min-w-0 md:border-l md:border-tone-border md:pl-(--space-5)"
+                    >
+                      <h2 id={headingId} className="text-eyebrow text-tone-heading uppercase">
                         {column.heading}
                       </h2>
                       <ul aria-labelledby={headingId} className="m-0 mt-(--space-3) list-none p-0">
@@ -107,7 +113,10 @@ export function SiteFooter({
                           <li key={`${link.href}-${link.label}`}>
                             <a
                               href={link.href}
-                              className={cx(quietLinkClasses, "block py-(--space-1) text-body")}
+                              className={cx(
+                                quietLinkClasses,
+                                "block py-(--space-1) text-body lg:text-small",
+                              )}
                             >
                               {link.label}
                             </a>
@@ -131,7 +140,10 @@ export function SiteFooter({
                     <li>
                       <a
                         href={`mailto:${email}`}
-                        className={cx(quietLinkClasses, "block py-(--space-1) text-body")}
+                        className={cx(
+                          quietLinkClasses,
+                          "block py-(--space-1) text-body lg:text-small",
+                        )}
                       >
                         {email}
                       </a>
@@ -141,7 +153,10 @@ export function SiteFooter({
                     <li key={link.href}>
                       <a
                         href={link.href}
-                        className={cx(quietLinkClasses, "block py-(--space-1) text-body")}
+                        className={cx(
+                          quietLinkClasses,
+                          "block py-(--space-1) text-body lg:text-small",
+                        )}
                       >
                         {link.label}
                       </a>

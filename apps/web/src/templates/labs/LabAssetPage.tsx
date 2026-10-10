@@ -4,7 +4,7 @@ import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import type { Crumb } from "../institutional/breadcrumbs";
 import { formatDate } from "../institutional/format";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { LabAssetData } from "./load";
@@ -34,29 +34,28 @@ export function LabAssetPage({ data }: Readonly<{ data: LabAssetData }>) {
 
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={<Breadcrumbs trail={trail} />}
+        title={asset.title}
+        eyebrow={typeLabel}
+        lead={asset.summary}
+        afterTitle={
+          <MaturityBadge maturity={asset.maturity} label={maturityLabel(asset.maturity)} />
+        }
+      >
+        {updated ? (
+          <MetaRow
+            items={[
+              {
+                label: labLabels.updated,
+                value: <time dateTime={asset.updatedAt}>{updated}</time>,
+              },
+            ]}
+          />
+        ) : null}
+      </PageHeroBand>
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={trail} />
-          <PageHeader
-            title={asset.title}
-            eyebrow={typeLabel}
-            lead={asset.summary}
-            afterTitle={
-              <MaturityBadge maturity={asset.maturity} label={maturityLabel(asset.maturity)} />
-            }
-          >
-            {updated ? (
-              <MetaRow
-                items={[
-                  {
-                    label: labLabels.updated,
-                    value: <time dateTime={asset.updatedAt}>{updated}</time>,
-                  },
-                ]}
-              />
-            ) : null}
-          </PageHeader>
-
           {isIsNot.length > 0 ? <DefinitionList items={isIsNot} /> : null}
 
           {hasRichText(asset.body) ? <RichText value={asset.body} /> : null}

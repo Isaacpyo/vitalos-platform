@@ -43,3 +43,7 @@ The owner confirms or replaces `#2457FF` or the typefaces; Figma styles are reco
 ## Clarification (workstream G1)
 
 Decision 6 lists Source Serif 4 as part of the provisional set. In the web app only Geist Sans and Geist Mono are loaded (through the installed `geist` package and `next/font`); `--font-source-serif` is not set, so serif prose uses the stack's system fallback until the owner confirms the typeface and a build-time download or a bundled font file is approved. See `docs/brand/token-reconciliation.md`.
+
+## Status update (10 Oct 2026)
+
+ADR-023 (web presentation from the owner comp) extends the token set without changing a decision here: three tints of the locked hues in a separate `tints` map (the Stage 9 `colors` set is unchanged), tone roles `eyebrow`, `tileBg` and `tileFg` with tested contrast pairs, an `emphasis` easing, a 12 px radius for selected media and hero keyframes, all generated as before. Display XL (mobile 44 px), Display L (desktop 60 px), H2 (desktop 40 px) and the eyebrow tracking moved within the Stage 9 ranges, and the section entrance is 400 ms. These need the design review this ADR and ADR-008 require. Typography is unchanged (provisional Geist).

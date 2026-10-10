@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { format } from "prettier";
 import { describe, expect, it } from "vitest";
 import { fluid, kebab, renderTailwindThemeCss, renderThemeCss } from "./css";
-import { colors } from "./primitives";
+import { colors, tints } from "./primitives";
 
 const REGENERATE =
   "Generated CSS is out of date. Run: UPDATE_TOKENS=1 corepack pnpm --filter @vitalos/design-tokens test";
@@ -34,6 +34,14 @@ describe("generated CSS stays in sync with the TypeScript tokens", () => {
   it("exposes every brand colour as a CSS variable with its exact value", () => {
     for (const [key, value] of Object.entries(colors)) {
       expect(themeCss.toLowerCase()).toContain(`--color-${kebab(key)}: ${value.toLowerCase()};`);
+    }
+  });
+
+  it("exposes every tint as a CSS variable and a Tailwind colour", () => {
+    for (const [key, value] of Object.entries(tints)) {
+      const declaration = `--color-${kebab(key)}: ${value.toLowerCase()};`;
+      expect(themeCss.toLowerCase()).toContain(declaration);
+      expect(tailwindThemeCss.toLowerCase()).toContain(declaration);
     }
   });
 

@@ -1,9 +1,12 @@
+import { useId } from "react";
 import type { ReactNode } from "react";
 import {
   aiJourneyStages,
   brandLine,
   ctas,
   descriptor,
+  howWeWorkStages,
+  megaMenuColumns,
   navLabels,
   practiceNames,
   proposition,
@@ -14,28 +17,34 @@ import type { HomePageView, HomeSectionKey, PublicationGates } from "@vitalos/cm
 import {
   Button,
   CTAGroup,
+  Carousel,
   CaseStudyFeature,
   CaseStudyRow,
   Container,
   Display,
   Eyebrow,
-  IndustryRow,
+  HeroVisual,
   LabAssetRow,
+  LinkCard,
   ArticleRow,
   Lead,
   PersonCard,
   PracticeRow,
   ProcessJourney,
   ProofStrip,
+  Reveal,
   Section,
+  SectionHeading,
   SolutionCard,
   TerminalCTA,
-  TextLink,
   TrustTopicRow,
   isNonEmpty,
 } from "@vitalos/ui";
+import type { MediaPlaceholderVariant } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
+import { iconFor } from "../../lib/view-mapping/icons";
+import { carouselLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import {
   caseStudyMeta,
@@ -67,24 +76,52 @@ type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | nu
 
 const heading = (context: HomeContext, key: HomeSectionKey) => context.home.headings[key];
 
-/** 1. Hero. Locked copy only: descriptor, proposition as the h1, brand line, two actions. */
+/**
+ * The proposition with its closing clause in the brand colour, as the comp sets the end of its
+ * headline. Presentation only: the text (and so the accessible name) is the locked string.
+ */
+function PropositionTitle() {
+  const split = proposition.lastIndexOf(" and ");
+  if (split === -1) return <>{proposition}</>;
+  return (
+    <>
+      {proposition.slice(0, split + 5)}
+      <span className="text-tone-link">{proposition.slice(split + 5)}</span>
+    </>
+  );
+}
+
+/**
+ * 1. Hero (the comp's split hero). Locked copy only: descriptor, proposition as the h1, brand
+ * line and two actions on the left; the decorative hero visual on the right (below the copy on
+ * compact screens), carrying the locked AI journey stage names and no figures.
+ */
 export function HeroSection(): ReactNode {
   return (
-    <Section as="div" tone="muted" spacing="large">
-      <Container size="wide">
-        <Eyebrow className="mb-(--space-4)">{descriptor}</Eyebrow>
-        <Display size="xl" as="h1" className="max-w-(--container-max) break-words">
-          {proposition}
-        </Display>
-        <Lead className="mt-(--space-5)">{brandLine}</Lead>
-        <CTAGroup className="mt-(--space-7)">
-          <Button href={contactHref()} size="lg">
-            {ctas.primary}
-          </Button>
-          <Button href={routes.whatWeDo()} variant="text" size="lg">
-            {ctas.secondary}
-          </Button>
-        </CTAGroup>
+    <Section as="div" tone="light" spacing="default" className="relative isolate overflow-hidden">
+      <Container
+        size="wide"
+        className="grid items-center gap-x-(--space-7) gap-y-(--space-8) lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
+      >
+        <div className="min-w-0">
+          <Eyebrow className="mb-(--space-4)">{descriptor}</Eyebrow>
+          <Display size="xl" as="h1" className="break-words">
+            <PropositionTitle />
+          </Display>
+          <Lead className="mt-(--space-5)">{brandLine}</Lead>
+          <CTAGroup className="mt-(--space-7)">
+            <Button href={contactHref()} size="lg" arrow>
+              {ctas.primary}
+            </Button>
+            <Button href={routes.whatWeDo()} variant="secondary" size="lg" arrow>
+              {ctas.secondary}
+            </Button>
+          </CTAGroup>
+        </div>
+        <HeroVisual
+          steps={aiJourneyStages}
+          className="aspect-[4/3] w-full sm:aspect-[3/2] lg:aspect-[4/5] lg:max-h-[36rem]"
+        />
       </Container>
     </Section>
   );
@@ -101,7 +138,13 @@ export const credibilitySection: SectionRender = (context, tone) => {
   );
 };
 
-/** 3. Problems we solve: the Solutions, in the order the specs fix. */
+/** Grid width for a set of solution cards: the comp's row of five when all five exist. */
+const solutionColumns = (count: number): 2 | 3 | 5 => (count >= 5 ? 5 : count >= 3 ? 3 : 2);
+
+/**
+ * 3. Problems we solve: the Solutions, in the order the specs fix, as the comp's row of icon
+ * cards under a split section header.
+ */
 export const problemsSection: SectionRender = (context, tone) => {
   const title = heading(context, "problems");
   const cards = orderByLockedNames(context.home.solutions, solutionNames).flatMap((solution) => {
@@ -109,12 +152,22 @@ export const problemsSection: SectionRender = (context, tone) => {
     return card ? [card] : [];
   });
   if (cards.length === 0) return null;
+  const columns = solutionColumns(cards.length);
   return (
-    <Band tone={tone} heading={title}>
-      <CardGrid>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={megaMenuColumns.solutions}
+      link={{ label: navLabels.allWhatWeDo, href: routes.whatWeDo() }}
+    >
+      <CardGrid columns={columns}>
         {cards.map((card) => (
           <li key={card.href} className="min-w-0">
-            <SolutionCard {...card} />
+            <SolutionCard
+              {...card}
+              icon={iconFor("solution", card.title)}
+              titleSize={columns === 5 ? "h4" : "h3"}
+            />
           </li>
         ))}
       </CardGrid>
@@ -122,22 +175,65 @@ export const problemsSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 4. From strategy to production: the How We Work introduction (CMS) and a link to the page. */
+/**
+ * 4. From strategy to production (the comp's process band): the How We Work introduction (CMS)
+ * and its action on the left; the locked delivery stages, numbered, on the right.
+ */
 export const strategyToProductionSection: SectionRender = (context, tone) => {
   const title = heading(context, "strategyToProduction");
   const intro = context.howWeWorkIntro?.trim();
   if (!title || !intro) return null;
-  return (
-    <Band tone={tone} heading={title}>
-      <Lead>{intro}</Lead>
-      <p className="mt-(--space-5)">
-        <TextLink href={routes.howWeWork()}>{navLabels.howWeWork}</TextLink>
-      </p>
-    </Band>
-  );
+  return <StrategyBand tone={tone} title={title} intro={intro} />;
 };
 
-/** 5. Practices: the five, in the order the specs fix. */
+function StrategyBand({
+  tone,
+  title,
+  intro,
+}: Readonly<{ tone: SectionTone; title: string; intro: string }>) {
+  const headingId = useId();
+  return (
+    <Section tone={tone} aria-labelledby={headingId}>
+      <Container
+        size="wide"
+        className="grid gap-x-(--space-8) gap-y-(--space-7) lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-center"
+      >
+        <Reveal>
+          <SectionHeading id={headingId} eyebrow={navLabels.howWeWork} title={title} />
+          <Lead className="mt-(--space-5)">{intro}</Lead>
+          <CTAGroup className="mt-(--space-6)">
+            <Button href={routes.howWeWork()} arrow>
+              {navLabels.howWeWork}
+            </Button>
+          </CTAGroup>
+        </Reveal>
+        <Reveal delay={1}>
+          <ol
+            aria-label={navLabels.howWeWork}
+            className="m-0 grid list-none grid-cols-2 gap-x-(--space-5) gap-y-(--space-4) p-0 sm:grid-cols-3"
+          >
+            {howWeWorkStages.map((stage, index) => (
+              <li
+                key={stage}
+                className="flex min-w-0 items-center gap-(--space-3) border-t border-tone-border pt-(--space-4)"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="min-w-0 text-body font-semibold text-tone-heading">{stage}</span>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+      </Container>
+    </Section>
+  );
+}
+
+/** 5. Practices: the five, in the order the specs fix, as editorial rows with icon tiles. */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
   const rows = toRows("practice", orderByLockedNames(context.home.practices, practiceNames), {
@@ -145,10 +241,15 @@ export const practicesSection: SectionRender = (context, tone) => {
   });
   if (rows.length === 0) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={megaMenuColumns.practices}
+      link={{ label: navLabels.whatWeDo, href: routes.whatWeDo() }}
+    >
       <RowList>
         {rows.map((row) => (
-          <PracticeRow key={row.href} {...row} />
+          <PracticeRow key={row.href} {...row} icon={iconFor("practice", row.title)} />
         ))}
       </RowList>
     </Band>
@@ -157,7 +258,8 @@ export const practicesSection: SectionRender = (context, tone) => {
 
 /**
  * 6. AI at the centre: the signature AI journey. The stage names are locked copy (Stage 9
- * section 19); the section appears when the CMS supplies its heading. Dark emphasis surface.
+ * section 19); the section appears when the CMS supplies its heading. Dark emphasis surface,
+ * with the comp's connected steps.
  */
 export const aiAtTheCentreSection: SectionRender = (context) => {
   const title = heading(context, "aiAtTheCentre");
@@ -187,7 +289,12 @@ export const selectedWorkSection: SectionRender = (context, tone) => {
   const [lead, ...rest] = items;
   if (!lead) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.work}
+      link={{ label: navLabels.work, href: routes.work() }}
+    >
       <CaseStudyFeature
         title={lead.row.title}
         href={lead.row.href}
@@ -208,19 +315,38 @@ export const selectedWorkSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 8. Industries: only when the Industries gate is open. */
+const placeholderCycle: readonly MediaPlaceholderVariant[] = [0, 1, 2, 3];
+
+/**
+ * 8. Industries: only when the Industries gate is open. The comp's browsable row of cards (a
+ * vertical list on phones), each with a token placeholder where the comp shows a photograph.
+ */
 export const industriesSection: SectionRender = (context, tone) => {
   if (!context.gates.open.industries) return null;
   const title = heading(context, "industries");
   const rows = toRows("industry", context.home.industries, { headingLevel: itemLevel(title) });
   if (rows.length === 0) return null;
+  const label = title ?? navLabels.industries;
   return (
-    <Band tone={tone} heading={title}>
-      <RowList>
-        {rows.map((row) => (
-          <IndustryRow key={row.href} {...row} />
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.industries}
+      link={{ label: navLabels.industries, href: routes.industries() }}
+    >
+      <Carousel label={label} {...carouselLabels(label)}>
+        {rows.map((row, index) => (
+          <li key={row.href}>
+            <LinkCard
+              kind="industry"
+              {...row}
+              icon={iconFor("industry", row.title)}
+              placeholder={placeholderCycle[index % placeholderCycle.length]}
+              titleSize="h4"
+            />
+          </li>
         ))}
-      </RowList>
+      </Carousel>
     </Band>
   );
 };
@@ -233,15 +359,17 @@ export const trustSection: SectionRender = (context, tone) => {
   });
   if (rows.length === 0) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.trustCentre}
+      link={{ label: navLabels.trustCentre, href: routes.trust() }}
+    >
       <RowList>
         {rows.map((row) => (
           <TrustTopicRow key={row.href} {...row} />
         ))}
       </RowList>
-      <p className="mt-(--space-5)">
-        <TextLink href={routes.trust()}>{navLabels.trustCentre}</TextLink>
-      </p>
     </Band>
   );
 };
@@ -257,15 +385,17 @@ export const labsSection: SectionRender = (context, tone) => {
   });
   if (rows.length === 0) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.labs}
+      link={{ label: navLabels.labs, href: routes.labs() }}
+    >
       <RowList>
         {rows.map((row) => (
           <LabAssetRow key={row.href} {...row} />
         ))}
       </RowList>
-      <p className="mt-(--space-5)">
-        <TextLink href={routes.labs()}>{navLabels.labs}</TextLink>
-      </p>
     </Band>
   );
 };
@@ -280,15 +410,17 @@ export const insightsSection: SectionRender = (context, tone) => {
   });
   if (rows.length === 0) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.insights}
+      link={{ label: navLabels.insights, href: routes.insights() }}
+    >
       <RowList>
         {rows.map((row) => (
           <ArticleRow key={row.href} {...row} />
         ))}
       </RowList>
-      <p className="mt-(--space-5)">
-        <TextLink href={routes.insights()}>{navLabels.insights}</TextLink>
-      </p>
     </Band>
   );
 };
@@ -302,7 +434,12 @@ export const leadershipSection: SectionRender = (context, tone) => {
   });
   if (cards.length === 0) return null;
   return (
-    <Band tone={tone} heading={title}>
+    <Band
+      tone={tone}
+      heading={title}
+      eyebrow={navLabels.leadership}
+      link={{ label: navLabels.leadership, href: routes.leadership() }}
+    >
       <ul className="m-0 grid list-none grid-cols-1 gap-(--space-6) p-0 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
           <li key={card.href} className="min-w-0">
@@ -310,16 +447,13 @@ export const leadershipSection: SectionRender = (context, tone) => {
           </li>
         ))}
       </ul>
-      <p className="mt-(--space-6)">
-        <TextLink href={routes.leadership()}>{navLabels.leadership}</TextLink>
-      </p>
     </Band>
   );
 };
 
 /**
  * 13. Final conversion: needs its heading from the CMS. The action is the CMS call to action, or
- * the locked "Talk to Vitalos" to the contact page.
+ * the locked "Talk to Vitalos" to the contact page. The comp's single-row closing band.
  */
 export const finalConversionSection: SectionRender = (context) => {
   const title = heading(context, "finalConversion");

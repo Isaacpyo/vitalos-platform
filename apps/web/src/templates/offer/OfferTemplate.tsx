@@ -63,6 +63,7 @@ export function OfferTemplate({ offer, draft }: Readonly<OfferTemplateProps>) {
     <PageMain>
       <PageIntro
         crumbs={offerTrail(offer)}
+        eyebrow={structuralLabels.offers}
         title={offer.title}
         {...(offer.summary ? { lead: offer.summary } : {})}
         actions={<Button href={cta.href}>{cta.label}</Button>}

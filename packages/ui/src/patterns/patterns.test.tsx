@@ -110,7 +110,11 @@ describe("empty and absent data", () => {
       />,
     );
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
-    expect(screen.getByText("11%")).toBeTruthy();
+    // The verified figure renders twice: the visual copy (aria-hidden, counted up on scroll) and
+    // the copy assistive technology reads.
+    const copies = screen.getAllByText("11%");
+    expect(copies).toHaveLength(2);
+    expect(copies.filter((node) => node.getAttribute("aria-hidden") === "true")).toHaveLength(1);
   });
 
   it("isNonEmpty narrows lists", () => {

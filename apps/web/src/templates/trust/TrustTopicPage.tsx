@@ -11,7 +11,7 @@ import {
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { formatDate } from "../institutional/format";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { TrustTopicData } from "./load";
@@ -41,8 +41,8 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
 
   return (
     <PageMain>
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -50,19 +50,24 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
               { name: view.title, path: routes.trustTopic(topic) },
             ]}
           />
-          <PageHeader title={view.title} eyebrow={trustTopicLabel(topic)} lead={view.summary}>
-            {updated ? (
-              <MetaRow
-                items={[
-                  {
-                    label: trustLabels.updated,
-                    value: <time dateTime={view.updatedAt}>{updated}</time>,
-                  },
-                ]}
-              />
-            ) : null}
-          </PageHeader>
-
+        }
+        title={view.title}
+        eyebrow={trustTopicLabel(topic)}
+        lead={view.summary}
+      >
+        {updated ? (
+          <MetaRow
+            items={[
+              {
+                label: trustLabels.updated,
+                value: <time dateTime={view.updatedAt}>{updated}</time>,
+              },
+            ]}
+          />
+        ) : null}
+      </PageHeroBand>
+      <PageBand>
+        <Stack gap={8}>
           {hasRichText(view.publicSummary) ? <RichText value={view.publicSummary} /> : null}
           <ContentGap
             draft={draft && empty}

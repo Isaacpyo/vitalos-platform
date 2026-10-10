@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, PersonCard, Stack } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { LeadershipData } from "./load";
 import { leaderCardProps } from "./map";
@@ -12,8 +12,8 @@ export function LeadershipPage({ data }: Readonly<{ data: LeadershipData }>) {
   const { page, leaders, draft } = data;
   return (
     <PageMain>
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -21,7 +21,12 @@ export function LeadershipPage({ data }: Readonly<{ data: LeadershipData }>) {
               { name: navLabels.leadership, path: routes.leadership() },
             ]}
           />
-          <PageHeader title={page?.heading ?? navLabels.leadership} lead={page?.intro} />
+        }
+        title={page?.heading ?? navLabels.leadership}
+        lead={page?.intro}
+      />
+      <PageBand>
+        <Stack gap={8}>
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && leaders.length === 0}

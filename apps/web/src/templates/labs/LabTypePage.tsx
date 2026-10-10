@@ -1,7 +1,7 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { Stack } from "@vitalos/ui";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { LabList } from "./LabList";
 import type { LabTypeData } from "./load";
@@ -13,8 +13,8 @@ export function LabTypePage({ data }: Readonly<{ data: LabTypeData }>) {
   const label = labTypeLabel(type);
   return (
     <PageMain>
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -22,7 +22,11 @@ export function LabTypePage({ data }: Readonly<{ data: LabTypeData }>) {
               { name: label, path: routes.labType(type) },
             ]}
           />
-          <PageHeader title={label} />
+        }
+        title={label}
+      />
+      <PageBand>
+        <Stack gap={8}>
           <LabList id="lab-type-list" assets={assets} />
         </Stack>
       </PageBand>

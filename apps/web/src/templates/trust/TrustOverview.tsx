@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, EvidenceRequestCTA, Stack, TrustTopicRow } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { TrustOverviewData } from "./load";
 import { evidenceRequestLink, topicRowProps, trustLabels } from "./map";
@@ -15,10 +15,15 @@ export function TrustOverview({ data }: Readonly<{ data: TrustOverviewData }>) {
   const { page, topics, draft } = data;
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={
+          <Breadcrumbs trail={[homeCrumb, { name: navLabels.trustCentre, path: routes.trust() }]} />
+        }
+        title={page?.heading ?? navLabels.trustCentre}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.trustCentre, path: routes.trust() }]} />
-          <PageHeader title={page?.heading ?? navLabels.trustCentre} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page && topics.length === 0}

@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { ArticleFeature, ArticleRow, ContentGap, Stack } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { ListFilter } from "../institutional/list-filter";
 import { rowFilterAttributes } from "../institutional/list-filter-model";
 import { PageMain } from "../institutional/page-main";
@@ -22,10 +22,15 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
   const groups = insightFilterGroups(rest);
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={
+          <Breadcrumbs trail={[homeCrumb, { name: navLabels.insights, path: routes.insights() }]} />
+        }
+        title={page?.heading ?? navLabels.insights}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.insights, path: routes.insights() }]} />
-          <PageHeader title={page?.heading ?? navLabels.insights} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page}

@@ -4,37 +4,42 @@
  * from these maps (`--tone-*`), scoped by `data-tone="light|muted|dark"`, so a dark Section
  * switches every descendant to verified contrast pairs without per-component overrides.
  */
-import { colors, type ColorToken } from "./primitives";
+import { palette, type ColorToken, type PaletteToken } from "./primitives";
 
 export type Tone = "light" | "muted" | "dark";
 
 export interface ToneRoles {
   /** Page or section background. */
-  readonly bg: ColorToken;
+  readonly bg: PaletteToken;
   /** Default body copy. */
-  readonly text: ColorToken;
+  readonly text: PaletteToken;
   /** Headings and high-emphasis copy. */
-  readonly heading: ColorToken;
+  readonly heading: PaletteToken;
   /** Secondary copy and metadata. */
-  readonly muted: ColorToken;
+  readonly muted: PaletteToken;
   /** Structural rules and dividers (decorative, not a control boundary). */
-  readonly border: ColorToken;
+  readonly border: PaletteToken;
   /** Form control boundary; must reach 3:1 against the surface (WCAG 1.4.11). */
-  readonly controlBorder: ColorToken;
+  readonly controlBorder: PaletteToken;
   /** Form control fill. */
-  readonly controlBg: ColorToken;
+  readonly controlBg: PaletteToken;
   /** Primary action fill. */
-  readonly action: ColorToken;
-  readonly actionHover: ColorToken;
+  readonly action: PaletteToken;
+  readonly actionHover: PaletteToken;
   /** Label colour on the action fill. */
-  readonly actionText: ColorToken;
+  readonly actionText: PaletteToken;
   /** Inline link colour. */
-  readonly link: ColorToken;
-  readonly linkHover: ColorToken;
+  readonly link: PaletteToken;
+  readonly linkHover: PaletteToken;
   /** Keyboard focus indicator. */
-  readonly focus: ColorToken;
+  readonly focus: PaletteToken;
   /** Rare data/intelligence accent, text and UI use. */
-  readonly accent: ColorToken;
+  readonly accent: PaletteToken;
+  /** Section categorisation line (Eyebrow): the brand blue on light surfaces. */
+  readonly eyebrow: PaletteToken;
+  /** Icon tile fill (a tint) and the icon drawn on it. */
+  readonly tileBg: PaletteToken;
+  readonly tileFg: PaletteToken;
 }
 
 export const tones = {
@@ -53,6 +58,9 @@ export const tones = {
     linkHover: "blue700",
     focus: "blue600",
     accent: "aqua600",
+    eyebrow: "blue600",
+    tileBg: "blue50",
+    tileFg: "blue600",
   },
   muted: {
     bg: "cloud50",
@@ -69,6 +77,9 @@ export const tones = {
     linkHover: "blue700",
     focus: "blue600",
     accent: "aqua600",
+    eyebrow: "blue600",
+    tileBg: "blue50",
+    tileFg: "blue600",
   },
   dark: {
     bg: "midnight950",
@@ -87,6 +98,9 @@ export const tones = {
     linkHover: "border",
     focus: "white",
     accent: "white",
+    eyebrow: "border",
+    tileBg: "midnight800",
+    tileFg: "white",
   },
 } as const satisfies Record<Tone, ToneRoles>;
 
@@ -110,7 +124,7 @@ export interface ContrastPair {
   readonly min: number;
 }
 
-const hex = (token: ColorToken): string => colors[token];
+const hex = (token: PaletteToken): string => palette[token];
 
 /**
  * Every declared foreground and surface pair that carries meaning. contrast.test.ts asserts each
@@ -125,7 +139,7 @@ export function declaredContrastPairs(): ContrastPair[] {
     const surface = hex(t.bg);
     const add = (
       role: string,
-      fg: ColorToken,
+      fg: PaletteToken,
       bg: string,
       kind: ContrastKind,
       min: number,
@@ -138,6 +152,8 @@ export function declaredContrastPairs(): ContrastPair[] {
     add("link", t.link, surface, "text", 4.5);
     add("linkHover", t.linkHover, surface, "text", 4.5);
     add("accent", t.accent, surface, "text", 4.5);
+    add("eyebrow", t.eyebrow, surface, "text", 4.5);
+    add("tileIcon", t.tileFg, hex(t.tileBg), "ui", 3);
     add("focus", t.focus, surface, "ui", 3);
     add("controlBorder", t.controlBorder, surface, "ui", 3);
     add("controlBorderOnControl", t.controlBorder, hex(t.controlBg), "ui", 3);

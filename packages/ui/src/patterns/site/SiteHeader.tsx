@@ -5,7 +5,7 @@ import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import type { PatternLink } from "../_internal/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileNav } from "./MobileNav";
-import { topLevelLinkClasses, quietLinkClasses } from "./nav-styles";
+import { topLevelLinkClasses, utilityLinkClasses } from "./nav-styles";
 import type { SiteNavItem, SiteNavLink } from "./types";
 
 export interface SiteHeaderProps {
@@ -63,7 +63,7 @@ export function SiteHeader({
             className="shrink-0"
           />
           <nav aria-label={navLabel} className="hidden h-full min-w-0 flex-1 lg:block">
-            <ul className="m-0 flex h-full list-none items-center gap-x-(--space-1) p-0">
+            <ul className="m-0 flex h-full list-none items-center justify-center gap-x-(--space-1) p-0 xl:gap-x-(--space-2)">
               {items.map((item) =>
                 item.menu ? (
                   <MegaMenu
@@ -89,12 +89,12 @@ export function SiteHeader({
               )}
             </ul>
           </nav>
-          <div className="ml-auto flex items-center gap-(--space-4) lg:ml-0">
+          <div className="ml-auto flex items-center gap-(--space-3) lg:ml-0">
             {utility && utility.length > 0 ? (
               <ul className="m-0 hidden list-none gap-(--space-4) p-0 xl:flex">
                 {utility.map((link) => (
                   <li key={link.href}>
-                    <a href={link.href} className={cx(quietLinkClasses, "text-small font-medium")}>
+                    <a href={link.href} className={utilityLinkClasses}>
                       {link.label}
                     </a>
                   </li>
@@ -103,7 +103,7 @@ export function SiteHeader({
             ) : null}
             {cta ? (
               <div className="hidden lg:block">
-                <Button href={cta.href} size="sm">
+                <Button href={cta.href} size="sm" arrow>
                   {cta.label}
                 </Button>
               </div>

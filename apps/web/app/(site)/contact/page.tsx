@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ctas, navLabels, routes } from "@vitalos/cms";
 import { getEnv, getFeatures } from "@vitalos/config";
-import { Container, Heading, Lead, Section, Stack } from "@vitalos/ui";
+import { Container, PageHero, Section, Stack } from "@vitalos/ui";
 import { RichText } from "../../../src/components/rich-text";
 import { buildMetadata } from "../../../src/features/seo/metadata";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
@@ -50,36 +50,40 @@ export default async function ContactPage({
 
   return (
     <main id="main" tabIndex={-1}>
-      <Section spacing="default">
-        <Container size="content">
-          <Stack gap={8}>
-            <Stack gap={4}>
-              {/* Heading and intro come from the CMS; locked copy is the only fallback. */}
-              <Heading level={1}>{page?.heading ?? ctas.primary}</Heading>
-              {page?.intro ? <Lead>{page.intro}</Lead> : null}
-            </Stack>
-
+      {/* Heading and intro come from the CMS; locked copy is the only fallback. */}
+      <PageHero size="title" title={page?.heading ?? ctas.primary} lead={page?.intro} />
+      <Section tone="muted" spacing="default">
+        <Container
+          size="wide"
+          className="grid gap-x-(--space-8) gap-y-(--space-7) lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]"
+        >
+          {/* What happens next and the intent routes first (reading and focus order), then the form. */}
+          <Stack gap={6} className="min-w-0">
             <RichText value={page?.expectations} />
-
+            {form.available ? <IntentRoutes routes={page?.routes ?? []} /> : null}
+          </Stack>
+          {/* The form card starts at md: below it the Turnstile widget (300px fixed) needs the
+              full width to fit a 320px viewport (WCAG 1.4.10). */}
+          <div
+            data-tone="light"
+            className="min-w-0 text-tone-text md:rounded-lg md:border md:border-tone-border md:bg-tone-bg md:p-(--space-7)"
+          >
             {form.available ? (
-              <>
-                <IntentRoutes routes={page?.routes ?? []} />
-                <EnquiryForm
-                  action={submitEnquiryAction}
-                  sourcePath={SOURCE_PATH}
-                  privacyNoticeVersion={form.privacyNoticeVersion}
-                  idempotencyKey={crypto.randomUUID()}
-                  intentOptions={buildIntentOptions(page?.routes)}
-                  prefill={prefill}
-                  turnstileSiteKey={turnstileSiteKey}
-                  contactEmail={settings.contactEmail}
-                  successMessage={page?.successMessage}
-                />
-              </>
+              <EnquiryForm
+                action={submitEnquiryAction}
+                sourcePath={SOURCE_PATH}
+                privacyNoticeVersion={form.privacyNoticeVersion}
+                idempotencyKey={crypto.randomUUID()}
+                intentOptions={buildIntentOptions(page?.routes)}
+                prefill={prefill}
+                turnstileSiteKey={turnstileSiteKey}
+                contactEmail={settings.contactEmail}
+                successMessage={page?.successMessage}
+              />
             ) : (
               <ContactAlternative contactEmail={settings.contactEmail} />
             )}
-          </Stack>
+          </div>
         </Container>
       </Section>
     </main>

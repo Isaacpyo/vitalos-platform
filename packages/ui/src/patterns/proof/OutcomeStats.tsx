@@ -1,5 +1,5 @@
 import { cx } from "../../primitives/_internal/cx";
-import { Stat } from "../../primitives/Stat";
+import { CountUp } from "../../motion/CountUp";
 import { hasText, isNonEmpty, type NonEmptyArray } from "../_internal/types";
 
 /** Matches OutcomeMetricView. `source` is mandatory (the Stat primitive enforces it too). */
@@ -87,15 +87,35 @@ export function OutcomeStatList({
       )}
     >
       {shown.map((stat, index) => (
-        <li key={`${stat.value}-${index}`} className="min-w-0">
-          <Stat
-            value={stat.value}
-            descriptor={stat.descriptor}
-            source={stat.source}
-            context={[stat.context, stat.timeframe].filter(hasText).join(" · ") || undefined}
-          />
+        <li
+          key={`${stat.value}-${index}`}
+          className="min-w-0 lg:border-l lg:border-tone-border lg:pl-(--space-6) lg:first:border-l-0 lg:first:pl-0"
+        >
+          <VerifiedStat stat={stat} />
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * One figure that has passed `renderableStats` (sourced and, when evidence is given, verified).
+ * Same content as the Stat primitive (value, descriptor, context, mandatory source), with the
+ * value in the brand colour and counted up once on scroll. CountUp is only reachable from here,
+ * so an unverified figure can never be animated.
+ */
+function VerifiedStat({ stat }: { stat: OutcomeStatItem }) {
+  const context = [stat.context, stat.timeframe].filter(hasText).join(" · ");
+  return (
+    <div className="flex flex-col gap-(--space-2)">
+      <p className="text-display-l text-tone-eyebrow tabular-nums">
+        <CountUp value={stat.value} />
+      </p>
+      <p className="text-body font-medium text-tone-text">{stat.descriptor}</p>
+      {context ? <p className="text-small text-tone-muted">{context}</p> : null}
+      <p className="text-small text-tone-muted">
+        <span className="font-medium">Source:</span> {stat.source}
+      </p>
+    </div>
   );
 }

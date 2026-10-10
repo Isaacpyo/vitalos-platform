@@ -8,7 +8,7 @@ export function SolutionCard(props: SolutionCardProps) {
   return <FeatureCard kind="solution" {...props} />;
 }
 
-export type LinkCardKind = "practice" | "solution" | "case-study" | "insight" | "lab";
+export type LinkCardKind = "practice" | "solution" | "industry" | "case-study" | "insight" | "lab";
 
 export interface LinkCardProps extends CardBaseProps {
   /** Content type. Drives `data-kind`; the visible label is `eyebrow`, supplied by the caller. */

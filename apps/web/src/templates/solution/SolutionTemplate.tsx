@@ -62,6 +62,7 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
     <PageMain>
       <PageIntro
         crumbs={solutionTrail(solution)}
+        eyebrow={structuralLabels.solutions}
         title={solution.title}
         lead={solution.problemStatement}
         actions={<Button href={cta.href}>{cta.label}</Button>}

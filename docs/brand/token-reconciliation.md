@@ -46,6 +46,22 @@ Spec aqua-600 `#007E76` is a data and intelligence accent, 4.9:1 on white and 4.
 - Fallbacks follow the stack in `primitives.ts`: `ui-sans-serif`, `system-ui`, Segoe UI, Aptos (the Stage 7 office fallback), then generic families. The web app loads Geist Sans and Geist Mono through `next/font` (the installed `geist` package, self-hosted) and sets `--font-geist-sans` and `--font-geist-mono`. **Source Serif 4 is not loaded in the web app yet** (`--font-source-serif` is unset, so `Prose serif` falls back to the system serif stack): `next/font/google` would download the font at build time, which this repository avoids until the owner confirms the typeface and its hosting. Storybook uses `@font-face` for Geist from the `geist` package and shows a system serif where Source Serif 4 is not bundled.
 - Needed from the owner: confirm the families, confirm licences (both families are published under open-source licences; verify the terms before launch), and approve rendering at the Stage 9 type roles. Changing families is a token and loader change, not a component change.
 
+## Open: tints and type-role adjustments from the owner comp (design review)
+
+ADR-023 ports the owner comp's presentation. It needed light tints for icon tiles and decorative surfaces, added as `tints` (not new hues) and pending design review:
+
+| Token      | Value     | Use                                                  | Contrast                                            |
+| ---------- | --------- | ---------------------------------------------------- | --------------------------------------------------- |
+| `blue-50`  | `#EEF2FF` | Icon tile fill, page-hero plane, placeholders        | Vitalos Blue icon on it: 4.8:1 (tested, `tileIcon`) |
+| `blue-100` | `#DCE4FF` | Hero planes and placeholders only (never under text) | Decorative                                          |
+| `aqua-50`  | `#E6F4F2` | Hero plane and placeholders only                     | Decorative                                          |
+
+The eyebrow is now Vitalos Blue on light surfaces (5.4:1 on white, 5.1:1 on cloud; tested as the `eyebrow` role) and the border colour on midnight. Type roles moved within the Stage 9 section 5 ranges: Display XL mobile 44 px, Display L desktop 60 px, H2 desktop 40 px (tighter leading and tracking), eyebrow tracking 0.14 em.
+
+## Open: typeface for the comp presentation (owner)
+
+The comp uses Manrope and PR #31 used Inter. Neither is adopted: the site keeps the provisional Geist set above and no font dependency was added. Choosing Geist, Inter, Manrope or another family remains an owner decision; it is a token and loader change only.
+
 ## Open: logo and favicon
 
 Figma exports for the wordmark and symbol are not yet available. `Wordmark` is a typed slot (`logo?: { src, width, height, alt? }`) and renders the text `VITALOS` until the approved SVG is supplied. Favicon, app icons, Open Graph images and the Organization logo remain typed slots in the application layer and are not invented here. The descriptor shown in a logo lockup versus the website descriptor is tracked in `docs/delivery/stage-1-plan.md` and `docs/brand/asset-approval.md`.

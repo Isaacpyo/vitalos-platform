@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { cx } from "../../primitives/_internal/cx";
-import { Icon } from "../../primitives/Icon";
+import { CircleArrow } from "../../primitives/CircleArrow";
+import type { IconName } from "../../primitives/Icon";
+import { IconTile } from "../../primitives/IconTile";
 import { MetaRow, type MetaItem } from "../../primitives/MetaRow";
 import { CardTitle } from "./CardTitle";
 import { hasText, type ItemHeadingLevel } from "./types";
@@ -17,6 +19,8 @@ export interface RowBaseProps {
   meta?: readonly MetaItem[] | undefined;
   /** Outline level of the title. Defaults to 3. */
   headingLevel?: ItemHeadingLevel | undefined;
+  /** Decorative subject icon on a tinted tile, beside the title. */
+  icon?: IconName | undefined;
   className?: string | undefined;
 }
 
@@ -30,7 +34,8 @@ interface EditorialRowProps extends RowBaseProps {
 
 /**
  * Rule-separated, content-first row (Stage 9 section 17 "Editorial row"). Two columns from md:
- * title, summary and facts. A single stretched link, long titles wrap, no image required.
+ * title (with an optional icon tile), summary and facts, closed by the comp's arrow disc. A
+ * single stretched link, long titles wrap, no image required.
  */
 export function EditorialRow({
   title,
@@ -39,6 +44,7 @@ export function EditorialRow({
   eyebrow,
   meta,
   headingLevel = 3,
+  icon,
   className,
   lead,
   children,
@@ -48,19 +54,22 @@ export function EditorialRow({
     <article
       {...(kind ? { "data-kind": kind } : {})}
       className={cx(
-        "group relative grid gap-x-(--space-6) gap-y-(--space-3) border-t border-tone-border py-(--space-5)",
+        "group relative grid gap-x-(--space-6) gap-y-(--space-3) border-t border-tone-border py-(--space-6)",
         "md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]",
         className,
       )}
     >
-      <div className="min-w-0">
-        {hasText(eyebrow) ? (
-          <p className="mb-(--space-2) text-eyebrow text-tone-muted uppercase">{eyebrow}</p>
-        ) : null}
-        <CardTitle level={headingLevel} size="h3" href={href}>
-          {title}
-        </CardTitle>
-        {lead ? <div className="mt-(--space-3)">{lead}</div> : null}
+      <div className={cx("min-w-0", icon && "flex items-start gap-(--space-4)")}>
+        {icon ? <IconTile name={icon} /> : null}
+        <div className="min-w-0">
+          {hasText(eyebrow) ? (
+            <p className="mb-(--space-2) text-eyebrow text-tone-muted uppercase">{eyebrow}</p>
+          ) : null}
+          <CardTitle level={headingLevel} size="h3" href={href}>
+            {title}
+          </CardTitle>
+          {lead ? <div className="mt-(--space-3)">{lead}</div> : null}
+        </div>
       </div>
       <div className="flex min-w-0 items-start justify-between gap-(--space-4)">
         <div className="min-w-0 flex-1">
@@ -72,11 +81,7 @@ export function EditorialRow({
           ) : null}
           {children}
         </div>
-        <Icon
-          name="arrow-right"
-          size={20}
-          className="mt-(--space-1) shrink-0 text-tone-heading transition-transform duration-(--duration-feedback) ease-(--ease-standard) group-hover:translate-x-1"
-        />
+        <CircleArrow />
       </div>
     </article>
   );

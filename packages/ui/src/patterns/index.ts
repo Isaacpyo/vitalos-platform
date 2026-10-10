@@ -11,6 +11,16 @@ export {
   type PatternLink,
 } from "./_internal/types";
 
+// Section layout (ADR-023, from the owner comp)
+export { SectionHeading, type SectionHeadingProps } from "./layout/SectionHeading";
+export { PageHero, type PageHeroProps } from "./layout/PageHero";
+export { HeroVisual, type HeroVisualProps } from "./media/HeroVisual";
+export {
+  MediaPlaceholder,
+  type MediaPlaceholderProps,
+  type MediaPlaceholderVariant,
+} from "./media/MediaPlaceholder";
+
 // Site chrome
 export { SiteHeader, type SiteHeaderProps } from "./site/SiteHeader";
 export { MegaMenu, type MegaMenuProps } from "./site/MegaMenu";

@@ -1,4 +1,4 @@
-import { SiteFooter } from "@vitalos/ui";
+import { RevealController, SiteFooter } from "@vitalos/ui";
 import { ActiveSectionHeader } from "../../src/components/active-section";
 import { loadSiteChrome } from "../../src/components/site-chrome/load";
 
@@ -15,6 +15,8 @@ export default async function SiteLayout({ children }: Readonly<{ children: Reac
       <ActiveSectionHeader {...header} />
       {children}
       <SiteFooter {...footer} />
+      {/* Drives the optional section entrances (ADR-023). Renders nothing; inert without JS. */}
+      <RevealController />
     </>
   );
 }

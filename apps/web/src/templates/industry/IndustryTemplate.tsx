@@ -56,6 +56,7 @@ export function IndustryTemplate({ industry, gates, draft }: Readonly<IndustryTe
     <PageMain>
       <PageIntro
         crumbs={industryTrail(industry)}
+        eyebrow={structuralLabels.industries}
         title={industry.title}
         {...(industry.summary ? { lead: industry.summary } : {})}
         actions={<Button href={cta.href}>{cta.label}</Button>}

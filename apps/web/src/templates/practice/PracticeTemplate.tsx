@@ -53,6 +53,7 @@ export function PracticeTemplate({ practice, gates, draft }: Readonly<PracticeTe
     <PageMain>
       <PageIntro
         crumbs={practiceTrail(practice)}
+        eyebrow={structuralLabels.practices}
         title={practice.title}
         lead={practice.proposition}
         actions={<Button href={cta.href}>{cta.label}</Button>}

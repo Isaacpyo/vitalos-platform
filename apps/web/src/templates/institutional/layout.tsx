@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Container, Eyebrow, Heading, Lead, Section, Stack } from "@vitalos/ui";
+import { Container, Eyebrow, Heading, Lead, PageHero, Section, Stack } from "@vitalos/ui";
 import type { HeadingLevel, ContainerSize, SectionTone } from "@vitalos/ui";
 
 /** A page band: Section plus Container. The page's own `<main>` is `PageMain`. */
@@ -25,6 +25,45 @@ export function PageBand({
     >
       <Container size={size}>{children}</Container>
     </Section>
+  );
+}
+
+/**
+ * The page's first band (the owner comp's page hero, ADR-023): breadcrumb, eyebrow, the single
+ * H1, an optional lead, then anything beneath them, on a light field with a decorative plane.
+ */
+export function PageHeroBand({
+  crumbs,
+  title,
+  eyebrow,
+  lead,
+  afterTitle,
+  size = "content",
+  children,
+}: Readonly<{
+  /** Content width; match the PageBand that follows. */
+  size?: ContainerSize;
+  /** The breadcrumb trail element (Breadcrumbs). */
+  crumbs?: ReactNode;
+  title: string;
+  eyebrow?: string | undefined;
+  lead?: string | undefined;
+  /** Rendered directly under the H1, before the lead (for example the maturity badge). */
+  afterTitle?: ReactNode;
+  children?: ReactNode;
+}>) {
+  return (
+    <PageHero
+      size="title"
+      containerSize={size}
+      title={title}
+      eyebrow={eyebrow}
+      lead={lead}
+      before={crumbs}
+      afterTitle={afterTitle}
+    >
+      {children ? <Stack gap={4}>{children}</Stack> : null}
+    </PageHero>
   );
 }
 

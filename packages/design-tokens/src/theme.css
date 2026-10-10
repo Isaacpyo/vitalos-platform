@@ -14,6 +14,9 @@
   --color-success: #18794e;
   --color-warning: #9a6700;
   --color-danger: #c9372c;
+  --color-blue-50: #eef2ff;
+  --color-blue-100: #dce4ff;
+  --color-aqua-50: #e6f4f2;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -27,12 +30,14 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --duration-feedback: 140ms;
   --duration-reveal: 200ms;
   --duration-disclosure: 220ms;
-  --duration-entrance: 300ms;
+  --duration-entrance: 400ms;
   --duration-diagram: 600ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasis: cubic-bezier(0.22, 1, 0.36, 1);
   --shadow-floating: 0 8px 24px 0 rgb(8 26 42 / 0.12);
   --font-sans:
     var(--font-geist-sans, "Geist"), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Aptos,
@@ -41,22 +46,22 @@
     var(--font-source-serif, "Source Serif 4"), ui-serif, Georgia, Cambria, "Times New Roman", serif;
   --font-mono:
     var(--font-geist-mono, "Geist Mono"), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --text-display-xl: clamp(3rem, calc(2.5rem + 2.5vw), 4.5rem);
+  --text-display-xl: clamp(2.75rem, calc(2.1667rem + 2.9167vw), 4.5rem);
   --text-display-xl--line-height: 1;
   --text-display-xl--font-weight: 600;
-  --text-display-xl--letter-spacing: -0.02em;
-  --text-display-l: clamp(2.5rem, calc(2.1667rem + 1.6667vw), 3.5rem);
-  --text-display-l--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-l: clamp(2.5rem, calc(2.0833rem + 2.0833vw), 3.75rem);
+  --text-display-l--line-height: 1.02;
   --text-display-l--font-weight: 600;
-  --text-display-l--letter-spacing: -0.02em;
+  --text-display-l--letter-spacing: -0.025em;
   --text-h1: clamp(2.25rem, calc(2rem + 1.25vw), 3rem);
   --text-h1--line-height: 1.1;
   --text-h1--font-weight: 600;
-  --text-h1--letter-spacing: -0.015em;
-  --text-h2: clamp(1.875rem, calc(1.75rem + 0.625vw), 2.25rem);
-  --text-h2--line-height: 1.15;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h2: clamp(1.875rem, calc(1.6667rem + 1.0417vw), 2.5rem);
+  --text-h2--line-height: 1.08;
   --text-h2--font-weight: 600;
-  --text-h2--letter-spacing: -0.01em;
+  --text-h2--letter-spacing: -0.02em;
   --text-h3: clamp(1.375rem, calc(1.2917rem + 0.4167vw), 1.625rem);
   --text-h3--line-height: 1.25;
   --text-h3--font-weight: 600;
@@ -76,7 +81,7 @@
   --text-eyebrow: clamp(0.75rem, calc(0.7292rem + 0.1042vw), 0.8125rem);
   --text-eyebrow--line-height: 1.4;
   --text-eyebrow--font-weight: 600;
-  --text-eyebrow--letter-spacing: 0.08em;
+  --text-eyebrow--letter-spacing: 0.14em;
   --container-max: 90rem;
   --container-content: 70rem;
   --container-prose: 45rem;
@@ -110,6 +115,9 @@
   --tone-link-hover: var(--color-blue-700);
   --tone-focus: var(--color-blue-600);
   --tone-accent: var(--color-aqua-600);
+  --tone-eyebrow: var(--color-blue-600);
+  --tone-tile-bg: var(--color-blue-50);
+  --tone-tile-fg: var(--color-blue-600);
 }
 
 [data-tone="muted"] {
@@ -127,6 +135,9 @@
   --tone-link-hover: var(--color-blue-700);
   --tone-focus: var(--color-blue-600);
   --tone-accent: var(--color-aqua-600);
+  --tone-eyebrow: var(--color-blue-600);
+  --tone-tile-bg: var(--color-blue-50);
+  --tone-tile-fg: var(--color-blue-600);
 }
 
 [data-tone="dark"] {
@@ -144,6 +155,9 @@
   --tone-link-hover: var(--color-border);
   --tone-focus: var(--color-white);
   --tone-accent: var(--color-white);
+  --tone-eyebrow: var(--color-border);
+  --tone-tile-bg: var(--color-midnight-800);
+  --tone-tile-fg: var(--color-white);
 }
 
 /* Focus: strong, consistent, never removed (Stage 9 section 30). */
@@ -155,6 +169,21 @@
 /* Reflow: long unbroken strings (URLs, identifiers) wrap instead of forcing horizontal scroll at 320px. */
 html {
   overflow-wrap: anywhere;
+}
+
+/* Entrance keyframes for the decorative hero visual (ADR-023). Used only behind motion-safe. The
+   panel carries text, so it only moves (never fades) and its contrast holds at every frame. */
+@keyframes hero-plane {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+@keyframes hero-panel {
+  from {
+    translate: 0 0.75rem;
+  }
 }
 
 /* Reduced motion: keep state changes, drop transitions and smooth scrolling. */

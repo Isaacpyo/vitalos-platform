@@ -7,7 +7,7 @@ import { getSeoContext } from "../../features/seo/context";
 import { jobPostingJsonLd } from "../../features/seo/json-ld";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { formatDate } from "../institutional/format";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { JobData } from "./load";
@@ -39,8 +39,8 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
       {open ? (
         <JsonLd data={jobPostingJsonLd(job, { siteUrl: getSeoContext().siteUrl }, now)} />
       ) : null}
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -49,10 +49,15 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
               { name: job.title, path: routes.job(job.slug) },
             ]}
           />
-          <PageHeader title={job.title} lead={job.summary}>
-            {open ? null : <Tag>{careersLabels.closed}</Tag>}
-            <MetaRow items={facts} />
-          </PageHeader>
+        }
+        title={job.title}
+        lead={job.summary}
+      >
+        {open ? null : <Tag>{careersLabels.closed}</Tag>}
+        <MetaRow items={facts} />
+      </PageHeroBand>
+      <PageBand>
+        <Stack gap={8}>
           {hasRichText(job.description) ? <RichText value={job.description} /> : null}
           <ContentGap
             draft={draft && !hasRichText(job.description)}

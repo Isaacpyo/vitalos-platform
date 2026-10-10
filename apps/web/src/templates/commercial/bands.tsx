@@ -6,11 +6,11 @@ import {
   CTAGroup,
   Container,
   ContentGap,
-  Display,
-  Eyebrow,
-  Heading,
-  Lead,
+  Icon,
+  PageHero,
+  Reveal,
   Section,
+  SectionHeading,
 } from "@vitalos/ui";
 import type { PatternLink, SectionSpacing, SectionTone } from "@vitalos/ui";
 import { crumbsToUi } from "../../lib/view-mapping/breadcrumbs";
@@ -35,23 +35,21 @@ export interface PageIntroProps {
   children?: ReactNode;
 }
 
-/** First band of a page: breadcrumb, h1, lead and actions. The page has no other h1. */
+/**
+ * First band of a page (the owner comp's page hero): breadcrumb, eyebrow, h1, lead and actions
+ * on a light field with a decorative angled plane. The page has no other h1.
+ */
 export function PageIntro({ crumbs, eyebrow, title, lead, actions, children }: PageIntroProps) {
   return (
-    <Section as="div" tone="light" spacing="default">
-      <Container size="wide">
-        {crumbs && crumbs.length > 1 ? (
-          <Breadcrumb items={crumbsToUi(crumbs)} className="mb-(--space-6)" />
-        ) : null}
-        {eyebrow ? <Eyebrow className="mb-(--space-3)">{eyebrow}</Eyebrow> : null}
-        <Display size="l" as="h1" className="max-w-(--container-content) break-words">
-          {title}
-        </Display>
-        {lead ? <Lead className="mt-(--space-5)">{lead}</Lead> : null}
-        {actions ? <CTAGroup className="mt-(--space-6)">{actions}</CTAGroup> : null}
-        {children ? <div className="mt-(--space-7)">{children}</div> : null}
-      </Container>
-    </Section>
+    <PageHero
+      title={title}
+      eyebrow={eyebrow}
+      lead={lead}
+      before={crumbs && crumbs.length > 1 ? <Breadcrumb items={crumbsToUi(crumbs)} /> : undefined}
+      actions={actions}
+    >
+      {children}
+    </PageHero>
   );
 }
 
@@ -60,6 +58,12 @@ export interface BandProps {
   spacing?: SectionSpacing;
   /** Visible heading of the band. Without one the band is an unnamed container. */
   heading?: string | undefined;
+  /** Categorisation line above the heading. */
+  eyebrow?: string | undefined;
+  /** Short introduction beside the heading (the comp's split section header). */
+  intro?: string | undefined;
+  /** One onward link beside the heading. */
+  link?: PatternLink | undefined;
   children: ReactNode;
   className?: string;
 }
@@ -72,6 +76,9 @@ export function Band({
   tone = "light",
   spacing = "default",
   heading,
+  eyebrow,
+  intro,
+  link,
   children,
   className,
 }: BandProps) {
@@ -85,11 +92,19 @@ export function Band({
     >
       <Container size="wide">
         {heading ? (
-          <Heading id={headingId} level={2} size="h2" className="max-w-(--container-content)">
-            {heading}
-          </Heading>
+          <Reveal>
+            <SectionHeading
+              id={headingId}
+              title={heading}
+              eyebrow={eyebrow}
+              intro={intro}
+              link={link}
+            />
+          </Reveal>
         ) : null}
-        <div className={heading ? "mt-(--space-6)" : undefined}>{children}</div>
+        <Reveal delay={heading ? 1 : 0} className={heading ? "mt-(--space-7)" : undefined}>
+          {children}
+        </Reveal>
       </Container>
     </Section>
   );
@@ -107,9 +122,15 @@ export function StatementList({ items }: Readonly<{ items: readonly string[] }>)
       {shown.map((item, index) => (
         <li
           key={`${item}-${index}`}
-          className="min-w-0 border-t border-tone-border py-(--space-4) text-body-l text-tone-text text-pretty"
+          className="flex min-w-0 items-start gap-(--space-4) border-t border-tone-border py-(--space-5) text-body-l text-tone-text text-pretty"
         >
-          {item}
+          <span
+            aria-hidden="true"
+            className="mt-(--space-1) inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-tone-tile-fg"
+          >
+            <Icon name="check" size={16} />
+          </span>
+          <span className="min-w-0">{item}</span>
         </li>
       ))}
     </ul>
@@ -121,10 +142,20 @@ export function RowList({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="border-b border-tone-border">{children}</div>;
 }
 
+const cardColumns = {
+  2: "md:grid-cols-2",
+  3: "md:grid-cols-2 lg:grid-cols-3",
+  /** The comp's row of five solution cards: two, then three, then all five abreast. */
+  5: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+} as const;
+
 /** Cards in a responsive grid; for a few high-value items, never a wall. */
-export function CardGrid({ children }: Readonly<{ children: ReactNode }>) {
+export function CardGrid({
+  children,
+  columns = 2,
+}: Readonly<{ children: ReactNode; columns?: keyof typeof cardColumns }>) {
   return (
-    <ul className="m-0 grid list-none grid-cols-1 gap-(--space-5) p-0 md:grid-cols-2">
+    <ul className={`m-0 grid list-none grid-cols-1 gap-(--space-5) p-0 ${cardColumns[columns]}`}>
       {children}
     </ul>
   );

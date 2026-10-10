@@ -48,4 +48,7 @@ export { DefinitionList, type DefinitionItem, type DefinitionListProps } from ".
 export { AnchorNav, type AnchorNavItem, type AnchorNavProps } from "./AnchorNav";
 export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from "./Breadcrumb";
 export { Icon, iconNames, type IconName, type IconProps } from "./Icon";
+export { IconTile, type IconTileProps } from "./IconTile";
+export { SlideArrow, type SlideArrowProps } from "./SlideArrow";
+export { CircleArrow, type CircleArrowProps } from "./CircleArrow";
 export { Wordmark, type WordmarkLogo, type WordmarkProps } from "./Wordmark";

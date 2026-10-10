@@ -30,6 +30,25 @@ export const colors = {
 
 export type ColorToken = keyof typeof colors;
 
+/**
+ * Tints of the locked hues (ADR-023, web presentation from the owner comp). They are not new
+ * hues: each is a light mix of Vitalos Blue or Aqua with white, used for icon tiles and for
+ * decorative, non-text surfaces (hero planes, media placeholders). Kept apart from `colors` so
+ * the Stage 9 section 4 set stays exact. PENDING DESIGN REVIEW (ADR-008).
+ */
+export const tints = {
+  blue50: "#EEF2FF",
+  blue100: "#DCE4FF",
+  aqua50: "#E6F4F2",
+} as const;
+
+export type TintToken = keyof typeof tints;
+
+/** Every colour token: the Stage 9 colours plus the tints. Tone roles and the CSS read this. */
+export const palette = { ...colors, ...tints } as const;
+
+export type PaletteToken = keyof typeof palette;
+
 /** 4px base spacing scale (Stage 9 section 7), in px. space-1 to space-10. */
 export const space = {
   1: 4,
@@ -63,6 +82,8 @@ export const radii = {
   sm: 4,
   md: 6,
   lg: 8,
+  /** Selected media only (Stage 9 section 8), for example the hero visual panels. */
+  xl: 12,
 } as const;
 
 /** Motion durations in ms (Stage 9 section 11). */
@@ -74,13 +95,15 @@ export const durations = {
   /** Accordion and disclosure, 180 to 260ms. */
   disclosure: 220,
   /** Optional section entrance, 200 to 400ms. */
-  entrance: 300,
+  entrance: 400,
   /** Diagram sequence, 400 to 800ms. */
   diagram: 600,
 } as const;
 
 export const easing = {
   standard: "cubic-bezier(0.2, 0, 0, 1)",
+  /** Decelerating curve for entrances and the arrow slide (the owner comp's motion feel). */
+  emphasis: "cubic-bezier(0.22, 1, 0.36, 1)",
 } as const;
 
 /**
@@ -99,10 +122,10 @@ export interface TypeRole {
 }
 
 export const typeRoles = {
-  displayXl: { mobile: 48, desktop: 72, lineHeight: 1, weight: 600, tracking: -0.02 },
-  displayL: { mobile: 40, desktop: 56, lineHeight: 1.05, weight: 600, tracking: -0.02 },
-  h1: { mobile: 36, desktop: 48, lineHeight: 1.1, weight: 600, tracking: -0.015 },
-  h2: { mobile: 30, desktop: 36, lineHeight: 1.15, weight: 600, tracking: -0.01 },
+  displayXl: { mobile: 44, desktop: 72, lineHeight: 1, weight: 600, tracking: -0.03 },
+  displayL: { mobile: 40, desktop: 60, lineHeight: 1.02, weight: 600, tracking: -0.025 },
+  h1: { mobile: 36, desktop: 48, lineHeight: 1.1, weight: 600, tracking: -0.02 },
+  h2: { mobile: 30, desktop: 40, lineHeight: 1.08, weight: 600, tracking: -0.02 },
   h3: { mobile: 22, desktop: 26, lineHeight: 1.25, weight: 600, tracking: -0.005 },
   bodyL: { mobile: 18, desktop: 20, lineHeight: 1.5, weight: 400, tracking: 0 },
   body: { mobile: 16, desktop: 17, lineHeight: 1.55, weight: 400, tracking: 0 },
@@ -112,7 +135,7 @@ export const typeRoles = {
     desktop: 13,
     lineHeight: 1.4,
     weight: 600,
-    tracking: 0.08,
+    tracking: 0.14,
     uppercase: true,
   },
 } as const satisfies Record<string, TypeRole>;

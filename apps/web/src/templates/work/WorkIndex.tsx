@@ -2,7 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { CaseStudyRow, ContentGap, Stack } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { PageBand, PageHeader } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { ListFilter } from "../institutional/list-filter";
 import { rowFilterAttributes } from "../institutional/list-filter-model";
 import { PageMain } from "../institutional/page-main";
@@ -21,10 +21,13 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
   const groups = workFilterGroups(studies);
   return (
     <PageMain>
+      <PageHeroBand
+        crumbs={<Breadcrumbs trail={[homeCrumb, { name: navLabels.work, path: routes.work() }]} />}
+        title={page?.heading ?? navLabels.work}
+        lead={page?.intro}
+      />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.work, path: routes.work() }]} />
-          <PageHeader title={page?.heading ?? navLabels.work} lead={page?.intro} />
           <RichText value={page?.body} />
           <ContentGap
             draft={draft && !page}

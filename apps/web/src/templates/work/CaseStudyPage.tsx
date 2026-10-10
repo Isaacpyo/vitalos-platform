@@ -10,7 +10,7 @@ import {
 } from "@vitalos/ui";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
-import { ContentSection, PageBand, PageHeader } from "../institutional/layout";
+import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { CaseStudyData } from "./load";
@@ -37,8 +37,8 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
 
   return (
     <PageMain>
-      <PageBand>
-        <Stack gap={8}>
+      <PageHeroBand
+        crumbs={
           <Breadcrumbs
             trail={[
               homeCrumb,
@@ -47,10 +47,15 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
               { name: study.title, path: routes.caseStudy(study.slug) },
             ]}
           />
-          <PageHeader title={study.title} eyebrow={study.sector} lead={study.summary}>
-            <MetaRow items={caseStudyFacts(study)} />
-          </PageHeader>
-
+        }
+        title={study.title}
+        eyebrow={study.sector}
+        lead={study.summary}
+      >
+        <MetaRow items={caseStudyFacts(study)} />
+      </PageHeroBand>
+      <PageBand>
+        <Stack gap={8}>
           {metrics ? <OutcomeStats stats={metrics} aria-label={workLabels.outcome} /> : null}
 
           {hasRichText(study.challenge) ? (
