@@ -97,21 +97,22 @@ test.describe("homepage", () => {
     // 2. Credibility: a verified proof marker.
     await expect(main.getByText("Example verified marker (fixture)")).toBeVisible();
     // 3 to 13: each section's authored heading.
-    for (const key of [
-      "problems",
-      "strategyToProduction",
-      "practices",
-      "aiAtTheCentre",
-      "selectedWork",
-      "industries",
-      "trust",
-      "labs",
-      "insights",
-      "leadership",
-      "finalConversion",
-    ]) {
+    const headings: Record<string, string> = {
+      problems: "Problems (fixture)",
+      strategyToProduction: "Strategy to production (fixture)",
+      practices: "Practices (fixture)",
+      aiAtTheCentre: "AI at the centre (fixture)",
+      selectedWork: "Selected work (fixture)",
+      industries: "Industries (fixture)",
+      trust: "Trust (fixture)",
+      labs: "Labs (fixture)",
+      insights: "Insights (fixture)",
+      leadership: "Leadership (fixture)",
+      finalConversion: "Final conversion (fixture)",
+    };
+    for (const [key, heading] of Object.entries(headings)) {
       await expect(
-        main.getByRole("heading", { level: 2, name: `Example ${key} heading (fixture)` }),
+        main.getByRole("heading", { level: 2, name: heading }),
         `section ${key}`,
       ).toBeVisible();
     }
@@ -234,9 +235,7 @@ test.describe("commercial pages", () => {
     page,
   }) => {
     await page.goto("/what-we-do");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Example what-we-do heading (fixture)",
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("What we do (fixture)");
     const main = page.locator("main");
     await expect(main.getByRole("link", { name: "Example Practice (fixture)" })).toBeVisible();
     await expect(main.getByRole("link", { name: "Example Solution (fixture)" })).toBeVisible();

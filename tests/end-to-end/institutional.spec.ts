@@ -54,9 +54,7 @@ test.describe("every institutional template", () => {
 test.describe("about and leadership", () => {
   test("about shows the CMS heading, the leadership profile and onward links", async ({ page }) => {
     await page.goto("/about");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Example about heading (fixture)",
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("About (fixture)");
     await expect(
       page.locator("main").getByRole("link", { name: "Example Person (fixture)" }),
     ).toBeVisible();

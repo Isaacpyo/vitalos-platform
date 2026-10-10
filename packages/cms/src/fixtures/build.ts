@@ -46,5 +46,24 @@ export function fixtureMetric(label: string): OutcomeMetricView {
   };
 }
 
+/**
+ * "strategyToProduction" or "what-we-do" -> "Strategy to production". Deterministic, so generated
+ * fixture headings read naturally in screenshots and Storybook.
+ */
+export function humaniseKey(key: string): string {
+  const words = key
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[-_]+/g, " ")
+    .trim()
+    .toLowerCase();
+  const sentence = words.charAt(0).toUpperCase() + words.slice(1);
+  return sentence.replace(/\bai\b/gi, "AI");
+}
+
+/** A readable, clearly artificial heading for a section or page key. */
+export function fixtureHeading(key: string): string {
+  return `${humaniseKey(key)} ${FIXTURE_LABEL}`;
+}
+
 export const exampleUrl = (path: string): string => `https://example.invalid/${path}`;
 export const exampleEmail = (local: string): string => `${local}@example.invalid`;

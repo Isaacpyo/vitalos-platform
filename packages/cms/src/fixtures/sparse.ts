@@ -17,7 +17,7 @@ import type {
   SolutionView,
   TrustTopicView,
 } from "../content/types";
-import { FIXTURE_LABEL, richText, seo, verifiedEvidence } from "./build";
+import { FIXTURE_LABEL, fixtureHeading, richText, seo, verifiedEvidence } from "./build";
 
 const L = FIXTURE_LABEL;
 
@@ -139,7 +139,7 @@ const privacy: LegalPageView = {
 /** No "what happens next" copy: the UI must show a neutral receipt and promise nothing. */
 const contact: ContactPageView = {
   key: "contact",
-  heading: `Example contact heading ${L}`,
+  heading: fixtureHeading("contact"),
   seo: seo("Example contact"),
   routes: [],
 };

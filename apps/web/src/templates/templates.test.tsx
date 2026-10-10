@@ -59,15 +59,15 @@ describe("homepage sections", () => {
     const markup = html(
       <HomeTemplate home={fullHome} gates={closedGates} howWeWorkIntro="intro" />,
     );
-    for (const key of ["selectedWork", "industries", "labs", "insights"]) {
-      expect(markup).not.toContain(`Example ${key} heading`);
+    for (const heading of ["Selected work", "Industries", "Labs", "Insights"]) {
+      expect(markup).not.toContain(`${heading} (fixture)`);
     }
     expect(markup).not.toContain("/work/");
     expect(markup).not.toContain("/labs/");
     expect(markup).not.toContain("/insights/");
     // Ungated sections still render.
-    expect(markup).toContain("Example problems heading");
-    expect(markup).toContain("Example practices heading");
+    expect(markup).toContain("Problems (fixture)");
+    expect(markup).toContain("Practices (fixture)");
   });
 
   it("renders no heading for a section whose heading is not authored", () => {

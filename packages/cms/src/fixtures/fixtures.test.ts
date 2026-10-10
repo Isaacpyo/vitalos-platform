@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fixtureHeading } from "./build";
 import { createFixtureContentSource, fixtureSets, fullFixtureSet, sparseFixtureSet } from "./index";
 
 function walk(value: unknown, visit: (entry: string, key: string) => void, key = ""): void {
@@ -79,5 +80,19 @@ describe("fixture sitemap", () => {
       const privacy = set.documents.legalPage.find((page) => page.slug === "privacy");
       expect(privacy?.version).toMatch(/^[A-Za-z0-9._-]{1,40}$/);
     }
+  });
+});
+
+describe("fixture headings", () => {
+  it("turn section keys into readable sentence case and keep the fixture marker", () => {
+    expect(fixtureHeading("strategyToProduction")).toBe("Strategy to production (fixture)");
+    expect(fixtureHeading("what-we-do")).toBe("What we do (fixture)");
+    expect(fixtureHeading("aiAtTheCentre")).toBe("AI at the centre (fixture)");
+    expect(fixtureHeading("about")).toBe("About (fixture)");
+  });
+
+  it("applies to the full home and route page headings", () => {
+    expect(fullFixtureSet.routePages["what-we-do"]?.heading).toBe("What we do (fixture)");
+    expect(fullFixtureSet.home?.headings.selectedWork).toBe("Selected work (fixture)");
   });
 });

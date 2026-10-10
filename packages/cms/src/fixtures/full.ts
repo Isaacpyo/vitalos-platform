@@ -30,7 +30,9 @@ import {
   FIXTURE_LABEL,
   exampleEmail,
   exampleUrl,
+  fixtureHeading,
   fixtureMetric,
+  humaniseKey,
   pendingEvidence,
   richText,
   seo,
@@ -422,8 +424,8 @@ const caseStudies: CaseStudyView[] = [
 function routePage(key: RoutePageKey): RoutePageView {
   return {
     key,
-    heading: `Example ${key} heading ${L}`,
-    intro: `Artificial introduction for ${key} ${L}.`,
+    heading: fixtureHeading(key),
+    intro: `Artificial introduction for ${humaniseKey(key).toLowerCase()} ${L}.`,
     seo: seo(`Example ${key}`),
   };
 }
@@ -455,7 +457,7 @@ routePages.trust = trustOverview;
 const home: HomePageView = {
   seo: seo("Example home"),
   headings: Object.fromEntries(
-    homeSections.map((section) => [section.key, `Example ${section.key} heading ${L}`]),
+    homeSections.map((section) => [section.key, fixtureHeading(section.key)]),
   ),
   proof: [{ label: `Example verified marker ${L}`, evidence: verifiedEvidence }],
   solutions: [summaryOf("solution", solutionOne), summaryOf("solution", solutionTwo)],
