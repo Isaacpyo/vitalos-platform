@@ -62,3 +62,7 @@ Pages are only as fresh as the webhook (with a one-hour fallback). `revalidateTa
 ## Revisit triggers
 
 Content volume or edit frequency makes ISR refresh cost visible; the owner wants live preview with click-to-edit (stega) or live content; Next.js stabilises Cache Components for forms and `searchParams` in a way that removes the Suspense burden; the Sanity dataset becomes private; a CDN other than Vercel's fronts the site; redirects need patterns (for example whole retired sections).
+
+## Status update (10 Oct 2026)
+
+Decision 1 describes `sanity` failing loudly if `createSanityContentSource` is missing and `fixtures` falling back to the empty source until `createFixtureContentSource` exists. Both exports landed with workstream C2 (PR #30), so those fallbacks are now only defensive code paths. No decision in this ADR is changed.

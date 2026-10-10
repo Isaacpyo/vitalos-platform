@@ -53,3 +53,14 @@ Gates must be reproducible without secrets and must fail loudly on the propertie
 ## Revisit triggers
 
 Templates stabilise (add visual regression); Lighthouse or field data shows a budget that the JS number misses; the Supabase CLI pin is needed; a sparse-fixture server becomes practical (single build with runtime-selected content); Vercel preview checks are introduced.
+
+## Status update (10 Oct 2026)
+
+Facts in this ADR that changed after it was accepted; the decisions are unchanged.
+
+- Decision 7: `check:raw-colours` is now part of the root `check` script.
+- Decision 8 and trade-offs: the `database` job pins the Supabase CLI to 2.120.0 (PR #26). The `quality` job also runs `check:cms-types` (generated Sanity types must not drift).
+- Consequences: the 320px homepage check no longer carries `test.fail`; the interim shell was replaced and `tests/accessibility/baseline.spec.ts` now asserts reflow as a permanent gate.
+- Decision 1: the fixtures content source and the memory enquiry backend are wired in (C2, D), so the e2e suites run against real fixture pages rather than the locked-copy shell.
+- Decision 5: the JS budgets were re-measured with the G2a templates; `tests/performance/budgets.json` records the measured values and its own rationale (for example `/` is now measured at 145,287 B gzip with a 160,000 B budget). Routes without an entry still use the 175,000 B default.
+- Workstream F2 (further journeys and suites, listed under Consequences) had not landed when this note was written.

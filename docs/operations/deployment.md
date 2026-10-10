@@ -1,3 +1,67 @@
 # Deployment
 
-Vercel is the intended web host, Sanity is separately administered, and Cloudflare retains DNS ownership. Pull requests receive previews; production requires launch-gate approval, a tagged release, recorded owner and rollback target. This repository contains no authorization to connect or deploy any production system.
+Vercel is the intended web host, Sanity is administered separately, and Cloudflare retains DNS ownership (ADR-004, ADR-005, ADR-007, ADR-015). Pull requests receive previews; production requires launch-gate approval, a tagged release, a recorded owner and a rollback target.
+
+This repository contains no authorisation to connect or deploy any production system. Production deploys, DNS changes, secret rotation and production data deletion need explicit owner approval (`AGENTS.md`).
+
+Not recorded in the repository: Vercel project settings (root directory, install and build commands, domains) and project or team identifiers; there is no `vercel.json`. They are set by the owner in Vercel. Preview deployments of Stage 1 pull requests currently report "Deployment was blocked" until Vercel team access is fixed (owner decision 24, `docs/delivery/owner-decisions.md`).
+
+## How the deploy environment is decided
+
+`@vitalos/config` (`packages/config/src/schema.ts`) validates the environment at build and start. `NODE_ENV` is never used: every `next build` sets it, including local and CI builds.
+
+- `VITALOS_DEPLOY_ENV` (`local`, `preview`, `staging`, `production`) wins when set. Otherwise `VERCEL_ENV` maps `production` to production and `preview` to preview; everything else is `local`.
+- `VITALOS_DEPLOY_ENV` may not be `local` or `preview` when `VERCEL_ENV=production`.
+- Only `production` is indexable. Every other environment sends `X-Robots-Tag: noindex, nofollow` and a `robots.txt` that disallows everything.
+- Invalid production configuration fails the build, before anything is served. Error messages name variables, never values.
+
+## Variables by environment
+
+Public variables are inlined at build time (`NEXT_PUBLIC_*`); changing one needs a rebuild. Secrets live only in each provider's encrypted store, are distinct per environment, and never use a `NEXT_PUBLIC_` prefix (`docs/security/secret-management.md`).
+
+| Variable                                                          | local                                        | preview and staging                                             | production                                                                                        |
+| ----------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `VITALOS_DEPLOY_ENV`                                              | optional                                     | derived from `VERCEL_ENV` or set `staging`                      | `production` (or `VERCEL_ENV=production`)                                                         |
+| `NEXT_PUBLIC_SITE_URL`                                            | defaults to `http://localhost:3000`          | defaults to `https://$VERCEL_URL` on Vercel; required elsewhere | **Required, https origin, no path** (the canonical host: owner decision)                          |
+| `VITALOS_CONTENT_SOURCE`                                          | optional (`empty` or `sanity` by project id) | any except production rules                                     | **Required, explicit**: `sanity` or `empty`; `fixtures` is rejected                               |
+| `VITALOS_ENQUIRY_BACKEND`                                         | optional (`disabled` by default)             | `supabase`, `memory` or `disabled`                              | **Required, explicit**: `supabase` or `disabled`; `memory` is rejected                            |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID`                                   | optional                                     | required for `sanity`                                           | required for `sanity`                                                                             |
+| `NEXT_PUBLIC_SANITY_DATASET`                                      | defaults to `development`                    | defaults to `development`                                       | **Required, explicit** when the source is `sanity` (the development default is never used)        |
+| `NEXT_PUBLIC_SANITY_API_VERSION`                                  | optional                                     | optional                                                        | optional (default `2025-02-19`)                                                                   |
+| `NEXT_PUBLIC_SANITY_STUDIO_URL`, `SANITY_STUDIO_ORIGIN`           | optional                                     | Studio origin (frames the site for Presentation)                | `SANITY_STUDIO_ORIGIN` is ignored for framing in production (`frame-ancestors 'none'`)            |
+| `SANITY_API_READ_TOKEN`                                           | optional                                     | needed for Draft Mode and visual editing                        | optional; needed only if drafts are read server-side                                              |
+| `SANITY_REVALIDATE_SECRET` (16+ chars)                            | optional                                     | for webhook testing                                             | needed for on-demand freshness; without it `/api/revalidate` answers 503 and pages refresh hourly |
+| `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (20+)                       | local stack values                           | a non-production project only                                   | **Required** when the backend is `supabase`                                                       |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`          | test keys allowed                            | test keys allowed                                               | **Required as a pair** with `supabase`; Cloudflare test keys are rejected                         |
+| `ENQUIRY_IP_HASH_SALT` (16+ chars)                                | required for `supabase`                      | required for `supabase`                                         | **Required** with `supabase`                                                                      |
+| `ENQUIRY_PRIVACY_NOTICE_VERSION`                                  | optional                                     | optional                                                        | **Required** with `supabase`; exactly the version of the published privacy notice                 |
+| `OUTBOX_DISPATCH_SECRET` (32+ chars)                              | for manual dispatch                          | for dispatch testing                                            | needed by the dispatch endpoint (503 without); not enforced by the schema                         |
+| `EMAIL_PROVIDER`                                                  | `none` or `console`                          | `none` or `console`                                             | `none` until an adapter exists; `console` is **rejected**                                         |
+| `EMAIL_PROVIDER_API_KEY`, `EMAIL_FROM`, `ENQUIRY_NOTIFICATION_TO` | unused                                       | unused                                                          | reserved for the email adapter (not built); `ENQUIRY_NOTIFICATION_TO` must be a valid email       |
+| `ENABLE_HSTS`                                                     | ignored                                      | optional                                                        | `false` until the owner approves; never adds `includeSubDomains` or preload                       |
+
+Other cross-field rules: a site or Studio URL must be an http(s) origin (path, query or fragment rejected); `sanity` needs a project id; `supabase` needs its URL and secret; the two Turnstile keys must be set together.
+
+## Production prerequisites
+
+Do not set production variables until the matching owner inputs exist (`docs/delivery/owner-decisions.md`). In order:
+
+1. Gates G0-G10 reviewed with the owner; no date overrides a gate (`docs/delivery/launch-gates.md`).
+2. Production Sanity project and dataset, webhook to `/api/revalidate`, CORS, Studio hosting.
+3. Remote Supabase project; the owner applies the three migrations (`supabase/migrations`) with their own credentials. Agents never run `supabase link` or `push`.
+4. Turnstile production keys; enquiry secrets; privacy notice published and its version set.
+5. An email `Notifier` adapter, provider account and DNS records (SPF, DKIM) approved and in place. Until then enquiries are stored but nobody is notified; see `docs/runbooks/enquiry-delivery-failure.md`.
+6. A scheduler for `/api/internal/outbox/dispatch` (Vercel Cron is not configured; owner approval needed).
+7. Canonical host and DNS plan; then `docs/runbooks/production-cutover.md`.
+
+## Smoke checks after any deployment
+
+- `GET /api/health` returns `{"status":"ok","service":"web"}`.
+- Response headers: CSP, `Referrer-Policy`, `X-Content-Type-Options`, `Permissions-Policy`; `X-Robots-Tag: noindex, nofollow` on every non-production environment and absent in production.
+- `/robots.txt` and `/sitemap.xml` match the environment (disallow all outside production; sitemap lists only published, gate-open pages).
+- `/contact` shows the form only when enquiries can be stored and a privacy notice is published.
+- A legacy URL from the seed (for example `/services`) returns a 301 to its destination.
+
+## Environments
+
+Local, per-PR preview, optional staging and protected production (ADR-015, `docs/architecture/environment-model.md`). Use isolated secrets and data, noindex preview and staging, production-only analytics and never copy live enquiries into other environments. A dedicated staging environment depends on plan and workflow justification and is not set up.

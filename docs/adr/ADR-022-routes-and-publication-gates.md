@@ -49,3 +49,7 @@ Changing a threshold, route or locked string is a code change with review rather
 ## Revisit triggers
 
 Owner changes the minimum content bars or the information architecture; a content type needs a route not in the manifest; gate evaluation needs data a count cannot express; locked copy is superseded by approved brand work.
+
+## Status update (10 Oct 2026)
+
+The last consequence ("until the content workstreams land, the homepage renders locked copy only and links to routes that are not yet built") no longer holds: every route in the manifest is built (G1, H, G2a, G2b, with C2 supplying queries, mappers and fixtures). The homepage builds its sections from the content source and renders each one only when data exists; with the empty source it still shows locked copy only. No decision in this ADR is changed.
