@@ -147,6 +147,9 @@ test.describe("focus is not obscured by the sticky header (WCAG 2.4.11)", () => 
     test(`${path}: tabbing forwards and backwards never lands under the header`, async ({
       page,
     }) => {
+      // Up to 120 Tab and 120 Shift+Tab presses, each followed by a DOM check, is a few hundred
+      // round-trips; the 30s default leaves no headroom on the denser templates.
+      test.setTimeout(120_000);
       await open(page, path, 200);
       const stops = await page.evaluate(
         () =>
