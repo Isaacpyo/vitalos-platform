@@ -27,11 +27,11 @@
     "check": "corepack pnpm format:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm check:boundaries"
   },
   "devDependencies": {
-    "@playwright/test": "1.55.1",
+    "@playwright/test": "1.63.0",
     "@vitalos/eslint-config": "workspace:*",
     "dependency-cruiser": "17.1.0",
-    "prettier": "3.6.2",
-    "turbo": "2.10.12",
+    "prettier": "3.9.9",
+    "turbo": "2.11.7",
     "typescript": "5.9.2",
     "vitest": "3.2.6"
   }

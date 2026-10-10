@@ -10,16 +10,16 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@storybook/addon-a11y": "10.6.0",
-    "@storybook/react-vite": "10.6.0",
+    "@storybook/addon-a11y": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/ui": "workspace:*",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-dom": "19.2.8",
-    "storybook": "10.6.0"
+    "storybook": "10.6.1"
   },
   "devDependencies": {
-    "@types/react": "19.2.18",
+    "@types/react": "19.3.0",
     "@vitalos/eslint-config": "workspace:*",
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",
