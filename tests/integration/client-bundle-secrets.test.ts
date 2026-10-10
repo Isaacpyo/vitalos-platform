@@ -7,6 +7,9 @@ describe("client bundle secret scanner", () => {
     const names: string[] = await serverEnvNames();
     expect(names).toContain("SUPABASE_SECRET_KEY");
     expect(names).toContain("TURNSTILE_SECRET_KEY");
+    for (const email of ["EMAIL_PROVIDER", "EMAIL_PROVIDER_API_KEY", "EMAIL_FROM"]) {
+      expect(names).toContain(email);
+    }
     expect(names).not.toContain("NEXT_PUBLIC_SITE_URL");
     expect(names).not.toContain("NEXT_PUBLIC_TURNSTILE_SITE_KEY");
   });
@@ -31,5 +34,12 @@ describe("client bundle secret scanner", () => {
         names,
       ),
     ).toEqual([]);
+  });
+
+  it("flags a Resend-style API key value without echoing it", async () => {
+    const names: string[] = await serverEnvNames();
+    const findings = scanText('const k="re_AbCdEfGhIjKlMnOpQrStUv123456";', names);
+    expect(findings).toEqual([{ label: "Resend API key" }]);
+    expect(JSON.stringify(findings)).not.toContain("AbCdEf");
   });
 });

@@ -93,6 +93,77 @@ describe("production guards", () => {
     expect(issuePaths({ ...production, EMAIL_PROVIDER: "console" })).toEqual(["EMAIL_PROVIDER"]);
   });
 
+  it("rejects provider none in production once a notification recipient is set", () => {
+    const withTo = { ...production, ENQUIRY_NOTIFICATION_TO: "ops@example.invalid" };
+    expect(issuePaths(withTo)).toEqual(["EMAIL_PROVIDER"]);
+    expect(issuePaths({ ...withTo, EMAIL_PROVIDER: "none" })).toEqual(["EMAIL_PROVIDER"]);
+    // Without a recipient, none stays valid; outside production it is not enforced.
+    expect(issuePaths(production)).toEqual([]);
+    expect(issuePaths({ ENQUIRY_NOTIFICATION_TO: "ops@example.invalid" })).toEqual([]);
+    expect(
+      issuePaths({
+        ...withTo,
+        EMAIL_PROVIDER: "postmark",
+        EMAIL_FROM: "Vitalos <noreply@example.invalid>",
+        EMAIL_PROVIDER_API_KEY: "key-fixture",
+      }),
+    ).toEqual([]);
+  });
+
+  it("requires sender, key and recipient when postmark or resend is selected", () => {
+    for (const provider of ["postmark", "resend"]) {
+      expect(issuePaths({ EMAIL_PROVIDER: provider }).sort()).toEqual([
+        "EMAIL_FROM",
+        "EMAIL_PROVIDER_API_KEY",
+        "ENQUIRY_NOTIFICATION_TO",
+      ]);
+      const env = parseEnv({
+        EMAIL_PROVIDER: provider,
+        EMAIL_FROM: "noreply@example.invalid",
+        EMAIL_PROVIDER_API_KEY: "key-fixture",
+        ENQUIRY_NOTIFICATION_TO: "ops@example.invalid",
+      });
+      expect(env.email).toEqual({
+        provider,
+        apiKey: "key-fixture",
+        from: "noreply@example.invalid",
+      });
+      expect(deriveFeatures(env).emailNotifications).toBe(true);
+    }
+  });
+
+  it("rejects a multi-line or malformed sender and never echoes the key in errors", () => {
+    const base = {
+      EMAIL_PROVIDER: "resend",
+      EMAIL_PROVIDER_API_KEY: "secret-key-fixture",
+      ENQUIRY_NOTIFICATION_TO: "ops@example.invalid",
+    };
+    expect(
+      issuePaths({ ...base, EMAIL_FROM: "a@example.invalid\nBcc: x@example.invalid" }),
+    ).toEqual(["EMAIL_FROM"]);
+    const result = safeParseEnv({ ...base, EMAIL_FROM: "bad>\nsender" });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("secret-key-fixture");
+    for (const from of [
+      "noreply",
+      "Vitalos <noreply>",
+      "a@x.invalid, b@y.invalid",
+      "Vitalos <a@x.invalid>, <b@y.invalid>",
+      "a@x.invalid\tb@y.invalid",
+      "a@x",
+      "bad>\nsender",
+    ]) {
+      expect(issuePaths({ ...base, EMAIL_FROM: from }), from).toEqual(["EMAIL_FROM"]);
+    }
+    for (const from of [
+      "noreply@example.invalid",
+      "Vitalos <noreply@example.invalid>",
+      '"Vitalos Ltd" <noreply@example.invalid>',
+    ]) {
+      expect(issuePaths({ ...base, EMAIL_FROM: from }), from).toEqual([]);
+    }
+  });
+
   it("accepts a deliberate empty content source and disabled enquiries in production", () => {
     const env = parseEnv(production);
     expect(env.contentSource).toBe("empty");
@@ -342,7 +413,6 @@ describe("feature flags", () => {
       SUPABASE_URL: "https://project.example.invalid",
       SUPABASE_SECRET_KEY: "x".repeat(24),
       EMAIL_PROVIDER_API_KEY: "key",
-      ENQUIRY_NOTIFICATION_TO: "ops@example.invalid",
     });
     expect(deriveFeatures(env)).toEqual({
       cms: true,

@@ -42,6 +42,7 @@ export const secretPatterns = [
   { label: "AWS access key id", pattern: /\bAKIA[0-9A-Z]{16}\b/ },
   { label: "GitHub token", pattern: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/ },
   { label: "Sanity API token", pattern: /\bsk[A-Za-z0-9]{50,}\b/ },
+  { label: "Resend API key", pattern: /\bre_[A-Za-z0-9_]{16,}/ },
   { label: "Bearer credential", pattern: /\bBearer\s+[A-Za-z0-9._~+/-]{32,}=*/ },
 ];
 

@@ -3,6 +3,7 @@ import { MemoryOutboxStore } from "./adapters/memory-outbox";
 import { MemoryEnquiryRepository } from "./adapters/memory-repository";
 import { MemoryRateLimiter } from "./adapters/memory-rate-limiter";
 import { ConsoleNotifier } from "./adapters/console-notifier";
+import { PostmarkNotifier, ResendNotifier } from "./adapters/email-notifier";
 import { createEnquiryLogger } from "./adapters/observability-logger";
 import { PostgresRateLimiter } from "./adapters/postgres-rate-limiter";
 import { SupabaseEnquiryRepository } from "./adapters/supabase-repository";
@@ -84,6 +85,38 @@ const unavailable: EnquiryService = {
   dispatch: () => Promise.resolve(null),
 };
 
+/** `undefined` (no notifier) for `none`, or when a provider is selected but not fully configured. */
+function buildNotifier(
+  env: Env,
+  logger: EnquiryLogger,
+  overrides: EnquiryServiceOverrides,
+): Notifier | undefined {
+  const { provider, apiKey, from } = env.email;
+  if (provider === "console") return new ConsoleNotifier(logger);
+  if (provider !== "postmark" && provider !== "resend") return undefined;
+  const to = env.enquiry.notificationTo;
+  if (!apiKey || !from || !to) {
+    // The configuration rules already require these; this is defence in depth. Names only.
+    logger.error("notifier.misconfigured", {
+      provider,
+      missing: !apiKey
+        ? "EMAIL_PROVIDER_API_KEY"
+        : !from
+          ? "EMAIL_FROM"
+          : "ENQUIRY_NOTIFICATION_TO",
+    });
+    return undefined;
+  }
+  const options = {
+    apiKey,
+    from,
+    to,
+    logger,
+    ...(overrides.fetch ? { fetch: overrides.fetch } : {}),
+  };
+  return provider === "postmark" ? new PostmarkNotifier(options) : new ResendNotifier(options);
+}
+
 export function createEnquiryService(
   env: Env,
   overrides: EnquiryServiceOverrides = {},
@@ -145,8 +178,7 @@ export function createEnquiryService(
     : new DisabledVerifier();
 
   const notifier: Notifier | undefined =
-    overrides.notifier ??
-    (env.email.provider === "console" ? new ConsoleNotifier(logger) : undefined);
+    overrides.notifier ?? buildNotifier(env, logger, overrides);
 
   return {
     available: true,

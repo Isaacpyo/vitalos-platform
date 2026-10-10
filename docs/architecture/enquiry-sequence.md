@@ -70,7 +70,7 @@ sequenceDiagram
     participant R as /api/internal/outbox/dispatch<br/>(Bearer secret)
     participant X as dispatchOutbox
     participant D as PostgreSQL<br/>(claim_outbox_batch, mark_outbox)
-    participant N as Notifier<br/>(console now; email provider later)
+    participant N as Notifier<br/>(console locally; Postmark or Resend adapter once a provider is approved)
 
     S->>R: POST (Authorization: Bearer ...)
     R->>X: dispatch one batch

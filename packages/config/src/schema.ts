@@ -19,7 +19,7 @@ export type FixtureSet = (typeof fixtureSets)[number];
 export const enquiryBackends = ["supabase", "memory", "disabled"] as const;
 export type EnquiryBackend = (typeof enquiryBackends)[number];
 
-export const emailProviders = ["none", "console"] as const;
+export const emailProviders = ["none", "console", "postmark", "resend"] as const;
 export type EmailProvider = (typeof emailProviders)[number];
 
 const LOCAL_SITE_URL = "http://localhost:3000";
@@ -237,6 +237,17 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
  */
 const isCloudflareTestKey = (value: string): boolean => /^[123]x0{16,}/.test(value);
 
+const BARE_ADDRESS = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
+
+/** Exactly one mailbox: `address` or `Name <address>`; no commas, control characters or lists. */
+function isSingleMailbox(value: string): boolean {
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f,;]/.test(value)) return false;
+  if (BARE_ADDRESS.test(value)) return true;
+  const named = /^([^<>"@]+|"[^"<>@\\]+")\s*<([^<>\s]+)>$/.exec(value);
+  return named !== null && BARE_ADDRESS.test(named[2] as string);
+}
+
 /** Cross-field rules. Messages never include variable values. */
 function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue[] {
   const issues: EnvIssue[] = [];
@@ -287,6 +298,25 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
   }
   if (production && env.email.provider === "console") {
     add("EMAIL_PROVIDER", "console is forbidden in production (it would log enquiry content)");
+  }
+  if (production && env.email.provider === "none" && env.enquiry.notificationTo) {
+    add(
+      "EMAIL_PROVIDER",
+      "must not be none in production once ENQUIRY_NOTIFICATION_TO is set (notifications would silently never send)",
+    );
+  }
+  if (env.email.provider === "postmark" || env.email.provider === "resend") {
+    for (const [path, value] of [
+      ["EMAIL_FROM", env.email.from],
+      ["EMAIL_PROVIDER_API_KEY", env.email.apiKey],
+      ["ENQUIRY_NOTIFICATION_TO", env.enquiry.notificationTo],
+    ] as const) {
+      if (!value) add(path, `is required when EMAIL_PROVIDER is ${env.email.provider}`);
+    }
+    const from = env.email.from;
+    if (from && !isSingleMailbox(from)) {
+      add("EMAIL_FROM", "must be one address or `Name <address>` (no commas, tabs or line breaks)");
+    }
   }
   if (env.contentSource === "sanity" && !env.sanity.projectId) {
     add("NEXT_PUBLIC_SANITY_PROJECT_ID", "is required when VITALOS_CONTENT_SOURCE is sanity");
