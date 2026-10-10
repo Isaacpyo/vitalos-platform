@@ -79,6 +79,10 @@ const rawSchema = z.object({
   EMAIL_FROM: z.string().min(3).optional(),
   ENQUIRY_NOTIFICATION_TO: z.email().optional(),
   ENQUIRY_IP_HASH_SALT: z.string().min(16).optional(),
+  ENQUIRY_PRIVACY_NOTICE_VERSION: z
+    .string()
+    .regex(/^[A-Za-z0-9._-]{1,40}$/, "must be 1-40 letters, numbers, dots, dashes or underscores")
+    .optional(),
   OUTBOX_DISPATCH_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
 });
@@ -105,6 +109,8 @@ export interface Env {
     backend: EnquiryBackend;
     notificationTo: string | undefined;
     ipHashSalt: string | undefined;
+    /** Current privacy notice version. A submission must present this exact value. */
+    privacyNoticeVersion: string | undefined;
     outboxDispatchSecret: string | undefined;
   };
   email: {
@@ -211,6 +217,7 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         backend,
         notificationTo: raw.ENQUIRY_NOTIFICATION_TO,
         ipHashSalt: raw.ENQUIRY_IP_HASH_SALT,
+        privacyNoticeVersion: raw.ENQUIRY_PRIVACY_NOTICE_VERSION,
         outboxDispatchSecret: raw.OUTBOX_DISPATCH_SECRET,
       },
       email: {
@@ -222,6 +229,13 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
     },
   };
 }
+
+/**
+ * Cloudflare's documented Turnstile test keys (`1x000...AA`, `2x000...`, `3x000...`): always
+ * pass, always fail or already-spent dummies. They are public, so a deployment using one would
+ * accept any token. Real keys never start with `[123]x` followed by a run of zeros.
+ */
+const isCloudflareTestKey = (value: string): boolean => /^[123]x0{16,}/.test(value);
 
 /** Cross-field rules. Messages never include variable values. */
 function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue[] {
@@ -284,6 +298,40 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
     if (!env.supabase.secretKey) {
       add("SUPABASE_SECRET_KEY", "is required when VITALOS_ENQUIRY_BACKEND is supabase");
     }
+  }
+  if (production && env.enquiry.backend === "supabase") {
+    // Fail closed: a live enquiry endpoint without human verification, IP hashing or a pinned
+    // privacy notice version must not be deployable by omission.
+    if (!env.turnstile.siteKey) {
+      add(
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+        "is required in production when VITALOS_ENQUIRY_BACKEND is supabase",
+      );
+    }
+    if (!env.turnstile.secretKey) {
+      add(
+        "TURNSTILE_SECRET_KEY",
+        "is required in production when VITALOS_ENQUIRY_BACKEND is supabase",
+      );
+    }
+    if (!env.enquiry.ipHashSalt) {
+      add(
+        "ENQUIRY_IP_HASH_SALT",
+        "is required in production when VITALOS_ENQUIRY_BACKEND is supabase",
+      );
+    }
+    if (!env.enquiry.privacyNoticeVersion) {
+      add(
+        "ENQUIRY_PRIVACY_NOTICE_VERSION",
+        "is required in production when VITALOS_ENQUIRY_BACKEND is supabase",
+      );
+    }
+  }
+  if (production && env.turnstile.secretKey && isCloudflareTestKey(env.turnstile.secretKey)) {
+    add("TURNSTILE_SECRET_KEY", "is a Cloudflare test secret, which accepts every token");
+  }
+  if (production && env.turnstile.siteKey && isCloudflareTestKey(env.turnstile.siteKey)) {
+    add("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "is a Cloudflare test site key");
   }
   if (env.turnstile.siteKey && !env.turnstile.secretKey) {
     add("TURNSTILE_SECRET_KEY", "is required when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set");

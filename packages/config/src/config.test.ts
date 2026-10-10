@@ -161,6 +161,73 @@ describe("production guards", () => {
   });
 });
 
+describe("production enquiry hardening", () => {
+  const supabaseProduction = {
+    VITALOS_DEPLOY_ENV: "production",
+    NEXT_PUBLIC_SITE_URL: "https://www.example.invalid",
+    VITALOS_CONTENT_SOURCE: "empty",
+    VITALOS_ENQUIRY_BACKEND: "supabase",
+    SUPABASE_URL: "https://project.example.invalid",
+    SUPABASE_SECRET_KEY: "x".repeat(24),
+  };
+  const complete = {
+    ...supabaseProduction,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: "0x4AAAAAAAfixturesitekey",
+    TURNSTILE_SECRET_KEY: "0x4AAAAAAAfixturesecretkey",
+    ENQUIRY_IP_HASH_SALT: "s".repeat(24),
+    ENQUIRY_PRIVACY_NOTICE_VERSION: "2026-10",
+  };
+
+  it("requires Turnstile, the IP hash salt and the privacy notice version with the supabase backend", () => {
+    expect(issuePaths(supabaseProduction).sort()).toEqual([
+      "ENQUIRY_IP_HASH_SALT",
+      "ENQUIRY_PRIVACY_NOTICE_VERSION",
+      "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+      "TURNSTILE_SECRET_KEY",
+    ]);
+    expect(safeParseEnv(complete).success).toBe(true);
+  });
+
+  it("does not require them for local or preview supabase runs", () => {
+    const { VITALOS_DEPLOY_ENV: _drop, ...rest } = supabaseProduction;
+    void _drop;
+    expect(safeParseEnv({ ...rest, VITALOS_DEPLOY_ENV: "preview" }).success).toBe(true);
+    expect(safeParseEnv({ ...rest, VITALOS_DEPLOY_ENV: "local" }).success).toBe(true);
+  });
+
+  it("does not require them when enquiries are deliberately disabled", () => {
+    expect(safeParseEnv(production).success).toBe(true);
+  });
+
+  it.each([
+    "1x0000000000000000000000000000000AA",
+    "2x0000000000000000000000000000000AA",
+    "3x0000000000000000000000000000000AA",
+  ])("rejects Cloudflare's dummy secret %s in production", (secret) => {
+    expect(issuePaths({ ...complete, TURNSTILE_SECRET_KEY: secret })).toEqual([
+      "TURNSTILE_SECRET_KEY",
+    ]);
+  });
+
+  it("rejects Cloudflare's dummy site key in production but allows it outside production", () => {
+    const siteKey = "1x00000000000000000000AA";
+    expect(issuePaths({ ...complete, NEXT_PUBLIC_TURNSTILE_SITE_KEY: siteKey })).toEqual([
+      "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+    ]);
+    const local = {
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: siteKey,
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+    };
+    expect(safeParseEnv(local).success).toBe(true);
+  });
+
+  it("rejects a malformed privacy notice version without echoing it", () => {
+    const result = safeParseEnv({ ...complete, ENQUIRY_PRIVACY_NOTICE_VERSION: "bad version!" });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("bad version!");
+  });
+});
+
 describe("cross-field rules", () => {
   it("requires a Sanity project id when the content source is sanity", () => {
     expect(issuePaths({ VITALOS_CONTENT_SOURCE: "sanity" })).toEqual([
@@ -268,8 +335,10 @@ describe("feature flags", () => {
       VITALOS_ENQUIRY_BACKEND: "supabase",
       NEXT_PUBLIC_SANITY_DATASET: "production",
       NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123",
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x0000000000000000",
-      TURNSTILE_SECRET_KEY: "1x0000000000000000",
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: "0x4AAAAAAAfixturesitekey",
+      TURNSTILE_SECRET_KEY: "0x4AAAAAAAfixturesecretkey",
+      ENQUIRY_IP_HASH_SALT: "s".repeat(24),
+      ENQUIRY_PRIVACY_NOTICE_VERSION: "2026-10",
       SUPABASE_URL: "https://project.example.invalid",
       SUPABASE_SECRET_KEY: "x".repeat(24),
       EMAIL_PROVIDER_API_KEY: "key",

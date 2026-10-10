@@ -1,0 +1,53 @@
+# ADR 019 Enquiry pipeline
+
+Status: Accepted for the local foundation. The production Supabase project, the email provider, Turnstile production keys, the retention policy and acknowledgement emails remain unapproved (stage-1 plan section 6).
+
+## Context
+
+Stage 8 section 20, Stage 9 section 15 and Stage 10 section 21 define the enquiry flow: server-rendered form, server validation, Turnstile when enabled, a durable record, an email notification and an optional acknowledgement. Email is a notification channel, not the database (Stage 0 section 11): an enquiry must survive a provider outage. The baseline only validated input and then answered 503: no persistence, rate limiting, human verification or notifier. ADR 006 chose Supabase PostgreSQL with a durable outbox; this ADR records how the pipeline is built on it.
+
+## Decision
+
+1. **Layers.** `apps/web/src/features/enquiries` is split into `domain` (model, events, ports), `application` (`receiveEnquiry`, `dispatchOutbox`), `adapters` (Supabase, Postgres rate limiter, Turnstile, memory, console) and `composition.ts`. Domain and application import no framework or provider; they depend on ports (`EnquiryRepository`, `RateLimiter`, `HumanVerifier`, `OutboxStore`, `Notifier`, `Clock`, `EnquiryLogger`). Route handlers and the server action are thin adapters over the same service.
+
+2. **One contract.** `@vitalos/validation` exports `enquirySchemaV2` (`.strict()`), shared by the JSON route and the server action. Fields: name, organisation, workEmail, role?, goal (20 to 5000), timeframe, budgetRange?, intent, offerSlug?, sourcePath, utm (bounded), consent (literal true), privacyNoticeVersion, idempotencyKey (uuid), turnstileToken?, honeypot `website` (must be empty). Error messages explain the fix and never echo the submitted value.
+
+3. **Result model.** `receiveEnquiry` returns `accepted | invalid | rejected | rate-limited | unavailable`. Order: validate (cheap, local), abuse signals (honeypot, unknown keys: `rejected`, never a field error), privacy notice version check, per-IP rate limit, idempotency lookup, Turnstile, global rate limit, persist. A replayed idempotency key is answered with the original reference before Turnstile runs, so a retry after a lost response neither fails on a spent token nor spends budget. The global bucket is charged only after the human check has passed, so a flood of failing tokens cannot exhaust it and lock real visitors out. Any dependency failure is `unavailable` (fail closed, HTTP 503); the log line carries the SQLSTATE or adapter code, never the message. Input that PostgreSQL cannot store is a validation error (400): the schema rejects NUL, ill-formed Unicode and CR/LF in one-line fields, and measures lengths in code points like `char_length`; UTM is bounded by UTF-8 bytes. With no backend configured the service is honestly unavailable.
+
+4. **Atomic write and idempotency.** `public.submit_enquiry(p jsonb)` inserts the enquiry and its outbox row in one function body (one transaction) and returns `{id, reference, duplicate}`. `idempotency_key` is unique; a replayed key returns the original reference and writes nothing. Only the `internal-notification` outbox row is enqueued. The `acknowledgement` kind is reserved in the schema and dispatcher but is not enqueued until the owner approves customer acknowledgements.
+
+5. **Outbox and dispatch.** The outbox row is the durability guarantee. `claim_outbox_batch` uses `FOR UPDATE SKIP LOCKED`, increments `attempts` and takes a five minute lease, so concurrent dispatchers never share a row; expired leases, including rows with a null lease, are reclaimed. `attempts` is the lease token: `mark_outbox(id, attempts, state, ...)` only updates a row still `processing` with that exact value, so a stale worker cannot overwrite the outcome of the worker that re-claimed the row. `dispatchOutbox` retries with bounded exponential backoff (60 s doubling, capped at 1 h), dead-letters after five attempts or on a non-retryable error (`state = failed`, visible to operators) and stores only an error code, never a provider message. Delivery is at-least-once; each message carries `enquiryId:kind` as its idempotency key. Events follow the Stage 0 section 42 envelope (`enquiry.received.v1`) and carry identifiers only, never personal data.
+
+6. **Dispatch trigger.** After an accepted enquiry the route handler or action calls `after()` for best-effort dispatch. That is an optimisation only: if it never runs, the row stays pending. `/api/internal/outbox/dispatch` (Bearer `OUTBOX_DISPATCH_SECRET`, compared with timing-safe digests, 503 when the secret is unset) drains a batch for a scheduler. No Vercel Cron is configured (blocked on owner approval); `tooling/scripts/dispatch-outbox-local.mjs` is the manual trigger.
+
+7. **Abuse controls.** Same-origin check (Origin must match the site origin or the request host; `Sec-Fetch-Site`, when present, must be `same-origin`), JSON content type required, body capped at 32 KiB while streaming (Server Action bodies are capped at 64 KB through `serverActions.bodySizeLimit`), unknown keys and a filled honeypot rejected, rate limits per hashed IP (10 per 10 minutes) and globally (300 per hour) in `rate_limit_buckets` through `rate_limit_consume`, Turnstile verified server-side (action `enquiry` pinned, hostname pinned in production). A Turnstile provider outage is `unavailable`, not a pass. Production never runs without Turnstile: `@vitalos/config` requires both keys, `ENQUIRY_IP_HASH_SALT` and `ENQUIRY_PRIVACY_NOTICE_VERSION` when `VITALOS_ENQUIRY_BACKEND=supabase`, rejects Cloudflare's documented dummy keys, and the composition root refuses to build a service without them (the disabled verifier is unreachable in production). The client address is taken from `x-vercel-forwarded-for`, then `x-real-ip`, then the first valid hop of `x-forwarded-for`, skipping malformed values. Server Actions are additionally protected by the Next.js Origin/Host comparison, which this code relies on but does not replace (a request with no `Origin` header is allowed through by the framework with a warning, which is why validation, rate limiting and Turnstile run regardless).
+
+8. **Privacy.** Logs go through `@vitalos/observability` (shared redaction) and never contain name, email, goal or organisation. The IP address is stored and used for rate limiting only as an HMAC-SHA-256 under `ENQUIRY_IP_HASH_SALT`; the Supabase backend refuses to run without the salt. Database error messages (which embed the failing row) are never logged: the adapter keeps only the SQLSTATE. `retention_until` is null until the owner approves a retention policy and lawful basis. Consent time and the privacy notice version are stored with each enquiry; the version is accepted only when it equals the server's `ENQUIRY_PRIVACY_NOTICE_VERSION`, so consent is never recorded against a client-chosen label (a mismatch asks the visitor to reload and confirm again; the contact page reads the same value on the server). `sourcePath` is a bare site path (no query or fragment). References carry 48 bits (`VIT-` plus 12 hex characters).
+
+9. **Database access.** The four functions are `SECURITY DEFINER` with `set search_path = ''`, revoked from `public`, `anon` and `authenticated` and granted to `service_role` only; the tables stay revoked from `anon` and `authenticated` with RLS enabled. The web app uses the server-side secret key behind `server-only`, with sessions disabled. pgTAP (`supabase/tests/002_enquiry_v2.sql`) asserts privileges, atomicity, idempotency, constraints, claim/lease/retry and the limiter.
+
+10. **Flags and accepted risks.** `budgetRange` is off: `approvedBudgetBands` is empty until the owner approves bands, so the field is rejected if sent. The timeframe identifiers (`immediately`, `within-3-months`, `within-6-months`, `exploring`) are provisional and need owner approval. Accepted risks: (a) the Turnstile hostname is pinned in production only; preview and staging use generated hostnames, so there only the action is pinned; (b) the rate limit assumes Vercel overwrites the forwarding headers, and elsewhere a spoofed address could evade the per-IP limit (the global limit, Turnstile and idempotency remain); (c) the NOT VALID check `enquiries_v2_required` is also evaluated when an existing row is updated, which is harmless because no pre-v2 rows exist (the production project is unapproved and the table has only been written through `submit_enquiry`); if such rows ever exist the constraint must be made conditional on a v2 marker before they are updated.
+
+## Options
+
+- Email only, or a provider webhook as the record: rejected, an outage would lose enquiries.
+- Direct table inserts with row-level security from the browser: rejected, it exposes the schema and removes server-side validation and abuse controls.
+- A queue service or workers now: rejected for Stage 1 (Stage 0 section 43: do not add infrastructure before it is needed). The Postgres outbox keeps the contract so a worker can take over later.
+- In-memory or edge rate limiting: rejected for production, state would not be shared across instances; kept only as the memory backend for tests.
+- Fire-and-forget `after()` as the only delivery path: rejected, it is not durable.
+
+## Reasons
+
+A single contract and one service behind ports keep the route handler and the server action identical and let tests exercise every result without a database. Atomic function writes and the outbox give durability and recoverability. Hashing the IP and logging only identifiers meets the data-minimisation requirement of Stage 10 section 25.
+
+## Trade-offs
+
+Fixed-window rate limiting allows a burst at a window boundary. The outbox is polled, so notification latency depends on the trigger until a scheduler is approved. The function-based interface couples the web app to function signatures; they are versioned by migration. Turnstile needs JavaScript, so the no-JS native POST cannot pass verification when Turnstile is enabled.
+
+## Consequences
+
+Contact page work (H) binds `submitEnquiryAction` and the `EnquiryFormState` type. A real email adapter implements `Notifier` once a provider is approved. A runbook for delivery failure (workstream I) should cover dead-lettered rows (`state = 'failed'`). Retention and deletion need a follow-up migration after the policy is approved.
+
+## Revisit triggers
+
+Owner approval of timeframe or budget bands, retention policy, acknowledgement emails, an email provider, Turnstile production keys or a scheduler; sustained enquiry volume that outgrows the polled outbox; an approved existing datastore (ADR 006).
