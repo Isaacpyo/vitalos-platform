@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: supabase/setup-cli@v1
-        with: { version: latest }
+        with: { version: 2.120.0 } # pinned: "latest" hits GitHub API rate limits
       - name: Start local Supabase (database and API only)
         run: supabase start -x studio,mailpit,logflare,vector,edge-runtime,imgproxy,storage-api,realtime,postgres-meta,supavisor
       - name: pgTAP
