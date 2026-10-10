@@ -84,7 +84,7 @@ export const sitemapQuery = defineQuery(`{
   "solution": *[_type == "solution" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "offer": *[_type == "offer" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "industry": *[_type == "industry" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
-  "caseStudy": *[_type == "caseStudy" && ${okEvidence}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus, "classification": evidence.classification },
+  "caseStudy": *[_type == "caseStudy" && ${okEvidence} && evidence.evidenceStatus == "verified"]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus, "classification": evidence.classification },
   "insight": *[_type == "insight" && ${okInsight}]{ "slug": slug.current, "updatedAt": coalesce(updatedAt, _updatedAt), "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "person": *[_type == "person" && ${ok}]{ "slug": slug.current, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus },
   "labAsset": *[_type == "labAsset" && ${okLab}]{ "slug": slug.current, labType, "updatedAt": _updatedAt, "noindex": seo.noindex, "editorialStatus": governance.editorialStatus, "classification": evidence.classification },

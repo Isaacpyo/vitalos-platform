@@ -18,6 +18,7 @@
     "test": "turbo test",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test tests/end-to-end",
+    "test:e2e:sparse": "node tests/support/run-sparse.mjs",
     "test:a11y": "playwright test tests/accessibility",
     "test:storybook-a11y": "playwright test -c tests/storybook/playwright.config.ts",
     "test:perf": "playwright test tests/performance",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixtureSets, fullFixtureSet, sparseFixtureSet } from "./index";
+import { createFixtureContentSource, fixtureSets, fullFixtureSet, sparseFixtureSet } from "./index";
 
 function walk(value: unknown, visit: (entry: string, key: string) => void, key = ""): void {
   if (typeof value === "string") visit(value, key);
@@ -63,5 +63,21 @@ describe("fixture set contents", () => {
     expect(sparseFixtureSet.home?.proof).toEqual([]);
     expect(sparseFixtureSet.routePages.contact).not.toHaveProperty("expectations");
     expect(sparseFixtureSet.documents.labAsset).toEqual([]);
+  });
+});
+
+describe("fixture sitemap", () => {
+  it("lists only case studies with verified evidence (the others have no public page)", async () => {
+    const source = createFixtureContentSource("full");
+    const paths = (await source.getSitemapEntries()).map((entry) => entry.path);
+    expect(paths).toContain("/work/example-case-study");
+    expect(paths).not.toContain("/work/example-case-study-pending");
+  });
+
+  it("uses a privacy notice version the enquiry contract accepts", () => {
+    for (const set of Object.values(fixtureSets)) {
+      const privacy = set.documents.legalPage.find((page) => page.slug === "privacy");
+      expect(privacy?.version).toMatch(/^[A-Za-z0-9._-]{1,40}$/);
+    }
   });
 });

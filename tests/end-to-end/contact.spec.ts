@@ -167,7 +167,8 @@ test.describe("enquiry form", () => {
     await page.getByRole("button", { name: "Send enquiry" }).click();
 
     const receipt = page.getByRole("status");
-    await expect(receipt).toContainText("Your enquiry has been received");
+    // The action calls Cloudflare's siteverify (even with the dummy keys): allow for the network.
+    await expect(receipt).toContainText("Your enquiry has been received", { timeout: 20_000 });
     await expect(receipt).toContainText(/VIT-[0-9A-F]{12}/i);
     // Focus moves to the receipt so keyboard and screen reader users land on it.
     await expect(page.locator("#enquiry-outcome")).toBeFocused();

@@ -216,6 +216,13 @@ export function createFixtureSource(
         for (const view of views(kind)) {
           const doc = view;
           if ("seo" in doc && doc.seo.noindex === true) continue;
+          // A case study without verified evidence has no public page (the route answers 404).
+          if (
+            kind === "caseStudy" &&
+            (doc as ViewFor<"caseStudy">).evidence.status !== "verified"
+          ) {
+            continue;
+          }
           const ref = documentRef(kind, doc);
           entries.push(
             clean<SitemapEntry>({

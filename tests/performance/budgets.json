@@ -1,13 +1,90 @@
 {
-  "_rationale": "G2a measured (gzip, fixtures, chromium): / 145287; /offers/*, /industries/* 145287; /what-we-do, /what-we-do/*, /solutions/*, /how-we-work 151639 (adds the RichText/CmsImage client chunk). The shell adds only the active-section header and the MegaMenu island. Budgets are the measured value plus about 8 percent headroom.",
-  "default": { "maxJsGzipBytes": 175000 },
+  "_rationale": "Budgets are gzip bytes of JavaScript requested while loading a route (production build, fixtures, desktop Chromium), set from the measured value plus about 8 percent headroom. Measured first-party gzip bytes (headroom in brackets): / 146431 (9.3%); /offers/*, /industries/* 146431 (about 9%); /what-we-do, /what-we-do/*, /solutions/*, /how-we-work and every other template 152783 (RichText and CmsImage client chunk), /work /insights /labs 153383 (client-side filter island), /labs/:type 147254, 404 page 145202; each new entry is the measurement rounded up to 8 percent. /contact is 186862 first-party (the enquiry form island, about 34 KB gzip over the other templates) plus 27685 third-party (Cloudflare Turnstile api.js). Third-party scripts are budgeted separately (maxThirdPartyJsGzipBytes, default 0) because their size changes without a deploy: only /contact may load one, with about 50 percent headroom. A budget is only raised in a PR that says why; the lab LCP and CLS values printed by the perf suite are advisory.",
+  "default": {
+    "maxJsGzipBytes": 175000
+  },
   "routes": {
-    "/": { "maxJsGzipBytes": 160000 },
-    "/what-we-do": { "maxJsGzipBytes": 165000 },
-    "/what-we-do/example-practice": { "maxJsGzipBytes": 165000 },
-    "/solutions/example-solution": { "maxJsGzipBytes": 165000 },
-    "/offers/example-offer": { "maxJsGzipBytes": 160000 },
-    "/industries/example-industry": { "maxJsGzipBytes": 160000 },
-    "/how-we-work": { "maxJsGzipBytes": 165000 }
+    "/": {
+      "maxJsGzipBytes": 160000
+    },
+    "/what-we-do": {
+      "maxJsGzipBytes": 165000
+    },
+    "/what-we-do/example-practice": {
+      "maxJsGzipBytes": 165000
+    },
+    "/solutions": {
+      "maxJsGzipBytes": 166000
+    },
+    "/solutions/example-solution": {
+      "maxJsGzipBytes": 165000
+    },
+    "/offers": {
+      "maxJsGzipBytes": 166000
+    },
+    "/offers/example-offer": {
+      "maxJsGzipBytes": 160000
+    },
+    "/industries": {
+      "maxJsGzipBytes": 166000
+    },
+    "/industries/example-industry": {
+      "maxJsGzipBytes": 160000
+    },
+    "/how-we-work": {
+      "maxJsGzipBytes": 165000
+    },
+    "/work": {
+      "maxJsGzipBytes": 166000
+    },
+    "/work/example-case-study": {
+      "maxJsGzipBytes": 166000
+    },
+    "/insights": {
+      "maxJsGzipBytes": 166000
+    },
+    "/insights/example-insight-1": {
+      "maxJsGzipBytes": 166000
+    },
+    "/people/example-person": {
+      "maxJsGzipBytes": 166000
+    },
+    "/labs": {
+      "maxJsGzipBytes": 166000
+    },
+    "/labs/open-source": {
+      "maxJsGzipBytes": 160000
+    },
+    "/labs/open-source/example-open-source-tool": {
+      "maxJsGzipBytes": 166000
+    },
+    "/about": {
+      "maxJsGzipBytes": 166000
+    },
+    "/about/leadership": {
+      "maxJsGzipBytes": 166000
+    },
+    "/trust": {
+      "maxJsGzipBytes": 166000
+    },
+    "/trust/security": {
+      "maxJsGzipBytes": 166000
+    },
+    "/careers": {
+      "maxJsGzipBytes": 166000
+    },
+    "/careers/example-role": {
+      "maxJsGzipBytes": 166000
+    },
+    "/legal/privacy": {
+      "maxJsGzipBytes": 166000
+    },
+    "/contact": {
+      "maxJsGzipBytes": 202000,
+      "maxThirdPartyJsGzipBytes": 42000
+    },
+    "/this-page-does-not-exist": {
+      "maxJsGzipBytes": 157000
+    }
   }
 }

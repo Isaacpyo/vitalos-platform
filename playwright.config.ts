@@ -16,7 +16,18 @@ import { defineConfig, devices } from "@playwright/test";
  *   E2E_REUSE_SERVER=1   reuse a server already listening on E2E_PORT (local iteration only)
  *   E2E_SKIP_BUILD=1     start without rebuilding (only when .next is known to be current)
  *   E2E_SPARSE_BASE_URL  base URL of a server started with VITALOS_FIXTURE_SET=sparse; enables the
- *                        `sparse` project (see below)
+ *                        `sparse` project (see below). Implied when E2E_FIXTURE_SET=sparse.
+ *
+ * Projects (ADR-021):
+ *   chromium / mobile    every browser spec against the `full` fixture set (desktop and 390px)
+ *   no-js                *.nojs.spec.ts with JavaScript disabled
+ *   http                 *.http.spec.ts: protocol checks over HTTP only (headers, redirects,
+ *                        robots, sitemap, abuse, link crawl), no browser, so they run once
+ *   sparse               *.sparse.spec.ts against a build with the `sparse` fixture set. Gated
+ *                        routes are decided at build time and a second build would overwrite
+ *                        `.next`, so the sparse run is its own invocation: with
+ *                        E2E_FIXTURE_SET=sparse this config builds the sparse server and defines
+ *                        ONLY the sparse project (`pnpm test:e2e:sparse`; its own CI job).
  *
  * The fixtures content source and the memory enquiry backend are delivered by other workstreams
  * (C2, D). Until they are wired into the app, the environment variables are accepted by
@@ -43,6 +54,21 @@ const command = [
 
 const nojs = /.*\.nojs\.spec\.ts$/;
 const sparse = /.*\.sparse\.spec\.ts$/;
+const http = /.*\.http\.spec\.ts$/;
+
+const fixtureSet = process.env.E2E_FIXTURE_SET ?? "full";
+const sparseRun = fixtureSet === "sparse";
+const sparseBaseUrl = process.env.E2E_SPARSE_BASE_URL ?? (sparseRun ? baseURL : undefined);
+
+// Files named *.sparse.spec.ts assert behaviour below the publication gates. They need a server
+// built with VITALOS_FIXTURE_SET=sparse (see the header comment). Inert unless one is configured.
+const sparseProject = {
+  name: "sparse",
+  testMatch: sparse,
+  use: { ...devices["Desktop Chrome"], baseURL: sparseBaseUrl ?? baseURL },
+  metadata: { requires: "E2E_SPARSE_BASE_URL or E2E_FIXTURE_SET=sparse" },
+  grep: sparseBaseUrl ? undefined : /^(?!)/,
+};
 
 export default defineConfig({
   testDir: "./tests",
@@ -64,7 +90,7 @@ export default defineConfig({
       NEXT_PUBLIC_SITE_URL: baseURL,
       VITALOS_DEPLOY_ENV: "local",
       VITALOS_CONTENT_SOURCE: process.env.E2E_CONTENT_SOURCE ?? "fixtures",
-      VITALOS_FIXTURE_SET: process.env.E2E_FIXTURE_SET ?? "full",
+      VITALOS_FIXTURE_SET: fixtureSet,
       VITALOS_ENQUIRY_BACKEND: process.env.E2E_ENQUIRY_BACKEND ?? "memory",
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: TURNSTILE_TEST_SITE_KEY,
       TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET_KEY,
@@ -75,36 +101,31 @@ export default defineConfig({
     },
   },
   use: { baseURL, trace: "retain-on-failure" },
-  projects: [
-    {
-      name: "chromium",
-      testIgnore: [nojs, sparse],
-      use: { ...devices["Desktop Chrome"] },
-    },
-    {
-      name: "mobile",
-      testIgnore: [nojs, sparse],
-      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
-    },
-    {
-      // Progressive-enhancement checks: files named *.nojs.spec.ts run with JavaScript disabled.
-      name: "no-js",
-      testMatch: nojs,
-      use: { ...devices["Desktop Chrome"], javaScriptEnabled: false },
-    },
-    {
-      // Files named *.sparse.spec.ts assert behaviour below the publication gates. They need a
-      // server started with VITALOS_FIXTURE_SET=sparse (a separate build, because gated routes are
-      // decided at build time). Skipped unless E2E_SPARSE_BASE_URL is set; wired by F2 once the
-      // fixture source (C2) and gated routes (G2) exist.
-      name: "sparse",
-      testMatch: sparse,
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: process.env.E2E_SPARSE_BASE_URL ?? baseURL,
-      },
-      metadata: { requires: "E2E_SPARSE_BASE_URL" },
-      grep: process.env.E2E_SPARSE_BASE_URL ? undefined : /^(?!)/,
-    },
-  ],
+  projects: sparseRun
+    ? [sparseProject]
+    : [
+        {
+          name: "chromium",
+          testIgnore: [nojs, sparse, http],
+          use: { ...devices["Desktop Chrome"] },
+        },
+        {
+          name: "mobile",
+          testIgnore: [nojs, sparse, http],
+          use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+        },
+        {
+          // Progressive-enhancement checks: files named *.nojs.spec.ts run with JavaScript disabled.
+          name: "no-js",
+          testMatch: nojs,
+          use: { ...devices["Desktop Chrome"], javaScriptEnabled: false },
+        },
+        {
+          // Protocol checks over HTTP (APIRequestContext only): the result does not depend on a
+          // viewport, so each runs once instead of once per browser project.
+          name: "http",
+          testMatch: http,
+        },
+        sparseProject,
+      ],
 });

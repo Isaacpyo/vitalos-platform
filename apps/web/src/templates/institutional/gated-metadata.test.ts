@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFixtureContentSource } from "@vitalos/cms/fixtures";
 
 /**
@@ -17,6 +17,27 @@ vi.mock("../../lib/cms/draft", () => ({ isDraftModeEnabled: async () => false })
 vi.mock("../../features/seo/context", () => ({
   getSeoContext: () => ({ siteUrl: "https://example.invalid", indexable: true }),
 }));
+
+// The first import of each route module compiles its whole template tree, which can exceed the
+// default 5s test timeout on a cold cache (CI). Import every route once, up front, with a
+// generous hook timeout so the individual tests only measure gate behaviour.
+beforeAll(async () => {
+  await Promise.all([
+    import("../../../app/(site)/work/page"),
+    import("../../../app/(site)/work/[slug]/page"),
+    import("../../../app/(site)/insights/page"),
+    import("../../../app/(site)/insights/[slug]/page"),
+    import("../../../app/(site)/labs/page"),
+    import("../../../app/(site)/labs/[type]/page"),
+    import("../../../app/(site)/labs/[type]/[slug]/page"),
+    import("../../../app/(site)/careers/page"),
+    import("../../../app/(site)/careers/[slug]/page"),
+    import("../../../app/(site)/about/page"),
+    import("../../../app/(site)/trust/[topic]/page"),
+    import("../../../app/(site)/legal/[slug]/page"),
+    import("../../../app/(site)/people/[slug]/page"),
+  ]);
+}, 120_000);
 
 const params = <T>(value: T) => ({ params: Promise.resolve(value) });
 

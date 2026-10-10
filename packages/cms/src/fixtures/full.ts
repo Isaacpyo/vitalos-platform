@@ -396,7 +396,7 @@ const legalPages: LegalPageView[] = (
   id: `fixture-legal-${slug}`,
   slug,
   title: `Example ${slug} page ${L}`,
-  version: `0.0 ${L}`,
+  version: "0.0-fixture",
   effectiveDate: "2026-01-01",
   body: richText(`legal-${slug}`, `Artificial placeholder legal text ${L}. Not legal advice.`),
   seo: seo(`Example ${slug}`),

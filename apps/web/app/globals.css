@@ -8,6 +8,9 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* The header is sticky: keep focused elements and #anchor targets clear of it (WCAG 2.4.11
+       Focus Not Obscured). Browsers honour this when they scroll a focused element into view. */
+    scroll-padding-top: calc(var(--size-header) + var(--space-4));
   }
   body {
     background: var(--tone-bg);

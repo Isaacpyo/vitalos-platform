@@ -70,6 +70,32 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The `sparse` fixture set sits below every publication gate. Gated routes are decided at build
+  # time and a second build would overwrite `.next`, so it is its own job: it builds and serves
+  # apps/web with VITALOS_FIXTURE_SET=sparse and runs only the *.sparse.spec.ts files (ADR-021).
+  e2e-sparse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with: { run_install: false }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Sparse-content end-to-end (builds and starts apps/web with the sparse set)
+        run: pnpm test:e2e:sparse
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-sparse
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
   # axe against every story in the static Storybook build.
   storybook-a11y:
     runs-on: ubuntu-latest

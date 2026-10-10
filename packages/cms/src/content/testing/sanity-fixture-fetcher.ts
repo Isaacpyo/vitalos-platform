@@ -444,19 +444,26 @@ export function createFixtureSanityFetcher(set: FixtureSet): SanityFetcher {
           Object.fromEntries(
             kinds.map((kind) => [
               kind,
-              docs(kind).map((view) => {
-                const doc = view as unknown as Record<string, unknown>;
-                const seo = doc.seo as SeoView;
-                return {
-                  slug: doc.slug ?? null,
-                  topic: doc.topic ?? null,
-                  labType: doc.labType ?? null,
-                  updatedAt: doc.updatedAt ?? null,
-                  noindex: seo.noindex ?? null,
-                  editorialStatus: APPROVED,
-                  classification: "public",
-                };
-              }),
+              docs(kind)
+                // Mirrors the GROQ: only case studies with verified evidence are public.
+                .filter(
+                  (view) =>
+                    kind !== "caseStudy" ||
+                    (view as ViewFor<"caseStudy">).evidence.status === "verified",
+                )
+                .map((view) => {
+                  const doc = view as unknown as Record<string, unknown>;
+                  const seo = doc.seo as SeoView;
+                  return {
+                    slug: doc.slug ?? null,
+                    topic: doc.topic ?? null,
+                    labType: doc.labType ?? null,
+                    updatedAt: doc.updatedAt ?? null,
+                    noindex: seo.noindex ?? null,
+                    editorialStatus: APPROVED,
+                    classification: "public",
+                  };
+                }),
             ]),
           ),
         );

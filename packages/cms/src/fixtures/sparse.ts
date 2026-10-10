@@ -130,7 +130,7 @@ const privacy: LegalPageView = {
   id: "fixture-legal-privacy",
   slug: "privacy",
   title: `Example privacy page ${L}`,
-  version: `0.0 ${L}`,
+  version: "0.0-fixture",
   effectiveDate: "2026-01-01",
   body: richText("legal-privacy", `Artificial placeholder legal text ${L}.`),
   seo: seo("Example privacy"),
