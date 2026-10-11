@@ -44,7 +44,7 @@ function keysOf(params: Record<string, string>): string[] {
 /**
  * Decides, from the published document list alone, that a detail URL has no document behind it.
  *
- * Why this exists (ADR-026): Next.js cannot server-render the not-found UI for a `notFound()`
+ * Why this exists (ADR-027): Next.js cannot server-render the not-found UI for a `notFound()`
  * thrown by a page. The shell render fails, Next sends an empty `__next_error__` document with
  * status 404 and the browser draws the 404 from the streamed payload, so a visitor without
  * JavaScript sees a blank page. An unmatched URL, in contrast, is server-rendered. The proxy
