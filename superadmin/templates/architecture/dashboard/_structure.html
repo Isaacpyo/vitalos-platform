@@ -1,0 +1,26 @@
+{% load ui %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <p class="muted text-sm">Practices → Solutions → Offers</p>
+  {% if can_edit %}<button type="button" class="btn btn-primary" hx-get="{% url 'architecture:entity_create' 'practice' %}?service_line={{ line.slug }}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add practice</button>{% endif %}
+</div>
+<ul class="mt-4 space-y-4" data-testid="structure-tree">
+  {% for practice in practices %}
+    <li id="practice-{{ practice.pk }}" class="card p-4">
+      {% include "architecture/dashboard/_node.html" with obj=practice kind="practice" child_kind="solution" child_param="practice" %}
+      <ul class="mt-3 space-y-3 border-l-2 border-slate-200 pl-4 dark:border-slate-700">
+        {% for solution in practice.solutions.all %}
+          <li id="solution-{{ solution.pk }}">
+            {% include "architecture/dashboard/_node.html" with obj=solution kind="solution" child_kind="offer" child_param="solution" %}
+            <ul class="mt-2 space-y-2 border-l-2 border-dashed border-slate-200 pl-4 dark:border-slate-700">
+              {% for offer in solution.offers.all %}
+                <li id="offer-{{ offer.pk }}">{% include "architecture/dashboard/_node.html" with obj=offer kind="offer" child_kind="" %}</li>
+              {% empty %}<li class="muted text-xs">No offers yet.</li>{% endfor %}
+            </ul>
+          </li>
+        {% empty %}<li class="muted text-sm">No solutions yet.</li>{% endfor %}
+      </ul>
+    </li>
+  {% empty %}
+    <li class="card muted p-6 text-center text-sm">No practices yet.{% if can_edit %} Start by adding the first practice.{% endif %}</li>
+  {% endfor %}
+</ul>

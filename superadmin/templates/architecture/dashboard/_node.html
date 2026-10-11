@@ -1,0 +1,15 @@
+{% load ui %}
+<div class="flex flex-wrap items-start justify-between gap-2">
+  <div class="min-w-0">
+    <p class="flex flex-wrap items-center gap-2">
+      <span class="muted text-xs font-semibold uppercase tracking-wide">{{ kind }}</span>
+      <span class="font-medium {% if obj.is_archived %}line-through opacity-60{% endif %}">{{ obj.name }}</span>
+      <span class="{{ obj.status|badge_class }}">{{ obj.get_status_display }}</span>
+      <span class="{{ 'slate'|badge_class }}">{{ obj.get_maturity_display }}</span>
+      {% if obj.classification != "internal" %}<span class="{{ obj.classification|badge_class }}">{{ obj.get_classification_display }}</span>{% endif %}
+      {% if obj.is_archived %}<span class="{{ 'cancelled'|badge_class }}">Archived</span>{% endif %}
+    </p>
+    {% if obj.summary %}<p class="muted mt-1 text-sm">{{ obj.summary|truncatewords:40 }}</p>{% endif %}
+  </div>
+  {% include "architecture/dashboard/_node_actions.html" %}
+</div>

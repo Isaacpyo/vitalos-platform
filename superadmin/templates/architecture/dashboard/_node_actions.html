@@ -1,0 +1,16 @@
+{% load ui %}
+{% if can_edit %}
+  <span class="flex shrink-0 flex-wrap items-center">
+    {% if obj.is_archived %}
+      {% url 'architecture:entity_restore' kind obj.pk as restore_url %}
+      {% include "partials/post_button.html" with url=restore_url label="Restore" target=obj.name icon_name="restore" show_label=True %}
+    {% else %}
+      {% if child_kind %}
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'architecture:entity_create' child_kind %}?{{ child_param }}={{ obj.pk }}" hx-target="#modal" aria-label="Add {{ child_kind }} to {{ obj.name }}">{% icon "plus" "h-4 w-4" %}<span class="hidden sm:inline">{{ child_kind|capfirst }}</span></button>
+      {% endif %}
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'architecture:entity_edit' kind obj.pk %}" hx-target="#modal" aria-label="Edit {{ obj.name }}">{% icon "edit" "h-4 w-4" %}</button>
+      {% url 'architecture:entity_archive' kind obj.pk as archive_url %}
+      {% include "partials/post_button.html" with url=archive_url label="Archive" target=obj.name icon_name="archive" confirm="Archive this item? It is hidden but kept, and can be restored." %}
+    {% endif %}
+  </span>
+{% endif %}

@@ -1,0 +1,39 @@
+{% load ui %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div class="flex flex-wrap gap-1" role="group" aria-label="Filter by status">
+    <a href="?tab=projects" class="tab" aria-selected="{% if not status_filter %}true{% else %}false{% endif %}" hx-get="{{ request.path }}?tab=projects" hx-target="#tab-region" hx-swap="outerHTML">All</a>
+    {% for value, label in status_choices %}
+      <a href="?tab=projects&amp;status={{ value }}" class="tab" aria-selected="{% if status_filter == value %}true{% else %}false{% endif %}" hx-get="{{ request.path }}?tab=projects&amp;status={{ value }}" hx-target="#tab-region" hx-swap="outerHTML">{{ label }} <span class="muted text-xs">{{ status_counts|dictget:value }}</span></a>
+    {% endfor %}
+  </div>
+  {% if can_edit %}<button type="button" class="btn btn-primary" hx-get="{% url 'architecture:entity_create' 'project' %}?service_line={{ line.slug }}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add project</button>{% endif %}
+</div>
+<div class="card mt-4 overflow-x-auto">
+  <table class="table-base" data-testid="projects-table">
+    <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">Dates</th><th scope="col">Lead</th><th scope="col" class="text-right">Value</th><th scope="col">Class.</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+      {% for project in projects %}
+        <tr id="project-{{ project.pk }}" class="{% if project.is_archived %}opacity-60{% endif %}">
+          <td><span class="font-medium">{{ project.name }}</span><br><span class="muted text-xs">{{ project.client|default:"—" }}</span></td>
+          <td>
+            {% if can_edit and not project.is_archived %}
+              <form method="post" action="{% url 'architecture:project_status' project.pk %}" hx-post="{% url 'architecture:project_status' project.pk %}" hx-trigger="change" hx-swap="none">
+                {% csrf_token %}
+                <label class="sr-only" for="status-{{ project.pk }}">Status of {{ project.name }}</label>
+                <select id="status-{{ project.pk }}" name="status" class="rounded-md border border-slate-300 bg-white py-1 pl-2 pr-7 text-xs dark:border-slate-600 dark:bg-slate-900">
+                  {% for value, label in status_choices %}<option value="{{ value }}" {% if value == project.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+                <noscript><button type="submit" class="btn btn-secondary btn-sm">Save</button></noscript>
+              </form>
+            {% else %}<span class="{{ project.status|badge_class }}">{{ project.get_status_display }}</span>{% endif %}
+          </td>
+          <td class="whitespace-nowrap text-xs">{{ project.start_date|date:"j M Y"|default:"—" }} → {{ project.end_date|date:"j M Y"|default:"—" }}</td>
+          <td>{{ project.lead|default:"—" }}</td>
+          <td class="whitespace-nowrap text-right">{% if project.value is not None %}£{{ project.value|floatformat:"2g" }}{% else %}—{% endif %}</td>
+          <td><span class="{{ project.classification|badge_class }}">{{ project.get_classification_display }}</span></td>
+          <td class="text-right">{% include "architecture/dashboard/_node_actions.html" with obj=project kind="project" child_kind="" %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="7" class="muted py-6 text-center">No projects{% if status_filter %} with this status{% endif %}.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>

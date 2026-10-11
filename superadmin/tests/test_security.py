@@ -1,0 +1,114 @@
+import json
+import logging
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+from django.test import Client
+
+from apps.core.logging import RequestIDFilter, request_id_var
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.django_db
+def test_strict_csp_with_nonce(seeded, superadmin, client_for):
+    response = client_for(superadmin).get("/")
+    policy = response["Content-Security-Policy"]
+    nonce = re.search(r"'nonce-([^']+)'", policy).group(1)
+    assert "default-src 'none'" in policy and "frame-ancestors 'none'" in policy
+    assert "unsafe-inline" not in policy and "unsafe-eval" not in policy
+    body = response.content.decode()
+    # Every script tag carries the per-request nonce; there are no inline handlers.
+    scripts = re.findall(r"<script[^>]*>", body)
+    assert scripts and all(f'nonce="{nonce}"' in tag for tag in scripts)
+    assert not re.search(r"\son[a-z]+=", body)
+    assert ' style="' not in body
+
+
+@pytest.mark.django_db
+def test_security_headers(seeded, superadmin, client_for):
+    response = client_for(superadmin).get("/")
+    assert response["X-Frame-Options"] == "DENY"
+    assert response["X-Content-Type-Options"] == "nosniff"
+    assert response["Referrer-Policy"] == "same-origin"
+    assert "camera=()" in response["Permissions-Policy"]
+    assert response["Cache-Control"] == "private, no-store"
+
+
+@pytest.mark.django_db
+def test_request_id_is_generated_or_propagated(seeded):
+    client = Client()
+    generated = client.get("/login/")["X-Request-ID"]
+    assert re.fullmatch(r"[0-9a-f]{32}", generated)
+    assert client.get("/login/", HTTP_X_REQUEST_ID="abc-12345678")["X-Request-ID"] == "abc-12345678"
+    # Unsafe values are replaced rather than echoed.
+    assert client.get("/login/", HTTP_X_REQUEST_ID="<bad>")["X-Request-ID"] != "<bad>"
+
+
+@pytest.mark.django_db
+def test_health_check_bypasses_host_validation():
+    response = Client().get("/healthz/", HTTP_HOST="10.0.0.12:8000")
+    assert response.status_code == 200 and response.json() == {"status": "ok"}
+
+
+def test_json_log_lines_include_request_id():
+    from pythonjsonlogger.json import JsonFormatter
+
+    record = logging.LogRecord("superadmin.access", logging.INFO, __file__, 1, "request", None, None)
+    token = request_id_var.set("req-123456789")
+    try:
+        RequestIDFilter().filter(record)
+    finally:
+        request_id_var.reset(token)
+    formatter = JsonFormatter(
+        "%(asctime)s %(levelname)s %(name)s %(message)s %(request_id)s", rename_fields={"levelname": "level"}
+    )
+    line = json.loads(formatter.format(record))
+    assert line["request_id"] == "req-123456789" and line["level"] == "INFO"
+
+
+def _prod_env(**overrides):
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "DJANGO_SETTINGS_MODULE": "config.settings.prod",
+        "DJANGO_SECRET_KEY": "x" * 20 + "-not-a-real-secret-only-for-settings-tests-" + "y" * 20,
+        "DATABASE_URL": "postgres://user@localhost:5432/db",
+        "ALLOWED_HOSTS": "admin.vitalos.co.uk",
+        "CSRF_TRUSTED_ORIGINS": "https://admin.vitalos.co.uk",
+    }
+    env.update(overrides)
+    return env
+
+
+def _check_prod(script, **overrides):
+    return subprocess.run(  # noqa: S603 - fixed interpreter and arguments
+        [sys.executable, "-c", script],
+        cwd=BASE_DIR,
+        env=_prod_env(**overrides),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_production_settings_are_hardened():
+    script = (
+        "import django;django.setup();from django.conf import settings as s;"
+        "assert not s.DEBUG;assert s.SECURE_SSL_REDIRECT;assert s.SESSION_COOKIE_SECURE and s.CSRF_COOKIE_SECURE;"
+        "assert s.SECURE_HSTS_SECONDS>=31536000;assert s.SESSION_COOKIE_AGE==28800;"
+        "assert s.ALLOWED_HOSTS==['admin.vitalos.co.uk'];assert s.SECURE_PROXY_SSL_HEADER;"
+        "assert 'Manifest' in s.STORAGES['staticfiles']['BACKEND'];"
+        "db=s.DATABASES['default'];assert db['CONN_MAX_AGE']==0 and db['CONN_HEALTH_CHECKS'];"
+        "assert db['DISABLE_SERVER_SIDE_CURSORS'];print('ok')"
+    )
+    result = _check_prod(script)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "ok"
+
+
+def test_production_refuses_a_weak_secret_key():
+    result = _check_prod("import django;django.setup()", DJANGO_SECRET_KEY="short")
+    assert result.returncode != 0 and "DJANGO_SECRET_KEY" in result.stderr

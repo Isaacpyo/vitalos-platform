@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Settings · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-semibold">Settings</h1>
+  <div id="settings-region" class="mt-4" hx-get="{{ request.path }}" hx-trigger="vsa-changed from:body" hx-select="#settings-region" hx-target="this" hx-swap="outerHTML">
+    <nav role="tablist" aria-label="Settings sections" class="flex gap-1 overflow-x-auto border-b border-slate-200 pb-2 dark:border-slate-800">
+      {% if is_superadmin %}
+        <a role="tab" class="tab" href="{% url 'architecture:settings_company' %}" aria-selected="{% if tab == 'company' %}true{% else %}false{% endif %}" hx-get="{% url 'architecture:settings_company' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">Company profile</a>
+        <a role="tab" class="tab" href="{% url 'accounts:settings_users' %}" aria-selected="{% if tab == 'users' %}true{% else %}false{% endif %}" hx-get="{% url 'accounts:settings_users' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">Users &amp; roles</a>
+      {% endif %}
+      <a role="tab" class="tab" href="{% url 'accounts:settings_tokens' %}" aria-selected="{% if tab == 'tokens' %}true{% else %}false{% endif %}" hx-get="{% url 'accounts:settings_tokens' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">API tokens</a>
+      <a role="tab" class="tab" href="{% url 'architecture:settings_data' %}" aria-selected="{% if tab == 'data' %}true{% else %}false{% endif %}" hx-get="{% url 'architecture:settings_data' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">CSV import / export</a>
+    </nav>
+    <div role="tabpanel" class="mt-6">
+      {% block settings_panel %}{% endblock %}
+    </div>
+  </div>
+{% endblock %}

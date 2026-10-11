@@ -1,6 +1,6 @@
 # Container architecture
 
-Current state (10 Oct 2026, `stage-1` branch) and future state. The repository is a modular monolith with three deployable apps and shared packages (ADR-003). External systems below are the intended providers; none is connected to production yet.
+Current state (10 Oct 2026, `stage-1` branch) and future state. The repository is a modular monolith with three deployable apps and shared packages (ADR-003), plus the separately deployed Django Super Admin (ADR-026). External systems below are the intended providers; none is connected to production yet.
 
 ## Current state
 
@@ -30,6 +30,11 @@ flowchart TB
   Turnstile["Cloudflare Turnstile<br/>(production keys pending)"]
   Email["Email provider<br/>(none approved; no adapter)"]
 
+  SuperAdmin["superadmin<br/>Django deployable<br/>(internal, admin.vitalos.co.uk)"]
+  SADB[("Super Admin PostgreSQL<br/>company architecture records")]
+  Consumers["Internal API consumers"]
+  Staff([Vitalos staff])
+
   Visitor -->|HTTPS| Web
   Editor --> Studio
   Studio --> Sanity
@@ -43,6 +48,10 @@ flowchart TB
   Web --> UI & Tokens & CMS & Config & Validation & Security & Obs
   Studio --> CMS
   Storybook --> UI & Tokens
+
+  Staff -->|HTTPS| SuperAdmin
+  SuperAdmin --> SADB
+  SuperAdmin -.->|read-only /api/v1| Consumers
 ```
 
 Notes:
@@ -51,6 +60,7 @@ Notes:
 - With no Sanity configuration the web app runs on the `empty` content source (honest empty state, all publication gates closed). `fixtures` (artificial content) is for tests and local work and is rejected in production; `draft` (content drafted from the strategy library, pending approval, ADR-025) is for review in local, preview and staging and is likewise rejected in production. See `docs/operations/local-development.md`.
 - `apps/web` never imports `sanity`, `@vitalos/cms/schemas|structure|actions|presentation`. The Studio is a separate build and deployment unit.
 - Storybook is private by default and is not deployed.
+- The web, Studio, Storybook and Super Admin are independent build/deployment units. Super Admin is an internal Django application with its own database and toolchain and no source imports in either direction (ADR-026).
 
 ## Runtime responsibilities (`apps/web`)
 

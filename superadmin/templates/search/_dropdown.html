@@ -1,0 +1,15 @@
+{% load ui %}
+<div class="card max-h-[70vh] overflow-y-auto p-2 text-sm shadow-lg" role="listbox" aria-label="Search results" data-testid="search-dropdown">
+  {% for group in groups %}
+    <p class="muted px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide">{{ group.label }}</p>
+    {% for result in group.results %}
+      <a role="option" href="{{ result.get_absolute_url }}" class="block rounded px-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800">
+        <span class="font-medium">{{ result }}</span>
+        {% if result.service_line and result.service_line != result %}<span class="muted text-xs"> · {{ result.service_line.name }}</span>{% endif %}
+      </a>
+    {% endfor %}
+  {% empty %}
+    <p class="muted px-2 py-3">No matches for “{{ query }}”.</p>
+  {% endfor %}
+  {% if groups %}<a href="{% url 'architecture:search' %}?q={{ query|urlencode }}" class="mt-1 block border-t border-slate-100 px-2 pt-2 text-xs text-vitalos-blue hover:underline dark:border-slate-800 dark:text-blue-400">See all results</a>{% endif %}
+</div>

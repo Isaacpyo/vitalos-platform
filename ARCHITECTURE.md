@@ -9,6 +9,7 @@ Vitalos uses a TypeScript-first modular monolith and independently deployable ap
 - `apps/storybook`: private component workbench.
 - `packages`: `design-tokens`, `ui`, `cms`, `config`, `validation`, `security`, `observability`, `testing`.
 - `supabase`: local migrations and pgTAP tests. No remote project is used.
+- `superadmin`: the isolated Django Super Admin (internal, `admin.vitalos.co.uk`, own PostgreSQL; ADR-026). Python toolchain, no source imports to or from the TypeScript apps.
 - Quality gates run in CI: format, lint, typecheck, unit tests, boundaries, type drift, build, Storybook build, end-to-end and accessibility, JS budgets, client-bundle secret scan, Storybook axe, pgTAP, CodeQL and gitleaks (ADR-021).
 
 ## Future (documented, not built)
@@ -24,7 +25,7 @@ Production Sanity and Supabase projects, an email notifier adapter and outbox sc
 
 ## Data ownership
 
-Sanity: editorial content. PostgreSQL: enquiries, outbox, rate limits. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public CMS. Email is a notification channel, never the record.
+Sanity: editorial content. PostgreSQL: enquiries, outbox, rate limits. Super Admin PostgreSQL (separate database): internal company architecture records. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public CMS. Email is a notification channel, never the record.
 
 ## Read next
 

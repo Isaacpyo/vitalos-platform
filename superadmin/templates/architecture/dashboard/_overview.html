@@ -1,0 +1,50 @@
+{% load ui %}
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {% for kpi in kpis %}{% include "architecture/dashboard/_kpi_tile.html" %}{% empty %}
+    <div class="card muted p-4 text-sm sm:col-span-2 lg:col-span-4">No KPIs defined yet.{% if can_edit %} Add one from the KPIs tab.{% endif %}</div>
+  {% endfor %}
+</div>
+<div class="mt-6 grid gap-6 lg:grid-cols-3">
+  <section class="card p-5">
+    <h2 class="font-semibold">Recent projects</h2>
+    <ul class="mt-2 divide-y divide-slate-100 dark:divide-slate-800">
+      {% for project in recent_projects %}
+        <li class="flex items-center justify-between gap-3 py-2 text-sm">
+          <span class="min-w-0"><span class="block truncate font-medium">{{ project.name }}</span><span class="muted text-xs">{{ project.client|default:"—" }}</span></span>
+          <span class="{{ project.status|badge_class }}">{{ project.get_status_display }}</span>
+        </li>
+      {% empty %}<li class="muted py-2 text-sm">No projects yet.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="card p-5">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold">Decisions</h2>
+      {% if can_edit %}<button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'architecture:entity_create' 'decision' %}?service_line={{ line.slug }}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add</button>{% endif %}
+    </div>
+    <ul class="mt-2 divide-y divide-slate-100 dark:divide-slate-800">
+      {% for decision in decisions %}
+        <li id="decision-{{ decision.pk }}" class="py-2 text-sm">
+          <div class="flex items-start justify-between gap-2">
+            <p class="font-medium">{{ decision.title }}</p>
+            {% if can_edit %}
+              <span class="flex shrink-0">
+                <button type="button" class="btn btn-ghost btn-sm" aria-label="Edit decision {{ decision.title }}" hx-get="{% url 'architecture:entity_edit' 'decision' decision.pk %}" hx-target="#modal">{% icon "edit" "h-4 w-4" %}</button>
+                {% url 'architecture:entity_archive' 'decision' decision.pk as archive_url %}
+                {% include "partials/post_button.html" with url=archive_url label="Archive" target=decision.title icon_name="archive" confirm="Archive this decision? You can restore it later." %}
+              </span>
+            {% endif %}
+          </div>
+          <p class="muted text-xs">{{ decision.date|date:"j M Y" }}{% if decision.notion_url %} · <a href="{{ decision.notion_url }}" class="underline" rel="noopener noreferrer" target="_blank">Notion</a>{% endif %}</p>
+          {% if decision.rationale %}<p class="mt-1 text-slate-600 dark:text-slate-300">{{ decision.rationale|truncatewords:30 }}</p>{% endif %}
+        </li>
+      {% empty %}<li class="muted py-2 text-sm">No decisions recorded.</li>{% endfor %}
+    </ul>
+  </section>
+  <section class="card p-5">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold">Activity</h2>
+      <a href="{% url 'architecture:activity' %}?service_line={{ line.slug }}" class="text-sm text-vitalos-blue hover:underline dark:text-blue-400">View all</a>
+    </div>
+    {% include "activity/_widget.html" with entries=activity_entries %}
+  </section>
+</div>

@@ -1,0 +1,21 @@
+{% load ui %}
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <p class="muted text-sm">People working in {{ line.name }}.</p>
+  {% if can_edit_team %}<button type="button" class="btn btn-primary" hx-get="{% url 'architecture:entity_create' 'teammember' %}?service_line={{ line.slug }}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add team member</button>{% endif %}
+</div>
+<div class="card mt-4 overflow-x-auto">
+  <table class="table-base">
+    <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Email</th><th scope="col">Login</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+      {% for member in members %}
+        <tr id="teammember-{{ member.pk }}" class="{% if member.is_archived %}opacity-60{% endif %}">
+          <td class="font-medium">{{ member.name }}{% if member.is_archived %} <span class="{{ 'cancelled'|badge_class }}">Archived</span>{% endif %}</td>
+          <td>{{ member.role_title|default:"—" }}</td>
+          <td>{% if member.email %}<a class="underline" href="mailto:{{ member.email }}">{{ member.email }}</a>{% else %}—{% endif %}</td>
+          <td>{% if member.user %}{{ member.user.email }}{% else %}<span class="muted">None</span>{% endif %}</td>
+          <td class="text-right">{% include "architecture/dashboard/_node_actions.html" with obj=member kind="teammember" child_kind="" can_edit=can_edit_team %}</td>
+        </tr>
+      {% empty %}<tr><td colspan="5" class="muted py-6 text-center">No team members linked to this service line.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>

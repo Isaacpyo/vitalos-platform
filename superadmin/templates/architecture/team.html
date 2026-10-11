@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Team · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div id="team-region" hx-get="{{ request.get_full_path }}" hx-trigger="vsa-changed from:body" hx-select="#team-region" hx-target="this" hx-swap="outerHTML">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold">Team</h1>
+        <p class="muted mt-1 text-sm">Everyone across the service lines.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a class="muted text-sm hover:underline" href="?{% if not show_archived %}archived=1{% endif %}">{% if show_archived %}Hide archived{% else %}Show archived{% endif %}</a>
+        {% if can_edit_team %}<button type="button" class="btn btn-primary" hx-get="{% url 'architecture:entity_create' 'teammember' %}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add team member</button>{% endif %}
+      </div>
+    </div>
+    <div class="card mt-6 overflow-x-auto">
+      <table class="table-base">
+        <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Service lines</th><th scope="col">Login</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for member in members %}
+            <tr id="teammember-{{ member.pk }}" class="{% if member.is_archived %}opacity-60{% endif %}">
+              <td class="font-medium">{{ member.name }}<br><span class="muted text-xs font-normal">{{ member.email }}</span></td>
+              <td>{{ member.role_title|default:"—" }}</td>
+              <td><div class="flex flex-wrap gap-1">{% for line in member.service_lines.all %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>
+              <td>{{ member.user.email|default:"—" }}</td>
+              <td class="text-right">{% include "architecture/dashboard/_node_actions.html" with obj=member kind="teammember" child_kind="" can_edit=can_edit_team %}</td>
+            </tr>
+          {% empty %}<tr><td colspan="5" class="muted py-6 text-center">No team members yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
