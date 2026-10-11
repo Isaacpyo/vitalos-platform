@@ -12,8 +12,12 @@ if len(SECRET_KEY) < 50:
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
+# Neon (free tier) autosuspends after 5 idle minutes and is reached through its PgBouncer pooler:
+# open a fresh connection per request, health-check reused ones, and avoid server-side cursors,
+# which transaction pooling does not support.
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=0)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool("DB_DISABLE_SERVER_SIDE_CURSORS", default=True)
 APP_ENVIRONMENT = env("APP_ENVIRONMENT", default="production")
 
 # TLS terminates at the platform ingress, which sets X-Forwarded-Proto.
