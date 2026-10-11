@@ -1,5 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createFixtureSource } from "../content/fixture-source";
+import type { FixtureSet } from "../content/fixture-source";
 import { createSanityContentSource } from "../content/sanity-source";
 import { describeContentSourceContract, docKinds } from "../content/testing/contract";
 import { createFixtureSanityFetcher } from "../content/testing/sanity-fixture-fetcher";
@@ -20,9 +22,26 @@ import { singletonProvenanceKeys } from "./provenance";
 const NOW = () => new Date("2026-10-10T12:00:00Z");
 const { set, provenance } = draftContent;
 const draftSource = () => createDraftContentSource({ now: NOW });
-const sanitySource = () => createSanityContentSource(createFixtureSanityFetcher(set), { now: NOW });
+/**
+ * The Sanity mappers know nothing about placeholder documents (they are never imported by default),
+ * so the Sanity-shaped contract runs over the set without them.
+ */
+const withoutPlaceholders: FixtureSet = {
+  ...set,
+  documents: Object.fromEntries(
+    Object.entries(set.documents).map(([kind, list]) => [
+      kind,
+      (list as readonly { placeholder?: true }[]).filter((doc) => doc.placeholder !== true),
+    ]),
+  ) as unknown as FixtureSet["documents"],
+};
+const sanitySource = () =>
+  createSanityContentSource(createFixtureSanityFetcher(withoutPlaceholders), { now: NOW });
+const draftWithoutPlaceholders = () => createFixtureSource(withoutPlaceholders, { now: NOW });
 
-describeContentSourceContract("Draft content", draftSource);
+describeContentSourceContract("Draft content", draftSource, {
+  countsPlaceholderCaseStudies: true,
+});
 describeContentSourceContract("Sanity source (draft-shaped documents)", sanitySource);
 
 const allDocuments = (): { kind: DocKind; doc: ViewFor<DocKind> }[] =>
@@ -31,7 +50,7 @@ const allDocuments = (): { kind: DocKind; doc: ViewFor<DocKind> }[] =>
   );
 
 describe("draft content matches the fixture view-model contract through the Sanity mappers", () => {
-  const draft = draftSource();
+  const draft = draftWithoutPlaceholders();
   const sanity = sanitySource();
 
   it("site chrome, home page, gates and route pages", async () => {
@@ -67,10 +86,27 @@ describe("draft content matches the fixture view-model contract through the Sani
   });
 });
 
-describe("publication gates stay closed where content is empty", () => {
-  it("opens only Labs and Industries", async () => {
+describe("publication gates in the draft source", () => {
+  it("opens every gate: the placeholder content opens Work, Insights and Careers", async () => {
     const gates = await draftSource().getPublicationGates();
     expect(gates.open).toEqual({
+      work: true,
+      insights: true,
+      labs: true,
+      industries: true,
+      careers: true,
+    });
+    expect(gates.counts).toMatchObject({ work: 2, insights: 6, careers: 1 });
+  });
+
+  it("opens Work only through the draft source: other sources ignore placeholder status", async () => {
+    // The same set served without the draft-only option (as fixtures, sparse or Sanity would be).
+    const plain = await createFixtureSource(set, { now: NOW }).getPublicationGates();
+    expect(plain.open.work).toBe(false);
+    expect(plain.counts.work).toBe(0);
+    // The Sanity mappers see only the verified-evidence rule, and placeholders are not imported.
+    const sanity = await sanitySource().getPublicationGates();
+    expect(sanity.open).toEqual({
       work: false,
       insights: false,
       labs: true,
@@ -79,21 +115,112 @@ describe("publication gates stay closed where content is empty", () => {
     });
   });
 
-  it("drafts no case studies, insights, people or roles", () => {
+  it("drafts only placeholder case studies, insights, people and roles", () => {
     for (const kind of ["caseStudy", "insight", "person", "job"] as const) {
-      expect(set.documents[kind], kind).toEqual([]);
+      const list = set.documents[kind] as readonly { placeholder?: true }[];
+      expect(list.length, kind).toBeGreaterThan(0);
+      expect(
+        list.every((doc) => doc.placeholder === true),
+        kind,
+      ).toBe(true);
     }
+    expect(set.documents.person).toHaveLength(3);
+    expect(set.documents.insight).toHaveLength(6);
+    expect(set.documents.caseStudy).toHaveLength(2);
+    expect(set.documents.job).toHaveLength(1);
+    // The home page stays free of placeholder content.
     expect(set.home?.selectedWork).toEqual([]);
     expect(set.home?.insights).toEqual([]);
     expect(set.home?.leadership).toEqual([]);
     expect(set.home?.proof).toEqual([]);
   });
 
-  it("keeps closed sections and draft legal pages out of the sitemap", async () => {
-    const kinds = new Set((await draftSource().getSitemapEntries()).map((entry) => entry.kind));
+  it("keeps draft legal pages out of the sitemap and lists no placeholder page", async () => {
+    const entries = await draftSource().getSitemapEntries();
+    const kinds = new Set(entries.map((entry) => entry.kind));
     expect(kinds.has("legalPage")).toBe(false);
     expect(kinds.has("practice")).toBe(true);
     expect(kinds.has("labAsset")).toBe(true);
+    for (const kind of ["caseStudy", "insight", "person", "job"]) {
+      expect(kinds.has(kind as never), kind).toBe(false);
+    }
+  });
+});
+
+describe("placeholder content guardrails", () => {
+  const placeholders = (): { kind: DocKind; doc: ViewFor<DocKind> }[] =>
+    allDocuments().filter(({ doc }) => (doc as { placeholder?: true }).placeholder === true);
+
+  it("flags exactly the personas, insights, case studies and role", () => {
+    expect(new Set(placeholders().map(({ kind }) => kind))).toEqual(
+      new Set(["person", "insight", "caseStudy", "job"]),
+    );
+    expect(placeholders()).toHaveLength(12);
+    for (const { doc } of placeholders())
+      expect(provenance[doc.id]?.placeholder, doc.id).toBe(true);
+  });
+
+  it("is always noindex, on the document and on the sections it opens", () => {
+    for (const { doc } of placeholders()) expect(doc.seo.noindex, doc.id).toBe(true);
+    for (const key of ["work", "insights", "careers"] as const) {
+      expect(set.routePages[key]?.seo.noindex, key).toBe(true);
+    }
+  });
+
+  it("personas carry no credentials, links, portraits or employers", () => {
+    for (const person of set.documents.person) {
+      expect(person.credentials).toEqual([]);
+      expect(person.sameAs).toEqual([]);
+      expect(person.portrait).toBeUndefined();
+      expect(JSON.stringify(person)).not.toMatch(/https?:|@|linkedin|university|degree|certif/i);
+    }
+    expect(set.documents.person.filter((person) => person.isLeadership)).toHaveLength(1);
+  });
+
+  it("insights are 900 to 1400 words, authored by a persona, with no figures", () => {
+    const people = new Set(set.documents.person.map((person) => person.id));
+    const words = (value: unknown): number => {
+      const text: string[] = [];
+      const walk = (node: unknown): void => {
+        if (Array.isArray(node)) node.forEach(walk);
+        else if (typeof node === "object" && node !== null) {
+          const record = node as Record<string, unknown>;
+          if (record["_type"] === "span") text.push(String(record["text"]));
+          else Object.values(record).forEach(walk);
+        }
+      };
+      walk(value);
+      return text.join(" ").split(/\s+/).filter(Boolean).length;
+    };
+    for (const insight of set.documents.insight) {
+      const count = words(insight.body);
+      expect(count, insight.slug).toBeGreaterThanOrEqual(900);
+      expect(count, insight.slug).toBeLessThanOrEqual(1400);
+      expect(insight.authors.length, insight.slug).toBeGreaterThan(0);
+      for (const author of insight.authors) expect(people.has(author.id)).toBe(true);
+      expect(JSON.stringify(insight.body), insight.slug).not.toMatch(
+        /\d+(\.\d+)?\s?(x|times|per cent|million|billion)\b/i,
+      );
+    }
+  });
+
+  it("case studies are anonymised scenarios with no outcome, metrics or testimonial", () => {
+    for (const study of set.documents.caseStudy) {
+      expect(study.clientDisplay).toBe("anonymised");
+      expect(study.clientName).toBeUndefined();
+      expect(study.metrics).toEqual([]);
+      expect(study.testimonial).toBeUndefined();
+      expect(study.outcome).toBeUndefined();
+      expect(study.evidence.status).toBe("pending");
+      expect(study.summary).toMatch(/^Illustrative scenario/);
+    }
+  });
+
+  it("the role has no salary and no application URL, and the page falls back to careers contact", () => {
+    for (const job of set.documents.job) {
+      expect(job.applicationUrl).toBeUndefined();
+      expect(JSON.stringify(job)).not.toMatch(/salary|£|benefits/i);
+    }
   });
 });
 

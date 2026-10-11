@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { getEnv } from "@vitalos/config";
 import { createLogger } from "@vitalos/observability";
+import { resetMissingDocumentIndex } from "../../../src/features/missing-documents";
 import { createRevalidateHandler } from "../../../src/lib/cms/revalidate-handler";
 
 /**
@@ -13,7 +14,11 @@ export async function POST(request: Request): Promise<Response> {
   const logger = createLogger({ service: "vitalos-web", env: env.deployEnv });
   return createRevalidateHandler({
     secret: env.sanity.revalidateSecret,
-    revalidateTag,
+    revalidateTag: (tag, profile) => {
+      revalidateTag(tag, profile);
+      // The proxy caches the published document lists (ADR-027); a content change drops them.
+      resetMissingDocumentIndex();
+    },
     log: (event, attributes) => logger.info(event, attributes),
   })(request);
 }

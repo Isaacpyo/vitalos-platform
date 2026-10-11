@@ -4,8 +4,10 @@ import { NOT_FOUND_PATH, TEMPLATES } from "../support/routes";
 
 /**
  * The draft content source (ADR-025). Under E2E_CONTENT_SOURCE=draft (the `e2e-draft` CI job)
- * every page carries the "Draft content, pending approval" ribbon and the closed sections stay
- * closed; under any other source the ribbon must never appear.
+ * every page carries the "Draft content, pending approval" ribbon, and the pages that render invented
+ * placeholder content (ADR-025 status note, 11 October 2026) also carry the "Placeholder — replace
+ * before launch" notice, are noindex and emit no structured data; under any other source neither
+ * notice may appear.
  */
 
 const ribbon = (page: import("@playwright/test").Page) =>
@@ -93,20 +95,53 @@ test.describe("draft content source", () => {
     ]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     }
-    // Empty proof stays empty: no Selected Work, Insights or Leadership sections.
+    // The home page stays free of placeholder content: no Selected Work, Insights or Leadership.
     for (const heading of ["Selected Work", "Insights", "Leadership"]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toHaveCount(0);
     }
   });
 
-  test("navigation hides the sections whose gates stay closed", async ({ page }) => {
+  test("navigation shows every section: the placeholder content opens the gates", async ({
+    page,
+  }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation").first();
-    await expect(nav.getByRole("link", { name: "Industries", exact: true }).first()).toBeAttached();
-    await expect(nav.getByRole("link", { name: "Labs", exact: true }).first()).toBeAttached();
-    for (const closed of ["Work", "Insights"]) {
-      await expect(nav.getByRole("link", { name: closed, exact: true })).toHaveCount(0);
+    for (const open of ["Industries", "Labs", "Work", "Insights"]) {
+      await expect(nav.getByRole("link", { name: open, exact: true }).first()).toBeAttached();
     }
+  });
+
+  for (const path of [
+    "/work",
+    "/work/connecting-field-and-warehouse-systems",
+    "/insights",
+    "/insights/why-ai-pilots-stall-before-production",
+    "/people/alex-morgan",
+    "/about/leadership",
+    "/careers",
+    "/careers/senior-engineer-technical-lead",
+  ]) {
+    test(`${path}: placeholder notice, noindex and no structured data`, async ({ page }) => {
+      await page.goto(path);
+      await expect(
+        page.getByRole("complementary", { name: "Placeholder content notice" }),
+      ).toContainText("Placeholder — replace before launch");
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+      await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    });
+  }
+
+  test("pages without placeholder content carry no placeholder notice", async ({ page }) => {
+    for (const path of ["/", "/what-we-do/engineering", "/industries/health-care", "/contact"]) {
+      await page.goto(path);
+      await expect(page.locator("[data-placeholder-notice]"), path).toHaveCount(0);
+    }
+  });
+
+  test("the placeholder role applies through the careers contact route", async ({ page }) => {
+    await page.goto("/careers/senior-engineer-technical-lead");
+    await expect(page.locator('main a[href="/contact?intent=careers"]')).toHaveCount(1);
+    await expect(page.locator("main")).not.toContainText(/salary|£/i);
   });
 
   test("offers carry no prices", async ({ page }) => {

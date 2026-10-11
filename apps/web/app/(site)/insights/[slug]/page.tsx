@@ -34,7 +34,7 @@ export async function generateMetadata({
       authors: insight.authors.map((author) => author.title).filter((name) => name.trim() !== ""),
     },
     // A closed Insights gate, or a piece without a named author, is reachable but not indexed.
-    noindex: !named || !(await isDetailIndexableNow("insights")),
+    noindex: insight.placeholder === true || !named || !(await isDetailIndexableNow("insights")),
   });
 }
 

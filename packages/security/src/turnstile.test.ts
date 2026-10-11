@@ -104,3 +104,41 @@ describe("verifyTurnstileToken", () => {
     expect(JSON.stringify(result)).not.toContain("fixture-token");
   });
 });
+
+describe("Cloudflare dummy secrets are answered without the network", () => {
+  const dummy = (digit: string) => `${digit}x0000000000000000000000000000000AA`;
+  const noNetwork = () => {
+    const spy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("network is down"));
+    return spy;
+  };
+
+  it("passes the always-pass secret even when the network is down", async () => {
+    const spy = noNetwork();
+    const result = await verifyTurnstileToken({ ...base, secret: dummy("1") });
+    expect(result).toEqual({ success: true, errorCodes: [] });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("fails the always-fail and already-spent secrets as token errors, never as provider errors", async () => {
+    const spy = noNetwork();
+    expect(await verifyTurnstileToken({ ...base, secret: dummy("2") })).toEqual({
+      success: false,
+      errorCodes: ["invalid-input-response"],
+    });
+    expect(await verifyTurnstileToken({ ...base, secret: dummy("3") })).toEqual({
+      success: false,
+      errorCodes: ["timeout-or-duplicate"],
+    });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("still calls Cloudflare for any other secret, and fails closed when it is unreachable", async () => {
+    const spy = noNetwork();
+    const result = await verifyTurnstileToken({ ...base, secret: "0x4AAAAAAAreal-looking-secret" });
+    expect(result.errorCodes).toEqual(["network-error"]);
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+});

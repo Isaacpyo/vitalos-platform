@@ -20,7 +20,10 @@ describe("handleDispatchRequest", () => {
   it("401 without or with a wrong bearer secret, and does not dispatch", async () => {
     const svc = service();
     for (const header of [undefined, "Bearer wrong", `Basic ${secret}`, "Bearer ", secret]) {
-      const response = await handleDispatchRequest(request(header), { service: svc, secret });
+      const response = await handleDispatchRequest(request(header), {
+        service: svc,
+        secrets: [secret],
+      });
       expect(response.status).toBe(401);
     }
     expect(svc.dispatch).not.toHaveBeenCalled();
@@ -29,7 +32,7 @@ describe("handleDispatchRequest", () => {
   it("200 with counts only when the secret matches", async () => {
     const response = await handleDispatchRequest(request(`Bearer ${secret}`), {
       service: service(),
-      secret,
+      secrets: [secret],
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
@@ -45,7 +48,28 @@ describe("handleDispatchRequest", () => {
   it("503 when the endpoint secret is not configured (never open by default)", async () => {
     const response = await handleDispatchRequest(request(`Bearer ${secret}`), {
       service: service(),
-      secret: undefined,
+      secrets: [undefined],
+    });
+    expect(response.status).toBe(503);
+  });
+
+  it("accepts either OUTBOX_DISPATCH_SECRET or CRON_SECRET, ignoring unset entries", async () => {
+    const cron = "c".repeat(20);
+    const svc = service();
+    const deps = { service: svc, secrets: [secret, cron, undefined] };
+    expect((await handleDispatchRequest(request(`Bearer ${secret}`), deps)).status).toBe(200);
+    expect((await handleDispatchRequest(request(`Bearer ${cron}`), deps)).status).toBe(200);
+    expect((await handleDispatchRequest(request("Bearer nope"), deps)).status).toBe(401);
+    // Only CRON_SECRET configured (the Vercel Cron case).
+    const only = { service: svc, secrets: [undefined, cron] };
+    expect((await handleDispatchRequest(request(`Bearer ${cron}`), only)).status).toBe(200);
+    expect((await handleDispatchRequest(request(`Bearer ${secret}`), only)).status).toBe(401);
+  });
+
+  it("503 when neither secret is set, even for an empty bearer", async () => {
+    const response = await handleDispatchRequest(request("Bearer "), {
+      service: service(),
+      secrets: [undefined, ""],
     });
     expect(response.status).toBe(503);
   });
@@ -53,12 +77,12 @@ describe("handleDispatchRequest", () => {
   it("503 when there is no backend or no notifier configured", async () => {
     const noBackend = await handleDispatchRequest(request(`Bearer ${secret}`), {
       service: service({ available: false }),
-      secret,
+      secrets: [secret],
     });
     expect(noBackend.status).toBe(503);
     const noNotifier = await handleDispatchRequest(request(`Bearer ${secret}`), {
       service: service({ dispatch: () => Promise.resolve(null) }),
-      secret,
+      secrets: [secret],
     });
     expect(noNotifier.status).toBe(503);
     expect(await noNotifier.json()).toEqual({ error: "notifications-not-configured" });

@@ -1,6 +1,6 @@
 # ADR 025 Draft content source
 
-Status: Accepted (engineering). Every draft document is pending owner approval; nothing here is approved copy.
+Status: Accepted (engineering). Every draft document is pending owner approval; nothing here is approved copy. See the status note at the end (11 October 2026): the placeholder-content directive amends decision 5.
 
 ## Context
 
@@ -49,3 +49,19 @@ The draft source shows the owner a populated site built from their own strategy,
 ## Revisit triggers
 
 The owner imports the dataset into Sanity (then retire `packages/cms/src/draft` and the `e2e-draft` job, or keep the export only); the owner names an Insights author or supplies case studies, leadership or legal identity; a production need to preview drafts appears (use Sanity Draft Mode, never this source).
+
+## Status note, 11 October 2026: placeholder personas and content (owner directive)
+
+The owner directed (Temitope, 11 October 2026): the gated sections (Insights, People and Leadership, Work, Careers) stay closed in production because no real authors, case studies or roles exist, but the owner asked for "random personas, I will edit later" so those pages open in the draft preview. This amends decision 5 ("Empty stays empty; gates stay closed") for the `draft` source only. Nothing changes for fixtures, the sparse set, Sanity or production.
+
+What was added to `packages/cms/src/draft/`, and the guardrails that make it safe:
+
+1. **A `placeholder` flag** on draft documents and summaries (`DocBase`, `SummaryBase`; optional, `true` only). Only the draft source sets it. Provenance records it too.
+2. **Content.** Three invented personas (Founder and Managing Director, Engineering Lead, AI and Data Lead) with ordinary invented names and short role and focus-area bios drawn from Stages 13 and 14, with no credentials, employers, degrees, certifications, social links or portraits. Six articles of 900 to 1,400 words on Stage 13 themes, authored by them, with stage and section provenance and no statistics. Two anonymised illustrative case-study scenarios (generic descriptors, challenge and approach from Stages 3 and 5, no outcome, metrics, testimonial or named client). One placeholder Engineering role with no salary and no application URL (it falls back to `/contact?intent=careers`). The home page does not feature any of it.
+3. **A visible notice**, "Placeholder — replace before launch", rendered by `PlaceholderNotice` on every page that renders placeholder content (article, persona, case study, role, the Insights, Work and Careers indexes, Leadership and About), beside the draft ribbon. It exists only because the content exists, and placeholders exist only in the draft source, which configuration and the factory already reject in production.
+4. **Never indexed, never structured.** Placeholder documents set `seo.noindex`, the routes force `noindex`, they are out of the sitemap, and the Article, Person or ProfilePage, JobPosting and breadcrumb JSON-LD output is suppressed for them. The Work, Insights and Careers route pages are `noindex` (and unlisted) while placeholders are their only content.
+5. **Never imported by accident.** The Sanity export (`toSanityDocuments`) and `tooling/content/draft-dataset.ndjson` exclude every placeholder document by default. `--include-placeholders` (default off) writes them to a separate, never-committed file (`draft-dataset.with-placeholders.ndjson`) with `draftProvenance.placeholder: true`, the role exported closed; the committed file is never changed by the flag.
+6. **Gate counting, draft only.** `createFixtureSource` takes `countPlaceholderCaseStudies`; only `createDraftContentSource` sets it, so a case study flagged `placeholder` counts towards the Work gate although its evidence stays `pending`. Insights and Careers open through their existing rules (named author, open role). Without the option, and in the Sanity source (the mappers know nothing of placeholders), the verified-evidence rule is unchanged; tests prove it.
+7. **Tests.** Placeholders never produce JSON-LD, are `noindex` and are excluded from the default export; all five gates are open in draft; fixtures, sparse and Sanity gate behaviour is unchanged; the notice renders on every placeholder page and nowhere else; the end-to-end and accessibility suites cover the new pages under the draft source.
+
+Revisit: replace each placeholder with real content in Sanity, then delete the document here. When the last placeholder is gone the gates return to the real-content rules.

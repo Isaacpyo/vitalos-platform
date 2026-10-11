@@ -1,5 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, PersonCard, Stack } from "@vitalos/ui";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
@@ -10,11 +11,14 @@ import { leaderCardProps } from "./map";
 /** Leadership: each profile's portrait (when approved), name, role and summary, linking to the profile. */
 export function LeadershipPage({ data }: Readonly<{ data: LeadershipData }>) {
   const { page, leaders, draft } = data;
+  const placeholder = hasPlaceholder(leaders);
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
         crumbs={
           <Breadcrumbs
+            jsonLd={!placeholder}
             trail={[
               homeCrumb,
               { name: navLabels.about, path: routes.about() },

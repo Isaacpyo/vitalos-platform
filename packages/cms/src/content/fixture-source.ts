@@ -44,14 +44,27 @@ export interface FixtureSet {
 export interface FixtureContentSourceOptions {
   /** Clock for job validity. Defaults to the real time. */
   now?: () => Date;
+  /**
+   * Count case studies flagged `placeholder` towards the Work gate even though their evidence is
+   * not verified. Only the draft content source sets this (ADR-025); the fixtures, the sparse set
+   * and the Sanity source never do, so the production rule (verified evidence only) is unchanged.
+   */
+  countPlaceholderCaseStudies?: boolean;
 }
 
-const base = (view: { id: string; slug: string; title: string; summary?: string }) =>
-  clean<{ id: string; slug: string; title: string; summary?: string }>({
+const base = (view: {
+  id: string;
+  slug: string;
+  title: string;
+  summary?: string;
+  placeholder?: true;
+}) =>
+  clean<{ id: string; slug: string; title: string; summary?: string; placeholder?: true }>({
     id: view.id,
     slug: view.slug,
     title: view.title,
     summary: view.summary,
+    placeholder: view.placeholder,
   });
 
 /** The summary a view would have been listed with. Used by the fixture source and fixture builders. */
@@ -152,7 +165,11 @@ export function createFixtureSource(
   const gates = (): PublicationGates => {
     const t = today();
     return evaluateGates({
-      work: views("caseStudy").filter((study) => study.evidence.status === "verified").length,
+      work: views("caseStudy").filter(
+        (study) =>
+          study.evidence.status === "verified" ||
+          (options.countPlaceholderCaseStudies === true && study.placeholder === true),
+      ).length,
       insights: views("insight").filter((insight) => insight.authors.length > 0).length,
       labs: views("labAsset").length,
       industries: views("industry").length,

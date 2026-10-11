@@ -18,6 +18,7 @@ const memoryEnv = (overrides: Partial<Env["enquiry"]> = {}): Env =>
       notificationTo: undefined,
       ipHashSalt: "fixture-salt-0123456789",
       outboxDispatchSecret: undefined,
+      cronSecret: undefined,
       ...overrides,
     },
     email: { provider: "console", apiKey: undefined, from: undefined },

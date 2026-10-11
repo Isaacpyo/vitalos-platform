@@ -80,6 +80,8 @@ const rawSchema = z.object({
   TURNSTILE_SECRET_KEY: z.string().min(10).optional(),
   EMAIL_PROVIDER: z.enum(emailProviders).optional(),
   EMAIL_PROVIDER_API_KEY: z.string().min(1).optional(),
+  /** Fallback alias for EMAIL_PROVIDER_API_KEY, used only when EMAIL_PROVIDER=resend. Server-only. */
+  RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(3).optional(),
   ENQUIRY_NOTIFICATION_TO: z.email().optional(),
   ENQUIRY_IP_HASH_SALT: z.string().min(16).optional(),
@@ -88,6 +90,8 @@ const rawSchema = z.object({
     .regex(/^[A-Za-z0-9._-]{1,40}$/, "must be 1-40 letters, numbers, dots, dashes or underscores")
     .optional(),
   OUTBOX_DISPATCH_SECRET: z.string().min(32).optional(),
+  // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
+  CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
 });
 
@@ -116,6 +120,8 @@ export interface Env {
     /** Current privacy notice version. A submission must present this exact value. */
     privacyNoticeVersion: string | undefined;
     outboxDispatchSecret: string | undefined;
+    /** `CRON_SECRET`: the bearer Vercel Cron presents to the dispatch route. */
+    cronSecret: string | undefined;
   };
   email: {
     provider: EmailProvider;
@@ -223,10 +229,13 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         ipHashSalt: raw.ENQUIRY_IP_HASH_SALT,
         privacyNoticeVersion: raw.ENQUIRY_PRIVACY_NOTICE_VERSION,
         outboxDispatchSecret: raw.OUTBOX_DISPATCH_SECRET,
+        cronSecret: raw.CRON_SECRET,
       },
       email: {
         provider: raw.EMAIL_PROVIDER ?? "none",
-        apiKey: raw.EMAIL_PROVIDER_API_KEY,
+        apiKey:
+          raw.EMAIL_PROVIDER_API_KEY ??
+          (raw.EMAIL_PROVIDER === "resend" ? raw.RESEND_API_KEY : undefined),
         from: raw.EMAIL_FROM,
       },
       enableHsts: raw.ENABLE_HSTS === "true" || raw.ENABLE_HSTS === "1",

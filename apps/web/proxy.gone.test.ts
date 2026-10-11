@@ -11,7 +11,7 @@ const { proxy } = await import("./proxy");
 
 describe("proxy: retired paths", () => {
   it("answers 410 Gone and still echoes the correlation id", async () => {
-    const response = proxy(
+    const response = await proxy(
       new NextRequest("http://localhost:3000/retired", {
         headers: { "x-request-id": "edge-abc-123456" },
       }),
@@ -21,7 +21,7 @@ describe("proxy: retired paths", () => {
     expect(await response.text()).toBe("Gone");
   });
 
-  it("passes every other path through", () => {
-    expect(proxy(new NextRequest("http://localhost:3000/what-we-do")).status).toBe(200);
+  it("passes every other path through", async () => {
+    expect((await proxy(new NextRequest("http://localhost:3000/what-we-do"))).status).toBe(200);
   });
 });

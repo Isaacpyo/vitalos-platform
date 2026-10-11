@@ -141,6 +141,8 @@ const personRef = (author: { name?: string; title?: string; slug: string }, ctx:
  * `null`. `description` is only the document summary, never generated.
  */
 export function articleJsonLd(insight: InsightView, ctx: JsonLdContext): JsonLdNode | null {
+  // Placeholder content (ADR-025) never emits structured data.
+  if (insight.placeholder === true) return null;
   const datePublished = validDate(insight.publishedAt);
   const authors = insight.authors
     .map((author) => personRef(author, ctx))
@@ -163,7 +165,9 @@ export function articleJsonLd(insight: InsightView, ctx: JsonLdContext): JsonLdN
 }
 
 /** ProfilePage with a Person. `sameAs` carries verified profile links only (view contract). */
-export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonLdNode {
+export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonLdNode | null {
+  // Placeholder personas (ADR-025) never emit a Person or ProfilePage.
+  if (person.placeholder === true) return null;
   const url = absoluteUrl(ctx.siteUrl, routes.person(person.slug));
   return compact({
     "@context": CONTEXT,
@@ -205,7 +209,8 @@ export function jobPostingJsonLd(
   ctx: JsonLdContext,
   now: Date = new Date(),
 ): JsonLdNode | null {
-  if (job.status !== "open") return null;
+  // Placeholder roles (ADR-025) never emit a JobPosting.
+  if (job.status !== "open" || job.placeholder === true) return null;
   const datePosted = validDate(job.datePosted);
   if (!datePosted) return null;
   const validThrough = validDate(job.validThrough);

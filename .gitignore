@@ -19,3 +19,5 @@ Thumbs.db
 .claude/worktrees/
 .claude/settings.local.json
 tests/visual/__screenshots__/linux-local/
+# Draft export that includes invented placeholder documents (ADR-025): never committed.
+tooling/content/draft-dataset.with-placeholders.ndjson

@@ -8,6 +8,7 @@ import {
   TableOfContents,
 } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { getSeoContext } from "../../features/seo/context";
 import { articleJsonLd } from "../../features/seo/json-ld";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
@@ -32,12 +33,16 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
   const authors = insight.authors.filter((author) => author.title.trim() !== "");
   const related = insight.related.filter((item) => item.slug !== insight.slug);
 
+  const placeholder = hasPlaceholder(insight, insight.authors, related);
+
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <JsonLd data={articleJsonLd(insight, { siteUrl: getSeoContext().siteUrl })} />
       <PageHeroBand
         crumbs={
           <Breadcrumbs
+            jsonLd={!placeholder}
             trail={[
               homeCrumb,
               // The Insights index does not exist below its gate, so it is not a crumb then.

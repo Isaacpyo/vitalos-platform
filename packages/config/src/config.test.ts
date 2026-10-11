@@ -182,6 +182,13 @@ describe("production guards", () => {
     expect(parseEnv({ VITALOS_ENQUIRY_BACKEND: "memory" }).enquiry.backend).toBe("memory");
   });
 
+  it("treats CRON_SECRET as optional and requires 32+ characters when set", () => {
+    expect(issuePaths(production)).toEqual([]);
+    expect(issuePaths({ ...production, CRON_SECRET: "c".repeat(32) })).toEqual([]);
+    expect(issuePaths({ ...production, CRON_SECRET: "short" })).toEqual(["CRON_SECRET"]);
+    expect(issuePaths({ ...production, CRON_SECRET: "c".repeat(31) })).toEqual(["CRON_SECRET"]);
+  });
+
   it("rejects the console email provider in production", () => {
     expect(issuePaths({ ...production, EMAIL_PROVIDER: "console" })).toEqual(["EMAIL_PROVIDER"]);
   });
@@ -223,6 +230,30 @@ describe("production guards", () => {
       });
       expect(deriveFeatures(env).emailNotifications).toBe(true);
     }
+  });
+
+  it("accepts RESEND_API_KEY as a fallback key only for resend, with EMAIL_PROVIDER_API_KEY winning", () => {
+    const base = {
+      EMAIL_FROM: "noreply@example.invalid",
+      ENQUIRY_NOTIFICATION_TO: "ops@example.invalid",
+    };
+    const alias = parseEnv({ ...base, EMAIL_PROVIDER: "resend", RESEND_API_KEY: "alias-fixture" });
+    expect(alias.email.apiKey).toBe("alias-fixture");
+    const both = parseEnv({
+      ...base,
+      EMAIL_PROVIDER: "resend",
+      RESEND_API_KEY: "alias-fixture",
+      EMAIL_PROVIDER_API_KEY: "primary-fixture",
+    });
+    expect(both.email.apiKey).toBe("primary-fixture");
+    expect(
+      issuePaths({ ...base, EMAIL_PROVIDER: "postmark", RESEND_API_KEY: "alias-fixture" }),
+    ).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    expect(issuePaths({ ...base, EMAIL_PROVIDER: "resend" })).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    // Production still requires a key for resend; the alias satisfies it.
+    const prod = { ...production, ...base, EMAIL_PROVIDER: "resend" };
+    expect(issuePaths(prod)).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    expect(issuePaths({ ...prod, RESEND_API_KEY: "alias-fixture" })).toEqual([]);
   });
 
   it("rejects a multi-line or malformed sender and never echoes the key in errors", () => {

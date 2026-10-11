@@ -24,7 +24,7 @@ export async function generateMetadata({
     description: data.study.summary,
     seo: data.study.seo,
     // Detail pages stay reachable below the Work gate but are not indexed (ADR-022).
-    noindex: !(await isDetailIndexableNow("work")),
+    noindex: data.study.placeholder === true || !(await isDetailIndexableNow("work")),
   });
 }
 

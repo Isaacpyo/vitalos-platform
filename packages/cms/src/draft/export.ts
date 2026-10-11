@@ -10,9 +10,14 @@
  * - Each document carries `draftProvenance` (stage and section citations). It is not a schema
  *   field: the Studio shows it as an unknown field, to be removed once the owner approves.
  * - Nothing that is empty in the draft set is invented here (no prices, effective dates, owners).
+ * - Placeholder documents (invented personas, insights, case study scenarios and role; owner
+ *   directive of 11 October 2026) are EXCLUDED unless `includePlaceholders` is set, so they can
+ *   never reach Sanity by accident. When included they carry `draftProvenance.placeholder: true`.
  */
 import { hrefForRoutePage, routePageKeys } from "../routes";
 import type { CtaView, RichText, SeoView } from "../content/types";
+import { jobDrafts } from "./content/careers";
+import { draftId } from "./slugs";
 import type { DraftContentSet } from "./set";
 import { singletonProvenanceKeys } from "./provenance";
 import type { DraftProvenance } from "./provenance";
@@ -56,6 +61,13 @@ function seo(view: SeoView | undefined) {
   });
 }
 
+/** The SEO object without its `noindex` flag. */
+function withoutNoindex(view: SeoView): SeoView {
+  const rest: SeoView = { ...view };
+  delete rest.noindex;
+  return rest;
+}
+
 function cta(view: CtaView | undefined) {
   if (!view) return undefined;
   const routeKey = routePageKeys.find((key) => hrefForRoutePage(key) === view.href);
@@ -69,20 +81,28 @@ function cta(view: CtaView | undefined) {
 const rich = (value: RichText | undefined) =>
   value && value.length > 0 ? value.map((block) => sanityBlock(block)) : undefined;
 
+/** Internal link targets: the route pattern and the draft document type it resolves to. */
+const linkTargets: readonly { pattern: RegExp; type: string }[] = [
+  { pattern: /^\/legal\/([a-z-]+)$/, type: "legalPage" },
+  { pattern: /^\/offers\/([a-z-]+)$/, type: "offer" },
+];
+
 /**
  * Resolved internal links (`{ _type: "link", internal: true, href: "/legal/privacy" }`) become the
- * schema's `internalLink` mark with a weak reference to the draft document. Only legal-page targets
- * are used by the draft content.
+ * schema's `internalLink` mark with a weak reference to the draft document. Legal-page and offer
+ * targets are used by the draft content.
  */
 function sanityBlock(block: RichText[number]): Record<string, unknown> {
   const defs = block["markDefs"];
   if (!Array.isArray(defs)) return { ...block };
   const markDefs = (defs as Record<string, unknown>[]).map((def) => {
     if (def["_type"] !== "link" || def["internal"] !== true) return def;
-    const legal = /^\/legal\/([a-z-]+)$/.exec(String(def["href"]));
-    if (!legal)
-      throw new Error(`Unsupported internal link in draft content: ${String(def["href"])}`);
-    const id = `legalPage-${legal[1]}`;
+    const href = String(def["href"]);
+    const target = linkTargets
+      .map(({ pattern, type }) => ({ match: pattern.exec(href), type }))
+      .find(({ match }) => match !== null);
+    if (!target?.match) throw new Error(`Unsupported internal link in draft content: ${href}`);
+    const id = draftId(target.type, target.match[1] ?? "");
     return {
       _type: "internalLink",
       _key: def["_key"],
@@ -90,7 +110,7 @@ function sanityBlock(block: RichText[number]): Record<string, unknown> {
         _type: "reference",
         _ref: id,
         _weak: true,
-        _strengthenOnPublish: { type: "legalPage" },
+        _strengthenOnPublish: { type: target.type },
       },
     };
   });
@@ -150,13 +170,29 @@ function doc(
       status: provenance.status,
       sources: provenance.sources.map((s, i) => ({ _key: `source-${i + 1}`, ...s })),
       omitted: provenance.omitted,
+      placeholder: provenance.placeholder,
     },
   });
 }
 
+export interface ExportOptions {
+  /** Include the invented placeholder documents. Off by default; never import them as real content. */
+  includePlaceholders?: boolean;
+}
+
+/** Whether a draft view is invented placeholder content. */
+export const isPlaceholderDocument = (view: { placeholder?: true }): boolean =>
+  view.placeholder === true;
+
 /** All draft documents as Sanity documents, in a stable order. */
-export function toSanityDocuments(content: DraftContentSet): SanityDocument[] {
+export function toSanityDocuments(
+  content: DraftContentSet,
+  options: ExportOptions = {},
+): SanityDocument[] {
   const { set, provenance } = content;
+  const includePlaceholders = options.includePlaceholders === true;
+  const exported = <T extends { placeholder?: true }>(list: readonly T[]): T[] =>
+    list.filter((view) => includePlaceholders || !isPlaceholderDocument(view));
   const docs = set.documents;
   const out: SanityDocument[] = [];
 
@@ -219,7 +255,13 @@ export function toSanityDocuments(content: DraftContentSet): SanityDocument[] {
                 (r) => `route-${String(r["intent"])}`,
               )
             : undefined,
-          seo: seo(page.seo),
+          // A section index is noindex only because placeholders are its sole content: do not carry
+          // that into Sanity unless the placeholders themselves are exported.
+          seo: seo(
+            !includePlaceholders && content.placeholderNoindexRoutes.includes(key)
+              ? withoutNoindex(page.seo)
+              : page.seo,
+          ),
         },
         provenance[singletonProvenanceKeys.routePage(key)],
       ),
@@ -387,6 +429,104 @@ export function toSanityDocuments(content: DraftContentSet): SanityDocument[] {
           // effectiveDate is deliberately absent: a draft is not in force.
           effectiveDate: v.effectiveDate,
           body: rich(v.body),
+          seo: seo(v.seo),
+        },
+        provenance[v.id],
+      ),
+    );
+  }
+
+  for (const v of exported(docs.person)) {
+    out.push(
+      doc(
+        "person",
+        v.id,
+        {
+          name: v.name,
+          slug: slug(v.slug),
+          role: v.role,
+          isLeadership: v.isLeadership,
+          summary: v.summary,
+          bio: rich(v.bio),
+          seo: seo(v.seo),
+        },
+        provenance[v.id],
+      ),
+    );
+  }
+
+  for (const v of exported(docs.insight)) {
+    out.push(
+      doc(
+        "insight",
+        v.id,
+        {
+          title: v.title,
+          slug: slug(v.slug),
+          summary: v.summary,
+          format: v.format,
+          topics: [...v.topics],
+          authors: refs("person", ids(v.authors), "strong"),
+          publishedAt: v.publishedAt,
+          updatedAt: v.updatedAt,
+          body: rich(v.body),
+          related: refs("insight", ids(v.related), "weak"),
+          seo: seo(v.seo),
+        },
+        provenance[v.id],
+      ),
+    );
+  }
+
+  for (const v of exported(docs.caseStudy)) {
+    out.push(
+      doc(
+        "caseStudy",
+        v.id,
+        {
+          title: v.title,
+          slug: slug(v.slug),
+          summary: v.summary,
+          engagementBasis: v.engagementBasis,
+          clientDisplay: v.clientDisplay,
+          anonymisedDescriptor: v.sector,
+          sector: v.sector,
+          challenge: rich(v.challenge),
+          approach: rich(v.approach),
+          disclosureApproved: false,
+          evidence: pendingPublicEvidence,
+          practices: refs("practice", ids(v.practices), "weak"),
+          solutions: refs("solution", ids(v.solutions), "weak"),
+          industries: refs("industry", ids(v.industries), "weak"),
+          seo: seo(v.seo),
+        },
+        provenance[v.id],
+      ),
+    );
+  }
+
+  for (const v of exported(docs.job)) {
+    // The job view model carries no practice; the draft role records it (careers.ts).
+    const practice = jobDrafts.find((d) => draftId("job", d.slug) === v.id)?.practice;
+    if (practice === undefined) throw new Error(`No practice recorded for draft role ${v.id}`);
+    const practiceId = draftId("practice", practice);
+    out.push(
+      doc(
+        "job",
+        v.id,
+        {
+          title: v.title,
+          slug: slug(v.slug),
+          summary: v.summary,
+          practice: { _type: "reference", _ref: practiceId, _weak: true },
+          employmentType: v.employmentType,
+          location: v.location,
+          datePosted: v.datePosted,
+          validThrough: v.validThrough,
+          // The Studio requires an https application link for an open role; the placeholder has
+          // none (the site falls back to the careers contact route), so it is exported closed.
+          status: "closed",
+          description: rich(v.description),
           seo: seo(v.seo),
         },
         provenance[v.id],

@@ -1,6 +1,7 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { ArticleRow, ContentGap, PersonHero, Stack } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { getSeoContext } from "../../features/seo/context";
 import { profilePageJsonLd } from "../../features/seo/json-ld";
@@ -31,12 +32,15 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
       ]
     : [homeCrumb, { name: person.name, path: routes.person(person.slug) }];
 
+  const placeholder = hasPlaceholder(person, insights);
+
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <JsonLd data={profilePageJsonLd(person, { siteUrl: getSeoContext().siteUrl })} />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={trail} />
+          <Breadcrumbs trail={trail} jsonLd={!placeholder} />
           <PersonHero {...personHeroProps(person)}>
             {hasRichText(person.bio) ? <RichText value={person.bio} /> : null}
           </PersonHero>

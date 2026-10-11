@@ -56,10 +56,10 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
 ];
 
 /**
- * The same templates under the `draft` content source (ADR-025), with draft slugs. Templates whose
- * section has no draft content are absent because their pages do not exist: Work, Insights,
- * people and Careers stay behind closed publication gates. Leadership (no profile, no route page)
- * and the legal pages (marked "not in force") are served but `noindex`, so the sitemap omits them.
+ * The same templates under the `draft` content source (ADR-025), with draft slugs. Work, Insights,
+ * people, Leadership and Careers are open only because of the invented placeholder documents
+ * (ADR-025 status note, 11 October 2026): their pages are served but always `noindex`, so the
+ * sitemap omits them, as it does the legal pages (marked "not in force").
  */
 const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "home", path: "/", pattern: "/" },
@@ -72,6 +72,21 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "industries", path: "/industries", pattern: "/industries" },
   { name: "industry", path: "/industries/health-care", pattern: "/industries/:slug" },
   { name: "how we work", path: "/how-we-work", pattern: "/how-we-work" },
+  { name: "work index", path: "/work", pattern: "/work", inSitemap: false },
+  {
+    name: "case study",
+    path: "/work/connecting-field-and-warehouse-systems",
+    pattern: "/work/:slug",
+    inSitemap: false,
+  },
+  { name: "insights index", path: "/insights", pattern: "/insights", inSitemap: false },
+  {
+    name: "article",
+    path: "/insights/why-ai-pilots-stall-before-production",
+    pattern: "/insights/:slug",
+    inSitemap: false,
+  },
+  { name: "person", path: "/people/alex-morgan", pattern: "/people/:slug", inSitemap: false },
   { name: "labs index", path: "/labs", pattern: "/labs" },
   { name: "labs category", path: "/labs/research", pattern: "/labs/:slug" },
   {
@@ -88,6 +103,13 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   },
   { name: "trust overview", path: "/trust", pattern: "/trust" },
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
+  { name: "careers", path: "/careers", pattern: "/careers", inSitemap: false },
+  {
+    name: "role",
+    path: "/careers/senior-engineer-technical-lead",
+    pattern: "/careers/:slug",
+    inSitemap: false,
+  },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
   { name: "contact", path: "/contact", pattern: "/contact" },
 ];

@@ -290,6 +290,23 @@ describe("buildSitemap", () => {
 });
 
 describe("loadSitemap", () => {
+  it("leaves out a route page marked noindex (placeholder-only section index)", async () => {
+    const base = new EmptyContentSource();
+    const source: ContentSource = Object.assign(Object.create(base) as ContentSource, {
+      getHomePage: () => Promise.resolve({} as never),
+      getRoutePage: (key: RoutePageKey) =>
+        Promise.resolve(
+          key === "about"
+            ? ({ seo: {} } as never)
+            : key === "contact"
+              ? ({ seo: { noindex: true } } as never)
+              : null,
+        ),
+    });
+    const urls = (await loadSitemap(source, production.siteUrl)).map((entry) => entry.url);
+    expect(urls).toEqual(["https://www.example.invalid/", "https://www.example.invalid/about"]);
+  });
+
   it("is empty for the empty content source", async () => {
     expect(await loadSitemap(new EmptyContentSource(), production.siteUrl)).toEqual([]);
   });
@@ -298,7 +315,8 @@ describe("loadSitemap", () => {
     const base = new EmptyContentSource();
     const source: ContentSource = Object.assign(Object.create(base) as ContentSource, {
       getHomePage: () => Promise.resolve({} as never),
-      getRoutePage: (key: RoutePageKey) => Promise.resolve(key === "about" ? ({} as never) : null),
+      getRoutePage: (key: RoutePageKey) =>
+        Promise.resolve(key === "about" ? ({ seo: {} } as never) : null),
       getSitemapEntries: () =>
         Promise.resolve([{ path: "/what-we-do/a", kind: "practice" } as const]),
     });

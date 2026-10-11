@@ -17,7 +17,13 @@ export const homeCrumb: Crumb = { name: brandName, path: routes.home() };
  * Visible breadcrumb trail plus BreadcrumbList JSON-LD from the same data. The last crumb is the
  * current page. Crumbs without a name are dropped; a trail shorter than two renders nothing.
  */
-export function Breadcrumbs({ trail }: Readonly<{ trail: readonly Crumb[] }>) {
+export function Breadcrumbs({
+  trail,
+  jsonLd = true,
+}: Readonly<{
+  trail: readonly Crumb[];
+  /** False on placeholder pages (ADR-025): no structured data. */ jsonLd?: boolean;
+}>) {
   const crumbs = trail.filter((crumb) => crumb.name.trim() !== "");
   if (crumbs.length < 2) return null;
   const items = crumbs.map((crumb, index) => ({
@@ -27,7 +33,9 @@ export function Breadcrumbs({ trail }: Readonly<{ trail: readonly Crumb[] }>) {
   return (
     <>
       <Breadcrumb items={items} />
-      <JsonLd data={breadcrumbJsonLd(crumbs, { siteUrl: getSeoContext().siteUrl })} />
+      {jsonLd ? (
+        <JsonLd data={breadcrumbJsonLd(crumbs, { siteUrl: getSeoContext().siteUrl })} />
+      ) : null}
     </>
   );
 }

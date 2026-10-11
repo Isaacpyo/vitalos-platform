@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { REQUEST_ID_HEADER, correlationId } from "@vitalos/observability";
+import { UNMATCHED_PATH, isMissingDetailPath } from "./src/features/missing-documents";
 import { goneResponse, isGone } from "./src/features/redirects/gone";
 
 /**
@@ -16,8 +17,15 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  *
  * Retired paths (`status: 410` rules in the redirect map, ADR-018) answer 410 Gone here; 301/308
  * redirects are applied earlier by `next.config.ts`.
+ *
+ * A detail URL with no document behind it is rewritten onto an unmatched path (ADR-027). Next.js
+ * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
+ * page, which would leave visitors without JavaScript with a blank 404.
  */
-export function proxy(request: NextRequest) {
+/** Cookie Next.js sets while Draft Mode is on. */
+const DRAFT_MODE_COOKIE = "__prerender_bypass";
+
+export async function proxy(request: NextRequest) {
   const requestId = correlationId(request.headers);
 
   if (isGone(request.nextUrl.pathname)) {
@@ -29,8 +37,21 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  // Editors in Draft Mode may open unpublished documents, so the published list does not apply.
+  const inDraftMode = request.cookies.has(DRAFT_MODE_COOKIE);
+  const missing =
+    !inDraftMode &&
+    request.method === "GET" &&
+    (await isMissingDetailPath(request.nextUrl.pathname));
+  const response = missing
+    ? NextResponse.rewrite(new URL(UNMATCHED_PATH, request.url), {
+        request: { headers: requestHeaders },
+      })
+    : NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(REQUEST_ID_HEADER, requestId);
+  // A rewritten 404 must never be cached by an edge or browser: the document may be published
+  // moments later (ADR-027).
+  if (missing) response.headers.set("cache-control", "no-store");
   return response;
 }
 
