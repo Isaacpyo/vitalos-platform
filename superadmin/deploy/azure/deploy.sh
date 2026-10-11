@@ -111,6 +111,19 @@ case "$DATABASE_URL" in *sslmode=require*) ;; *) die "DATABASE_URL must include 
 case "$DATABASE_URL" in
   *@db.*.supabase.co*) die "DATABASE_URL uses the Supabase direct host, which is IPv6-only and unreachable from Container Apps. Use Connect -> Session pooler (port 5432) instead (DEPLOY.md)." ;;
 esac
+# An unescaped /, ?, # or @ in the password moves part of it into the path or host, so Django sees a wrong
+# database name and the release job fails inside Azure (and logs that fragment). Never print the URL here.
+_db_rest=${DATABASE_URL#*://}
+_db_authority=${_db_rest%%[/?#]*}
+case "${_db_rest#"$_db_authority"}" in
+  *@*) die "DATABASE_URL password contains an unescaped /, ? or #: URL-encode it, or use an openssl rand -hex 24 password (DEPLOY.md §2.3)." ;;
+esac
+case "$_db_authority" in
+  *@*@*) die "DATABASE_URL has more than one @ before the host: URL-encode the password, or use an openssl rand -hex 24 password (DEPLOY.md §2.3)." ;;
+  *@?*) ;;
+  *) die "DATABASE_URL has no user@host part: use the full connection string from the provider (DEPLOY.md §2.3)." ;;
+esac
+unset _db_rest _db_authority
 
 # The app pulls the image anonymously, so the ghcr.io package must be public. Check before touching
 # Azure, so a private package fails here with instructions instead of as a stuck revision.

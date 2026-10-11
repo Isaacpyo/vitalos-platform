@@ -29,7 +29,7 @@ The real deploy is the "What Temitope does once" checklist below.
 **Set up on 11 Oct 2026** (DECISIONS.md 54-57):
 
 - **Azure:** the personal **"Azure subscription 1"**, a free trial. Its credit expires on **10 Nov 2026**: **upgrade it to Pay-As-You-Go before then**, or the subscription is disabled and the app stops. Moving it to the Vitalos Entra tenant is a Phase 2 item.
-- **GitHub environment:** the existing Vercel-created **`Production`**. GitHub matches environment names case-insensitively, so the workflow's `production` resolves to it. The Azure app `github-vitalos-superadmin-deploy` has federated credentials for both `environment:production` and `environment:Production`.
+- **GitHub environment:** the existing Vercel-created **`Production`**. GitHub matches environment names case-insensitively, so the workflow's `production` resolves to it. The Azure app `github-vitalos-superadmin-deploy` (client ID `a6bc0a8d-c742-4f14-9e31-7112b1963fef`) trusts the subject `repo:Isaacpyo@54102915/vitalos-platform@1372649383:environment:production` (§2.1).
 - **No approval pause:** required reviewers aren't available on this private repository's plan, so step 6 below relies on the public-image check instead.
 - **Database:** Supabase project `vitalos-superadmin` (ref `uhvcjsnuxdthjfainvmm`), London, PostgreSQL 17.11. The Data API was disabled at creation, the lock-down SQL (§2.3) was applied, and `backup_reader` (§6.1) was created and verified.
 
@@ -64,7 +64,7 @@ All of it is in **`rg-vitalos-superadmin`**, region **`uksouth`**:
 | Resource group                | `rg-vitalos-superadmin`   | §2.1 (once)    |                                                                               |
 | Log Analytics workspace       | `log-vitalos-superadmin`  | §2.1 (once)    | PerGB2018, daily cap **0.1 GB**, 30-day retention                             |
 | Container Apps environment    | `cae-vitalos-superadmin`  | §2.1 (once)    | **Consumption only** (no workload profiles)                                   |
-| OIDC app registration         | `github-vitalos-superadmin-deploy` | §2.1 (once) | Federated with the GitHub `production` and `Production` environment subjects; **Contributor on the RG** |
+| OIDC app registration         | `github-vitalos-superadmin-deploy` | §2.1 (once) | Federated with the GitHub `production` environment (immutable subject, §2.1); **Contributor on the RG** |
 | Container Apps job            | `superadmin-release`      | deploy         | Manual; `bin/release.sh`; 0.25 vCPU / 0.5 GiB                                 |
 | Container app                 | `superadmin`              | deploy         | External ingress :8000, **min 0 / max 1 replicas**, 0.25 vCPU / 0.5 GiB, HTTP concurrency 50 |
 | Custom domain + managed cert  | `admin.vitalos.co.uk`     | deploy         | CNAME validation                                                              |
@@ -113,17 +113,14 @@ az containerapp env create -n cae-vitalos-superadmin -g "$RG" -l "$LOC" --enable
 # GitHub Actions to Azure with OIDC: no stored Azure keys. Contributor on this resource group only.
 APP_ID=$(az ad app create --display-name github-vitalos-superadmin-deploy --query appId -o tsv)
 SP_ID=$(az ad sp create --id "$APP_ID" --query id -o tsv)
+# This repository uses GitHub's immutable OIDC subjects (owner and repository IDs after the names), and the
+# token carries the environment name as the workflow spells it (lowercase). Check the prefix with:
+#   gh api repos/Isaacpyo/vitalos-platform/actions/oidc/customization/sub --jq .sub_claim_prefix
+# Type the subject exactly: a trailing newline or space makes Azure reject every login (AADSTS700213).
 az ad app federated-credential create --id "$APP_ID" --parameters '{
-  "name": "github-production-environment",
+  "name": "github-production-immutable",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:Isaacpyo/vitalos-platform:environment:production",
-  "audiences": ["api://AzureADTokenExchange"]}'
-# The OIDC subject is case-sensitive. The GitHub environment here is the Vercel-created "Production",
-# so federate that spelling too.
-az ad app federated-credential create --id "$APP_ID" --parameters '{
-  "name": "github-production-environment-capitalised",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:Isaacpyo/vitalos-platform:environment:Production",
+  "subject": "repo:Isaacpyo@54102915/vitalos-platform@1372649383:environment:production",
   "audiences": ["api://AzureADTokenExchange"]}'
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal \
   --role Contributor --scope "$(az group show -n "$RG" --query id -o tsv)"
@@ -169,7 +166,7 @@ Either free plan works with the same app, settings and retries. Supabase is the 
 1. **Create the project.** At https://supabase.com/dashboard, create a **new, separate** project named `vitalos-superadmin` on the **Free** plan, in region **London** (AWS `eu-west-2`).
    - Never reuse the website's Supabase project. ADR-026 keeps internal governance data and access separate from the public site.
    - The free plan allows **2 active projects per organisation**. If the organisation already has two, free one up or put this project in another organisation.
-   - Generate the database password locally with `openssl rand -hex 24`. Hex needs no URL escaping. Keep it only in the GitHub secrets.
+   - Generate the database password locally with `openssl rand -hex 24`. Hex needs no URL escaping. Keep it only in the GitHub secrets. A password with `/`, `?`, `#`, `@` or `:` must be percent-encoded in `DATABASE_URL`; `deploy.sh` refuses an unescaped one before touching Azure (DECISIONS #61).
    - If the form offers **Enable Data API**, untick it. The app talks to PostgreSQL directly and never uses Supabase's APIs.
 2. **Copy the connection string.** Click **Connect** and choose **Session pooler**. Copy the URI, fill in the password, and append `?sslmode=require`. That is `DATABASE_URL`:
 
