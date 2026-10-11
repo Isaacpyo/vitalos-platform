@@ -1,0 +1,67 @@
+name: Super Admin backup
+# Daily logical backup of the Super Admin's database (Supabase by default, or Neon) at 02:00 UTC, kept
+# 14 days as a workflow artifact (free). On Supabase's free plan this is the only backup, and the daily
+# connection also keeps the project from being paused for inactivity. Uses the "backup" environment,
+# which has no required reviewers so the schedule is never held for approval; it holds DATABASE_URL
+# (the read-only backup_reader role, DEPLOY.md §6.1) and, optionally, BACKUP_PASSPHRASE to encrypt the
+# dump. Scheduled runs only start once this file is on main.
+# Restore steps: superadmin/docs/DEPLOY.md §6.
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: superadmin-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: backup
+    timeout-minutes: 20
+    steps:
+      - name: pg_dump (client matching the server's PostgreSQL version)
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL is not set in the 'backup' environment (see DEPLOY.md)"
+            exit 1
+          fi
+          # pg_dump needs a session. Supabase's session pooler (port 5432) provides one, so its URL is
+          # used as is. Neon's pooler is PgBouncer in transaction mode, so switch to its direct host.
+          direct="${DATABASE_URL/-pooler./.}"
+          echo "::add-mask::$direct"
+          # Dump with the client of the server's major version (Supabase 15 or 17, Neon 17), so the dump
+          # restores cleanly on that version; a newer client writes settings an older server rejects.
+          server="$(docker run --rm -e PGURL="$direct" postgres:17 sh -c 'psql "$PGURL" -tAc "show server_version_num"')"
+          major="$((server / 10000))"
+          case "$major" in 1[4-9]) echo "Server is PostgreSQL $major" ;; *) echo "::error::unexpected server version $server"; exit 1 ;; esac
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          mkdir -p dump
+          file="dump/superadmin-$stamp-pg$major.sql.gz"
+          # Only the app's schema: Supabase's own schemas (auth, storage, ...) are platform-managed and
+          # not readable by backup_reader. The app keeps everything in public.
+          docker run --rm -e PGURL="$direct" "postgres:$major" \
+            sh -c 'pg_dump --schema=public --no-owner --no-privileges --dbname="$PGURL"' | gzip -9 > "$file"
+          gzip -t "$file"
+          header="$(zcat "$file" | head -n 20 || true)"  # head closes the pipe early; ignore SIGPIPE
+          grep -q "PostgreSQL database dump" <<< "$header" || { echo "::error::dump looks empty"; exit 1; }
+          if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+              -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
+            rm "$file"
+          fi
+          ls -l dump
+          echo "name=superadmin-db-$stamp-pg$major" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: dump/
+          if-no-files-found: error
+          retention-days: 14

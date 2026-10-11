@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="mx-auto mt-10 max-w-md sm:mt-20">
+    <div class="mb-6 text-center">
+      <p class="text-lg font-semibold tracking-[0.3em] text-vitalos-blue dark:text-blue-400">VITALOS</p>
+      <p class="muted text-sm">Super Admin</p>
+    </div>
+    <div class="card p-6 sm:p-8">
+      {% block auth_body %}{% endblock %}
+    </div>
+    <p class="muted mt-6 text-center text-xs">Internal system. Access is logged. Microsoft Entra ID single sign-on is planned for Phase 2.</p>
+  </div>
+{% endblock %}

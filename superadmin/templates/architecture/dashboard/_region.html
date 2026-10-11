@@ -1,0 +1,24 @@
+{% load ui %}
+<section id="tab-region" class="mt-6" hx-get="{{ request.path }}?tab={{ tab }}{% if show_archived %}&amp;archived=1{% endif %}" hx-trigger="vsa-changed from:body" hx-target="this" hx-swap="outerHTML">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-2 dark:border-slate-800">
+    <nav role="tablist" aria-label="{{ line.name }} sections" class="flex gap-1 overflow-x-auto">
+      {% for key, label in tabs %}
+        <a role="tab" id="tab-{{ key }}" href="?tab={{ key }}" class="tab" aria-selected="{% if key == tab %}true{% else %}false{% endif %}" aria-controls="tab-panel"
+           hx-get="{{ request.path }}?tab={{ key }}" hx-target="#tab-region" hx-swap="outerHTML" hx-push-url="true">{{ label }}</a>
+      {% endfor %}
+    </nav>
+    {% if tab != "overview" %}
+      <a class="muted inline-flex items-center gap-2 text-sm hover:text-slate-900 dark:hover:text-white" href="?tab={{ tab }}{% if not show_archived %}&amp;archived=1{% endif %}"
+         hx-get="{{ request.path }}?tab={{ tab }}{% if not show_archived %}&amp;archived=1{% endif %}" hx-target="#tab-region" hx-swap="outerHTML" hx-push-url="true">
+        {% icon "archive" "h-4 w-4" %} {% if show_archived %}Hide archived{% else %}Show archived{% endif %}
+      </a>
+    {% endif %}
+  </div>
+  <div id="tab-panel" role="tabpanel" aria-labelledby="tab-{{ tab }}" class="mt-6">
+    {% if tab == "overview" %}{% include "architecture/dashboard/_overview.html" %}
+    {% elif tab == "structure" %}{% include "architecture/dashboard/_structure.html" %}
+    {% elif tab == "team" %}{% include "architecture/dashboard/_team.html" %}
+    {% elif tab == "projects" %}{% include "architecture/dashboard/_projects.html" %}
+    {% elif tab == "kpis" %}{% include "architecture/dashboard/_kpis.html" %}{% endif %}
+  </div>
+</section>

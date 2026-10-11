@@ -1,0 +1,130 @@
+{
+  "base_url": "http://localhost:8001",
+  "checks": [
+    {
+      "check": "login page returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "signed in and on the homepage",
+      "ok": true,
+      "detail": "http://localhost:8001/"
+    },
+    {
+      "check": "homepage shows the six service lines in order",
+      "ok": true,
+      "detail": "Vitalos Consulting, Vitalos Engineering, Vitalos AI & Data, Vitalos Experience, Vitalos Managed Services, Vitalos Labs"
+    },
+    {
+      "check": "dashboard /s/consulting/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "dashboard /s/engineering/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "dashboard /s/ai-data/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "dashboard /s/experience/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "dashboard /s/managed-services/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "dashboard /s/labs/ opens",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "every dashboard tab loads over HTMX",
+      "ok": true,
+      "detail": "6 lines \u00d7 5 tabs"
+    },
+    {
+      "check": "created and edited a Practice \u2192 Solution \u2192 Offer",
+      "ok": true,
+      "detail": "consulting"
+    },
+    {
+      "check": "created a Project and changed its status inline",
+      "ok": true,
+      "detail": "Smoke test project 20261010-231232"
+    },
+    {
+      "check": "created a KPI and recorded a value (target breach flagged)",
+      "ok": true,
+      "detail": "Smoke test KPI 20261010-231232"
+    },
+    {
+      "check": "live search finds the new records",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "activity feed shows the new records",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "history rows recorded for the practice",
+      "ok": true,
+      "detail": "2 rows"
+    },
+    {
+      "check": "/architecture/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "/notifications/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "/settings/company/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "/settings/users/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "/settings/data/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "/api/docs/ returns 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "no CSP violations in the browser console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "smoke records archived (history kept)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "check": "temporary smoke-test authenticator removed",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

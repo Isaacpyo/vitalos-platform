@@ -1,0 +1,12 @@
+{% extends "settings/_shell.html" %}
+{% block settings_panel %}
+  <section class="card max-w-3xl p-6">
+    <h2 class="font-semibold">Company profile</h2>
+    <p class="muted mb-4 text-sm">The north star shown at the top of the homepage.</p>
+    <form method="post" action="{% url 'architecture:settings_company' %}" hx-post="{% url 'architecture:settings_company' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" novalidate>
+      {% csrf_token %}
+      {% include "partials/form_fields.html" %}
+      <button type="submit" class="btn btn-primary mt-6">Save company profile</button>
+    </form>
+  </section>
+{% endblock %}

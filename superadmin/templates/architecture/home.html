@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Service lines · Vitalos Super Admin{% endblock %}
+{% block content %}
+  {% if company %}
+    <section class="overflow-hidden rounded-2xl bg-midnight text-white shadow-sm" aria-labelledby="north-star">
+      <div class="px-6 py-8 sm:px-10">
+        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-aqua">{{ company.name }} north star</p>
+        <h1 id="north-star" class="mt-2 text-3xl font-semibold sm:text-4xl">{{ company.tagline }}</h1>
+        <dl class="mt-6 grid gap-6 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Vision</dt>
+            <dd class="mt-1 text-slate-100">{{ company.vision }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Mission</dt>
+            <dd class="mt-1 text-slate-100">{{ company.mission }}</dd>
+          </div>
+        </dl>
+        <div class="mt-6 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-widest text-slate-300">
+          {% for mode in company.business_modes %}<span class="rounded-full border border-slate-600 px-3 py-1">{{ mode }}</span>{% if not forloop.last %}<span aria-hidden="true">·</span>{% endif %}{% endfor %}
+        </div>
+      </div>
+    </section>
+  {% else %}
+    <div class="card p-6 text-sm">The company profile has not been seeded yet. Run <code>manage.py seed_architecture</code>.</div>
+  {% endif %}
+
+  <div class="mt-10 flex items-end justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-semibold">Service lines</h2>
+      <p class="muted text-sm">Practices → Solutions → Offers, owned line by line.</p>
+    </div>
+    {% if is_superadmin %}<a href="{% url 'architecture:architecture' %}" class="btn btn-secondary">{% icon "tree" "h-4 w-4" %} Manage architecture</a>{% endif %}
+  </div>
+  <ul class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="service-line-grid">
+    {% for line in service_lines %}
+      <li>
+        <a href="{{ line.get_absolute_url }}" class="card group flex h-full flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md" data-testid="service-line-card">
+          {% accent_bar line.colour %}
+          <div class="flex flex-1 flex-col p-5">
+            <div class="flex items-center gap-3">
+              <span class="rounded-lg bg-slate-100 p-2 dark:bg-slate-800">{% icon line.icon "h-5 w-5" line.colour %}</span>
+              <h3 class="font-semibold group-hover:text-vitalos-blue dark:group-hover:text-blue-400">{{ line.name }}</h3>
+            </div>
+            <p class="muted mt-3 text-sm">{{ line.tagline|default:"No tagline yet." }}</p>
+            <div class="mt-3 flex flex-wrap gap-1">{% badges line.business_modes %}</div>
+            <dl class="mt-auto grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">
+              <div>
+                <dt class="muted text-xs">Active projects</dt>
+                <dd class="mt-0.5 text-lg font-semibold">{{ line.active_projects }}</dd>
+              </div>
+              <div class="col-span-2 min-w-0">
+                <dt class="muted text-xs">Headline KPI</dt>
+                <dd class="mt-0.5 truncate">
+                  {% if line.headline_kpi %}
+                    <span class="font-semibold">{% if line.headline_value %}{{ line.headline_value.value|floatformat:"-2" }}{{ line.headline_kpi.unit }}{% else %}—{% endif %}</span>
+                    <span class="muted text-xs">{{ line.headline_kpi.name }}</span>
+                  {% else %}<span class="muted">Not set</span>{% endif %}
+                </dd>
+              </div>
+              <div class="col-span-3">
+                <dt class="sr-only">Owner</dt>
+                <dd class="muted flex items-center gap-1.5 text-xs">{% icon "user" "h-3.5 w-3.5" %} {{ line.owner|default:"Owner not assigned" }}</dd>
+              </div>
+            </dl>
+          </div>
+        </a>
+      </li>
+    {% empty %}
+      <li class="card muted p-6 text-sm sm:col-span-2 xl:col-span-3">No active service lines are visible to you.</li>
+    {% endfor %}
+  </ul>
+
+  <section class="mt-10 grid gap-6 lg:grid-cols-3">
+    <div class="card p-5 lg:col-span-2">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold">Recent activity</h2>
+        <a href="{% url 'architecture:activity' %}" class="text-sm text-vitalos-blue hover:underline dark:text-blue-400">View all</a>
+      </div>
+      {% include "activity/_widget.html" with entries=recent_activity %}
+    </div>
+    <div class="card p-5 text-sm">
+      <h2 class="font-semibold">Governance</h2>
+      <ul class="muted mt-3 space-y-2">
+        <li>Classifications: Public · Internal · Confidential · Restricted.</li>
+        <li>Records are archived, never deleted, and every change is in the activity history.</li>
+        <li>Identity source of truth: Microsoft Entra ID (single sign-on in Phase 2).</li>
+        <li>Engineering source of truth: GitHub.</li>
+      </ul>
+    </div>
+  </section>
+{% endblock %}

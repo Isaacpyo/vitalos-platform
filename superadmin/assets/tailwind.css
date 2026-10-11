@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* Scan templates and Python (form widgets, badge helpers) for class names. */
+@source "../templates";
+@source "../apps";
+@source "../static/js";
+
+@theme {
+  --color-vitalos-blue: #2457ff;
+  --color-midnight: #081a2a;
+  --color-aqua: #45e0d0;
+  --color-cloud: #f7f9fc;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-aqua);
+    outline-offset: 2px;
+  }
+  [x-cloak],
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-vitalos-blue text-white shadow-sm hover:bg-blue-700;
+  }
+  .btn-secondary {
+    @apply bg-white text-slate-800 ring-1 ring-slate-300 ring-inset hover:bg-slate-50 dark:bg-slate-800
+      dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-700;
+  }
+  .btn-ghost {
+    @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800
+      dark:hover:text-white;
+  }
+  .btn-danger {
+    @apply text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
+  }
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
+  }
+  .muted {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+  .table-base {
+    @apply min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700;
+  }
+  .table-base th {
+    @apply px-3 py-2 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400;
+  }
+  .table-base td {
+    @apply px-3 py-2 align-top;
+  }
+  .tab {
+    @apply rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100
+      hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white;
+  }
+  .tab[aria-selected="true"] {
+    @apply bg-vitalos-blue/10 text-vitalos-blue dark:bg-vitalos-blue/20 dark:text-blue-300;
+  }
+  .htmx-indicator {
+    @apply opacity-0 transition-opacity;
+  }
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    @apply opacity-100;
+  }
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200;
+  }
+  .field-help {
+    @apply mt-1 text-xs text-slate-500 dark:text-slate-400;
+  }
+  .field-error {
+    @apply mt-1 text-xs font-medium text-rose-600 dark:text-rose-400;
+  }
+}
