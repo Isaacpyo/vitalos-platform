@@ -1,22 +1,26 @@
 version: 2
+# Monthly, with one grouped pull request per ecosystem, to keep Actions minutes down. Security
+# updates are separate and still open as soon as an advisory is published.
 updates:
   - package-ecosystem: npm
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     ignore:
       # Keep @types/node on the Node 24 major (engines: >=24 <25).
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
-      minor-and-patch: { update-types: [minor, patch] }
+      npm: { patterns: ["*"] }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
+    groups:
+      github-actions: { patterns: ["*"] }
   - package-ecosystem: pip
     directory: /superadmin
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     groups:
-      python-minor-and-patch: { update-types: [minor, patch] }
+      python: { patterns: ["*"] }
   - package-ecosystem: docker
     directory: /superadmin
     schedule: { interval: monthly }

@@ -1,8 +1,19 @@
 name: CI
+# Changes to Markdown or docs alone skip CI, except docs/strategy, which a unit test reads.
 on:
   pull_request:
+    paths:
+      - "**"
+      - "!**.md"
+      - "!docs/**"
+      - "docs/strategy/**"
   push:
     branches: [main, stage-1]
+    paths:
+      - "**"
+      - "!**.md"
+      - "!docs/**"
+      - "docs/strategy/**"
 permissions:
   contents: read
 concurrency:

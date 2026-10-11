@@ -107,7 +107,7 @@ To run the Supabase integration tests: `supabase start && supabase db reset`, th
 
 ## CI jobs
 
-`quality` (format, lint, typecheck, unit tests, boundaries, CMS type drift, build, Storybook build), `e2e` (end-to-end, accessibility, budgets, bundle-secret scan, integration), `storybook-a11y`, `database` (local Supabase and pgTAP), plus CodeQL and gitleaks. Releases need all of them green. No CI job holds a secret, project reference or database password.
+`quality` (format, lint, typecheck, unit tests, boundaries, CMS type drift, build, Storybook build), `e2e` (end-to-end, accessibility, budgets, bundle-secret scan, integration), `storybook-a11y`, `database` (local Supabase and pgTAP), plus gitleaks on pull requests and CodeQL weekly or on demand (ADR-014). Changes to Markdown or `docs/` alone (except `docs/strategy/`) skip CI. Releases need all of them green, including a CodeQL run on the release commit. No CI job holds a secret, project reference or database password.
 
 ## Next.js note
 
