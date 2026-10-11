@@ -232,6 +232,7 @@ az containerapp job execution list -n superadmin-release -g rg-vitalos-superadmi
 - **Staying at £0:**
   - Do not add an external uptime monitor. `/healthz/` touches the database and would keep Neon and the app awake.
   - If a cold start ever fails to pull the image, check GitHub **Settings → Billing → Packages**. Private-package transfer on GitHub Free is 1 GB/month (about 10 cold pulls). Make the package public, or move to a paid tier (PHASE2.md).
+- **GitHub Actions minutes:** deploys and the daily backup run on the account's Actions quota (2,000 minutes/month for private repositories on GitHub Free). When the quota or spending limit is exhausted, jobs fail with "spending limit needs to be increased", and **backups stop**. Check **GitHub → Settings → Billing → Actions** monthly, and watch the backup workflow's run history.
 - **Lost authenticator:** a superuser deletes the person's TOTP device in `/django-admin/`, and they enrol again at next sign-in.
 
 ## 8. Local development
