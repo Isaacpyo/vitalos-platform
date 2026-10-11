@@ -1,5 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { CaseStudyRow, ContentGap, Stack } from "@vitalos/ui";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
@@ -19,10 +20,17 @@ const LIST_ID = "work-list";
 export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
   const { page, studies, draft } = data;
   const groups = workFilterGroups(studies);
+  const placeholder = hasPlaceholder(studies);
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
-        crumbs={<Breadcrumbs trail={[homeCrumb, { name: navLabels.work, path: routes.work() }]} />}
+        crumbs={
+          <Breadcrumbs
+            jsonLd={!placeholder}
+            trail={[homeCrumb, { name: navLabels.work, path: routes.work() }]}
+          />
+        }
         title={page?.heading ?? navLabels.work}
         lead={page?.intro}
       />

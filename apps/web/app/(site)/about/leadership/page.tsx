@@ -11,7 +11,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: page?.heading ?? navLabels.leadership,
     seo: page?.seo,
     // Neither a Leadership document nor a leadership profile: nothing to index yet.
-    noindex: page === null && leaders.length === 0,
+    // Placeholder personas (ADR-025) are never indexed either.
+    noindex:
+      (page === null && leaders.length === 0) ||
+      (leaders.length > 0 && leaders.every((leader) => leader.placeholder === true)),
   });
 }
 

@@ -71,7 +71,7 @@ export const homeProvenance = drafted(
     cite(11, "9. Homepage — desktop high-fidelity mockup"),
     cite(10, "14. Homepage production plan"),
   ],
-  "Credibility strip, Selected Work, Insights and Leadership are empty: no verified proof, case studies, named authors or leadership profiles exist (Stage 8 §8; Stage 10 §14).",
+  "Credibility strip, Selected Work, Insights and Leadership are empty: no verified proof, case studies, named authors or leadership profiles exist (Stage 8 §8; Stage 10 §14). The invented placeholder personas, articles, scenarios and role (ADR-025 status note, 11 October 2026) are deliberately not featured on the home page.",
 );
 
 /* ---------- Route pages ---------- */
@@ -258,7 +258,7 @@ const work: RoutePageDraft = {
   },
   provenance: drafted(
     [cite(11, "19. Work index"), cite(10, "17. Work / case-study launch")],
-    "The Work section stays closed: no verified case studies exist (Stage 10 §17).",
+    "No verified case studies exist (Stage 10 §17). The Work section opens in the draft source only because of the two placeholder scenarios (ADR-025 status note, 11 October 2026); this page is noindex while they are its only content.",
   ),
 };
 
@@ -275,7 +275,7 @@ const insights: RoutePageDraft = {
   },
   provenance: drafted(
     [cite(11, "21. Insights index"), cite(8, "16. Insights & authority platform")],
-    "The Insights section stays closed: the specs name no author, so no insights are drafted (Stage 8 §16; Stage 10 §18).",
+    "The specs name no author (Stage 8 §16; Stage 10 §18). The Insights section opens in the draft source only because of the six placeholder articles by invented personas (ADR-025 status note, 11 October 2026); this page is noindex while they are its only content.",
   ),
 };
 
@@ -405,7 +405,7 @@ const careers: RoutePageDraft = {
   },
   provenance: drafted(
     [cite(8, "19. Careers architecture")],
-    "Careers stays closed: there are no open roles, and Stage 8 §19 rules out a dead careers page. Culture, benefits and working-practice copy need real facts from the owner.",
+    "There are no open roles, and Stage 8 §19 rules out a dead careers page. Careers opens in the draft source only because of one placeholder role (ADR-025 status note, 11 October 2026); this page is noindex while it is the only content. Culture, benefits and working-practice copy need real facts from the owner.",
   ),
 };
 

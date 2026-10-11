@@ -54,6 +54,14 @@ export const workLabels = {
 export const isVerifiedProof = (study: CaseStudyView): boolean =>
   study.evidence.status === "verified";
 
+/**
+ * Whether a case study has a public page and a place in the Work index: verified evidence, or an
+ * illustrative placeholder scenario. Placeholders exist only in the draft content source (ADR-025),
+ * which is rejected in production; no other source sets the flag.
+ */
+export const isPublicCaseStudy = (study: CaseStudyView): boolean =>
+  isVerifiedProof(study) || study.placeholder === true;
+
 /** The named client, or undefined when the client is anonymised or unnamed. */
 export function namedClient(study: CaseStudyView): string | undefined {
   if (study.clientDisplay !== "named") return undefined;
@@ -62,6 +70,8 @@ export function namedClient(study: CaseStudyView): string | undefined {
 }
 
 export function engagementLabel(study: CaseStudyView): string {
+  // A placeholder scenario describes no engagement, so it must not claim a basis.
+  if (study.placeholder === true) return "Illustrative scenario (placeholder)";
   return engagementBasisLabels[study.engagementBasis];
 }
 

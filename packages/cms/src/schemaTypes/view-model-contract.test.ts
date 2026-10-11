@@ -27,7 +27,8 @@ import { documentTypes } from "./index";
 /** A schema field name, or "derived": computed from other documents or system fields. */
 type Source = string;
 
-type Base = "id" | "slug" | "title" | "summary" | "seo" | "updatedAt";
+/** `placeholder` is set only by the draft content source (ADR-025); no schema field backs it. */
+type Base = "id" | "slug" | "title" | "summary" | "seo" | "updatedAt" | "placeholder";
 type Mapping<View, Omitted extends PropertyKey = Base> = {
   [K in Exclude<keyof View, Omitted>]-?: Source;
 };

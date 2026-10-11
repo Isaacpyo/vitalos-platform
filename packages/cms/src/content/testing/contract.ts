@@ -38,6 +38,11 @@ export interface ContractOptions {
   empty?: boolean;
   /** Which gates are expected to be open (omit to skip the check). */
   gates?: "closed" | "open";
+  /**
+   * The draft source counts case studies flagged `placeholder` towards the Work gate (ADR-025).
+   * Every other source must leave this unset, so only verified evidence counts.
+   */
+  countsPlaceholderCaseStudies?: boolean;
 }
 
 /** Reads a document the way the web app does, from a `listParams` entry. */
@@ -150,7 +155,9 @@ export function describeContentSourceContract(
       const verified = await countWhere(
         source,
         "caseStudy",
-        (doc) => doc.evidence.status === "verified",
+        (doc) =>
+          doc.evidence.status === "verified" ||
+          (options.countsPlaceholderCaseStudies === true && doc.placeholder === true),
       );
       expect(gates.counts.work).toBe(verified);
       expect(gates.counts.insights).toBe(

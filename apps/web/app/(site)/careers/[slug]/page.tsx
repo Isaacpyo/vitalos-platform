@@ -26,7 +26,10 @@ export async function generateMetadata({
     seo: data.job.seo,
     // A closed or expired role keeps its page but is not indexed; so does any role while the
     // Careers section is below its gate.
-    noindex: !isOpenRole(data.job, data.now) || !(await isDetailIndexableNow("careers")),
+    noindex:
+      data.job.placeholder === true ||
+      !isOpenRole(data.job, data.now) ||
+      !(await isDetailIndexableNow("careers")),
   });
 }
 

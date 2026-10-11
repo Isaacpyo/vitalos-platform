@@ -14,7 +14,13 @@ export type { DraftContentSet };
 export { DRAFT_STATUS, singletonProvenanceKeys } from "./provenance";
 export type { DraftCitation, DraftProvenance } from "./provenance";
 export { DRAFT_LEGAL_MARK, DRAFT_LEGAL_VERSION } from "./content/legal";
-export { toNdjson, toSanityDocuments, DRAFT_OWNER_PLACEHOLDER, DRAFT_REVIEW_DATE } from "./export";
+export {
+  toNdjson,
+  toSanityDocuments,
+  isPlaceholderDocument,
+  DRAFT_OWNER_PLACEHOLDER,
+  DRAFT_REVIEW_DATE,
+} from "./export";
 export type { SanityDocument } from "./export";
 
 /** The draft content set, built once. */
@@ -22,5 +28,6 @@ export const draftContent: DraftContentSet = buildDraftContentSet();
 
 /** The draft `ContentSource`. Never use it in production (configuration rejects it there). */
 export function createDraftContentSource(options: FixtureContentSourceOptions = {}): ContentSource {
-  return createFixtureSource(draftContent.set, options);
+  // The draft source alone counts placeholder case studies towards the Work gate (ADR-025).
+  return createFixtureSource(draftContent.set, { ...options, countPlaceholderCaseStudies: true });
 }

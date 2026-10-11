@@ -6,14 +6,22 @@
 import { summaryOf } from "../content/fixture-source";
 import type { FixtureSet } from "../content/fixture-source";
 import type {
+  CaseStudyView,
   HomePageView,
   IndustryView,
+  InsightView,
+  JobView,
   OfferView,
+  PersonView,
   PracticeView,
   RoutePageViewFor,
   SolutionView,
 } from "../content/types";
 import type { RoutePageKey } from "../routes";
+import { caseStudyDrafts } from "./content/work";
+import { jobDrafts } from "./content/careers";
+import { insightDrafts } from "./content/insights";
+import { personDrafts, personId } from "./content/people";
 import { industryDrafts } from "./content/industries";
 import type { IndustryDraft } from "./content/industries";
 import { labDrafts } from "./content/labs";
@@ -38,6 +46,11 @@ export interface DraftContentSet {
   set: FixtureSet;
   /** Keyed by document id, or by `singletonProvenanceKeys` for documents without one. */
   provenance: Readonly<Record<string, DraftProvenance>>;
+  /**
+   * Route pages forced `noindex` only because placeholder documents are the sole content of their
+   * section. The Sanity export drops that flag unless the placeholders are exported too.
+   */
+  placeholderNoindexRoutes: readonly RoutePageKey[];
 }
 
 const union = <T>(...lists: readonly (readonly T[])[]): T[] => [...new Set(lists.flat())];
@@ -50,6 +63,13 @@ function strip<D extends { provenance: DraftProvenance }>(draft: D): Omit<D, "pr
   const rest: Record<string, unknown> = { ...draft };
   delete rest["provenance"];
   return rest as Omit<D, "provenance">;
+}
+
+/** A copy of `value` without the named keys. */
+function omit<T extends object, K extends keyof T>(value: T, ...keys: K[]): Omit<T, K> {
+  const rest: Partial<T> = { ...value };
+  for (const key of keys) delete rest[key];
+  return rest as Omit<T, K>;
 }
 
 export function buildDraftContentSet(): DraftContentSet {
@@ -169,6 +189,49 @@ export function buildDraftContentSet(): DraftContentSet {
     offers: pick(offerSummary, inOrder(offerOrder, d.offers)),
   }));
 
+  /* Placeholder personas, insights, case studies and role (owner directive of 11 October 2026). */
+  const personBase = (d: (typeof personDrafts)[number]): PersonView => ({
+    ...strip(d),
+    id: personId(d.slug),
+    insights: [],
+  });
+  const personSummary = new Map(
+    personDrafts.map((d) => [d.slug, summaryOf("person", personBase(d))]),
+  );
+  const insightBase = (d: (typeof insightDrafts)[number]): InsightView => {
+    const rest = omit(strip(d), "authors", "related");
+    return {
+      ...rest,
+      id: draftId("insight", d.slug),
+      authors: pick(personSummary, d.authors),
+      related: [],
+    };
+  };
+  const insightSummary = new Map(
+    insightDrafts.map((d) => [d.slug, summaryOf("insight", insightBase(d))]),
+  );
+  const insights: InsightView[] = insightDrafts.map((d) => ({
+    ...insightBase(d),
+    related: pick(insightSummary, d.related),
+  }));
+  const people: PersonView[] = personDrafts.map((d) => ({
+    ...personBase(d),
+    insights: pick(
+      insightSummary,
+      insightDrafts.filter((i) => i.authors.includes(d.slug)).map((i) => i.slug),
+    ),
+  }));
+  const caseStudies: CaseStudyView[] = caseStudyDrafts.map((d) => ({
+    ...strip(d),
+    id: draftId("caseStudy", d.slug),
+    practices: pick(practiceSummary, d.practices),
+    solutions: pick(solutionSummary, d.solutions),
+    industries: pick(industrySummary, d.industries),
+  }));
+  const jobs: JobView[] = jobDrafts.map((d) => {
+    return { ...omit(strip(d), "practice"), id: draftId("job", d.slug) };
+  });
+
   const trustItems = trustDrafts.map((d) => d.view);
   const labAssets = labDrafts.map((d) => d.view);
   const legalPages = legalDrafts.map((d) => d.view);
@@ -197,6 +260,24 @@ export function buildDraftContentSet(): DraftContentSet {
   for (const [key, draft] of Object.entries(routePageDrafts)) {
     (routePages as Record<string, RoutePageViewFor<RoutePageKey>>)[key] = draft.view;
   }
+  /* A section index whose only content is placeholder content is not indexable either. */
+  const onlyPlaceholders = (list: readonly { placeholder?: true }[]) =>
+    list.length > 0 && list.every((doc) => doc.placeholder === true);
+  const placeholderNoindexRoutes: RoutePageKey[] = [];
+  for (const [key, list] of [
+    ["work", caseStudies],
+    ["insights", insights],
+    ["careers", jobs],
+  ] as const) {
+    const page = routePages[key];
+    if (page && onlyPlaceholders(list)) {
+      (routePages as Record<string, RoutePageViewFor<RoutePageKey>>)[key] = {
+        ...page,
+        seo: { ...page.seo, noindex: true },
+      };
+      placeholderNoindexRoutes.push(key);
+    }
+  }
 
   const provenance: Record<string, DraftProvenance> = {
     [singletonProvenanceKeys.siteSettings]: settingsDraft.provenance,
@@ -216,6 +297,10 @@ export function buildDraftContentSet(): DraftContentSet {
   trustDrafts.forEach((d) => record(d.view.id, d.provenance));
   labDrafts.forEach((d) => record(d.view.id, d.provenance));
   legalDrafts.forEach((d) => record(d.view.id, d.provenance));
+  personDrafts.forEach((d) => record(personId(d.slug), d.provenance));
+  insightDrafts.forEach((d) => record(draftId("insight", d.slug), d.provenance));
+  caseStudyDrafts.forEach((d) => record(draftId("caseStudy", d.slug), d.provenance));
+  jobDrafts.forEach((d) => record(draftId("job", d.slug), d.provenance));
 
   return {
     set: {
@@ -228,15 +313,16 @@ export function buildDraftContentSet(): DraftContentSet {
         solution: solutions,
         offer: offers,
         industry: industries,
-        caseStudy: [],
-        insight: [],
-        person: [],
+        caseStudy: caseStudies,
+        insight: insights,
+        person: people,
         labAsset: labAssets,
         trustItem: trustItems,
-        job: [],
+        job: jobs,
         legalPage: legalPages,
       },
     },
     provenance,
+    placeholderNoindexRoutes,
   };
 }

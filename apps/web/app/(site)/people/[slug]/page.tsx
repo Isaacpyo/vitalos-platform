@@ -23,6 +23,8 @@ export async function generateMetadata({
     description: data.person.summary,
     seo: data.person.seo,
     type: "profile",
+    // Placeholder personas (ADR-025) are never indexed.
+    noindex: data.person.placeholder === true,
   });
 }
 

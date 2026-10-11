@@ -123,6 +123,8 @@ interface SummaryBase {
   slug: string;
   title: string;
   summary?: string;
+  /** Set only by the draft content source (ADR-025): illustrative placeholder content. */
+  placeholder?: true;
 }
 
 export type PracticeSummary = SummaryBase;
@@ -171,6 +173,11 @@ interface DocBase {
   slug: string;
   title: string;
   summary?: string;
+  /**
+   * Set only by the draft content source (ADR-025): the document is invented placeholder content
+   * that must be replaced before launch. Never produced by the Sanity mappers or the fixtures.
+   */
+  placeholder?: true;
   seo: SeoView;
   updatedAt?: IsoDate;
 }

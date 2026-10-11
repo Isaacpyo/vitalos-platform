@@ -1,5 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { ArticleFeature, ArticleRow, ContentGap, Stack } from "@vitalos/ui";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
@@ -20,11 +21,16 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
   const { page, insights, draft } = data;
   const [featured, ...rest] = insights;
   const groups = insightFilterGroups(rest);
+  const placeholder = hasPlaceholder(insights);
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
         crumbs={
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.insights, path: routes.insights() }]} />
+          <Breadcrumbs
+            jsonLd={!placeholder}
+            trail={[homeCrumb, { name: navLabels.insights, path: routes.insights() }]}
+          />
         }
         title={page?.heading ?? navLabels.insights}
         lead={page?.intro}

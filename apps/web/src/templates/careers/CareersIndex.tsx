@@ -1,5 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, Stack } from "@vitalos/ui";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
@@ -10,11 +11,16 @@ import type { CareersIndexData } from "./load";
 /** Careers (gated on open roles): the CMS introduction, then the open roles. */
 export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
   const { page, jobs, draft } = data;
+  const placeholder = hasPlaceholder(jobs);
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
         crumbs={
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.careers, path: routes.careers() }]} />
+          <Breadcrumbs
+            jsonLd={!placeholder}
+            trail={[homeCrumb, { name: navLabels.careers, path: routes.careers() }]}
+          />
         }
         title={page?.heading ?? navLabels.careers}
         lead={page?.intro}

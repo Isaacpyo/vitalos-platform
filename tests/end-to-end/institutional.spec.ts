@@ -36,13 +36,19 @@ const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
 ];
 
 /**
- * Under the draft source (ADR-025) Careers has no roles and its gate is closed, and the
- * Certifications and Subprocessors topics are not published: no such pages.
+ * Under the draft source (ADR-025) the Certifications and Subprocessors topics are not published:
+ * no such pages. Leadership, Careers and the role render invented placeholder content (ADR-025
+ * status note, 11 October 2026), so they emit no structured data at all.
  */
-const notDrafted = /^\/(careers(\/|$)|trust\/(certifications|subprocessors)$)/;
-const templates = isDraftRun
-  ? fixtureTemplates.filter((template) => !notDrafted.test(template.path))
-  : fixtureTemplates;
+const notDrafted = /^\/(trust\/(certifications|subprocessors)$|careers\/example-)/;
+const placeholderPages = /^\/(about\/leadership|careers$)/;
+const templates = (
+  isDraftRun
+    ? fixtureTemplates.filter((template) => !notDrafted.test(template.path))
+    : fixtureTemplates
+).map((template) =>
+  isDraftRun && placeholderPages.test(template.path) ? { ...template, ld: [] } : template,
+);
 
 test.describe("every institutional template", () => {
   for (const template of templates) {
@@ -55,6 +61,7 @@ test.describe("every institutional template", () => {
       await expect(page.locator("main#main")).toHaveCount(1);
       const types = (await jsonLdNodes(page)).map((node) => node["@type"]);
       expect(types).toEqual(expect.arrayContaining(template.ld));
+      if (isDraftRun && placeholderPages.test(template.path)) expect(types).toEqual([]);
       await expectNoA11yViolations(page);
       await expectNoHorizontalOverflowAt320(page);
     });

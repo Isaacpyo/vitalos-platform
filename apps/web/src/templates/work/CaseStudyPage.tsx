@@ -8,6 +8,7 @@ import {
   Testimonial,
   isNonEmpty,
 } from "@vitalos/ui";
+import { PlaceholderNotice } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
@@ -35,11 +36,15 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
   const hasNarrative =
     hasRichText(study.challenge) || hasRichText(study.approach) || hasRichText(study.outcome);
 
+  const placeholder = study.placeholder === true;
+
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
         crumbs={
           <Breadcrumbs
+            jsonLd={!placeholder}
             trail={[
               homeCrumb,
               // The Work index does not exist below its gate, so it is not a crumb then.

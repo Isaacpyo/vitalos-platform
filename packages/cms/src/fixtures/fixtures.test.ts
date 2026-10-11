@@ -11,6 +11,16 @@ function walk(value: unknown, visit: (entry: string, key: string) => void, key =
 }
 
 describe.each(Object.values(fixtureSets))("$name fixture set is obviously artificial", (set) => {
+  it("has no placeholder documents and counts only verified case studies (ADR-025)", async () => {
+    walk(set, (_entry, key) => expect(key).not.toBe("placeholder"));
+    expect(JSON.stringify(set)).not.toContain('"placeholder":');
+    const verified = set.documents.caseStudy.filter(
+      (study) => study.evidence.status === "verified",
+    ).length;
+    const gates = await createFixtureContentSource(set).getPublicationGates();
+    expect(gates.counts.work).toBe(verified);
+  });
+
   it("uses only .invalid addresses", () => {
     walk(set, (entry) => {
       for (const url of entry.match(/https?:\/\/[^\s"')]+/g) ?? []) {

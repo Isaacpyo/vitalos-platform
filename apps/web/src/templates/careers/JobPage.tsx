@@ -2,6 +2,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { Button, ContentGap, MetaRow, Stack, Tag } from "@vitalos/ui";
 import type { MetaItem } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
+import { PlaceholderNotice } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { getSeoContext } from "../../features/seo/context";
 import { jobPostingJsonLd } from "../../features/seo/json-ld";
@@ -34,14 +35,18 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
     time(careersLabels.closes, job.validThrough),
   ].filter((item): item is MetaItem => item !== null);
 
+  const placeholder = job.placeholder === true;
+
   return (
     <PageMain>
+      <PlaceholderNotice show={placeholder} />
       {open ? (
         <JsonLd data={jobPostingJsonLd(job, { siteUrl: getSeoContext().siteUrl }, now)} />
       ) : null}
       <PageHeroBand
         crumbs={
           <Breadcrumbs
+            jsonLd={!placeholder}
             trail={[
               homeCrumb,
               // The Careers index does not exist while there are no open roles.

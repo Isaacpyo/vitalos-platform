@@ -1,5 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { ContentGap, PersonCard, Stack, TextLink } from "@vitalos/ui";
+import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
@@ -16,6 +17,7 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
   const { page, leaders, gates, draft } = data;
   return (
     <PageMain>
+      <PlaceholderNotice show={hasPlaceholder(leaders)} />
       <PageHeroBand
         crumbs={
           <Breadcrumbs trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]} />

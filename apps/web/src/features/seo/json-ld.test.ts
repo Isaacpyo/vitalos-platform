@@ -157,6 +157,10 @@ describe("articleJsonLd", () => {
     expect(node).not.toHaveProperty("image");
   });
 
+  it("is null for placeholder content, even with a named author and a valid date", () => {
+    expect(articleJsonLd(insight({ placeholder: true }), ctx)).toBeNull();
+  });
+
   it("is null without a named author or a valid date", () => {
     expect(articleJsonLd(insight({ authors: [] }), ctx)).toBeNull();
     expect(
@@ -180,8 +184,12 @@ describe("profilePageJsonLd", () => {
     ...overrides,
   });
 
+  it("is null for a placeholder persona (no Person, no ProfilePage)", () => {
+    expect(profilePageJsonLd(person({ placeholder: true }), ctx)).toBeNull();
+  });
+
   it("includes only present fields", () => {
-    const node = profilePageJsonLd(person(), ctx);
+    const node = profilePageJsonLd(person(), ctx)!;
     expect(node["@type"]).toBe("ProfilePage");
     const entity = node.mainEntity as Record<string, unknown>;
     expect(entity).toMatchObject({ "@type": "Person", name: "Example Person (fixture)" });
@@ -203,7 +211,7 @@ describe("profilePageJsonLd", () => {
         sameAs: ["https://www.linkedin.com/in/example", "http://insecure.invalid"],
       }),
       ctx,
-    );
+    )!;
     expect(node.mainEntity).toMatchObject({
       jobTitle: "Example role",
       sameAs: ["https://www.linkedin.com/in/example"],
@@ -231,6 +239,10 @@ describe("jobPostingJsonLd", () => {
       },
     ],
     ...overrides,
+  });
+
+  it("is null for a placeholder role, even when open with a description and location", () => {
+    expect(jobPostingJsonLd(job({ placeholder: true }), ctx, now)).toBeNull();
   });
 
   it("describes an open role with no invented salary or remote claims", () => {

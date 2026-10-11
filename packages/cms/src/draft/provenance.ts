@@ -28,6 +28,11 @@ export interface DraftProvenance {
   sources: readonly DraftCitation[];
   /** What was deliberately left empty in this document, and why. */
   omitted?: string;
+  /**
+   * The document is invented placeholder content (owner directive of 11 October 2026, ADR-025):
+   * excluded from the Sanity export unless `--include-placeholders` is passed.
+   */
+  placeholder?: true;
 }
 
 /** A citation: `cite(3, "4.1 Core capabilities")`. */
@@ -46,3 +51,11 @@ export const singletonProvenanceKeys = {
   homePage: "homePage",
   routePage: (key: string) => `routePage.${key}`,
 } as const;
+
+/** Provenance for an invented placeholder document: same shape, flagged `placeholder`. */
+export function placeholderDrafted(
+  sources: readonly DraftCitation[],
+  omitted: string,
+): DraftProvenance {
+  return { status: DRAFT_STATUS, sources, omitted, placeholder: true };
+}

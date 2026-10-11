@@ -3,19 +3,31 @@ import { isDraftRun } from "../support/content-source";
 import { fetchAndCheckSitemap } from "../support/sitemap";
 
 /**
- * Publication rules under the draft content source (ADR-025): sections without draft content keep
- * their gates closed, draft legal pages stay out of the sitemap, and nothing is indexable.
+ * Publication rules under the draft content source (ADR-025): the invented placeholder content opens
+ * Work, Insights and Careers, but every placeholder page stays out of the sitemap and noindex, draft
+ * legal pages stay out of the sitemap, and nothing is indexable.
  */
 test.skip(!isDraftRun, "runs only against a server built with E2E_CONTENT_SOURCE=draft");
 
-test("sections with no draft content answer 404 and stay out of the sitemap", async ({
+test("placeholder sections are served but never listed in the sitemap", async ({
   request,
   baseURL,
 }) => {
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
-  for (const closed of ["/work", "/insights", "/careers"]) {
-    expect((await request.get(closed)).status(), closed).toBe(404);
-    expect(paths.some((path) => path === closed || path.startsWith(`${closed}/`))).toBe(false);
+  for (const section of ["/work", "/insights", "/careers"]) {
+    expect((await request.get(section)).status(), section).toBe(200);
+    expect(paths.some((path) => path === section || path.startsWith(`${section}/`))).toBe(false);
+  }
+  for (const path of [
+    "/work/connecting-field-and-warehouse-systems",
+    "/insights/why-ai-pilots-stall-before-production",
+    "/people/alex-morgan",
+    "/careers/senior-engineer-technical-lead",
+    "/about/leadership",
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(await response.text(), path).toContain("Placeholder — replace before launch");
   }
   expect(paths.some((path) => path.startsWith("/people/"))).toBe(false);
 });

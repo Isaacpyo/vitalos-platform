@@ -88,7 +88,11 @@ export async function loadSitemap(
     siteUrl,
     gates,
     hasHome: home !== null,
-    routePages: new Set(pages.filter(([, page]) => page !== null).map(([key]) => key)),
+    // A route page marked noindex (for example a section index whose only content is placeholder
+    // content, ADR-025) is not listed.
+    routePages: new Set(
+      pages.filter(([, page]) => page !== null && page.seo.noindex !== true).map(([key]) => key),
+    ),
     entries,
   });
 }
