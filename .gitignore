@@ -18,3 +18,4 @@ supabase/.temp/
 Thumbs.db
 .claude/worktrees/
 .claude/settings.local.json
+tests/visual/__screenshots__/linux-local/

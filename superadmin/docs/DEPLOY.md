@@ -26,6 +26,13 @@ Target: **https://admin.vitalos.co.uk**. Expected cost: **£0.00 per month.**
 
 The real deploy is the "What Temitope does once" checklist below.
 
+**Set up on 11 Oct 2026** (DECISIONS.md 54-57):
+
+- **Azure:** the personal **"Azure subscription 1"**, a free trial. Its credit expires on **10 Nov 2026**: **upgrade it to Pay-As-You-Go before then**, or the subscription is disabled and the app stops. Moving it to the Vitalos Entra tenant is a Phase 2 item.
+- **GitHub environment:** the existing Vercel-created **`Production`**. GitHub matches environment names case-insensitively, so the workflow's `production` resolves to it. The Azure app `github-vitalos-superadmin-deploy` has federated credentials for both `environment:production` and `environment:Production`.
+- **No approval pause:** required reviewers aren't available on this private repository's plan, so step 6 below relies on the public-image check instead.
+- **Database:** Supabase project `vitalos-superadmin` (ref `uhvcjsnuxdthjfainvmm`), London, PostgreSQL 17.11. The Data API was disabled at creation, the lock-down SQL (§2.3) was applied, and `backup_reader` (§6.1) was created and verified.
+
 ## What Temitope does once
 
 1. **Database (§2.3).** **Supabase** is the default; Neon works the same way.
@@ -34,12 +41,17 @@ The real deploy is the "What Temitope does once" checklist below.
    - In the SQL editor, run the **Data API lock-down** SQL in §2.3 before the first deploy.
    - Create the read-only `backup_reader` role with the SQL in §6.1. Its connection string is the backup `DATABASE_URL` in step 4.
 2. **Cloudflare.** Confirm vitalos.co.uk is active on Cloudflare's free plan: `dig +short NS vitalos.co.uk` shows `*.ns.cloudflare.com`. If it doesn't, add the site in Cloudflare and change the nameservers at the registrar first. Then create a token under **My Profile → API Tokens → Create Token → "Edit zone DNS"**, with **Zone Resources: Include → Specific zone → vitalos.co.uk**. That is `CLOUDFLARE_API_TOKEN`.
-3. **Azure.** Run the §2.1 one-time setup as subscription Owner. A card on file is required, but nothing is charged within the free grant.
+3. **Azure.** Run the §2.1 one-time setup as subscription Owner. A card on file is required, but nothing is charged within the free grant. A free-trial subscription must be upgraded to Pay-As-You-Go before its credit expires (for "Azure subscription 1", 10 Nov 2026).
 4. **GitHub.** Go to **Settings → Environments**.
-   - `production`: add yourself as a **required reviewer**. Add the secrets `DATABASE_URL` (step 1), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1). Optionally add `SENTRY_DSN`. No registry token is needed: the image is public.
+   - `production`: this repository uses the existing Vercel-created `Production` environment; names match case-insensitively. Required reviewers aren't available on this private repository's plan, so there is no approval gate. Add the secrets `DATABASE_URL` (step 1), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1). Optionally add `SENTRY_DSN`. No registry token is needed: the image is public.
    - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production), and `BACKUP_PASSPHRASE` to encrypt dumps (recommended). On Supabase's free plan this nightly dump is the **only** backup, and it also keeps the project from being paused (§2.3).
 5. **Deploy.** Merge PR #50. Open **Actions → Super Admin deploy → Run workflow** on `main`, type `DEPLOY`, and tick **smoke test** (first run only).
-6. **Make the image public (first run only).** The build job creates the package `vitalos-platform/superadmin` on ghcr.io as private, which GitHub always does for a new package, and the API can't change it. While the deploy job waits for your approval, open https://github.com/users/Isaacpyo/packages/container/vitalos-platform%2Fsuperadmin/settings and go to **Danger Zone → Change visibility → Public**. Then approve the `production` gate. If you approve first, the deploy stops before touching Azure with the same link; set the package to Public and use **Re-run failed jobs**. The package stays public for every later deploy.
+6. **Make the image public (first run only).** The build job creates the package `vitalos-platform/superadmin` on ghcr.io as private, which GitHub always does for a new package, and the API can't change it. There is no approval pause, so:
+   1. Run the deploy (step 5) and let it stop at the **public-image check**. It fails before touching Azure and prints the package settings link.
+   2. Open https://github.com/users/Isaacpyo/packages/container/vitalos-platform%2Fsuperadmin/settings and go to **Danger Zone → Change visibility → Public**.
+   3. Back on the run, use **Re-run failed jobs**.
+
+   The package stays public for every later deploy.
 
 The **plan** job prints everything it will create and the expected cost (£0.00) before anything changes. The run ends when https://admin.vitalos.co.uk answers with a valid certificate, then the live smoke test runs. Without `CLOUDFLARE_API_TOKEN`, the run prints two DNS records and stops successfully. Create the records, then run the workflow again; it carries on from the DNS step.
 
@@ -52,7 +64,7 @@ All of it is in **`rg-vitalos-superadmin`**, region **`uksouth`**:
 | Resource group                | `rg-vitalos-superadmin`   | §2.1 (once)    |                                                                               |
 | Log Analytics workspace       | `log-vitalos-superadmin`  | §2.1 (once)    | PerGB2018, daily cap **0.1 GB**, 30-day retention                             |
 | Container Apps environment    | `cae-vitalos-superadmin`  | §2.1 (once)    | **Consumption only** (no workload profiles)                                   |
-| OIDC app registration         | `github-vitalos-superadmin-deploy` | §2.1 (once) | Federated with the GitHub `production` environment; **Contributor on the RG** |
+| OIDC app registration         | `github-vitalos-superadmin-deploy` | §2.1 (once) | Federated with the GitHub `production` and `Production` environment subjects; **Contributor on the RG** |
 | Container Apps job            | `superadmin-release`      | deploy         | Manual; `bin/release.sh`; 0.25 vCPU / 0.5 GiB                                 |
 | Container app                 | `superadmin`              | deploy         | External ingress :8000, **min 0 / max 1 replicas**, 0.25 vCPU / 0.5 GiB, HTTP concurrency 50 |
 | Custom domain + managed cert  | `admin.vitalos.co.uk`     | deploy         | CNAME validation                                                              |
@@ -106,6 +118,13 @@ az ad app federated-credential create --id "$APP_ID" --parameters '{
   "issuer": "https://token.actions.githubusercontent.com",
   "subject": "repo:Isaacpyo/vitalos-platform:environment:production",
   "audiences": ["api://AzureADTokenExchange"]}'
+# The OIDC subject is case-sensitive. The GitHub environment here is the Vercel-created "Production",
+# so federate that spelling too.
+az ad app federated-credential create --id "$APP_ID" --parameters '{
+  "name": "github-production-environment-capitalised",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:Isaacpyo/vitalos-platform:environment:Production",
+  "audiences": ["api://AzureADTokenExchange"]}'
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal \
   --role Contributor --scope "$(az group show -n "$RG" --query id -o tsv)"
 
@@ -148,7 +167,7 @@ Either free plan works with the same app, settings and retries. Supabase is the 
 **Supabase (default)**
 
 1. **Create the project.** At https://supabase.com/dashboard, create a **new, separate** project named `vitalos-superadmin` on the **Free** plan, in region **London** (AWS `eu-west-2`).
-   - Never reuse the website's Supabase project. ADR-016 keeps internal governance data and access separate from the public site.
+   - Never reuse the website's Supabase project. ADR-026 keeps internal governance data and access separate from the public site.
    - The free plan allows **2 active projects per organisation**. If the organisation already has two, free one up or put this project in another organisation.
    - Generate the database password locally with `openssl rand -hex 24`. Hex needs no URL escaping. Keep it only in the GitHub secrets.
    - If the form offers **Enable Data API**, untick it. The app talks to PostgreSQL directly and never uses Supabase's APIs.
@@ -181,7 +200,7 @@ Things to know about the Supabase free plan:
 - **Inactivity pause.** A free project is paused after **7 days without activity**. The nightly backup (`backup.yml`, 02:00 UTC) connects every day, which keeps the project active, so keep it running. It starts once the workflow is on `main` and the `backup` environment has `DATABASE_URL`. If backups stop, for example because Actions minutes run out (§7), the project can pause. The app then fails until you **Restore** the project from the Supabase dashboard; the data is kept while it is paused.
 - **No automatic backups.** The free plan has no scheduled backups or point-in-time recovery, so **the GitHub Actions `pg_dump` is the only backup**. Artifacts are kept 14 days. Set `BACKUP_PASSPHRASE`, watch the backup run history, and download a dump now and then to keep a copy outside GitHub. Paid plans add daily backups (PHASE2.md).
 - **Limits:** 500 MB of database. The app stores structured text, far below that. The app uses at most about 4 connections at once: 2 gunicorn workers on one replica, the release job and the backup.
-- **PostgreSQL version:** Supabase projects run PostgreSQL 15, or 17 on newer projects. Both work. The test suite passes on Supabase's own PostgreSQL 15 image, and the backup uses a client matching the server's version (§6).
+- **PostgreSQL version:** Supabase projects run PostgreSQL 15, or 17 on newer projects. Both work. The `vitalos-superadmin` project runs 17.11. The test suite passes on Supabase's own PostgreSQL 15 image, and the backup uses a client matching the server's version (§6).
 
 **Neon (alternative)**
 

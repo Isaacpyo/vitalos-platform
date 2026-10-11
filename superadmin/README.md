@@ -4,7 +4,7 @@ The internal system of record for the Vitalos company architecture, at **https:/
 
 It holds the company north star (vision, mission and the ADVISE · BUILD · OPERATE · CREATE business modes) and the six service lines. Each line has its own Practices → Solutions → Offers, team, projects, KPIs and decisions. Records are classified Public, Internal, Confidential or Restricted, archived rather than deleted, and every change is in the history.
 
-Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (standalone CLI, no Node), PostgreSQL 17, django-simple-history, django-axes, django-otp, django-csp, Django REST Framework with drf-spectacular, WhiteNoise and gunicorn. See [ADR-016](../docs/adr/ADR-016-superadmin-django.md).
+Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (standalone CLI, no Node), PostgreSQL 17, django-simple-history, django-axes, django-otp, django-csp, Django REST Framework with drf-spectacular, WhiteNoise and gunicorn. See [ADR-026](../docs/adr/ADR-026-superadmin-django.md).
 
 ## Pages
 
