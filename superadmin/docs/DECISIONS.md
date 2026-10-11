@@ -15,13 +15,16 @@ The brief asked for autonomous delivery, so every judgement call made without as
 6. **Tailwind v4.1.11 standalone CLI.** The binary is downloaded by `bin/tailwind.sh` and its SHA-256 verified. The CSS is built in Docker and CI and is not committed. The source lives in `assets/tailwind.css`, outside the static tree, so that manifest post-processing works.
 7. **HTMX 2** is served from the copy vendored by django-htmx, with no CDN. Attribute inheritance is disabled, so every element states its own target and swap. The history cache is disabled, so page snapshots with possibly confidential data are never written to `localStorage`.
 8. **Playwright 1.56** (Python) is pinned so that it uses the same Chromium build (1194) as the monorepo tooling and the build image.
-9. **PostgreSQL 17** is used everywhere (Neon, CI, compose). The image's `pg_dump`/`pg_restore` and the backup workflow's `postgres:17` client are version 17. Pairing a version 17 client with a version 16 server produced a restore warning in testing. **Create the Neon project on PostgreSQL 17.**
+9. **PostgreSQL versions.**
+    - **CI and compose:** PostgreSQL 17, and the image's `pg_dump`/`pg_restore` are version 17.
+    - **Production:** whatever the provider runs. Supabase projects run 15 (newer projects 17); create a Neon project on 17. Django 5.2 supports 14 and later. On 11 Oct 2026 the full test suite (110 tests) passed against Supabase's own PostgreSQL 15 image, connected as its non-superuser `postgres` role.
+    - **Backups:** a dump from a newer client can carry settings an older server rejects; a 17 client against a 16 server produced a `transaction_timeout` error on restore in testing. So the backup workflow reads the server's version and dumps with the matching `postgres:<major>` client (#19).
 10. **API tokens.** Instead of DRF's single `authtoken`, there is a small `ApiToken` model: several named tokens per user, an expiry, revocation, last-used time, and only a SHA-256 hash stored. The secret is shown once. It is sent as `Authorization: Bearer vsa_…`.
 11. **Swagger UI** uses drf-spectacular's split view and sidecar assets, so no inline scripts or CDNs are needed.
 
 ## Hosting and deployment (amended 11 Oct 2026 for zero monthly cost)
 
-12. **Azure Container Apps, UK South, at £0/month.** Temitope asked for zero monthly cost and pre-approved this change. The app runs on the Container Apps consumption plan inside the permanent free grant. PostgreSQL is Neon's free tier, the image is a public ghcr.io package, and DNS and TLS are Cloudflare free plus an Azure managed certificate. This replaces Key Vault, Azure Container Registry, Azure Database for PostgreSQL and the Azure Files backup job, which together would cost money every month.
+12. **Azure Container Apps, UK South, at £0/month.** Temitope asked for zero monthly cost and pre-approved this change. The app runs on the Container Apps consumption plan inside the permanent free grant. PostgreSQL is a free tier, **Supabase by default or Neon** (#15), the image is a public ghcr.io package, and DNS and TLS are Cloudflare free plus an Azure managed certificate. This replaces Key Vault, Azure Container Registry, Azure Database for PostgreSQL and the Azure Files backup job, which together would cost money every month.
     - No hosting CLI or MCP was connected in the build session, and the build sandbox's cloud credentials were not Vitalos's, so they were not used.
     - Deployment is an idempotent script, `deploy/azure/deploy.sh` (`--dry-run` prints the plan), run by the manual, environment-gated `Super Admin deploy` workflow.
     - The workflow logs in with Azure OIDC, so no Azure keys are stored. The OIDC identity has only **Contributor on `rg-vitalos-superadmin`**.
@@ -32,14 +35,29 @@ The brief asked for autonomous delivery, so every judgement call made without as
     - **Free grant:** 180,000 vCPU-s, 360,000 GiB-s and 2 million requests per subscription per month. That covers about 200 hours of a running replica, because 180,000 / 0.25 = 360,000 / 0.5 = 720,000 s.
     - **Release job:** its runs last seconds and draw on the same grant.
     - **Assumptions:** the grant is shared by everything in the subscription. Nothing else in that subscription uses Container Apps; if something does, the £1 budget alert in DEPLOY.md is the tripwire.
-    - **Trade-off: cold starts.** After about 5 idle minutes, the first request waits for a replica to start, which can include pulling the image (about 95 MB compressed), and Neon wakes too. Expect a few seconds, occasionally more. That is acceptable for an internal tool, and later requests are fast.
+    - **Trade-off: cold starts.** After about 5 idle minutes, the first request waits for a replica to start, which can include pulling the image (about 95 MB compressed), and on Neon the database wakes too. Expect a few seconds, occasionally more. That is acceptable for an internal tool, and later requests are fast.
     - **Single replica:** a deploy briefly swaps revisions. There is no high availability; Phase 2 covers paid tiers.
-15. **Database: Neon free tier** (AWS eu-west-2, London; UK data residency).
-    - **Connection:** `DATABASE_URL` is the **pooled** connection string with `sslmode=require`, held as a GitHub `production` environment secret, re-applied on every deploy (so rotating it means updating that secret and redeploying), and passed to the containers as a secret.
-    - **Settings for autosuspend and pooling:** Neon autosuspends after 5 idle minutes, and pooling runs through PgBouncer in transaction mode. Prod settings therefore use `CONN_MAX_AGE=0` and `CONN_HEALTH_CHECKS=True`, and set `DISABLE_SERVER_SIDE_CURSORS=True`, because transaction pooling cannot hold cursors.
-    - **Release job:** `bin/release.sh` runs `migrate`, `seed_architecture` and `create_superadmin` as a one-off Container Apps job *before* the app gets the new image. Each step is retried 3 times with 5 s and 15 s backoff, to cover Neon cold starts.
+15. **Database: Supabase free plan by default, or Neon free plan** (both London, AWS eu-west-2; UK data residency). On 11 Oct 2026 Temitope chose Supabase, so DEPLOY.md documents it as the default. Neon stays a supported alternative, and nothing in the app depends on which is used.
+    - **A dedicated Supabase project, never the website's.** ADR-016 rejected sharing the web app's Supabase, to keep internal governance data and access models separate. Supabase's free plan allows 2 active projects per organisation, and the website already uses one, so this is the second (assumption: no other free project exists in that organisation).
+    - **Connection:** `DATABASE_URL` is held as a GitHub `production` environment secret, re-applied on every deploy (so rotating it means updating that secret and redeploying), and passed to the containers as a secret. It always carries `sslmode=require`, which `deploy.sh` checks.
+      - **Supabase:** the **session pooler** string from **Connect → Session pooler** (port 5432, user `postgres.<project-ref>`).
+      - **Neon:** the **pooled** string.
+    - **Why Supabase's session pooler:** Supabase's direct host (`db.<project-ref>.supabase.co`) is **IPv6-only**, and neither Container Apps nor GitHub-hosted runners have IPv6 egress, so it is unreachable from both. `deploy.sh` refuses that host with a pointer to DEPLOY.md §2.3. The session pooler is reachable over IPv4, keeps one server connection per client connection, and supports `pg_dump`, so the app, the release job and the backup all use it.
+    - **Settings are unchanged** from the Neon design, as instructed: `CONN_MAX_AGE=0`, `CONN_HEALTH_CHECKS=True` and `DISABLE_SERVER_SIDE_CURSORS=True`.
+      - With Neon, these suit its 5-minute autosuspend and PgBouncer's transaction mode, which cannot hold cursors.
+      - With Supabase's session pooler, they are conservative but correct: one short-lived pooled connection per request, and no reliance on cursors.
+    - **Release job:** `bin/release.sh` runs `migrate`, `seed_architecture` and `create_superadmin` as a one-off Container Apps job *before* the app gets the new image. Each step is retried 3 times with 5 s and 15 s backoff, to cover a slow or refused first connection, such as a Neon cold start.
     - **Bootstrap account:** `create_superadmin` only creates a missing account. It never re-activates, re-promotes or changes an existing one; `--password` resets only the password.
-    - **Access and limits:** the app uses the Neon project's owner role, over TLS with a generated password. A least-privilege role is a Phase 2 item, and Neon IP allow-listing is not on the free plan (assumption). Free-plan limits at the time of writing are 0.5 GB of storage and a monthly compute allowance; autosuspend keeps an internal tool well within it.
+    - **Access and limits:** the app uses the project's owner role (Supabase `postgres`, Neon `neondb_owner`) over TLS with a generated password. A least-privilege application role is a Phase 2 item, and IP allow-listing is not used on the free plans (assumption).
+      - **Supabase free:** 500 MB of database.
+      - **Neon free:** 0.5 GB and a monthly compute allowance.
+      - The app needs at most about 4 connections at once: 2 gunicorn workers on one replica, the release job and the backup.
+    - **Supabase inactivity pause.** Free Supabase projects are paused after **7 days without activity**. The nightly backup connects every day, which keeps the project active. This assumes Supabase counts a daily database connection as activity. If backups stop (Actions minutes, #51), the project can pause and the app fails until it is restored from the dashboard. The data is kept while it is paused. The uptime-monitor ban (#21) still holds.
+    - **Supabase Data API lock-down (security).** Supabase's default privileges grant `anon`, `authenticated` and `service_role` full read and write on every new table in `public`, with row-level security off. Supabase exposes those roles through its Data API (PostgREST/GraphQL), and the `anon` key is public by design.
+      - **Tested on Supabase's PostgreSQL 15 image:** after migrating, `anon` had `SELECT`, `INSERT`, `UPDATE`, `DELETE` and `TRUNCATE` on `accounts_user`, which holds password hashes, and on the TOTP device table.
+      - **Fix:** the app never uses Supabase's APIs, so DEPLOY.md §2.3 has Temitope disable the Data API when creating the project, and run a REVOKE script (including default privileges) before the first deploy.
+      - **Verified:** after the script, `anon`, `authenticated` and `service_role` have no access to the app's tables, including tables that later migrations create. The app, migrations and backup keep working.
+      - This is not optional: skipping it would expose the user table to anyone holding the project URL and its public key.
 16. **Secrets: Container Apps secrets** (no Key Vault).
     - **Where they live:** `django-secret-key`, `database-url`, `bootstrap-admin-password` (plus `sentry-dsn` if set) are secrets on both the app and the release job, referenced with `secretref:`. No registry credential is stored: the image is public (#17).
     - **Generation:** the workflow generates the secret key and bootstrap password with `openssl rand`, masks them, and writes them only into Container Apps secrets. A redeploy reads back and keeps the existing values (tested with a stubbed `az`), so sessions and the bootstrap password survive.
@@ -55,14 +73,22 @@ The brief asked for autonomous delivery, so every judgement call made without as
     - **Safety:** it never silently replaces a record that points elsewhere (`DNS_OVERWRITE=1` to force). Without `CLOUDFLARE_API_TOKEN` it prints the two records, writes `bound=false` and stops before binding, so the run succeeds and can be resumed.
     - **Orange cloud:** turning on the Cloudflare proxy is optional hardening (DEPLOY.md §4). It needs SSL mode **Full (strict)** and `TRUSTED_PROXY_COUNT=2`. Azure renews managed certificates only while the CNAME is visible, so set the record back to grey around renewal, or use a Cloudflare Origin CA certificate instead.
     - **Nameservers:** `stage-status.md` notes that Cloudflare nameserver activation was pending, so DEPLOY.md starts by checking which DNS host is authoritative.
-19. **Backups: Neon history plus a daily GitHub Actions dump.**
-    - **Neon:** point-in-time restore over its free-plan history window (6 hours at the time of writing).
-    - **Daily dump:** `.github/workflows/backup.yml` runs at 02:00 UTC. It runs `pg_dump` with a PostgreSQL 17 client against Neon's direct (non-pooler) host, because `pg_dump` needs a session. It gzips the output and uploads it as a workflow artifact kept **14 days** (free).
-    - **`backup` environment:** the workflow uses an environment named `backup` with **no required reviewers**. Placing it in `production` would hold every scheduled run for approval. It needs its own `DATABASE_URL`, ideally the read-only `backup_reader` role (exact SQL in DEPLOY.md §6.1, verified on PostgreSQL 17), and, recommended, `BACKUP_PASSPHRASE` for AES-256 encryption. Artifacts are otherwise readable by anyone with read access to the repository.
-    - **Schedule:** scheduled runs start only once the workflow is on `main`. Each run takes about 1–2 Actions minutes.
-    - **`bin/backup.sh`** stays as a portable manual tool, and CI still exercises it.
+19. **Backups: a daily GitHub Actions dump, plus Neon history when on Neon.**
+    - **Supabase free has no automatic backups** (no scheduled backups or point-in-time recovery), so **the Actions dump is the only backup**. DEPLOY.md recommends `BACKUP_PASSPHRASE`, watching the run history, and an occasional copy kept outside GitHub. Paid Supabase plans add daily backups (PHASE2.md).
+    - **Neon:** point-in-time restore over its free-plan history window (6 hours at the time of writing), plus the dump.
+    - **Daily dump:** `.github/workflows/backup.yml` runs at 02:00 UTC and uploads a gzipped plain dump as a workflow artifact kept **14 days** (free). The artifact name ends in `-pg<major>`.
+      - **Connection:** `pg_dump` needs a session. On Supabase it uses the session pooler string as is. On Neon it switches to the direct (non-pooler) host.
+      - **Client version:** it reads the server's version and dumps with the matching `postgres:<major>` client (#9), so the dump restores on that version.
+      - **`--schema=public` only:** the app keeps all its tables in `public`. On Supabase, a whole-database dump as `backup_reader` fails on Supabase's own schemas (`permission denied for schema auth`, tested). Even as `postgres`, it would carry platform tables (`auth`, `storage`) that must not be restored over a new project's own.
+      - **Restore:** `CREATE SCHEMA public;` is filtered out, because the schema already exists in a new database (DEPLOY.md §6).
+      - **Verified on Supabase's 15 image and on PostgreSQL 17:** both dumped and restored into a fresh database with no pending migrations.
+    - **`backup` environment:** the workflow uses an environment named `backup` with **no required reviewers**. Placing it in `production` would hold every scheduled run for approval. It needs its own `DATABASE_URL`, ideally the read-only `backup_reader` role, and, recommended, `BACKUP_PASSPHRASE` for AES-256 encryption. Artifacts are otherwise readable by anyone with read access to the repository.
+      - The exact `backup_reader` SQL is in DEPLOY.md §6.1. It was verified on Supabase's PostgreSQL 15 image as the non-superuser `postgres`, and on PostgreSQL 17 set up like Neon.
+      - On Supabase, the pooler user name is `backup_reader.<project-ref>`. That format is untested without an account; the first manual backup run checks it.
+    - **Schedule:** scheduled runs start only once the workflow is on `main`. Each run takes about 1–2 Actions minutes. On Supabase, the run also keeps the project from being paused (#15).
+    - **`bin/backup.sh`** stays as a portable manual tool, and CI still exercises it. It also dumps only `public` now, for the same reason.
 20. **HSTS.** One year, with `includeSubDomains` (which only affects `*.admin.vitalos.co.uk`). Preload is **not** set, because preload-list submission is a decision for the whole `vitalos.co.uk` domain. Django's `security.W021` warning is therefore silenced in prod settings, and CI runs `check --deploy --fail-level WARNING`.
-21. **Health probe.** `/healthz/` answers before host validation, because platform probes use the container IP as the Host header, and it is exempt from the HTTPS redirect. It touches the database, so an external uptime monitor would keep Neon and the app awake and use up the free grants. Don't add one; the platform's default TCP probes do not wake Neon.
+21. **Health probe.** `/healthz/` answers before host validation, because platform probes use the container IP as the Host header, and it is exempt from the HTTPS redirect. It touches the database, so an external uptime monitor would keep the app (and Neon) awake and use up the free grants. Don't add one; the platform's default TCP probes do not touch the database. On Supabase, the nightly backup already prevents the inactivity pause (#15).
 
 ## Data model
 
@@ -142,7 +168,26 @@ The brief asked for autonomous delivery, so every judgement call made without as
 50. **File names.** The backup workflow is `.github/workflows/backup.yml`, as requested, with the display name "Super Admin backup", because the monorepo has other apps.
 51. **GitHub Actions minutes are a shared, finite quota (found 11 Oct 2026).** On this PR's final push, GitHub refused to start a CI job: "recent account payments have failed or your spending limit needs to be increased". The account's included private-repository Actions minutes (2,000/month on GitHub Free) or its spending limit were exhausted. The deploy and backup workflows draw on the same quota, so while it is exhausted:
     - deploys cannot run;
-    - **daily backups silently stop**, leaving only Neon's 6-hour history.
+    - **daily backups silently stop**. On Supabase that leaves no backup at all, and after 7 days the project can be paused (#15). On Neon it leaves only the 6-hour history.
 
     To keep £0 hosting dependable, either cut CI usage or accept a small Actions spending limit. The always-failing CodeQL job is now disabled (#48), which saves about 3 minutes per push. CI usage is also kept down by running the container smoke job only when `superadmin/` changes (it already does). **Confirm** which. Check usage under **GitHub → Settings → Billing → Actions**.
-52. **Verification limits.** No Azure, Neon or Cloudflare credentials were available in the build session either time, so the real deploy has still not run. The script was exercised with a stubbed `az` (first deploy, redeploy, Actions masking and the no-Cloudflare resumable stop), and `shellcheck` and `actionlint` are clean. Every Azure CLI flag was checked against `az` 2.91. Locally, the production image passed the 25-check browser smoke test inside the free-grant shape (container limited to 0.25 vCPU / 512 MB, using about 150 MiB with 2 gunicorn workers), with the Neon-oriented DB settings. The backup workflow's script produced a gzipped and encrypted dump, which decrypted and restored into PostgreSQL 17 (6 service lines and their history).
+52. **Verification limits.** No Azure, Supabase, Neon or Cloudflare credentials were available in the build session either time, so the real deploy has still not run. The script was exercised with a stubbed `az` (first deploy, redeploy, Actions masking and the no-Cloudflare resumable stop), and `shellcheck` and `actionlint` are clean. Every Azure CLI flag was checked against `az` 2.91. Locally, the production image passed the 25-check browser smoke test inside the free-grant shape (container limited to 0.25 vCPU / 512 MB, using about 150 MiB with 2 gunicorn workers), with the Neon-oriented DB settings. The backup workflow's script produced a gzipped and encrypted dump, which decrypted and restored into PostgreSQL 17 (6 service lines and their history).
+53. **Supabase as the documented default (11 Oct 2026).** Temitope chose Supabase's free plan: London, session pooler on port 5432, `sslmode=require`. DEPLOY.md, this file, PHASE2.md, ADR-016 and the PR now say "Supabase or Neon", with Supabase as the default. Retry and health-check settings are unchanged (#15).
+    - **Code changes:** only what Supabase requires.
+      - `backup.yml` dumps only `public`, with a client matching the server's version.
+      - `bin/backup.sh` also dumps only `public`.
+      - `deploy.sh` refuses Supabase's IPv6-only direct host.
+      - Comments and plan text say "Supabase or Neon".
+    - **Tested locally against Supabase's own image (`supabase/postgres:15.19.0.004`):**
+      - the test suite;
+      - the `backup_reader` SQL;
+      - the Data API lock-down;
+      - the backup workflow step itself;
+      - a restore into a fresh Supabase database.
+    - **Not testable without a Supabase account:**
+      - the dashboard steps;
+      - the pooler's `<role>.<project-ref>` user name;
+      - the IPv4 reachability of the session pooler from Container Apps;
+      - how Supabase measures inactivity.
+
+      The first deploy and the first manual backup run check the first three.

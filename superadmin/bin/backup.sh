@@ -9,7 +9,9 @@ STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 FILE="$DIR/superadmin-$STAMP.dump"
 
 mkdir -p "$DIR"
-pg_dump --format=custom --no-owner --no-privileges --dbname="$DATABASE_URL" --file="$FILE.partial"
+# Only the app's schema (public): on Supabase, the platform schemas (auth, storage, ...) must not be
+# restored over a new project's own.
+pg_dump --format=custom --schema=public --no-owner --no-privileges --dbname="$DATABASE_URL" --file="$FILE.partial"
 mv "$FILE.partial" "$FILE"
 pg_restore --list "$FILE" > /dev/null  # fail loudly if the archive is unreadable
 # -mtime +N matches files at least N+1 days old, so this keeps exactly $DAYS daily dumps.

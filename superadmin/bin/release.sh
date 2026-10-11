@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Release step, run as a one-off job before new revisions take traffic. Safe to re-run.
-# Each command is retried 3 times with backoff: Neon's free tier autosuspends after 5 idle minutes
-# and the first connection after a suspend can be slow or refused while compute starts.
+# Each command is retried 3 times with backoff: a free-tier database can be slow or refuse the first
+# connection, for example while Neon resumes from its 5-minute autosuspend.
 set -eu
 cd "$(dirname "$0")/.."
 

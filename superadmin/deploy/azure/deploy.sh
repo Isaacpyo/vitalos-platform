@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy the Vitalos Super Admin to Azure Container Apps (consumption plan, UK South) at zero monthly
-# cost: scale-to-zero inside the Container Apps free grant, Neon free-tier PostgreSQL, the image on
-# ghcr.io, Cloudflare free DNS and an Azure managed (free) TLS certificate for admin.vitalos.co.uk.
+# cost: scale-to-zero inside the Container Apps free grant, free-tier PostgreSQL (Supabase by default, or
+# Neon), the image on ghcr.io, Cloudflare free DNS and an Azure managed (free) TLS certificate for admin.vitalos.co.uk.
 #
 #   superadmin/deploy/azure/deploy.sh --dry-run   # print the plan and expected cost; calls nothing
 #   superadmin/deploy/azure/deploy.sh             # deploy (normally run by the "Super Admin deploy" workflow)
@@ -18,7 +18,8 @@
 #   AZ_SUBSCRIPTION            Azure subscription ID
 #   IMAGE                      image to deploy, e.g. ghcr.io/isaacpyo/vitalos-platform/superadmin:<git sha>
 #                              (a public ghcr.io package: pulled anonymously, no registry credentials)
-#   DATABASE_URL               Neon pooled connection string (sslmode=require)
+#   DATABASE_URL               Supabase session pooler (port 5432) or Neon pooled connection string,
+#                              with sslmode=require
 #   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
 # Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
 # run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN, BOOTSTRAP_ADMIN_EMAIL.
@@ -65,22 +66,23 @@ Container Apps env  $CAE   (exists: §2.1, consumption only, no workload profile
 Will create or update:
   1. Container Apps job  $RELEASE_JOB
        manual trigger; runs /app/bin/release.sh (migrate, seed_architecture, create_superadmin,
-       each retried 3x with backoff for Neon cold starts); $CPU vCPU / $MEMORY; runs for seconds per deploy
+       each retried 3x with backoff for database cold starts); $CPU vCPU / $MEMORY; runs for seconds per deploy
   2. Container app       $APP
        image ${IMAGE:-ghcr.io/<owner>/vitalos-platform/superadmin:<git sha>} pulled anonymously (public package)
        external ingress :8000; min replicas 0, max replicas 1 (scale to zero); $CPU vCPU / $MEMORY
        scale rule: HTTP concurrency $HTTP_CONCURRENCY
   3. Container Apps secrets on both (values never printed):
        django-secret-key, bootstrap-admin-password (generated once, then kept),
-       database-url (Neon pooled, from the GitHub production environment); no registry credentials
+       database-url (Supabase session pooler or Neon pooled, from the GitHub production environment);
+       no registry credentials
   4. Cloudflare DNS (zone $ZONE, DNS only / grey cloud, TTL 300):
        CNAME ${DOMAIN%%."$ZONE"} -> <app FQDN>.$LOCATION.azurecontainerapps.io
        TXT   asuid.${DOMAIN%%."$ZONE"} -> <custom domain verification ID>
        (no CLOUDFLARE_API_TOKEN: the two records are printed and the run stops here, resumable)
   5. Custom domain $DOMAIN + Azure managed certificate (free), CNAME validation
 
-Not created (zero-cost design): no container registry (public ghcr.io package), no managed PostgreSQL (Neon free),
-no Key Vault (Container Apps secrets), no storage account (backups run in GitHub Actions).
+Not created (zero-cost design): no container registry (public ghcr.io package), no managed PostgreSQL
+(Supabase or Neon free), no Key Vault (Container Apps secrets), no storage account (backups run in GitHub Actions).
 
 Expected monthly cost: £0.00
 Free-grant assumptions (per subscription per month; check Azure Cost Management, budget alert £1):
@@ -89,8 +91,9 @@ Free-grant assumptions (per subscription per month; check Azure Cost Management,
     Scaled to zero when idle, an internal tool stays far below that; release-job runs are seconds.
   - Log Analytics: first 5 GB/month ingestion and 31 days retention free; daily cap 0.1 GB (~3 GB/month).
   - Managed certificate and the consumption-only environment: no charge.
-  - Neon free plan (0.5 GB storage, autosuspend after 5 min), Cloudflare free DNS, GitHub Packages and
-    Actions within the plan's included quotas: no charge (public packages have no transfer quota).
+  - Supabase free plan (500 MB database; paused after 7 days without activity, which the nightly backup
+    prevents) or Neon free plan (0.5 GB, autosuspend after 5 min); Cloudflare free DNS; GitHub Packages
+    and Actions within the plan's included quotas: no charge (public packages have no transfer quota).
 EOF
 }
 
@@ -101,9 +104,13 @@ fi
 
 : "${AZ_SUBSCRIPTION:?Set AZ_SUBSCRIPTION}"
 : "${IMAGE:?Set IMAGE to the ghcr.io image to deploy}"
-: "${DATABASE_URL:?Set DATABASE_URL to the Neon pooled connection string}"
+: "${DATABASE_URL:?Set DATABASE_URL to the Supabase session pooler (or Neon pooled) connection string}"
 mask "$DATABASE_URL"
 case "$DATABASE_URL" in *sslmode=require*) ;; *) die "DATABASE_URL must include sslmode=require" ;; esac
+# Supabase's direct host (db.<ref>.supabase.co) is IPv6-only, and Container Apps has no IPv6 egress.
+case "$DATABASE_URL" in
+  *@db.*.supabase.co*) die "DATABASE_URL uses the Supabase direct host, which is IPv6-only and unreachable from Container Apps. Use Connect -> Session pooler (port 5432) instead (DEPLOY.md)." ;;
+esac
 
 # The app pulls the image anonymously, so the ghcr.io package must be public. Check before touching
 # Azure, so a private package fails here with instructions instead of as a stuck revision.
@@ -297,7 +304,7 @@ EOF
 fi
 output bound true
 
-log "Waiting for https://$DOMAIN (the first request also wakes the app and Neon)"
+log "Waiting for https://$DOMAIN (the first request also wakes the app and the database)"
 for attempt in $(seq 1 60); do
   if curl -fsS --max-time 30 "https://$DOMAIN/healthz/" > /dev/null 2>&1; then
     curl -fsS -o /dev/null -w "login page: HTTP %{http_code}\n" "https://$DOMAIN/login/"
