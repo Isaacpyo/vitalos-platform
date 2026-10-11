@@ -32,7 +32,7 @@ flowchart LR
 - Email is a notification channel, not the database. A failed or missing notification never removes a stored enquiry.
 - The enquiry row and its outbox row are written in one transaction; a replayed idempotency key returns the original reference and writes nothing.
 - The client IP is stored only as an HMAC under a server-side salt (`ip_hash`). The outbox payload carries identifiers only; personal data is read from the enquiry at send time.
-- Consent time and the privacy notice version are stored with each enquiry. `retention_until` is null until the owner approves a retention policy; no deletion job exists.
+- Consent time and the privacy notice version are stored with each enquiry. Enquiries are kept 24 months after the last contact, then deleted (owner decision, 11 October 2026). A trigger sets `retention_until` to `received_at` plus 24 months on insert; `purge_expired_enquiries()` (service role only) deletes expired enquiries and their outbox rows, and a daily Vercel Cron calls it through `/api/internal/retention/purge`. There is no last-contact field: to extend retention for a conversation that is still active, update `retention_until` manually. Backups and provider copies (Supabase, the email provider) are outside this job and age out under their own policies.
 - Production data is never copied to preview or staging; non-production environments use separate secrets and data (ADR-015).
 
 ## Super Admin records

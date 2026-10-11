@@ -2,17 +2,21 @@ import type { Env } from "@vitalos/config";
 import { MemoryOutboxStore } from "./adapters/memory-outbox";
 import { MemoryEnquiryRepository } from "./adapters/memory-repository";
 import { MemoryRateLimiter } from "./adapters/memory-rate-limiter";
+import { MemoryRetentionStore } from "./adapters/memory-retention";
 import { ConsoleNotifier } from "./adapters/console-notifier";
 import { PostmarkNotifier, ResendNotifier } from "./adapters/email-notifier";
 import { createEnquiryLogger } from "./adapters/observability-logger";
 import { PostgresRateLimiter } from "./adapters/postgres-rate-limiter";
 import { SupabaseEnquiryRepository } from "./adapters/supabase-repository";
 import { SupabaseOutboxStore } from "./adapters/supabase-outbox";
+import { SupabaseRetentionStore } from "./adapters/supabase-retention";
 import { createSupabaseRpcClient } from "./adapters/supabase-rpc";
 import type { RpcClient } from "./adapters/supabase-rpc";
 import { DisabledVerifier, TurnstileVerifier } from "./adapters/turnstile-verifier";
 import { dispatchOutbox } from "./application/dispatch-outbox";
 import type { DispatchSummary } from "./application/dispatch-outbox";
+import { purgeExpiredEnquiries } from "./application/purge-expired-enquiries";
+import type { PurgeSummary } from "./application/purge-expired-enquiries";
 import { receiveEnquiry } from "./application/receive-enquiry";
 import type { ReceiveRequest, ReceiveResult } from "./application/receive-enquiry";
 import type {
@@ -22,6 +26,7 @@ import type {
   Notifier,
   OutboxStore,
   RateLimiter,
+  RetentionStore,
 } from "./domain/ports";
 
 /**
@@ -40,6 +45,8 @@ export interface EnquiryService {
    * then simply stay pending (the outbox is the durability guarantee).
    */
   dispatch(): Promise<DispatchSummary | null>;
+  /** Deletes enquiries past their retention date (with their outbox rows). Counts only. */
+  purgeExpired(): Promise<PurgeSummary>;
 }
 
 export interface EnquiryServiceOverrides {
@@ -54,6 +61,7 @@ interface MemoryBackend {
   repository: MemoryEnquiryRepository;
   outbox: MemoryOutboxStore;
   limiter: MemoryRateLimiter;
+  retention: MemoryRetentionStore;
   salt: string;
 }
 
@@ -70,6 +78,7 @@ function memoryBackend(): MemoryBackend {
       repository,
       outbox: new MemoryOutboxStore(repository),
       limiter: new MemoryRateLimiter(),
+      retention: new MemoryRetentionStore(repository),
       salt: crypto.randomUUID() + crypto.randomUUID(),
     };
   })();
@@ -83,6 +92,7 @@ const unavailable: EnquiryService = {
   available: false,
   receive: () => Promise.resolve({ kind: "unavailable" }),
   dispatch: () => Promise.resolve(null),
+  purgeExpired: () => Promise.reject(new Error("unavailable")),
 };
 
 /** `undefined` (no notifier) for `none`, or when a provider is selected but not fully configured. */
@@ -126,6 +136,7 @@ export function createEnquiryService(
   let repository: EnquiryRepository;
   let outbox: OutboxStore;
   let limiter: RateLimiter;
+  let retention: RetentionStore;
   let salt: string;
 
   if (env.enquiry.backend === "memory") {
@@ -133,6 +144,7 @@ export function createEnquiryService(
     repository = memory.repository;
     outbox = memory.outbox;
     limiter = memory.limiter;
+    retention = memory.retention;
     salt = env.enquiry.ipHashSalt ?? memory.salt;
   } else if (env.enquiry.backend === "supabase") {
     const { url, secretKey } = env.supabase;
@@ -150,6 +162,7 @@ export function createEnquiryService(
     repository = new SupabaseEnquiryRepository(client);
     outbox = new SupabaseOutboxStore(client);
     limiter = new PostgresRateLimiter(client);
+    retention = new SupabaseRetentionStore(client);
     salt = ipHashSalt;
   } else {
     return unavailable;
@@ -197,5 +210,6 @@ export function createEnquiryService(
     dispatch: notifier
       ? () => dispatchOutbox({ store: outbox, notifier, logger })
       : () => Promise.resolve(null),
+    purgeExpired: () => purgeExpiredEnquiries({ store: retention, logger }),
   };
 }

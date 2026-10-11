@@ -169,10 +169,10 @@ select is(
   1, 'exactly one outbox row exists after a replay'
 );
 select results_eq(
-  $$select e.ip_hash, e.consent_at is not null, e.retention_until is null, e.utm ->> 'source', e.correlation_id
+  $$select e.ip_hash, e.consent_at is not null, e.retention_until = e.received_at + interval '24 months', e.utm ->> 'source', e.correlation_id
       from public.enquiries e where e.idempotency_key = '11111111-1111-4111-8111-111111111111'$$,
   $$values (repeat('a', 64), true, true, 'fixture', 'corr-1')$$,
-  'v2 columns are stored; retention stays unset'
+  'v2 columns are stored; retention is received_at + 24 months (migration 20261011110000)'
 );
 select results_eq(
   $$select o.kind, o.event_type, o.state, o.channel
