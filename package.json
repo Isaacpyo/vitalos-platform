@@ -21,6 +21,8 @@
     "test:e2e:sparse": "node tests/support/run-sparse.mjs",
     "test:a11y": "playwright test tests/accessibility",
     "test:storybook-a11y": "playwright test -c tests/storybook/playwright.config.ts",
+    "test:visual": "playwright test -c tests/visual/playwright.config.ts",
+    "test:visual:update": "playwright test -c tests/visual/playwright.config.ts --update-snapshots",
     "test:perf": "playwright test tests/performance",
     "storybook:build": "corepack pnpm --filter @vitalos/storybook build",
     "db:test": "supabase test db",

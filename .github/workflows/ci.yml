@@ -96,6 +96,58 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # Visual regression (ADR-021 decision 7). NON-GATING: continue-on-error, and it must never be
+  # added to the required checks until the owner approves the Figma templates. Baselines are
+  # specific to this runner's Chromium and fonts, so the job is self-baselining: with no committed
+  # `linux-ci` baselines it records them and uploads `visual-baselines-for-adoption`; with them it
+  # compares and uploads `visual-diff-report` on any difference. See tests/visual/README.md.
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    env:
+      VISUAL_BASELINE_SET: ci
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with: { run_install: false }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Decide whether CI baselines exist
+        id: baselines
+        run: |
+          if [ -d tests/visual/__screenshots__/linux-ci ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Visual regression (compare against committed CI baselines)
+        if: steps.baselines.outputs.present == 'true'
+        run: pnpm test:visual
+      - name: Visual regression (no CI baselines yet, record them)
+        if: steps.baselines.outputs.present == 'false'
+        run: pnpm test:visual --update-snapshots=all
+      - name: Baselines for adoption
+        if: ${{ !cancelled() && steps.baselines.outputs.present == 'false' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines-for-adoption
+          path: tests/visual/__screenshots__/linux-ci
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Diff report
+        if: ${{ !cancelled() && steps.baselines.outputs.present == 'true' && failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
   # axe against every story in the static Storybook build.
   storybook-a11y:
     runs-on: ubuntu-latest

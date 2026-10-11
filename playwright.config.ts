@@ -73,7 +73,7 @@ const sparseProject = {
 export default defineConfig({
   testDir: "./tests",
   // Storybook and unit suites have their own runners; Playwright owns the browser suites only.
-  testIgnore: ["**/storybook/**", "**/integration/**"],
+  testIgnore: ["**/storybook/**", "**/integration/**", "**/visual/**"],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
