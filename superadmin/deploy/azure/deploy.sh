@@ -16,9 +16,9 @@
 #
 # Environment for a real run:
 #   AZ_SUBSCRIPTION            Azure subscription ID
-#   IMAGE                      image to deploy, e.g. ghcr.io/isaacpyo/vitalos-superadmin:<git sha>
+#   IMAGE                      image to deploy, e.g. ghcr.io/isaacpyo/vitalos-platform/superadmin:<git sha>
+#                              (a public ghcr.io package: pulled anonymously, no registry credentials)
 #   DATABASE_URL               Neon pooled connection string (sslmode=require)
-#   GHCR_USERNAME, GHCR_PULL_TOKEN   GitHub user + classic PAT with read:packages, for image pulls
 #   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
 # Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
 # run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN, BOOTSTRAP_ADMIN_EMAIL.
@@ -40,7 +40,6 @@ RELEASE_JOB="${APP}-release"
 DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
 ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:-superadmin-owner@example.invalid}"
-REGISTRY="ghcr.io"
 CPU="0.25"
 MEMORY="0.5Gi"
 HTTP_CONCURRENCY="50"
@@ -68,19 +67,19 @@ Will create or update:
        manual trigger; runs /app/bin/release.sh (migrate, seed_architecture, create_superadmin,
        each retried 3x with backoff for Neon cold starts); $CPU vCPU / $MEMORY; runs for seconds per deploy
   2. Container app       $APP
-       image ${IMAGE:-ghcr.io/<owner>/vitalos-superadmin:<git sha>} pulled from $REGISTRY with a read:packages PAT
+       image ${IMAGE:-ghcr.io/<owner>/vitalos-platform/superadmin:<git sha>} pulled anonymously (public package)
        external ingress :8000; min replicas 0, max replicas 1 (scale to zero); $CPU vCPU / $MEMORY
        scale rule: HTTP concurrency $HTTP_CONCURRENCY
   3. Container Apps secrets on both (values never printed):
        django-secret-key, bootstrap-admin-password (generated once, then kept),
-       database-url (Neon pooled, from the GitHub production environment), registry password (ghcr PAT)
+       database-url (Neon pooled, from the GitHub production environment); no registry credentials
   4. Cloudflare DNS (zone $ZONE, DNS only / grey cloud, TTL 300):
        CNAME ${DOMAIN%%."$ZONE"} -> <app FQDN>.$LOCATION.azurecontainerapps.io
        TXT   asuid.${DOMAIN%%."$ZONE"} -> <custom domain verification ID>
        (no CLOUDFLARE_API_TOKEN: the two records are printed and the run stops here, resumable)
   5. Custom domain $DOMAIN + Azure managed certificate (free), CNAME validation
 
-Not created (zero-cost design): no container registry (ghcr.io), no managed PostgreSQL (Neon free),
+Not created (zero-cost design): no container registry (public ghcr.io package), no managed PostgreSQL (Neon free),
 no Key Vault (Container Apps secrets), no storage account (backups run in GitHub Actions).
 
 Expected monthly cost: £0.00
@@ -91,7 +90,7 @@ Free-grant assumptions (per subscription per month; check Azure Cost Management,
   - Log Analytics: first 5 GB/month ingestion and 31 days retention free; daily cap 0.1 GB (~3 GB/month).
   - Managed certificate and the consumption-only environment: no charge.
   - Neon free plan (0.5 GB storage, autosuspend after 5 min), Cloudflare free DNS, GitHub Packages and
-    Actions within the plan's included quotas: no charge.
+    Actions within the plan's included quotas: no charge (public packages have no transfer quota).
 EOF
 }
 
@@ -103,11 +102,27 @@ fi
 : "${AZ_SUBSCRIPTION:?Set AZ_SUBSCRIPTION}"
 : "${IMAGE:?Set IMAGE to the ghcr.io image to deploy}"
 : "${DATABASE_URL:?Set DATABASE_URL to the Neon pooled connection string}"
-: "${GHCR_USERNAME:?Set GHCR_USERNAME}"
-: "${GHCR_PULL_TOKEN:?Set GHCR_PULL_TOKEN (classic PAT, read:packages)}"
 mask "$DATABASE_URL"
-mask "$GHCR_PULL_TOKEN"
 case "$DATABASE_URL" in *sslmode=require*) ;; *) die "DATABASE_URL must include sslmode=require" ;; esac
+
+# The app pulls the image anonymously, so the ghcr.io package must be public. Check before touching
+# Azure, so a private package fails here with instructions instead of as a stuck revision.
+check_public_image() {
+  local ref="${IMAGE#ghcr.io/}" repo tag token code
+  [ "$ref" != "$IMAGE" ] || die "IMAGE must be a ghcr.io image (got $IMAGE)"
+  repo="${ref%:*}"; tag="${ref##*:}"
+  [ "$repo" != "$ref" ] || die "IMAGE must include a tag (got $IMAGE)"
+  token="$(curl -fsS "https://ghcr.io/token?scope=repository:$repo:pull" 2>/dev/null \
+    | sed -n 's/.*"token":"\([^"]*\)".*/\1/p' || true)"
+  code="$(curl -sS -o /dev/null -w '%{http_code}' -I -H "Authorization: Bearer $token" \
+    -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' \
+    "https://ghcr.io/v2/$repo/manifests/$tag" || true)"
+  [ "$code" = 200 ] || die "ghcr.io/$repo:$tag cannot be pulled anonymously (HTTP ${code:-none}). Make the package public once:
+  https://github.com/users/${repo%%/*}/packages/container/$(printf '%s' "${repo#*/}" | sed 's|/|%2F|g')/settings
+  -> Danger Zone -> Change visibility -> Public (DEPLOY.md, 'What Temitope does once'), then re-run the deploy."
+}
+log "Checking $IMAGE is publicly pullable"
+check_public_image
 
 wait_for_job() {  # job name, execution name
   local status attempt
@@ -183,18 +198,19 @@ if [ -n "${SENTRY_DSN:-}" ]; then
   ENV_VARS+=(SENTRY_DSN=secretref:sentry-dsn)
 fi
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)
-REGISTRY_ARGS=(--registry-server "$REGISTRY" --registry-username "$GHCR_USERNAME" --registry-password "$GHCR_PULL_TOKEN")
 
 log "Release job $RELEASE_JOB (migrations run before the app takes the new image)"
 if [ "$JOB_EXISTS" = 0 ]; then
   quiet az containerapp job create -n "$RELEASE_JOB" -g "$RG" --environment "$CAE" \
     --trigger-type Manual --replica-timeout 900 --replica-retry-limit 0 --parallelism 1 --replica-completion-count 1 \
-    --image "$IMAGE" "${REGISTRY_ARGS[@]}" --cpu "$CPU" --memory "$MEMORY" --command /app/bin/release.sh \
+    --image "$IMAGE" --cpu "$CPU" --memory "$MEMORY" --command /app/bin/release.sh \
     --secrets "${SECRETS[@]}" --env-vars "${JOB_ENV[@]}"
 else
   quiet az containerapp job secret set -n "$RELEASE_JOB" -g "$RG" --secrets "${SECRETS[@]}"
-  quiet az containerapp job registry set -n "$RELEASE_JOB" -g "$RG" --server "$REGISTRY" \
-    --username "$GHCR_USERNAME" --password "$GHCR_PULL_TOKEN"
+  # Public image: drop any ghcr.io credential left from the earlier private-package setup.
+  if exists az containerapp job registry show -n "$RELEASE_JOB" -g "$RG" --server ghcr.io; then
+    quiet az containerapp job registry remove -n "$RELEASE_JOB" -g "$RG" --server ghcr.io
+  fi
   quiet az containerapp job update -n "$RELEASE_JOB" -g "$RG" --image "$IMAGE" --set-env-vars "${JOB_ENV[@]}"
 fi
 EXECUTION="$(az containerapp job start -n "$RELEASE_JOB" -g "$RG" --query name -o tsv --only-show-errors)"
@@ -204,13 +220,14 @@ log "Container app $APP (scale to zero, $CPU vCPU / $MEMORY, max 1 replica)"
 SCALE_ARGS=(--min-replicas 0 --max-replicas 1 --cpu "$CPU" --memory "$MEMORY"
   --scale-rule-name http-concurrency --scale-rule-type http --scale-rule-http-concurrency "$HTTP_CONCURRENCY")
 if [ "$APP_EXISTS" = 0 ]; then
-  quiet az containerapp create -n "$APP" -g "$RG" --environment "$CAE" --image "$IMAGE" "${REGISTRY_ARGS[@]}" \
+  quiet az containerapp create -n "$APP" -g "$RG" --environment "$CAE" --image "$IMAGE" \
     --target-port 8000 --ingress external --revisions-mode single "${SCALE_ARGS[@]}" \
     --secrets "${SECRETS[@]}" --env-vars "${ENV_VARS[@]}"
 else
   quiet az containerapp secret set -n "$APP" -g "$RG" --secrets "${SECRETS[@]}"
-  quiet az containerapp registry set -n "$APP" -g "$RG" --server "$REGISTRY" \
-    --username "$GHCR_USERNAME" --password "$GHCR_PULL_TOKEN"
+  if exists az containerapp registry show -n "$APP" -g "$RG" --server ghcr.io; then
+    quiet az containerapp registry remove -n "$APP" -g "$RG" --server ghcr.io
+  fi
   quiet az containerapp update -n "$APP" -g "$RG" --image "$IMAGE" "${SCALE_ARGS[@]}" --set-env-vars "${ENV_VARS[@]}"
 fi
 FQDN="$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv)"

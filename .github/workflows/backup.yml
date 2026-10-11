@@ -1,8 +1,8 @@
 name: Super Admin backup
 # Daily logical backup of the Super Admin's Neon database (02:00 UTC), kept 14 days as a workflow
 # artifact (free). Uses the "backup" environment, which has no required reviewers so the schedule is
-# never held for approval; it holds DATABASE_URL (ideally a read-only Neon role) and, optionally,
-# BACKUP_PASSPHRASE to encrypt the dump. Scheduled runs only start once this file is on main.
+# never held for approval; it holds DATABASE_URL (the read-only backup_reader role, DEPLOY.md §6.1)
+# and, optionally, BACKUP_PASSPHRASE to encrypt the dump. Scheduled runs only start once this file is on main.
 # Restore steps: superadmin/docs/DEPLOY.md §6.
 on:
   schedule:

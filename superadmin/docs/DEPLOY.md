@@ -6,7 +6,7 @@ Target: **https://admin.vitalos.co.uk**. Expected cost: **£0.00 per month.**
 | ---------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | App              | Azure Container Apps, consumption plan, UK South, scale to zero            | Inside the monthly Container Apps free grant                     |
 | Database         | Neon PostgreSQL 17, free plan, AWS eu-west-2 (London)                      | Neon free plan                                                   |
-| Image            | GitHub Container Registry (ghcr.io), private package                       | GitHub Packages included quota (3 versions kept)                 |
+| Image            | GitHub Container Registry, public package `vitalos-platform/superadmin`     | Public packages: free storage and transfer, no pull token        |
 | DNS              | Cloudflare free plan, `admin` CNAME (DNS only)                             | Cloudflare free                                                  |
 | TLS              | Azure Container Apps managed certificate                                   | No charge                                                        |
 | Secrets          | Container Apps secrets                                                     | No charge (no Key Vault)                                         |
@@ -29,15 +29,14 @@ The real deploy is the "What Temitope does once" checklist below.
 ## What Temitope does once
 
 1. **Neon.** At https://neon.tech, create a free project named `vitalos-superadmin`, with region **AWS Europe West 2 (London)** and **PostgreSQL 17**. On the dashboard, open **Connect**, tick **Connection pooling**, and copy the connection string. Its host contains `-pooler` and it ends in `?sslmode=require`. That is `DATABASE_URL`.
-   - Recommended, for backups: **Roles → New role** `backup_reader`. In the SQL editor, run `GRANT pg_read_all_data TO backup_reader;`. Then copy that role's connection string as the backup `DATABASE_URL` in step 4.
+   - Recommended, for backups: create the read-only role `backup_reader` with the SQL in §6.1, and use its connection string as the backup `DATABASE_URL` in step 4.
 2. **Cloudflare.** Confirm vitalos.co.uk is active on Cloudflare's free plan: `dig +short NS vitalos.co.uk` shows `*.ns.cloudflare.com`. If it doesn't, add the site in Cloudflare and change the nameservers at the registrar first. Then create a token under **My Profile → API Tokens → Create Token → "Edit zone DNS"**, with **Zone Resources: Include → Specific zone → vitalos.co.uk**. That is `CLOUDFLARE_API_TOKEN`.
 3. **Azure.** Run the §2.1 one-time setup as subscription Owner. A card on file is required, but nothing is charged within the free grant.
 4. **GitHub.** Go to **Settings → Environments**.
-   - `production`: add yourself as a **required reviewer**. Add the secrets `DATABASE_URL` (step 1), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1), and `GHCR_PULL_TOKEN`. Optionally add `SENTRY_DSN`.
-     - `GHCR_PULL_TOKEN` is a classic PAT with only the **read:packages** scope (**Settings → Developer settings → Personal access tokens (classic)**), with a 1-year expiry and a calendar reminder.
-     - If the PAT owner isn't the repository owner, also add the variable `GHCR_USERNAME`.
-   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string, or the same one as production). Optionally add `BACKUP_PASSPHRASE` to encrypt dumps; recommended.
-5. **Deploy.** Merge PR #50. Open **Actions → Super Admin deploy → Run workflow** on `main`, type `DEPLOY`, tick **smoke test** (first run only), and approve the `production` gate.
+   - `production`: add yourself as a **required reviewer**. Add the secrets `DATABASE_URL` (step 1), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1). Optionally add `SENTRY_DSN`. No registry token is needed: the image is public.
+   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production). Optionally add `BACKUP_PASSPHRASE` to encrypt dumps; recommended.
+5. **Deploy.** Merge PR #50. Open **Actions → Super Admin deploy → Run workflow** on `main`, type `DEPLOY`, and tick **smoke test** (first run only).
+6. **Make the image public (first run only).** The build job creates the package `vitalos-platform/superadmin` on ghcr.io as private, which GitHub always does for a new package, and the API can't change it. While the deploy job waits for your approval, open https://github.com/users/Isaacpyo/packages/container/vitalos-platform%2Fsuperadmin/settings and go to **Danger Zone → Change visibility → Public**. Then approve the `production` gate. If you approve first, the deploy stops before touching Azure with the same link; set the package to Public and use **Re-run failed jobs**. The package stays public for every later deploy.
 
 The **plan** job prints everything it will create and the expected cost (£0.00) before anything changes. The run ends when https://admin.vitalos.co.uk answers with a valid certificate, then the live smoke test runs. Without `CLOUDFLARE_API_TOKEN`, the run prints two DNS records and stops successfully. Create the records, then run the workflow again; it carries on from the DNS step.
 
@@ -67,7 +66,6 @@ All secrets are **Container Apps secrets**, referenced by environment variables 
 | `django-secret-key`        | `DJANGO_SECRET_KEY`        | `openssl rand` in the workflow on first deploy; kept afterwards             |
 | `bootstrap-admin-password` | `BOOTSTRAP_ADMIN_PASSWORD` | `openssl rand` on first deploy; kept. Env var only on the release job      |
 | `database-url`             | `DATABASE_URL`             | GitHub `production` secret (Neon pooled); re-applied every deploy          |
-| registry password          | (none; image pull)         | GitHub `production` secret `GHCR_PULL_TOKEN`; re-applied every deploy      |
 | `sentry-dsn` (optional)    | `SENTRY_DSN`               | GitHub `production` secret                                                 |
 
 Plain environment variables: `DJANGO_SETTINGS_MODULE=config.settings.prod`, `ALLOWED_HOSTS=admin.vitalos.co.uk`, `CSRF_TRUSTED_ORIGINS=https://admin.vitalos.co.uk`, `SECURE_SSL_REDIRECT=True`, `TRUSTED_PROXY_COUNT=1`, `APP_ENVIRONMENT=production`, `LOG_FORMAT=json` and `WEB_CONCURRENCY=2`. The release job also gets `BOOTSTRAP_ADMIN_EMAIL=superadmin-owner@example.invalid`. The prod settings use `CONN_MAX_AGE=0`, connection health checks, and no server-side cursors, which suits Neon autosuspend and PgBouncer.
@@ -176,12 +174,12 @@ Turn the proxy on only **after** the first deploy has bound the domain and issue
 
 ## 5. Redeploy and roll back
 
-**Redeploy:** run **Super Admin deploy** again from the commit you want. It builds `ghcr.io/<owner>/vitalos-superadmin:<sha>` and runs the release job (migrations first). Then it updates the app. Secrets and the domain binding are kept, and the 3 newest images are retained.
+**Redeploy:** run **Super Admin deploy** again from the commit you want. It builds `ghcr.io/<owner>/vitalos-platform/superadmin:<sha>` and runs the release job (migrations first). Then it updates the app. Secrets and the domain binding are kept, and the 3 newest images are retained.
 
 **Roll back the code** to one of the 3 retained images:
 
 ```sh
-az containerapp update -n superadmin -g rg-vitalos-superadmin --image ghcr.io/isaacpyo/vitalos-superadmin:<previous sha>
+az containerapp update -n superadmin -g rg-vitalos-superadmin --image ghcr.io/isaacpyo/vitalos-platform/superadmin:<previous sha>
 ```
 
 Migrations only move forward. They are additive in this project. If a migration must be undone, restore the database (§6). Never drop tables by hand.
@@ -217,6 +215,43 @@ az containerapp secret set -n superadmin -g rg-vitalos-superadmin --secrets data
 
 followed by a revision restart.
 
+### 6.1 Read-only backup role (Neon)
+
+The backup workflow only needs to read. Give it its own role so that a leaked backup secret can't change or delete data.
+
+1. Generate the password locally: `openssl rand -hex 24`. Hex needs no URL escaping, and it is well above Neon's minimum strength. Don't paste it anywhere except the SQL below and the `backup` secret.
+2. In the Neon console, open **SQL Editor**. Select database **`neondb`** with role **`neondb_owner`**, which is the role that owns the app's tables because migrations run as it. Then run:
+
+```sql
+-- Read-only role for the daily backup. Run once in the Neon SQL editor, connected to neondb as neondb_owner.
+CREATE ROLE backup_reader WITH LOGIN PASSWORD '<paste the openssl rand -hex 24 value>' CONNECTION LIMIT 2;
+ALTER ROLE backup_reader SET default_transaction_read_only = on;
+GRANT CONNECT ON DATABASE neondb TO backup_reader;
+GRANT USAGE ON SCHEMA public TO backup_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_reader;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO backup_reader;
+-- Tables and sequences that later migrations create (as neondb_owner) are readable too.
+ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public GRANT SELECT ON TABLES TO backup_reader;
+ALTER DEFAULT PRIVILEGES FOR ROLE neondb_owner IN SCHEMA public GRANT SELECT ON SEQUENCES TO backup_reader;
+```
+
+3. Set the GitHub `backup` environment secret `DATABASE_URL` to:
+
+   `postgresql://backup_reader:<password>@<endpoint host>/neondb?sslmode=require`
+
+   Copy `<endpoint host>` from the production connection string. Either the pooled (`-pooler`) host or the direct host works, because the workflow switches to the direct host for `pg_dump`.
+4. Run **Actions → Super Admin backup → Run workflow** once and check that it uploads an artifact.
+
+If the app's tables are owned by a role other than `neondb_owner`, use that role's name in both `ALTER DEFAULT PRIVILEGES` lines and run the SQL as that role. Check the owner with `SELECT DISTINCT tableowner FROM pg_tables WHERE schemaname = 'public';`.
+
+Rotate the password with `ALTER ROLE backup_reader PASSWORD '<new>';`, then update the secret. Remove the role with `DROP OWNED BY backup_reader; DROP ROLE backup_reader;`. `DROP OWNED` here revokes only its grants, because it owns nothing.
+
+This SQL was checked against PostgreSQL 17 set up like Neon, with `neondb` owned by `neondb_owner` and `CREATEROLE` on that role:
+
+- `pg_dump --no-owner --no-privileges` as `backup_reader` dumps every table, and the dump restores cleanly.
+- A table created afterwards by `neondb_owner` is included in the next dump.
+- `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE` and `CREATE TABLE` are refused, even after `SET default_transaction_read_only = off`.
+
 ## 7. Operations
 
 ```sh
@@ -227,11 +262,10 @@ az containerapp job execution list -n superadmin-release -g rg-vitalos-superadmi
 - **Errors:** every response carries `X-Request-ID`; search for it in Log Analytics. Set `SENTRY_DSN` in the `production` environment and redeploy to report errors; no personal data is sent.
 - **Rotating secrets:**
   - Database: change the role password in Neon, update `DATABASE_URL`, and redeploy.
-  - Pull token: create a new PAT, update `GHCR_PULL_TOKEN`, and redeploy.
   - Django key: `az containerapp secret set ... --secrets django-secret-key=<new>` on both the app and the job. This signs everyone out.
 - **Staying at £0:**
   - Do not add an external uptime monitor. `/healthz/` touches the database and would keep Neon and the app awake.
-  - If a cold start ever fails to pull the image, check GitHub **Settings → Billing → Packages**. Private-package transfer on GitHub Free is 1 GB/month (about 10 cold pulls). Make the package public, or move to a paid tier (PHASE2.md).
+  - The image is public, so cold-start pulls have no transfer quota and need no token. Keep it public: if it is made private again, deploys stop at the pull check, and running replicas fail their next cold start.
 - **GitHub Actions minutes:** deploys and the daily backup run on the account's Actions quota (2,000 minutes/month for private repositories on GitHub Free). When the quota or spending limit is exhausted, jobs fail with "spending limit needs to be increased", and **backups stop**. Check **GitHub → Settings → Billing → Actions** monthly, and watch the backup workflow's run history.
 - **Lost authenticator:** a superuser deletes the person's TOTP device in `/django-admin/`, and they enrol again at next sign-in.
 

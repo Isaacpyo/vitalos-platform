@@ -11,6 +11,10 @@ permissions:
   security-events: write
 jobs:
   analyze:
+    # Disabled (reported as skipped): code scanning is not enabled for this repository, so the upload
+    # step always failed. Re-enable once code scanning is on by setting the repository variable
+    # CODEQL_ENABLED=true (superadmin/docs/DECISIONS.md #48).
+    if: vars.CODEQL_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

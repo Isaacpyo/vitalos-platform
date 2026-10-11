@@ -55,10 +55,10 @@ Each integration is a provider adapter behind an interface. It uses server-side 
 
 ## Platform hardening carried over from Phase 1
 
-- **Outgrowing the free tiers.** Phase 1 runs at £0/month (DECISIONS #12–19). Move to paid tiers, or to Microsoft for Startups Founders Hub credits, when any of these happen: the £1 budget alert fires; Container Apps runtime approaches the ~200 replica-hours/month grant; cold starts become a real annoyance (set min replicas to 1); Neon nears its free storage or compute limits, or needs longer history; or the ghcr private-pull quota bites (make the package public, or pay for GitHub Packages). Each step is a settings change in `deploy.sh`, not a redesign.
+- **Outgrowing the free tiers.** Phase 1 runs at £0/month (DECISIONS #12–19). Move to paid tiers, or to Microsoft for Startups Founders Hub credits, when any of these happen: the £1 budget alert fires; Container Apps runtime approaches the ~200 replica-hours/month grant; cold starts become a real annoyance (set min replicas to 1); Neon nears its free storage or compute limits, or needs longer history. Each step is a settings change in `deploy.sh`, not a redesign.
 
 - Convert `deploy/azure/deploy.sh` to Terraform under `infra/`, as ADR-012 requires, before adding a staging environment. Add a staging environment with copied seed data only.
 - Database hardening: connect as a least-privilege application role (keeping the Neon owner role for migrations and break-glass), and use Neon IP allow-listing or private networking once on a paid tier.
 - GIN indexes on the search vectors when data volume warrants it. Track M2M history for team membership.
 - Optional WAF and rate limiting at the edge, after testing with Cloudflare (ADR-007).
-- Enable repository code scanning (CodeQL) so that the existing `analyze` job turns green.
+- Enable repository code scanning, then re-enable the CodeQL `analyze` job by setting the repository variable `CODEQL_ENABLED=true` (DECISIONS #48).

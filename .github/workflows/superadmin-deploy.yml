@@ -1,9 +1,10 @@
 name: Super Admin deploy
 # Manual production deploy of superadmin/ to Azure Container Apps (consumption plan, UK South) at zero
-# monthly cost: image on ghcr.io, Neon free PostgreSQL, Cloudflare free DNS, Azure managed TLS.
+# monthly cost: public image on ghcr.io (pulled without credentials), Neon free PostgreSQL, Cloudflare
+# free DNS, Azure managed TLS.
 # Never runs automatically. The deploy job uses the protected "production" environment (required
 # reviewer) holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC, no stored Azure keys),
-# DATABASE_URL (Neon pooled), GHCR_PULL_TOKEN and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN.
+# DATABASE_URL (Neon pooled) and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN.
 # See superadmin/docs/DEPLOY.md.
 on:
   workflow_dispatch:
@@ -48,7 +49,8 @@ jobs:
       - uses: actions/checkout@v5
       - id: image
         name: Image name
-        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vitalos-superadmin:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        # Package "vitalos-platform/superadmin", public so Container Apps pulls it without a token.
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vitalos-platform/superadmin:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -67,7 +69,7 @@ jobs:
         uses: actions/delete-package-versions@v5
         continue-on-error: true
         with:
-          package-name: vitalos-superadmin
+          package-name: vitalos-platform/superadmin
           package-type: container
           min-versions-to-keep: 3
 
@@ -94,8 +96,6 @@ jobs:
           AZ_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IMAGE: ${{ needs.build.outputs.image }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
-          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
