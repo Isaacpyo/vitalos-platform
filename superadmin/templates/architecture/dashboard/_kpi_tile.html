@@ -1,0 +1,14 @@
+{% load ui %}
+<div class="card p-4" id="kpi-{{ kpi.pk }}" data-testid="kpi-tile">
+  <div class="flex items-start justify-between gap-2">
+    <p class="text-sm font-medium">{{ kpi.name }}{% if kpi.is_headline %} <span class="muted text-xs">(headline)</span>{% endif %}</p>
+    {% if kpi.breached %}<span class="{{ 'cancelled'|badge_class }}">{% icon "alert" "h-3 w-3" %} Off target</span>{% elif kpi.latest and kpi.target is not None %}<span class="{{ 'active'|badge_class }}">On target</span>{% endif %}
+  </div>
+  <p class="mt-2 text-2xl font-semibold">{% if kpi.latest %}{{ kpi.latest.value|floatformat:"-2" }}<span class="muted ml-0.5 text-sm font-normal">{{ kpi.unit }}</span>{% else %}<span class="muted text-base font-normal">No values yet</span>{% endif %}</p>
+  <p class="muted text-xs">
+    {% if kpi.target is not None %}Target {{ kpi.target|floatformat:"-2" }}{{ kpi.unit }} ({{ kpi.get_direction_display|lower }}){% else %}No target set{% endif %}
+    {% if kpi.previous %} · Δ {{ kpi.latest|delta:kpi.previous }}{% endif %}
+    {% if kpi.latest %} · {{ kpi.latest.date|date:"j M Y" }}{% endif %}
+  </p>
+  <div class="mt-3 {% if kpi.breached %}text-rose-500{% else %}text-vitalos-blue dark:text-blue-400{% endif %}">{% sparkline kpi.recent_values kpi.target %}</div>
+</div>

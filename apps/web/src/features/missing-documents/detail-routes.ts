@@ -2,7 +2,7 @@ import type { DocKind } from "@vitalos/cms";
 
 /**
  * The dynamic detail routes whose page answers `notFound()` when the document does not exist, and
- * how each one is addressed in `ContentSource.listParams` (ADR-026). Pure and framework-free.
+ * how each one is addressed in `ContentSource.listParams` (ADR-027). Pure and framework-free.
  *
  * `fields` names the route parameters (in `listParams` terms) that identify the document;
  * `values` holds what the request supplied for them.

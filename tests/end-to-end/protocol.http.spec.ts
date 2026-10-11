@@ -86,7 +86,7 @@ test.describe("404 page", () => {
       expect(html.match(/<main[\s>]/g) ?? [], `${path} has one main landmark`).toHaveLength(1);
     }
     // A missing document on a dynamic route (unknown slug, lab type, lab asset, legal page): same
-    // status and noindex. The proxy rewrites these onto an unmatched path (ADR-026), so the 404
+    // status and noindex. The proxy rewrites these onto an unmatched path (ADR-027), so the 404
     // content is in the server HTML; not-found.nojs.spec.ts asserts it for every route family.
     for (const path of [
       "/what-we-do/no-such-practice",

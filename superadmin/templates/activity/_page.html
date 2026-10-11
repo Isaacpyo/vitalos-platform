@@ -1,0 +1,6 @@
+{% for entry in entries %}{% include "activity/_entry.html" %}{% endfor %}
+{% if next_before %}
+  <li id="activity-more" class="py-3 text-center">
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'architecture:activity' %}?{% if selected_line %}service_line={{ selected_line.slug }}&amp;{% endif %}{% if model_key %}model={{ model_key }}&amp;{% endif %}before={{ next_before|urlencode }}" hx-target="#activity-more" hx-swap="outerHTML">Load more</button>
+  </li>
+{% endif %}

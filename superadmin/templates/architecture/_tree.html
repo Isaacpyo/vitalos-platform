@@ -1,0 +1,72 @@
+{% load ui %}
+<div id="architecture-region" hx-get="{{ request.path }}{% if show_archived %}?archived=1{% endif %}" hx-trigger="vsa-changed from:body" hx-target="this" hx-swap="outerHTML">
+  <div class="mt-6 flex justify-end">
+    <a class="muted inline-flex items-center gap-2 text-sm hover:text-slate-900 dark:hover:text-white" href="?{% if not show_archived %}archived=1{% endif %}">{% icon "archive" "h-4 w-4" %} {% if show_archived %}Hide archived{% else %}Show archived{% endif %}</a>
+  </div>
+  <ol class="mt-3 space-y-4" data-testid="architecture-tree">
+    {% for line in lines %}
+      <li class="card overflow-hidden {% if line.is_archived or not line.is_active %}opacity-75{% endif %}" id="serviceline-{{ line.pk }}">
+        <div class="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4 dark:border-slate-800">
+          {% if can_manage and not line.is_archived %}
+            <div class="flex flex-col">
+              {% url 'architecture:service_line_move' line.pk 'up' as up_url %}{% url 'architecture:service_line_move' line.pk 'down' as down_url %}
+              {% include "partials/post_button.html" with url=up_url label="Move up" target=line.name icon_name="up" %}
+              {% include "partials/post_button.html" with url=down_url label="Move down" target=line.name icon_name="down" %}
+            </div>
+          {% endif %}
+          {% swatch line.colour "h-4 w-4" %}
+          <div class="min-w-0 flex-1">
+            <a href="{{ line.get_absolute_url }}" class="font-semibold hover:underline">{{ line.order }}. {{ line.name }}</a>
+            <span class="ml-2 inline-flex flex-wrap gap-1 align-middle">{% badges line.business_modes %}
+              {% if not line.is_active %}<span class="{{ 'retired'|badge_class }}">Retired</span>{% endif %}
+              {% if line.is_archived %}<span class="{{ 'cancelled'|badge_class }}">Archived</span>{% endif %}</span>
+            <p class="muted text-xs">{{ line.practices.all|length }} practices · {{ line.project_total }} projects · {{ line.member_total }} people · Owner: {{ line.owner|default:"not assigned" }}</p>
+          </div>
+          {% if can_manage %}
+            <div class="flex flex-wrap items-center gap-1">
+              {% if line.is_archived %}
+                {% url 'architecture:entity_restore' 'serviceline' line.pk as restore_url %}
+                {% include "partials/post_button.html" with url=restore_url label="Restore" target=line.name icon_name="restore" show_label=True %}
+              {% else %}
+                <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'architecture:entity_edit' 'serviceline' line.pk %}" hx-target="#modal">{% icon "edit" "h-4 w-4" %} Edit</button>
+                <form method="post" action="{% url 'architecture:service_line_active' line.pk %}" hx-post="{% url 'architecture:service_line_active' line.pk %}" hx-swap="none" {% if line.is_active %}hx-confirm="Retire {{ line.name }}? It disappears from the homepage but keeps its history."{% endif %}>
+                  {% csrf_token %}<input type="hidden" name="active" value="{% if line.is_active %}0{% else %}1{% endif %}">
+                  <button type="submit" class="btn btn-ghost btn-sm">{% if line.is_active %}Retire{% else %}Reactivate{% endif %}</button>
+                </form>
+                {% url 'architecture:entity_archive' 'serviceline' line.pk as archive_url %}
+                {% include "partials/post_button.html" with url=archive_url label="Archive" target=line.name icon_name="archive" confirm="Archive this service line? It is hidden everywhere but can be restored." %}
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        {% if line.practices.all %}
+          <ul class="grid gap-3 p-4 text-sm md:grid-cols-2">
+            {% for practice in line.practices.all %}
+              <li>
+                <a href="{{ practice.get_absolute_url }}" class="font-medium hover:underline">{{ practice.name }}</a> <span class="{{ practice.status|badge_class }}">{{ practice.get_status_display }}</span>
+                <ul class="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700">
+                  {% for solution in practice.solutions.all %}
+                    <li>{{ solution.name }}{% if solution.offers.all %}<span class="muted"> — {% for offer in solution.offers.all %}{{ offer.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}</li>
+                  {% empty %}<li class="muted text-xs">No solutions</li>{% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted p-4 text-sm">No practices yet.</p>
+        {% endif %}
+      </li>
+    {% empty %}<li class="card muted p-6 text-sm">No service lines.</li>{% endfor %}
+  </ol>
+  <section class="card mt-6 p-5">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold">Company-wide decisions</h2>
+      {% if can_manage %}<button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'architecture:entity_create' 'decision' %}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add</button>{% endif %}
+    </div>
+    <ul class="mt-2 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+      {% for decision in company_decisions %}
+        <li class="py-2"><span class="font-medium">{{ decision.title }}</span> <span class="muted text-xs">{{ decision.date|date:"j M Y" }}</span>{% if decision.rationale %}<p class="muted">{{ decision.rationale|truncatewords:30 }}</p>{% endif %}</li>
+      {% empty %}<li class="muted py-2">No company-wide decisions recorded.</li>{% endfor %}
+    </ul>
+  </section>
+</div>

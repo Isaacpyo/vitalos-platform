@@ -8,6 +8,7 @@ Private production-platform monorepo for **Vitalos: Technology Consulting, Engin
 - Stage 1 engineering build: complete on the `stage-1` integration branch, pending owner review and merge to `main`.
 - No launch gate is fully met; most remaining work is owner input (content, legal identity, provider accounts, brand approvals).
 - No production site, DNS, CMS dataset, database or deployment is changed by this repository.
+- Super Admin (`superadmin/`): Phase 1 and 1.5 built and tested; deployment to `admin.vitalos.co.uk` was pre-approved in the founder's build brief of 10 Oct 2026 (`superadmin/docs/DEPLOY.md`).
 
 Details: [`docs/delivery/stage-status.md`](docs/delivery/stage-status.md) (what exists, gates G0-G10) and [`docs/delivery/owner-decisions.md`](docs/delivery/owner-decisions.md) (what the owner must provide).
 
@@ -18,6 +19,7 @@ Details: [`docs/delivery/stage-status.md`](docs/delivery/stage-status.md) (what 
 - `apps/storybook`: private component workbench (not deployed).
 - `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, queries, fixtures, schemas), `config` (validated environment), `validation`, `security`, `observability`, `testing`.
 - `supabase`: local PostgreSQL 17 configuration, three migrations and pgTAP tests.
+- `superadmin`: internal Django Super Admin for the Vitalos company architecture (`admin.vitalos.co.uk`); see `superadmin/README.md` and ADR-026.
 - `tests`, `tooling`: Playwright, axe, budget and integration suites; check and helper scripts.
 - `infra`, `services`, `workers`: policy placeholders only; nothing is provisioned or extracted.
 

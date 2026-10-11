@@ -16,7 +16,7 @@ export async function POST(request: Request): Promise<Response> {
     secret: env.sanity.revalidateSecret,
     revalidateTag: (tag, profile) => {
       revalidateTag(tag, profile);
-      // The proxy caches the published document lists (ADR-026); a content change drops them.
+      // The proxy caches the published document lists (ADR-027); a content change drops them.
       resetMissingDocumentIndex();
     },
     log: (event, attributes) => logger.info(event, attributes),

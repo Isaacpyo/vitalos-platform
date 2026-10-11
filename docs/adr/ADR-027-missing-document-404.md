@@ -1,4 +1,4 @@
-# ADR 026 Server-rendered 404 for missing documents
+# ADR 027 Server-rendered 404 for missing documents
 
 Status: Accepted (engineering).
 

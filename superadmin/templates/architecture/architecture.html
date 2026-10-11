@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Architecture · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold">Company architecture</h1>
+      <p class="muted mt-1 text-sm">{{ company.name|default:"Vitalos" }} → Service lines → Practices → Solutions → Offers</p>
+    </div>
+    {% if can_manage %}
+      <button type="button" class="btn btn-primary" hx-get="{% url 'architecture:entity_create' 'serviceline' %}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add service line</button>
+    {% endif %}
+  </div>
+  {% include "architecture/_tree.html" %}
+{% endblock %}

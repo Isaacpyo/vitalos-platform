@@ -1,0 +1,58 @@
+{% extends "settings/_shell.html" %}
+{% load ui %}
+{% block settings_panel %}
+  <div class="grid gap-6 lg:grid-cols-2">
+    <section class="card p-6">
+      <h2 class="font-semibold">Export</h2>
+      <p class="muted mb-4 text-sm">CSV of every record you can see, including archived rows. Text cells that look like spreadsheet formulas are prefixed with an apostrophe.</p>
+      <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for resource in resources %}
+          <li class="flex items-center justify-between py-2 text-sm">
+            <span>{{ resource.label }} <span class="muted text-xs">({{ resource.columns|join:", " }})</span></span>
+            <a class="btn btn-secondary btn-sm shrink-0" href="{% url 'architecture:csv_export' resource.key %}" download>{% icon "download" "h-4 w-4" %} CSV</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+    <section class="card p-6">
+      <h2 class="font-semibold">Import</h2>
+      {% if can_import %}
+        <p class="muted mb-4 text-sm">Upload a CSV in the export format. Rows are matched on their natural key (slugs, project id, KPI + date, team email) and validated with the same rules as the app. A dry run reports what would change without saving; a real import saves only if every row is valid.</p>
+        <form method="post" enctype="multipart/form-data" action="{% url 'architecture:settings_data' %}" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_fields.html" %}
+          <button type="submit" class="btn btn-primary mt-4">{% icon "upload" "h-4 w-4" %} Validate / import</button>
+        </form>
+      {% else %}
+        <p class="muted text-sm">Only SuperAdmins can import data.</p>
+      {% endif %}
+    </section>
+  </div>
+  {% if report %}
+    <section class="card mt-6 p-6" data-testid="import-report">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="font-semibold">{% if report.dry_run %}Dry run{% else %}Import{% endif %} report · {{ report.resource }}</h2>
+        {% if report.committed %}<span class="{{ 'active'|badge_class }}">Saved</span>{% elif report.has_errors %}<span class="{{ 'cancelled'|badge_class }}">Nothing saved: fix the errors and retry</span>{% else %}<span class="{{ 'slate'|badge_class }}">Dry run: nothing saved</span>{% endif %}
+      </div>
+      {% for error in report.file_errors %}<p class="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400">{{ error }}</p>{% endfor %}
+      <dl class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+        <div><dt class="muted text-xs">Created</dt><dd class="text-lg font-semibold" data-testid="import-created">{{ report.summary.created }}</dd></div>
+        <div><dt class="muted text-xs">Updated</dt><dd class="text-lg font-semibold">{{ report.summary.updated }}</dd></div>
+        <div><dt class="muted text-xs">Unchanged</dt><dd class="text-lg font-semibold">{{ report.summary.unchanged }}</dd></div>
+        <div><dt class="muted text-xs">Errors</dt><dd class="text-lg font-semibold {% if report.summary.error %}text-rose-600{% endif %}">{{ report.summary.error }}</dd></div>
+      </dl>
+      {% if report.rows %}
+        <div class="mt-4 max-h-96 overflow-auto">
+          <table class="table-base">
+            <thead><tr><th scope="col">Line</th><th scope="col">Result</th><th scope="col">Record</th><th scope="col">Details</th></tr></thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for row in report.rows %}
+                <tr><td>{{ row.line }}</td><td><span class="{% if row.action == 'error' %}{{ 'cancelled'|badge_class }}{% elif row.action == 'unchanged' %}{{ 'slate'|badge_class }}{% else %}{{ 'active'|badge_class }}{% endif %}">{{ row.action }}</span></td><td>{{ row.label }}</td><td class="text-xs text-rose-700 dark:text-rose-300">{{ row.errors|join:" " }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+{% endblock %}

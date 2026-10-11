@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Activity · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold">Activity</h1>
+      <p class="muted mt-1 text-sm">Every change to the architecture, from the audit history.</p>
+    </div>
+    <form method="get" class="flex flex-wrap gap-2" hx-get="{% url 'architecture:activity' %}" hx-trigger="change" hx-target="#activity-list" hx-swap="outerHTML" hx-push-url="true">
+      <label class="sr-only" for="filter-line">Service line</label>
+      <select id="filter-line" name="service_line" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
+        <option value="">All service lines</option>
+        {% for line in lines %}<option value="{{ line.slug }}" {% if selected_line and selected_line.pk == line.pk %}selected{% endif %}>{{ line.name }}</option>{% endfor %}
+      </select>
+      <label class="sr-only" for="filter-model">Record type</label>
+      <select id="filter-model" name="model" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
+        <option value="">All record types</option>
+        {% for key, label in model_choices %}<option value="{{ key }}" {% if key == model_key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <noscript><button type="submit" class="btn btn-secondary">Filter</button></noscript>
+    </form>
+  </div>
+  <div class="card mt-6 px-4">
+    {% include "activity/_list.html" %}
+  </div>
+{% endblock %}

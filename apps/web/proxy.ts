@@ -18,7 +18,7 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  * Retired paths (`status: 410` rules in the redirect map, ADR-018) answer 410 Gone here; 301/308
  * redirects are applied earlier by `next.config.ts`.
  *
- * A detail URL with no document behind it is rewritten onto an unmatched path (ADR-026). Next.js
+ * A detail URL with no document behind it is rewritten onto an unmatched path (ADR-027). Next.js
  * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
  * page, which would leave visitors without JavaScript with a blank 404.
  */
@@ -50,7 +50,7 @@ export async function proxy(request: NextRequest) {
     : NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(REQUEST_ID_HEADER, requestId);
   // A rewritten 404 must never be cached by an edge or browser: the document may be published
-  // moments later (ADR-026).
+  // moments later (ADR-027).
   if (missing) response.headers.set("cache-control", "no-store");
   return response;
 }
