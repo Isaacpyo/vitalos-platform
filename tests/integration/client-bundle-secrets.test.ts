@@ -7,7 +7,12 @@ describe("client bundle secret scanner", () => {
     const names: string[] = await serverEnvNames();
     expect(names).toContain("SUPABASE_SECRET_KEY");
     expect(names).toContain("TURNSTILE_SECRET_KEY");
-    for (const email of ["EMAIL_PROVIDER", "EMAIL_PROVIDER_API_KEY", "EMAIL_FROM"]) {
+    for (const email of [
+      "EMAIL_PROVIDER",
+      "EMAIL_PROVIDER_API_KEY",
+      "RESEND_API_KEY",
+      "EMAIL_FROM",
+    ]) {
       expect(names).toContain(email);
     }
     expect(names).not.toContain("NEXT_PUBLIC_SITE_URL");

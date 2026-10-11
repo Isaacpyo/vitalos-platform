@@ -232,6 +232,30 @@ describe("production guards", () => {
     }
   });
 
+  it("accepts RESEND_API_KEY as a fallback key only for resend, with EMAIL_PROVIDER_API_KEY winning", () => {
+    const base = {
+      EMAIL_FROM: "noreply@example.invalid",
+      ENQUIRY_NOTIFICATION_TO: "ops@example.invalid",
+    };
+    const alias = parseEnv({ ...base, EMAIL_PROVIDER: "resend", RESEND_API_KEY: "alias-fixture" });
+    expect(alias.email.apiKey).toBe("alias-fixture");
+    const both = parseEnv({
+      ...base,
+      EMAIL_PROVIDER: "resend",
+      RESEND_API_KEY: "alias-fixture",
+      EMAIL_PROVIDER_API_KEY: "primary-fixture",
+    });
+    expect(both.email.apiKey).toBe("primary-fixture");
+    expect(
+      issuePaths({ ...base, EMAIL_PROVIDER: "postmark", RESEND_API_KEY: "alias-fixture" }),
+    ).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    expect(issuePaths({ ...base, EMAIL_PROVIDER: "resend" })).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    // Production still requires a key for resend; the alias satisfies it.
+    const prod = { ...production, ...base, EMAIL_PROVIDER: "resend" };
+    expect(issuePaths(prod)).toEqual(["EMAIL_PROVIDER_API_KEY"]);
+    expect(issuePaths({ ...prod, RESEND_API_KEY: "alias-fixture" })).toEqual([]);
+  });
+
   it("rejects a multi-line or malformed sender and never echoes the key in errors", () => {
     const base = {
       EMAIL_PROVIDER: "resend",

@@ -80,6 +80,8 @@ const rawSchema = z.object({
   TURNSTILE_SECRET_KEY: z.string().min(10).optional(),
   EMAIL_PROVIDER: z.enum(emailProviders).optional(),
   EMAIL_PROVIDER_API_KEY: z.string().min(1).optional(),
+  /** Fallback alias for EMAIL_PROVIDER_API_KEY, used only when EMAIL_PROVIDER=resend. Server-only. */
+  RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(3).optional(),
   ENQUIRY_NOTIFICATION_TO: z.email().optional(),
   ENQUIRY_IP_HASH_SALT: z.string().min(16).optional(),
@@ -231,7 +233,9 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
       },
       email: {
         provider: raw.EMAIL_PROVIDER ?? "none",
-        apiKey: raw.EMAIL_PROVIDER_API_KEY,
+        apiKey:
+          raw.EMAIL_PROVIDER_API_KEY ??
+          (raw.EMAIL_PROVIDER === "resend" ? raw.RESEND_API_KEY : undefined),
         from: raw.EMAIL_FROM,
       },
       enableHsts: raw.ENABLE_HSTS === "true" || raw.ENABLE_HSTS === "1",
