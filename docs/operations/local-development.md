@@ -87,7 +87,7 @@ Design-token CSS is generated too: `UPDATE_TOKENS=1 corepack pnpm --filter @vita
 | `corepack pnpm check:boundaries`          | dependency-cruiser rules (`docs/architecture/dependency-rules.md`)                                                                         |
 | `corepack pnpm check:raw-colours`         | no raw colour values outside `packages/design-tokens`                                                                                      |
 | `corepack pnpm check:cms-types`           | generated Sanity types match schema and queries (also a CI step)                                                                           |
-| `corepack pnpm check:security`            | tracked-file secret patterns and `pnpm audit --audit-level high` (not a CI step)                                                           |
+| `corepack pnpm check:security`            | tracked-file secret patterns and `pnpm audit --audit-level high` (also the blocking `audit` CI job)                                        |
 | `corepack pnpm build`                     | Turbo build; runs with no variables locally (set `NEXT_PUBLIC_SITE_URL` for any non-local deploy env)                                      |
 | `corepack pnpm storybook:build`           | Static Storybook                                                                                                                           |
 | `corepack pnpm test:e2e`                  | Playwright against a production build (`next build` and `next start` on port 3210) with fixtures, memory enquiries and Turnstile test keys |
