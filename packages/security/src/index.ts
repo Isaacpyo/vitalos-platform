@@ -1,7 +1,3 @@
-const sensitive = /token|secret|password|authorization|cookie/i;
-export const redact = (record: Record<string, unknown>) =>
-  Object.fromEntries(
-    Object.entries(record).map(([k, v]) => [k, sensitive.test(k) ? "[REDACTED]" : v]),
-  );
-export const isSafeRelativeRedirect = (value: string) =>
-  value.startsWith("/") && !value.startsWith("//") && !value.includes("\\");
+// Public entry: prefer the subpath exports (./redact, ./url, ./headers, ./csp, ./turnstile, ./rate-limit).
+export { redact } from "./redact";
+export { isSafeRelativeRedirect } from "./url";

@@ -1,6 +1,5 @@
-export interface Logger {
-  info(message: string, attributes?: Record<string, unknown>): void;
-  error(message: string, error: unknown, attributes?: Record<string, unknown>): void;
-}
-export const correlationId = (headers: Headers) =>
-  headers.get("x-request-id") ?? crypto.randomUUID();
+export { REQUEST_ID_HEADER, correlationId, createRequestId, isValidRequestId } from "./context";
+export { createLogger, serializeError } from "./logger";
+export type { Attributes, LogRecord, Logger, LoggerOptions, Severity } from "./logger";
+export { createConsoleErrorReporter, noopErrorReporter } from "./error-reporter";
+export type { ErrorContext, ErrorReporter } from "./error-reporter";

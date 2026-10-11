@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "@vitalos/design-tokens/theme.css";
+@import "@vitalos/design-tokens/tailwind-theme.css";
+
+/* Tailwind scans the shared UI package and the stories for utility classes. */
+@source "../../../packages/ui/src";
+@source "../stories";
+
+/*
+ * Provisional typefaces (Stage 7 section 15.1, pending owner confirmation): Geist Sans and Geist
+ * Mono from the `geist` package. Source Serif 4 is not bundled here (no dependency added); the
+ * serif stack falls back to a system serif in Storybook until the owner confirms the fonts.
+ * The web app loads the same families through next/font and the --font-geist-* variables.
+ */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../node_modules/geist/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2");
+}
+
+@layer base {
+  body {
+    background: var(--tone-bg);
+    color: var(--tone-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+}

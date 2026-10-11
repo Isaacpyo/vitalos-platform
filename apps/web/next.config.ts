@@ -1,3 +1,24 @@
 import type { NextConfig } from "next";
-const config: NextConfig = { poweredByHeader: false, reactStrictMode: true };
+import { readBuildEnv } from "@vitalos/config/build";
+import { getSecurityHeaders } from "./src/config/security-headers";
+import { nextRedirects } from "./src/features/redirects/next-redirects";
+
+// Validated once at build/start. Invalid production configuration (for example fixtures or the
+// memory enquiry backend in production) fails here, before anything is served.
+const buildEnv = readBuildEnv();
+
+const config: NextConfig = {
+  poweredByHeader: false,
+  reactStrictMode: true,
+  // Inline the resolved site URL so client bundles and the server agree (VERCEL_URL fallback,
+  // origin normalisation, localhost only for the local deploy env).
+  env: { NEXT_PUBLIC_SITE_URL: buildEnv.siteUrl },
+  // The enquiry form is the only Server Action. Its largest legitimate body is a 5000 character
+  // goal (up to ~20 KB as UTF-8) plus short fields, so cap action bodies well below the 1 MB
+  // default (workstream D, ADR-019).
+  experimental: { serverActions: { bodySizeLimit: "64kb" } },
+  headers: () => getSecurityHeaders(buildEnv),
+  redirects: () => nextRedirects(),
+};
+
 export default config;

@@ -12,6 +12,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@vitalos/security": "workspace:*"
+  },
   "devDependencies": {
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",

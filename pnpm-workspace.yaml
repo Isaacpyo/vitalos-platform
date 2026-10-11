@@ -8,7 +8,38 @@ allowBuilds:
   esbuild: true
   unrs-resolver: true
 
+# Advisory exception, reviewed 2026-10-10, next review 2027-01-10 (docs/security/dependency-advisories.md).
+# GHSA-vfj7-8cjw-p6xm: braces <=3.0.3, stack exhaustion on deeply nested brace patterns. Routes in the lockfile:
+#   @sanity/codegen > chokidar@3.6.0 > braces (build-time Sanity typegen watcher)
+#   @sanity/codegen > globby@11 > fast-glob > micromatch@4.0.8 > braces (build-time)
+#   eslint-config-next > @next/eslint-plugin-next > fast-glob@3.3.1 > micromatch > braces (lint-time)
+# All are build or lint time with globs we write ourselves; nothing ships to the site. There is no patched
+# release (none since 3.0.3), and overriding chokidar alone would not clear it: @sanity/codegen@8.2.0 still
+# pulls globby ^11 and chokidar ^3. NOTE: ignoreGhsas applies to every path, so a future runtime dependency
+# on braces would also be ignored until review; tests/integration/audit-exceptions.test.ts fails if braces
+# appears on any route other than the reviewed ones. The audit level stays "high"; remove this entry when fixed.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-vfj7-8cjw-p6xm
+
 overrides:
   js-yaml@<3.15.2: 3.15.2
   postcss@<8.5.18: 8.5.18
   smol-toml@<1.7.1: 1.7.1
+  # pnpm 12 cannot re-resolve sanity's `ui5` npm alias (404s on "ui5"); pin it explicitly.
+  ui5: npm:@sanity/ui@5.0.0-alpha.14
+  # motion is pinned exact (ADR-024); its own caret ranges would pull releases younger than two weeks.
+  motion@13.4.4>framer-motion: 13.4.4
+  framer-motion@13.4.4>motion-dom: 13.4.4
+  framer-motion@13.4.4>motion-utils: 13.3.0
+  motion-dom@13.4.4>motion-utils: 13.3.0
+  # Advisory fixes (docs/security/dependency-advisories.md). Selectors are as narrow as the chains allow;
+  # versions are exact patched releases.
+  "@module-federation/dts-plugin>adm-zip": 0.6.1
+  "@module-federation/dts-plugin>undici": 7.29.1
+  brace-expansion@<1.1.21: 1.1.21
+  brace-expansion@>=5.0.0 <5.0.12: 5.0.12
+  source-map-js@<1.2.2: 1.2.2
+  # Stop-gap: vitest 3 asks for tinypool ^1; the real fix is vitest 4 (follow-up).
+  vitest@3>tinypool: 2.1.2
+  next>sharp: 0.35.5

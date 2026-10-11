@@ -9,3 +9,6 @@ export const enquirySchema = z
   })
   .strict();
 export type EnquiryInput = z.infer<typeof enquirySchema>;
+
+// Enquiry contract v2 (see ./enquiry). `enquirySchema` above is the legacy v1 shape.
+export * from "./enquiry";

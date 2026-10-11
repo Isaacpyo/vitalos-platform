@@ -8,6 +8,7 @@ export default [
       "**/dist/**",
       "**/storybook-static/**",
       "tooling/scripts/*.mjs",
+      "packages/cms/src/generated/**",
     ],
   },
 ];

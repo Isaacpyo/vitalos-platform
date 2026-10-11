@@ -3,3 +3,5 @@ pnpm-lock.yaml
 storybook-static/
 playwright-report/
 test-results/
+packages/cms/src/generated/
+docs/strategy/

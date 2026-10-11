@@ -1,0 +1,234 @@
+import { absoluteUrl, brandName, routes } from "@vitalos/cms";
+import type {
+  ImageView,
+  InsightView,
+  JobView,
+  PersonView,
+  RichText,
+  SiteSettingsView,
+} from "@vitalos/cms";
+import { richTextToPlainText } from "../../lib/cms/rich-text";
+
+/**
+ * Structured data builders (ADR-018). Rules:
+ *
+ *  - Pure functions of view models; nothing is read from the environment.
+ *  - A property is emitted only when the content actually has it. Nothing is invented: no
+ *    ratings, no addresses, no logo, no sameAs, no dates, no salary, no authors.
+ *  - A builder returns `null` when the type cannot be described honestly (an Article without a
+ *    named author or date; a JobPosting that is closed, expired or has no description).
+ *
+ * Organization and WebSite use only the brand name (locked copy) and the site URL (config) when
+ * site settings are empty.
+ */
+
+export interface JsonLdNode {
+  "@context"?: "https://schema.org";
+  "@type": string;
+  [property: string]: unknown;
+}
+
+export interface JsonLdContext {
+  /** Origin of the site, no path. */
+  siteUrl: string;
+}
+
+const CONTEXT = "https://schema.org" as const;
+
+export const organizationId = (ctx: JsonLdContext): string =>
+  absoluteUrl(ctx.siteUrl, "/#organization");
+export const websiteId = (ctx: JsonLdContext): string => absoluteUrl(ctx.siteUrl, "/#website");
+
+/** Drops properties that are undefined, null or empty strings/arrays. */
+function compact<T extends Record<string, unknown>>(value: T): T {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, v]) => {
+      if (v === undefined || v === null) return false;
+      if (typeof v === "string") return v.trim() !== "";
+      if (Array.isArray(v)) return v.length > 0;
+      return true;
+    }),
+  ) as T;
+}
+
+const imageObject = (image: ImageView | undefined) =>
+  image && !image.decorative && image.url.startsWith("https://")
+    ? compact({ "@type": "ImageObject", url: image.url, width: image.width, height: image.height })
+    : undefined;
+
+const isHttps = (value: string) => URL.canParse(value) && new URL(value).protocol === "https:";
+
+/** Serialises for an inline `<script type="application/ld+json">`; `<` can never close the tag. */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContext): JsonLdNode {
+  const logo = settings.logo && isHttps(settings.logo.src) ? settings.logo : undefined;
+  const sameAs = (settings.social ?? []).map((link) => link.href).filter(isHttps);
+  return compact({
+    "@context": CONTEXT,
+    "@type": "Organization",
+    "@id": organizationId(ctx),
+    name: brandName,
+    legalName: settings.legalName,
+    url: absoluteUrl(ctx.siteUrl, routes.home()),
+    logo: logo
+      ? compact({
+          "@type": "ImageObject",
+          url: logo.src,
+          width: logo.width,
+          height: logo.height,
+        })
+      : undefined,
+    email: settings.contactEmail,
+    address: settings.registeredAddress,
+    sameAs,
+  }) as JsonLdNode;
+}
+
+export function webSiteJsonLd(ctx: JsonLdContext): JsonLdNode {
+  return {
+    "@context": CONTEXT,
+    "@type": "WebSite",
+    "@id": websiteId(ctx),
+    name: brandName,
+    url: absoluteUrl(ctx.siteUrl, routes.home()),
+    publisher: { "@id": organizationId(ctx) },
+    inLanguage: "en-GB",
+  };
+}
+
+export interface BreadcrumbItem {
+  name: string;
+  /** Site path from routes.ts. */
+  path: string;
+}
+
+/** Null for fewer than two crumbs: a single-item trail adds nothing. */
+export function breadcrumbJsonLd(
+  items: readonly BreadcrumbItem[],
+  ctx: JsonLdContext,
+): JsonLdNode | null {
+  const crumbs = items.filter((item) => item.name.trim() !== "" && item.path.startsWith("/"));
+  if (crumbs.length < 2) return null;
+  return {
+    "@context": CONTEXT,
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(ctx.siteUrl, item.path),
+    })),
+  };
+}
+
+const validDate = (value: string | undefined) =>
+  value !== undefined && !Number.isNaN(Date.parse(value)) ? value : undefined;
+
+const personRef = (author: { name?: string; title?: string; slug: string }, ctx: JsonLdContext) => {
+  const name = author.name ?? author.title;
+  if (!name) return null;
+  return { "@type": "Person", name, url: absoluteUrl(ctx.siteUrl, routes.person(author.slug)) };
+};
+
+/**
+ * Article. Requires a published date and at least one named author (Stage 10 §18); otherwise
+ * `null`. `description` is only the document summary, never generated.
+ */
+export function articleJsonLd(insight: InsightView, ctx: JsonLdContext): JsonLdNode | null {
+  const datePublished = validDate(insight.publishedAt);
+  const authors = insight.authors
+    .map((author) => personRef(author, ctx))
+    .filter((author): author is NonNullable<typeof author> => author !== null);
+  if (!datePublished || authors.length === 0) return null;
+  return compact({
+    "@context": CONTEXT,
+    "@type": "Article",
+    headline: insight.title,
+    description: insight.seo.description ?? insight.summary,
+    url: absoluteUrl(ctx.siteUrl, routes.insight(insight.slug)),
+    mainEntityOfPage: absoluteUrl(ctx.siteUrl, routes.insight(insight.slug)),
+    datePublished,
+    dateModified: validDate(insight.updatedAt),
+    author: authors,
+    publisher: { "@id": organizationId(ctx) },
+    image: imageObject(insight.seo.ogImage),
+    inLanguage: "en-GB",
+  }) as JsonLdNode;
+}
+
+/** ProfilePage with a Person. `sameAs` carries verified profile links only (view contract). */
+export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonLdNode {
+  const url = absoluteUrl(ctx.siteUrl, routes.person(person.slug));
+  return compact({
+    "@context": CONTEXT,
+    "@type": "ProfilePage",
+    url,
+    dateModified: validDate(person.updatedAt),
+    mainEntity: compact({
+      "@type": "Person",
+      "@id": `${url}#person`,
+      name: person.name,
+      jobTitle: person.role,
+      url,
+      image: imageObject(person.portrait),
+      sameAs: person.sameAs.filter(isHttps),
+      worksFor: { "@id": organizationId(ctx) },
+    }),
+  }) as JsonLdNode;
+}
+
+/** Schema.org employmentType values. Anything else is omitted rather than guessed. */
+const employmentTypes: Record<string, string> = {
+  "full-time": "FULL_TIME",
+  "full time": "FULL_TIME",
+  "part-time": "PART_TIME",
+  "part time": "PART_TIME",
+  contract: "CONTRACTOR",
+  contractor: "CONTRACTOR",
+  temporary: "TEMPORARY",
+  internship: "INTERN",
+  intern: "INTERN",
+};
+
+/**
+ * JobPosting, only for an open role that has not expired and has a description. `now` is
+ * injectable so expiry is testable. No salary, no remote claims, no direct-apply claims.
+ */
+export function jobPostingJsonLd(
+  job: JobView,
+  ctx: JsonLdContext,
+  now: Date = new Date(),
+): JsonLdNode | null {
+  if (job.status !== "open") return null;
+  const datePosted = validDate(job.datePosted);
+  if (!datePosted) return null;
+  const validThrough = validDate(job.validThrough);
+  if (validThrough && Date.parse(validThrough) < now.getTime()) return null;
+  const description = job.description ? richTextToPlainText(job.description as RichText) : "";
+  // Google requires a location; a posting without one is not described rather than half-described.
+  if (description === "" || !job.location?.trim()) return null;
+  return compact({
+    "@context": CONTEXT,
+    "@type": "JobPosting",
+    title: job.title,
+    description,
+    datePosted,
+    validThrough,
+    employmentType: job.employmentType
+      ? employmentTypes[job.employmentType.toLowerCase()]
+      : undefined,
+    hiringOrganization: {
+      "@type": "Organization",
+      name: brandName,
+      url: absoluteUrl(ctx.siteUrl, routes.home()),
+    },
+    jobLocation: { "@type": "Place", address: job.location },
+    url: absoluteUrl(ctx.siteUrl, routes.job(job.slug)),
+  }) as JsonLdNode;
+}
