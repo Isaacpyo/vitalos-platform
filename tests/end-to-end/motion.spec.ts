@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { waitForSettledLayout } from "../support/overflow";
 
 /**
  * Motion and navigation enhancements (ADR-024), in a real browser against the production build.
@@ -306,6 +307,9 @@ test.describe("header", () => {
     const before = await anchorTop();
     await page.evaluate(() => window.scrollTo(0, 400));
     await expect(header).toHaveAttribute("data-condensed", "");
+    // The bar and the margin under it change over the reveal duration; measure the resting state,
+    // not the first frame after the attribute flips.
+    await waitForSettledLayout(page);
     const short = (await header.boundingBox())?.height ?? 0;
     expect(short).toBeLessThan(tall);
     // At most a third shorter, and still taller than a 44px target.
