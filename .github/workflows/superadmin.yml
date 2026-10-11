@@ -56,7 +56,8 @@ jobs:
           ALLOWED_HOSTS: admin.vitalos.co.uk
           CSRF_TRUSTED_ORIGINS: https://admin.vitalos.co.uk
         run: |
-          export DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          DJANGO_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          export DJANGO_SECRET_KEY
           python manage.py check --deploy --fail-level WARNING
 
   security:
@@ -113,7 +114,7 @@ jobs:
           docker run --rm --network host --env-file "$RUNNER_TEMP/app.env" vitalos-superadmin:ci bin/release.sh
           docker run --rm --network host --env-file "$RUNNER_TEMP/app.env" vitalos-superadmin:ci bin/release.sh
           docker run -d --name web --network host --env-file "$RUNNER_TEMP/app.env" vitalos-superadmin:ci
-          for attempt in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz/ && break; sleep 1; done
+          for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/healthz/ && break; sleep 1; done
           curl -fsS -o /dev/null http://localhost:8000/login/
       - name: Backup job writes a restorable dump
         run: |
@@ -129,7 +130,8 @@ jobs:
         run: |
           export SMOKE_BASE_URL=http://localhost:8000
           export SMOKE_EMAIL=ci-admin@example.test
-          export SMOKE_PASSWORD="$(grep '^BOOTSTRAP_ADMIN_PASSWORD=' "$RUNNER_TEMP/app.env" | cut -d= -f2-)"
+          SMOKE_PASSWORD="$(grep '^BOOTSTRAP_ADMIN_PASSWORD=' "$RUNNER_TEMP/app.env" | cut -d= -f2-)"
+          export SMOKE_PASSWORD
           python e2e/smoke.py --screenshots "$RUNNER_TEMP/screenshots"
       - name: Container logs
         if: always()

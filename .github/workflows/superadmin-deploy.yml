@@ -1,8 +1,10 @@
 name: Super Admin deploy
-# Manual production deploy of superadmin/ to Azure Container Apps (UK South) and admin.vitalos.co.uk.
-# Never runs automatically. Requires the "production" GitHub environment (with required reviewers)
-# holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC federated credential) and
-# CLOUDFLARE_API_TOKEN secrets plus the AZURE_DEPLOYER_OBJECT_ID variable. See superadmin/docs/DEPLOY.md.
+# Manual production deploy of superadmin/ to Azure Container Apps (consumption plan, UK South) at zero
+# monthly cost: image on ghcr.io, Neon free PostgreSQL, Cloudflare free DNS, Azure managed TLS.
+# Never runs automatically. The deploy job uses the protected "production" environment (required
+# reviewer) holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC, no stored Azure keys),
+# DATABASE_URL (Neon pooled), GHCR_PULL_TOKEN and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN.
+# See superadmin/docs/DEPLOY.md.
 on:
   workflow_dispatch:
     inputs:
@@ -17,15 +19,65 @@ on:
         default: false
 permissions:
   contents: read
-  id-token: write
 concurrency:
   group: superadmin-deploy
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  plan:
+    name: Plan (resources and expected cost)
     if: inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Print the deployment plan
+        run: |
+          superadmin/deploy/azure/deploy.sh --dry-run | tee plan.txt
+          { echo '```'; cat plan.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: Build and push image to ghcr.io
+    needs: plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: image
+        name: Image name
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vitalos-superadmin:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: superadmin
+          push: true
+          tags: ${{ steps.image.outputs.image }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          # No attestation manifests: they add package versions that count against storage.
+          provenance: false
+      - name: Keep only the 3 newest image versions (GitHub Packages free storage)
+        uses: actions/delete-package-versions@v5
+        continue-on-error: true
+        with:
+          package-name: vitalos-superadmin
+          package-type: container
+          min-versions-to-keep: 3
+
+  deploy:
+    name: Deploy to Azure Container Apps
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     environment:
       name: production
       url: https://admin.vitalos.co.uk
@@ -36,31 +88,41 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: docker/setup-buildx-action@v3
-      - name: Provision and deploy
+      - name: Deploy (secrets generated here, written only to Container Apps secrets)
+        id: deploy
         env:
           AZ_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_DEPLOYER_OBJECT_ID: ${{ vars.AZURE_DEPLOYER_OBJECT_ID }}
+          IMAGE: ${{ needs.build.outputs.image }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GHCR_USERNAME: ${{ vars.GHCR_USERNAME || github.repository_owner }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: superadmin/deploy/azure/deploy.sh
+        run: |
+          # Used only if the app has no such secret yet; existing values are always kept.
+          NEW_DJANGO_SECRET_KEY="$(openssl rand -base64 64 | tr -d '\n')"
+          NEW_BOOTSTRAP_ADMIN_PASSWORD="$(openssl rand -base64 30 | tr -d '\n/+=')"
+          echo "::add-mask::$NEW_DJANGO_SECRET_KEY"
+          echo "::add-mask::$NEW_BOOTSTRAP_ADMIN_PASSWORD"
+          export NEW_DJANGO_SECRET_KEY NEW_BOOTSTRAP_ADMIN_PASSWORD
+          superadmin/deploy/azure/deploy.sh
       - uses: actions/setup-python@v6
-        if: inputs.smoke_test
+        if: inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         with:
           python-version: "3.12"
       - name: Live smoke test
-        if: inputs.smoke_test
+        if: inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         working-directory: superadmin
         run: |
-          password="$(az keyvault secret show --vault-name "${AZ_KEY_VAULT:-kv-vitalossa}" --name bootstrap-admin-password --query value -o tsv)"
+          password="$(az containerapp secret show -n superadmin -g rg-vitalos-superadmin \
+            --secret-name bootstrap-admin-password --query value -o tsv)"
           echo "::add-mask::$password"
           pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
           SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL=superadmin-owner@example.invalid SMOKE_PASSWORD="$password" \
             python e2e/smoke.py --skip-if-enrolled --screenshots "$RUNNER_TEMP/screenshots"
       - name: Upload screenshots
-        if: always() && inputs.smoke_test
+        if: always() && inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: superadmin-live-smoke-screenshots

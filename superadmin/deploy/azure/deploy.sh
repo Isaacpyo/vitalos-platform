@@ -1,121 +1,113 @@
 #!/usr/bin/env bash
-# Provision (idempotently) and deploy the Vitalos Super Admin to Azure Container Apps, UK South,
-# then point admin.vitalos.co.uk at it with a managed TLS certificate.
+# Deploy the Vitalos Super Admin to Azure Container Apps (consumption plan, UK South) at zero monthly
+# cost: scale-to-zero inside the Container Apps free grant, Neon free-tier PostgreSQL, the image on
+# ghcr.io, Cloudflare free DNS and an Azure managed (free) TLS certificate for admin.vitalos.co.uk.
 #
-# Safe to re-run: existing resources are reused, secrets are generated only when missing, data is
-# never deleted. Secret values are generated into files with mode 0600 and never printed.
+#   superadmin/deploy/azure/deploy.sh --dry-run   # print the plan and expected cost; calls nothing
+#   superadmin/deploy/azure/deploy.sh             # deploy (normally run by the "Super Admin deploy" workflow)
 #
-# Requirements: bash, az CLI >= 2.70 logged in to the Vitalos subscription with Owner (or
-# Contributor + User Access Administrator) on the target resource group, docker (BuildKit),
-# python3, curl. Optional: CLOUDFLARE_API_TOKEN (Zone:DNS:Edit on vitalos.co.uk) to create the
-# DNS records automatically; without it the script prints the two records and stops.
+# Idempotent and resumable: existing resources are updated, never deleted, and the Django secret key
+# and bootstrap password are generated once and then kept. Secret values are never printed (and are
+# registered with the GitHub Actions log masker when running in Actions).
 #
-# Usage:  AZ_SUBSCRIPTION=<subscription id> superadmin/deploy/azure/deploy.sh
-#         (see superadmin/docs/DEPLOY.md for every variable and the manual equivalent)
+# Prerequisites (DEPLOY.md §2.1, done once by the subscription Owner): resource group, consumption-only
+# Container Apps environment and Log Analytics workspace already exist; the deploying identity has
+# Contributor on the resource group.
+#
+# Environment for a real run:
+#   AZ_SUBSCRIPTION            Azure subscription ID
+#   IMAGE                      image to deploy, e.g. ghcr.io/isaacpyo/vitalos-superadmin:<git sha>
+#   DATABASE_URL               Neon pooled connection string (sslmode=require)
+#   GHCR_USERNAME, GHCR_PULL_TOKEN   GitHub user + classic PAT with read:packages, for image pulls
+#   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
+# Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
+# run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN, BOOTSTRAP_ADMIN_EMAIL.
 set -euo pipefail
 
-: "${AZ_SUBSCRIPTION:?Set AZ_SUBSCRIPTION to the Vitalos Azure subscription ID}"
+DRY_RUN=0
+case "${1:-}" in
+  --dry-run) DRY_RUN=1 ;;
+  "") ;;
+  *) echo "usage: $0 [--dry-run]" >&2; exit 2 ;;
+esac
+
 LOCATION="${AZ_LOCATION:-uksouth}"
-PREFIX="${AZ_NAME_PREFIX:-vitalossa}"             # lower-case letters/digits; drives global names
-RG="${AZ_RESOURCE_GROUP:-rg-vitalos-superadmin-prod}"
-ACR="${AZ_ACR:-${PREFIX}acr}"                      # globally unique, 5-50 alphanumerics
-KV="${AZ_KEY_VAULT:-kv-${PREFIX}}"                 # globally unique, 3-24 characters
-PG="${AZ_POSTGRES:-psql-${PREFIX}}"                # globally unique server name
-PG_DB="superadmin"
-PG_ADMIN="vitalosadmin"
-STORAGE="${AZ_STORAGE:-st${PREFIX}backup}"         # globally unique, 3-24 lower-case alphanumerics
-LOG_WS="log-${PREFIX}"
-CAE="cae-${PREFIX}"
-IDENTITY="id-${PREFIX}"
+RG="${AZ_RESOURCE_GROUP:-rg-vitalos-superadmin}"
+CAE="${AZ_CONTAINERAPPS_ENV:-cae-vitalos-superadmin}"
+LOG_WS="${AZ_LOG_WORKSPACE:-log-vitalos-superadmin}"
 APP="${AZ_APP:-superadmin}"
 RELEASE_JOB="${APP}-release"
-BACKUP_JOB="${APP}-backup"
 DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
 ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:-superadmin-owner@example.invalid}"
-SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TAG="${IMAGE_TAG:-$(git -C "$SRC_DIR" rev-parse --short=12 HEAD)}"
-
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
-umask 077
+REGISTRY="ghcr.io"
+CPU="0.25"
+MEMORY="0.5Gi"
+HTTP_CONCURRENCY="50"
 
 log() { printf '\n==> %s\n' "$*"; }
-# In GitHub Actions, register values with the log masker so they can never appear in job output.
-mask() { if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "$1" ]; then printf '::add-mask::%s\n' "$1"; fi; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 quiet() { "$@" --output none --only-show-errors; }
 exists() { "$@" --output none --only-show-errors >/dev/null 2>&1; }
+# In GitHub Actions, register values with the log masker so they can never appear in job output.
+mask() { if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "$1" ]; then printf '::add-mask::%s\n' "$1"; fi; }
+output() { if [ -n "${GITHUB_OUTPUT:-}" ]; then printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; fi; }
 
-# Write a random secret (no trailing newline) to a 0600 file and print the file path.
-secret_file() {
-  local path="$WORK/$1"
-  python3 - "$2" > "$path" <<'PY'
-import secrets, sys
-length = int(sys.argv[1])
-while True:
-    value = secrets.token_urlsafe(length)
-    # Azure PostgreSQL passwords need three character classes; retry until upper, lower and digit.
-    if any(c.isupper() for c in value) and any(c.islower() for c in value) and any(c.isdigit() for c in value):
-        sys.stdout.write(value)
-        break
-PY
-  printf '%s' "$path"
+plan() {
+  cat <<EOF
+Vitalos Super Admin: deployment plan (dry run, nothing is created or changed)
+
+Subscription        ${AZ_SUBSCRIPTION:-<AZURE_SUBSCRIPTION_ID from the production environment>}
+Region              $LOCATION
+Resource group      $RG   (exists: created once in DEPLOY.md §2.1)
+Log Analytics       $LOG_WS   (exists: §2.1, daily cap 0.1 GB, 31-day retention)
+Container Apps env  $CAE   (exists: §2.1, consumption only, no workload profiles)
+
+Will create or update:
+  1. Container Apps job  $RELEASE_JOB
+       manual trigger; runs /app/bin/release.sh (migrate, seed_architecture, create_superadmin,
+       each retried 3x with backoff for Neon cold starts); $CPU vCPU / $MEMORY; runs for seconds per deploy
+  2. Container app       $APP
+       image ${IMAGE:-ghcr.io/<owner>/vitalos-superadmin:<git sha>} pulled from $REGISTRY with a read:packages PAT
+       external ingress :8000; min replicas 0, max replicas 1 (scale to zero); $CPU vCPU / $MEMORY
+       scale rule: HTTP concurrency $HTTP_CONCURRENCY
+  3. Container Apps secrets on both (values never printed):
+       django-secret-key, bootstrap-admin-password (generated once, then kept),
+       database-url (Neon pooled, from the GitHub production environment), registry password (ghcr PAT)
+  4. Cloudflare DNS (zone $ZONE, DNS only / grey cloud, TTL 300):
+       CNAME ${DOMAIN%%."$ZONE"} -> <app FQDN>.$LOCATION.azurecontainerapps.io
+       TXT   asuid.${DOMAIN%%."$ZONE"} -> <custom domain verification ID>
+       (no CLOUDFLARE_API_TOKEN: the two records are printed and the run stops here, resumable)
+  5. Custom domain $DOMAIN + Azure managed certificate (free), CNAME validation
+
+Not created (zero-cost design): no container registry (ghcr.io), no managed PostgreSQL (Neon free),
+no Key Vault (Container Apps secrets), no storage account (backups run in GitHub Actions).
+
+Expected monthly cost: £0.00
+Free-grant assumptions (per subscription per month; check Azure Cost Management, budget alert £1):
+  - Container Apps consumption: 180,000 vCPU-s, 360,000 GiB-s and 2 million requests free.
+    One $CPU vCPU / $MEMORY replica uses both grants at the same rate: 180,000 / $CPU = 720,000 s ~= 200 h/month.
+    Scaled to zero when idle, an internal tool stays far below that; release-job runs are seconds.
+  - Log Analytics: first 5 GB/month ingestion and 31 days retention free; daily cap 0.1 GB (~3 GB/month).
+  - Managed certificate and the consumption-only environment: no charge.
+  - Neon free plan (0.5 GB storage, autosuspend after 5 min), Cloudflare free DNS, GitHub Packages and
+    Actions within the plan's included quotas: no charge.
+EOF
 }
 
-kv_has() {  # true if present, false only if definitely absent; any other error stops the script
-  local output
-  if output="$(az keyvault secret show --vault-name "$KV" --name "$1" --output none --only-show-errors 2>&1)"; then
-    return 0
-  fi
-  case "$output" in
-    *SecretNotFound* | *"was not found"*) return 1 ;;
-    *) die "cannot read Key Vault secret $1 (never treated as missing, to avoid overwriting it): $output" ;;
-  esac
-}
+if [ "$DRY_RUN" = 1 ]; then
+  plan
+  exit 0
+fi
 
-kv_set_from_file() {
-  local attempt
-  for attempt in $(seq 1 12); do  # RBAC role assignments can take a minute to propagate
-    if quiet az keyvault secret set --vault-name "$KV" --name "$1" --file "$2" --encoding utf-8; then
-      return 0
-    fi
-    sleep 10
-  done
-  die "could not write secret $1 to Key Vault $KV"
-}
-
-ensure_kv_secret() {  # name, length
-  kv_has "$1" || kv_set_from_file "$1" "$(secret_file "$1" "$2")"
-}
-
-kv_value() {
-  local value
-  value="$(az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv --only-show-errors)"
-  mask "$value"
-  printf '%s' "$value"
-}
-
-assign_role() {  # principal object id, principal type, role, scope (idempotent)
-  local output
-  if ! output="$(az role assignment create --assignee-object-id "$1" --assignee-principal-type "$2" \
-    --role "$3" --scope "$4" --output none --only-show-errors 2>&1)"; then
-    case "$output" in
-      *"already exists"* | *RoleAssignmentExists*) ;;
-      *) die "role assignment '$3' failed: $output" ;;
-    esac
-  fi
-}
-
-retry() {  # retry a command while new role assignments propagate (up to ~5 minutes)
-  local attempt
-  for attempt in $(seq 1 10); do
-    "$@" && return 0
-    printf 'Retrying in 30s (attempt %s/10)…\n' "$attempt" >&2
-    sleep 30
-  done
-  die "command failed after 10 attempts: $*"
-}
+: "${AZ_SUBSCRIPTION:?Set AZ_SUBSCRIPTION}"
+: "${IMAGE:?Set IMAGE to the ghcr.io image to deploy}"
+: "${DATABASE_URL:?Set DATABASE_URL to the Neon pooled connection string}"
+: "${GHCR_USERNAME:?Set GHCR_USERNAME}"
+: "${GHCR_PULL_TOKEN:?Set GHCR_PULL_TOKEN (classic PAT, read:packages)}"
+mask "$DATABASE_URL"
+mask "$GHCR_PULL_TOKEN"
+case "$DATABASE_URL" in *sslmode=require*) ;; *) die "DATABASE_URL must include sslmode=require" ;; esac
 
 wait_for_job() {  # job name, execution name
   local status attempt
@@ -128,95 +120,52 @@ wait_for_job() {  # job name, execution name
     esac
     sleep 10
   done
-  die "$1 execution $2 did not finish within 15 minutes"
+  die "$1 execution $2 did not finish within 15 minutes (attempt $attempt)"
+}
+
+read_secret() {  # target variable, "app"|"job", resource name, secret name. Empty if absent.
+  local -n _target="$1"
+  if [ "$2" = job ]; then
+    _target="$(az containerapp job secret show -n "$3" -g "$RG" --secret-name "$4" --query value -o tsv --only-show-errors 2>/dev/null || true)"
+  else
+    _target="$(az containerapp secret show -n "$3" -g "$RG" --secret-name "$4" --query value -o tsv --only-show-errors 2>/dev/null || true)"
+  fi
+  mask "$_target"
 }
 
 # ------------------------------------------------------------------------------------------------
-log "Subscription and resource group ($LOCATION)"
+log "Checking prerequisites in $RG ($LOCATION)"
 quiet az account set --subscription "$AZ_SUBSCRIPTION"
-for provider in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry \
-  Microsoft.DBforPostgreSQL Microsoft.KeyVault Microsoft.Storage Microsoft.ManagedIdentity; do
-  # Registration needs subscription-level rights; DEPLOY.md has the founder do it once up front.
-  if [ "$(az provider show --namespace "$provider" --query registrationState -o tsv 2>/dev/null)" != "Registered" ]; then
-    quiet az provider register --namespace "$provider" --wait
-  fi
-done
-quiet az group create --name "$RG" --location "$LOCATION" --tags app=vitalos-superadmin env=production
-
-log "Deployer identity"
-# A service principal usually cannot read Microsoft Graph, so CI passes its object ID explicitly.
-if [ "$(az account show --query user.type -o tsv)" = "servicePrincipal" ]; then
-  DEPLOYER_TYPE="ServicePrincipal"
-  DEPLOYER_ID="${AZURE_DEPLOYER_OBJECT_ID:-$(az ad sp show --id "$(az account show --query user.name -o tsv)" --query id -o tsv)}"
-else
-  DEPLOYER_TYPE="User"
-  DEPLOYER_ID="${AZURE_DEPLOYER_OBJECT_ID:-$(az ad signed-in-user show --query id -o tsv)}"
+exists az group show -n "$RG" || die "resource group $RG not found: run DEPLOY.md §2.1 first"
+exists az containerapp env show -n "$CAE" -g "$RG" || die "Container Apps environment $CAE not found: run DEPLOY.md §2.1 first"
+if [ -n "$(az containerapp env show -n "$CAE" -g "$RG" --query "properties.workloadProfiles[?name!='Consumption'].name" -o tsv 2>/dev/null)" ]; then
+  die "$CAE has dedicated workload profiles; the zero-cost design needs a consumption-only environment"
 fi
-[ -n "$DEPLOYER_ID" ] || die "set AZURE_DEPLOYER_OBJECT_ID to the deploying identity's object ID"
+APP_EXISTS=0; exists az containerapp show -n "$APP" -g "$RG" && APP_EXISTS=1
+JOB_EXISTS=0; exists az containerapp job show -n "$RELEASE_JOB" -g "$RG" && JOB_EXISTS=1
 
-log "Key Vault $KV (secrets manager)"
-exists az keyvault show -n "$KV" -g "$RG" || quiet az keyvault create -n "$KV" -g "$RG" -l "$LOCATION" \
-  --enable-rbac-authorization true --retention-days 90 --enable-purge-protection true
-KV_ID="$(az keyvault show -n "$KV" -g "$RG" --query id -o tsv)"
-KV_URI="$(az keyvault show -n "$KV" -g "$RG" --query properties.vaultUri -o tsv)"
-KV_URI="${KV_URI%/}"
-assign_role "$DEPLOYER_ID" "$DEPLOYER_TYPE" "Key Vault Secrets Officer" "$KV_ID"
-retry quiet az keyvault secret list --vault-name "$KV" --maxresults 1  # wait for data-plane access
-ensure_kv_secret django-secret-key 64
-ensure_kv_secret bootstrap-admin-password 24
-ensure_kv_secret postgres-admin-password 32
-if [ -n "${SENTRY_DSN:-}" ]; then
-  printf '%s' "$SENTRY_DSN" > "$WORK/sentry"
-  kv_set_from_file sentry-dsn "$WORK/sentry"
-fi
+log "Resolving secrets (generated once, then kept)"
+resolve() {  # target variable, secret name, newly generated fallback (assigned, never echoed)
+  local -n _value="$1"
+  _value=""
+  if [ "$APP_EXISTS" = 1 ]; then read_secret _value app "$APP" "$2"; fi
+  if [ -z "$_value" ] && [ "$JOB_EXISTS" = 1 ]; then read_secret _value job "$RELEASE_JOB" "$2"; fi
+  if [ -z "$_value" ]; then _value="$3"; fi
+  [ -n "$_value" ] || die "no value for $2: the workflow must provide it on the first deploy"
+  mask "$_value"
+}
+SECRET_KEY=""
+ADMIN_PASSWORD=""
+resolve SECRET_KEY django-secret-key "${NEW_DJANGO_SECRET_KEY:-}"
+resolve ADMIN_PASSWORD bootstrap-admin-password "${NEW_BOOTSTRAP_ADMIN_PASSWORD:-}"
+[ "${#SECRET_KEY}" -ge 50 ] || die "django-secret-key must be at least 50 characters"
 
-log "Managed identity $IDENTITY"
-exists az identity show -n "$IDENTITY" -g "$RG" || quiet az identity create -n "$IDENTITY" -g "$RG" -l "$LOCATION"
-IDENTITY_ID="$(az identity show -n "$IDENTITY" -g "$RG" --query id -o tsv)"
-IDENTITY_PRINCIPAL="$(az identity show -n "$IDENTITY" -g "$RG" --query principalId -o tsv)"
-assign_role "$IDENTITY_PRINCIPAL" ServicePrincipal "Key Vault Secrets User" "$KV_ID"
-
-log "PostgreSQL 17 Flexible Server $PG (14-day managed backups)"
-if ! exists az postgres flexible-server show -n "$PG" -g "$RG"; then
-  # The admin password is passed on this machine's command line once, at creation only.
-  quiet az postgres flexible-server create -n "$PG" -g "$RG" -l "$LOCATION" \
-    --version 17 --tier Burstable --sku-name Standard_B1ms --storage-size 32 \
-    --admin-user "$PG_ADMIN" --admin-password "$(kv_value postgres-admin-password)" \
-    --backup-retention 14 --zonal-resiliency Disabled --public-access 0.0.0.0 --yes
-fi
-exists az postgres flexible-server db show -g "$RG" -s "$PG" -n "$PG_DB" ||
-  quiet az postgres flexible-server db create -g "$RG" -s "$PG" -n "$PG_DB"
-PG_HOST="$(az postgres flexible-server show -n "$PG" -g "$RG" --query fullyQualifiedDomainName -o tsv)"
-if ! kv_has database-url; then
-  printf 'postgres://%s:%s@%s:5432/%s?sslmode=require' \
-    "$PG_ADMIN" "$(kv_value postgres-admin-password)" "$PG_HOST" "$PG_DB" > "$WORK/database-url"
-  kv_set_from_file database-url "$WORK/database-url"
-fi
-
-log "Container registry $ACR and image superadmin:$TAG"
-exists az acr show -n "$ACR" -g "$RG" || quiet az acr create -n "$ACR" -g "$RG" -l "$LOCATION" --sku Basic --admin-enabled false
-ACR_ID="$(az acr show -n "$ACR" -g "$RG" --query id -o tsv)"
-ACR_SERVER="$(az acr show -n "$ACR" -g "$RG" --query loginServer -o tsv)"
-assign_role "$IDENTITY_PRINCIPAL" ServicePrincipal AcrPull "$ACR_ID"
-assign_role "$DEPLOYER_ID" "$DEPLOYER_TYPE" AcrPush "$ACR_ID"
-IMAGE="$ACR_SERVER/superadmin:$TAG"
-retry quiet az acr login --name "$ACR"
-docker buildx build --platform linux/amd64 --tag "$IMAGE" --push "$SRC_DIR"
-
-log "Log Analytics and Container Apps environment $CAE"
-exists az monitor log-analytics workspace show -g "$RG" -n "$LOG_WS" ||
-  quiet az monitor log-analytics workspace create -g "$RG" -n "$LOG_WS" -l "$LOCATION" --retention-time 30
-if ! exists az containerapp env show -n "$CAE" -g "$RG"; then
-  LOG_CUSTOMER_ID="$(az monitor log-analytics workspace show -g "$RG" -n "$LOG_WS" --query customerId -o tsv)"
-  LOG_KEY="$(az monitor log-analytics workspace get-shared-keys -g "$RG" -n "$LOG_WS" --query primarySharedKey -o tsv)"
-  mask "$LOG_KEY"
-  quiet az containerapp env create -n "$CAE" -g "$RG" -l "$LOCATION" \
-    --logs-workspace-id "$LOG_CUSTOMER_ID" --logs-workspace-key "$LOG_KEY"
-fi
-CAE_ID="$(az containerapp env show -n "$CAE" -g "$RG" --query id -o tsv)"
-
-ref() { printf '%s=keyvaultref:%s/secrets/%s,identityref:%s' "$1" "$KV_URI" "$1" "$IDENTITY_ID"; }
-COMMON_ENV=(
+SECRETS=(
+  "django-secret-key=$SECRET_KEY"
+  "database-url=$DATABASE_URL"
+  "bootstrap-admin-password=$ADMIN_PASSWORD"
+)
+ENV_VARS=(
   DJANGO_SETTINGS_MODULE=config.settings.prod
   DJANGO_SECRET_KEY=secretref:django-secret-key
   DATABASE_URL=secretref:database-url
@@ -226,117 +175,118 @@ COMMON_ENV=(
   TRUSTED_PROXY_COUNT=1
   APP_ENVIRONMENT=production
   LOG_FORMAT=json
+  WEB_CONCURRENCY=2
 )
-APP_SECRETS=("$(ref django-secret-key)" "$(ref database-url)")
-if kv_has sentry-dsn; then
-  APP_SECRETS+=("$(ref sentry-dsn)")
-  COMMON_ENV+=(SENTRY_DSN=secretref:sentry-dsn)
+if [ -n "${SENTRY_DSN:-}" ]; then
+  mask "$SENTRY_DSN"
+  SECRETS+=("sentry-dsn=$SENTRY_DSN")
+  ENV_VARS+=(SENTRY_DSN=secretref:sentry-dsn)
 fi
+JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)
+REGISTRY_ARGS=(--registry-server "$REGISTRY" --registry-username "$GHCR_USERNAME" --registry-password "$GHCR_PULL_TOKEN")
 
-log "Release job $RELEASE_JOB (migrate, seed_architecture, create_superadmin)"
-if ! exists az containerapp job show -n "$RELEASE_JOB" -g "$RG"; then
-  retry quiet az containerapp job create -n "$RELEASE_JOB" -g "$RG" --environment "$CAE" \
+log "Release job $RELEASE_JOB (migrations run before the app takes the new image)"
+if [ "$JOB_EXISTS" = 0 ]; then
+  quiet az containerapp job create -n "$RELEASE_JOB" -g "$RG" --environment "$CAE" \
     --trigger-type Manual --replica-timeout 900 --replica-retry-limit 0 --parallelism 1 --replica-completion-count 1 \
-    --image "$IMAGE" --registry-server "$ACR_SERVER" --registry-identity "$IDENTITY_ID" --mi-user-assigned "$IDENTITY_ID" \
-    --cpu 0.5 --memory 1Gi --command /app/bin/release.sh \
-    --secrets "${APP_SECRETS[@]}" "$(ref bootstrap-admin-password)" \
-    --env-vars "${COMMON_ENV[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password
+    --image "$IMAGE" "${REGISTRY_ARGS[@]}" --cpu "$CPU" --memory "$MEMORY" --command /app/bin/release.sh \
+    --secrets "${SECRETS[@]}" --env-vars "${JOB_ENV[@]}"
 else
-  quiet az containerapp job update -n "$RELEASE_JOB" -g "$RG" --image "$IMAGE"
+  quiet az containerapp job secret set -n "$RELEASE_JOB" -g "$RG" --secrets "${SECRETS[@]}"
+  quiet az containerapp job registry set -n "$RELEASE_JOB" -g "$RG" --server "$REGISTRY" \
+    --username "$GHCR_USERNAME" --password "$GHCR_PULL_TOKEN"
+  quiet az containerapp job update -n "$RELEASE_JOB" -g "$RG" --image "$IMAGE" --set-env-vars "${JOB_ENV[@]}"
 fi
 EXECUTION="$(az containerapp job start -n "$RELEASE_JOB" -g "$RG" --query name -o tsv --only-show-errors)"
 wait_for_job "$RELEASE_JOB" "$EXECUTION"
 
-log "Container app $APP"
-if ! exists az containerapp show -n "$APP" -g "$RG"; then
-  retry quiet az containerapp create -n "$APP" -g "$RG" --environment "$CAE" \
-    --image "$IMAGE" --registry-server "$ACR_SERVER" --registry-identity "$IDENTITY_ID" --user-assigned "$IDENTITY_ID" \
-    --target-port 8000 --ingress external --revisions-mode single --min-replicas 1 --max-replicas 3 \
-    --cpu 0.5 --memory 1Gi --secrets "${APP_SECRETS[@]}" --env-vars "${COMMON_ENV[@]}"
+log "Container app $APP (scale to zero, $CPU vCPU / $MEMORY, max 1 replica)"
+SCALE_ARGS=(--min-replicas 0 --max-replicas 1 --cpu "$CPU" --memory "$MEMORY"
+  --scale-rule-name http-concurrency --scale-rule-type http --scale-rule-http-concurrency "$HTTP_CONCURRENCY")
+if [ "$APP_EXISTS" = 0 ]; then
+  quiet az containerapp create -n "$APP" -g "$RG" --environment "$CAE" --image "$IMAGE" "${REGISTRY_ARGS[@]}" \
+    --target-port 8000 --ingress external --revisions-mode single "${SCALE_ARGS[@]}" \
+    --secrets "${SECRETS[@]}" --env-vars "${ENV_VARS[@]}"
 else
-  quiet az containerapp update -n "$APP" -g "$RG" --image "$IMAGE"
+  quiet az containerapp secret set -n "$APP" -g "$RG" --secrets "${SECRETS[@]}"
+  quiet az containerapp registry set -n "$APP" -g "$RG" --server "$REGISTRY" \
+    --username "$GHCR_USERNAME" --password "$GHCR_PULL_TOKEN"
+  quiet az containerapp update -n "$APP" -g "$RG" --image "$IMAGE" "${SCALE_ARGS[@]}" --set-env-vars "${ENV_VARS[@]}"
 fi
 FQDN="$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
 VERIFICATION_ID="$(az containerapp show -n "$APP" -g "$RG" --query properties.customDomainVerificationId -o tsv)"
+output fqdn "$FQDN"
 
-log "Nightly pg_dump job $BACKUP_JOB (02:15 UTC, 14-day retention on Azure Files)"
-exists az storage account show -n "$STORAGE" -g "$RG" || quiet az storage account create -n "$STORAGE" -g "$RG" \
-  -l "$LOCATION" --sku Standard_LRS --kind StorageV2 --min-tls-version TLS1_2 --allow-blob-public-access false
-exists az storage share-rm show --storage-account "$STORAGE" -g "$RG" -n backups ||
-  quiet az storage share-rm create --storage-account "$STORAGE" -g "$RG" -n backups --quota 50
-STORAGE_KEY="$(az storage account keys list -n "$STORAGE" -g "$RG" --query '[0].value' -o tsv)"
-mask "$STORAGE_KEY"
-quiet az containerapp env storage set -n "$CAE" -g "$RG" --storage-name backups --access-mode ReadWrite \
-  --azure-file-account-name "$STORAGE" --azure-file-account-key "$STORAGE_KEY" --azure-file-share-name backups
-sed -e "s#__LOCATION__#$LOCATION#g" -e "s#__IDENTITY_ID__#$IDENTITY_ID#g" -e "s#__CAE_ID__#$CAE_ID#g" \
-  -e "s#__ACR_SERVER__#$ACR_SERVER#g" -e "s#__KV_URI__#$KV_URI#g" -e "s#__IMAGE__#$IMAGE#g" \
-  "$SRC_DIR/deploy/azure/backup-job.yaml" > "$WORK/backup-job.yaml"
-if exists az containerapp job show -n "$BACKUP_JOB" -g "$RG"; then
-  quiet az containerapp job update -n "$BACKUP_JOB" -g "$RG" --image "$IMAGE"
-else
-  retry quiet az containerapp job create -n "$BACKUP_JOB" -g "$RG" --yaml "$WORK/backup-job.yaml"
-fi
-
-log "DNS: $DOMAIN → $FQDN"
-cloudflare() {  # method, path, [json body]
-  curl -fsS -X "$1" "https://api.cloudflare.com/client/v4$2" \
-    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" ${3:+--data "$3"}
+bound() {
+  [ "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].bindingType" -o tsv 2>/dev/null)" = "SniEnabled" ]
 }
-upsert_record() {  # zone id, type, name, content. Never silently replaces a record pointing elsewhere.
-  local zone_id="$1" type="$2" name="$3" content="$4" existing existing_id existing_content body
-  existing="$(cloudflare GET "/zones/$zone_id/dns_records?type=$type&name=$name" |
-    python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] + " " + r[0]["content"].strip(chr(34)) if r else "")')"
-  existing_id="${existing%% *}"
-  existing_content="${existing#* }"
-  body="$(python3 -c 'import json,sys; print(json.dumps({"type": sys.argv[1], "name": sys.argv[2], "content": sys.argv[3], "ttl": 300, "proxied": False}))' "$type" "$name" "$content")"
-  if [ -z "$existing" ]; then
-    cloudflare POST "/zones/$zone_id/dns_records" "$body" > /dev/null
-  elif [ "$existing_content" != "$content" ]; then
-    [ "${DNS_OVERWRITE:-}" = "1" ] ||
-      die "$type $name already points to '$existing_content'. Check what uses it, then re-run with DNS_OVERWRITE=1 to replace it."
-    cloudflare PUT "/zones/$zone_id/dns_records/$existing_id" "$body" > /dev/null
-  fi
-}
-if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then
-  ZONE_ID="$(cloudflare GET "/zones?name=$ZONE" | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"][0]["id"])')"
-  upsert_record "$ZONE_ID" CNAME "$DOMAIN" "$FQDN"
-  upsert_record "$ZONE_ID" TXT "asuid.$DOMAIN" "$VERIFICATION_ID"
-  log "Cloudflare records written (DNS only, not proxied)"
-else
-  cat <<EOF
 
-Create these DNS records in the vitalos.co.uk zone (DNS only / not proxied, TTL 300), then re-run:
+if bound; then
+  log "$DOMAIN is already bound with a managed certificate; DNS left as it is"
+else
+  log "DNS: $DOMAIN -> $FQDN"
+  if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+    cat <<EOF
+
+CLOUDFLARE_API_TOKEN is not set. Create these records in the $ZONE zone (DNS only / grey cloud, TTL 300),
+then run the workflow again; it resumes from here:
   CNAME  ${DOMAIN%%."$ZONE"}         $FQDN
   TXT    asuid.${DOMAIN%%."$ZONE"}   $VERIFICATION_ID
 EOF
-  exit 0
-fi
+    output bound false
+    exit 0
+  fi
+  mask "$CLOUDFLARE_API_TOKEN"
+  cloudflare() {  # method, path, [json body]
+    curl -fsS -X "$1" "https://api.cloudflare.com/client/v4$2" \
+      -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" ${3:+--data "$3"}
+  }
+  upsert_record() {  # zone id, type, name, content. Never silently replaces a record pointing elsewhere.
+    local zone_id="$1" type="$2" name="$3" content="$4" existing existing_id existing_content body
+    existing="$(cloudflare GET "/zones/$zone_id/dns_records?type=$type&name=$name" |
+      python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] + " " + r[0]["content"].strip(chr(34)) if r else "")')"
+    existing_id="${existing%% *}"
+    existing_content="${existing#* }"
+    body="$(python3 -c 'import json,sys; print(json.dumps({"type": sys.argv[1], "name": sys.argv[2], "content": sys.argv[3], "ttl": 300, "proxied": False}))' "$type" "$name" "$content")"
+    if [ -z "$existing" ]; then
+      cloudflare POST "/zones/$zone_id/dns_records" "$body" > /dev/null
+    elif [ "$existing_content" != "$content" ]; then
+      [ "${DNS_OVERWRITE:-}" = "1" ] ||
+        die "$type $name already points to '$existing_content'. Check what uses it, then re-run with DNS_OVERWRITE=1."
+      cloudflare PUT "/zones/$zone_id/dns_records/$existing_id" "$body" > /dev/null
+    fi
+  }
+  ZONE_ID="$(cloudflare GET "/zones?name=$ZONE" | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] if r else "")')"
+  [ -n "$ZONE_ID" ] || die "zone $ZONE not found for this Cloudflare token"
+  upsert_record "$ZONE_ID" CNAME "$DOMAIN" "$FQDN"
+  upsert_record "$ZONE_ID" TXT "asuid.$DOMAIN" "$VERIFICATION_ID"
+  log "Cloudflare records written (DNS only, grey cloud)"
 
-resolves() {  # name, type, expected value (via DNS-over-HTTPS, no dig needed)
-  curl -fsS -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=$1&type=$2" |
-    python3 -c 'import json,sys; want=sys.argv[1].rstrip(".").lower(); answers=[a["data"].strip("\"").rstrip(".").lower() for a in json.load(sys.stdin).get("Answer", [])]; sys.exit(0 if want in answers else 1)' "$3"
-}
-for attempt in $(seq 1 60); do
-  if resolves "$DOMAIN" CNAME "$FQDN" && resolves "asuid.$DOMAIN" TXT "$VERIFICATION_ID"; then break; fi
-  [ "$attempt" = 60 ] && die "DNS for $DOMAIN has not propagated after 30 minutes"
-  sleep 30
-done
+  resolves() {  # name, type, expected value (DNS-over-HTTPS, no dig needed)
+    curl -fsS -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=$1&type=$2" |
+      python3 -c 'import json,sys; want=sys.argv[1].rstrip(".").lower(); answers=[a["data"].strip("\"").rstrip(".").lower() for a in json.load(sys.stdin).get("Answer", [])]; sys.exit(0 if want in answers else 1)' "$3"
+  }
+  for attempt in $(seq 1 60); do
+    if resolves "$DOMAIN" CNAME "$FQDN" && resolves "asuid.$DOMAIN" TXT "$VERIFICATION_ID"; then break; fi
+    [ "$attempt" = 60 ] && die "DNS for $DOMAIN has not propagated after 30 minutes; re-run later"
+    sleep 30
+  done
 
-log "Custom domain and managed certificate"
-if [ -z "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].name" -o tsv)" ]; then
-  quiet az containerapp hostname add -n "$APP" -g "$RG" --hostname "$DOMAIN"
-fi
-if [ "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].bindingType" -o tsv)" != "SniEnabled" ]; then
+  log "Custom domain and managed certificate (free)"
+  if [ -z "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].name" -o tsv)" ]; then
+    quiet az containerapp hostname add -n "$APP" -g "$RG" --hostname "$DOMAIN"
+  fi
   quiet az containerapp hostname bind -n "$APP" -g "$RG" --hostname "$DOMAIN" --environment "$CAE" --validation-method CNAME
 fi
+output bound true
 
-log "Waiting for https://$DOMAIN to serve with a valid certificate"
+log "Waiting for https://$DOMAIN (the first request also wakes the app and Neon)"
 for attempt in $(seq 1 60); do
-  if curl -fsS --max-time 10 "https://$DOMAIN/healthz/" > /dev/null 2>&1; then
+  if curl -fsS --max-time 30 "https://$DOMAIN/healthz/" > /dev/null 2>&1; then
     curl -fsS -o /dev/null -w "login page: HTTP %{http_code}\n" "https://$DOMAIN/login/"
-    log "Live: https://$DOMAIN (image superadmin:$TAG)"
+    log "Live: https://$DOMAIN ($IMAGE)"
     exit 0
   fi
   sleep 20
 done
-die "https://$DOMAIN did not become healthy within 20 minutes"
+die "https://$DOMAIN did not become healthy within 20 minutes (attempt $attempt)"
