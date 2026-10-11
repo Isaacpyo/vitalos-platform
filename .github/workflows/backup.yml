@@ -1,0 +1,57 @@
+name: Super Admin backup
+# Daily logical backup of the Super Admin's Neon database (02:00 UTC), kept 14 days as a workflow
+# artifact (free). Uses the "backup" environment, which has no required reviewers so the schedule is
+# never held for approval; it holds DATABASE_URL (ideally a read-only Neon role) and, optionally,
+# BACKUP_PASSPHRASE to encrypt the dump. Scheduled runs only start once this file is on main.
+# Restore steps: superadmin/docs/DEPLOY.md §6.
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: superadmin-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: backup
+    timeout-minutes: 20
+    steps:
+      - name: pg_dump Neon (PostgreSQL 17 client)
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL is not set in the 'backup' environment (see DEPLOY.md)"
+            exit 1
+          fi
+          # pg_dump needs a session, so use Neon's direct host rather than the PgBouncer (-pooler) one.
+          direct="${DATABASE_URL/-pooler./.}"
+          echo "::add-mask::$direct"
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          mkdir -p dump
+          file="dump/superadmin-$stamp.sql.gz"
+          docker run --rm -e PGURL="$direct" postgres:17 \
+            sh -c 'pg_dump --no-owner --no-privileges --dbname="$PGURL"' | gzip -9 > "$file"
+          gzip -t "$file"
+          header="$(zcat "$file" | head -n 20 || true)"  # head closes the pipe early; ignore SIGPIPE
+          grep -q "PostgreSQL database dump" <<< "$header" || { echo "::error::dump looks empty"; exit 1; }
+          if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+              -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
+            rm "$file"
+          fi
+          ls -l dump
+          echo "name=superadmin-db-$stamp" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: dump/
+          if-no-files-found: error
+          retention-days: 14
