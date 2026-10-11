@@ -46,6 +46,20 @@ interface SiteverifyBody {
   action?: unknown;
 }
 
+/**
+ * What Cloudflare documents for its dummy secrets: `1x` always passes, `2x` always fails and `3x`
+ * reports an already-spent token. Answering these locally keeps tests and local development off
+ * the network: a call to Cloudflare can time out or fail on a busy runner, and a provider outage
+ * is deliberately reported as "unavailable" (fail closed), which made the enquiry end-to-end
+ * flows flaky. Only these public test secrets are answered here; the configuration rejects them
+ * in production, so a real deployment always verifies against Cloudflare.
+ */
+function answerTestSecret(secret: string): VerifyTurnstileResult {
+  if (secret.startsWith("1")) return { success: true, errorCodes: [] };
+  if (secret.startsWith("2")) return { success: false, errorCodes: ["invalid-input-response"] };
+  return { success: false, errorCodes: ["timeout-or-duplicate"] };
+}
+
 export async function verifyTurnstileToken(
   input: VerifyTurnstileInput,
 ): Promise<VerifyTurnstileResult> {
@@ -55,6 +69,8 @@ export async function verifyTurnstileToken(
   });
   if (!input.token) return fail("missing-input-response");
   if (!input.secret) return fail("missing-input-secret");
+  // An injected `fetch` (unit tests of the network path) is always honoured.
+  if (!input.fetch && isTurnstileTestSecret(input.secret)) return answerTestSecret(input.secret);
 
   const body = new URLSearchParams({ secret: input.secret, response: input.token });
   if (input.remoteIp) body.set("remoteip", input.remoteIp);

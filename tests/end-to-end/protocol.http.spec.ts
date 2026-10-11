@@ -85,9 +85,9 @@ test.describe("404 page", () => {
       expect(html, `${path} has the site footer`).toMatch(/<footer[\s>]/);
       expect(html.match(/<main[\s>]/g) ?? [], `${path} has one main landmark`).toHaveLength(1);
     }
-    // notFound() from dynamic routes (unknown slug, lab type, lab asset, legal page): same status
-    // and noindex. Next.js renders these on the client from the streamed payload, so the site
-    // shell for them is asserted in a browser (not-found.spec.ts).
+    // A missing document on a dynamic route (unknown slug, lab type, lab asset, legal page): same
+    // status and noindex. The proxy rewrites these onto an unmatched path (ADR-026), so the 404
+    // content is in the server HTML; not-found.nojs.spec.ts asserts it for every route family.
     for (const path of [
       "/what-we-do/no-such-practice",
       "/labs/not-a-lab-type",

@@ -182,6 +182,13 @@ describe("production guards", () => {
     expect(parseEnv({ VITALOS_ENQUIRY_BACKEND: "memory" }).enquiry.backend).toBe("memory");
   });
 
+  it("treats CRON_SECRET as optional and requires 32+ characters when set", () => {
+    expect(issuePaths(production)).toEqual([]);
+    expect(issuePaths({ ...production, CRON_SECRET: "c".repeat(32) })).toEqual([]);
+    expect(issuePaths({ ...production, CRON_SECRET: "short" })).toEqual(["CRON_SECRET"]);
+    expect(issuePaths({ ...production, CRON_SECRET: "c".repeat(31) })).toEqual(["CRON_SECRET"]);
+  });
+
   it("rejects the console email provider in production", () => {
     expect(issuePaths({ ...production, EMAIL_PROVIDER: "console" })).toEqual(["EMAIL_PROVIDER"]);
   });

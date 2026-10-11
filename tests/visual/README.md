@@ -19,7 +19,7 @@ Both build and start `apps/web` through the e2e config's web server. `E2E_PORT` 
 
 - `set` is `VISUAL_BASELINE_SET` (default `local`; CI sets `ci`).
 - `linux-local/` is generated with `pnpm test:visual:update` in your own environment and is git-ignored: it is never committed, and CI never reads it. A local baseline from one machine will not match another.
-- `linux-ci/` is the set CI compares against. It does not exist until the owner adopts one (below).
+- `linux-ci/` is the set CI compares against. Adopted on 11 Oct 2026 from the `visual-baselines-for-adoption` artifact of the CI run on the launch-fixes branch (it includes the About two-column layout).
 
 ## Determinism
 

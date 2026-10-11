@@ -84,7 +84,7 @@ test.describe("enquiry journey", () => {
     await page.getByRole("button", { name: "Send enquiry" }).click();
 
     const receipt = page.getByRole("status");
-    // The action calls Cloudflare's siteverify (even with the dummy keys): allow for the network.
+    // Cloudflare's dummy secret is answered locally (no siteverify call), so no network is involved.
     await expect(receipt).toContainText("Your enquiry has been received", { timeout: 20_000 });
     await expect(receipt).toContainText(/VIT-[0-9A-F]{12}/i);
     await expect(page.locator("#enquiry-outcome")).toBeFocused();

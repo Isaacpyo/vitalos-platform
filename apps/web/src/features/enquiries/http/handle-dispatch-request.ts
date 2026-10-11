@@ -4,8 +4,11 @@ import { correlationIdFrom } from "./request-guards";
 
 export interface DispatchRequestDeps {
   service: EnquiryService;
-  /** `OUTBOX_DISPATCH_SECRET`. Undefined means the endpoint is not configured. */
-  secret: string | undefined;
+  /**
+   * Accepted bearer secrets: `OUTBOX_DISPATCH_SECRET` (manual and local runs) and `CRON_SECRET`
+   * (Vercel Cron). Unset entries are ignored; none set means the endpoint is not configured.
+   */
+  secrets: readonly (string | undefined)[];
 }
 
 const respond = (
@@ -29,16 +32,20 @@ export function bearerMatches(header: string | null, secret: string): boolean {
 
 /**
  * Internal outbox dispatch endpoint. Not a public API: it requires the shared bearer secret and
- * is intended for a scheduler (none is configured yet: Vercel Cron is blocked on owner approval)
- * or `tooling/scripts/dispatch-outbox-local.mjs`. Returns counts only, never enquiry content.
+ * is intended for the daily Vercel Cron safety net (`apps/web/vercel.json`; `after()` stays the
+ * immediate path) or `tooling/scripts/dispatch-outbox-local.mjs`. Returns counts only, never enquiry content.
  */
 export async function handleDispatchRequest(
   request: Request,
   deps: DispatchRequestDeps,
 ): Promise<Response> {
   const correlationId = correlationIdFrom(request.headers);
-  if (!deps.secret) return respond({ error: "unavailable" }, 503, correlationId);
-  if (!bearerMatches(request.headers.get("authorization"), deps.secret)) {
+  const secrets = deps.secrets.filter((s): s is string => Boolean(s));
+  if (secrets.length === 0) return respond({ error: "unavailable" }, 503, correlationId);
+  const header = request.headers.get("authorization");
+  // Check every secret (no short-circuit) so timing does not reveal which one matched.
+  const authorised = secrets.map((s) => bearerMatches(header, s)).includes(true);
+  if (!authorised) {
     return respond({ error: "unauthorized" }, 401, correlationId, {
       "www-authenticate": "Bearer",
     });

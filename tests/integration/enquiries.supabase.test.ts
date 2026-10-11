@@ -72,6 +72,7 @@ describe.skipIf(!enabled)("enquiry pipeline on local Supabase", () => {
         notificationTo: undefined,
         ipHashSalt: "integration-salt-0123456789",
         outboxDispatchSecret: undefined,
+        cronSecret: undefined,
       },
       email: { provider: "console", apiKey: undefined, from: undefined },
       ...overrides,

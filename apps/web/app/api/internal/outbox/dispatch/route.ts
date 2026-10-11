@@ -7,7 +7,7 @@ async function handle(request: Request): Promise<Response> {
   try {
     return await handleDispatchRequest(request, {
       service: getEnquiryService(),
-      secret: getEnv().enquiry.outboxDispatchSecret,
+      secrets: [getEnv().enquiry.outboxDispatchSecret, getEnv().enquiry.cronSecret],
     });
   } catch {
     return Response.json(

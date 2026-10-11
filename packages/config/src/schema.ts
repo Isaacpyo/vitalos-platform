@@ -88,6 +88,8 @@ const rawSchema = z.object({
     .regex(/^[A-Za-z0-9._-]{1,40}$/, "must be 1-40 letters, numbers, dots, dashes or underscores")
     .optional(),
   OUTBOX_DISPATCH_SECRET: z.string().min(32).optional(),
+  // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
+  CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
 });
 
@@ -116,6 +118,8 @@ export interface Env {
     /** Current privacy notice version. A submission must present this exact value. */
     privacyNoticeVersion: string | undefined;
     outboxDispatchSecret: string | undefined;
+    /** `CRON_SECRET`: the bearer Vercel Cron presents to the dispatch route. */
+    cronSecret: string | undefined;
   };
   email: {
     provider: EmailProvider;
@@ -223,6 +227,7 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         ipHashSalt: raw.ENQUIRY_IP_HASH_SALT,
         privacyNoticeVersion: raw.ENQUIRY_PRIVACY_NOTICE_VERSION,
         outboxDispatchSecret: raw.OUTBOX_DISPATCH_SECRET,
+        cronSecret: raw.CRON_SECRET,
       },
       email: {
         provider: raw.EMAIL_PROVIDER ?? "none",
