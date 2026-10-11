@@ -11,7 +11,8 @@
     "./queries": "./src/queries/index.ts",
     "./presentation": "./src/presentation.ts",
     "./fixtures": "./src/fixtures/index.ts",
-    "./draft": "./src/draft/index.ts"
+    "./draft": "./src/draft/index.ts",
+    "./repo": "./src/repo/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

@@ -23,7 +23,7 @@ Keep lockfile changes to one pull request at a time and keep the `ui5` override 
 
 ## Content sources
 
-`VITALOS_CONTENT_SOURCE` selects where `apps/web` reads content (ADR-018). Defaults: `sanity` when `NEXT_PUBLIC_SANITY_PROJECT_ID` is set, otherwise `empty`.
+`VITALOS_CONTENT_SOURCE` selects where `apps/web` reads content (ADR-018). Default: `repo`, the approved repo-file content that production serves (ADR-028). `sanity` is deprecated.
 
 | Source     | Use                           | Behaviour                                                                                                                                                                                               |
 | ---------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

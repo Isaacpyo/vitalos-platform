@@ -18,6 +18,7 @@ const loaders = (overrides: Partial<ContentSourceLoaders> = {}): ContentSourceLo
   loadQueriesModule: vi.fn().mockResolvedValue({}),
   loadFixturesModule: vi.fn().mockResolvedValue({}),
   loadDraftModule: vi.fn().mockResolvedValue({}),
+  loadRepoModule: vi.fn().mockResolvedValue({}),
   warn: vi.fn(),
   ...overrides,
 });
@@ -133,6 +134,32 @@ describe("resolveContentSource", () => {
     const source = await resolveContentSource(
       config({ kind: "draft" }),
       loaders({ loadDraftModule: () => Promise.resolve(mod) }),
+    );
+    expect(await source.listSummaries("practice")).toHaveLength(5);
+  });
+
+  it("serves the repo source in every environment, production included", async () => {
+    const created = new EmptyContentSource();
+    const createRepoContentSource = vi.fn().mockReturnValue(created);
+    for (const deployEnv of ["local", "preview", "staging", "production"]) {
+      const l = loaders({ loadRepoModule: vi.fn().mockResolvedValue({ createRepoContentSource }) });
+      await expect(resolveContentSource(config({ kind: "repo", deployEnv }), l)).resolves.toBe(
+        created,
+      );
+    }
+  });
+
+  it("fails loudly (no empty fallback) when the repo module is missing", async () => {
+    await expect(resolveContentSource(config({ kind: "repo" }), loaders())).rejects.toThrow(
+      /createRepoContentSource/,
+    );
+  });
+
+  it("the real repo module provides a working production source", async () => {
+    const mod = (await import("@vitalos/cms/repo")) as unknown as Record<string, unknown>;
+    const source = await resolveContentSource(
+      config({ kind: "repo", deployEnv: "production" }),
+      loaders({ loadRepoModule: () => Promise.resolve(mod) }),
     );
     expect(await source.listSummaries("practice")).toHaveLength(5);
   });

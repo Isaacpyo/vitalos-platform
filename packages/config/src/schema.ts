@@ -11,10 +11,12 @@ export const deployEnvs = ["local", "preview", "staging", "production"] as const
 export type DeployEnv = (typeof deployEnvs)[number];
 
 /**
- * `fixtures` is artificial test content; `draft` is repo-authored editorial content drafted from the
- * strategy library and pending owner approval (ADR-025). Neither may run in production.
+ * `repo` is the approved repo-file content served as the public site (ADR-028); it is the default
+ * and may run in production. `fixtures` is artificial test content; `draft` is the full drafted set
+ * including placeholders, pending owner approval (ADR-025). Neither may run in production.
+ * `sanity` is deprecated (ADR-028) and is removed in a later change.
  */
-export const contentSources = ["sanity", "empty", "fixtures", "draft"] as const;
+export const contentSources = ["repo", "sanity", "empty", "fixtures", "draft"] as const;
 export type ContentSourceKind = (typeof contentSources)[number];
 
 export const fixtureSets = ["full", "sparse"] as const;
@@ -199,7 +201,7 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
   const deployEnv = deriveDeployEnv(raw);
   const siteUrl = deriveSiteUrl(raw, deployEnv);
   const projectId = raw.NEXT_PUBLIC_SANITY_PROJECT_ID;
-  const contentSource = raw.VITALOS_CONTENT_SOURCE ?? (projectId ? "sanity" : "empty");
+  const contentSource = raw.VITALOS_CONTENT_SOURCE ?? "repo";
   const supabaseConfigured = Boolean(raw.SUPABASE_URL && raw.SUPABASE_SECRET_KEY);
   const backend = raw.VITALOS_ENQUIRY_BACKEND ?? (supabaseConfigured ? "supabase" : "disabled");
   return {
@@ -316,8 +318,8 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
     );
   }
   if (env.contentSource === "draft" && env.enquiry.backend === "supabase") {
-    // The draft privacy notice is marked "not in force"; real enquiries must never be recorded
-    // against it (ADR-025).
+    // The draft privacy skeleton is marked "not in force"; real enquiries must never be recorded
+    // against it (ADR-025). The `repo` source carries the approved privacy notice (ADR-028).
     add(
       "VITALOS_ENQUIRY_BACKEND",
       "supabase cannot be combined with VITALOS_CONTENT_SOURCE=draft (the draft privacy notice is not in force)",

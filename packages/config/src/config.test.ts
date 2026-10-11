@@ -19,11 +19,11 @@ function issuePaths(source: Record<string, string>): string[] {
 }
 
 describe("deploy environment", () => {
-  it("defaults to local with a local site URL and an empty content source", () => {
+  it("defaults to local with a local site URL and the repo content source", () => {
     const env = parseEnv({});
     expect(env.deployEnv).toBe("local");
     expect(env.siteUrl).toBe("http://localhost:3000");
-    expect(env.contentSource).toBe("empty");
+    expect(env.contentSource).toBe("repo");
     expect(env.enquiry.backend).toBe("disabled");
     expect(env.email.provider).toBe("none");
   });
@@ -288,6 +288,19 @@ describe("production guards", () => {
     }
   });
 
+  it("allows the repo content source in production, with the supabase enquiry backend", () => {
+    const paths = issuePaths({
+      ...production,
+      VITALOS_CONTENT_SOURCE: "repo",
+      VITALOS_ENQUIRY_BACKEND: "supabase",
+      SUPABASE_URL: "https://project.example.invalid",
+      SUPABASE_SECRET_KEY: "x".repeat(24),
+    });
+    expect(paths).not.toContain("VITALOS_CONTENT_SOURCE");
+    expect(paths).not.toContain("VITALOS_ENQUIRY_BACKEND");
+    expect(parseEnv({ ...production, VITALOS_CONTENT_SOURCE: "repo" }).contentSource).toBe("repo");
+  });
+
   it("accepts a deliberate empty content source and disabled enquiries in production", () => {
     const env = parseEnv(production);
     expect(env.contentSource).toBe("empty");
@@ -430,9 +443,9 @@ describe("cross-field rules", () => {
     ]);
   });
 
-  it("defaults the content source to sanity when a project id is present", () => {
+  it("defaults the content source to repo even when a Sanity project id is present", () => {
     const env = parseEnv({ NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123" });
-    expect(env.contentSource).toBe("sanity");
+    expect(env.contentSource).toBe("repo");
     expect(env.sanity.dataset).toBe("development");
   });
 
@@ -466,7 +479,7 @@ describe("cross-field rules", () => {
       SUPABASE_URL: "  ",
       VITALOS_CONTENT_SOURCE: "",
     });
-    expect(env.contentSource).toBe("empty");
+    expect(env.contentSource).toBe("repo");
     expect(env.supabase.url).toBeUndefined();
   });
 
