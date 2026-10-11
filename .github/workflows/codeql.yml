@@ -1,10 +1,10 @@
 name: CodeQL
+# Weekly and on demand only, to keep Actions minutes down (ADR-014 amendment, 11 Oct 2026).
+# Run it by hand before a release or after a security-sensitive change.
 on:
-  pull_request:
-  push:
-    branches: [main]
   schedule:
     - cron: "17 4 * * 1"
+  workflow_dispatch:
 # Code scanning uploads are unavailable for this user-owned private repository,
 # so results stay in the run: published as an artifact and enforced below (ADR-014).
 permissions:
