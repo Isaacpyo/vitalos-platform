@@ -15,22 +15,54 @@ The brief asked for autonomous delivery, so every judgement call made without as
 6. **Tailwind v4.1.11 standalone CLI.** The binary is downloaded by `bin/tailwind.sh` and its SHA-256 verified. The CSS is built in Docker and CI and is not committed. The source lives in `assets/tailwind.css`, outside the static tree, so that manifest post-processing works.
 7. **HTMX 2** is served from the copy vendored by django-htmx, with no CDN. Attribute inheritance is disabled, so every element states its own target and swap. The history cache is disabled, so page snapshots with possibly confidential data are never written to `localStorage`.
 8. **Playwright 1.56** (Python) is pinned so that it uses the same Chromium build (1194) as the monorepo tooling and the build image.
-9. **PostgreSQL 17** is used everywhere (Azure, CI, compose). The image's `pg_dump`/`pg_restore` are version 17 (Debian trixie), and pairing them with a 16 server produced a restore warning in testing.
+9. **PostgreSQL 17** is used everywhere (Neon, CI, compose). The image's `pg_dump`/`pg_restore` and the backup workflow's `postgres:17` client are version 17. Pairing a version 17 client with a version 16 server produced a restore warning in testing. **Create the Neon project on PostgreSQL 17.**
 10. **API tokens.** Instead of DRF's single `authtoken`, there is a small `ApiToken` model: several named tokens per user, an expiry, revocation, last-used time, and only a SHA-256 hash stored. The secret is shown once. It is sent as `Authorization: Bearer vsa_…`.
 11. **Swagger UI** uses drf-spectacular's split view and sidecar assets, so no inline scripts or CDNs are needed.
 
-## Hosting and deployment
+## Hosting and deployment (amended 11 Oct 2026 for zero monthly cost)
 
-12. **Azure Container Apps, UK South.** It is first in the brief's order. No hosting CLI or MCP was connected in the build session. Cloud credentials present in the build sandbox were not Vitalos's and were deliberately not used. Deployment is therefore an idempotent script, `deploy/azure/deploy.sh`, plus a manual, environment-gated GitHub workflow, `superadmin-deploy.yml`, using Azure OIDC. This is the one remaining step (see DEPLOY.md).
+12. **Azure Container Apps, UK South, at £0/month.** Temitope asked for zero monthly cost and pre-approved this change. The app runs on the Container Apps consumption plan inside the permanent free grant. PostgreSQL is Neon's free tier, the image is on ghcr.io, and DNS and TLS are Cloudflare free plus an Azure managed certificate. This replaces Key Vault, Azure Container Registry, Azure Database for PostgreSQL and the Azure Files backup job, which together would cost money every month.
+    - No hosting CLI or MCP was connected in the build session, and the build sandbox's cloud credentials were not Vitalos's, so they were not used.
+    - Deployment is an idempotent script, `deploy/azure/deploy.sh` (`--dry-run` prints the plan), run by the manual, environment-gated `Super Admin deploy` workflow.
+    - The workflow logs in with Azure OIDC, so no Azure keys are stored. The OIDC identity has only **Contributor on `rg-vitalos-superadmin`**.
+    - The subscription Owner creates the resource group, Log Analytics workspace and environment once (DEPLOY.md §2.1).
 13. **Imperative CLI, not Terraform.** The brief asked for provisioning through the CLI. ADR-012 prefers Terraform, so ADR-016 records this as a single-environment bootstrap exception, and converting it to Terraform is in Phase 2.
-14. **Sizing.** PostgreSQL Burstable B1ms with 32 GB. The app runs 1–3 replicas at 0.5 vCPU / 1 GiB, with a minimum of 1 to avoid cold starts at sign-in. **Confirm** cost against the Azure pricing calculator; no figures are quoted here.
-15. **Database networking.** Public endpoint, restricted to Azure services (`0.0.0.0` rule, which admits any Azure-hosted client), with TLS required (`sslmode=require`) and a generated 32-character password. The app connects as the server admin. Private networking (VNet integration and a private endpoint) and a least-privilege application role are Phase 2 hardening items. In GitHub Actions, the deploy script masks every secret value it reads.
-16. **Secrets manager: Azure Key Vault**, with RBAC and purge protection. Containers read secrets through a user-assigned managed identity using Key Vault references. The bootstrap password is the Key Vault secret `bootstrap-admin-password`, given only to the release job as `BOOTSTRAP_ADMIN_PASSWORD`.
-17. **DNS: Cloudflare** (ADR-007). The script never silently replaces an existing record that points elsewhere; that needs `DNS_OVERWRITE=1`. A **DNS-only** CNAME (not proxied, to avoid double-CDN and certificate issues) plus the `asuid` TXT verification record, with a free managed certificate from Container Apps. `stage-status.md` notes that Cloudflare nameserver activation was pending, so DEPLOY.md starts by checking which DNS host is authoritative.
-18. **Backups.** Azure managed backups with **14-day** retention and point-in-time restore are the primary mechanism. A nightly `pg_dump` job (02:15 UTC) to Azure Files, with 14 daily copies, is a portable secondary. Pruning deletes only expired dump files, never database data.
-19. **Release job.** Every deploy runs `bin/release.sh` (migrate, `seed_architecture`, `create_superadmin`) as a one-off Container Apps job *before* the app is switched to the new image. `create_superadmin` only creates a missing account. It never re-activates, re-promotes or changes an existing one; `--password` resets only the password.
+14. **Sizing and the free grant.**
+    - **Shape:** a consumption-only environment (no workload profiles). One app at **0.25 vCPU / 0.5 GiB, min replicas 0, max replicas 1**, scaling on HTTP concurrency 50, with gunicorn at `WEB_CONCURRENCY=2` to fit 0.5 GiB.
+    - **Free grant:** 180,000 vCPU-s, 360,000 GiB-s and 2 million requests per subscription per month. That covers about 200 hours of a running replica, because 180,000 / 0.25 = 360,000 / 0.5 = 720,000 s.
+    - **Release job:** its runs last seconds and draw on the same grant.
+    - **Assumptions:** the grant is shared by everything in the subscription. Nothing else in that subscription uses Container Apps; if something does, the £1 budget alert in DEPLOY.md is the tripwire.
+    - **Trade-off: cold starts.** After about 5 idle minutes, the first request waits for a replica to start, which can include pulling the image (about 95 MB compressed), and Neon wakes too. Expect a few seconds, occasionally more. That is acceptable for an internal tool, and later requests are fast.
+    - **Single replica:** a deploy briefly swaps revisions. There is no high availability; Phase 2 covers paid tiers.
+15. **Database: Neon free tier** (AWS eu-west-2, London; UK data residency).
+    - **Connection:** `DATABASE_URL` is the **pooled** connection string with `sslmode=require`, held as a GitHub `production` environment secret, re-applied on every deploy (so rotating it means updating that secret and redeploying), and passed to the containers as a secret.
+    - **Settings for autosuspend and pooling:** Neon autosuspends after 5 idle minutes, and pooling runs through PgBouncer in transaction mode. Prod settings therefore use `CONN_MAX_AGE=0` and `CONN_HEALTH_CHECKS=True`, and set `DISABLE_SERVER_SIDE_CURSORS=True`, because transaction pooling cannot hold cursors.
+    - **Release job:** `bin/release.sh` runs `migrate`, `seed_architecture` and `create_superadmin` as a one-off Container Apps job *before* the app gets the new image. Each step is retried 3 times with 5 s and 15 s backoff, to cover Neon cold starts.
+    - **Bootstrap account:** `create_superadmin` only creates a missing account. It never re-activates, re-promotes or changes an existing one; `--password` resets only the password.
+    - **Access and limits:** the app uses the Neon project's owner role, over TLS with a generated password. A least-privilege role is a Phase 2 item, and Neon IP allow-listing is not on the free plan (assumption). Free-plan limits at the time of writing are 0.5 GB of storage and a monthly compute allowance; autosuspend keeps an internal tool well within it.
+16. **Secrets: Container Apps secrets** (no Key Vault).
+    - **Where they live:** `django-secret-key`, `database-url`, `bootstrap-admin-password` (plus `sentry-dsn` if set) are secrets on both the app and the release job, referenced with `secretref:`. The ghcr pull token is held as the registry password secret that `az` manages for the app and job.
+    - **Generation:** the workflow generates the secret key and bootstrap password with `openssl rand`, masks them, and writes them only into Container Apps secrets. A redeploy reads back and keeps the existing values (tested with a stubbed `az`), so sessions and the bootstrap password survive.
+    - **Bootstrap password:** the app container does not receive it as an environment variable. It is stored on the app only so Temitope can retrieve it once (DEPLOY.md §3), and should be changed in the app after first sign-in.
+    - **Who can read them:** anyone with Contributor on the resource group can read these secrets. Keep that role to the founder and the deploy identity.
+17. **Registry: GitHub Container Registry, private, with a pull PAT** (default as instructed).
+    - **Push and pull:** the workflow pushes with `GITHUB_TOKEN` (`docker/build-push-action`). Container Apps pulls with a classic PAT that has only `read:packages`, stored as the `GHCR_PULL_TOKEN` environment secret.
+    - **Storage:** only the 3 newest image versions are kept (`actions/delete-package-versions`), and provenance attestations are off, to stay within the free 500 MB of package storage.
+    - **Transfer:** private-package pulls by Azure count against GitHub's free data transfer, 1 GB/month on GitHub Free. At about 95 MB per cold pull, that is roughly 10 cold pulls a month. Beyond that, with GitHub's default $0 spending limit, pulls fail rather than cost money, which would be an outage, not a bill. The image contains no secrets, only the application code. **Confirm:** making the package public removes the transfer limit; otherwise keep the PAT and watch the GitHub billing page.
+    - **PAT expiry:** the PAT expires on the date chosen when it was created. Rotate it by updating `GHCR_PULL_TOKEN` and redeploying.
+18. **DNS and TLS: Cloudflare free** (ADR-007) **and an Azure managed certificate** (free).
+    - **Records:** the workflow writes a **DNS-only (grey cloud)** CNAME `admin` to the app FQDN, plus the `asuid.admin` TXT verification record, then runs `hostname add` and `hostname bind --validation-method CNAME`.
+    - **Safety:** it never silently replaces a record that points elsewhere (`DNS_OVERWRITE=1` to force). Without `CLOUDFLARE_API_TOKEN` it prints the two records, writes `bound=false` and stops before binding, so the run succeeds and can be resumed.
+    - **Orange cloud:** turning on the Cloudflare proxy is optional hardening (DEPLOY.md §4). It needs SSL mode **Full (strict)** and `TRUSTED_PROXY_COUNT=2`. Azure renews managed certificates only while the CNAME is visible, so set the record back to grey around renewal, or use a Cloudflare Origin CA certificate instead.
+    - **Nameservers:** `stage-status.md` notes that Cloudflare nameserver activation was pending, so DEPLOY.md starts by checking which DNS host is authoritative.
+19. **Backups: Neon history plus a daily GitHub Actions dump.**
+    - **Neon:** point-in-time restore over its free-plan history window (6 hours at the time of writing).
+    - **Daily dump:** `.github/workflows/backup.yml` runs at 02:00 UTC. It runs `pg_dump` with a PostgreSQL 17 client against Neon's direct (non-pooler) host, because `pg_dump` needs a session. It gzips the output and uploads it as a workflow artifact kept **14 days** (free).
+    - **`backup` environment:** the workflow uses an environment named `backup` with **no required reviewers**. Placing it in `production` would hold every scheduled run for approval. It needs its own `DATABASE_URL` (ideally a read-only Neon role) and, recommended, `BACKUP_PASSPHRASE` for AES-256 encryption. Artifacts are otherwise readable by anyone with read access to the repository.
+    - **Schedule:** scheduled runs start only once the workflow is on `main`. Each run takes about 1–2 Actions minutes.
+    - **`bin/backup.sh`** stays as a portable manual tool, and CI still exercises it.
 20. **HSTS.** One year, with `includeSubDomains` (which only affects `*.admin.vitalos.co.uk`). Preload is **not** set, because preload-list submission is a decision for the whole `vitalos.co.uk` domain. Django's `security.W021` warning is therefore silenced in prod settings, and CI runs `check --deploy --fail-level WARNING`.
-21. **Health probe.** `/healthz/` answers before host validation, because platform probes use the container IP as the Host header, and it is exempt from the HTTPS redirect.
+21. **Health probe.** `/healthz/` answers before host validation, because platform probes use the container IP as the Host header, and it is exempt from the HTTPS redirect. It touches the database, so an external uptime monitor would keep Neon and the app awake and use up the free grants. Don't add one; the platform's default TCP probes do not wake Neon.
 
 ## Data model
 
@@ -97,5 +129,14 @@ The brief asked for autonomous delivery, so every judgement call made without as
 
 ## Repository CI
 
-47. **Independent review.** A read-only reviewer agent reviewed the PR. Its authorisation, CSV, activity, DNS and bootstrap findings were fixed with regression tests. Its database-networking finding is recorded in #15 and Phase 2.
+47. **Independent review.** A read-only reviewer agent reviewed the PR. Its authorisation, CSV, activity, DNS and bootstrap findings were fixed with regression tests. Its database-networking finding is now superseded by the move to Neon; the least-privilege database role remains in #15 and Phase 2.
 48. CodeQL (`analyze`) is red on `main` and on this PR because code scanning is not enabled in the repository settings. This is unrelated to the change and needs a repository-owner setting.
+
+## Zero-cost amendment (11 Oct 2026)
+
+49. **Workflow shape.** `Super Admin deploy` keeps the `DEPLOY` confirmation, the smoke-test toggle and the `production` environment gate, and runs as plan → build → deploy:
+    - **plan:** `deploy.sh --dry-run`, which lists every resource with the expected cost **£0.00** and the free-grant assumptions. It needs no secrets.
+    - **build:** pushes `ghcr.io/<owner>/vitalos-superadmin:<sha>`. This runs before the approval gate; pushing an image changes nothing in production.
+    - **deploy:** behind the `production` gate.
+50. **File names.** The backup workflow is `.github/workflows/backup.yml`, as requested, with the display name "Super Admin backup", because the monorepo has other apps.
+51. **Verification limits.** No Azure, Neon or Cloudflare credentials were available in the build session either time, so the real deploy has still not run. The script was exercised with a stubbed `az` (first deploy, redeploy, Actions masking and the no-Cloudflare resumable stop), and `shellcheck` and `actionlint` are clean. Every Azure CLI flag was checked against `az` 2.91. Locally, the production image passed the 25-check browser smoke test inside the free-grant shape (container limited to 0.25 vCPU / 512 MB, using about 150 MiB with 2 gunicorn workers), with the Neon-oriented DB settings. The backup workflow's script produced a gzipped and encrypted dump, which decrypted and restored into PostgreSQL 17 (6 service lines and their history).

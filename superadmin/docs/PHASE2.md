@@ -7,7 +7,7 @@ The items below are ordered roughly by dependency, not committed dates. Each ite
 - Use OpenID Connect against the Vitalos Entra tenant, with authorisation code flow and PKCE, for example with `mozilla-django-oidc` or MSAL. Register the app redirect URI `https://admin.vitalos.co.uk/oidc/callback/`.
 - **Map Entra groups to roles:** `sg-superadmin-superadmins` → SuperAdmin, `sg-superadmin-service-leads` → ServiceLead, `sg-superadmin-viewers` → Viewer. Re-evaluate the mapping at every sign-in. Users in no mapped group are refused.
 - Map service-line scope for ServiceLeads from Entra groups or attributes, such as `sg-sl-consulting-leads`, replacing manual ownership.
-- Let Conditional Access and Entra MFA replace local TOTP. Keep **one local break-glass SuperAdmin** with TOTP and password, monitored, with its secret in Key Vault.
+- Let Conditional Access and Entra MFA replace local TOTP. Keep **one local break-glass SuperAdmin** with TOTP and password, monitored, with its credentials held only by the founder.
 - Disable local password sign-in for everyone else. Create accounts just in time on first sign-in. Deactivate on Entra disable (see JML).
 
 ## 2. Industries
@@ -43,7 +43,7 @@ The items below are ordered roughly by dependency, not committed dates. Each ite
 
 ## 8. Read-only integration tiles
 
-Each integration is a provider adapter behind an interface. It uses server-side credentials from Key Vault, caches with a TTL, and degrades gracefully. Nothing is written back.
+Each integration is a provider adapter behind an interface. It uses server-side credentials held as Container Apps secrets, caches with a TTL, and degrades gracefully. Nothing is written back.
 
 - **Notion:** recent decision pages and linked meeting notes, embedded as Decision tiles, using the Notion API with an internal integration token.
 - **HubSpot:** pipeline value and deal counts per service line, read-only, via a private-app token.
@@ -55,8 +55,10 @@ Each integration is a provider adapter behind an interface. It uses server-side 
 
 ## Platform hardening carried over from Phase 1
 
+- **Outgrowing the free tiers.** Phase 1 runs at £0/month (DECISIONS #12–19). Move to paid tiers, or to Microsoft for Startups Founders Hub credits, when any of these happen: the £1 budget alert fires; Container Apps runtime approaches the ~200 replica-hours/month grant; cold starts become a real annoyance (set min replicas to 1); Neon nears its free storage or compute limits, or needs longer history; or the ghcr private-pull quota bites (make the package public, or pay for GitHub Packages). Each step is a settings change in `deploy.sh`, not a redesign.
+
 - Convert `deploy/azure/deploy.sh` to Terraform under `infra/`, as ADR-012 requires, before adding a staging environment. Add a staging environment with copied seed data only.
-- Private networking: Container Apps VNet integration and a PostgreSQL private endpoint, then remove the Azure-services firewall rule. Connect as a least-privilege application role, keeping the server admin for break-glass only.
+- Database hardening: connect as a least-privilege application role (keeping the Neon owner role for migrations and break-glass), and use Neon IP allow-listing or private networking once on a paid tier.
 - GIN indexes on the search vectors when data volume warrants it. Track M2M history for team membership.
 - Optional WAF and rate limiting at the edge, after testing with Cloudflare (ADR-007).
 - Enable repository code scanning (CodeQL) so that the existing `analyze` job turns green.

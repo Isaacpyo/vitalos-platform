@@ -32,7 +32,7 @@ apps/architecture/ models, services (write rules), selectors (visibility), searc
 apps/api/          DRF read-only API
 templates/, static/, assets/tailwind.css
 bin/               tailwind.sh, release.sh (migrate + seed + bootstrap admin), backup.sh (pg_dump)
-deploy/azure/      deploy.sh (idempotent Azure provisioning and deploy), backup-job.yaml
+deploy/azure/      deploy.sh (idempotent zero-cost Container Apps deploy; --dry-run prints the plan)
 tests/             pytest-django suite
 e2e/smoke.py       Playwright browser smoke test (local or live)
 docs/              DEPLOY.md, DECISIONS.md, PHASE2.md, screenshots/
