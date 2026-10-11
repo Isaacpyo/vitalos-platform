@@ -198,7 +198,8 @@ function MobileNavInner({
           {cta.label}
         </Button>
       ) : null}
-      <details className="group" open={open}>
+      {/* `data-mobile-nav-sheet` lets page chrome react to the sheet being open (neutral hook). */}
+      <details className="group" open={open} data-mobile-nav-sheet="">
         <summary
           ref={summaryRef}
           onClick={onSummaryClick}

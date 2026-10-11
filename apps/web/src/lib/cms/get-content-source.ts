@@ -28,6 +28,8 @@ const loaders: ContentSourceLoaders = {
     import("@vitalos/cms/queries") as unknown as Promise<Record<string, unknown>>,
   loadFixturesModule: () =>
     import("@vitalos/cms/fixtures") as unknown as Promise<Record<string, unknown>>,
+  loadDraftModule: () =>
+    import("@vitalos/cms/draft") as unknown as Promise<Record<string, unknown>>,
   warn: (message) => console.warn(message),
 };
 

@@ -82,6 +82,99 @@ describe("production guards", () => {
     }
   });
 
+  it("rejects draft content in production", () => {
+    expect(issuePaths({ ...production, VITALOS_CONTENT_SOURCE: "draft" })).toEqual([
+      "VITALOS_CONTENT_SOURCE",
+    ]);
+    expect(() => readBuildEnv({ ...production, VITALOS_CONTENT_SOURCE: "draft" })).toThrow(
+      EnvValidationError,
+    );
+    try {
+      readBuildEnv({ ...production, VITALOS_CONTENT_SOURCE: "draft" });
+    } catch (error) {
+      expect((error as EnvValidationError).issues.map((issue) => issue.path)).toEqual([
+        "VITALOS_CONTENT_SOURCE",
+      ]);
+    }
+  });
+
+  it("rejects draft content in production whichever way production is signalled", () => {
+    expect(
+      issuePaths({
+        VERCEL_ENV: "production",
+        ...explicitProductionChoices,
+        VITALOS_CONTENT_SOURCE: "draft",
+      }),
+    ).toEqual(["VITALOS_CONTENT_SOURCE"]);
+  });
+
+  it("never serves draft or fixtures on a Vercel production deployment, whatever VITALOS_DEPLOY_ENV says", () => {
+    for (const source of ["draft", "fixtures"]) {
+      for (const override of ["local", "preview", "staging"]) {
+        expect(
+          issuePaths({
+            VERCEL_ENV: "production",
+            VITALOS_DEPLOY_ENV: override,
+            NEXT_PUBLIC_SITE_URL: "https://www.example.invalid",
+            VITALOS_CONTENT_SOURCE: source,
+            VITALOS_ENQUIRY_BACKEND: "memory",
+          }),
+          `${source} with ${override}`,
+        ).toContain("VITALOS_DEPLOY_ENV");
+        const build = () =>
+          readBuildEnv({
+            VERCEL_ENV: "production",
+            VITALOS_DEPLOY_ENV: override,
+            NEXT_PUBLIC_SITE_URL: "https://www.example.invalid",
+            VITALOS_CONTENT_SOURCE: source,
+          });
+        expect(build).toThrow(EnvValidationError);
+        try {
+          build();
+        } catch (error) {
+          expect((error as EnvValidationError).issues.map((issue) => issue.path)).toContain(
+            "VITALOS_DEPLOY_ENV",
+          );
+        }
+      }
+    }
+  });
+
+  it("allows draft content outside production", () => {
+    for (const deployEnv of ["local", "preview", "staging"]) {
+      const env = parseEnv({
+        VITALOS_DEPLOY_ENV: deployEnv,
+        NEXT_PUBLIC_SITE_URL: "https://x.invalid",
+        VITALOS_CONTENT_SOURCE: "draft",
+        VITALOS_ENQUIRY_BACKEND: "memory",
+      });
+      expect(env.contentSource).toBe("draft");
+      expect(deriveFeatures(env).cms).toBe(false);
+      expect(deriveFeatures(env).indexable).toBe(false);
+    }
+  });
+
+  it("never records real enquiries against the draft privacy notice", () => {
+    expect(
+      issuePaths({
+        VITALOS_DEPLOY_ENV: "staging",
+        NEXT_PUBLIC_SITE_URL: "https://x.invalid",
+        VITALOS_CONTENT_SOURCE: "draft",
+        VITALOS_ENQUIRY_BACKEND: "supabase",
+        SUPABASE_URL: "https://project.example.invalid",
+        SUPABASE_SECRET_KEY: "x".repeat(24),
+      }),
+    ).toEqual(["VITALOS_ENQUIRY_BACKEND"]);
+    // Implied supabase (configured, backend unset) is caught the same way.
+    expect(
+      issuePaths({
+        VITALOS_CONTENT_SOURCE: "draft",
+        SUPABASE_URL: "https://project.example.invalid",
+        SUPABASE_SECRET_KEY: "x".repeat(24),
+      }),
+    ).toEqual(["VITALOS_ENQUIRY_BACKEND"]);
+  });
+
   it("rejects the memory enquiry backend in production", () => {
     expect(issuePaths({ ...production, VITALOS_ENQUIRY_BACKEND: "memory" })).toEqual([
       "VITALOS_ENQUIRY_BACKEND",
@@ -205,8 +298,8 @@ describe("production guards", () => {
     ).toEqual([]);
   });
 
-  it("rejects local or preview deploy env overrides on a Vercel production deployment", () => {
-    for (const override of ["local", "preview"]) {
+  it("rejects any non-production deploy env override on a Vercel production deployment", () => {
+    for (const override of ["local", "preview", "staging"]) {
       expect(
         issuePaths({
           ...explicitProductionChoices,

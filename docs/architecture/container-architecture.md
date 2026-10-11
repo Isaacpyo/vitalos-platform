@@ -18,7 +18,7 @@ flowchart TB
   subgraph Packages["packages (public entrypoints only)"]
     UI["@vitalos/ui"]
     Tokens["@vitalos/design-tokens"]
-    CMS["@vitalos/cms<br/>root: routes, locked copy, gates,<br/>ContentSource, view models<br/>./queries ./fixtures<br/>Studio-only: ./schemas ./structure ./actions ./presentation"]
+    CMS["@vitalos/cms<br/>root: routes, locked copy, gates,<br/>ContentSource, view models<br/>./queries ./fixtures ./draft<br/>Studio-only: ./schemas ./structure ./actions ./presentation"]
     Config["@vitalos/config"]
     Validation["@vitalos/validation"]
     Security["@vitalos/security"]
@@ -48,7 +48,7 @@ flowchart TB
 Notes:
 
 - Solid lines exist in code; dashed lines are configured but inactive (no Sanity project, no webhook, no email adapter).
-- With no Sanity configuration the web app runs on the `empty` content source (honest empty state, all publication gates closed). `fixtures` (artificial content) is for tests and local work and is rejected in production. See `docs/operations/local-development.md`.
+- With no Sanity configuration the web app runs on the `empty` content source (honest empty state, all publication gates closed). `fixtures` (artificial content) is for tests and local work and is rejected in production; `draft` (content drafted from the strategy library, pending approval, ADR-025) is for review in local, preview and staging and is likewise rejected in production. See `docs/operations/local-development.md`.
 - `apps/web` never imports `sanity`, `@vitalos/cms/schemas|structure|actions|presentation`. The Studio is a separate build and deployment unit.
 - Storybook is private by default and is not deployed.
 

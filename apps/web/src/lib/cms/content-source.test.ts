@@ -17,6 +17,7 @@ const loaders = (overrides: Partial<ContentSourceLoaders> = {}): ContentSourceLo
   createSanityFetcher: vi.fn().mockResolvedValue(vi.fn()),
   loadQueriesModule: vi.fn().mockResolvedValue({}),
   loadFixturesModule: vi.fn().mockResolvedValue({}),
+  loadDraftModule: vi.fn().mockResolvedValue({}),
   warn: vi.fn(),
   ...overrides,
 });
@@ -95,6 +96,45 @@ describe("resolveContentSource", () => {
     await expect(
       resolveContentSource(config({ kind: "fixtures", deployEnv: "production" }), loaders()),
     ).rejects.toThrow(/forbidden in production/);
+  });
+
+  it("uses the draft source outside production", async () => {
+    const created = new EmptyContentSource();
+    const createDraftContentSource = vi.fn().mockReturnValue(created);
+    for (const deployEnv of ["local", "preview", "staging"]) {
+      const l = loaders({
+        loadDraftModule: vi.fn().mockResolvedValue({ createDraftContentSource }),
+      });
+      await expect(resolveContentSource(config({ kind: "draft", deployEnv }), l)).resolves.toBe(
+        created,
+      );
+      expect(l.loadFixturesModule).not.toHaveBeenCalled();
+    }
+  });
+
+  it("never serves draft content in production, and does not even load it", async () => {
+    const l = loaders();
+    await expect(
+      resolveContentSource(config({ kind: "draft", deployEnv: "production" }), l),
+    ).rejects.toThrow(/forbidden in production/);
+    expect(l.loadDraftModule).not.toHaveBeenCalled();
+  });
+
+  it("fails loudly (no empty fallback) when the draft module is missing", async () => {
+    const l = loaders();
+    await expect(resolveContentSource(config({ kind: "draft" }), l)).rejects.toThrow(
+      /createDraftContentSource/,
+    );
+    expect(l.warn).not.toHaveBeenCalled();
+  });
+
+  it("the real draft module provides a working source", async () => {
+    const mod = (await import("@vitalos/cms/draft")) as unknown as Record<string, unknown>;
+    const source = await resolveContentSource(
+      config({ kind: "draft" }),
+      loaders({ loadDraftModule: () => Promise.resolve(mod) }),
+    );
+    expect(await source.listSummaries("practice")).toHaveLength(5);
   });
 
   it("is extensible: a replacement factory map can add a source", async () => {

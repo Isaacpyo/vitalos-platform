@@ -393,6 +393,29 @@ export function createFixtureSanityFetcher(set: FixtureSet): SanityFetcher {
     };
   };
 
+  /**
+   * Internal links in view-model rich text are already resolved (`{ _type: "link", internal: true,
+   * href }`); a projection returns them as `internalLink` marks with their target. Only legal-page
+   * targets are needed by any content set today.
+   */
+  const rawRichText = (value: unknown) => {
+    if (!Array.isArray(value)) return value ?? null;
+    return value.map((block: Record<string, unknown>) => {
+      if (!Array.isArray(block["markDefs"])) return block;
+      const markDefs = (block["markDefs"] as Record<string, unknown>[]).map((def) => {
+        const href = typeof def["href"] === "string" ? def["href"] : "";
+        const legal = /^\/legal\/([a-z-]+)$/.exec(href);
+        if (def["_type"] !== "link" || def["internal"] !== true || !legal) return def;
+        return {
+          _type: "internalLink",
+          _key: def["_key"],
+          target: { _type: "legalPage", slug: legal[1], editorialStatus: APPROVED },
+        };
+      });
+      return { ...block, markDefs };
+    });
+  };
+
   const rawRoutePage = (key: string) => {
     const page = (set.routePages as Record<string, Record<string, unknown> | undefined>)[key];
     if (!page) return null;
@@ -401,10 +424,10 @@ export function createFixtureSanityFetcher(set: FixtureSet): SanityFetcher {
       key,
       heading: page.heading,
       intro: page.intro ?? null,
-      body: page.body ?? null,
+      body: rawRichText(page.body),
       seo: rawSeo(page.seo as SeoView),
       cta: rawCta(page.cta as CtaView | undefined),
-      expectations: page.expectations ?? null,
+      expectations: rawRichText(page.expectations),
       successMessage: page.successMessage ?? null,
       routes: page.routes ?? null,
     };

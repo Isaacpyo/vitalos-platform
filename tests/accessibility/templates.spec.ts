@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
-import { NOT_FOUND_PATH, TEMPLATES } from "../support/routes";
+import { NOT_FOUND_PATH, TEMPLATES, templatePaths } from "../support/routes";
 
 /**
  * Accessibility sweep over EVERY page template (WCAG 2.2 AA, ADR-021), driven by the route
@@ -54,7 +54,8 @@ test.describe("reflow at 320px on every template (WCAG 1.4.10)", () => {
 });
 
 test.describe("reduced motion is respected", () => {
-  const sample = ["/", "/what-we-do/example-practice", "/labs", "/trust", "/contact"];
+  // Template names, resolved to the paths of the content source under test.
+  const sample = templatePaths("home", "practice", "labs index", "trust overview", "contact");
 
   for (const path of sample) {
     test(`${path}: no smooth scrolling, no running animation or long transition`, async ({
@@ -131,16 +132,12 @@ test.describe("focus is not obscured by the sticky header (WCAG 2.4.11)", () => 
     });
   }
 
+  // Template names resolved for the content source under test. Under the draft source the
+  // article and case-study templates do not exist (their gates are closed), so they drop out.
   const focusPages = [
-    "/",
-    "/what-we-do/example-practice",
-    "/offers/example-offer",
-    "/insights/example-insight-1",
-    "/work/example-case-study",
+    ...templatePaths("home", "practice", "offer", "article", "case study"),
     "/trust/procurement",
-    "/labs/open-source/example-open-source-tool",
-    "/legal/privacy",
-    "/contact",
+    ...templatePaths("lab asset", "legal", "contact"),
   ];
 
   for (const path of focusPages) {

@@ -1,0 +1,500 @@
+/**
+ * Site settings, the homepage and the route pages (index pages). Locked strings are imported from
+ * locked-copy.ts, never repeated. Most headings are quoted from the Stage 11 mockup briefs; three
+ * index headings are adapted from Stage 11 section titles or composed from the cited sections
+ * (marked where they are defined). All are pending owner confirmation like everything else here.
+ */
+import { brandName, ctas, homeSections, howWeWorkStages, proposition } from "../../locked-copy";
+import type { HomeSectionKey } from "../../locked-copy";
+import type {
+  ContactPageView,
+  RoutePageView,
+  SiteSettingsView,
+  TrustOverviewView,
+} from "../../content/types";
+import type { RoutePageKey } from "../../routes";
+import { cta, h2, p, pLink, richText, seo, ul } from "../build";
+import { cite, drafted } from "../provenance";
+import type { DraftProvenance } from "../provenance";
+
+/* ---------- Site settings ---------- */
+
+/**
+ * Only facts the specs state: the brand name and proposition as default SEO. Legal name, company
+ * number, registered address, contact and security email, social links and logo are not supplied.
+ */
+export const settingsDraft: { view: SiteSettingsView; provenance: DraftProvenance } = {
+  view: { defaultSeo: { title: brandName, description: proposition } },
+  provenance: drafted(
+    [cite(0, "0. AUTHORITATIVE VITALOS CONTEXT"), cite(7, "7. Messaging hierarchy")],
+    "Legal name, company number, registered address, contact and security emails, social links and logo: the specs do not state them (Stage 6 §4.1 lists them as owner-supplied).",
+  ),
+};
+
+/* ---------- Homepage headings ---------- */
+
+/** A spec-quoted heading from locked copy, where one exists for the section. */
+function lockedHeading(key: HomeSectionKey): string | undefined {
+  const section = homeSections.find((entry) => entry.key === key);
+  return section && "visibleHeading" in section ? section.visibleHeading : undefined;
+}
+
+function headingFor(key: HomeSectionKey): string {
+  const heading = lockedHeading(key);
+  if (heading === undefined) throw new Error(`No locked heading for ${key}`);
+  return heading;
+}
+
+/**
+ * Section headings. Five are the spec-quoted titles in locked copy. The others are the section
+ * names Stage 11 §9 uses for items 7 to 11 ("Industries", "Trust", "Vitalos Labs", "Insights",
+ * "Leadership"). The hero is locked copy and has no heading entry; the credibility strip has no
+ * quoted title and no verified proof, so it has none either.
+ */
+export const homeHeadings: Partial<Record<HomeSectionKey, string>> = {
+  problems: headingFor("problems"),
+  strategyToProduction: headingFor("strategyToProduction"),
+  practices: headingFor("practices"),
+  aiAtTheCentre: headingFor("aiAtTheCentre"),
+  selectedWork: headingFor("selectedWork"),
+  industries: "Industries",
+  trust: "Trust",
+  labs: "Vitalos Labs",
+  insights: "Insights",
+  leadership: "Leadership",
+  finalConversion: headingFor("finalConversion"),
+};
+
+export const homeProvenance = drafted(
+  [
+    cite(8, "8. Homepage architecture"),
+    cite(11, "9. Homepage — desktop high-fidelity mockup"),
+    cite(10, "14. Homepage production plan"),
+  ],
+  "Credibility strip, Selected Work, Insights and Leadership are empty: no verified proof, case studies, named authors or leadership profiles exist (Stage 8 §8; Stage 10 §14).",
+);
+
+/* ---------- Route pages ---------- */
+
+export interface RoutePageDraft {
+  view: RoutePageView | ContactPageView | TrustOverviewView;
+  provenance: DraftProvenance;
+}
+
+const howWeWorkStageText: Readonly<Record<(typeof howWeWorkStages)[number], string>> = {
+  Qualify:
+    "Should Vitalos pursue this work? We look at the business problem and the cost of doing nothing, the sponsor and decision-makers, urgency, budget, technical complexity and risk, and decide to pursue, clarify or decline.",
+  Discover:
+    "What is actually happening and why? We gather evidence on the problem, users and processes, systems and data, risks and success measures, so the problem is understood before large commitments are made.",
+  Define:
+    "What exactly should be done? Scope, target outcomes, architecture direction, roadmap, backlog and how acceptance will work, specific enough that both sides know what is included and excluded.",
+  Design:
+    "How will the solution work? Service and interface design alongside technical, integration, data and security design, with material choices recorded as decision records.",
+  Engineer:
+    "Can we build it safely and incrementally? Working increments through version control, peer review, automated checks and controlled environments. Contractors and partners work to the same Vitalos standards.",
+  Validate:
+    "Is it fit for release and use? Functional, security, performance, accessibility, data, integration and operational-readiness checks, AI evaluation where relevant, and acceptance by a named client owner.",
+  Release:
+    "Can we move to production safely? Deployment, migration, runbooks, monitoring, a rollback plan and training. A deadline is never approval to skip review, validation or rollback planning.",
+  Operate:
+    "Can the live service meet its commitments? Monitoring, incident response, support, maintenance and service reporting, with ownership made explicit through a service transition.",
+  Improve:
+    "What should change next? We compare the live system with its intended outcomes, incidents, cost, user friction and technical debt, and agree the next roadmap.",
+};
+
+const howWeWork: RoutePageDraft = {
+  view: {
+    key: "how-we-work",
+    heading: "Disciplined delivery without unnecessary bureaucracy.",
+    intro:
+      "You can start with consulting or come directly for engineering. Discovery is required when risk or uncertainty makes it necessary, and every engagement follows one delivery lifecycle with quality gates that are not waived to protect a date.",
+    body: richText(
+      "route-how-we-work",
+      h2("Two ways to start"),
+      p(
+        "Consulting-led: when you know there is a problem but not yet the right solution, discovery and assessment create the evidence and the roadmap. Engineering-led: when the objective, requirements and constraints are clear, we confirm the technical approach and build.",
+      ),
+      h2("One accountable Engagement Lead"),
+      p(
+        "Every engagement has one named Vitalos Engagement Lead, accountable for the relationship, the outcome, delivery and commercial health, risk, quality and truthful reporting. You never have to coordinate separate Vitalos practices.",
+      ),
+      h2("Quality gates"),
+      p(
+        "Before production or acceptance, work passes gates for architecture, security, privacy and data, functional quality, performance, accessibility, resilience and recovery, operational readiness, documentation and client acceptance, plus AI evaluation where AI is involved. A gate that does not apply is recorded as not applicable, with the reason.",
+      ),
+      h2("Contractors under Vitalos standards"),
+      p(
+        "Contractors and specialist partners may extend capacity and capability, but you contract with Vitalos and Vitalos stays accountable. They follow Vitalos security, delivery, documentation and quality standards, get least-privilege access that is removed promptly, and critical knowledge never stays with one contractor. Where we partner for a capability, you know the responsibility model.",
+      ),
+      h2("What clients can expect"),
+      p(
+        "Organised without bureaucracy, technically serious without being inaccessible, commercially disciplined without being adversarial, and fast without being reckless. Status reports say what is true: health with a reason, outcomes since the last report, decisions needed, top risks and owners, and the scope position. Changes to scope are handled openly, never absorbed silently.",
+      ),
+      ...howWeWorkStages.flatMap((stage) => [h2(stage), p(howWeWorkStageText[stage])]),
+    ),
+    cta: cta(ctas.primary, "project"),
+    seo: seo(
+      "How We Work",
+      "One delivery lifecycle from Qualify to Improve, with an accountable Engagement Lead and mandatory quality gates.",
+    ),
+  },
+  provenance: drafted([
+    cite(5, "3. Vitalos Delivery Lifecycle"),
+    cite(5, "4. Qualify, Discover & Define"),
+    cite(5, "5. Design & Engineer"),
+    cite(5, "6. Validate & Release"),
+    cite(5, "7. Operate & Improve"),
+    cite(5, "8. Delivery entry paths"),
+    cite(5, "9.1 The Engagement Lead"),
+    cite(5, "11. Mandatory quality gates"),
+    cite(5, "Non-negotiable contractor model"),
+    cite(5, "Desired client experience"),
+    cite(5, "Baseline weekly status"),
+    cite(5, "15. Scope, change control & commercial health"),
+    cite(8, "17. About, Leadership & How We Work"),
+    cite(11, "28. How We Work"),
+  ]),
+};
+
+const whatWeDo: RoutePageDraft = {
+  view: {
+    key: "what-we-do",
+    heading: "Strategy, engineering and AI — connected through delivery.",
+    intro:
+      "Vitalos combines consulting with hands-on engineering, from problem definition through production and ongoing improvement.",
+    body: richText(
+      "route-what-we-do",
+      h2("Three ways to look at what we do"),
+      ul(
+        "Practices are our capabilities: Consulting, Engineering, AI & Data, Experience and Managed Services.",
+        "Solutions are the problems we solve, bringing several practices together around one outcome.",
+        "Offers are practical ways to start: bounded engagements you can scope and buy.",
+      ),
+      p(
+        "Complex problems often need more than one practice. You still work with one integrated team and one accountable engagement lead.",
+      ),
+    ),
+    cta: cta(ctas.primary, "general"),
+    seo: seo(
+      "What We Do",
+      "Practices, solutions and offers: how Vitalos connects consulting, engineering and AI from strategy to production.",
+    ),
+  },
+  provenance: drafted([
+    cite(3, "2. The Three-Layer Service Architecture"),
+    cite(3, "9.1 Solution ownership"),
+    cite(8, "9. What We Do — commercial architecture"),
+    cite(11, "13. What We Do index page"),
+  ]),
+};
+
+const solutions: RoutePageDraft = {
+  view: {
+    key: "solutions",
+    // Adapted from the Stage 11 §13 section title "Solutions — the problems we solve".
+    heading: "Solutions: the problems we solve.",
+    intro:
+      "Solutions are organised around problems executives recognise. Each brings together the practices the outcome needs, under one accountable engagement lead.",
+    cta: cta(ctas.primary, "project"),
+    seo: seo(
+      "Solutions",
+      "Cross-practice solutions organised around the business and technology problems leaders recognise.",
+    ),
+  },
+  provenance: drafted([
+    cite(8, "11. Solutions architecture"),
+    cite(3, "9. Cross-Practice Solution Plays"),
+    cite(3, "9.1 Solution ownership"),
+    cite(11, "13. What We Do index page"),
+  ]),
+};
+
+const offers: RoutePageDraft = {
+  view: {
+    key: "offers",
+    // Adapted from the Stage 11 §13 section title "Offers — practical ways to start".
+    heading: "Offers: practical ways to start.",
+    intro:
+      "Offers are bounded entry points and defined delivery engagements, not discount packages. Each sets out the problem, the shape of the work, what you receive, what we need from you and the likely next stage. Pricing is set in a proposal once scope is understood.",
+    cta: cta(ctas.primary, "offer"),
+    seo: seo(
+      "Offers",
+      "Bounded engagements to start with: assessments, discoveries, sprints, delivery and managed services. Pricing is proposal-led.",
+    ),
+  },
+  provenance: drafted([
+    cite(8, "12. Offer architecture"),
+    cite(3, "10. Initial Offer Catalogue"),
+    cite(11, "13. What We Do index page"),
+  ]),
+};
+
+const industries: RoutePageDraft = {
+  view: {
+    key: "industries",
+    // Composed from Stage 2 §5 and Stage 8 §13; no spec quotes an Industries index heading.
+    heading: "Three launch sectors, and selective work with technology companies.",
+    intro:
+      "Vitalos begins with Health & Care; Retail, Commerce & Consumer; and Operations, Industry & Logistics, where we are building repeatable domain knowledge, and works selectively with growth and technology companies.",
+    cta: cta(ctas.primary, "project"),
+    seo: seo(
+      "Industries",
+      "Health & Care; Retail, Commerce & Consumer; Operations, Industry & Logistics; and selective Growth & Technology work.",
+    ),
+  },
+  provenance: drafted([
+    cite(2, "5. Initial Industry Verticals"),
+    cite(8, "13. Industry architecture"),
+  ]),
+};
+
+const work: RoutePageDraft = {
+  view: {
+    key: "work",
+    heading: "Technology outcomes, not project theatre.",
+    intro:
+      "Case studies of client work, published only with permission and evidence. Each says whether the work was contracted by Vitalos or reflects prior team experience.",
+    seo: seo("Work", "Case studies of client work, published with permission and evidence."),
+  },
+  provenance: drafted(
+    [cite(11, "19. Work index"), cite(10, "17. Work / case-study launch")],
+    "The Work section stays closed: no verified case studies exist (Stage 10 §17).",
+  ),
+};
+
+const insights: RoutePageDraft = {
+  view: {
+    key: "insights",
+    heading: "Ideas for turning technology into operating advantage.",
+    intro:
+      "Executive briefings, engineering notes, research and guides for business and technology leaders, each with a named author.",
+    seo: seo(
+      "Insights",
+      "Executive briefings, engineering notes, research and guides from named Vitalos authors.",
+    ),
+  },
+  provenance: drafted(
+    [cite(11, "21. Insights index"), cite(8, "16. Insights & authority platform")],
+    "The Insights section stays closed: the specs name no author, so no insights are drafted (Stage 8 §16; Stage 10 §18).",
+  ),
+};
+
+const labs: RoutePageDraft = {
+  view: {
+    key: "labs",
+    heading: "Research, prototypes and engineering accelerators.",
+    intro:
+      "Vitalos Labs explores emerging technology, builds reference architectures and tests ideas before they become client capabilities or products. Labs is technical proof, not client work.",
+    body: richText(
+      "route-labs",
+      h2("Maturity labels"),
+      p("Every Labs asset carries a maturity label, shown above the fold, that says what exists:"),
+      ul(
+        "Research: exploration or analysis; not a client product.",
+        "Concept: a defined idea with limited implementation evidence.",
+        "Prototype: a working proof designed to test feasibility.",
+        "Accelerator: a reusable internal or client delivery component.",
+        "Beta / Pilot: limited use with explicit constraints.",
+        "Production product: only when a separately supported commercial product genuinely exists.",
+      ),
+      p("Each asset states what it is, what it is not and its known limitations."),
+    ),
+    seo: seo(
+      "Vitalos Labs",
+      "Research, concepts, prototypes and accelerators from Vitalos Labs, each with an explicit maturity label.",
+    ),
+  },
+  provenance: drafted([
+    cite(11, "23. Vitalos Labs index"),
+    cite(8, "15. Vitalos Labs digital architecture"),
+    cite(19, "4. Maturity labels"),
+    cite(19, "37. Labs website and proof architecture"),
+  ]),
+};
+
+const about: RoutePageDraft = {
+  view: {
+    key: "about",
+    heading: "Strategy and engineering, connected by responsibility for the outcome.",
+    intro:
+      "Vitalos is a technology consulting, engineering and digital transformation company with AI at the centre.",
+    body: richText(
+      "route-about",
+      h2("Why Vitalos exists"),
+      p(
+        "Technology has become inseparable from how organisations operate, serve customers and compete. AI accelerates that shift, but the hard part is not choosing a model or buying another tool. It is redesigning work, modernising systems, connecting data, making good engineering decisions and carrying change safely into production. Vitalos exists for that gap between ambition and execution.",
+      ),
+      h2("From strategy to production"),
+      p(
+        "We work with organisations to understand what needs to change, decide where technology and AI create real value, engineer the products and platforms required, and keep improving them once they are live. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
+      ),
+      h2("Five practices, one firm"),
+      p(
+        "Consulting, Engineering, AI & Data, Experience and Managed Services share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like five departments.",
+      ),
+      h2("Two ways to start"),
+      p(
+        "Clients can start with consulting or come directly for engineering. Discovery is used when it reduces real uncertainty or risk, not by default.",
+      ),
+      h2("Operating principles"),
+      ul(
+        "Senior involvement: you have access to people who can understand the problem and make decisions about it.",
+        "Evidence before claims: we prefer a verifiable fact to an adjective.",
+        "Production quality: security, reliability, maintainability and operational readiness are part of delivery.",
+        "Responsible AI: AI is used where it creates measurable value and can be governed.",
+        "Commercially sensible: scope, assumptions, responsibilities, risks and expected outcomes are explicit.",
+      ),
+      h2("UK first, international by design"),
+      p(
+        "The United Kingdom is Vitalos's launch market and commercial base. The company's services, delivery standards and operating practices are designed to support international work as it grows, without pretending that geographic scale already exists.",
+      ),
+    ),
+    cta: cta(ctas.primary, "general"),
+    seo: seo(
+      "About Vitalos",
+      "A technology consulting, engineering and digital transformation company with AI at the centre, from strategy to production.",
+    ),
+  },
+  provenance: drafted(
+    [
+      cite(7, "9. Brand narrative"),
+      cite(7, "10. Messaging pillars"),
+      cite(2, "10. Differentiation Strategy"),
+      cite(2, "3.1 Primary Launch Market — United Kingdom"),
+      cite(5, "1. Executive summary"),
+      cite(3, "15.2 Cross-practice operating rule"),
+      cite(8, "17. About, Leadership & How We Work"),
+      cite(11, "26. About Vitalos"),
+    ],
+    "No leadership preview: no leadership profile exists. No locations, staff numbers or client names (Stage 11 §38).",
+  ),
+};
+
+const trust: RoutePageDraft = {
+  view: {
+    key: "trust",
+    heading: "Trust should be verifiable.",
+    intro:
+      "Vitalos publishes how it approaches security, privacy, Responsible AI, accessibility and delivery assurance, and provides controlled evidence for procurement where appropriate.",
+    body: richText(
+      "route-trust",
+      p(
+        "Each topic shows its public summary. Only verified certifications will ever be listed. Procurement and security questions go through the procurement route; controlled documents are shared where they exist.",
+      ),
+    ),
+    cta: cta("Ask a procurement question", "procurement"),
+    seo: seo(
+      "Trust Centre",
+      "How Vitalos approaches security, privacy, Responsible AI, accessibility, resilience and procurement.",
+    ),
+    topics: [],
+  },
+  provenance: drafted([
+    cite(11, "25. Trust Centre"),
+    cite(8, "18. Trust Centre architecture"),
+    cite(6, "14. Vitalos Trust Centre"),
+  ]),
+};
+
+const careers: RoutePageDraft = {
+  view: {
+    key: "careers",
+    heading: "Careers",
+    intro: "Open roles are published here when Vitalos is hiring.",
+    seo: seo("Careers", "Open roles at Vitalos."),
+  },
+  provenance: drafted(
+    [cite(8, "19. Careers architecture")],
+    "Careers stays closed: there are no open roles, and Stage 8 §19 rules out a dead careers page. Culture, benefits and working-practice copy need real facts from the owner.",
+  ),
+};
+
+const contact: RoutePageDraft = {
+  view: {
+    key: "contact",
+    heading: headingFor("finalConversion"),
+    intro:
+      "Come to us for consulting, direct engineering, AI and data work or managed services. Tell us what you are trying to achieve and we will help identify the right starting point.",
+    expectations: richText(
+      "route-contact-expectations",
+      p(
+        "We read every enquiry and reply to arrange a conversation about the right starting point. There is no obligation, and you do not need to complete a procurement questionnaire first.",
+      ),
+      pLink(
+        "We use your details to respond to and qualify your enquiry, as described on the ",
+        "privacy page",
+        "/legal/privacy",
+        ".",
+      ),
+    ),
+    successMessage:
+      "Thank you. Your enquiry has been received and we will be in touch about next steps.",
+    routes: [
+      {
+        intent: "project",
+        label: "Discuss a business or technology problem",
+        description: "A project enquiry: tell us the problem and we will suggest a starting point.",
+      },
+      {
+        intent: "offer",
+        label: "Start a defined assessment",
+        description: "An enquiry about a specific offer, such as a Technology Health Assessment.",
+      },
+      {
+        intent: "engineering",
+        label: "An engineering requirement",
+        description:
+          "A defined build, integration or modernisation that can go straight to engineering.",
+      },
+      {
+        intent: "ai",
+        label: "An AI opportunity",
+        description: "From an AI Opportunity Assessment to production AI.",
+      },
+      {
+        intent: "managed-services",
+        label: "Ongoing support or a system takeover",
+        description: "Managed services for systems we build or responsibly take over.",
+      },
+      {
+        intent: "procurement",
+        label: "Procurement and security",
+        description: "Questionnaires, supplier onboarding and requests for controlled documents.",
+      },
+      { intent: "partnership", label: "Partnership", description: "A partner enquiry." },
+      { intent: "careers", label: "Careers", description: "Roles and talent contact." },
+      { intent: "general", label: "General and media", description: "Anything else." },
+    ],
+    seo: seo(
+      ctas.primary,
+      "Start a conversation with Vitalos about consulting, engineering, AI and data or managed services.",
+    ),
+  },
+  provenance: drafted(
+    [
+      cite(11, "29. Contact / Talk to Vitalos"),
+      cite(8, "20. Contact & conversion architecture"),
+      cite(10, "21. Lead capture & enquiry architecture"),
+    ],
+    "No response-time promise: Stage 8 §20 and Stage 10 §21 allow one only when it can be met operationally, and none is confirmed.",
+  ),
+};
+
+/**
+ * Route pages. `leadership` is deliberately absent: with no leadership profile the page would be
+ * a placeholder (Stage 8 §17, Stage 6 §5), and without a route page it stays noindex.
+ */
+export const routePageDrafts: Partial<Record<RoutePageKey, RoutePageDraft>> = {
+  "what-we-do": whatWeDo,
+  solutions,
+  offers,
+  industries,
+  work,
+  insights,
+  labs,
+  about,
+  "how-we-work": howWeWork,
+  trust,
+  careers,
+  contact,
+};

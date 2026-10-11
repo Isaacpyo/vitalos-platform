@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { isDraftRun } from "../support/content-source";
 import type { Page } from "@playwright/test";
 import { waitForSettledLayout } from "../support/overflow";
 
@@ -45,7 +46,9 @@ async function scrollThrough(page: Page) {
 test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
-  for (const path of ["/", "/how-we-work", "/what-we-do/example-practice"]) {
+  // A practice page from the content source under test (ADR-025 draft slugs differ).
+  const practice = isDraftRun ? "/what-we-do/engineering" : "/what-we-do/example-practice";
+  for (const path of ["/", "/how-we-work", practice]) {
     test(`${path}: nothing animates, nothing is held back, nothing moves while scrolling`, async ({
       page,
     }) => {

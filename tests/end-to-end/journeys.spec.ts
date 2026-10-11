@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import type { Page, TestInfo } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 
@@ -44,6 +45,7 @@ test.describe("enquiry journey", () => {
   test("home, What We Do, a practice, an offer, then a submitted enquiry that remembers the offer", async ({
     page,
   }, testInfo) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.context().setExtraHTTPHeaders({ "x-forwarded-for": documentationIp(testInfo) });
 
     await page.goto("/");
@@ -109,7 +111,11 @@ test.describe("enquiry journey", () => {
   });
 
   test("the header call to action reaches the contact page from any template", async ({ page }) => {
-    for (const start of ["/what-we-do/example-practice", "/insights", "/legal/privacy"]) {
+    // The draft source (ADR-025) has no insights, so its run starts from Labs instead.
+    const starts = isDraftRun
+      ? ["/what-we-do/engineering", "/labs", "/legal/privacy"]
+      : ["/what-we-do/example-practice", "/insights", "/legal/privacy"];
+    for (const start of starts) {
       await page.goto(start);
       await openMenuIfCompact(page);
       await page.getByRole("banner").getByRole("link", { name: "Talk to Vitalos" }).first().click();
@@ -120,6 +126,10 @@ test.describe("enquiry journey", () => {
 });
 
 test.describe("gated sections are reachable while their gates are open", () => {
+  // Needs the full set's open Work and Insights gates; under draft they stay closed and
+  // draft-content.http.spec.ts asserts the 404s.
+  test.skip(isDraftRun, FIXTURE_SPECIFIC);
+
   test("the header leads to Work, Insights and Labs, each with its own heading", async ({
     page,
   }) => {

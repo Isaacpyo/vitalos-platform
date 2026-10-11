@@ -10,7 +10,11 @@ import { z } from "zod";
 export const deployEnvs = ["local", "preview", "staging", "production"] as const;
 export type DeployEnv = (typeof deployEnvs)[number];
 
-export const contentSources = ["sanity", "empty", "fixtures"] as const;
+/**
+ * `fixtures` is artificial test content; `draft` is repo-authored editorial content drafted from the
+ * strategy library and pending owner approval (ADR-025). Neither may run in production.
+ */
+export const contentSources = ["sanity", "empty", "fixtures", "draft"] as const;
 export type ContentSourceKind = (typeof contentSources)[number];
 
 export const fixtureSets = ["full", "sparse"] as const;
@@ -261,11 +265,14 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
   }
   if (
     raw.VERCEL_ENV === "production" &&
-    (raw.VITALOS_DEPLOY_ENV === "local" || raw.VITALOS_DEPLOY_ENV === "preview")
+    raw.VITALOS_DEPLOY_ENV !== undefined &&
+    raw.VITALOS_DEPLOY_ENV !== "production"
   ) {
+    // Any non-production override (local, preview or staging) would switch off the production
+    // guards (fixtures, draft, memory backend, noindex) on the production deployment.
     add(
       "VITALOS_DEPLOY_ENV",
-      "cannot be local or preview when VERCEL_ENV is production (it would disable production guards)",
+      "must be production (or unset) when VERCEL_ENV is production (any other value would disable production guards)",
     );
   }
   if (production && raw.VITALOS_CONTENT_SOURCE === undefined) {
@@ -292,6 +299,20 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
   }
   if (production && env.contentSource === "fixtures") {
     add("VITALOS_CONTENT_SOURCE", "fixtures are forbidden in production");
+  }
+  if (production && env.contentSource === "draft") {
+    add(
+      "VITALOS_CONTENT_SOURCE",
+      "draft content is forbidden in production (it is pending owner approval)",
+    );
+  }
+  if (env.contentSource === "draft" && env.enquiry.backend === "supabase") {
+    // The draft privacy notice is marked "not in force"; real enquiries must never be recorded
+    // against it (ADR-025).
+    add(
+      "VITALOS_ENQUIRY_BACKEND",
+      "supabase cannot be combined with VITALOS_CONTENT_SOURCE=draft (the draft privacy notice is not in force)",
+    );
   }
   if (production && env.enquiry.backend === "memory") {
     add("VITALOS_ENQUIRY_BACKEND", "memory is forbidden in production");

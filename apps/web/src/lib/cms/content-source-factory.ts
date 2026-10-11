@@ -38,6 +38,8 @@ export interface ContentSourceLoaders {
   loadQueriesModule(): Promise<Record<string, unknown>>;
   /** Module that exports `createFixtureContentSource(set)` (workstream C2). */
   loadFixturesModule(): Promise<Record<string, unknown>>;
+  /** Module that exports `createDraftContentSource()` (`@vitalos/cms/draft`, ADR-025). */
+  loadDraftModule(): Promise<Record<string, unknown>>;
   warn(message: string): void;
 }
 
@@ -90,10 +92,31 @@ const fixturesFactory: ContentSourceFactory = async (config, loaders) => {
   return (create as (set: FixtureSet) => ContentSource)(config.fixtureSet);
 };
 
+/**
+ * Draft editorial content (repo-authored, pending owner approval; ADR-025). Never production:
+ * configuration already rejects it there and this check is the second line. Unlike fixtures there
+ * is no fallback: asking for draft content and silently getting an empty site would hide a
+ * packaging error.
+ */
+const draftFactory: ContentSourceFactory = async (config, loaders) => {
+  if (config.deployEnv === "production") {
+    throw new Error("The draft content source is forbidden in production.");
+  }
+  const mod = await loaders.loadDraftModule();
+  const create = mod["createDraftContentSource"];
+  if (typeof create !== "function") {
+    throw new Error(
+      "The draft content source is not available: @vitalos/cms/draft does not export createDraftContentSource.",
+    );
+  }
+  return (create as () => ContentSource)();
+};
+
 export const contentSourceFactories: Record<ContentSourceKind, ContentSourceFactory> = {
   empty: emptyFactory,
   sanity: sanityFactory,
   fixtures: fixturesFactory,
+  draft: draftFactory,
 };
 
 export function resolveContentSource(

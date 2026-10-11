@@ -10,7 +10,8 @@
     "./actions": "./src/actions/index.ts",
     "./queries": "./src/queries/index.ts",
     "./presentation": "./src/presentation.ts",
-    "./fixtures": "./src/fixtures/index.ts"
+    "./fixtures": "./src/fixtures/index.ts",
+    "./draft": "./src/draft/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

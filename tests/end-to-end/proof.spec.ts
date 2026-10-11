@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
@@ -13,6 +14,11 @@ import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
  * The suite runs on the desktop and the 390px mobile project, so axe is scanned at both widths;
  * every template is also checked at 320px for reflow.
  */
+
+// Every test here reads fixture case studies, insights, people or Labs assets. Under the draft
+// source (ADR-025) there are none of the first three and the Labs assets differ;
+// draft-content.spec.ts and the accessibility sweep cover the draft Labs pages.
+test.skip(isDraftRun, FIXTURE_SPECIFIC);
 
 const CASE_STUDY_NAMED = "/work/example-case-study";
 const CASE_STUDY_ANON = "/work/example-case-study-two";

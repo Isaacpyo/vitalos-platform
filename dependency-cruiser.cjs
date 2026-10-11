@@ -55,6 +55,16 @@ module.exports = {
       to: { path: pkg("sanity|groq|@sanity") },
     },
     {
+      name: "cms-draft-no-sanity",
+      comment:
+        "The draft content source (@vitalos/cms/draft, ADR-025) is loaded by the web app: no Sanity, GROQ, Studio schemas or queries. Its tests may use the schema validation harness.",
+      severity: "error",
+      from: { path: "^packages/cms/src/draft/", pathNot: "\\.test\\.ts$" },
+      to: {
+        path: `${pkg("sanity|groq|@sanity")}|^packages/cms/src/(schemaTypes|queries|structure|presentation|actions)(/|\\.ts$)`,
+      },
+    },
+    {
       name: "ui-no-framework-or-platform",
       comment:
         "packages/ui is presentation only: no Next.js, CMS, config or Supabase. Links are plain anchors.",

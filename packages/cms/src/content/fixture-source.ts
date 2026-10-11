@@ -33,7 +33,8 @@ import type {
 export type FixtureSetName = "full" | "sparse";
 
 export interface FixtureSet {
-  name: FixtureSetName;
+  /** `draft` is the repo-authored draft content set (ADR-025), served by the same in-memory source. */
+  name: FixtureSetName | "draft";
   settings: SiteSettingsView;
   home: HomePageView | null;
   routePages: { [K in RoutePageKey]?: RoutePageViewFor<K> };

@@ -1,10 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 
 /**
  * Progressive enhancement for the proof templates (workstream G2b). Runs with JavaScript disabled:
  * the lists are complete and crawlable, and the client-side filters and the code-copy button,
  * which need JavaScript, are absent rather than dead.
  */
+
+// Reads the fixture Work, Labs and Insights documents (ADR-025: none of these exist as such in
+// the draft set; draft-content.nojs.spec.ts covers the draft source without JavaScript).
+test.skip(isDraftRun, FIXTURE_SPECIFIC);
 
 test("work index lists every verified case study with no filter controls", async ({ page }) => {
   await page.goto("/work");

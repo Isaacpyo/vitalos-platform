@@ -1,5 +1,7 @@
+import { getEnv } from "@vitalos/config";
 import { SiteFooter } from "@vitalos/ui";
 import { ActiveSectionHeader } from "../active-section";
+import { DraftContentRibbon } from "../draft-content-ribbon";
 import { loadSiteChrome } from "./load";
 
 /**
@@ -16,6 +18,8 @@ export async function SiteShell({ children }: Readonly<{ children: React.ReactNo
   const { header, footer } = await loadSiteChrome();
   return (
     <>
+      {/* "Draft content, pending approval" while VITALOS_CONTENT_SOURCE=draft (ADR-025); else nothing. */}
+      <DraftContentRibbon kind={getEnv().contentSource} />
       <ActiveSectionHeader {...header} />
       {children}
       <SiteFooter {...footer} />

@@ -7,8 +7,12 @@ import { defineConfig, devices } from "@playwright/test";
  * Environment for the server under test is parametrised so it can switch as the Stage 1
  * workstreams land. Defaults describe the target harness:
  *
- *   E2E_CONTENT_SOURCE   fixtures | empty   (default fixtures; artificial content, rejected in
- *                                            production by @vitalos/config)
+ *   E2E_CONTENT_SOURCE   fixtures | empty | draft
+ *                                           (default fixtures; artificial content, rejected in
+ *                                            production by @vitalos/config. `draft` is the
+ *                                            repo-authored draft content of ADR-025: fixture-
+ *                                            specific specs skip themselves, see
+ *                                            tests/support/content-source.ts)
  *   E2E_FIXTURE_SET      full | sparse      (default full)
  *   E2E_ENQUIRY_BACKEND  memory | disabled  (default memory; rejected in production)
  *   E2E_PORT             port for the app   (default 3210, so a developer's `next dev` on 3000 is

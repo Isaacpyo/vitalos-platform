@@ -2,7 +2,12 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
-import { COMMERCIAL_ROUTES_FULL, internalLinks } from "./commercial.support";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
+import {
+  COMMERCIAL_ROUTES_DRAFT,
+  COMMERCIAL_ROUTES_FULL,
+  internalLinks,
+} from "./commercial.support";
 
 /**
  * Commercial templates and site shell (workstream G2a), against the `full` fixture set: every
@@ -14,7 +19,7 @@ import { COMMERCIAL_ROUTES_FULL, internalLinks } from "./commercial.support";
  */
 
 /** Pages of the other template families: each must sit in the shell with exactly one main. */
-const OTHER_ROUTES = [
+const FIXTURE_OTHER_ROUTES = [
   "/work",
   "/work/example-case-study",
   "/insights",
@@ -29,10 +34,20 @@ const OTHER_ROUTES = [
   "/contact",
 ];
 
+/**
+ * Under the draft source (ADR-025) Work, Insights, people and Careers have no documents and their
+ * gates are closed, so those routes are not pages; the rest are the same paths.
+ */
+const OTHER_ROUTES = isDraftRun
+  ? FIXTURE_OTHER_ROUTES.filter((route) => !/^\/(work|insights|people|careers)(\/|$)/.test(route))
+  : FIXTURE_OTHER_ROUTES;
+
+const COMMERCIAL_ROUTES = isDraftRun ? COMMERCIAL_ROUTES_DRAFT : COMMERCIAL_ROUTES_FULL;
+
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;
 
 test.describe("every commercial route", () => {
-  for (const route of COMMERCIAL_ROUTES_FULL) {
+  for (const route of COMMERCIAL_ROUTES) {
     test(`${route}: one h1, one main, header and footer landmarks`, async ({ page }) => {
       const response = await page.goto(route);
       expect(response?.status()).toBe(200);
@@ -78,6 +93,7 @@ test.describe("homepage", () => {
   test("renders the locked hero and all thirteen sections from the full fixtures", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/");
     // 1. Hero: locked copy only.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -141,6 +157,7 @@ test.describe("site shell", () => {
   test("desktop header shows the gated navigation, the utility link and the CTA", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
@@ -161,6 +178,7 @@ test.describe("site shell", () => {
   test("the What We Do mega-menu opens from its own button and closes with Escape", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
@@ -181,6 +199,7 @@ test.describe("site shell", () => {
   });
 
   test("the current section is marked in the navigation", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/offers/example-offer");
     const current = page
@@ -192,6 +211,7 @@ test.describe("site shell", () => {
   test("the compact viewport exposes the same sections and the CTA through the menu", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(isDesktop(page), "the desktop header shows the navigation directly");
     await page.goto("/");
     await page.getByRole("banner").getByText("Menu", { exact: true }).click();
@@ -212,6 +232,7 @@ test.describe("site shell", () => {
   test("the footer lists the gated sections, company links and legal identity", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/");
     const footer = page.getByRole("contentinfo");
     for (const label of ["Industries", "Work", "Insights", "Labs", "Careers", "Leadership"]) {
@@ -231,6 +252,9 @@ test.describe("site shell", () => {
 });
 
 test.describe("commercial pages", () => {
+  // Asserts fixture document titles and relations; draft-content.spec.ts covers the draft pages.
+  test.skip(isDraftRun, FIXTURE_SPECIFIC);
+
   test("What We Do shows practices, solutions and offers and links to How We Work", async ({
     page,
   }) => {

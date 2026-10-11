@@ -25,11 +25,12 @@ Keep lockfile changes to one pull request at a time and keep the `ui5` override 
 
 `VITALOS_CONTENT_SOURCE` selects where `apps/web` reads content (ADR-018). Defaults: `sanity` when `NEXT_PUBLIC_SANITY_PROJECT_ID` is set, otherwise `empty`.
 
-| Source     | Use                           | Behaviour                                                                                                                                                               |
-| ---------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `empty`    | Default local, CI builds      | No documents, every publication gate closed. The homepage shows locked copy only; detail routes 404. This is the honest empty state                                     |
-| `fixtures` | UI work, tests                | Artificial content ("Example Practice (fixture)", `*.invalid` addresses). `VITALOS_FIXTURE_SET=full` (above all gates) or `sparse` (below them). Rejected in production |
-| `sanity`   | Against a real Sanity project | Needs a project id, dataset and, for drafts, a read token. Not available until the owner provides a project                                                             |
+| Source     | Use                           | Behaviour                                                                                                                                                                                               |
+| ---------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `empty`    | Default local, CI builds      | No documents, every publication gate closed. The homepage shows locked copy only; detail routes 404. This is the honest empty state                                                                     |
+| `fixtures` | UI work, tests                | Artificial content ("Example Practice (fixture)", `*.invalid` addresses). `VITALOS_FIXTURE_SET=full` (above all gates) or `sparse` (below them). Rejected in production                                 |
+| `draft`    | Content review, demos         | Repo-authored content drafted from `docs/strategy/`, pending owner approval (ADR-025). Shows a "Draft content, pending approval" ribbon. Rejected in production and with the `supabase` enquiry backend |
+| `sanity`   | Against a real Sanity project | Needs a project id, dataset and, for drafts, a read token. Not available until the owner provides a project                                                                                             |
 
 Example, full fixtures with in-memory enquiries:
 
@@ -37,6 +38,8 @@ Example, full fixtures with in-memory enquiries:
 VITALOS_CONTENT_SOURCE=fixtures VITALOS_FIXTURE_SET=full VITALOS_ENQUIRY_BACKEND=memory \
   corepack pnpm dev:web
 ```
+
+Draft content: `VITALOS_CONTENT_SOURCE=draft VITALOS_ENQUIRY_BACKEND=memory`. The inventory is `docs/content/draft-inventory.md`; after editing `packages/cms/src/draft`, regenerate the Sanity export with `node tooling/scripts/export-draft-dataset.mjs`. End-to-end against it: `E2E_CONTENT_SOURCE=draft corepack pnpm test:e2e` (fixture-specific specs skip themselves).
 
 On the contact page the enquiry form renders only when enquiries can be stored and a privacy notice is published. With fixtures the full set includes one; with `empty` you see the email alternative instead.
 

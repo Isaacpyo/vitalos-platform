@@ -14,6 +14,20 @@ export const COMMERCIAL_ROUTES_FULL = [
   "/how-we-work",
 ] as const;
 
+/** The same templates under the draft content source (ADR-025), with draft slugs. */
+export const COMMERCIAL_ROUTES_DRAFT = [
+  "/",
+  "/what-we-do",
+  "/what-we-do/engineering",
+  "/solutions",
+  "/solutions/ai-transformation",
+  "/offers",
+  "/offers/ai-opportunity-assessment",
+  "/industries",
+  "/industries/health-care",
+  "/how-we-work",
+] as const;
+
 /** Routes that exist in the `sparse` set (no industries: the gate is closed). */
 export const COMMERCIAL_ROUTES_SPARSE = [
   "/",

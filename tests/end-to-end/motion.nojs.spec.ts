@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { isDraftRun } from "../support/content-source";
 
 /**
  * Runs in the `no-js` project (JavaScript disabled). The motion islands (ADR-024) must never be
  * what makes content visible: the server HTML is the final, visible state.
  */
-const routes = [
+const fixtureRoutes = [
   "/",
   "/what-we-do/example-practice",
   "/solutions/example-solution",
@@ -20,6 +21,26 @@ const routes = [
   "/about",
   "/contact",
 ];
+
+/**
+ * The same templates under the draft source (ADR-025). Work and Insights have no draft content and
+ * their gates are closed, so those pages do not exist there.
+ */
+const draftRoutes = [
+  "/",
+  "/what-we-do/engineering",
+  "/solutions/ai-transformation",
+  "/offers/ai-opportunity-assessment",
+  "/industries/health-care",
+  "/how-we-work",
+  "/labs",
+  "/labs/research/production-ai-evaluation-harness",
+  "/trust/security",
+  "/about",
+  "/contact",
+];
+
+const routes = isDraftRun ? draftRoutes : fixtureRoutes;
 
 for (const path of routes) {
   test(`${path}: the server HTML hides nothing for an entrance`, async ({ request }) => {

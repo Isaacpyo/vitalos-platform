@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { crawl } from "../support/crawl";
 import { GATED_PREFIXES, TEMPLATES, isGatedPath } from "../support/routes";
 import { fetchAndCheckSitemap } from "../support/sitemap";
@@ -19,12 +20,15 @@ test("sitemap.xml is valid, lists only live pages and covers every template", as
   for (const template of TEMPLATES.filter((entry) => entry.inSitemap !== false)) {
     expect(listed.has(template.path), `${template.path} (${template.name}) is listed`).toBe(true);
   }
-  // Gated sections are listed because their gates are open in this set.
+  // Gated sections are listed exactly when their gates are open: all of them in the full fixture
+  // set; only Industries and Labs under the draft source (ADR-025), which has no case studies,
+  // insights or roles.
+  const open: readonly string[] = isDraftRun ? ["/industries", "/labs"] : GATED_PREFIXES;
   for (const prefix of GATED_PREFIXES) {
     expect(
       paths.some((path) => path === prefix || path.startsWith(`${prefix}/`)),
-      `${prefix} is listed while its gate is open`,
-    ).toBe(true);
+      `${prefix} is listed only while its gate is open`,
+    ).toBe(open.includes(prefix));
   }
 });
 
@@ -32,6 +36,8 @@ test("content that is not publishable is neither listed nor served", async ({
   request,
   baseURL,
 }) => {
+  // The draft equivalent (closed sections, noindex draft legal pages) is draft-content.http.spec.ts.
+  test.skip(isDraftRun, FIXTURE_SPECIFIC);
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
   // Pending case study (no verified evidence): not a page at all (proof.spec.ts asserts the 404).
   expect(paths).not.toContain("/work/example-case-study-pending");
@@ -44,6 +50,9 @@ test("closed roles are not listed but keep their page; open roles and lab types 
   request,
   baseURL,
 }) => {
+  // Fixture roles and lab type; the draft equivalent (no roles, /labs/accelerators listed) is in
+  // draft-content.http.spec.ts.
+  test.skip(isDraftRun, FIXTURE_SPECIFIC);
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
   expect(paths).toContain("/careers/example-role");
   expect(paths).not.toContain("/careers/example-closed-role");

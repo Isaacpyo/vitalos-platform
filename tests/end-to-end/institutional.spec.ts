@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
+import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
@@ -19,7 +20,7 @@ async function jsonLdNodes(page: Page): Promise<Record<string, unknown>[]> {
   });
 }
 
-const templates: { name: string; path: string; ld: string[] }[] = [
+const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
   { name: "about", path: "/about", ld: ["BreadcrumbList"] },
   { name: "leadership", path: "/about/leadership", ld: ["BreadcrumbList"] },
   { name: "trust overview", path: "/trust", ld: ["BreadcrumbList"] },
@@ -33,6 +34,15 @@ const templates: { name: string; path: string; ld: string[] }[] = [
   { name: "legal (privacy)", path: "/legal/privacy", ld: ["BreadcrumbList"] },
   { name: "legal (terms)", path: "/legal/terms", ld: ["BreadcrumbList"] },
 ];
+
+/**
+ * Under the draft source (ADR-025) Careers has no roles and its gate is closed, and the
+ * Certifications and Subprocessors topics are not published: no such pages.
+ */
+const notDrafted = /^\/(careers(\/|$)|trust\/(certifications|subprocessors)$)/;
+const templates = isDraftRun
+  ? fixtureTemplates.filter((template) => !notDrafted.test(template.path))
+  : fixtureTemplates;
 
 test.describe("every institutional template", () => {
   for (const template of templates) {
@@ -52,6 +62,9 @@ test.describe("every institutional template", () => {
 });
 
 test.describe("about and leadership", () => {
+  // Asserts fixture documents; draft-content.spec.ts covers the draft equivalents.
+  test.skip(isDraftRun, FIXTURE_SPECIFIC);
+
   test("about shows the CMS heading, the leadership profile and onward links", async ({ page }) => {
     await page.goto("/about");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("About (fixture)");
@@ -75,12 +88,14 @@ test.describe("trust centre", () => {
     page,
   }) => {
     await page.goto("/trust");
-    await expect(page.locator('main a[href^="/trust/"]')).toHaveCount(8);
+    // Every published topic: all eight fixture topics, or the six drafted ones (ADR-025).
+    await expect(page.locator('main a[href^="/trust/"]')).toHaveCount(isDraftRun ? 6 : 8);
     const request = page.getByRole("link", { name: "Request procurement evidence" });
     await expect(request).toHaveAttribute("href", "/contact?intent=procurement");
   });
 
   test("certifications show scope and dates; other topics omit the block", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/trust/certifications");
     await expect(page.getByRole("heading", { level: 2, name: "Certifications" })).toBeVisible();
     await expect(page.getByText("Example scope (fixture)")).toBeVisible();
@@ -91,6 +106,7 @@ test.describe("trust centre", () => {
   });
 
   test("the subprocessor table has a caption, headers and a row", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/trust/subprocessors");
     const table = page.getByRole("table", { name: "Subprocessors" });
     await expect(table).toBeVisible();
@@ -114,6 +130,7 @@ test.describe("trust centre", () => {
 
 test.describe("careers", () => {
   test("lists the open role only and links to its page", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/careers");
     await expect(page.locator('main a[href^="/careers/"]')).toHaveCount(1);
     await expect(page.locator('main a[href="/careers/example-role"]')).toBeVisible();
@@ -121,6 +138,7 @@ test.describe("careers", () => {
   });
 
   test("an open role has JobPosting data and an application link", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/careers/example-role");
     const nodes = await jsonLdNodes(page);
     const job = nodes.find((node) => node["@type"] === "JobPosting");
@@ -136,6 +154,7 @@ test.describe("careers", () => {
   test("a closed role says so, has no JobPosting data and no application link", async ({
     page,
   }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/careers/example-closed-role");
     await expect(page.getByText("This role is closed")).toBeVisible();
     const types = (await jsonLdNodes(page)).map((node) => node["@type"]);
@@ -150,6 +169,7 @@ test.describe("careers", () => {
 
 test.describe("legal", () => {
   test("shows the CMS title, version, effective date and body", async ({ page }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/legal/privacy");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Example privacy page (fixture)",

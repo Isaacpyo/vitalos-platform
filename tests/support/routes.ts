@@ -4,7 +4,10 @@
  * appears in sitemap.xml, so a suite can prove that the manifest has not drifted from the site: a
  * new template appears in the sitemap, matches no pattern and fails `sitemap.http.spec.ts` until it
  * is added here (and therefore to the axe, reflow, focus and JavaScript-budget sweeps).
+ * Under the draft content source the sweeps use `DRAFT_TEMPLATES` instead (ADR-025).
  */
+import { isDraftRun } from "./content-source";
+
 export interface TemplateRoute {
   /** Stable name used in test titles. */
   name: string;
@@ -19,7 +22,7 @@ export interface TemplateRoute {
   inSitemap?: false;
 }
 
-export const TEMPLATES: readonly TemplateRoute[] = [
+export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "home", path: "/", pattern: "/" },
   { name: "what we do", path: "/what-we-do", pattern: "/what-we-do" },
   { name: "practice", path: "/what-we-do/example-practice", pattern: "/what-we-do/:slug" },
@@ -52,6 +55,65 @@ export const TEMPLATES: readonly TemplateRoute[] = [
   { name: "contact", path: "/contact", pattern: "/contact" },
 ];
 
+/**
+ * The same templates under the `draft` content source (ADR-025), with draft slugs. Templates whose
+ * section has no draft content are absent because their pages do not exist: Work, Insights,
+ * people and Careers stay behind closed publication gates. Leadership (no profile, no route page)
+ * and the legal pages (marked "not in force") are served but `noindex`, so the sitemap omits them.
+ */
+const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
+  { name: "home", path: "/", pattern: "/" },
+  { name: "what we do", path: "/what-we-do", pattern: "/what-we-do" },
+  { name: "practice", path: "/what-we-do/engineering", pattern: "/what-we-do/:slug" },
+  { name: "solutions", path: "/solutions", pattern: "/solutions" },
+  { name: "solution", path: "/solutions/ai-transformation", pattern: "/solutions/:slug" },
+  { name: "offers", path: "/offers", pattern: "/offers" },
+  { name: "offer", path: "/offers/ai-opportunity-assessment", pattern: "/offers/:slug" },
+  { name: "industries", path: "/industries", pattern: "/industries" },
+  { name: "industry", path: "/industries/health-care", pattern: "/industries/:slug" },
+  { name: "how we work", path: "/how-we-work", pattern: "/how-we-work" },
+  { name: "labs index", path: "/labs", pattern: "/labs" },
+  { name: "labs category", path: "/labs/research", pattern: "/labs/:slug" },
+  {
+    name: "lab asset",
+    path: "/labs/research/production-ai-evaluation-harness",
+    pattern: "/labs/:slug/:slug",
+  },
+  { name: "about", path: "/about", pattern: "/about" },
+  {
+    name: "leadership",
+    path: "/about/leadership",
+    pattern: "/about/leadership",
+    inSitemap: false,
+  },
+  { name: "trust overview", path: "/trust", pattern: "/trust" },
+  { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
+  { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
+  { name: "contact", path: "/contact", pattern: "/contact" },
+];
+
+/** The templates of the content source under test (see tests/support/content-source.ts). */
+export const TEMPLATES: readonly TemplateRoute[] = isDraftRun ? DRAFT_TEMPLATES : FIXTURE_TEMPLATES;
+
+/**
+ * Paths of named templates under the content source being tested. A name that is not a template
+ * at all always throws, and under fixtures every template exists, so a missing one throws too:
+ * tests can never vanish silently. Only under the draft source may a template be absent (its
+ * section has no draft content), and then it is left out.
+ */
+export function templatePaths(...names: string[]): string[] {
+  return names.flatMap((name) => {
+    if (!FIXTURE_TEMPLATES.some((template) => template.name === name)) {
+      throw new Error(`No template named "${name}" in tests/support/routes.ts`);
+    }
+    const path = TEMPLATES.find((template) => template.name === name)?.path;
+    if (path === undefined && !isDraftRun) {
+      throw new Error(`Template "${name}" is missing from the fixture manifest`);
+    }
+    return path === undefined ? [] : [path];
+  });
+}
+
 /** The 404 template (served for any unknown path and for every closed gate). */
 export const NOT_FOUND_PATH = "/this-page-does-not-exist";
 
@@ -64,8 +126,9 @@ export function matchesPattern(path: string, pattern: string): boolean {
   );
 }
 
+/** The template family of a path. Families are the same for every content source. */
 export const templateFor = (path: string): TemplateRoute | undefined =>
-  TEMPLATES.find((template) => matchesPattern(path, template.pattern));
+  FIXTURE_TEMPLATES.find((template) => matchesPattern(path, template.pattern));
 
 /**
  * Sections behind a publication gate (ADR-022): with the `sparse` set every path below one of

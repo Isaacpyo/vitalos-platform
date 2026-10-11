@@ -109,6 +109,43 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The draft editorial content source (ADR-025): repo-authored content pending owner approval.
+  # Gated routes and page content are decided at build time, so it is its own build like the sparse
+  # job: the Playwright config builds and serves apps/web with VITALOS_CONTENT_SOURCE=draft, the
+  # memory enquiry backend and the dummy Turnstile keys. Fixture-specific specs skip themselves
+  # (tests/support/content-source.ts). No secrets, no remote services.
+  e2e-draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_CONTENT_SOURCE: draft
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with: { run_install: false }
+      - uses: actions/setup-node@v5
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Draft-content end-to-end (builds and starts apps/web with the draft source)
+        run: pnpm test:e2e
+      - name: Accessibility on the draft templates (axe, WCAG 2.2 AA)
+        run: pnpm test:a11y
+        env: { E2E_SKIP_BUILD: "1" }
+        if: ${{ !cancelled() }}
+      - name: Client bundle secret scan
+        run: pnpm check:bundle-secrets
+        if: ${{ !cancelled() }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-draft
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
   # Visual regression (ADR-021 decision 7). NON-GATING: continue-on-error, and it must never be
   # added to the required checks until the owner approves the Figma templates. Baselines are
   # specific to this runner's Chromium and fonts, so the job is self-baselining: with no committed
