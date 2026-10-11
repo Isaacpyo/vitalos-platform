@@ -4,7 +4,8 @@ name: Super Admin deploy
 # default, or Neon), Cloudflare free DNS, Azure managed TLS.
 # Never runs automatically. The deploy job uses the "production" environment (it resolves to the
 # Vercel-created "Production"; no required reviewer on this plan) holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC, no stored Azure keys),
-# DATABASE_URL (Supabase session pooler, or Neon pooled) and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN.
+# SUPERADMIN_DATABASE_URL (the Super Admin's own Supabase session pooler or Neon pooled string, never the
+# website's) and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN.
 # See superadmin/docs/DEPLOY.md.
 on:
   workflow_dispatch:
@@ -95,7 +96,7 @@ jobs:
         env:
           AZ_SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           IMAGE: ${{ needs.build.outputs.image }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.SUPERADMIN_DATABASE_URL }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
