@@ -9,6 +9,12 @@
         <a role="tab" class="tab" href="{% url 'architecture:settings_company' %}" aria-selected="{% if tab == 'company' %}true{% else %}false{% endif %}" hx-get="{% url 'architecture:settings_company' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">Company profile</a>
         <a role="tab" class="tab" href="{% url 'accounts:settings_users' %}" aria-selected="{% if tab == 'users' %}true{% else %}false{% endif %}" hx-get="{% url 'accounts:settings_users' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">Users &amp; roles</a>
       {% endif %}
+      {% if is_superadmin %}
+        <a role="tab" class="tab" href="{% url 'enquiries_settings:email' %}" aria-selected="{% if tab == 'email' %}true{% else %}false{% endif %}">Email</a>
+      {% endif %}
+      {% if can_enquiries %}
+        <a role="tab" class="tab" href="{% url 'enquiries_settings:notifications' %}" aria-selected="{% if tab == 'notifications' %}true{% else %}false{% endif %}">Notifications</a>
+      {% endif %}
       <a role="tab" class="tab" href="{% url 'accounts:settings_tokens' %}" aria-selected="{% if tab == 'tokens' %}true{% else %}false{% endif %}" hx-get="{% url 'accounts:settings_tokens' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">API tokens</a>
       <a role="tab" class="tab" href="{% url 'architecture:settings_data' %}" aria-selected="{% if tab == 'data' %}true{% else %}false{% endif %}" hx-get="{% url 'architecture:settings_data' %}" hx-select="#settings-region" hx-target="#settings-region" hx-swap="outerHTML" hx-push-url="true">CSV import / export</a>
     </nav>

@@ -1,0 +1,5 @@
+{# Activity tabs. Context: active ("changes" or "audit"). The audit trail is SuperAdmin only. #}
+<nav class="mt-4 flex gap-1 border-b border-slate-200 pb-2 dark:border-slate-800" aria-label="Activity views">
+  <a href="{% url 'architecture:activity' %}" class="tab" {% if active == "changes" %}aria-current="page"{% endif %}>Changes</a>
+  {% if is_superadmin %}<a href="{% url 'audit:trail' %}" class="tab" {% if active == "audit" %}aria-current="page"{% endif %}>Audit trail</a>{% endif %}
+</nav>

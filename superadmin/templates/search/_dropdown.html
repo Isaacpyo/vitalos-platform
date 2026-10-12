@@ -11,5 +11,5 @@
   {% empty %}
     <p class="muted px-2 py-3">No matches for “{{ query }}”.</p>
   {% endfor %}
-  {% if groups %}<a href="{% url 'architecture:search' %}?q={{ query|urlencode }}" class="mt-1 block border-t border-slate-100 px-2 pt-2 text-xs text-vitalos-blue hover:underline dark:border-slate-800 dark:text-blue-400">See all results</a>{% endif %}
+  {% if groups %}<a href="{% url 'architecture:search' %}?q={{ query|urlencode }}" class="mt-1 block border-t border-slate-100 px-2 pt-2 text-xs text-vitalos-blue hover:underline dark:border-slate-800 dark:text-cobalt-300">See all results</a>{% endif %}
 </div>

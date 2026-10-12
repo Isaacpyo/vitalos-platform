@@ -3,7 +3,7 @@
 {% block content %}
   <div class="flex flex-wrap items-end justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-semibold">Activity</h1>
+      <h1 class="font-display text-2xl font-semibold">Activity</h1>
       <p class="muted mt-1 text-sm">Every change to the architecture, from the audit history.</p>
     </div>
     <form method="get" class="flex flex-wrap gap-2" hx-get="{% url 'architecture:activity' %}" hx-trigger="change" hx-target="#activity-list" hx-swap="outerHTML" hx-push-url="true">
@@ -20,6 +20,7 @@
       <noscript><button type="submit" class="btn btn-secondary">Filter</button></noscript>
     </form>
   </div>
+  {% include "activity/_tabs.html" with active="changes" %}
   <div class="card mt-6 px-4">
     {% include "activity/_list.html" %}
   </div>

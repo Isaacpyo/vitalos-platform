@@ -15,7 +15,7 @@
           <h2 class="font-semibold">{{ group.label }}</h2>
           <ul class="mt-2 divide-y divide-slate-100 text-sm dark:divide-slate-800">
             {% for result in group.results %}
-              <li class="py-2"><a href="{{ result.get_absolute_url }}" class="font-medium text-vitalos-blue hover:underline dark:text-blue-400">{{ result }}</a>{% if result.service_line and result.service_line != result %}<span class="muted text-xs"> · {{ result.service_line.name }}</span>{% endif %}</li>
+              <li class="py-2"><a href="{{ result.get_absolute_url }}" class="font-medium text-vitalos-blue hover:underline dark:text-cobalt-300">{{ result }}</a>{% if result.service_line and result.service_line != result %}<span class="muted text-xs"> · {{ result.service_line.name }}</span>{% endif %}</li>
             {% endfor %}
           </ul>
         </section>

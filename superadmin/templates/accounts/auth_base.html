@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
+{% block main_width %}max-w-md{% endblock %}
 {% block content %}
-  <div class="mx-auto mt-10 max-w-md sm:mt-20">
-    <div class="mb-6 text-center">
-      <p class="text-lg font-semibold tracking-[0.3em] text-vitalos-blue dark:text-blue-400">VITALOS</p>
-      <p class="muted text-sm">Super Admin</p>
+  <div class="mt-8 sm:mt-16">
+    <div class="flex items-center justify-between rounded-t-md bg-midnight px-6 py-5 sm:px-8">
+      <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28" class="h-7 w-auto">
+      <span class="font-mono text-[11px] uppercase tracking-wider text-slate-300">Super Admin</span>
     </div>
-    <div class="card p-6 sm:p-8">
+    <div class="card rounded-t-none border-t-0 p-6 sm:p-8">
       {% block auth_body %}{% endblock %}
     </div>
     <p class="muted mt-6 text-center text-xs">Internal system. Access is logged. Microsoft Entra ID single sign-on is planned for Phase 2.</p>

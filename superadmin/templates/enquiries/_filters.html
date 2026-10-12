@@ -1,0 +1,24 @@
+{% load ui %}
+<p class="mono-label muted px-2 pb-1">Views</p>
+<ul class="space-y-0.5">
+  {% for key, label, count in filters %}
+    <li>
+      <a href="{% url 'enquiries:inbox' %}?f={{ key }}" class="flex min-h-8 items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 {% if key == filter_key %}bg-cobalt-600/10 font-medium text-cobalt-600 dark:bg-cobalt/20 dark:text-cobalt-300{% endif %}"
+         {% if key == filter_key %}aria-current="true"{% endif %} data-filter="{{ key }}">
+        <span>{{ label }}</span><span class="tabular text-xs {% if key != filter_key %}muted{% endif %}">{{ count }}</span>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+{% if tags %}
+  <p class="mono-label muted mt-5 px-2 pb-1">Tags</p>
+  <ul class="space-y-0.5">
+    {% for item in tags %}
+      <li><a href="{% url 'enquiries:inbox' %}?f={{ filter_key }}&amp;tag={{ item.name|urlencode }}" class="block rounded-md px-2 py-1 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 {% if item.name == tag %}font-medium text-cobalt-600 dark:text-cobalt-300{% endif %}" {% if item.name == tag %}aria-current="true"{% endif %}># {{ item.name }}</a></li>
+    {% endfor %}
+    {% if tag %}<li><a href="{% url 'enquiries:inbox' %}?f={{ filter_key }}" class="muted block px-2 py-1 text-xs hover:underline">Clear tag filter</a></li>{% endif %}
+  </ul>
+{% endif %}
+{% if is_superadmin %}
+  <p class="mt-6 px-2"><a href="{% url 'enquiries_settings:email' %}" class="muted text-xs hover:underline">Email settings</a></p>
+{% endif %}

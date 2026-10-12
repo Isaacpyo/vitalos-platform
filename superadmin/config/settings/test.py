@@ -13,7 +13,9 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "attachments": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
 }
+ATTACHMENTS_STORAGE_ENABLED = True
 LOGGING["handlers"]["console"]["formatter"] = "text"
 LOGGING["root"]["level"] = "WARNING"
 LOGGING["loggers"]["django"]["level"] = "ERROR"

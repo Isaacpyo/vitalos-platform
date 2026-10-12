@@ -8,7 +8,9 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.accounts.roles import SUPERADMIN, has_service_access, is_superadmin, role_required
+from apps.core import overview
 from apps.core.htmx import changed_response
+from apps.enquiries.selectors import can_access as can_access_enquiries
 
 from .. import activity, search, selectors, services
 from ..models import Decision, Offer, Practice, Project, ServiceLine, Solution, TeamMember
@@ -40,8 +42,20 @@ def home(request):
         "company": selectors.company(user),
         "service_lines": selectors.service_lines_for_home(user),
         "recent_activity": activity.feed(user, limit=8),
+        "system": overview.system_status(),
+        "show_enquiry_kpis": can_access_enquiries(user),
     }
+    if context["show_enquiry_kpis"]:
+        context["kpis"] = overview.enquiry_kpis()
+        context["attention"] = overview.needs_attention()
     return render(request, "architecture/home.html", context)
+
+
+@role_required()
+@require_GET
+def service_lines(request):
+    context = {"service_lines": selectors.service_lines_for_home(request.user)}
+    return render(request, "architecture/service_lines.html", context)
 
 
 def _overview(request, line, archived):

@@ -21,15 +21,17 @@
           </div>
         </div>
       </div>
-      <dl class="grid grid-cols-2 gap-6 text-sm sm:text-right">
-        <div><dt class="muted text-xs">Owner</dt><dd class="font-medium">{{ line.owner|default:"Not assigned" }}</dd></div>
-        <div><dt class="muted text-xs">Active projects</dt><dd class="text-lg font-semibold">{{ active_projects }}</dd></div>
+      <div class="grid grid-cols-2 gap-6 text-sm sm:text-right">
+        <dl class="contents">
+          <div><dt class="muted text-xs">Owner</dt><dd class="font-medium">{{ line.owner|default:"Not assigned" }}</dd></div>
+          <div><dt class="muted text-xs">Active projects</dt><dd class="text-lg font-semibold">{{ active_projects }}</dd></div>
+        </dl>
         {% if is_superadmin %}
           <div class="col-span-2">
             <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'architecture:entity_edit' 'serviceline' line.pk %}" hx-target="#modal">{% icon "edit" "h-4 w-4" %} Edit service line</button>
           </div>
         {% endif %}
-      </dl>
+      </div>
     </div>
   </header>
   {% include "architecture/dashboard/_region.html" %}

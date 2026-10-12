@@ -1,6 +1,6 @@
 # ADR 030 Shared email layout for every Vitalos email
 
-Status: Accepted (owner brief, 12 October 2026). Numbered 030 because ADR-029 is taken by the Super Admin mail ADR on PR #83.
+Status: Accepted (owner brief, 12 October 2026). Numbered 030 because ADR-029 is the Super Admin enquiries, mail and console ADR (PR #83).
 
 ## Context
 
