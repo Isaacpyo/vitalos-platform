@@ -60,7 +60,7 @@ Notes:
 - With no Sanity configuration the web app runs on the `empty` content source (honest empty state, all publication gates closed). `fixtures` (artificial content) is for tests and local work and is rejected in production; `draft` (content drafted from the strategy library, pending approval, ADR-025) is for review in local, preview and staging and is likewise rejected in production. See `docs/operations/local-development.md`.
 - `apps/web` never imports `sanity`, `@vitalos/cms/schemas|structure|actions|presentation`. The Studio is a separate build and deployment unit.
 - Storybook is private by default and is not deployed.
-- The web, Studio, Storybook and Super Admin are independent build/deployment units. Super Admin is an internal Django application with its own database and toolchain and no source imports in either direction (ADR-026).
+- The web, Studio, Storybook and Super Admin are independent build/deployment units. Super Admin is an internal Django application with its own database and toolchain and no source imports in either direction (ADR-026). Its planned enquiry mail path (proposed, not live): Cloudflare Email Routing, an Email Worker (`infra/cloudflare-email-worker`) that forwards to the existing inbox and posts signed mail to the Super Admin, and Resend for outbound mail (ADR-028).
 
 ## Runtime responsibilities (`apps/web`)
 

@@ -51,7 +51,9 @@ Each integration is a provider adapter behind an interface. It uses server-side 
 
 ## 9. Email notifications
 
-- An outbox table plus a delivery worker (Container Apps job) and an email provider adapter (Microsoft Graph `sendMail` or an approved transactional provider). Per-user preferences cover role changes, status changes, KPI breaches and a daily digest. Email failure never blocks the in-app notification.
+- **Delivered (12 Oct 2026, ADR-028, pending owner approval to switch on):** email notifications for enquiries (flush plus an 08:00 digest from `send_enquiry_notifications`), outbound mail through Resend behind a provider interface, and the Cloudflare Email Worker for inbound support mail. Setup: [email-setup.md](email-setup.md).
+- **Remaining:** notifications for architecture events (role changes, status changes, KPI breaches), per-user preferences for them, and the Microsoft Graph adapter once Microsoft 365 is live.
+- Original design note: an outbox table plus a delivery worker (Container Apps job) and an email provider adapter (Microsoft Graph `sendMail` or an approved transactional provider). Per-user preferences cover role changes, status changes, KPI breaches and a daily digest. Email failure never blocks the in-app notification.
 
 ## Platform hardening carried over from Phase 1
 
