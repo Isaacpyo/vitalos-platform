@@ -1,12 +1,17 @@
 import { NotificationError } from "../domain/ports";
 import type { EnquiryLogger, NotificationMessage, Notifier } from "../domain/ports";
+import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-notification-email";
 
 /**
  * Email notifier adapters (`EMAIL_PROVIDER=postmark|resend`). They only tell the internal
  * recipient (`ENQUIRY_NOTIFICATION_TO`) that an enquiry arrived; the database stays the record.
+ * The message is multipart/alternative (plain text and HTML), rendered by
+ * `enquiry-notification-email.ts`.
  *
  * Privacy rules:
- * - The subject carries the reference and the intent only (never the goal, name or organisation).
+ * - The subject carries the intent, the enquirer's name and organisation and the reference; the
+ *   HTML preheader carries the timeframe and the start of the goal. This lets the internal
+ *   recipient triage from the inbox (owner decision 2026-10-12, ADR-019 status note).
  * - The body carries the enquiry for the internal recipient, as the notifier design intends.
  * - Logs carry the provider, kind, reference, correlation id and an HTTP status. Never an address,
  *   a name, the goal, the API key, or any provider response body (providers can echo the request).
@@ -45,43 +50,9 @@ interface EmailContent {
   to: string;
   subject: string;
   text: string;
+  html: string;
   replyTo: string | undefined;
   idempotencyKey: string;
-}
-
-const oneLine = (value: string): string => value.replace(/[\r\n\t]+/g, " ").trim();
-const SAFE_TOKEN = /^[a-z0-9][a-z0-9-]{0,39}$/;
-const SIMPLE_ADDRESS = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
-
-/** Reference and intent only. The intent is shown only if it is a short lowercase token. */
-export function buildSubject(message: NotificationMessage): string {
-  const { reference, intent } = message.enquiry;
-  return intent && SAFE_TOKEN.test(intent)
-    ? `New enquiry ${reference} (${intent})`
-    : `New enquiry ${reference}`;
-}
-
-export function buildTextBody(message: NotificationMessage): string {
-  const e = message.enquiry;
-  const lines = [
-    `Reference: ${e.reference}`,
-    `Received: ${e.receivedAt}`,
-    `Name: ${oneLine(e.name)}`,
-    e.organisation ? `Organisation: ${oneLine(e.organisation)}` : undefined,
-    `Work email: ${oneLine(e.workEmail)}`,
-    e.role ? `Role: ${oneLine(e.role)}` : undefined,
-    e.intent ? `Intent: ${oneLine(e.intent)}` : undefined,
-    e.timeframe ? `Timeframe: ${oneLine(e.timeframe)}` : undefined,
-    e.budgetRange ? `Budget range: ${oneLine(e.budgetRange)}` : undefined,
-    e.offerSlug ? `Offer: ${oneLine(e.offerSlug)}` : undefined,
-    e.sourcePath ? `Source page: ${oneLine(e.sourcePath)}` : undefined,
-    "",
-    "Goal:",
-    e.goal,
-    "",
-    "Internal notification. The enquiry is stored in the Vitalos database; this email is not the record.",
-  ];
-  return lines.filter((line) => line !== undefined).join("\n");
 }
 
 abstract class EmailNotifier implements Notifier {
@@ -109,12 +80,15 @@ abstract class EmailNotifier implements Notifier {
       throw new NotificationError("email-kind-unsupported", { retryable: false });
     }
 
-    const workEmail = oneLine(message.enquiry.workEmail);
+    // Same cleaning as the template, so the Reply-To and the reply button always agree.
+    const workEmail = cleanLine(message.enquiry.workEmail);
+    const rendered = renderEnquiryNotification(message);
     const request = this.request({
       from: this.options.from,
       to: this.options.to,
-      subject: buildSubject(message),
-      text: buildTextBody(message),
+      subject: rendered.subject,
+      text: rendered.text,
+      html: rendered.html,
       replyTo: SIMPLE_ADDRESS.test(workEmail) ? workEmail : undefined,
       idempotencyKey: message.idempotencyKey,
     });
@@ -188,6 +162,7 @@ export class PostmarkNotifier extends EmailNotifier {
         To: c.to,
         Subject: c.subject,
         TextBody: c.text,
+        HtmlBody: c.html,
         ...(c.replyTo ? { ReplyTo: c.replyTo } : {}),
       },
     };
@@ -210,6 +185,7 @@ export class ResendNotifier extends EmailNotifier {
         to: [c.to],
         subject: c.subject,
         text: c.text,
+        html: c.html,
         ...(c.replyTo ? { reply_to: c.replyTo } : {}),
       },
     };
