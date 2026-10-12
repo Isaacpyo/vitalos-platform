@@ -31,6 +31,7 @@ jobs:
     name: Plan (resources and expected cost)
     if: inputs.confirm == 'DEPLOY'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
       - name: Print the deployment plan
@@ -42,6 +43,7 @@ jobs:
     name: Build and push image to ghcr.io
     needs: plan
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
@@ -79,6 +81,7 @@ jobs:
     name: Deploy to Azure Container Apps
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
