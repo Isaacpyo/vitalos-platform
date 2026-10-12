@@ -8,7 +8,7 @@
  * that every cited section heading exists in the cited stage file.
  */
 
-/** The only status a draft document can have. Approval happens in Sanity, not in this repo. */
+/** The only status a draft document can have. Approval is an owner decision recorded in a pull request. */
 export const DRAFT_STATUS = "draft-pending-approval" as const;
 export type DraftStatus = typeof DRAFT_STATUS;
 
@@ -30,7 +30,7 @@ export interface DraftProvenance {
   omitted?: string;
   /**
    * The document is invented placeholder content (owner directive of 11 October 2026, ADR-025):
-   * excluded from the Sanity export unless `--include-placeholders` is passed.
+   * dropped by the repo content source (ADR-028).
    */
   placeholder?: true;
 }

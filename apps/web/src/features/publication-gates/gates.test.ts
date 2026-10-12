@@ -52,9 +52,4 @@ describe("indexIsServable", () => {
     expect(indexIsServable("insights", evaluateGates({ insights: 5 }))).toBe(false);
     expect(indexIsServable("insights", evaluateGates({ insights: 6 }))).toBe(true);
   });
-
-  it("lets editors preview a closed section in Draft Mode only", () => {
-    expect(indexIsServable("work", closedGates, { draft: true })).toBe(true);
-    expect(indexIsServable("work", closedGates, { draft: false })).toBe(false);
-  });
 });

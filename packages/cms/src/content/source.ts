@@ -1,6 +1,6 @@
 /**
  * The content boundary of the platform. The web app depends only on this interface;
- * Sanity, fixtures and the empty source are interchangeable implementations.
+ * The repo, draft, fixtures and empty sources are interchangeable implementations.
  *
  * Empty-content policy (ADR-022): a missing detail document yields `null` (the page calls
  * `notFound()`); a section without data renders nothing; draft/preview mode may show a
@@ -60,7 +60,7 @@ export interface ContentSource {
 
 /**
  * Honest empty state: no documents, every gate closed, no settings. Used when no CMS is
- * configured so the platform builds and runs without Sanity.
+ * configured so the platform builds and runs without content.
  */
 export class EmptyContentSource implements ContentSource {
   getSiteChrome(): Promise<SiteChromeView> {

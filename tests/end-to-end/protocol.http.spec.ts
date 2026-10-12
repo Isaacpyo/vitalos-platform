@@ -180,7 +180,7 @@ test.describe("security headers (ADR-020)", () => {
       expect(directives.get("object-src")).toEqual(["'none'"]);
       expect(directives.get("base-uri")).toEqual(["'self'"]);
       expect(directives.get("form-action")).toEqual(["'self'"]);
-      // No Studio origin is configured here, so nothing may frame the site.
+      // Nothing may frame the site.
       expect(directives.get("frame-ancestors")).toEqual(["'none'"]);
       // Production build: React's dev tooling needs no eval.
       expect(directives.get("script-src") ?? []).not.toContain("'unsafe-eval'");

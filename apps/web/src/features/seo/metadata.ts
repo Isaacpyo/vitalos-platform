@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { brandName } from "@vitalos/cms";
 import type { ImageView, SeoView } from "@vitalos/cms";
 import { isSafeRelativeRedirect } from "@vitalos/security/url";
-import { classifyImageUrl } from "../../lib/cms/images";
+import { isSameOriginImage } from "../../lib/cms/images";
 import { getSeoContext } from "./context";
 import type { SeoContext } from "./context";
 
@@ -33,16 +33,8 @@ export interface PageMetadataInput {
   absoluteTitle?: boolean | undefined;
 }
 
-const imageScope = () => ({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || undefined,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || undefined,
-});
-
 const usableImage = (image: ImageView | undefined): ImageView | undefined =>
-  image &&
-  !image.decorative &&
-  image.alt.trim() !== "" &&
-  classifyImageUrl(image.url, imageScope()) !== null
+  image && !image.decorative && image.alt.trim() !== "" && isSameOriginImage(image.url)
     ? image
     : undefined;
 

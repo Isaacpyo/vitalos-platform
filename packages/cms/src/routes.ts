@@ -1,5 +1,5 @@
 /**
- * Single source of truth for public URLs (web app, Studio Presentation, sitemap, redirects).
+ * Single source of truth for public URLs (web app, sitemap, redirects).
  * URL architecture: Stage 8 §7; route inventory: Stage 10 §11-12; manifest: ADR-022.
  */
 import type { GateKey } from "./content/gates";

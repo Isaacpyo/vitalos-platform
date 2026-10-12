@@ -5,11 +5,6 @@ import { redirectMap, seedRedirects } from "./redirect-map";
 import type { RedirectRule } from "./types";
 import { assertValidRedirects, validateRedirects } from "./validate";
 import { isLiveStaticRoute } from "../publication-gates/route-gates";
-// @ts-expect-error The script is plain ESM JavaScript without type declarations.
-import * as pull from "../../../../../tooling/scripts/redirects-pull.mjs";
-
-const { normaliseRows, renderGeneratedModule } = pull;
-
 const live = { isLiveRoute: isLiveStaticRoute };
 const issues = (rules: RedirectRule[]) => validateRedirects(rules, live).map((i) => i.message);
 
@@ -103,7 +98,7 @@ describe("validateRedirects", () => {
     expect(issues([r("/old", "/contact?intent=procurement")])).toEqual([]);
   });
 
-  it("allows https external destinations (the Studio allows them too)", () => {
+  it("allows https external destinations (as the redirect rules allow)", () => {
     expect(issues([r("/old", "https://example.invalid/new")])).toEqual([]);
     // An external destination is never a chain, even if its path matches another source.
     expect(issues([r("/a", "https://example.invalid/b"), r("/b", "/c")])).toEqual([]);
@@ -161,38 +156,5 @@ describe("gone (410)", () => {
     const response = goneResponse();
     expect(response.status).toBe(410);
     expect(response.headers.get("cache-control")).toContain("max-age=0");
-  });
-});
-
-describe("redirects-pull script", () => {
-  it("normalises Sanity rows into sorted rules", () => {
-    expect(
-      normaliseRows([
-        { source: " /b ", destination: " /c ", status: "308" },
-        { source: "/a", status: 410, destination: "/ignored" },
-        { source: "/aa", destination: "/x", status: 301, extra: "dropped" },
-      ]),
-    ).toEqual([
-      { source: "/a", status: 410 },
-      { source: "/aa", destination: "/x", status: 301 },
-      { source: "/b", destination: "/c", status: 308 },
-    ]);
-  });
-
-  it("rejects rows that cannot be rules", () => {
-    expect(() => normaliseRows(null)).toThrow();
-    expect(() => normaliseRows([{ destination: "/x", status: 301 }])).toThrow(/no source/);
-    expect(() => normaliseRows([{ source: "/a", destination: "/x", status: 302 }])).toThrow(
-      /status/,
-    );
-    expect(() => normaliseRows([{ source: "/a", status: 301 }])).toThrow(/no destination/);
-  });
-
-  it("renders the committed empty module exactly, and valid modules otherwise", () => {
-    expect(renderGeneratedModule([])).toContain(
-      "export const generatedRedirects: readonly RedirectRule[] = [];",
-    );
-    const text: string = renderGeneratedModule([{ source: "/a", destination: "/b", status: 301 }]);
-    expect(text).toContain('{ source: "/a", destination: "/b", status: 301 },');
   });
 });

@@ -2,7 +2,7 @@
 
 Status (10 Oct 2026): only the four redirects named in the specification are seeded. The live-site URL inventory has not been supplied, so no other redirect exists and none has been guessed. Launch gate G7 (`docs/delivery/launch-gates.md`) cannot close until the inventory is reviewed with the owner.
 
-Mechanism: ADR-018 decision 7 and the refinements. Code: `apps/web/src/features/redirects/` (`redirect-map.ts`, `generated.ts`, `validate.ts`, `gone.ts`, `next-redirects.ts`) and `tooling/scripts/redirects-pull.mjs`.
+Mechanism: ADR-018 decision 7 and the refinements. Code: `apps/web/src/features/redirects/` (`redirect-map.ts`, `additional-redirects.ts`, `validate.ts`, `gone.ts`, `next-redirects.ts`).
 
 ## Seeded redirects (version-controlled in `redirect-map.ts`)
 
@@ -19,17 +19,17 @@ Notes:
 
 - `/labs` is gated: below its publication threshold (1 approved lab asset) the destination answers 404 until Labs content exists. Decide whether `/technologies` should wait or go elsewhere before cutover.
 - `/legal/privacy` and `/legal/terms` need published legal pages; until then the destinations answer 404.
-- `generated.ts` is empty: no Sanity `redirect` documents have been published.
+- `additional-redirects.ts` is empty: no further redirects have been approved.
 
 ## Rules enforced at build
 
-`next.config.ts` validates the whole map (seed plus generated) and fails the build on a violation:
+`next.config.ts` validates the whole map (seed plus `additional-redirects.ts`) and fails the build on a violation:
 
 - exact paths only (no wildcards, regular expressions or query handling); sources start with a single `/`;
 - unique sources; no chains; no loops;
 - no blanket redirect to `/`;
 - no redirect of a live static route;
-- same-site destinations, or https URLs from Sanity (external destinations skip the chain, loop and blanket checks);
+- same-site destinations, or https URLs (external destinations skip the chain, loop and blanket checks);
 - status 301, 308 or 410. A 410 answers `Gone` from `proxy.ts` and has no destination.
 
 A dynamic detail path such as `/insights/old-slug` may be redirected so slug changes work; a static manifest page or `/api` path may not.
@@ -46,10 +46,9 @@ Principles (Stage 10 section 12, ADR-018): redirect each retired URL to the clos
 
 ## Process for adding redirects
 
-1. Create or approve `redirect` documents in Studio (`docs/cms/editorial-workflow.md`). Slug changes create a draft 301 automatically.
-2. Owner runs `node tooling/scripts/redirects-pull.mjs` (needs the Sanity project id and dataset; a read token only for a private dataset). It validates and writes `generated.ts`; `--check` fails if the file differs from Sanity.
-3. Review the `generated.ts` diff in a pull request, merge, redeploy. Publishing in Sanity alone changes nothing live.
-4. For one-off changes without Sanity, edit `redirect-map.ts` through a reviewed pull request.
+1. Add the rule (301 or 308 with a destination, or 410) to `apps/web/src/features/redirects/additional-redirects.ts`. For a changed slug, add a 301 from the old path to the new one in the same pull request.
+2. The unit tests and the build validate the whole map (no chains, loops, blanket redirects or live-route shadowing).
+3. Review in a pull request into `stage-1`, merge and redeploy. Redirects ship with the deployment.
 
 ## Verification before cutover
 

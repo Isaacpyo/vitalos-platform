@@ -124,7 +124,7 @@ export function createMissingDocumentChecker(deps: MissingDocumentCheckerDeps) {
       }
       return !entry.keys.has(key);
     },
-    /** Forget cached lists (after a content revalidation, and in tests). */
+    /** Forget cached lists (in tests). */
     reset(): void {
       cache.clear();
       failedUntil.clear();

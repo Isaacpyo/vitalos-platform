@@ -2,7 +2,7 @@ import { humanise } from "../institutional/format";
 
 /**
  * Structural labels for insight formats and topics. The values are the Stage 8 §16 names
- * (Formats, Topics), keyed by the slugs the Studio stores. An unknown value falls back to a
+ * (Formats, Topics), keyed by the slugs the content stores. An unknown value falls back to a
  * readable form of the slug rather than being hidden.
  */
 const formatLabels: Readonly<Record<string, string>> = {

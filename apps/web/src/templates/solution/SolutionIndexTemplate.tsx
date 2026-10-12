@@ -5,13 +5,12 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { toSolutionCard } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid, gapBand } from "../commercial/bands";
+import { Band, CardGrid } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface SolutionIndexTemplateProps {
   page: RoutePageView | null;
   solutions: readonly SolutionSummary[];
-  draft: boolean;
 }
 
 export const solutionsTrail = () =>
@@ -21,11 +20,7 @@ export const solutionsTrail = () =>
   );
 
 /** Solutions index: problem-led propositions, in the order the specs fix. */
-export function SolutionIndexTemplate({
-  page,
-  solutions,
-  draft,
-}: Readonly<SolutionIndexTemplateProps>) {
+export function SolutionIndexTemplate({ page, solutions }: Readonly<SolutionIndexTemplateProps>) {
   const cards = orderByLockedNames(solutions, solutionNames).flatMap((solution) => {
     const card = toSolutionCard(solution);
     return card ? [card] : [];
@@ -48,9 +43,7 @@ export function SolutionIndexTemplate({
                 ))}
               </CardGrid>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.solutions, tone)
-          ),
+          ) : null,
       ]}
     />
   );

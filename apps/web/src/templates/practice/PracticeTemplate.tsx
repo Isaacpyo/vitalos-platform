@@ -13,7 +13,6 @@ import {
   PageIntro,
   RowList,
   StatementList,
-  gapBand,
   itemLevel,
   renderBands,
 } from "../commercial/bands";
@@ -21,8 +20,6 @@ import {
 export interface PracticeTemplateProps {
   practice: PracticeView;
   gates: PublicationGates;
-  /** Draft Mode: editors see notices for sections that have no content yet. */
-  draft: boolean;
 }
 
 /** The crumbs of a practice page. Also used for the page's BreadcrumbList. */
@@ -36,10 +33,10 @@ export const practiceTrail = (practice: Pick<PracticeView, "title" | "slug">) =>
  * Practice page (Stage 9 section 21): proposition, problems, capabilities, the practice's own
  * account of how it helps, related solutions and offers, industries and work as proof. One
  * template for all five practices; variation comes from content. A section without content is
- * omitted (an editor notice appears in Draft Mode). Industries and Work appear only when their
+ * omitted. Industries and Work appear only when their
  * publication gate is open, because their pages only exist then.
  */
-export function PracticeTemplate({ practice, gates, draft }: Readonly<PracticeTemplateProps>) {
+export function PracticeTemplate({ practice, gates }: Readonly<PracticeTemplateProps>) {
   const cta = ctaToLink(practice.cta) ?? { label: ctas.primary, href: contactHref() };
   const solutionCards = toRailItems("solution", practice.solutions);
   const offerRows = toOfferRows(practice.offers);
@@ -64,17 +61,13 @@ export function PracticeTemplate({ practice, gates, draft }: Readonly<PracticeTe
             <Band tone={tone} heading={structuralLabels.problems}>
               <StatementList items={practice.problems} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.problems, tone)
-          ),
+          ) : null,
         (tone) =>
           practice.capabilities.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.capabilities}>
               <StatementList items={practice.capabilities} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.capabilities, tone)
-          ),
+          ) : null,
         (tone) =>
           practice.body && practice.body.length > 0 ? (
             <Band tone={tone}>
@@ -89,9 +82,7 @@ export function PracticeTemplate({ practice, gates, draft }: Readonly<PracticeTe
                 items={solutionCards}
               />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.relatedSolutions, tone)
-          ),
+          ) : null,
         (tone) =>
           offerRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedOffers}>
@@ -105,9 +96,7 @@ export function PracticeTemplate({ practice, gates, draft }: Readonly<PracticeTe
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.relatedOffers, tone)
-          ),
+          ) : null,
         (tone) =>
           gates.open.industries && industryRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedIndustries}>

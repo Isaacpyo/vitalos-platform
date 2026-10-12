@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { CaseStudyRow, ContentGap, Stack } from "@vitalos/ui";
+import { CaseStudyRow, Stack } from "@vitalos/ui";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
@@ -18,7 +18,7 @@ const LIST_ID = "work-list";
  * hides rows and never writes to the URL (Stage 9 §24: no indexable query pages).
  */
 export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
-  const { page, studies, draft } = data;
+  const { page, studies } = data;
   const groups = workFilterGroups(studies);
   const placeholder = hasPlaceholder(studies);
   return (
@@ -37,11 +37,6 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />
-          <ContentGap
-            draft={draft && !page}
-            title="The Work page heading and introduction are not set"
-            description="Add a Work route page in the Studio. Until then the page shows the navigation label as its heading."
-          />
           <ListFilter listId={LIST_ID} groups={groups} total={studies.length} />
           <ul id={LIST_ID} className="m-0 list-none p-0">
             {studies.map((study) => (

@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { ContentGap, PersonCard, Stack, TableOfContents, TextLink } from "@vitalos/ui";
+import { PersonCard, Stack, TableOfContents, TextLink } from "@vitalos/ui";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
@@ -16,7 +16,7 @@ import { aboutLinks, exploreHeading, leaderCardProps } from "./map";
  * onward links use locked labels.
  */
 export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
-  const { page, leaders, gates, draft } = data;
+  const { page, leaders, gates } = data;
   const model = buildArticleBody(page?.body ?? []);
   const toc = tocForDisplay(model);
   return (
@@ -52,11 +52,6 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
               ) : null}
             </div>
           </div>
-          <ContentGap
-            draft={draft && !page}
-            title="The About page content is not set"
-            description="Add an About route page (heading, introduction, narrative) in the Studio. Until then the page shows the navigation label as its heading and is not indexed."
-          />
 
           {leaders.length > 0 ? (
             <ContentSection id="leadership" heading={navLabels.leadership}>

@@ -7,11 +7,10 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { deriveStages } from "../../lib/view-mapping/stages";
-import { Band, ClosingAction, PageIntro, gapBand, renderBands } from "../commercial/bands";
+import { Band, ClosingAction, PageIntro, renderBands } from "../commercial/bands";
 
 export interface HowWeWorkTemplateProps {
   page: RoutePageView | null;
-  draft: boolean;
 }
 
 export const howWeWorkTrail = () =>
@@ -26,10 +25,9 @@ export const howWeWorkTrail = () =>
  * named after the stage (see `deriveStages`). A stage the editors have not described still shows
  * its name; no description is generated. The page works without a CMS route page.
  */
-export function HowWeWorkTemplate({ page, draft }: Readonly<HowWeWorkTemplateProps>) {
+export function HowWeWorkTemplate({ page }: Readonly<HowWeWorkTemplateProps>) {
   const cta = ctaToLink(page?.cta) ?? { label: ctas.primary, href: contactHref() };
   const { stages, lead } = deriveStages(page?.body, howWeWorkStages);
-  const described = stages.some((stage) => stage.summary !== undefined);
 
   return (
     <PageMain>
@@ -52,7 +50,6 @@ export function HowWeWorkTemplate({ page, draft }: Readonly<HowWeWorkTemplatePro
               <ProcessJourney stages={stages} headingLevel={2} aria-label={navLabels.howWeWork} />
             </Band>
           ) : null,
-        (tone) => (described ? null : gapBand(draft, "Stage descriptions", tone)),
       ])}
       <ClosingAction link={cta} />
     </PageMain>

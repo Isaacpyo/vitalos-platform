@@ -10,7 +10,6 @@ playwright-report/
 .env.*
 !.env.example
 .vercel/
-.sanity/
 supabase/.branches/
 supabase/.temp/
 *.log
@@ -20,4 +19,3 @@ Thumbs.db
 .claude/settings.local.json
 tests/visual/__screenshots__/linux-local/
 # Draft export that includes invented placeholder documents (ADR-025): never committed.
-tooling/content/draft-dataset.with-placeholders.ndjson

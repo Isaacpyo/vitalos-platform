@@ -1,6 +1,6 @@
 /**
  * Assembles the draft content into a content set: views with resolved relations (both directions
- * of every relation are unioned, as the Sanity queries do), the homepage selection and the
+ * of every relation are unioned, as the former CMS queries did), the homepage selection and the
  * provenance register.
  */
 import { summaryOf } from "../content/fixture-source";
@@ -48,7 +48,7 @@ export interface DraftContentSet {
   provenance: Readonly<Record<string, DraftProvenance>>;
   /**
    * Route pages forced `noindex` only because placeholder documents are the sole content of their
-   * section. The Sanity export drops that flag unless the placeholders are exported too.
+   * section. The repo source drops that flag because it drops the placeholders.
    */
   placeholderNoindexRoutes: readonly RoutePageKey[];
 }

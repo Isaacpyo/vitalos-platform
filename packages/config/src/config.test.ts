@@ -149,7 +149,6 @@ describe("production guards", () => {
         VITALOS_ENQUIRY_BACKEND: "memory",
       });
       expect(env.contentSource).toBe("draft");
-      expect(deriveFeatures(env).cms).toBe(false);
       expect(deriveFeatures(env).indexable).toBe(false);
     }
   });
@@ -322,26 +321,6 @@ describe("production guards", () => {
     ).toEqual([]);
   });
 
-  it("never falls back to the development Sanity dataset in production", () => {
-    const sanity = {
-      ...production,
-      VITALOS_CONTENT_SOURCE: "sanity",
-      NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123",
-    };
-    expect(issuePaths(sanity)).toEqual(["NEXT_PUBLIC_SANITY_DATASET"]);
-    expect(parseEnv({ ...sanity, NEXT_PUBLIC_SANITY_DATASET: "production" }).sanity.dataset).toBe(
-      "production",
-    );
-    // Not required when the source is not sanity, or outside production.
-    expect(issuePaths(production)).toEqual([]);
-    expect(
-      issuePaths({
-        VITALOS_CONTENT_SOURCE: "sanity",
-        NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123",
-      }),
-    ).toEqual([]);
-  });
-
   it("rejects any non-production deploy env override on a Vercel production deployment", () => {
     for (const override of ["local", "preview", "staging"]) {
       expect(
@@ -437,18 +416,6 @@ describe("production enquiry hardening", () => {
 });
 
 describe("cross-field rules", () => {
-  it("requires a Sanity project id when the content source is sanity", () => {
-    expect(issuePaths({ VITALOS_CONTENT_SOURCE: "sanity" })).toEqual([
-      "NEXT_PUBLIC_SANITY_PROJECT_ID",
-    ]);
-  });
-
-  it("defaults the content source to repo even when a Sanity project id is present", () => {
-    const env = parseEnv({ NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123" });
-    expect(env.contentSource).toBe("repo");
-    expect(env.sanity.dataset).toBe("development");
-  });
-
   it("requires Supabase credentials for the supabase backend", () => {
     expect(issuePaths({ VITALOS_ENQUIRY_BACKEND: "supabase" }).sort()).toEqual([
       "SUPABASE_SECRET_KEY",
@@ -475,7 +442,6 @@ describe("cross-field rules", () => {
 
   it("treats empty values (FOO=) as unset", () => {
     const env = parseEnv({
-      NEXT_PUBLIC_SANITY_PROJECT_ID: "",
       SUPABASE_URL: "  ",
       VITALOS_CONTENT_SOURCE: "",
     });
@@ -517,18 +483,11 @@ describe("site URL", () => {
       "http://localhost:3000",
     );
   });
-
-  it("applies the same origin rule to the Studio origin", () => {
-    expect(issuePaths({ SANITY_STUDIO_ORIGIN: "https://studio.example.invalid/desk" })).toEqual([
-      "SANITY_STUDIO_ORIGIN",
-    ]);
-  });
 });
 
 describe("feature flags", () => {
   it("are all off for an empty environment", () => {
     expect(deriveFeatures(parseEnv({}))).toEqual({
-      cms: false,
       turnstile: false,
       enquiryPersistence: false,
       emailNotifications: false,
@@ -539,10 +498,8 @@ describe("feature flags", () => {
   it("turn on from configuration", () => {
     const env = parseEnv({
       ...production,
-      VITALOS_CONTENT_SOURCE: "sanity",
+      VITALOS_CONTENT_SOURCE: "repo",
       VITALOS_ENQUIRY_BACKEND: "supabase",
-      NEXT_PUBLIC_SANITY_DATASET: "production",
-      NEXT_PUBLIC_SANITY_PROJECT_ID: "abc123",
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: "0x4AAAAAAAfixturesitekey",
       TURNSTILE_SECRET_KEY: "0x4AAAAAAAfixturesecretkey",
       ENQUIRY_IP_HASH_SALT: "s".repeat(24),
@@ -552,7 +509,6 @@ describe("feature flags", () => {
       EMAIL_PROVIDER_API_KEY: "key",
     });
     expect(deriveFeatures(env)).toEqual({
-      cms: true,
       turnstile: true,
       enquiryPersistence: true,
       emailNotifications: false,
@@ -587,8 +543,6 @@ describe("entries", () => {
       "deployEnv",
       "enableHsts",
       "indexable",
-      "sanityProjectId",
-      "sanityStudioOrigin",
       "siteUrl",
       "turnstileEnabled",
     ]);
@@ -612,7 +566,6 @@ describe("entries", () => {
     });
     expect(env.siteUrl).toBe("https://www.example.invalid");
     expect(JSON.stringify(env)).not.toContain("xxxx");
-    expect(env.sanityApiVersion).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("build and public entries and the schema never import server-only", () => {

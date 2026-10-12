@@ -1,6 +1,6 @@
 # ADR 017 Content model and editorial governance
 
-Status: Accepted. Studio remains undeployed; no remote Sanity project is configured (ADR 005).
+Status: Superseded by [ADR-028](ADR-028-repo-file-content.md) (11 Oct 2026): the Sanity schemas and Studio it describes have been removed. The view-model types in `packages/cms/src/content/types.ts` remain. Original record below.
 
 ## Context
 

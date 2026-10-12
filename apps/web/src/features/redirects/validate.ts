@@ -5,7 +5,7 @@ import type { RedirectRule } from "./types";
  * pull script's tests and the unit tests all apply the same checks:
  *
  *  - sources are exact same-site paths (no wildcards, regex or `//host`); destinations are
- *    same-site paths or https URLs (as in the Studio's redirect rules), never credentialed;
+ *    same-site paths or https URLs, never credentialed;
  *  - sources are unique, never "/", never a live static route or API path (`isLiveRoute`); a
  *    dynamic detail path such as `/insights/old-slug` may be redirected (slug changes);
  *  - no blanket redirect to "/" (a redirect must land on the equivalent page);

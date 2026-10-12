@@ -5,7 +5,7 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { toOfferRows, toRows, toSolutionCard } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid, RowList, gapBand } from "../commercial/bands";
+import { Band, CardGrid, RowList } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface WhatWeDoTemplateProps {
@@ -13,7 +13,6 @@ export interface WhatWeDoTemplateProps {
   practices: readonly PracticeSummary[];
   solutions: readonly SolutionSummary[];
   offers: readonly OfferSummary[];
-  draft: boolean;
 }
 
 export const whatWeDoTrail = () => trail({ label: navLabels.whatWeDo, path: routes.whatWeDo() });
@@ -29,7 +28,6 @@ export function WhatWeDoTemplate({
   practices,
   solutions,
   offers,
-  draft,
 }: Readonly<WhatWeDoTemplateProps>) {
   const practiceRows = toRows("practice", orderByLockedNames(practices, practiceNames));
   const solutionCards = orderByLockedNames(solutions, solutionNames).flatMap((solution) => {
@@ -54,9 +52,7 @@ export function WhatWeDoTemplate({
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.practices, tone)
-          ),
+          ) : null,
         (tone) =>
           solutionCards.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.solutions}>
@@ -68,9 +64,7 @@ export function WhatWeDoTemplate({
                 ))}
               </CardGrid>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.solutions, tone)
-          ),
+          ) : null,
         (tone) =>
           offerRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.offers}>
@@ -80,9 +74,7 @@ export function WhatWeDoTemplate({
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.offers, tone)
-          ),
+          ) : null,
         (tone) => (
           <Band tone={tone}>
             <TextLink href={routes.howWeWork()}>{navLabels.howWeWork}</TextLink>

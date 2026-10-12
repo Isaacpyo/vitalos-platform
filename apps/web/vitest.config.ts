@@ -11,13 +11,4 @@ export default defineConfig({
       ),
     },
   },
-  test: {
-    server: {
-      deps: {
-        // next-sanity imports extensionless Next.js subpaths (`next/headers`) that Node's ESM
-        // resolver rejects; inlining lets Vite resolve them like the Next.js bundler does.
-        inline: [/next-sanity/],
-      },
-    },
-  },
 });

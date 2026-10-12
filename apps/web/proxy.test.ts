@@ -44,7 +44,7 @@ describe("proxy", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
-  it("leaves an existing document, other methods and Draft Mode requests alone", async () => {
+  it("leaves an existing document, and other methods alone", async () => {
     isMissing.mockClear();
     const existing = await proxy(new NextRequest("http://localhost:3000/solutions/real"));
     expect(existing.headers.get("x-middleware-rewrite")).toBeNull();
@@ -52,13 +52,5 @@ describe("proxy", () => {
       new NextRequest("http://localhost:3000/solutions/nope", { method: "POST" }),
     );
     expect(post.headers.get("x-middleware-rewrite")).toBeNull();
-    isMissing.mockClear();
-    const draft = await proxy(
-      new NextRequest("http://localhost:3000/solutions/nope", {
-        headers: { cookie: "__prerender_bypass=abc" },
-      }),
-    );
-    expect(draft.headers.get("x-middleware-rewrite")).toBeNull();
-    expect(isMissing).not.toHaveBeenCalled();
   });
 });

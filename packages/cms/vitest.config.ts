@@ -10,13 +10,6 @@ export default defineConfig({
           new URL("../../tooling/vitest/server-only-stub.ts", import.meta.url),
         ),
       },
-      // The Studio SDK is slow to load under Node; schema tests need only its identity helpers.
-      {
-        find: /^sanity(\/.*)?$/,
-        replacement: fileURLToPath(
-          new URL("./src/schemaTypes/testing/sanity-stub.ts", import.meta.url),
-        ),
-      },
     ],
   },
 });

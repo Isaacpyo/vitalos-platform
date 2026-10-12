@@ -4,7 +4,7 @@
  * These are the names of page parts and of fields ("Audience", "Typical duration", "Related
  * offers"), taken from the Stage 9 section 21 to 23 template tables and the Stage 8 section 9
  * layer names. They describe what a block IS; they carry no marketing claim. Approved marketing
- * copy lives only in `@vitalos/cms` locked-copy.ts and everything else comes from Sanity, so do
+ * copy lives only in `@vitalos/cms` locked-copy.ts and everything else comes from the content files, so do
  * not add sentences or claims here.
  */
 import { megaMenuColumns, navLabels } from "@vitalos/cms";
@@ -64,7 +64,7 @@ export const structuralLabels = {
   engagementBasis: "Basis",
 } as const;
 
-/** Display titles of the Studio duration list (`durationCategoryList` in the CMS schema). */
+/** Display titles of the duration categories. */
 const durationLabels: Readonly<Record<string, string>> = {
   short: "Short engagement",
   medium: "Medium engagement",

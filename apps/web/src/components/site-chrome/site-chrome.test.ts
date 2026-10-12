@@ -51,7 +51,7 @@ describe("header model", () => {
 
   it("uses the approved logo only when site settings carry one", () => {
     expect(buildHeaderModel(base).logo).toBeUndefined();
-    const logo = { src: "https://cdn.sanity.io/images/p/d/logo.svg", width: 10, height: 10 };
+    const logo = { src: "/images/logo.svg", width: 10, height: 10 };
     expect(buildHeaderModel({ ...base, settings: { logo } }).logo).toEqual(logo);
   });
 });
