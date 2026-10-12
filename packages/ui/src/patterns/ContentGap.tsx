@@ -14,7 +14,7 @@ export interface ContentGapProps {
   description?: string | undefined;
   /** Badge text. Defaults to a structural English label. */
   label?: string | undefined;
-  /** Extra content, for example a link to the document in Studio. */
+  /** Extra content. */
   children?: ReactNode;
   className?: string | undefined;
 }

@@ -3,9 +3,8 @@
 ```mermaid
 flowchart LR
 Visitor --> Web[Next.js web]
-Editor --> Studio[Sanity Studio]
-Studio --> Sanity[(Sanity editorial content)]
-Web --> Sanity
+Editor -->|pull request| Repo[(Repo: editorial content)]
+Repo -->|build time| Web
 Web --> Postgres[(Supabase PostgreSQL operational data)]
 Web --> Providers[Email analytics monitoring adapters]
 Cloudflare[Cloudflare DNS and optional Turnstile] --> Web

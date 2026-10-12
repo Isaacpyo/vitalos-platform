@@ -14,14 +14,6 @@ export type { DraftContentSet };
 export { DRAFT_STATUS, singletonProvenanceKeys } from "./provenance";
 export type { DraftCitation, DraftProvenance } from "./provenance";
 export { DRAFT_LEGAL_MARK, DRAFT_LEGAL_VERSION } from "./content/legal";
-export {
-  toNdjson,
-  toSanityDocuments,
-  isPlaceholderDocument,
-  DRAFT_OWNER_PLACEHOLDER,
-  DRAFT_REVIEW_DATE,
-} from "./export";
-export type { SanityDocument } from "./export";
 
 /** The draft content set, built once. */
 export const draftContent: DraftContentSet = buildDraftContentSet();

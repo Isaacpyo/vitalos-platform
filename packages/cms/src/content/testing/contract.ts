@@ -1,6 +1,6 @@
 /**
  * The shared `ContentSource` contract: properties every implementation must satisfy, whatever
- * content it holds. Run against the empty, fixture and Sanity sources.
+ * content it holds. Run against the empty, fixture, draft and repo sources.
  */
 import { describe, expect, it } from "vitest";
 import { GATE_THRESHOLDS, gateForKind, gateKeys } from "../gates";

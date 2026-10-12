@@ -18,14 +18,12 @@ import {
   PageIntro,
   RowList,
   StatementList,
-  gapBand,
   renderBands,
 } from "../commercial/bands";
 
 export interface IndustryTemplateProps {
   industry: IndustryView;
   gates: PublicationGates;
-  draft: boolean;
 }
 
 export const industryTrail = (industry: Pick<IndustryView, "title" | "slug">) =>
@@ -39,7 +37,7 @@ export const industryTrail = (industry: Pick<IndustryView, "title" | "slug">) =>
  * trust and regulatory considerations, and the solutions, offers, work and insights that relate.
  * Work and Insights appear only when their publication gates are open.
  */
-export function IndustryTemplate({ industry, gates, draft }: Readonly<IndustryTemplateProps>) {
+export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateProps>) {
   const cta = ctaToLink(industry.cta) ?? { label: ctas.primary, href: contactHref() };
   const solutionCards = toRailItems("solution", industry.solutions);
   const offerRows = toOfferRows(industry.offers);
@@ -67,17 +65,13 @@ export function IndustryTemplate({ industry, gates, draft }: Readonly<IndustryTe
             <Band tone={tone} heading={structuralLabels.realities}>
               <StatementList items={industry.realities} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.realities, tone)
-          ),
+          ) : null,
         (tone) =>
           industry.problems.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.industryProblems}>
               <StatementList items={industry.problems} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.industryProblems, tone)
-          ),
+          ) : null,
         (tone) =>
           industry.aiOpportunities.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.aiOpportunities}>
@@ -98,9 +92,7 @@ export function IndustryTemplate({ industry, gates, draft }: Readonly<IndustryTe
                 items={solutionCards}
               />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.relatedSolutions, tone)
-          ),
+          ) : null,
         (tone) =>
           offerRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedOffers}>

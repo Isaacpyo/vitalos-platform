@@ -1,6 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
 import {
-  ContentGap,
   MetaRow,
   OutcomeStats,
   RelatedContentRail,
@@ -29,12 +28,10 @@ import {
  * when permitted; the testimonial is shown only for a named client (see ./map).
  */
 export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
-  const { study, gates, draft } = data;
+  const { study, gates } = data;
   const metrics = verifiedMetrics(study);
   const testimonial = publishableTestimonial(study);
   const related = relatedLinks(study, gates);
-  const hasNarrative =
-    hasRichText(study.challenge) || hasRichText(study.approach) || hasRichText(study.outcome);
 
   const placeholder = study.placeholder === true;
 
@@ -78,11 +75,6 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
               <RichText value={study.outcome} />
             </ContentSection>
           ) : null}
-          <ContentGap
-            draft={draft && !hasNarrative && !metrics}
-            title="This case study has no challenge, approach or outcome content"
-            description="Only verified, sourced content is published. Add the narrative sections and sourced metrics."
-          />
 
           {testimonial ? (
             <Testimonial

@@ -1,5 +1,5 @@
 import "server-only";
-import { getPublishedContentSource } from "../../lib/cms/get-content-source";
+import { getContentSource } from "../../lib/cms/get-content-source";
 import { createMissingDocumentChecker } from "./checker";
 
 /**
@@ -9,12 +9,9 @@ import { createMissingDocumentChecker } from "./checker";
 export const UNMATCHED_PATH = "/__vitalos-missing-document__";
 
 const checker = createMissingDocumentChecker({
-  listParams: async (kind) => (await getPublishedContentSource()).listParams(kind),
+  listParams: async (kind) => (await getContentSource()).listParams(kind),
 });
 
 /** True when the published content has no document behind this detail URL (fails open). */
 export const isMissingDetailPath = (pathname: string): Promise<boolean> =>
   checker.isMissing(pathname);
-
-/** Drop cached lists, for example after a content revalidation. */
-export const resetMissingDocumentIndex = (): void => checker.reset();

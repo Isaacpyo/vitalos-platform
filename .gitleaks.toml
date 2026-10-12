@@ -1,16 +1,3 @@
-# gitleaks configuration: the default rules plus one narrowly scoped allowlist.
+# gitleaks configuration: the default rules.
 [extend]
 useDefault = true
-
-# Sanity `_key` values in the generated draft dataset are readable slugs built from document ids
-# and field names (for example "practice-consulting-body-1"). `generic-api-key` flags them because
-# the field is called `_key`. The allowlist needs BOTH this one file AND a `_key` whose value is
-# hyphen-separated lowercase words, so any other secret shape in the file still fails the scan.
-[[rules]]
-id = "generic-api-key"
-[[rules.allowlists]]
-description = "Sanity _key slugs in tooling/content/draft-dataset.ndjson (ADR-025)"
-condition = "AND"
-paths = ['''(?:^|/)tooling/content/draft-dataset\.ndjson$''']
-regexTarget = "match"
-regexes = ['''^_key":"[a-z][a-z0-9]*(?:-[a-z0-9]+)+"$''']

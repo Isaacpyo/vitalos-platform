@@ -8,7 +8,7 @@
  *    route yields `null` and the caller drops it: no dead or guessed link is ever rendered.
  *  - Nothing is added: titles and summaries pass through; labels of facts are structural
  *    (labels.ts); there is no price, no invented metric, no logo that was not approved.
- *  - Images pass only when the URL is one the CSP allows (Sanity CDN or same-site).
+ *  - Images pass only when the URL is one the CSP allows (same-site paths).
  */
 import type {
   CaseStudySummary,
@@ -39,7 +39,7 @@ import type {
   ProofStripItem,
   SolutionCardProps,
 } from "@vitalos/ui";
-import { classifyImageUrl } from "../cms/images";
+import { isSameOriginImage } from "../cms/images";
 import { hrefForSummary } from "./hrefs";
 import { durationLabel, engagementBasisLabel, structuralLabels } from "./labels";
 
@@ -51,17 +51,12 @@ export interface MapOptions {
   headingLevel?: ItemHeadingLevel | undefined;
 }
 
-const imageScope = () => ({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || undefined,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || undefined,
-});
-
 /** An approved image as pattern media, or undefined when it cannot be shown (alt text, CSP). */
 export function toPatternImage(image: ImageView | undefined): PatternImage | undefined {
   if (!image) return undefined;
   if (!image.decorative && image.alt.trim() === "") return undefined;
   if (!(image.width > 0) || !(image.height > 0)) return undefined;
-  if (classifyImageUrl(image.url, imageScope()) === null) return undefined;
+  if (!isSameOriginImage(image.url)) return undefined;
   return {
     url: image.url,
     alt: image.alt,
@@ -193,7 +188,7 @@ export function labAssetPresentation(summary: LabAssetSummary): {
 export function insightEyebrow(summary: InsightSummary): string | undefined {
   const format = summary.format.trim();
   if (!format) return undefined;
-  // Studio stores formats as kebab-case keys ("executive-briefing"); show them as words.
+  // Content stores formats as kebab-case keys ("executive-briefing"); show them as words.
   const words = format.replace(/-/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }

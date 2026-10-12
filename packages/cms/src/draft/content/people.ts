@@ -6,7 +6,7 @@
  * owner will replace them. Guardrails: ordinary invented names, role and focus areas taken from the
  * strategy documents only, and no credentials, employers, degrees, certifications, social links or
  * portraits. Every document carries `placeholder: true`, which turns off structured data, forces
- * `noindex`, shows the "Placeholder" notice and keeps the document out of the default Sanity export.
+ * `noindex`, shows the "Placeholder" notice and keeps the document out of the repo content source.
  */
 import type { PersonView } from "../../content/types";
 import { h2, p, richText, seo, ul } from "../build";

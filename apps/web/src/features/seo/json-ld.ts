@@ -8,6 +8,7 @@ import type {
   SiteSettingsView,
 } from "@vitalos/cms";
 import { richTextToPlainText } from "../../lib/cms/rich-text";
+import { isSameOriginImage } from "../../lib/cms/images";
 
 /**
  * Structured data builders (ADR-018). Rules:
@@ -51,12 +52,20 @@ function compact<T extends Record<string, unknown>>(value: T): T {
   ) as T;
 }
 
-const imageObject = (image: ImageView | undefined) =>
-  image && !image.decorative && image.url.startsWith("https://")
-    ? compact({ "@type": "ImageObject", url: image.url, width: image.width, height: image.height })
-    : undefined;
-
 const isHttps = (value: string) => URL.canParse(value) && new URL(value).protocol === "https:";
+
+/** Absolute URL for structured data: a same-site path is resolved against the site URL. */
+const imageUrl = (ctx: JsonLdContext, src: string): string | undefined => {
+  if (isSameOriginImage(src)) return absoluteUrl(ctx.siteUrl, src);
+  return isHttps(src) ? src : undefined;
+};
+
+const imageObject = (ctx: JsonLdContext, image: ImageView | undefined) => {
+  const url = image && !image.decorative ? imageUrl(ctx, image.url) : undefined;
+  return image && url
+    ? compact({ "@type": "ImageObject", url, width: image.width, height: image.height })
+    : undefined;
+};
 
 /** Serialises for an inline `<script type="application/ld+json">`; `<` can never close the tag. */
 export function serializeJsonLd(data: unknown): string {
@@ -67,7 +76,8 @@ export function serializeJsonLd(data: unknown): string {
 }
 
 export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContext): JsonLdNode {
-  const logo = settings.logo && isHttps(settings.logo.src) ? settings.logo : undefined;
+  const logoUrl = settings.logo ? imageUrl(ctx, settings.logo.src) : undefined;
+  const logo = settings.logo && logoUrl ? { ...settings.logo, src: logoUrl } : undefined;
   const sameAs = (settings.social ?? []).map((link) => link.href).filter(isHttps);
   return compact({
     "@context": CONTEXT,
@@ -159,7 +169,7 @@ export function articleJsonLd(insight: InsightView, ctx: JsonLdContext): JsonLdN
     dateModified: validDate(insight.updatedAt),
     author: authors,
     publisher: { "@id": organizationId(ctx) },
-    image: imageObject(insight.seo.ogImage),
+    image: imageObject(ctx, insight.seo.ogImage),
     inLanguage: "en-GB",
   }) as JsonLdNode;
 }
@@ -180,7 +190,7 @@ export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonL
       name: person.name,
       jobTitle: person.role,
       url,
-      image: imageObject(person.portrait),
+      image: imageObject(ctx, person.portrait),
       sameAs: person.sameAs.filter(isHttps),
       worksFor: { "@id": organizationId(ctx) },
     }),

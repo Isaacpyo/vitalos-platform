@@ -17,7 +17,7 @@ Per Stage 8 section 24, the public accessibility statement must be published onl
 
 ### 2.1 Scope
 
-In scope: every page template in 2.4 at desktop (1440px), tablet (about 768px) and mobile (390px), including the 404 page. Out of scope: the contents of Cloudflare's Turnstile iframe (Cloudflare's document; record only how it behaves inside our page, see CT-08 to CT-10), Sanity Studio, and Storybook (covered by `test:storybook-a11y`). Gated sections (Industries, Work, Insights, Labs, Careers) are audited only when their gate is open, which the `full` fixture set does.
+In scope: every page template in 2.4 at desktop (1440px), tablet (about 768px) and mobile (390px), including the 404 page. Out of scope: the contents of Cloudflare's Turnstile iframe (Cloudflare's document; record only how it behaves inside our page, see CT-08 to CT-10), and Storybook (covered by `test:storybook-a11y`). Gated sections (Industries, Work, Insights, Labs, Careers) are audited only when their gate is open, which the `full` fixture set does.
 
 ### 2.2 Browsers, assistive technology and versions to record
 
@@ -63,7 +63,7 @@ Then open `http://127.0.0.1:3210`. This mirrors the environment in `playwright.c
 - `VITALOS_FIXTURE_SET=full` opens every publication gate so every template in 2.4 exists. `sparse` closes them and is not an audit set. The default `empty` source shows the honest empty state and 404s detail routes (useful only for the gated-state rows).
 - Fixture slugs are the artificial ones from `tests/support/routes.ts`. Fixture copy is placeholder text marked "(fixture)"; judge structure and behaviour, not wording.
 - `VITALOS_CONTENT_SOURCE=draft` is available after ADR-025 lands (handoff section 7: repo-authored draft content under `packages/cms/src/draft/**`, shown with a visible "Draft content, pending approval" ribbon, allowed locally and in preview and staging, rejected in production). It does not exist before that; do not use it until it does. When it exists, run this script again against it: real-length drafted content (long headings, many cards, long articles) stresses reflow, zoom, heading structure and link names far harder than fixtures. Also check that the ribbon is announced sensibly and never obscures focus (2.4.11). A `draft` run is a different build for sign-off purposes.
-- A final run is needed against the approved Sanity content on a staging or preview deployment before launch, because G5 applies to what visitors will actually get. Previews sit behind Vercel's login; arranging access is an owner action.
+- A final run is needed against the approved repo content on a staging or preview deployment before launch, because G5 applies to what visitors will actually get. Previews sit behind Vercel's login; arranging access is an owner action.
 
 ### 2.4 Template inventory and URLs (fixtures, `full` set)
 
@@ -616,7 +616,7 @@ Blank until an audit is performed. Nobody completes this block on another person
 | Date started                                                                           |       |
 | Date completed                                                                         |       |
 | Build under test (commit SHA)                                                          |       |
-| Content source and fixture set (`fixtures` full, `draft`, `sanity` staging)            |       |
+| Content source and fixture set (`fixtures` full, `draft`, `repo` staging)              |       |
 | URL or local run command used                                                          |       |
 | Desktop OS and browsers, with versions                                                 |       |
 | Screen readers, with versions (NVDA, VoiceOver macOS, VoiceOver iOS, TalkBack)         |       |

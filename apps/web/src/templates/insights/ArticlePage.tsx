@@ -1,12 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import {
-  ArticleRow,
-  AuthorMeta,
-  ContentGap,
-  PersonCard,
-  Stack,
-  TableOfContents,
-} from "@vitalos/ui";
+import { ArticleRow, AuthorMeta, PersonCard, Stack, TableOfContents } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { getSeoContext } from "../../features/seo/context";
@@ -27,7 +20,7 @@ import { authorCardProps, authorLinks, insightCardProps } from "./map";
  * shown for longer pieces; code blocks use the copy-button island.
  */
 export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
-  const { insight, gates, draft } = data;
+  const { insight, gates } = data;
   const model = buildArticleBody(insight.body);
   const toc = tocForDisplay(model);
   const authors = insight.authors.filter((author) => author.title.trim() !== "");
@@ -82,11 +75,6 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
             ) : null}
             <div className={`min-w-0 ${toc.length > 0 ? "" : "lg:col-span-2"}`}>
               {hasRichText(insight.body) ? <ArticleBody body={insight.body} model={model} /> : null}
-              <ContentGap
-                draft={draft && !hasRichText(insight.body)}
-                title="This insight has no body content"
-                description="Add the article body in the Studio before publishing."
-              />
             </div>
           </div>
 

@@ -14,9 +14,8 @@ export type DeployEnv = (typeof deployEnvs)[number];
  * `repo` is the approved repo-file content served as the public site (ADR-028); it is the default
  * and may run in production. `fixtures` is artificial test content; `draft` is the full drafted set
  * including placeholders, pending owner approval (ADR-025). Neither may run in production.
- * `sanity` is deprecated (ADR-028) and is removed in a later change.
  */
-export const contentSources = ["repo", "sanity", "empty", "fixtures", "draft"] as const;
+export const contentSources = ["repo", "empty", "fixtures", "draft"] as const;
 export type ContentSourceKind = (typeof contentSources)[number];
 
 export const fixtureSets = ["full", "sparse"] as const;
@@ -29,8 +28,6 @@ export const emailProviders = ["none", "console", "postmark", "resend"] as const
 export type EmailProvider = (typeof emailProviders)[number];
 
 const LOCAL_SITE_URL = "http://localhost:3000";
-const DEFAULT_SANITY_DATASET = "development";
-const DEFAULT_SANITY_API_VERSION = "2025-02-19";
 
 /** http(s) URL with no path, query or fragment; normalised to its origin (no trailing slash). */
 export const originUrl = z
@@ -50,19 +47,6 @@ export const originUrl = z
 /** NEXT_PUBLIC_* variables: safe for browser bundles. Shared by `public.ts` and the full schema. */
 export const publicEnvShape = {
   NEXT_PUBLIC_SITE_URL: originUrl.optional(),
-  NEXT_PUBLIC_SANITY_PROJECT_ID: z
-    .string()
-    .regex(/^[a-z0-9-]+$/, "must be lowercase letters, numbers and dashes")
-    .optional(),
-  NEXT_PUBLIC_SANITY_DATASET: z
-    .string()
-    .regex(/^[a-z0-9_-]+$/, "must be lowercase letters, numbers, dashes and underscores")
-    .optional(),
-  NEXT_PUBLIC_SANITY_API_VERSION: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "must be a date in YYYY-MM-DD form")
-    .optional(),
-  NEXT_PUBLIC_SANITY_STUDIO_URL: z.url({ protocol: /^https?$/ }).optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(10).optional(),
 } as const;
 
@@ -74,9 +58,6 @@ const rawSchema = z.object({
   VITALOS_CONTENT_SOURCE: z.enum(contentSources).optional(),
   VITALOS_FIXTURE_SET: z.enum(fixtureSets).optional(),
   VITALOS_ENQUIRY_BACKEND: z.enum(enquiryBackends).optional(),
-  SANITY_API_READ_TOKEN: z.string().min(10).optional(),
-  SANITY_REVALIDATE_SECRET: z.string().min(16).optional(),
-  SANITY_STUDIO_ORIGIN: originUrl.optional(),
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SECRET_KEY: z.string().min(20).optional(),
   TURNSTILE_SECRET_KEY: z.string().min(10).optional(),
@@ -104,15 +85,6 @@ export interface Env {
   siteUrl: string;
   contentSource: ContentSourceKind;
   fixtureSet: FixtureSet;
-  sanity: {
-    projectId: string | undefined;
-    dataset: string;
-    apiVersion: string;
-    studioUrl: string | undefined;
-    studioOrigin: string | undefined;
-    readToken: string | undefined;
-    revalidateSecret: string | undefined;
-  };
   supabase: { url: string | undefined; secretKey: string | undefined };
   turnstile: { siteKey: string | undefined; secretKey: string | undefined };
   enquiry: {
@@ -134,8 +106,6 @@ export interface Env {
 }
 
 export interface Features {
-  /** Content is read from Sanity. */
-  cms: boolean;
   /** Both Turnstile keys are configured. */
   turnstile: boolean;
   /** An enquiry persistence backend (supabase or memory) is active. */
@@ -200,7 +170,6 @@ function deriveSiteUrl(raw: Raw, deployEnv: DeployEnv): string | undefined {
 function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
   const deployEnv = deriveDeployEnv(raw);
   const siteUrl = deriveSiteUrl(raw, deployEnv);
-  const projectId = raw.NEXT_PUBLIC_SANITY_PROJECT_ID;
   const contentSource = raw.VITALOS_CONTENT_SOURCE ?? "repo";
   const supabaseConfigured = Boolean(raw.SUPABASE_URL && raw.SUPABASE_SECRET_KEY);
   const backend = raw.VITALOS_ENQUIRY_BACKEND ?? (supabaseConfigured ? "supabase" : "disabled");
@@ -211,15 +180,6 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
       siteUrl: siteUrl ?? LOCAL_SITE_URL,
       contentSource,
       fixtureSet: raw.VITALOS_FIXTURE_SET ?? "full",
-      sanity: {
-        projectId,
-        dataset: raw.NEXT_PUBLIC_SANITY_DATASET ?? DEFAULT_SANITY_DATASET,
-        apiVersion: raw.NEXT_PUBLIC_SANITY_API_VERSION ?? DEFAULT_SANITY_API_VERSION,
-        studioUrl: raw.NEXT_PUBLIC_SANITY_STUDIO_URL,
-        studioOrigin: raw.SANITY_STUDIO_ORIGIN,
-        readToken: raw.SANITY_API_READ_TOKEN,
-        revalidateSecret: raw.SANITY_REVALIDATE_SECRET,
-      },
       supabase: { url: raw.SUPABASE_URL, secretKey: raw.SUPABASE_SECRET_KEY },
       turnstile: {
         siteKey: raw.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
@@ -298,16 +258,6 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
       "must be set explicitly in production so that disabled enquiries are deliberate",
     );
   }
-  if (
-    production &&
-    env.contentSource === "sanity" &&
-    raw.NEXT_PUBLIC_SANITY_DATASET === undefined
-  ) {
-    add(
-      "NEXT_PUBLIC_SANITY_DATASET",
-      "must be set explicitly in production (the default development dataset is never used)",
-    );
-  }
   if (production && env.contentSource === "fixtures") {
     add("VITALOS_CONTENT_SOURCE", "fixtures are forbidden in production");
   }
@@ -349,9 +299,6 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
     if (from && !isSingleMailbox(from)) {
       add("EMAIL_FROM", "must be one address or `Name <address>` (no commas, tabs or line breaks)");
     }
-  }
-  if (env.contentSource === "sanity" && !env.sanity.projectId) {
-    add("NEXT_PUBLIC_SANITY_PROJECT_ID", "is required when VITALOS_CONTENT_SOURCE is sanity");
   }
   if (env.enquiry.backend === "supabase") {
     if (!env.supabase.url) {
@@ -431,7 +378,6 @@ export function parseEnv(source: EnvSource): Env {
 
 export function deriveFeatures(env: Env): Features {
   return {
-    cms: env.contentSource === "sanity",
     turnstile: Boolean(env.turnstile.siteKey && env.turnstile.secretKey),
     enquiryPersistence: env.enquiry.backend !== "disabled",
     emailNotifications: env.email.provider !== "none" && Boolean(env.enquiry.notificationTo),

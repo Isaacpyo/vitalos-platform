@@ -2,16 +2,14 @@ import { industryNames, navLabels, routes } from "@vitalos/cms";
 import type { IndustrySummary, RoutePageView } from "@vitalos/cms";
 import { IndustryRow } from "@vitalos/ui";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
-import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { toRows } from "../../lib/view-mapping/patterns";
-import { Band, RowList, gapBand } from "../commercial/bands";
+import { Band, RowList } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface IndustryIndexTemplateProps {
   page: RoutePageView | null;
   industries: readonly IndustrySummary[];
-  draft: boolean;
 }
 
 export const industriesTrail = () =>
@@ -21,11 +19,7 @@ export const industriesTrail = () =>
  * Industries index. The route is served only while the Industries gate is open (the page calls
  * `requireIndexGate`), so every row here links to a published, indexable industry page.
  */
-export function IndustryIndexTemplate({
-  page,
-  industries,
-  draft,
-}: Readonly<IndustryIndexTemplateProps>) {
+export function IndustryIndexTemplate({ page, industries }: Readonly<IndustryIndexTemplateProps>) {
   const rows = toRows("industry", orderByLockedNames(industries, industryNames), {
     headingLevel: 2,
   });
@@ -45,9 +39,7 @@ export function IndustryIndexTemplate({
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.industries, tone)
-          ),
+          ) : null,
       ]}
     />
   );

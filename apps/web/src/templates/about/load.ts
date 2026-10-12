@@ -1,7 +1,6 @@
 import "server-only";
 import { cache } from "react";
 import type { ContentSource, PersonView, PublicationGates, RoutePageView } from "@vitalos/cms";
-import { isDraftModeEnabled } from "../../lib/cms/draft";
 import { getContentSource } from "../../lib/cms/get-content-source";
 import { leadershipOf } from "./map";
 
@@ -15,32 +14,25 @@ export interface AboutData {
   page: RoutePageView | null;
   leaders: PersonView[];
   gates: PublicationGates;
-  draft: boolean;
 }
 
 export const loadAbout = cache(async (): Promise<AboutData> => {
   const source = await getContentSource();
-  const [page, people, gates, draft] = await Promise.all([
+  const [page, people, gates] = await Promise.all([
     source.getRoutePage("about"),
     allPeople(source),
     source.getPublicationGates(),
-    isDraftModeEnabled(),
   ]);
-  return { page, leaders: leadershipOf(people), gates, draft };
+  return { page, leaders: leadershipOf(people), gates };
 });
 
 export interface LeadershipData {
   page: RoutePageView | null;
   leaders: PersonView[];
-  draft: boolean;
 }
 
 export const loadLeadership = cache(async (): Promise<LeadershipData> => {
   const source = await getContentSource();
-  const [page, people, draft] = await Promise.all([
-    source.getRoutePage("leadership"),
-    allPeople(source),
-    isDraftModeEnabled(),
-  ]);
-  return { page, leaders: leadershipOf(people), draft };
+  const [page, people] = await Promise.all([source.getRoutePage("leadership"), allPeople(source)]);
+  return { page, leaders: leadershipOf(people) };
 });

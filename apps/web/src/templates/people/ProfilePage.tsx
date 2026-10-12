@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { ArticleRow, ContentGap, PersonHero, Stack } from "@vitalos/ui";
+import { ArticleRow, PersonHero, Stack } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
@@ -19,7 +19,7 @@ import { personHeroProps, personLabels, verifiedCredentials } from "./map";
  * biography: sections without data are not rendered.
  */
 export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
-  const { person, gates, draft } = data;
+  const { person, gates } = data;
   const credentials = verifiedCredentials(person);
   // Insights are linked only while their section is public (a closed section is noindex).
   const insights = gates.open.insights ? person.insights : [];
@@ -44,11 +44,6 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
           <PersonHero {...personHeroProps(person)}>
             {hasRichText(person.bio) ? <RichText value={person.bio} /> : null}
           </PersonHero>
-          <ContentGap
-            draft={draft && !hasRichText(person.bio)}
-            title="This profile has no biography"
-            description="Add a biography in the Studio. Profiles should communicate judgement, track record and areas of responsibility."
-          />
 
           {credentials.length > 0 ? (
             <ContentSection id="credentials" heading={personLabels.credentials}>

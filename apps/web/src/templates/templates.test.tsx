@@ -141,7 +141,7 @@ describe("practice template", () => {
   const [sparsePractice] = sparseFixtureSet.documents.practice;
 
   it("renders one h1, one main and the sections the content has", () => {
-    const markup = html(<PracticeTemplate practice={practice!} gates={openGates} draft={false} />);
+    const markup = html(<PracticeTemplate practice={practice!} gates={openGates} />);
     expect(count(markup, /<h1/g)).toBe(1);
     expect(count(markup, /<main/g)).toBe(1);
     for (const heading of [
@@ -156,30 +156,21 @@ describe("practice template", () => {
   });
 
   it("hides industries and work while their gates are closed", () => {
-    const markup = html(
-      <PracticeTemplate practice={practice!} gates={closedGates} draft={false} />,
-    );
+    const markup = html(<PracticeTemplate practice={practice!} gates={closedGates} />);
     expect(markup).not.toContain(">Industries</h2>");
     expect(markup).not.toContain(">Selected work</h2>");
     expect(markup).not.toContain("/industries/");
     expect(markup).not.toContain("/work/");
   });
 
-  it("omits empty sections for visitors and shows editor notices only in Draft Mode", () => {
-    const visitor = html(
-      <PracticeTemplate practice={sparsePractice!} gates={closedGates} draft={false} />,
-    );
+  it("omits empty sections", () => {
+    const visitor = html(<PracticeTemplate practice={sparsePractice!} gates={closedGates} />);
     expect(visitor).not.toContain(">Problems</h2>");
     expect(visitor).not.toContain("data-content-gap");
-    const editor = html(<PracticeTemplate practice={sparsePractice!} gates={closedGates} draft />);
-    expect(editor).toContain("data-content-gap");
-    expect(editor).toContain("Problems: no content yet");
   });
 
   it("falls back to the locked call to action when the CMS has none", () => {
-    const markup = html(
-      <PracticeTemplate practice={sparsePractice!} gates={closedGates} draft={false} />,
-    );
+    const markup = html(<PracticeTemplate practice={sparsePractice!} gates={closedGates} />);
     expect(markup).toContain("Talk to Vitalos");
   });
 });
@@ -187,7 +178,7 @@ describe("practice template", () => {
 describe("solution template", () => {
   it("renders the journey, offers and questions from the full fixture", () => {
     const [solution] = fullFixtureSet.documents.solution;
-    const markup = html(<SolutionTemplate solution={solution!} gates={openGates} draft={false} />);
+    const markup = html(<SolutionTemplate solution={solution!} gates={openGates} />);
     expect(count(markup, /<h1/g)).toBe(1);
     expect(markup).toContain(">Typical journey</h2>");
     expect(markup).toContain(">Related offers</h2>");
@@ -197,9 +188,7 @@ describe("solution template", () => {
 
   it("keeps only what the sparse fixture has: the statement and its required offer", () => {
     const [solution] = sparseFixtureSet.documents.solution;
-    const markup = html(
-      <SolutionTemplate solution={solution!} gates={closedGates} draft={false} />,
-    );
+    const markup = html(<SolutionTemplate solution={solution!} gates={closedGates} />);
     expect(markup).toContain("Example problem statement (fixture)");
     expect(markup).toContain(">Related offers</h2>");
     expect(markup).not.toContain(">Typical journey</h2>");
@@ -211,7 +200,7 @@ describe("offer template", () => {
   const [offer] = fullFixtureSet.documents.offer;
 
   it("shows the engagement summary as a definition list and carries no price", () => {
-    const markup = html(<OfferTemplate offer={offer!} draft={false} />);
+    const markup = html(<OfferTemplate offer={offer!} />);
     expect(markup).toContain("<dl");
     expect(markup).toContain("Who this is for");
     expect(markup).toContain("Short engagement");
@@ -219,7 +208,7 @@ describe("offer template", () => {
   });
 
   it("pre-selects the offer in the enquiry form through the call to action", () => {
-    const markup = html(<OfferTemplate offer={offer!} draft={false} />);
+    const markup = html(<OfferTemplate offer={offer!} />);
     expect(markup).toContain("/contact?intent=offer&amp;offer=example-offer");
   });
 
@@ -237,12 +226,10 @@ describe("industry template", () => {
   const [industry] = fullFixtureSet.documents.industry;
 
   it("shows work and insights only through open gates", () => {
-    const open = html(<IndustryTemplate industry={industry!} gates={openGates} draft={false} />);
+    const open = html(<IndustryTemplate industry={industry!} gates={openGates} />);
     expect(open).toContain(">Selected work</h2>");
     expect(open).toContain(">Insights</h2>");
-    const closed = html(
-      <IndustryTemplate industry={industry!} gates={closedGates} draft={false} />,
-    );
+    const closed = html(<IndustryTemplate industry={industry!} gates={closedGates} />);
     expect(closed).not.toContain(">Selected work</h2>");
     expect(closed).not.toContain(">Insights</h2>");
     expect(closed).toContain(">Sector realities</h2>");
@@ -251,7 +238,7 @@ describe("industry template", () => {
 
 describe("how we work template", () => {
   it("lists the nine locked stages with or without a CMS page", () => {
-    const without = html(<HowWeWorkTemplate page={null} draft={false} />);
+    const without = html(<HowWeWorkTemplate page={null} />);
     for (const stage of [
       "Qualify",
       "Discover",
@@ -291,13 +278,12 @@ describe("how we work template", () => {
         },
       ],
     };
-    const markup = html(<HowWeWorkTemplate page={page} draft={false} />);
+    const markup = html(<HowWeWorkTemplate page={page} />);
     expect(markup).toContain("We look closely.");
     expect(count(markup, /We look closely\./g)).toBe(1);
   });
 
-  it("flags missing stage descriptions to editors only", () => {
-    expect(html(<HowWeWorkTemplate page={null} draft={false} />)).not.toContain("data-content-gap");
-    expect(html(<HowWeWorkTemplate page={null} draft />)).toContain("data-content-gap");
+  it("shows no editor notice for missing stage descriptions", () => {
+    expect(html(<HowWeWorkTemplate page={null} />)).not.toContain("data-content-gap");
   });
 });

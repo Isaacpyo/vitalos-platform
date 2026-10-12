@@ -18,7 +18,7 @@ describe("buildCsp", () => {
     expect(directive(csp, "base-uri")).toBe("'self'");
     expect(directive(csp, "form-action")).toBe("'self'");
     expect(directive(csp, "frame-ancestors")).toBe("'none'");
-    expect(directive(csp, "img-src")).toBe("'self' data: https://cdn.sanity.io");
+    expect(directive(csp, "img-src")).toBe("'self' data:");
     expect(directive(csp, "font-src")).toBe("'self'");
     expect(directive(csp, "connect-src")).toBe("'self'");
     expect(directive(csp, "frame-src")).toBe("'none'");
@@ -39,33 +39,16 @@ describe("buildCsp", () => {
     expect(directive(csp, "frame-src")).toBe("https://challenges.cloudflare.com");
   });
 
-  it("adds Sanity API origins to connect-src only when asked and a project id is known", () => {
-    const withApi = buildCsp({ ...base, sanityProjectId: "abc123", sanityApiConnect: true });
-    expect(directive(withApi, "connect-src")).toBe(
-      "'self' https://abc123.api.sanity.io https://abc123.apicdn.sanity.io wss://abc123.api.sanity.io",
-    );
-    expect(directive(buildCsp({ ...base, sanityProjectId: "abc123" }), "connect-src")).toBe(
-      "'self'",
-    );
-    expect(directive(buildCsp({ ...base, sanityApiConnect: true }), "connect-src")).toBe("'self'");
-  });
-
-  it("rejects a malformed Sanity project id", () => {
-    expect(() =>
-      buildCsp({ ...base, sanityProjectId: "x; script-src *", sanityApiConnect: true }),
-    ).toThrow();
-  });
-
   it("sets frame-ancestors to the given origins and rejects injection", () => {
     expect(
       directive(
-        buildCsp({ ...base, frameAncestors: ["https://studio.example.com"] }),
+        buildCsp({ ...base, frameAncestors: ["https://embedder.example.com"] }),
         "frame-ancestors",
       ),
-    ).toBe("https://studio.example.com");
+    ).toBe("https://embedder.example.com");
     expect(directive(buildCsp({ ...base, frameAncestors: [] }), "frame-ancestors")).toBe("'none'");
     for (const bad of [
-      "https://studio.example.com; script-src *",
+      "https://embedder.example.com; script-src *",
       "https://a.com https://b.com",
       "*",
       "https://a.com/path",

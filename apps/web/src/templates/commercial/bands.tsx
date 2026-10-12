@@ -5,7 +5,6 @@ import {
   Button,
   CTAGroup,
   Container,
-  ContentGap,
   Icon,
   PageHero,
   Reveal,
@@ -230,28 +229,4 @@ export function renderBands(
     tone = tone === "muted" ? "light" : "muted";
   });
   return out;
-}
-
-/** The band to show for an empty section: an editor notice in Draft Mode, nothing otherwise. */
-export function gapBand(draft: boolean, section: string, tone: SectionTone): ReactNode | null {
-  if (!draft) return null;
-  return (
-    <Band tone={tone}>
-      <SectionGap draft section={section} />
-    </Band>
-  );
-}
-
-/**
- * Editor notice for a section that has no content (Draft Mode only; renders nothing for
- * visitors, who simply do not get the section).
- */
-export function SectionGap({ draft, section }: Readonly<{ draft: boolean; section: string }>) {
-  return (
-    <ContentGap
-      draft={draft}
-      title={`${section}: no content yet`}
-      description="Add content for this section in Sanity. Visitors do not see the section until it has content."
-    />
-  );
 }
