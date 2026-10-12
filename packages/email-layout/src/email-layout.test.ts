@@ -151,7 +151,8 @@ describe("rendering", () => {
   const hostile = renderEmail(fixtures["hostile-and-missing"]!);
 
   it("escapes every value and drops control and bidi characters", () => {
-    expect(hostile.html).not.toMatch(/<script|<img src=x|<b>/);
+    const lowered = hostile.html.toLowerCase();
+    for (const tag of ["<script", "<img src=x", "<b>"]) expect(lowered).not.toContain(tag);
     expect(hostile.html).toContain(
       "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; O&#39;Brien &amp; Zoë",
     );
