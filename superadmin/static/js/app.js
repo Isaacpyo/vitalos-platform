@@ -219,6 +219,130 @@
     });
   }
 
+
+  // ---------------------------------------------------------------------------------------------
+  // Enquiries inbox: keyboard shortcuts, composer tabs, canned responses, list/thread on mobile.
+  function inboxRoot() {
+    return document.querySelector("[data-enquiries]");
+  }
+
+  function enquiryRows() {
+    return Array.prototype.slice.call(document.querySelectorAll("[data-enquiry-row]"));
+  }
+
+  function markSelectedRow() {
+    enquiryRows().forEach(function (row) {
+      var path = new URL(row.getAttribute("href"), window.location.href).pathname;
+      if (path === window.location.pathname) row.setAttribute("aria-current", "page");
+      else row.removeAttribute("aria-current");
+    });
+  }
+
+  function moveSelection(step) {
+    var rows = enquiryRows();
+    if (!rows.length) return;
+    var current = rows.indexOf(document.activeElement);
+    if (current === -1) {
+      current = rows.findIndex(function (row) {
+        return row.getAttribute("aria-current") === "page";
+      });
+    }
+    var next = rows[Math.min(Math.max(current + step, 0), rows.length - 1)] || rows[0];
+    next.focus();
+    next.scrollIntoView({ block: "nearest" });
+  }
+
+  function setComposerMode(mode, focus) {
+    var composer = document.querySelector("[data-composer]");
+    if (!composer) return;
+    composer.setAttribute("data-mode", mode);
+    composer.querySelectorAll("[data-composer-tab]").forEach(function (tab) {
+      tab.setAttribute("aria-selected", tab.getAttribute("data-composer-tab") === mode ? "true" : "false");
+    });
+    var reply = document.getElementById("composer-reply");
+    var note = document.getElementById("composer-note");
+    if (reply) reply.hidden = mode !== "reply";
+    if (note) note.hidden = mode !== "note";
+    if (focus) {
+      var panel = mode === "reply" ? reply : note;
+      var field = panel && panel.querySelector("textarea");
+      if (field) field.focus();
+    }
+  }
+
+  function clickAction(name) {
+    var button = document.querySelector('[data-action="' + name + '"]');
+    if (button) button.click();
+  }
+
+  document.addEventListener("click", function (event) {
+    var tab = event.target.closest("[data-composer-tab]");
+    if (tab) setComposerMode(tab.getAttribute("data-composer-tab"), true);
+    var back = event.target.closest("[data-back-to-list]");
+    if (back && inboxRoot()) {
+      event.preventDefault();
+      inboxRoot().setAttribute("data-open", "list");
+      window.history.pushState({}, "", back.getAttribute("href"));
+    }
+  });
+
+  document.addEventListener("change", function (event) {
+    var select = event.target.closest("[data-canned-select]");
+    if (!select || !select.value) return;
+    var option = select.options[select.selectedIndex];
+    var field = select.form && select.form.querySelector("[data-composer-body]");
+    if (field) {
+      field.value = (field.value ? field.value.replace(/\s*$/, "") + "\n\n" : "") + option.getAttribute("data-body");
+      field.focus();
+    }
+    select.value = "";
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (!inboxRoot() || event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target)) return;
+    if (document.querySelector("dialog[open]")) return;
+    var handlers = {
+      j: function () { moveSelection(1); },
+      k: function () { moveSelection(-1); },
+      r: function () { setComposerMode("reply", true); },
+      n: function () { setComposerMode("note", true); },
+      e: function () { clickAction("resolve"); },
+      a: function () { clickAction("assign-me"); },
+      s: function () { clickAction("spam"); },
+      "/": function () {
+        var search = document.querySelector("[data-enquiry-search]");
+        if (search) search.focus();
+      },
+      "?": function () {
+        var help = document.getElementById("enquiry-shortcuts");
+        if (help) help.showModal();
+      },
+    };
+    var handler = handlers[event.key];
+    if (handler) {
+      event.preventDefault();
+      handler();
+    }
+  });
+
+  document.addEventListener("htmx:afterSwap", function (event) {
+    var target = event.detail.target;
+    if (!target) return;
+    if (target.id === "enquiry-thread") {
+      if (inboxRoot()) inboxRoot().setAttribute("data-open", "thread");
+      markSelectedRow();
+      var composer = target.querySelector("[data-composer]");
+      if (composer) setComposerMode(composer.getAttribute("data-mode") || "reply", false);
+    }
+    if (target.id === "enquiry-list") markSelectedRow();
+  });
+
+  window.addEventListener("popstate", function () {
+    if (inboxRoot() && !/\/enquiries\/VIT-\d+\/?$/.test(window.location.pathname)) {
+      inboxRoot().setAttribute("data-open", "list");
+    }
+  });
+
   document.addEventListener("vsa-close-modal", closeModal);
   document.addEventListener("vsa-toast", function (event) {
     showToast(event.detail && event.detail.message);

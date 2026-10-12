@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from apps.accounts.roles import is_superadmin
 
-from .navigation import NAV_ITEMS, is_available
+from .navigation import NAV_ITEMS, is_visible
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,7 @@ def _static_entries(user) -> list[PaletteResult]:
     entries = [
         PaletteResult("Pages", item.label, item.url, item.group, item.icon)
         for item in NAV_ITEMS
-        if is_available(item)
+        if is_visible(item, user)
     ]
     settings_sections = [
         ("API tokens", "accounts:settings_tokens"),
@@ -48,6 +48,7 @@ def _static_entries(user) -> list[PaletteResult]:
         settings_sections = [
             ("Company profile", "architecture:settings_company"),
             ("Users and roles", "accounts:settings_users"),
+            ("Email and inbox", "enquiries_settings:email"),
             *settings_sections,
         ]
     entries += [
@@ -61,6 +62,16 @@ def _static_entries(user) -> list[PaletteResult]:
         PaletteResult("Settings", "Notifications", reverse("notifications:list"), "Your account", "bell"),
         PaletteResult("Settings", "Help and keyboard shortcuts", reverse("core:help"), "Help", "life-buoy"),
     ]
+    if any(item.key == "enquiries" and is_visible(item, user) for item in NAV_ITEMS):
+        entries.append(
+            PaletteResult(
+                "Settings",
+                "Enquiry notification preferences",
+                reverse("enquiries_settings:notifications"),
+                "Your account",
+                "bell",
+            )
+        )
     return entries
 
 

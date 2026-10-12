@@ -181,6 +181,14 @@ _TONES = {
     "internal": "sky",
     "confidential": "amber",
     "restricted": "red",
+    # enquiry status and priority
+    "new": "blue",
+    "open": "sky",
+    "pending": "amber",
+    "resolved": "green",
+    "spam": "slate",
+    "urgent": "red",
+    "high": "amber",
     # business modes
     "ADVISE": "blue",
     "BUILD": "violet",
@@ -213,3 +221,29 @@ def delta(current, previous):
 @register.filter
 def dictget(mapping, key):
     return (mapping or {}).get(key, 0)
+
+
+@register.filter
+def initials(user_or_email) -> str:
+    """Two-letter avatar initials from a user (full name, else email) or an email address."""
+    text = (
+        getattr(user_or_email, "full_name", "")
+        or getattr(user_or_email, "email", "")
+        or str(user_or_email or "")
+    )
+    words = text.split("@")[0].replace(".", " ").replace("_", " ").split()
+    return "".join(word[0] for word in words[:2]).upper() or "?"
+
+
+@register.filter
+def duration(delta) -> str:
+    """'3 h 20 min' for a timedelta; empty for None."""
+    if delta is None:
+        return ""
+    minutes = int(delta.total_seconds() // 60)
+    if minutes < 60:
+        return f"{max(minutes, 0)} min"
+    hours, minutes = divmod(minutes, 60)
+    if hours < 48:
+        return f"{hours} h {minutes} min" if minutes else f"{hours} h"
+    return f"{hours // 24} days"

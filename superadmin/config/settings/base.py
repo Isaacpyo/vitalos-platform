@@ -235,6 +235,8 @@ CONTENT_SECURITY_POLICY = {
         "font-src": [SELF],
         "connect-src": [SELF],
         "manifest-src": [SELF],
+        # Enquiry message bodies render in a sandboxed same-origin iframe with their own CSP.
+        "frame-src": [SELF],
         "form-action": [SELF],
         "frame-ancestors": [NONE],
         "base-uri": [NONE],

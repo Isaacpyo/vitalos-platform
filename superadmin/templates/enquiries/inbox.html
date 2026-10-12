@@ -1,6 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Enquiries · Vitalos Super Admin{% endblock %}
+{% load ui %}
+{% block title %}{% if enquiry %}{{ enquiry.ref }} · {% endif %}Enquiries · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block main_padding %}p-0{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block">Operate</li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  {% if enquiry %}
+    <li><a href="{% url 'enquiries:inbox' %}" class="muted hover:underline">Enquiries</a></li>
+    <li class="muted" aria-hidden="true">/</li>
+    <li class="truncate font-mono text-[13px] font-medium" aria-current="page">{{ enquiry.ref }}</li>
+  {% else %}
+    <li class="truncate font-medium" aria-current="page">Enquiries</li>
+  {% endif %}
+{% endblock %}
 {% block content %}
-  <h1 class="text-2xl font-bold">Enquiries</h1>
-  <ul class="mt-4">{% for item in enquiries %}<li><a href="{{ item.get_absolute_url }}">{{ item.ref }} {{ item.subject }}</a></li>{% empty %}<li class="muted">No enquiries yet.</li>{% endfor %}</ul>
+  <h1 class="sr-only">Enquiries</h1>
+  <div class="group lg:grid lg:h-[calc(100dvh-3.5rem)] lg:grid-cols-[12.5rem_minmax(18rem,23rem)_1fr]" data-enquiries data-open="{% if enquiry %}thread{% else %}list{% endif %}">
+    {# Left: filters and tags #}
+    <aside class="hidden overflow-y-auto border-r border-slate-200 bg-white p-3 lg:block dark:border-slate-800 dark:bg-slate-900" aria-label="Enquiry filters">
+      {% include "enquiries/_filters.html" %}
+    </aside>
+
+    {# Middle: search and list #}
+    <section class="flex min-h-0 flex-col border-r border-slate-200 bg-white group-data-[open=thread]:hidden lg:group-data-[open=thread]:flex dark:border-slate-800 dark:bg-slate-900" aria-label="Enquiry list">
+      <form action="{% url 'enquiries:inbox' %}" method="get" role="search" class="space-y-2 border-b border-slate-200 p-3 dark:border-slate-800"
+            hx-get="{% url 'enquiries:inbox' %}" hx-target="#enquiry-list" hx-swap="innerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:find input[name=q], change from:find select, submit">
+        {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+        <label for="enquiry-search" class="sr-only">Search enquiries by subject, sender, reference or text</label>
+        <div class="relative">
+          <div class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-slate-500 dark:text-slate-400">{% icon "search" "h-4 w-4" %}</div>
+          <input id="enquiry-search" type="search" name="q" value="{{ query }}" placeholder="Search enquiries" autocomplete="off" data-enquiry-search
+                 class="block w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-8 text-sm placeholder:text-slate-500 focus:border-cobalt-600 focus:outline-none focus:ring-2 focus:ring-cobalt-600/30 dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-400">
+          <kbd class="pointer-events-none absolute inset-y-0 right-2 my-auto flex h-5 items-center rounded border border-slate-300 px-1 font-mono text-[10px] text-slate-500 dark:border-slate-600 dark:text-slate-400">/</kbd>
+        </div>
+        <label for="enquiry-filter-mobile" class="sr-only">Filter</label>
+        <select id="enquiry-filter-mobile" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm lg:hidden dark:border-slate-700 dark:bg-slate-800" name="f" data-filter-select>
+          {% for key, label, count in filters %}<option value="{{ key }}" {% if key == filter_key %}selected{% endif %}>{{ label }} ({{ count }})</option>{% endfor %}
+        </select>
+      </form>
+      <div id="enquiry-list" class="min-h-0 flex-1 overflow-y-auto"
+           hx-get="{% url 'enquiries:inbox' %}{% if querystring %}?{{ querystring }}{% endif %}" hx-trigger="vsa-enquiries-changed from:body" hx-swap="innerHTML">
+        {% include "enquiries/_list.html" %}
+      </div>
+    </section>
+
+    {# Right: thread #}
+    <section id="enquiry-thread" class="hidden min-h-0 overflow-y-auto bg-offwhite group-data-[open=thread]:block lg:block dark:bg-slate-950" aria-label="Enquiry" tabindex="-1">
+      {% if enquiry %}
+        {% include "enquiries/_thread.html" %}
+      {% else %}
+        <div class="flex h-full min-h-64 flex-col items-center justify-center gap-2 p-8 text-center">
+          <span class="text-slate-400 dark:text-slate-500">{% icon "inbox" "h-8 w-8" %}</span>
+          <p class="font-medium">Select an enquiry</p>
+          <p class="muted max-w-xs text-sm">Use <kbd class="font-mono text-xs">J</kbd> and <kbd class="font-mono text-xs">K</kbd> to move through the list, and <kbd class="font-mono text-xs">?</kbd> for all shortcuts.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <dialog id="enquiry-shortcuts" class="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-md border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-midnight/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" aria-labelledby="enquiry-shortcuts-title">
+    <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+      <h2 id="enquiry-shortcuts-title" class="font-semibold">Keyboard shortcuts</h2>
+      <form method="dialog"><button class="btn btn-ghost btn-sm" aria-label="Close">{% icon "x" "h-4 w-4" %}</button></form>
+    </div>
+    <dl class="divide-y divide-slate-200 px-4 py-2 text-sm dark:divide-slate-800">
+      <div class="flex justify-between py-2"><dt>Next / previous enquiry</dt><dd class="font-mono text-xs">J / K</dd></div>
+      <div class="flex justify-between py-2"><dt>Open the selected enquiry</dt><dd class="font-mono text-xs">Enter</dd></div>
+      <div class="flex justify-between py-2"><dt>Reply / internal note</dt><dd class="font-mono text-xs">R / N</dd></div>
+      <div class="flex justify-between py-2"><dt>Resolve</dt><dd class="font-mono text-xs">E</dd></div>
+      <div class="flex justify-between py-2"><dt>Assign to me</dt><dd class="font-mono text-xs">A</dd></div>
+      <div class="flex justify-between py-2"><dt>Mark as spam</dt><dd class="font-mono text-xs">S</dd></div>
+      <div class="flex justify-between py-2"><dt>Search</dt><dd class="font-mono text-xs">/</dd></div>
+    </dl>
+    <p class="muted px-4 pb-4 text-xs">Shortcuts are off while you are typing in a field.</p>
+  </dialog>
 {% endblock %}

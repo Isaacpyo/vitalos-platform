@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from django.urls import NoReverseMatch, reverse
+from django.utils.module_loading import import_string
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,8 @@ class NavItem:
     group: str
     prefixes: tuple[str, ...]
     exact: bool = False
+    # Dotted path to ``fn(user) -> bool`` when only some roles may see the item.
+    permission: str = ""
 
     @property
     def url(self) -> str:
@@ -29,8 +32,16 @@ GROUPS = ("Operate", "Organisation", "System")
 
 NAV_ITEMS = (
     NavItem("overview", "Overview", "architecture:home", "layout-dashboard", "Operate", ("/",), exact=True),
-    NavItem("enquiries", "Enquiries", "enquiries:inbox", "inbox", "Operate", ("/enquiries",)),
-    NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity",)),
+    NavItem(
+        "enquiries",
+        "Enquiries",
+        "enquiries:inbox",
+        "inbox",
+        "Operate",
+        ("/enquiries",),
+        permission="apps.enquiries.selectors.can_access",
+    ),
+    NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem(
         "service_lines",
         "Service lines",
@@ -55,14 +66,18 @@ def is_available(item: NavItem) -> bool:
     return True
 
 
-def nav_groups(path: str) -> list[dict]:
+def is_visible(item: NavItem, user) -> bool:
+    return is_available(item) and (not item.permission or import_string(item.permission)(user))
+
+
+def nav_groups(path: str, user=None) -> list[dict]:
     """Sidebar groups with each item's URL and active state for ``path``."""
     groups = []
     for group in GROUPS:
         items = [
             {"item": item, "url": item.url, "active": item.matches(path)}
             for item in NAV_ITEMS
-            if item.group == group and is_available(item)
+            if item.group == group and is_visible(item, user)
         ]
         if items:
             groups.append({"label": group, "items": items})
