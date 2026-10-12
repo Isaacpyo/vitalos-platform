@@ -1,7 +1,7 @@
 import type { RedirectRule } from "./types";
 
 /**
- * Redirect map rules (ADR-018). Pure and dependency-free so `next.config.ts`, the proxy, the
+ * Redirect map rules (ADR-018). Pure and dependency-free so `next.config.ts`, the proxy
  * and the unit tests all apply the same checks:
  *
  *  - sources are exact same-site paths (no wildcards, regex or `//host`); destinations are
