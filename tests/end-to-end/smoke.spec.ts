@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-// Locked copy: Stage 8 §8 (Homepage hero) and Stage 11 §9. The proposition is the H1;
-// the brand line is the supporting line, not the heading.
-const proposition =
-  "We help ambitious organisations modernise operations, build digital products and adopt AI.";
+// Locked copy (owner decision 2026-10-12): the proposition is the H1; the brand line is the
+// supporting line, not the heading. The hero has no eyebrow.
+const proposition = "Modernise. Build. Adopt AI.";
 
 test("corporate shell shows the locked hero hierarchy and navigation", async ({ page }) => {
   await page.goto("/");
@@ -11,7 +10,7 @@ test("corporate shell shows the locked hero hierarchy and navigation", async ({ 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(proposition);
   await expect(
     page.getByText("Technology Consulting, Engineering & Digital Transformation", { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(page.getByText("From strategy to production.", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Talk to Vitalos" }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Explore what we do" })).toBeVisible();
