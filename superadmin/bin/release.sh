@@ -25,3 +25,9 @@ retry python manage.py seed_architecture
 # Creates the bootstrap SuperAdmin only if missing (password from $BOOTSTRAP_ADMIN_PASSWORD);
 # an existing account is never re-activated, re-promoted or otherwise changed.
 retry python manage.py create_superadmin
+# Creates or confirms the primary owner (admin@vitalos.co.uk) with no usable password when
+# PRIMARY_OWNER_EMAIL is set. Idempotent; other SuperAdmins are untouched. The owner then sets a
+# password with a one-time link from `manage.py issue_setup_link` (docs/DEPLOY.md).
+if [ -n "${PRIMARY_OWNER_EMAIL:-}" ]; then
+  retry python manage.py create_owner
+fi

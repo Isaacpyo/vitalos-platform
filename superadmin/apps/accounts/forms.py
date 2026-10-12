@@ -114,3 +114,7 @@ class ConfirmPasswordForm(StyledFormMixin, forms.Form):
         if not self.user.check_password(password):
             raise forms.ValidationError("Incorrect password.")
         return password
+
+
+class ForgotPasswordForm(StyledFormMixin, forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={"autocomplete": "username", "autofocus": True}))

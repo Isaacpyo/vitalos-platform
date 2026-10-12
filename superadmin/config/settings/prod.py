@@ -3,7 +3,7 @@
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403
-from .base import SENTRY_DSN, env
+from .base import EMAIL_TRANSPORT, RESEND_API_KEY, SENTRY_DSN, env
 
 DEBUG = False
 SECRET_KEY = env("DJANGO_SECRET_KEY")
@@ -19,6 +19,11 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=0)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool("DB_DISABLE_SERVER_SIDE_CURSORS", default=True)
 APP_ENVIRONMENT = env("APP_ENVIRONMENT", default="production")
+APP_BASE_URL = env("APP_BASE_URL", default="https://admin.vitalos.co.uk").rstrip("/")
+if EMAIL_TRANSPORT == "resend" and not RESEND_API_KEY:
+    raise ImproperlyConfigured("EMAIL_TRANSPORT=resend needs RESEND_API_KEY.")
+# In production the reset email is offered only when it can actually be delivered.
+PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 
 # TLS terminates at the platform ingress, which sets X-Forwarded-Proto.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

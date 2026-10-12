@@ -2,6 +2,7 @@ from django.conf import settings
 
 from apps.accounts.otp import confirmed_devices, otp_required
 from apps.accounts.roles import has_any_role, is_superadmin, primary_role, role_label
+from apps.audit.services import previous_sign_in
 
 from . import navigation
 
@@ -46,4 +47,5 @@ def app_context(request):
         "user_initials": (lambda: _initials(user)) if authenticated else "",
         "role_label": (lambda: role_label(user)) if authenticated else "",
         "mfa_enabled": (lambda: confirmed_devices(user).exists()) if authenticated else False,
+        "previous_sign_in": (lambda: previous_sign_in(user)) if authenticated else None,
     }

@@ -41,6 +41,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+    # The single named owner (admin@vitalos.co.uk). Only the owner grants or revokes SuperAdmin,
+    # and the owner cannot be demoted or deactivated in the app (see services.set_role).
+    is_primary_owner = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -50,6 +53,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         ordering = ["email"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["is_primary_owner"],
+                condition=models.Q(is_primary_owner=True),
+                name="accounts_single_primary_owner",
+            )
+        ]
 
     def __str__(self):
         return self.full_name or self.email

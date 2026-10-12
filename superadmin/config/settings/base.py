@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "apps.core",
+    "apps.audit",
+    "apps.mailer",
     "apps.accounts",
     "apps.notifications",
     "apps.architecture",
@@ -126,8 +128,37 @@ AXES_SENSITIVE_PARAMETERS = ["password"]
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
 # django-otp: TOTP is mandatory for SuperAdmin and for anyone who enrolled a device.
+# REQUIRE_MFA_FOR_SUPER_ADMIN is accepted as an alias for OTP_REQUIRED_FOR_SUPERADMIN.
 OTP_TOTP_ISSUER = "Vitalos Super Admin"
-OTP_REQUIRED_FOR_SUPERADMIN = env.bool("OTP_REQUIRED_FOR_SUPERADMIN", default=True)
+OTP_REQUIRED_FOR_SUPERADMIN = env.bool(
+    "OTP_REQUIRED_FOR_SUPERADMIN", default=env.bool("REQUIRE_MFA_FOR_SUPER_ADMIN", default=True)
+)
+
+# Primary owner and sign-in. The owner is created by `manage.py create_owner` with no password.
+APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:8000").rstrip("/")
+PRIMARY_OWNER_EMAIL = env("PRIMARY_OWNER_EMAIL", default="").strip().lower()
+# Pre-fills the sign-in email when set. Empty by default: pre-filling a public page reveals the login.
+DEFAULT_SIGNIN_EMAIL = env("DEFAULT_SIGNIN_EMAIL", default="").strip().lower()
+
+# Outbound email. EMAIL_TRANSPORT=log (default) never sends; resend is switched on by a human only.
+EMAIL_TRANSPORT = env("EMAIL_TRANSPORT", default="log")
+EMAIL_BACKEND = {
+    "log": "apps.mailer.backends.LogEmailBackend",
+    "resend": "apps.mailer.backends.ResendEmailBackend",
+}.get(EMAIL_TRANSPORT, "apps.mailer.backends.LogEmailBackend")
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+RESEND_API_URL = "https://api.resend.com/emails"
+NOTIFY_FROM = env("NOTIFY_FROM", default="notifications@vitalos.co.uk")
+NOTIFY_FROM_HEADER = f"Vitalos Admin <{NOTIFY_FROM}>"
+DEFAULT_FROM_EMAIL = NOTIFY_FROM_HEADER
+SERVER_EMAIL = NOTIFY_FROM_HEADER
+SUPPORT_MAILBOX = env("SUPPORT_MAILBOX", default="support@vitalos.co.uk")
+SUPPORT_FROM_HEADER = f"Vitalos Support <{SUPPORT_MAILBOX}>"
+NOTIFY_OWNER_EMAIL = env("NOTIFY_OWNER_EMAIL", default=PRIMARY_OWNER_EMAIL or "admin@vitalos.co.uk")
+# Forgot-password emails only make sense when mail can actually be delivered (or locally).
+PASSWORD_RESET_ENABLED = env.bool(
+    "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"
+)
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Europe/London"

@@ -7,20 +7,22 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Prefetch
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.encoding import force_str
+from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode
 from django.views.decorators.http import require_http_methods, require_POST
 from django_otp import login as otp_login
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
+from apps.audit.services import record
 from apps.core.forms import StyledFormMixin
 from apps.core.htmx import changed_response, close_modal_response
 
@@ -28,6 +30,7 @@ from . import otp, services
 from .forms import (
     ApiTokenForm,
     ConfirmPasswordForm,
+    ForgotPasswordForm,
     LoginForm,
     OTPTokenForm,
     ProfileForm,
@@ -36,10 +39,18 @@ from .forms import (
 )
 from .models import ApiToken
 from .roles import ROLES, SUPERADMIN, is_superadmin, primary_role, role_required
+from .tokens import set_password_token
 
 
 class StyledPasswordChangeForm(StyledFormMixin, PasswordChangeForm):
     pass
+
+
+class StyledSetPasswordForm(StyledFormMixin, SetPasswordForm):
+    pass
+
+
+LAST_EMAIL_COOKIE = "vsa_last_email"
 
 
 def _next_url(request, default=None) -> str:
@@ -63,13 +74,31 @@ def login_view(request):
         if otp.otp_required(user) and not user.is_verified():
             return _second_factor_redirect(request, user)
         return HttpResponseRedirect(_next_url(request))
-    form = LoginForm(request, data=request.POST or None)
+    remembered = request.COOKIES.get(LAST_EMAIL_COOKIE, "")
+    initial = {"email": settings.DEFAULT_SIGNIN_EMAIL or remembered}
+    form = LoginForm(request, data=request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         auth_login(request, form.user)
         if otp.otp_required(form.user):
-            return _second_factor_redirect(request, form.user)
-        return HttpResponseRedirect(_next_url(request))
-    return render(request, "accounts/login.html", {"form": form, "next": _next_url(request, default="")})
+            response = _second_factor_redirect(request, form.user)
+        else:
+            response = HttpResponseRedirect(_next_url(request))
+        # Remember the last email on this browser (first-party, HttpOnly) to save retyping it.
+        response.set_cookie(
+            LAST_EMAIL_COOKIE,
+            form.user.email,
+            max_age=90 * 24 * 60 * 60,
+            secure=request.is_secure(),
+            httponly=True,
+            samesite="Lax",
+        )
+        return response
+    context = {
+        "form": form,
+        "next": _next_url(request, default=""),
+        "can_reset": settings.PASSWORD_RESET_ENABLED,
+    }
+    return render(request, "accounts/login.html", context)
 
 
 @login_required
@@ -102,6 +131,7 @@ def otp_setup(request):
             device.confirmed = True
             device.save(update_fields=["confirmed"])
             otp_login(request, device)
+            record("auth.mfa_enrolled", request=request, entity=user, summary="Authenticator app enrolled")
             messages.success(request, "Two-factor authentication is on.")
             return HttpResponseRedirect(_next_url(request))
         form.add_error("token", "That code did not match. Scan the QR code again and enter the current code.")
@@ -122,6 +152,56 @@ def logout_view(request):
     return redirect("accounts:login")
 
 
+def _user_from_uid(uidb64):
+    try:
+        pk = int(force_str(urlsafe_base64_decode(uidb64)))
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return get_user_model().objects.filter(pk=pk, is_active=True).first()
+
+
+def _no_store(response):
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@require_http_methods(["GET", "POST"])
+def set_password(request, uidb64, token):
+    """Single-use, 30-minute link from `issue_setup_link` or the forgot-password email."""
+    user = _user_from_uid(uidb64)
+    if user is None or not set_password_token.check_token(user, token):
+        context = {"invalid": True, "can_reset": settings.PASSWORD_RESET_ENABLED}
+        return _no_store(render(request, "accounts/set_password.html", context, status=400))
+    form = StyledSetPasswordForm(user, request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()  # Changes the password hash, which invalidates this link.
+        record(
+            "auth.password_set", request=request, actor=user, entity=user, summary="Password set from link"
+        )
+        if request.user.is_authenticated:
+            auth_logout(request)
+        messages.success(request, "Your password is set. Sign in to continue.")
+        return redirect("accounts:login")
+    return _no_store(render(request, "accounts/set_password.html", {"form": form, "email": user.email}))
+
+
+@require_http_methods(["GET", "POST"])
+def forgot_password(request):
+    """Always answers the same way, so it never reveals which emails have accounts."""
+    if not settings.PASSWORD_RESET_ENABLED:
+        raise Http404
+    form = ForgotPasswordForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        services.request_password_reset(form.cleaned_data["email"].lower(), request)
+        messages.info(
+            request,
+            "If that address belongs to an account, a link to set a new password is on its way. "
+            "It works once and expires in 30 minutes.",
+        )
+        return redirect("accounts:login")
+    return render(request, "accounts/forgot_password.html", {"form": form})
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def account(request):
@@ -137,10 +217,12 @@ def account(request):
     if action == "password" and password_form.is_valid():
         password_form.save()
         update_session_auth_hash(request, password_form.user)
+        record("auth.password_changed", request=request, entity=user, summary="Password changed")
         messages.success(request, "Password changed.")
         return redirect("accounts:account")
     if action == "reset_2fa" and reset_form.is_valid():
         TOTPDevice.objects.filter(user=user).delete()
+        record("auth.mfa_reset", request=request, entity=user, summary="Authenticator removed")
         auth_logout(request)
         messages.info(request, "Your authenticator was removed. Sign in again to enrol a new one.")
         return redirect("accounts:login")
@@ -186,6 +268,7 @@ def user_create(request):
                 role=data["role"],
                 password=data["password"],
                 actor=request.user,
+                request=request,
             )
         except ValidationError as exc:
             form.add_error(None, exc)
@@ -221,8 +304,8 @@ def user_edit(request, pk):
         data = form.cleaned_data
         try:
             with transaction.atomic():
-                services.set_role(target, data["role"] or None, request.user)
-                services.set_active(target, data["is_active"], request.user)
+                services.set_role(target, data["role"] or None, request.user, request=request)
+                services.set_active(target, data["is_active"], request.user, request=request)
                 if target.full_name != data["full_name"]:
                     target.full_name = data["full_name"]
                     target.save(update_fields=["full_name"])

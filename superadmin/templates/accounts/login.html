@@ -8,4 +8,5 @@
     {% include "partials/form_fields.html" %}
     <button type="submit" class="btn btn-primary mt-6 w-full">Sign in</button>
   </form>
+  {% if can_reset %}<p class="mt-4 text-center text-sm"><a href="{% url 'accounts:forgot_password' %}" class="text-cobalt-600 hover:underline dark:text-cobalt-300">Forgot your password?</a></p>{% endif %}
 {% endblock %}
