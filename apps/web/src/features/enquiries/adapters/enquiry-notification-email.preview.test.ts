@@ -9,6 +9,7 @@ import {
   escapeHtml,
   renderEnquiryNotification,
 } from "./enquiry-notification-email";
+import type { InlineImage } from "./email-inline-images";
 
 /**
  * Local preview of the notification email. Skipped unless EMAIL_PREVIEW_DIR is set:
@@ -16,7 +17,7 @@ import {
  *   EMAIL_PREVIEW_DIR=/some/dir pnpm --filter @vitalos/web exec vitest run enquiry-notification-email.preview
  *
  * Writes, per variant: the HTML part, copies with the dark-mode query forced on and off, the plain-text
- * part and an .eml (multipart/alternative, never sent) that opens in Outlook or Apple Mail; plus
+ * part, the rendered notification as JSON and an .eml (never sent) that opens in Outlook or Apple Mail; plus
  * index.html, a gallery of every variant in light, dark and forced-inversion views.
  */
 const outDir = process.env.EMAIL_PREVIEW_DIR;
@@ -117,8 +118,16 @@ function encodeHeader(value: string): string {
   return words.map((w) => `=?UTF-8?B?${Buffer.from(w).toString("base64")}?=`).join("\r\n ");
 }
 
-function eml(subject: string, replyTo: string | undefined, text: string, html: string): string {
-  const boundary = "vitalos-preview-boundary";
+/** multipart/related (HTML part plus its inline images) inside multipart/alternative. */
+function eml(
+  subject: string,
+  replyTo: string | undefined,
+  text: string,
+  html: string,
+  images: readonly InlineImage[],
+): string {
+  const alt = "vitalos-preview-alternative";
+  const rel = "vitalos-preview-related";
   return [
     `From: ${FROM}`,
     `To: ${TO}`,
@@ -126,22 +135,43 @@ function eml(subject: string, replyTo: string | undefined, text: string, html: s
     `Subject: ${encodeHeader(subject)}`,
     "Date: Mon, 12 Oct 2026 11:09:41 +0000",
     "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    `Content-Type: multipart/alternative; boundary="${alt}"`,
     "",
-    `--${boundary}`,
+    `--${alt}`,
     "Content-Type: text/plain; charset=utf-8",
     "Content-Transfer-Encoding: base64",
     "",
     base64Lines(text),
-    `--${boundary}`,
+    `--${alt}`,
+    `Content-Type: multipart/related; boundary="${rel}"`,
+    "",
+    `--${rel}`,
     "Content-Type: text/html; charset=utf-8",
     "Content-Transfer-Encoding: base64",
     "",
     base64Lines(html),
-    `--${boundary}--`,
+    ...images.flatMap((img) => [
+      `--${rel}`,
+      `Content-Type: ${img.contentType}; name="${img.filename}"`,
+      "Content-Transfer-Encoding: base64",
+      `Content-ID: <${img.contentId}>`,
+      `Content-Disposition: inline; filename="${img.filename}"`,
+      "",
+      (img.base64.match(/.{1,76}/g) ?? []).join("\r\n"),
+    ]),
+    `--${rel}--`,
+    `--${alt}--`,
     "",
   ].join("\r\n");
 }
+
+/** Browser previews cannot resolve cid: links, so inline the images as data URIs. */
+const withDataUris = (html: string, images: readonly InlineImage[]) =>
+  images.reduce(
+    (out, img) =>
+      out.replaceAll(`cid:${img.contentId}`, `data:${img.contentType};base64,${img.base64}`),
+    html,
+  );
 
 const frame = (src: string, width: number, invert = false) =>
   `<iframe src="${src}" width="${width}" height="1180" loading="lazy" title="${src}"${invert ? ' class="invert"' : ""}></iframe>`;
@@ -153,7 +183,9 @@ describe.skipIf(!outDir)("notification email preview", () => {
     const cards: string[] = [];
 
     for (const v of variants) {
-      const { subject, text, html } = renderEnquiryNotification(message(v.enquiry));
+      const rendered = renderEnquiryNotification(message(v.enquiry));
+      const { subject, text, inlineImages } = rendered;
+      const html = withDataUris(rendered.html, inlineImages);
       const email = cleanLine(v.enquiry.workEmail);
       const replyTo = SIMPLE_ADDRESS.test(email) ? email : undefined;
       const forcedDark = html.replace("@media (prefers-color-scheme:dark)", "@media all");
@@ -163,7 +195,11 @@ describe.skipIf(!outDir)("notification email preview", () => {
       writeFileSync(join(dir, `${v.slug}.light.html`), forcedLight);
       writeFileSync(join(dir, `${v.slug}.dark.html`), forcedDark);
       writeFileSync(join(dir, `${v.slug}.txt`), text);
-      writeFileSync(join(dir, `${v.slug}.eml`), eml(subject, replyTo, text, html));
+      writeFileSync(join(dir, `${v.slug}.json`), JSON.stringify({ ...rendered, replyTo }));
+      writeFileSync(
+        join(dir, `${v.slug}.eml`),
+        eml(subject, replyTo, text, rendered.html, inlineImages),
+      );
 
       const headers = [
         ["From", FROM],

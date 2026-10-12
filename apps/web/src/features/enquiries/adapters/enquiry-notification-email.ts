@@ -1,6 +1,9 @@
+import { repoSettingsFacts } from "@vitalos/cms/repo";
 import { palette } from "@vitalos/design-tokens";
 import type { EnquiryIntent, EnquiryTimeframe } from "@vitalos/validation/enquiry";
 import type { NotificationMessage } from "../domain/ports";
+import { inlineImages } from "./email-inline-images";
+import type { InlineImage } from "./email-inline-images";
 
 /**
  * The internal "new enquiry" notification email: subject, plain-text part and HTML part. The
@@ -13,15 +16,32 @@ import type { NotificationMessage } from "../domain/ports";
  *   and, in HTML, escaped. Single-line fields are folded onto one line, so they cannot fake extra
  *   fields or headers. The goal keeps its line breaks; in the plain-text part every goal line is
  *   quoted with "> " so it cannot pass for a field.
- * - HTML is table-based with inline styles, a single 600px column, system fonts, no images, no
- *   scripts and no remote assets. Colours come from the locked design tokens; dark mode uses
- *   `prefers-color-scheme` (Apple Mail, iOS Mail) and Outlook.com's `data-ogsc`/`data-ogsb`
- *   attributes. The light theme also reads correctly when Gmail inverts it.
- * - The only links are a `mailto:` to the enquirer and the public source page.
+ * - HTML is table-based with inline styles, a single 600px column, system fonts, no scripts and
+ *   no remote assets. The logo and social icons are inline CID attachments
+ *   (`email-inline-images.ts`), never fetched. Colours come from the locked design tokens; dark
+ *   mode uses `prefers-color-scheme` (Apple Mail, iOS Mail) and Outlook.com's
+ *   `data-ogsc`/`data-ogsb` attributes. The light theme also reads correctly when Gmail inverts it.
+ * - The links are a `mailto:` to the enquirer, the public source page and the social profiles.
  */
 
 export const FOOTER_NOTE =
   "Internal notification. The enquiry is stored in the Vitalos database; this email is not the record.";
+
+/** Social profiles supplied by the owner on 2026-10-12. Each has an inline icon. */
+export const socialLinks = [
+  {
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/company/vitalos",
+    image: inlineImages.linkedin,
+  },
+  { label: "X", url: "https://x.com/vitalos", image: inlineImages.x },
+  { label: "Instagram", url: "https://www.instagram.com/vitalos", image: inlineImages.instagram },
+  { label: "Facebook", url: "https://www.facebook.com/vitalos", image: inlineImages.facebook },
+] as const;
+
+/** Company details for the footer, from the owner-published settings (Companies House record). */
+const COMPANY_LINE = `${repoSettingsFacts.legalName}, company number ${repoSettingsFacts.companyNumber}`;
+const ADDRESS_LINE = `Registered office: ${repoSettingsFacts.registeredAddress}`;
 
 /** Origin used to show the source page as a full link. The apex redirects to www. */
 export const PUBLIC_SITE_ORIGIN = "https://vitalos.co.uk";
@@ -293,6 +313,11 @@ export function buildTextBody(message: NotificationMessage): string {
     "",
     "--",
     FOOTER_NOTE,
+    "",
+    ...socialLinks.map((s) => `${s.label}: ${s.url}`),
+    "",
+    COMPANY_LINE,
+    ADDRESS_LINE,
   ];
   return lines.filter((line) => line !== undefined).join("\n");
 }
@@ -441,6 +466,11 @@ const rawNote = (raw: string) =>
 const labelledHtml = (label: string, raw: string) =>
   !raw ? muted(NOT_PROVIDED) : label === raw ? escapeHtml(raw) : escapeHtml(label) + rawNote(raw);
 
+/** An inline (CID) image. Alt text inherits the cell's font and colour when images are off. */
+function image(img: InlineImage, alt: string): string {
+  return `<img src="cid:${img.contentId}" width="${img.width}" height="${img.height}" alt="${escapeHtml(alt)}" style="display:block;width:${img.width}px;height:${img.height}px;border:0;outline:none;text-decoration:none;">`;
+}
+
 function link(href: string, text: string): string {
   // inline-block with 12px vertical padding: a tap target of at least 44px.
   return `<a href="${escapeHtml(href)}" class="v-link" style="display:inline-block;padding:12px 0;color:${L.link};text-decoration:underline;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(text)}</a>`;
@@ -559,10 +589,10 @@ ${STYLE_BLOCKS.map((css) => `<style>\n${css}\n</style>`).join("\n")}
 <tr><td align="center" style="padding:16px 8px 24px;">
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;font-family:${FONT};">
-<tr><td bgcolor="${L.headBg}" class="v-pad" style="padding:16px 24px;background-color:${L.headBg};border-radius:12px 12px 0 0;">
+<tr><td bgcolor="${L.headBg}" class="v-pad" style="padding:16px 24px;background-color:${L.headBg};background-image:linear-gradient(${L.headBg},${L.headBg});border-radius:12px 12px 0 0;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
 <tr>
-<td style="font-family:${FONT};font-size:20px;line-height:24px;font-weight:700;letter-spacing:-0.2px;color:${L.headText};">Vitalos</td>
+<td style="font-family:${FONT};font-size:20px;line-height:24px;font-weight:700;color:${L.headText};">${image(inlineImages.logo, "Vitalos")}</td>
 <td align="right" style="font-family:${FONT};"><span style="display:inline-block;padding:4px 10px;border-radius:999px;background-color:${L.headLabelBg};color:${L.headLabelText};font-size:14px;line-height:20px;font-weight:600;">New enquiry</span></td>
 </tr></table>
 </td></tr>
@@ -588,6 +618,13 @@ ${section("Meta", detailsTable(metaRows))}
 </table>
 </td></tr>
 <tr><td class="v-m v-pad" style="padding:16px 24px 0;font-family:${FONT};font-size:14px;line-height:20px;color:${L.muted};">${escapeHtml(FOOTER_NOTE)}</td></tr>
+<tr><td class="v-pad" style="padding:12px 18px 0;">${socialLinks
+    .map(
+      (s) =>
+        `<a href="${escapeHtml(s.url)}" style="display:inline-block;padding:6px;text-decoration:none;">${image(s.image, `Vitalos on ${s.label}`)}</a>`,
+    )
+    .join("")}</td></tr>
+<tr><td class="v-m v-pad" style="padding:8px 24px 0;font-family:${FONT};font-size:14px;line-height:20px;color:${L.muted};">${escapeHtml(COMPANY_LINE)}<br>${escapeHtml(ADDRESS_LINE)}</td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
@@ -601,6 +638,8 @@ export interface RenderedNotification {
   subject: string;
   text: string;
   html: string;
+  /** Images the HTML references as `cid:`; send them as inline attachments. */
+  inlineImages: InlineImage[];
 }
 
 export function renderEnquiryNotification(message: NotificationMessage): RenderedNotification {
@@ -608,5 +647,6 @@ export function renderEnquiryNotification(message: NotificationMessage): Rendere
     subject: buildSubject(message),
     text: buildTextBody(message),
     html: buildHtmlBody(message),
+    inlineImages: [inlineImages.logo, ...socialLinks.map((s) => s.image)],
   };
 }

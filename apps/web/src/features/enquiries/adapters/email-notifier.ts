@@ -1,5 +1,6 @@
 import { NotificationError } from "../domain/ports";
 import type { EnquiryLogger, NotificationMessage, Notifier } from "../domain/ports";
+import type { InlineImage } from "./email-inline-images";
 import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-notification-email";
 
 /**
@@ -51,6 +52,8 @@ interface EmailContent {
   subject: string;
   text: string;
   html: string;
+  /** Sent as inline attachments, referenced from the HTML by content id. */
+  inlineImages: InlineImage[];
   replyTo: string | undefined;
   idempotencyKey: string;
 }
@@ -89,6 +92,7 @@ abstract class EmailNotifier implements Notifier {
       subject: rendered.subject,
       text: rendered.text,
       html: rendered.html,
+      inlineImages: rendered.inlineImages,
       replyTo: SIMPLE_ADDRESS.test(workEmail) ? workEmail : undefined,
       idempotencyKey: message.idempotencyKey,
     });
@@ -163,6 +167,12 @@ export class PostmarkNotifier extends EmailNotifier {
         Subject: c.subject,
         TextBody: c.text,
         HtmlBody: c.html,
+        Attachments: c.inlineImages.map((img) => ({
+          Name: img.filename,
+          Content: img.base64,
+          ContentType: img.contentType,
+          ContentID: `cid:${img.contentId}`,
+        })),
         ...(c.replyTo ? { ReplyTo: c.replyTo } : {}),
       },
     };
@@ -186,6 +196,12 @@ export class ResendNotifier extends EmailNotifier {
         subject: c.subject,
         text: c.text,
         html: c.html,
+        attachments: c.inlineImages.map((img) => ({
+          filename: img.filename,
+          content: img.base64,
+          content_type: img.contentType,
+          content_id: img.contentId,
+        })),
         ...(c.replyTo ? { reply_to: c.replyTo } : {}),
       },
     };

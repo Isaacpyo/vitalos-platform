@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
 import { contrastRatio } from "@vitalos/design-tokens";
 import { describe, expect, it } from "vitest";
 import type { NotificationMessage } from "../domain/ports";
+import { inlineImages } from "./email-inline-images";
 import {
   FOOTER_NOTE,
+  socialLinks,
   buildHtmlBody,
   buildPreheader,
   buildSubject,
@@ -121,10 +124,25 @@ describe("all fields, in the same order in both parts", () => {
   it("HTML", () => inOrder(visibleText(buildHtmlBody(message()))));
   it("plain text", () => inOrder(buildTextBody(message())));
 
-  it("footer note word for word in both parts", () => {
+  it("footer note word for word, then social links and the registered office, in both parts", () => {
     const { text, html } = renderEnquiryNotification(message());
-    expect(text.endsWith(`\n${FOOTER_NOTE}`)).toBe(true);
-    expect(html).toContain(FOOTER_NOTE);
+    const footer = [
+      FOOTER_NOTE,
+      "https://www.linkedin.com/company/vitalos",
+      "https://x.com/vitalos",
+      "https://www.instagram.com/vitalos",
+      "https://www.facebook.com/vitalos",
+      "Vitalos Technologies Limited, company number 16696895",
+      "Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT",
+    ];
+    for (const part of [text, html]) {
+      let at = 0;
+      for (const needle of footer) {
+        const found = part.indexOf(needle, at);
+        expect(found, needle).toBeGreaterThan(0);
+        at = found + needle.length;
+      }
+    }
   });
 
   it("role, budget range and offer appear when present, as before", () => {
@@ -171,6 +189,14 @@ describe("all fields, in the same order in both parts", () => {
         "",
         "--",
         FOOTER_NOTE,
+        "",
+        "LinkedIn: https://www.linkedin.com/company/vitalos",
+        "X: https://x.com/vitalos",
+        "Instagram: https://www.instagram.com/vitalos",
+        "Facebook: https://www.facebook.com/vitalos",
+        "",
+        "Vitalos Technologies Limited, company number 16696895",
+        "Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT",
       ].join("\n"),
     );
   });
@@ -229,7 +255,7 @@ describe("escaping", () => {
   it("HTML escapes every user value", () => {
     const html = buildHtmlBody(hostile);
     expect(html).not.toMatch(/<script/i);
-    expect(html).not.toMatch(/<img/i);
+    expect(html).not.toContain("<img src=x");
     expect(html).not.toContain("<b>bold</b>");
     expect(html).not.toContain("<i>unknown</i>");
     expect(html).toContain(
@@ -315,12 +341,39 @@ describe("UK time", () => {
 describe("HTML constraints", () => {
   const html = buildHtmlBody(message({ workEmail: "jane@gmail.com" }));
 
-  it("no scripts, images, external stylesheets, fonts or tracking", () => {
-    expect(html).not.toMatch(/<script|<img|<link|<iframe|<object|<embed|@import|url\(|@font-face/i);
-    expect(html).not.toMatch(/\ssrc=/i);
+  it("no scripts, remote images, external stylesheets, fonts or tracking", () => {
+    expect(html).not.toMatch(/<script|<link|<iframe|<object|<embed|@import|url\(|@font-face/i);
+    const sources = [...html.matchAll(/\ssrc="([^"]*)"/g)].map((m) => m[1]!);
+    for (const src of sources) expect(src).toMatch(/^cid:/);
     const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     expect(hrefs.length).toBeGreaterThan(0);
-    for (const href of hrefs) expect(href).toMatch(/^(mailto:|https:\/\/vitalos\.co\.uk\/)/);
+    const allowed = /^(mailto:|https:\/\/vitalos\.co\.uk\/)/;
+    const social = new Set(socialLinks.map((s) => s.url as string));
+    for (const href of hrefs) expect(allowed.test(href) || social.has(href), href).toBe(true);
+  });
+
+  it("every cid: image is attached, has a size and alt text", () => {
+    const rendered = renderEnquiryNotification(message());
+    const attached = new Set(rendered.inlineImages.map((img) => img.contentId));
+    const imgs = [...rendered.html.matchAll(/<img [^>]*>/g)].map((m) => m[0]);
+    expect(imgs).toHaveLength(5);
+    for (const img of imgs) {
+      expect(attached.has(img.match(/src="cid:([^"]+)"/)![1]!)).toBe(true);
+      expect(img).toMatch(/ width="\d+" height="\d+" alt="[^"]+"/);
+    }
+    expect(rendered.html).toContain('alt="Vitalos"');
+  });
+
+  it("inline images match the PNG files in ./assets", () => {
+    for (const img of Object.values(inlineImages)) {
+      const file = readFileSync(new URL(`./assets/${img.filename}`, import.meta.url));
+      expect(img.base64).toBe(file.toString("base64"));
+      // PNG IHDR: pixel size is twice the display size.
+      expect([file.readUInt32BE(16), file.readUInt32BE(20)]).toEqual([
+        img.width * 2,
+        img.height * 2,
+      ]);
+    }
   });
 
   it("declares light and dark colour schemes and a dark-mode query", () => {

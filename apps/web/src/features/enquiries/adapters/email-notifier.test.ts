@@ -86,6 +86,7 @@ describe("request shapes", () => {
     expect(init?.signal).toBeInstanceOf(AbortSignal);
     const body = JSON.parse(init?.body as string) as Record<string, string>;
     expect(Object.keys(body).sort()).toEqual([
+      "Attachments",
       "From",
       "HtmlBody",
       "ReplyTo",
@@ -93,6 +94,18 @@ describe("request shapes", () => {
       "TextBody",
       "To",
     ]);
+    const attachments = body.Attachments as unknown as Record<string, string>[];
+    expect(attachments.map((a) => a.ContentID)).toEqual([
+      "cid:vitalos-logo",
+      "cid:social-linkedin",
+      "cid:social-x",
+      "cid:social-instagram",
+      "cid:social-facebook",
+    ]);
+    expect(attachments[0]).toMatchObject({
+      Name: "vitalos-logo-white.png",
+      ContentType: "image/png",
+    });
     expect(body).toMatchObject({
       From: "Vitalos <noreply@example.invalid>",
       To: "ops@example.invalid",
@@ -114,7 +127,22 @@ describe("request shapes", () => {
     expect(headers["Idempotency-Key"]).toBe(`${id}:internal-notification`);
     expect(headers["X-Postmark-Server-Token"]).toBeUndefined();
     const body = JSON.parse(init?.body as string) as Record<string, unknown>;
-    expect(Object.keys(body).sort()).toEqual(["from", "html", "reply_to", "subject", "text", "to"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "attachments",
+      "from",
+      "html",
+      "reply_to",
+      "subject",
+      "text",
+      "to",
+    ]);
+    const attachments = body.attachments as Record<string, string>[];
+    expect(attachments).toHaveLength(5);
+    expect(attachments[0]).toMatchObject({
+      filename: "vitalos-logo-white.png",
+      content_type: "image/png",
+      content_id: "vitalos-logo",
+    });
     expect(body).toMatchObject({
       from: "Vitalos <noreply@example.invalid>",
       to: ["ops@example.invalid"],
