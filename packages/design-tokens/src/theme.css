@@ -192,7 +192,8 @@ html {
 /* Hero process card (owner decision 2026-10-12). Everything here is inside no-preference, so under
    reduced motion (or if CSS animation fails) the card simply renders in its final state: ticks
    drawn, last step blue, bars at full height. Transform, opacity and stroke-dashoffset only, so
-   nothing shifts layout. Delays come from --d, set per element in HeroVisual. */
+   nothing shifts layout. Delays come from --d, set per element in HeroVisual. Every animation is
+   finite (no infinite loops) so all motion ends within about 6s of load (WCAG 2.2.2). */
 @keyframes hv-card {
   from {
     opacity: 0;
@@ -269,10 +270,10 @@ html {
     transform-origin: bottom;
     animation:
       hv-bar var(--duration-entrance) var(--ease-emphasis) var(--d) both,
-      hv-wave 2500ms ease-in-out calc(var(--d) + 600ms + var(--w)) infinite;
+      hv-wave 2500ms ease-in-out calc(var(--d) + 600ms + var(--w)) 1;
   }
   .hv-flow {
-    animation: hv-flow 8s linear infinite;
+    animation: hv-flow 4s ease-out 240ms 1 both;
   }
 }
 
