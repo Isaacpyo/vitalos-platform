@@ -214,9 +214,10 @@ html {
   }
 }
 
+/* Labels slide only: text is never drawn faint, so it is fully legible at every moment, with or
+   without JavaScript (tests/end-to-end/motion.nojs.spec.ts). The checks carry the sequence. */
 @keyframes hv-label {
   from {
-    opacity: 0;
     translate: -0.25rem 0;
   }
 }
