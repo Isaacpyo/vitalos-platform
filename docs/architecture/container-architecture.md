@@ -94,4 +94,4 @@ Further future containers (client portal, operations, docs, mobile apps, workers
 - Remote Supabase and email provider: set `VITALOS_ENQUIRY_BACKEND=supabase`; a `Notifier` adapter is the only new code.
 - Scheduler, error provider and analytics provider are adapters behind existing interfaces.
 
-See `docs/delivery/owner-decisions.md`.
+Owner inputs are tracked in the owner's decision log (kept privately, outside this repository).

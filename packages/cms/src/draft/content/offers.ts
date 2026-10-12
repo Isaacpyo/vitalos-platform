@@ -576,7 +576,7 @@ const offers: readonly OfferDraft[] = [
 /**
  * Terms every engagement shares (Stage 4 "Scope, Change Control & Acceptance" and "Third-Party
  * Costs, Cloud & Partner Services"). Appended where an offer lists fewer than three, so each page
- * states what the client provides and what is excluded (direction: docs/research brief §4).
+ * states what the client provides and what is excluded (direction: content research brief §4, kept privately).
  */
 const commonRequirements = [
   "Timely decisions and feedback, including acceptance reviews within the agreed window",

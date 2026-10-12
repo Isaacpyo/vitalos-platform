@@ -1,3 +1,20 @@
 # gitleaks configuration: the default rules.
 [extend]
 useDefault = true
+
+# Verified false positives from the full-history review of 12 Oct 2026 (ADR-001). Allowlisted by value or
+# path, not by fingerprint: fingerprints include commit SHAs, which the history rewrite changed.
+[allowlist]
+description = "Verified false positives"
+paths = [
+  # Removed Sanity export (ADR-028): Portable Text _key ids, no credentials.
+  '''^tooling/content/draft-dataset\.ndjson$''',
+]
+regexes = [
+  # Test-only HMAC secret in the Super Admin enquiry tests.
+  '''^test-inbound-secret-0123456789$''',
+  # Email template keys in the Super Admin seed data.
+  '''^meeting-reminder-(24-hours|1-hour)$''',
+  # Placeholder idempotency UUID in an old EnquiryForm test.
+  '''^6f0f6a6e-1b43-4d7e-9a53-0a6f2f6f4f10$''',
+]

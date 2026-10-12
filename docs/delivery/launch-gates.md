@@ -1,6 +1,6 @@
 # Launch gates
 
-- G0 Source: approved private remote, deployment source and ownership confirmed.
+- G0 Source: approved remote, deployment source and ownership confirmed.
 - G1 Design: Figma system and representative responsive templates approved.
 - G2 Content: accurate owned reviewed content; no placeholders.
 - G3 Proof: permissions and evidence verified.

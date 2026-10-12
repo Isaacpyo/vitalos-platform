@@ -1,6 +1,6 @@
 # ADR 024 Motion for React under progressive-enhancement rules
 
-Status: Accepted (engineering), 10 Oct 2026. The owner approved Motion for React in the overnight directive (`docs/delivery/handoff-2026-10-10.md` section 7). Supersedes the "No Motion for React dependency" sentence of ADR-023 decision 4 and the related option rejected there; every other part of ADR-023 stands. Builds on ADR-016 (tokens), ADR-020 (CSP), ADR-021 (budgets and gates) and ADR-023. The conflicts with the strategy listed under "Conflicts and resolutions" are for owner review.
+Status: Accepted (engineering), 10 Oct 2026. The owner approved Motion for React in the overnight directive (handoff of 10 Oct 2026, section 7; kept privately). Supersedes the "No Motion for React dependency" sentence of ADR-023 decision 4 and the related option rejected there; every other part of ADR-023 stands. Builds on ADR-016 (tokens), ADR-020 (CSP), ADR-021 (budgets and gates) and ADR-023. The conflicts with the strategy listed under "Conflicts and resolutions" are for owner review.
 
 ## Context
 

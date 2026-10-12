@@ -36,7 +36,7 @@ A dynamic detail path such as `/insights/old-slug` may be redirected so slug cha
 
 ## Pending: live URL inventory (owner input)
 
-Provide the crawl or sitemap of the existing live site (owner decision 12, `docs/delivery/owner-decisions.md`). For each URL record the decision below; add rows here only from the real inventory.
+Provide the crawl or sitemap of the existing live site (owner decision 12). For each URL record the decision below; add rows here only from the real inventory.
 
 | Legacy URL | Traffic or backlinks (if known) | Decision (redirect, retire with 410, keep) | New destination | Status | Decided by | Date |
 | ---------- | ------------------------------- | ------------------------------------------ | --------------- | ------ | ---------- | ---- |

@@ -100,6 +100,7 @@ jobs:
           DATABASE_URL: ${{ secrets.SUPERADMIN_DATABASE_URL }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
           # Mail and enquiries (superadmin/docs/email-setup.md). Each is passed through only when set;
           # an unset secret or variable arrives empty and is skipped, never written over a stored value.
           PRIMARY_OWNER_EMAIL: ${{ vars.PRIMARY_OWNER_EMAIL }}
@@ -132,13 +133,15 @@ jobs:
       - name: Live smoke test
         if: inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         working-directory: superadmin
+        env:
+          SMOKE_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
         run: |
           password="$(az containerapp secret show -n superadmin -g rg-vitalos-superadmin \
             --secret-name bootstrap-admin-password --query value -o tsv)"
           echo "::add-mask::$password"
           pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
-          SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL=superadmin-owner@example.invalid SMOKE_PASSWORD="$password" \
+          SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL="$SMOKE_EMAIL" SMOKE_PASSWORD="$password" \
             python e2e/smoke.py --skip-if-enrolled --screenshots "$RUNNER_TEMP/screenshots"
       - name: Upload screenshots
         if: always() && inputs.smoke_test && steps.deploy.outputs.bound == 'true'

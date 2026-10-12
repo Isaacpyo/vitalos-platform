@@ -3,7 +3,7 @@
 Usage (credentials come only from the environment and are never printed):
 
     SMOKE_BASE_URL=https://admin.vitalos.co.uk \
-    SMOKE_EMAIL=superadmin-owner@example.invalid \
+    SMOKE_EMAIL=<bootstrap admin email> \
     SMOKE_PASSWORD=... \
     python e2e/smoke.py --screenshots docs/screenshots
 

@@ -58,7 +58,7 @@ Other cross-field rules: the site URL must be an http(s) origin (path, query or 
 
 ## Production prerequisites
 
-Do not set production variables until the matching owner inputs exist (`docs/delivery/owner-decisions.md`). In order:
+Do not set production variables until the matching owner inputs exist (the owner's decision log (kept privately, outside this repository)). In order:
 
 1. Gates G0-G10 reviewed with the owner; no date overrides a gate (`docs/delivery/launch-gates.md`).
 2. Approved site content merged into `packages/cms/src/repo` (`docs/cms/editing-site-content.md`); content is built into each deployment, so there is no CMS project, dataset or webhook to configure.

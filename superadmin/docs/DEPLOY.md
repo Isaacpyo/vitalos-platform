@@ -92,7 +92,7 @@ All secrets are **Container Apps secrets**, referenced by environment variables 
 | `database-url`             | `DATABASE_URL`             | GitHub `production` secret `SUPERADMIN_DATABASE_URL` (Supabase session pooler, or Neon pooled); re-applied every deploy |
 | `sentry-dsn` (optional)    | `SENTRY_DSN`               | GitHub `production` secret                                                 |
 
-Plain environment variables: `DJANGO_SETTINGS_MODULE=config.settings.prod`, `ALLOWED_HOSTS=admin.vitalos.co.uk`, `CSRF_TRUSTED_ORIGINS=https://admin.vitalos.co.uk`, `SECURE_SSL_REDIRECT=True`, `TRUSTED_PROXY_COUNT=1`, `APP_ENVIRONMENT=production`, `LOG_FORMAT=json` and `WEB_CONCURRENCY=2`. The release job also gets `BOOTSTRAP_ADMIN_EMAIL=superadmin-owner@example.invalid`. The prod settings use `CONN_MAX_AGE=0`, connection health checks, and no server-side cursors. That suits a pooled free-tier database: Supabase's session pooler, or Neon's PgBouncer with its autosuspend.
+Plain environment variables: `DJANGO_SETTINGS_MODULE=config.settings.prod`, `ALLOWED_HOSTS=admin.vitalos.co.uk`, `CSRF_TRUSTED_ORIGINS=https://admin.vitalos.co.uk`, `SECURE_SSL_REDIRECT=True`, `TRUSTED_PROXY_COUNT=1`, `APP_ENVIRONMENT=production`, `LOG_FORMAT=json` and `WEB_CONCURRENCY=2`. The release job also gets `BOOTSTRAP_ADMIN_EMAIL` from the `production` environment secret of that name. The prod settings use `CONN_MAX_AGE=0`, connection health checks, and no server-side cursors. That suits a pooled free-tier database: Supabase's session pooler, or Neon's PgBouncer with its autosuspend.
 
 ## 2. One-time setup: Azure (subscription Owner) and the database
 
@@ -144,7 +144,7 @@ None of the three printed values is secret. Store them as environment secrets an
 In the Azure portal, go to **Cost Management + Billing → Budgets → Add**:
 
 - Scope: the subscription. Amount: **£1**, monthly.
-- Alert conditions: **Actual 100%** and **Forecasted 100%**, emailed to superadmin-owner@example.invalid.
+- Alert conditions: **Actual 100%** and **Forecasted 100%**, emailed to the owner.
 
 Or use the CLI (start date = first day of the current month):
 
@@ -230,7 +230,7 @@ The bootstrap password lives only in the Container Apps secret `bootstrap-admin-
 az containerapp secret show -n superadmin -g rg-vitalos-superadmin --secret-name bootstrap-admin-password --query value -o tsv
 ```
 
-1. Open https://admin.vitalos.co.uk and sign in as `superadmin-owner@example.invalid`.
+1. Open https://admin.vitalos.co.uk and sign in as the bootstrap admin (`BOOTSTRAP_ADMIN_EMAIL`).
 2. Scan the QR code. TOTP is mandatory for SuperAdmin.
 3. **Change the password immediately**: **Account & security → Change password**. The Container Apps secret is not updated (by design), and it is never used again for an existing account, because `create_superadmin` leaves existing accounts unchanged.
 

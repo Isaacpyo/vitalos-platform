@@ -19,3 +19,6 @@ Thumbs.db
 .claude/settings.local.json
 tests/visual/__screenshots__/linux-local/
 # Draft export that includes invented placeholder documents (ADR-025): never committed.
+# Internal-only material, kept privately (ADR-001, 12 Oct 2026). Local copies must never be committed.
+docs/strategy/
+docs/research/

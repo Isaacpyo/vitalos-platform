@@ -1,2 +1,0 @@
-# False positive: placeholder UUID in a form test (EnquiryForm.test.tsx), since replaced by an all-zero UUID.
-326b103d9dd55e125750707f42e2441cd897beaf:apps/web/src/components/contact/EnquiryForm.test.tsx:generic-api-key:13

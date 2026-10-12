@@ -1,6 +1,6 @@
 # Vitalos Platform
 
-Private production-platform monorepo for **Vitalos: Technology Consulting, Engineering & Digital Transformation**. The immediate product is the replacement corporate website; the repository establishes boundaries for later applications and services without deploying premature distributed infrastructure.
+Production-platform monorepo for **Vitalos: Technology Consulting, Engineering & Digital Transformation**. The immediate product is the replacement corporate website; the repository establishes boundaries for later applications and services without deploying premature distributed infrastructure.
 
 ## Status (10 Oct 2026)
 
@@ -10,7 +10,7 @@ Private production-platform monorepo for **Vitalos: Technology Consulting, Engin
 - No production site, DNS, CMS dataset, database or deployment is changed by this repository.
 - Super Admin (`superadmin/`): Phase 1 and 1.5 built and tested; deployment to `admin.vitalos.co.uk` was pre-approved in the founder's build brief of 10 Oct 2026 (`superadmin/docs/DEPLOY.md`).
 
-Details: [`docs/delivery/stage-status.md`](docs/delivery/stage-status.md) (what exists, gates G0-G10) and [`docs/delivery/owner-decisions.md`](docs/delivery/owner-decisions.md) (what the owner must provide).
+Launch gates G0-G10: [`docs/delivery/launch-gates.md`](docs/delivery/launch-gates.md). Stage status, owner decisions, handoffs and the strategy library are kept privately, outside this public repository.
 
 ## What is in the repository
 
@@ -43,7 +43,7 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 | Decisions               | [`docs/adr/`](docs/adr/README.md) (ADR 001-022 indexed)                                                                                 |
 | Architecture            | `ARCHITECTURE.md`, `docs/architecture/` (containers, data ownership, dependency rules, enquiry sequence, environments, future services) |
 | Content and editorial   | `docs/cms/editing-site-content.md`                                                                                                      |
-| Delivery                | `docs/delivery/` (Stage 1 plan, launch gates, stage status, owner decisions)                                                            |
+| Delivery                | `docs/delivery/launch-gates.md`                                                                                                         |
 | Operations and runbooks | `docs/operations/` (local development, deployment, observability), `docs/runbooks/` (cutover, rollback, enquiry delivery failure)       |
 | Security                | `SECURITY.md`, `docs/security/` (threat model, secret management)                                                                       |
 | Brand and SEO           | `docs/brand/`, `docs/seo/redirect-inventory.md`                                                                                         |
@@ -58,3 +58,7 @@ Code owns production behaviour and locked copy; editorial content lives in the r
 - Never commit secrets or real enquiry or client data; fixtures are artificial.
 - Production deploys, DNS changes, secret rotation and production data deletion need explicit owner authorisation.
 - A failed launch gate is not success; reduce scope instead of bypassing a gate.
+
+## Licence
+
+Proprietary. Copyright Vitalos Technologies Limited, all rights reserved; see [`LICENSE`](LICENSE). The repository is public for transparency, not for reuse.

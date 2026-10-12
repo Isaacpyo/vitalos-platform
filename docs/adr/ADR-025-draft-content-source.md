@@ -6,7 +6,7 @@ Status: Accepted (engineering). Production content is now served by the `repo` s
 
 On 10 October 2026 the owner asked for a site that is "rich, full, robust" before real editorial content exists in Sanity (handoff §7). The rules that already govern the platform still apply: no invented clients, case studies, metrics, testimonials, logos, certifications, legal claims or people (AGENTS.md, Stage 6 §1, Stage 11 §38); locked copy lives only in `packages/cms/src/locked-copy.ts`; publication gates close sections without real content (ADR-022); `fixtures` are deliberately artificial and rejected in production (ADR-018, ADR-022). No remote Sanity project is configured (ADR-005), so the owner cannot yet enter content there.
 
-The owner's own strategy library (`docs/strategy/`, Stages 0 to 20) contains enough specific, approved-direction material to draft most editorial content: practices, solutions, offers, industries, delivery stages, trust commitments and Labs concepts. It names no client, no case study, no certification held and no public author.
+The owner's own strategy library (`docs/strategy/`, Stages 0 to 20; kept privately and gitignored since the repository became public on 12 Oct 2026) contains enough specific, approved-direction material to draft most editorial content: practices, solutions, offers, industries, delivery stages, trust commitments and Labs concepts. It names no client, no case study, no certification held and no public author.
 
 ## Decision
 

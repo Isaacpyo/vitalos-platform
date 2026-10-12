@@ -603,7 +603,7 @@ Suggested direction (optional):
 
 3. Severity. Blocker: a user cannot complete a core task (navigate, read, contact Vitalos) with keyboard or assistive technology. Serious: the task is possible only with great difficulty or a workaround. Moderate: an AA criterion fails with a reasonable workaround. Minor: best practice or AAA guidance. Any Blocker, Serious or AA failure blocks G5.
 4. Put the issue number in the Notes cell and set Result to `Fail`. Do not change the row until the fix is merged and the row re-run on a new build; then record the re-test result and date in Notes.
-5. Fixes follow `AGENTS.md` and `docs/delivery/handoff-2026-10-10.md` section 2: one branch and pull request per fix, with a test where the failure can be automated (add it to `tests/accessibility` or the relevant end-to-end spec; never weaken an existing assertion).
+5. Fixes follow `AGENTS.md`: one branch and pull request per fix, with a test where the failure can be automated (add it to `tests/accessibility` or the relevant end-to-end spec; never weaken an existing assertion).
 6. A defect the automated suites should have caught is also a gap in the automated layer: add the check and update section 3.
 
 ## 10. Sign-off

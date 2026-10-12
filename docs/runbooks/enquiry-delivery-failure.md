@@ -97,5 +97,5 @@ An authorised owner reads the enquiry from `public.enquiries` (columns `name`, `
 
 - Record the timeline, cause and affected references (no personal data).
 - Confirm no enquiry stayed `pending` without a human having seen it.
-- If the cause was missing infrastructure (provider, scheduler, alerting), raise it against `docs/delivery/owner-decisions.md`.
+- If the cause was missing infrastructure (provider, scheduler, alerting), raise it with the owner.
 - There is no alerting on stuck outbox rows yet; a simple check is the overview query above run on a schedule once an owner is named.

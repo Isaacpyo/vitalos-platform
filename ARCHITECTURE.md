@@ -30,4 +30,4 @@ Repo (`packages/cms/src/repo`, ADR-028): editorial content. PostgreSQL: enquirie
 
 - `docs/architecture/container-architecture.md`, `data-ownership.md`, `dependency-rules.md`, `enquiry-sequence.md`, `environment-model.md`, `future-service-model.md`, `system-context.md`
 - `docs/adr/README.md` (ADR 001-028)
-- `docs/delivery/stage-status.md` and `docs/delivery/owner-decisions.md`
+- `docs/delivery/launch-gates.md`

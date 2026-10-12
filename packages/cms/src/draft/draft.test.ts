@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createFixtureSource } from "../content/fixture-source";
 import { describeContentSourceContract, docKinds } from "../content/testing/contract";
@@ -157,8 +157,13 @@ describe("placeholder content guardrails", () => {
   });
 });
 
-describe("provenance", () => {
-  const stageFiles = readdirSync(new URL("../../../../docs/strategy/", import.meta.url));
+// The strategy library is kept privately and gitignored (ADR-025): provenance is checked only where a
+// local copy exists.
+const strategyDir = new URL("../../../../docs/strategy/", import.meta.url);
+const hasStrategyLibrary = existsSync(strategyDir);
+
+describe.skipIf(!hasStrategyLibrary)("provenance", () => {
+  const stageFiles = hasStrategyLibrary ? readdirSync(strategyDir) : [];
   const normalise = (text: string) =>
     text.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s+/g, " ").trim().toLowerCase();
   const headingsByStage = new Map<number, Set<string>>();

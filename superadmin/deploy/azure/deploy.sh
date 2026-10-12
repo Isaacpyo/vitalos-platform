@@ -22,7 +22,8 @@
 #                              with sslmode=require
 #   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
 # Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
-# run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN, BOOTSTRAP_ADMIN_EMAIL.
+# run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN.
+# Required: BOOTSTRAP_ADMIN_EMAIL (bootstrap admin sign-in; a secret so it stays out of public logs).
 # Optional mail and enquiry settings (superadmin/docs/email-setup.md), each passed through only when set:
 #   plain variables  PRIMARY_OWNER_EMAIL (also reaches the release job), EMAIL_TRANSPORT, INBOUND_PROVIDER,
 #                    NOTIFY_OWNER_EMAIL, OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_BUCKET,
@@ -48,7 +49,7 @@ APP="${AZ_APP:-superadmin}"
 RELEASE_JOB="${APP}-release"
 DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
-ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:-superadmin-owner@example.invalid}"
+ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:?BOOTSTRAP_ADMIN_EMAIL is required (the bootstrap admin sign-in email)}"
 CPU="0.25"
 MEMORY="0.5Gi"
 HTTP_CONCURRENCY="50"
