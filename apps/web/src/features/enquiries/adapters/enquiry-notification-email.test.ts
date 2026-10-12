@@ -1,8 +1,5 @@
-import { readFileSync } from "node:fs";
-import { contrastRatio } from "@vitalos/design-tokens";
 import { describe, expect, it } from "vitest";
 import type { NotificationMessage } from "../domain/ports";
-import { inlineImages } from "./email-inline-images";
 import {
   FOOTER_NOTE,
   socialLinks,
@@ -10,7 +7,6 @@ import {
   buildPreheader,
   buildSubject,
   buildTextBody,
-  emailTheme,
   formatUkTime,
   isPersonalEmailDomain,
   renderEnquiryNotification,
@@ -164,7 +160,10 @@ describe("all fields, in the same order in both parts", () => {
       [
         "VITALOS · NEW ENQUIRY",
         "",
-        "Example Person, Example Organisation",
+        "Example Person",
+        "",
+        "Example Organisation",
+        "",
         "New project · Within 3 months",
         "",
         "Reply to Example: mailto:person@example.invalid?subject=Re%3A%20Your%20Vitalos%20enquiry%20(VIT-0F867CE48552)",
@@ -197,6 +196,7 @@ describe("all fields, in the same order in both parts", () => {
         "",
         "Vitalos Technologies Limited, company number 16696895",
         "Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT",
+        "vitalos.co.uk · support@vitalos.co.uk",
       ].join("\n"),
     );
   });
@@ -238,7 +238,9 @@ describe("reply", () => {
     const html = buildHtmlBody(
       message({ workEmail: "a@example.invalid\r\nBcc: x@example.invalid" }),
     );
-    expect(html).not.toContain("mailto:");
+    // The only mailto: left is the footer's support address.
+    const mailtos = [...html.matchAll(/href="(mailto:[^"]*)"/g)].map((m) => m[1]);
+    expect(mailtos).toEqual(["mailto:support@vitalos.co.uk"]);
     expect(html).toContain("No valid reply address was provided");
   });
 });
@@ -347,7 +349,7 @@ describe("HTML constraints", () => {
     for (const src of sources) expect(src).toMatch(/^cid:/);
     const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
     expect(hrefs.length).toBeGreaterThan(0);
-    const allowed = /^(mailto:|https:\/\/vitalos\.co\.uk\/)/;
+    const allowed = /^(mailto:|https:\/\/vitalos\.co\.uk(\/|$))/;
     const social = new Set(socialLinks.map((s) => s.url as string));
     for (const href of hrefs) expect(allowed.test(href) || social.has(href), href).toBe(true);
   });
@@ -364,18 +366,6 @@ describe("HTML constraints", () => {
     expect(rendered.html).toContain('alt="Vitalos"');
   });
 
-  it("inline images match the PNG files in ./assets", () => {
-    for (const img of Object.values(inlineImages)) {
-      const file = readFileSync(new URL(`./assets/${img.filename}`, import.meta.url));
-      expect(img.base64).toBe(file.toString("base64"));
-      // PNG IHDR: pixel size is twice the display size.
-      expect([file.readUInt32BE(16), file.readUInt32BE(20)]).toEqual([
-        img.width * 2,
-        img.height * 2,
-      ]);
-    }
-  });
-
   it("declares light and dark colour schemes and a dark-mode query", () => {
     expect(html).toContain('<meta name="color-scheme" content="light dark">');
     expect(html).toContain('<meta name="supported-color-schemes" content="light dark">');
@@ -390,29 +380,4 @@ describe("HTML constraints", () => {
     // 13px is reserved for raw values and the raw timestamp; 1px is the hidden preheader.
     expect(sizes.filter((s) => s !== 1 && s !== 13).every((s) => s >= 14)).toBe(true);
   });
-});
-
-describe("contrast (WCAG AA, 4.5:1 for text) in both themes", () => {
-  const textPairs = [
-    ["heading", "surface"],
-    ["text", "surface"],
-    ["muted", "surface"],
-    ["muted", "page"],
-    ["link", "surface"],
-    ["actionText", "action"],
-    ["intentText", "intentBg"],
-    ["timeText", "timeBg"],
-    ["text", "quoteBg"],
-    ["muted", "quoteBg"],
-    ["heading", "codeBg"],
-    ["hintText", "hintBg"],
-    ["headText", "headBg"],
-    ["headLabelText", "headLabelBg"],
-  ] as const;
-
-  for (const [themeName, theme] of Object.entries(emailTheme)) {
-    it.each(textPairs)(`${themeName}: %s on %s`, (fg, bg) => {
-      expect(contrastRatio(theme[fg], theme[bg])).toBeGreaterThanOrEqual(4.5);
-    });
-  }
 });

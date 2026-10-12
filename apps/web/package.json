@@ -15,6 +15,7 @@
     "@vitalos/cms": "workspace:*",
     "@vitalos/config": "workspace:*",
     "@vitalos/design-tokens": "workspace:*",
+    "@vitalos/email-layout": "workspace:*",
     "@vitalos/observability": "workspace:*",
     "@vitalos/security": "workspace:*",
     "@vitalos/ui": "workspace:*",

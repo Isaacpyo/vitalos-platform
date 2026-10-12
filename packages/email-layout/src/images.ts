@@ -1,10 +1,10 @@
 /**
- * Inline images for the notification email, sent as CID attachments (no remote image is fetched).
- * Generated from the PNGs in ./assets; `enquiry-notification-email.test.ts` checks they match.
+ * Inline images for every Vitalos email, sent as CID attachments (no remote image is fetched).
+ * Generated from the PNGs in ../assets; `email-layout.test.ts` checks they match.
  *
  * - vitalos-logo-white.png: the Vitalos logo recoloured white (shape and alpha unchanged), 2x.
  * - social-*.png: Font Awesome Free 6.7.2 brand glyphs (CC BY 4.0, sources with licence in
- *   ./assets/brand-icons), white on a midnight circle, 2x.
+ *   ../assets/brand-icons), white on a midnight circle, 2x.
  */
 
 export interface InlineImage {

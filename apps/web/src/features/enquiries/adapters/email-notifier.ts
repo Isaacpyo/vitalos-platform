@@ -1,6 +1,6 @@
 import { NotificationError } from "../domain/ports";
 import type { EnquiryLogger, NotificationMessage, Notifier } from "../domain/ports";
-import type { InlineImage } from "./email-inline-images";
+import type { InlineImage } from "@vitalos/email-layout";
 import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-notification-email";
 
 /**

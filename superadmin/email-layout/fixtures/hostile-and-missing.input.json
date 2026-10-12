@@ -1,0 +1,61 @@
+{
+  "title": "<script>alert(\"x\")</script> O'Brien & Zoë",
+  "preheader": "\u202Eevil\u0007 preheader",
+  "headerLabel": "Test <b>",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": ""
+    },
+    {
+      "type": "text",
+      "text": "<img src=x onerror=alert(1)>\r\nsecond line"
+    },
+    {
+      "type": "button",
+      "label": "Click",
+      "url": "javascript:alert(1)"
+    },
+    {
+      "type": "badge",
+      "items": [
+        "",
+        "Only one"
+      ]
+    },
+    {
+      "type": "quote",
+      "text": ""
+    },
+    {
+      "type": "details",
+      "rows": [
+        {
+          "label": "Site",
+          "value": "evil",
+          "href": "http://evil.example"
+        }
+      ]
+    },
+    {
+      "type": "signature",
+      "name": ""
+    }
+  ],
+  "footer": {
+    "social": [
+      {
+        "label": "Bad",
+        "url": "javascript:alert(1)",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": ""
+    },
+    "unsubscribe": {
+      "reason": "Because.",
+      "url": "not a url"
+    }
+  }
+}

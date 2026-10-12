@@ -6,7 +6,7 @@ Vitalos uses a TypeScript-first modular monolith and independently deployable ap
 
 - `apps/web`: Next.js 16 on the App Router. Pages come from one route manifest (`@vitalos/cms`), read content only through a `ContentSource` (`repo`, `draft`, `fixtures`, `empty`; ADR-022, ADR-028) and are statically generated: content is static per deploy and nothing is revalidated by a webhook. Closed publication gates hide thin sections. Enquiries go through ports and adapters into a PostgreSQL record and durable outbox (ADR-019). Security headers, CSP, correlation ids and non-production `noindex` are built from validated configuration (ADR-020).
 - `apps/storybook`: private component workbench.
-- `packages`: `design-tokens`, `ui`, `cms`, `config`, `validation`, `security`, `observability`, `testing`.
+- `packages`: `design-tokens`, `ui`, `cms`, `config`, `validation`, `security`, `observability`, `testing`, `email-layout` (the shared layout for every Vitalos email, ADR-030).
 - `supabase`: local migrations and pgTAP tests. No remote project is used.
 - `superadmin`: the isolated Django Super Admin (internal, `admin.vitalos.co.uk`, own PostgreSQL; ADR-026). Python toolchain, no source imports to or from the TypeScript apps.
 - Quality gates run in CI: format, lint, typecheck, unit tests, boundaries, build, Storybook build, end-to-end and accessibility, JS budgets, client-bundle secret scan, Storybook axe, pgTAP, CodeQL and gitleaks (ADR-021).
