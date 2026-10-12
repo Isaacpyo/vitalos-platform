@@ -85,14 +85,36 @@ describe("request shapes", () => {
     expect(headers.Authorization).toBeUndefined();
     expect(init?.signal).toBeInstanceOf(AbortSignal);
     const body = JSON.parse(init?.body as string) as Record<string, string>;
-    expect(Object.keys(body).sort()).toEqual(["From", "ReplyTo", "Subject", "TextBody", "To"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "Attachments",
+      "From",
+      "HtmlBody",
+      "ReplyTo",
+      "Subject",
+      "TextBody",
+      "To",
+    ]);
+    const attachments = body.Attachments as unknown as Record<string, string>[];
+    expect(attachments.map((a) => a.ContentID)).toEqual([
+      "cid:vitalos-logo",
+      "cid:social-linkedin",
+      "cid:social-x",
+      "cid:social-instagram",
+      "cid:social-facebook",
+    ]);
+    expect(attachments[0]).toMatchObject({
+      Name: "vitalos-logo-white.png",
+      ContentType: "image/png",
+    });
     expect(body).toMatchObject({
       From: "Vitalos <noreply@example.invalid>",
       To: "ops@example.invalid",
       ReplyTo: "person@example.invalid",
-      Subject: `New enquiry ${referenceFromId(id)} (project)`,
+      Subject: `New enquiry: New project · Example Person (fixture), Example Organisation (fixture) · ${referenceFromId(id)}`,
     });
     expect(body.TextBody).toContain("Clearly artificial non-production enquiry");
+    expect(body.HtmlBody).toMatch(/^<!DOCTYPE html>/);
+    expect(body.HtmlBody).toContain("Clearly artificial non-production enquiry");
   });
 
   it("resend: URL, bearer header, idempotency key and minimal payload", async () => {
@@ -105,25 +127,45 @@ describe("request shapes", () => {
     expect(headers["Idempotency-Key"]).toBe(`${id}:internal-notification`);
     expect(headers["X-Postmark-Server-Token"]).toBeUndefined();
     const body = JSON.parse(init?.body as string) as Record<string, unknown>;
-    expect(Object.keys(body).sort()).toEqual(["from", "reply_to", "subject", "text", "to"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "attachments",
+      "from",
+      "html",
+      "reply_to",
+      "subject",
+      "text",
+      "to",
+    ]);
+    const attachments = body.attachments as Record<string, string>[];
+    expect(attachments).toHaveLength(5);
+    expect(attachments[0]).toMatchObject({
+      filename: "vitalos-logo-white.png",
+      content_type: "image/png",
+      content_id: "vitalos-logo",
+    });
     expect(body).toMatchObject({
       from: "Vitalos <noreply@example.invalid>",
       to: ["ops@example.invalid"],
       reply_to: "person@example.invalid",
-      subject: `New enquiry ${referenceFromId(id)} (project)`,
+      subject: `New enquiry: New project · Example Person (fixture), Example Organisation (fixture) · ${referenceFromId(id)}`,
     });
+    expect(body.html).toEqual(expect.stringContaining("Reply to Example"));
   });
 });
 
 describe.each(providers)("$name notifier", ({ name, make }) => {
-  it("subject carries reference and intent only, never the goal or other PII", async () => {
+  it("subject is one line and never carries the goal", async () => {
     const fetchFake = respond(200);
-    await make(fetchFake).send(message({ intent: "x".repeat(200) }));
+    await make(fetchFake).send(
+      message({ name: "Line\r\nBcc: x@example.invalid", intent: "x".repeat(200) }),
+    );
     const init = fetchFake.mock.calls[0]![1]!;
     const sent = JSON.parse(init.body as string) as Record<string, string>;
     const subject = sent.Subject ?? sent.subject!;
-    expect(subject).toBe(`New enquiry ${referenceFromId(id)}`);
-    for (const marker of piiMarkers) expect(subject).not.toContain(marker);
+    expect(subject).not.toMatch(/[\r\n]/);
+    expect(subject.startsWith(`New enquiry: ${"x".repeat(39)}…`)).toBe(true);
+    expect(subject.endsWith(` · ${referenceFromId(id)}`)).toBe(true);
+    expect(subject).not.toContain("Clearly artificial non-production enquiry");
   });
 
   it("omits reply-to when the address is not a plain safe address", async () => {
