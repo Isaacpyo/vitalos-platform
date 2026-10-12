@@ -102,3 +102,16 @@ Facts in this ADR that changed after it was accepted; the decisions are unchange
 ## Status note (10 Oct 2026): visual-regression harness landed (non-gating)
 
 Decision 7's harness exists; decision 9 (visual regression deferred) is superseded for the harness only. `tests/visual/` holds a separate Playwright config (`pnpm test:visual`, `pnpm test:visual:update`) that screenshots the 26 templates at 1440 and 390 under the `full` fixtures; `pnpm test:e2e` is unchanged. The CI job `visual` is `continue-on-error` and must not be made a required check. Baselines are specific to a Chromium build and font stack, so the job is self-baselining: with no committed `linux-ci` set it records one and uploads it as `visual-baselines-for-adoption`; with one it uploads `visual-diff-report` on any difference. The owner adopts a CI baseline set by committing it (see `tests/visual/README.md`). The harness becomes a gate only after the owner approves the Figma templates, by a later ADR amendment that also removes `continue-on-error`.
+
+## Amendment (12 Oct 2026): CI cost rules
+
+GitHub Actions minutes ran out on 12 Oct 2026, so CI now follows the "CI cost" rules in `AGENTS.md`. Decision 8 changes as follows:
+
+- `quality` runs first and gates every other job. It decides what a pull request needs (`tooling/scripts/ci-changes.mjs`), then runs the G8 secret scan and audit (formerly the `audit` job), format, lint, typecheck and boundaries. Lint and typecheck cover Turborepo-affected packages on pull requests and everything on `main`.
+- `unit` runs unit tests and the build, again affected-only on pull requests. Storybook is built once, by `storybook-a11y`, not also by `quality`.
+- `e2e`, `e2e-sparse`, `e2e-draft` and `visual` run only when `@vitalos/web` is affected. `storybook-a11y` runs only when `@vitalos/storybook` is affected, and `database` only when `supabase/` changes. All of them skip draft pull requests and run on `ready_for_review`.
+- Any file outside a workspace package (`tests/`, `tooling/`, root config, the lockfile, `ci.yml`, `docs/strategy/`) runs every job, because Turborepo cannot attribute it to a package. Changes to editorial content only (`packages/cms/src/repo/`) run `quality` alone.
+- Markdown, `docs/` (except `docs/strategy/`), `superadmin/` and the other workflow files do not start CI at all. Pushes to `main` run the full suite; there is no push trigger for `stage-1`, whose release pull request into `main` runs CI.
+- The Turborepo cache is restored in every run and saved only from `main`. Every job has `timeout-minutes`, and artifacts are kept 7 days.
+
+Trade-offs: a Markdown-only change is not `prettier --check`ed until the next code change. A content-only change is typechecked but not built, so a failing build shows first on the Vercel preview. Releases still need every job that ran to be green.
