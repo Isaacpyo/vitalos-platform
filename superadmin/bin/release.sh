@@ -22,6 +22,8 @@ retry() {
 
 retry python manage.py migrate --noinput
 retry python manage.py seed_architecture
+# Adds seed email templates that do not exist yet (as Draft); never changes edited templates.
+retry python manage.py seed_email_templates
 # Creates the bootstrap SuperAdmin only if missing (password from $BOOTSTRAP_ADMIN_PASSWORD);
 # an existing account is never re-activated, re-promoted or otherwise changed.
 retry python manage.py create_superadmin

@@ -29,3 +29,7 @@ The owner approved the redesigned internal enquiry notification (ADR-019, status
 ## Revisit triggers
 
 A third application that sends email; a decision to merge the website and Super Admin palettes (`docs/brand/token-reconciliation.md`); a change of email provider that needs a different image strategy than CID attachments.
+
+## Status note (12 October 2026): Super Admin side
+
+The Super Admin now renders every email template with `superadmin/apps/mailer/layout.py`, which passes the golden fixtures byte for byte. The email template library (Mail > Email templates, SuperAdmin only) stores templates and versions in PostgreSQL, seeds 81 templates from `superadmin/apps/email_templates/seed/`, reads footer facts from Settings > Company and sends inline images as CID attachments (`superadmin/docs/DECISIONS.md` 78 to 88). A muted text block right under a heading keeps the 4px subtitle gap; any other text under a heading now has 12px.

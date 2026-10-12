@@ -14,6 +14,8 @@ ROUTES = {
     "/team/": "team",
     "/architecture/": "architecture",
     "/settings/users/": "settings",
+    "/mail/templates/": "email_templates",
+    "/enquiries/": "enquiries",
 }
 
 

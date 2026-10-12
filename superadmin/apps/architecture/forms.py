@@ -34,10 +34,47 @@ class DateInput(forms.DateInput):
 
 class CompanyForm(StyledFormMixin, forms.ModelForm):
     business_modes = BusinessModesField()
+    website = forms.URLField(required=False, assume_scheme="https")
+    linkedin_url = forms.URLField(
+        label="LinkedIn URL",
+        required=False,
+        assume_scheme="https",
+        help_text="Email footers show an icon for each social profile set here.",
+    )
+    x_url = forms.URLField(label="X URL", required=False, assume_scheme="https")
+    instagram_url = forms.URLField(label="Instagram URL", required=False, assume_scheme="https")
+    facebook_url = forms.URLField(label="Facebook URL", required=False, assume_scheme="https")
 
     class Meta:
         model = Company
-        fields = ["name", "tagline", "vision", "mission", "business_modes", "classification"]
+        fields = [
+            "name",
+            "tagline",
+            "vision",
+            "mission",
+            "business_modes",
+            "classification",
+            "legal_name",
+            "company_number",
+            "registered_office",
+            "website",
+            "support_email",
+            "linkedin_url",
+            "x_url",
+            "instagram_url",
+            "facebook_url",
+        ]
+        help_texts = {
+            "legal_name": "Shown in every email footer. Leave blank to show a placeholder.",
+            "registered_office": "Shown in every email footer (required on UK business email).",
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        for name in ("website", "linkedin_url", "x_url", "instagram_url", "facebook_url"):
+            if cleaned.get(name) and not cleaned[name].startswith("https://"):
+                self.add_error(name, "Use an https:// address.")
+        return cleaned
 
 
 class ServiceLineForm(StyledFormMixin, forms.ModelForm):

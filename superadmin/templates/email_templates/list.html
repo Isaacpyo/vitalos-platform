@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Email templates · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold">Email templates</h1>
+      <p class="muted mt-1 max-w-2xl text-sm">Every Vitalos email, on the same branded layout as the enquiry notification. Seeded templates start as drafts: review the wording, then set them to Active.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'email_templates:create' %}" data-testid="new-template">{% icon "plus" "h-4 w-4" %} New template</a>
+  </div>
+
+  <form method="get" action="{% url 'email_templates:list' %}" role="search" class="card mt-6 flex flex-wrap items-end gap-3 p-3"
+        hx-get="{% url 'email_templates:list' %}" hx-target="#template-list" hx-swap="innerHTML" hx-push-url="true"
+        hx-trigger="input changed delay:300ms from:find input[name=q], change from:find select, submit">
+    <div class="min-w-56 flex-1">
+      <label for="template-search" class="field-label">Search</label>
+      <div class="relative">
+        <div class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-slate-500 dark:text-slate-400">{% icon "search" "h-4 w-4" %}</div>
+        <input id="template-search" type="search" name="q" value="{{ q }}" placeholder="Name, subject or key" autocomplete="off"
+               class="block w-full rounded-md border border-slate-300 bg-white py-1.5 pl-8 pr-2 text-sm placeholder:text-slate-500 focus:border-cobalt-600 focus:outline-none focus:ring-2 focus:ring-cobalt-600/30 dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-400">
+      </div>
+    </div>
+    <div>
+      <label for="template-category" class="field-label">Category</label>
+      <select id="template-category" name="category" class="block rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+        <option value="">All categories</option>
+        {% for value, label in categories %}<option value="{{ value }}" {% if value == category %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="template-status" class="field-label">Status</label>
+      <select id="template-status" name="status" class="block rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+        {% for value, label in status_filters %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-secondary">Filter</button></noscript>
+  </form>
+
+  <div id="template-list" class="mt-4">
+    {% include "email_templates/_list.html" %}
+  </div>
+{% endblock %}

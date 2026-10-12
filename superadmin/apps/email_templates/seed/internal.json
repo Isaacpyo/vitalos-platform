@@ -1,0 +1,68 @@
+[
+  {
+    "key": "internal-new-lead-assigned",
+    "name": "New lead assigned",
+    "category": "internal",
+    "kind": "internal",
+    "description": "Notifies a team member that a new lead has been assigned to them.",
+    "header_label": "New lead",
+    "subject": "New lead assigned: {{organisation}}",
+    "preheader": "{{full_name}}, interested in {{service}}. Please review and make first contact.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{assignee_name}},\n\nA new lead has been assigned to you. Please review the record and make first contact." },
+      { "type": "badge", "items": ["{{service}}", "{{timeframe}}"] },
+      { "type": "details", "rows": [["Name", "{{full_name}}"], ["Organisation", "{{organisation}}"], ["Role", "{{role}}"], ["Email", "{{email}}"], ["Reference", "{{reference}}"], ["Intent", "{{intent}}"], ["Budget", "{{budget_range}}"], ["Source", "{{source_page}}"], ["Received", "{{received_at}}"]] },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "button", "label": "Open lead", "url": "{{admin_link}}" }
+    ]
+  },
+  {
+    "key": "internal-proposal-activity",
+    "name": "Proposal viewed or accepted",
+    "category": "internal",
+    "kind": "internal",
+    "description": "Notifies the account owner when a client views or accepts a proposal.",
+    "header_label": "Proposal",
+    "subject": "Proposal activity: {{organisation}}",
+    "preheader": "The client has viewed or accepted the proposal. Check the record and follow up.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{assignee_name}},\n\n{{full_name}} at {{organisation}} has viewed or accepted the proposal for {{project_name}}. The record shows which, and when.\n\n- If viewed: follow up while it is fresh.\n- If accepted: start the contract and onboarding steps." },
+      { "type": "details", "rows": [["Contact", "{{full_name}}"], ["Organisation", "{{organisation}}"], ["Project", "{{project_name}}"], ["Reference", "{{reference}}"]] },
+      { "type": "button", "label": "Open record", "url": "{{admin_link}}" }
+    ]
+  },
+  {
+    "key": "internal-payment-received",
+    "name": "Payment received",
+    "category": "internal",
+    "kind": "internal",
+    "description": "Notifies the finance or account owner that a client payment has been recorded.",
+    "header_label": "Payment",
+    "subject": "Payment received: {{invoice_number}}",
+    "preheader": "{{amount}} from {{organisation}}. Reconcile and update the record.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{assignee_name}},\n\nA payment has been recorded against invoice {{invoice_number}}. Please reconcile it, mark the invoice paid and confirm the client receipt has gone out." },
+      { "type": "details", "rows": [["Organisation", "{{organisation}}"], ["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Project", "{{project_name}}"]] },
+      { "type": "button", "label": "Open invoice", "url": "{{admin_link}}" }
+    ]
+  },
+  {
+    "key": "internal-task-due",
+    "name": "Task or follow-up due",
+    "category": "internal",
+    "kind": "internal",
+    "description": "Reminds a team member that an assigned task or follow-up is due.",
+    "header_label": "Task due",
+    "subject": "Task due: {{task_name}}",
+    "preheader": "Due {{task_due}}. Complete it or update the due date in the record.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{assignee_name}},\n\nThe task below is due. Please complete it, or update the due date so the pipeline stays accurate." },
+      { "type": "details", "rows": [["Task", "{{task_name}}"], ["Due", "{{task_due}}"], ["Organisation", "{{organisation}}"], ["Reference", "{{reference}}"]] },
+      { "type": "button", "label": "Open task", "url": "{{admin_link}}" }
+    ]
+  }
+]

@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from apps.accounts.roles import is_superadmin
 
-from .navigation import NAV_ITEMS, is_visible
+from .navigation import is_visible, leaf_items
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ def register(provider: Provider) -> Provider:
 def _static_entries(user) -> list[PaletteResult]:
     entries = [
         PaletteResult("Pages", item.label, item.url, item.group, item.icon)
-        for item in NAV_ITEMS
+        for item in leaf_items()
         if is_visible(item, user)
     ]
     settings_sections = [
@@ -62,7 +62,7 @@ def _static_entries(user) -> list[PaletteResult]:
         PaletteResult("Settings", "Notifications", reverse("notifications:list"), "Your account", "bell"),
         PaletteResult("Settings", "Help and keyboard shortcuts", reverse("core:help"), "Help", "life-buoy"),
     ]
-    if any(item.key == "enquiries" and is_visible(item, user) for item in NAV_ITEMS):
+    if any(item.key == "enquiries" and is_visible(item, user) for item in leaf_items()):
         entries.append(
             PaletteResult(
                 "Settings",

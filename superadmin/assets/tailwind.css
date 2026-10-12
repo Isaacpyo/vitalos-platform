@@ -173,7 +173,8 @@
     @apply rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100
       hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white;
   }
-  .tab[aria-selected="true"] {
+  .tab[aria-selected="true"],
+  .tab[aria-pressed="true"] {
     @apply bg-cobalt-600/10 text-cobalt-600 dark:bg-cobalt/20 dark:text-cobalt-300;
   }
   .mono-label {
@@ -225,6 +226,23 @@
   .nav-item:hover .nav-tip,
   .nav-item:focus-visible .nav-tip {
     @apply md:collapsed:block;
+  }
+  /* Sidebar dropdown (Mail): children are indented; the collapsed rail always shows them as icons. */
+  .nav-child {
+    @apply pl-9 md:collapsed:pl-0;
+  }
+  .nav-sub[hidden] {
+    @apply md:collapsed:!block;
+  }
+  [data-nav-toggle][aria-expanded="false"] .nav-chevron {
+    @apply -rotate-90;
+  }
+  /* Email template editor: preview frame sizes. */
+  .preview-frame {
+    @apply block h-[1100px] w-full max-w-[640px] rounded-md border border-slate-200 bg-white dark:border-slate-800;
+  }
+  .preview-frame[data-device="mobile"] {
+    @apply max-w-[375px];
   }
   .nav-badge {
     @apply ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cobalt px-1.5 text-[11px]

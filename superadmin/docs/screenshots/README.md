@@ -1,5 +1,18 @@
 # Screenshots
 
+## Email templates (12 Oct 2026): `email-templates/`
+
+Captured from `manage.py runserver` (development settings, scratch SQLite) with the seed templates and one sample enquiry, signed in as a local SuperAdmin. The pages passed axe-core (WCAG 2.2 AA tags) with no violations in light and dark.
+
+| File prefix                 | Shows                                                                       |
+| --------------------------- | --------------------------------------------------------------------------- |
+| 01-list                     | Library: search, category and status filters, name, status, last edited, by |
+| 02-editor                   | Editor: details, blocks, merge variables, live preview (`-full` is the page) |
+| 03-enquiry-acknowledgement  | Preview at 375px, light and dark                                            |
+| 04-proposal-sent            | Preview at 375px, light and dark                                            |
+| 05-invoice-reminder         | Preview at 375px (friendly payment reminder), light and dark                |
+| 06-versions                 | Version history with restore                                                |
+
 ## Console upgrade (12 Oct 2026): `console/`
 
 Captured from `manage.py runserver` (development settings, SQLite) with seeded architecture data and the sample mail in `tests/fixtures/eml/` ingested, signed in as the primary owner. Every page also passed axe-core (WCAG 2.2 AA tags) with no violations in light and dark (`e2e/a11y.py`, which CI now runs against the production image).

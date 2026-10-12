@@ -34,6 +34,15 @@ ACTIONS = {
     "enquiries.exported": "Exported an enquiry",
     "enquiries.anonymised": "Anonymised an enquiry",
     "audit.exported": "Exported the audit trail",
+    "email_templates.created": "Created an email template",
+    "email_templates.updated": "Edited an email template",
+    "email_templates.duplicated": "Duplicated an email template",
+    "email_templates.archived": "Archived an email template",
+    "email_templates.unarchived": "Restored an archived email template",
+    "email_templates.version_restored": "Restored an email template version",
+    "email_templates.test_sent": "Sent a test email",
+    "email_templates.seeded": "Seeded the email template library",
+    "email_templates.unsubscribed": "Unsubscribed from Vitalos email",
 }
 
 

@@ -13,6 +13,16 @@ COMPANY = {
     "mission": "Help organisations turn technology and AI into measurable business advantage.",
     "business_modes": ["ADVISE", "BUILD", "OPERATE", "CREATE"],
     "classification": "public",
+    # Owner-published company facts (Companies House) and social profiles, for email footers.
+    "legal_name": "Vitalos Technologies Limited",
+    "company_number": "16696895",
+    "registered_office": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+    "website": "https://vitalos.co.uk",
+    "support_email": "support@vitalos.co.uk",
+    "linkedin_url": "https://www.linkedin.com/company/vitalos",
+    "x_url": "https://x.com/vitalos",
+    "instagram_url": "https://www.instagram.com/vitalos",
+    "facebook_url": "https://www.facebook.com/vitalos",
 }
 
 SERVICE_LINES = [

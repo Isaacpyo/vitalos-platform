@@ -267,7 +267,8 @@ function blockPad(block: Block, previous: Block | undefined): number {
   if (!previous || previous.type === "section") return 0;
   if (block.type === "section") return 28;
   if (block.type === "badge") return 12;
-  if (block.type === "text" && previous.type === "heading") return 4;
+  // A muted line right under a heading reads as its subtitle (the enquiry email's organisation).
+  if (block.type === "text" && previous.type === "heading") return block.tone === "muted" ? 4 : 12;
   if (block.type === "button") return 16;
   return 16;
 }

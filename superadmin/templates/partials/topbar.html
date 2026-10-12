@@ -6,7 +6,7 @@
       <ol class="flex min-w-0 items-center gap-1.5 text-sm">
         {% block breadcrumbs %}
           {% if nav_active %}
-            <li class="muted hidden sm:block">{{ nav_active.group }}</li>
+            <li class="muted hidden sm:block">{{ nav_crumb }}</li>
             <li class="muted hidden sm:block" aria-hidden="true">/</li>
             <li class="truncate font-medium" aria-current="page">{{ nav_active.label }}</li>
           {% else %}

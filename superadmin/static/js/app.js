@@ -404,6 +404,42 @@
     showToast("Network error. Check your connection and try again.", "error");
   });
 
+  // Sidebar dropdowns (Mail): show or hide the child links.
+  document.addEventListener("click", function (event) {
+    var toggle = event.target.closest("[data-nav-toggle]");
+    if (!toggle) return;
+    var list = document.getElementById(toggle.getAttribute("aria-controls"));
+    var open = toggle.getAttribute("aria-expanded") !== "true";
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    if (list) list.hidden = !open;
+  });
+
+  // Email template editor: insert a merge variable at the caret of the last focused text field.
+  var lastTemplateField = null;
+  document.addEventListener("focusin", function (event) {
+    var field = event.target;
+    if (field.closest && field.closest("[data-template-form]") && field.matches("input[type=text], textarea")) {
+      lastTemplateField = field;
+    }
+  });
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-insert-variable]");
+    if (!button) return;
+    event.preventDefault();
+    var token = button.getAttribute("data-insert-variable");
+    var field = lastTemplateField && document.body.contains(lastTemplateField) ? lastTemplateField : null;
+    if (!field) {
+      if (navigator.clipboard) navigator.clipboard.writeText(token);
+      showToast("Copied " + token + ". Click into a field to insert variables.", "info");
+      return;
+    }
+    var start = field.selectionStart == null ? field.value.length : field.selectionStart;
+    var end = field.selectionEnd == null ? start : field.selectionEnd;
+    field.setRangeText(token, start, end, "end");
+    field.focus();
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
   // Auto-dismiss server-rendered flash messages.
   window.setTimeout(function () {
     document.querySelectorAll("[data-autodismiss]").forEach(function (element) {

@@ -1,0 +1,377 @@
+[
+  {
+    "key": "new-lead-first-response",
+    "name": "New lead: first response",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "A personal first reply from a consultant to a new enquiry, proposing a short call.",
+    "header_label": "Your enquiry",
+    "subject": "Your enquiry: a few thoughts and next steps",
+    "preheader": "A personal reply from {{sender_name}}, with a suggested way forward.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you for your enquiry. I have read what you shared about {{organisation}} and wanted to reply personally rather than send a standard pack.\n\nIn your words:"
+      },
+      { "type": "quote", "text": "{{goal}}" },
+      {
+        "type": "text",
+        "text": "The most useful next step is a short conversation so I can understand the context properly: what is driving this now, what has already been tried, and what a good result would look like for you.\n\nThere is no preparation needed and no obligation. If we are not the right fit, I will tell you so and, where I can, suggest a better route."
+      },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "discovery-call-invite",
+    "name": "Discovery call invite",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Invites a qualified lead to a structured discovery call and explains what it will cover.",
+    "header_label": "Discovery call",
+    "subject": "An invitation to a discovery call",
+    "preheader": "A focused conversation about your priorities, with no obligation.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nFollowing our recent exchange, I would like to invite you to a discovery call. The aim is simple: to understand where {{organisation}} is today, what you want to change, and whether we are the right people to help.\n\nWe would usually cover:\n- the business problem and why it matters now\n- the systems, data and people involved\n- constraints such as timing, budget and governance\n- what a sensible first step could look like\n\nYou are welcome to bring colleagues who will be close to the decision or the work. Please choose a time that suits you."
+      },
+      { "type": "button", "label": "Choose a time", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "discovery-call-summary",
+    "name": "Discovery call summary and next steps",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Sent after a discovery call to play back what we heard and confirm the agreed next steps.",
+    "header_label": "Call summary",
+    "subject": "Summary of our discovery call and next steps",
+    "preheader": "What we heard, what we agreed, and what happens next. Please correct anything we missed.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you for your time on our call. Below is a short summary of what we heard. Please correct anything we have misunderstood; it matters that we start from an accurate picture.\n\nWhat you want to achieve:"
+      },
+      { "type": "quote", "text": "{{goal}}" },
+      {
+        "type": "details",
+        "rows": [
+          ["Reference", "{{reference}}"],
+          ["Area", "{{service}}"],
+          ["Timeframe", "{{timeframe}}"],
+          ["Budget range", "{{budget_range}}"]
+        ]
+      },
+      { "type": "text", "text": "Agreed next steps:\n\n{{next_steps}}" },
+      {
+        "type": "text",
+        "text": "If this looks right, a quick reply to confirm is all we need to move forward."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "requirements-questionnaire-request",
+    "name": "Requirements questionnaire request",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Asks a prospect to complete a requirements questionnaire so we can scope a proposal accurately.",
+    "header_label": "Questionnaire",
+    "subject": "A short questionnaire to shape our proposal",
+    "preheader": "Your answers help us scope accurately. Partial answers are perfectly fine.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nTo make sure our proposal reflects how {{organisation}} actually works, we have prepared a short requirements questionnaire. It covers your objectives, current systems, users, constraints and how you will judge success.\n\nA few practical notes:\n- Partial answers are fine. Mark anything uncertain and we will cover it together.\n- Feel free to share it with colleagues who know specific areas better.\n- Please do not include passwords or credentials. If we need system access later, we will arrange it through your own access-management tooling, and we will never ask for passwords by email."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Reference", "{{reference}}"],
+          ["Link expires", "{{link_expiry}}"]
+        ]
+      },
+      { "type": "button", "label": "Open the questionnaire", "url": "{{document_link}}" },
+      {
+        "type": "text",
+        "text": "Returning it within the timeframe we agreed will keep things moving. If any question is unclear, just reply."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "nda-request",
+    "name": "NDA request",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Sends a non-disclosure agreement for review and signature before detailed information is shared.",
+    "header_label": "NDA",
+    "subject": "An NDA for your review before we go further",
+    "preheader": "So you can share detail with confidence. Review and sign through the secure link.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nBefore we go into the detail of {{organisation}}'s systems and plans, it is sensible to have a non-disclosure agreement in place. That way you can share what we need with confidence, and both sides are clear on how that information is handled.\n\nThe agreement is ready to review and sign through the secure link below. If your organisation prefers to use its own template, that is absolutely fine; send it over and we will review it promptly."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Document", "Non-disclosure agreement"],
+          ["Reference", "{{reference}}"],
+          ["Link expires", "{{link_expiry}}"]
+        ]
+      },
+      { "type": "button", "label": "Review the NDA", "url": "{{document_link}}" },
+      {
+        "type": "text",
+        "text": "If you have questions about any clause, reply here and we can talk it through."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "proposal-sent",
+    "name": "Proposal sent",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Shares the proposal with a prospect and explains what it contains.",
+    "header_label": "Proposal",
+    "subject": "Our proposal for {{organisation}}",
+    "preheader": "Our approach, scope and commercials, shaped by what you told us.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you for the time you and your colleagues have given us. Our proposal is ready, and you can read it through the secure link below.\n\nWe have kept it practical. It sets out:\n- our understanding of your objectives and constraints\n- the approach we recommend, and why\n- scope, phasing and what we would need from your team\n- commercials and the assumptions behind them\n\nWhere we have made an assumption, we have said so. If anything does not match your understanding, that is exactly what we want to hear."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Reference", "{{reference}}"],
+          ["Link expires", "{{link_expiry}}"]
+        ]
+      },
+      { "type": "button", "label": "Read the proposal", "url": "{{proposal_link}}" },
+      {
+        "type": "text",
+        "text": "I would be glad to walk you through it on a short call. That is often the quickest way to work through questions."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "proposal-follow-up-day-3",
+    "name": "Proposal follow-up: day 3",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "A light check-in three days after a proposal is sent, offering a walkthrough.",
+    "header_label": "Proposal",
+    "subject": "Any early questions on our proposal?",
+    "preheader": "Happy to walk you or your colleagues through it, whichever is easier.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nI wanted to check that our proposal for {{organisation}} reached you safely, and to see whether any early questions have come up.\n\nA first read often raises points about scope or assumptions that are quicker to resolve in conversation than over email. If it would help, I am happy to take you, or anyone else involved in the decision, through it on a short call."
+      },
+      { "type": "button", "label": "Book a walkthrough", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "proposal-follow-up-day-7",
+    "name": "Proposal follow-up: day 7",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "A second check-in a week after a proposal is sent, asking where things stand.",
+    "header_label": "Proposal",
+    "subject": "Checking in on our proposal",
+    "preheader": "Is there anything we should adjust on scope, timing or approach?",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nI am following up on the proposal we shared last week. Decisions like this take time and usually involve more than one person, so there is no pressure from our side.\n\nIt would help to know where things stand:\n- If it is under review, is there anything we can clarify for your colleagues?\n- If scope, timing or budget need to change, we are happy to revise it.\n- If priorities have moved on, a short reply saying so is genuinely helpful.\n\nWhichever it is, a quick reply is all I need. The proposal is here if you want to look at it again."
+      },
+      { "type": "button", "label": "Read the proposal", "url": "{{proposal_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "revised-proposal",
+    "name": "Revised proposal",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Shares an updated proposal after feedback, with a summary of what has changed.",
+    "header_label": "Revised proposal",
+    "subject": "Revised proposal for {{organisation}}",
+    "preheader": "Updated to reflect our conversation, with a summary of what has changed.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you for your feedback on our original proposal. We have revised it to reflect what we discussed, and the updated version is ready below.\n\nWhat has changed:"
+      },
+      { "type": "quote", "text": "{{status_summary}}" },
+      {
+        "type": "text",
+        "text": "Everything else remains as previously proposed. This version replaces the earlier one, so please use it as the basis for any internal review."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Reference", "{{reference}}"],
+          ["Link expires", "{{link_expiry}}"]
+        ]
+      },
+      { "type": "button", "label": "Read the revised proposal", "url": "{{proposal_link}}" },
+      {
+        "type": "text",
+        "text": "If this now works for you, reply to let us know and we will prepare the contract. If something is still missing, tell us what it is."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "proposal-accepted-thank-you",
+    "name": "Proposal accepted: thank you",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Thanks a client for accepting a proposal and sets out the steps between now and kick-off.",
+    "header_label": "Thank you",
+    "subject": "Thank you for choosing Vitalos",
+    "preheader": "What happens between now and kick-off, and who to contact in the meantime.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thank you, {{first_name}}" },
+      {
+        "type": "text",
+        "text": "Thank you for confirming that {{organisation}} would like to go ahead. We appreciate the trust that decision represents, and we take it seriously.\n\nWhat happens next:\n- We will send the contract and statement of work for signature shortly.\n- Once signed, we will agree a kick-off date and confirm who will be involved on both sides.\n- Before kick-off, we will share a short list of what we need from your team, such as contacts, existing documentation and any access arranged through your own tooling."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Project", "{{project_name}}"],
+          ["Reference", "{{reference}}"]
+        ]
+      },
+      {
+        "type": "text",
+        "text": "I remain your point of contact until kick-off, so just reply here if anything comes up. We are looking forward to getting started!"
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "contract-sent-for-signature",
+    "name": "Contract or SOW sent for signature",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Sends the contract or statement of work for review and electronic signature.",
+    "header_label": "For signature",
+    "subject": "Ready for signature: {{project_name}}",
+    "preheader": "Review and sign securely online. Questions on any clause are welcome.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nAs agreed, the contract and statement of work for {{project_name}} are ready for your review and signature. You can open them securely using the button below.\n\nThey reflect the scope, assumptions and commercial terms in the accepted proposal. If your legal or procurement colleagues need to review them, please share the link with them, and let us know if they have questions or would like to suggest changes."
+      },
+      {
+        "type": "details",
+        "rows": [
+          ["Project", "{{project_name}}"],
+          ["Reference", "{{reference}}"],
+          ["Link expires", "{{link_expiry}}"]
+        ]
+      },
+      { "type": "button", "label": "Review and sign", "url": "{{document_link}}" },
+      {
+        "type": "text",
+        "text": "Once everything is signed, we will confirm the kick-off date and next steps."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "contract-signed-confirmation",
+    "name": "Contract signed confirmation",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Confirms receipt of the signed contract, shares a copy and sets out the steps towards kick-off.",
+    "header_label": "Signed",
+    "subject": "Signed and confirmed: {{project_name}}",
+    "preheader": "A copy for your records, and the next steps towards kick-off.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "We are ready to begin" },
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you. We have received the signed contract for {{project_name}}, and a copy of the signed agreement is available for your records through the link below.\n\nNext steps:"
+      },
+      { "type": "quote", "text": "{{next_steps}}" },
+      {
+        "type": "details",
+        "rows": [
+          ["Project", "{{project_name}}"],
+          ["Reference", "{{reference}}"]
+        ]
+      },
+      { "type": "button", "label": "Download your copy", "url": "{{document_link}}" },
+      {
+        "type": "text",
+        "text": "If anyone else at {{organisation}} should receive project updates, reply with their name and role and we will include them."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "closed-lost-polite-close",
+    "name": "Closed-lost: polite close",
+    "category": "sales",
+    "kind": "transactional",
+    "description": "Sent when a prospect decides not to proceed, thanking them and leaving the door open.",
+    "header_label": "Thank you",
+    "subject": "Thank you for considering Vitalos",
+    "preheader": "We respect your decision and would be glad to help in future.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThank you for letting us know where things have landed, and for the time you and your colleagues gave us along the way. We respect the decision, and we wish {{organisation}} every success with the work ahead.\n\nIf you are willing, we would value a sentence or two on what tipped the decision. It helps us improve, and there is no need to reply if you would rather not.\n\nCircumstances change, so please keep my details. If you ever need a second opinion or an extra pair of hands, I would be glad to hear from you."
+      },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "dormant-lead-re-engagement",
+    "name": "Dormant lead re-engagement",
+    "category": "sales",
+    "kind": "outreach",
+    "description": "Re-opens the conversation with a lead who has gone quiet for 60 to 90 days.",
+    "header_label": "Checking in",
+    "subject": "Picking up where we left off",
+    "preheader": "No pressure. Just checking whether the timing is better now.",
+    "reason": "You are receiving this because you previously got in touch with Vitalos about working together. You can opt out at any time.",
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nIt has been a little while since we last spoke about your plans at {{organisation}}, so I wanted to check in. When you first got in touch, you told us:"
+      },
+      { "type": "quote", "text": "{{goal}}" },
+      {
+        "type": "text",
+        "text": "Priorities shift. A project that felt urgent a few months ago may have moved on, been solved another way, or be waiting for the right moment. Any of those is fine.\n\nIf it is back on the agenda, I would be happy to pick up where we left off with a short call. If not, just let me know and I will not follow up again."
+      },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  }
+]

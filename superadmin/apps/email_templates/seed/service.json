@@ -1,0 +1,267 @@
+[
+  {
+    "key": "service-intro-consulting",
+    "name": "Service introduction: Consulting",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Introduces Vitalos Consulting to a prospect who may be facing transformation or architecture decisions.",
+    "header_label": "Consulting",
+    "subject": "Vitalos Consulting: clarity before costly execution",
+    "preheader": "How we help leaders make transformation choices with confidence.",
+    "reason": "We are contacting you because {{organisation}} may be weighing technology or transformation choices where we can help. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nLarge technology programmes are expensive to correct once they are under way. Vitalos Consulting exists to help leaders get the direction right first: clear transformation choices, a realistic roadmap and a sound architecture before significant budget is committed.\n\nTypical starting points include:\n- Digital Transformation Discovery, to agree priorities and a practical roadmap\n- Technology Health Assessment, for an independent view of your current estate\n- AI Opportunity Assessment, to identify which AI use cases are worth pursuing\n\nIf {{organisation}} is facing a decision like this, I would be glad to arrange a short conversation. If not, a quick reply is enough and I will not follow up." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-case-study-consulting",
+    "name": "Case study share: Consulting",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Shares an approved Vitalos Consulting case study with a prospect it is relevant to.",
+    "header_label": "Case study",
+    "subject": "A consulting case study you may find useful",
+    "preheader": "An example of setting direction before committing to delivery.",
+    "reason": "We are contacting you because this example may be relevant to the technology decisions {{organisation}} is making. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI thought this case study from Vitalos Consulting might be of interest: {{case_study_title}}.\n\nIt is an example of the work our consulting practice does, helping leaders reach clear transformation choices, a realistic roadmap and a sound architecture before committing to expensive execution. You may recognise some of the questions {{organisation}} is weighing." },
+      { "type": "button", "label": "Read the case study", "url": "{{case_study_link}}" },
+      { "type": "text", "text": "If it raises questions about your own situation, I would be glad to talk them through. And if this is not relevant to you, just let me know and I will not send more." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-follow-up-consulting",
+    "name": "Post-enquiry follow-up: Consulting",
+    "category": "service",
+    "kind": "transactional",
+    "description": "Personal follow-up after someone enquires about Vitalos Consulting, to prepare a useful first conversation.",
+    "header_label": "Follow-up",
+    "subject": "Your Vitalos Consulting enquiry: next steps",
+    "preheader": "A few questions to help us make the first conversation useful.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks again, {{first_name}}" },
+      { "type": "text", "text": "Thank you for your enquiry about Vitalos Consulting. I have read what you shared and wanted to follow up personally." },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "text", "text": "To make our first conversation as useful as possible, it would help to understand a little more:\n- The decision or change you are trying to reach clarity on\n- Who needs to be involved in making it\n- Any constraints, such as timing, budget or existing commitments\n\nThere is no need to prepare anything formal. A few lines in reply, or a short call, is plenty." },
+      { "type": "details", "rows": [["Reference", "{{reference}}"], ["Timeframe", "{{timeframe}}"]] },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-intro-engineering",
+    "name": "Service introduction: Engineering",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Introduces Vitalos Engineering to a prospect who may need production software built, modernised or integrated.",
+    "header_label": "Engineering",
+    "subject": "Vitalos Engineering: dependable production software",
+    "preheader": "Modernisation, platforms and integration for systems that must keep running.",
+    "reason": "We are contacting you because {{organisation}} may rely on software and systems where we can help. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI am getting in touch to introduce Vitalos Engineering. We build and modernise serious production software: the platforms, integrations and applications organisations depend on every day, with reliability treated as a design requirement rather than an afterthought.\n\nWork we commonly take on includes:\n- Application Modernisation, for systems that have become hard or risky to change\n- Systems Integration, so data and processes flow between the tools you rely on\n- Custom Digital Product, when an off-the-shelf option will not do\n- Engineering Rescue, for projects that need steadying\n\nIf any of these is on the list at {{organisation}}, I would welcome a short conversation. If not, just let me know and I will not follow up." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-case-study-engineering",
+    "name": "Case study share: Engineering",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Shares an approved Vitalos Engineering case study with a prospect it is relevant to.",
+    "header_label": "Case study",
+    "subject": "An engineering case study you may find useful",
+    "preheader": "An example of building and modernising software that has to keep running.",
+    "reason": "We are contacting you because this example may be relevant to the systems {{organisation}} relies on. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI thought this case study from Vitalos Engineering might be of interest: {{case_study_title}}.\n\nIt is an example of the work our engineering practice does on production software, whether that means modernising an existing system, building a new platform or connecting the tools an organisation already uses. You may find parallels with what {{organisation}} is working on." },
+      { "type": "button", "label": "Read the case study", "url": "{{case_study_link}}" },
+      { "type": "text", "text": "If it prompts questions about your own systems, I would be glad to talk them through. And if this is not relevant to you, just let me know and I will not send more." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-follow-up-engineering",
+    "name": "Post-enquiry follow-up: Engineering",
+    "category": "service",
+    "kind": "transactional",
+    "description": "Personal follow-up after someone enquires about Vitalos Engineering, to understand their systems before a first call.",
+    "header_label": "Follow-up",
+    "subject": "Your Vitalos Engineering enquiry: next steps",
+    "preheader": "A few questions about your systems so our first call is well prepared.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks again, {{first_name}}" },
+      { "type": "text", "text": "Thank you for your enquiry about Vitalos Engineering. I have read what you shared and wanted to follow up personally." },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "text", "text": "Before we speak, it would help to understand:\n- The systems involved and, broadly, the technology they use\n- What is driving the change, such as risk, cost or a new capability\n- Any deadlines or dependencies we should know about\n\nIf it later makes sense to look at code or systems, we will agree secure access through your own access-management tooling. We will never ask for passwords by email." },
+      { "type": "details", "rows": [["Reference", "{{reference}}"], ["Timeframe", "{{timeframe}}"]] },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-intro-ai-data",
+    "name": "Service introduction: AI & Data",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Introduces Vitalos AI & Data to a prospect exploring what AI and data could realistically do for them.",
+    "header_label": "AI & Data",
+    "subject": "Vitalos AI & Data: from opportunity to production",
+    "preheader": "Practical AI and data work, with the foundations to run it responsibly.",
+    "reason": "We are contacting you because {{organisation}} may be exploring AI or data initiatives where we can help. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nIf {{organisation}} is weighing what AI and data could realistically do for it, I thought a brief introduction to Vitalos AI & Data might be useful.\n\nWe work across the whole journey: identifying the right opportunities, putting sound data foundations in place, taking solutions into production and operating them responsibly afterwards. Common starting points are:\n- AI Opportunity Assessment, to find and prioritise the use cases worth pursuing\n- AI Prototype Sprint, to test a promising idea quickly before committing further\n- Data & BI Modernisation, to make reporting and data more dependable\n\nIf this is relevant, I would be glad to talk it through. If not, a quick reply is enough and I will leave it there." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-case-study-ai-data",
+    "name": "Case study share: AI & Data",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Shares an approved Vitalos AI & Data case study with a prospect it is relevant to.",
+    "header_label": "Case study",
+    "subject": "An AI and data case study you may find useful",
+    "preheader": "An example of taking AI and data from idea to dependable everyday use.",
+    "reason": "We are contacting you because this example may be relevant to the AI or data work {{organisation}} is considering. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI thought this case study from Vitalos AI & Data might be of interest: {{case_study_title}}.\n\nIt is an example of how our AI and data practice works, from identifying where AI or data can genuinely help, through the foundations it depends on, to running it reliably in production. You may find it relevant to what {{organisation}} is exploring." },
+      { "type": "button", "label": "Read the case study", "url": "{{case_study_link}}" },
+      { "type": "text", "text": "If it raises questions about your own plans, I would be glad to talk them through. And if this is not relevant to you, just let me know and I will not send more." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-follow-up-ai-data",
+    "name": "Post-enquiry follow-up: AI & Data",
+    "category": "service",
+    "kind": "transactional",
+    "description": "Personal follow-up after someone enquires about Vitalos AI & Data, to understand the opportunity and data before a first call.",
+    "header_label": "Follow-up",
+    "subject": "Your Vitalos AI & Data enquiry: next steps",
+    "preheader": "A few questions about the opportunity and your data before we speak.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks again, {{first_name}}" },
+      { "type": "text", "text": "Thank you for your enquiry about Vitalos AI & Data. I have read what you shared and wanted to follow up personally." },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "text", "text": "To make our first conversation useful, it would help to know:\n- The decision, process or service you hope to improve\n- Where the relevant data lives and how easy it is to access\n- Any privacy, security or governance requirements we should respect\n\nPlease do not send personal or sensitive data by email. If we need to look at data, we will agree a secure method with you first." },
+      { "type": "details", "rows": [["Reference", "{{reference}}"], ["Timeframe", "{{timeframe}}"]] },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-intro-experience",
+    "name": "Service introduction: Experience",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Introduces Vitalos Experience to a prospect whose products, services or customer journeys could be easier to use.",
+    "header_label": "Experience",
+    "subject": "Vitalos Experience: products people find easy to use",
+    "preheader": "Human-centred, accessible design for products, services and commerce.",
+    "reason": "We are contacting you because {{organisation}} offers digital products or services where we can help. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI am getting in touch to introduce Vitalos Experience. We design and deliver human-centred products, services and commerce, with accessibility built in from the start so that digital experiences work for everyone who needs them.\n\nWork we commonly take on includes:\n- Product Discovery, to understand users and shape the right product before building it\n- Customer Experience Transformation, to improve journeys across channels\n- Custom Digital Product, taking a design through to a working service\n\nIf improving the experience of your customers or staff is a priority at {{organisation}}, I would welcome a short conversation. If not, just let me know and I will not follow up." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-case-study-experience",
+    "name": "Case study share: Experience",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Shares an approved Vitalos Experience case study with a prospect it is relevant to.",
+    "header_label": "Case study",
+    "subject": "A digital experience case study you may find useful",
+    "preheader": "An example of designing around the people who use a product or service.",
+    "reason": "We are contacting you because this example may be relevant to the digital experiences {{organisation}} offers. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI thought this case study from Vitalos Experience might be of interest: {{case_study_title}}.\n\nIt is an example of how our experience practice works: starting with the people who use a product or service, and designing accessible digital experiences around their needs. You may find parallels with the journeys {{organisation}} offers its own customers." },
+      { "type": "button", "label": "Read the case study", "url": "{{case_study_link}}" },
+      { "type": "text", "text": "If it prompts ideas or questions about your own services, I would be glad to talk them through. And if this is not relevant to you, just let me know and I will not send more." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-follow-up-experience",
+    "name": "Post-enquiry follow-up: Experience",
+    "category": "service",
+    "kind": "transactional",
+    "description": "Personal follow-up after someone enquires about Vitalos Experience, to understand their users and journeys before a first call.",
+    "header_label": "Follow-up",
+    "subject": "Your Vitalos Experience enquiry: next steps",
+    "preheader": "A few questions about your users and journeys before we speak.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks again, {{first_name}}" },
+      { "type": "text", "text": "Thank you for your enquiry about Vitalos Experience. I have read what you shared and wanted to follow up personally." },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "text", "text": "Before we speak, it would help to understand:\n- Who your users or customers are, and what they are trying to do\n- Where the current experience falls short, as far as you know\n- Any accessibility requirements, and any research or analytics you already have\n\nThere is no need to prepare anything formal. A few lines in reply, or a short call, is plenty." },
+      { "type": "details", "rows": [["Reference", "{{reference}}"], ["Timeframe", "{{timeframe}}"]] },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-intro-managed-services",
+    "name": "Service introduction: Managed Services",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Introduces Vitalos Managed Services to a prospect who needs reliable operation and support for important systems.",
+    "header_label": "Managed Services",
+    "subject": "Vitalos Managed Services: steady, supported systems",
+    "preheader": "Reliable operation and continuous improvement for systems you depend on.",
+    "reason": "We are contacting you because {{organisation}} may depend on systems where reliable support could help. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI am getting in touch to introduce Vitalos Managed Services. We provide reliable operation, support and continuous improvement for the systems organisations depend on, both those we build and those we take on from others.\n\nWhen we inherit a system, we do so responsibly: we start by understanding it properly, often through a Technology Health Assessment, before agreeing how it will be supported. From there, Managed Engineering & Application Care keeps it running well and improving over time.\n\nIf ongoing support is a concern at {{organisation}}, I would welcome a short conversation. If not, just let me know and I will not follow up." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-case-study-managed-services",
+    "name": "Case study share: Managed Services",
+    "category": "service",
+    "kind": "outreach",
+    "description": "Shares an approved Vitalos Managed Services case study with a prospect it is relevant to.",
+    "header_label": "Case study",
+    "subject": "A managed services case study you may find useful",
+    "preheader": "An example of keeping important systems running and improving over time.",
+    "reason": "We are contacting you because this example may be relevant to the systems {{organisation}} depends on. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI thought this case study from Vitalos Managed Services might be of interest: {{case_study_title}}.\n\nIt is an example of how our managed services practice works: taking responsibility for the reliable operation and support of a system, and continuing to improve it after go-live. You may find it relevant to how {{organisation}} looks after its own systems." },
+      { "type": "button", "label": "Read the case study", "url": "{{case_study_link}}" },
+      { "type": "text", "text": "If it raises questions about supporting your own systems, I would be glad to talk them through. And if this is not relevant to you, just let me know and I will not send more." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "service-follow-up-managed-services",
+    "name": "Post-enquiry follow-up: Managed Services",
+    "category": "service",
+    "kind": "transactional",
+    "description": "Personal follow-up after someone enquires about Vitalos Managed Services, to understand the systems and support needed before a first call.",
+    "header_label": "Follow-up",
+    "subject": "Your Vitalos Managed Services enquiry: next steps",
+    "preheader": "A few questions about the systems and the support you need.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks again, {{first_name}}" },
+      { "type": "text", "text": "Thank you for your enquiry about Vitalos Managed Services. I have read what you shared and wanted to follow up personally." },
+      { "type": "quote", "text": "{{goal}}" },
+      { "type": "text", "text": "Before we speak, it would help to understand:\n- Which systems need support, and who looks after them today\n- What good support would look like for your organisation\n- Whether documentation or a handover from a previous supplier is available\n\nIf access is needed later, we will arrange it through your own identity or access-management tooling. We will never ask for passwords by email." },
+      { "type": "details", "rows": [["Reference", "{{reference}}"], ["Timeframe", "{{timeframe}}"]] },
+      { "type": "button", "label": "Book a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  }
+]

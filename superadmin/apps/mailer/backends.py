@@ -14,6 +14,7 @@ import logging
 import urllib.error
 import urllib.request
 import uuid
+from email.mime.base import MIMEBase
 
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
@@ -21,7 +22,16 @@ from django.core.mail.backends.base import BaseEmailBackend
 logger = logging.getLogger("superadmin.mail")
 
 # Headers we pass through to the provider; anything else set on a message is dropped.
-FORWARDED_HEADERS = ("Message-ID", "In-Reply-To", "References", "Auto-Submitted", "X-Auto-Response-Suppress")
+FORWARDED_HEADERS = (
+    "Message-ID",
+    "In-Reply-To",
+    "References",
+    "Auto-Submitted",
+    "X-Auto-Response-Suppress",
+    # One-click unsubscribe for marketing and outreach email (RFC 8058).
+    "List-Unsubscribe",
+    "List-Unsubscribe-Post",
+)
 
 
 def _headers(message) -> dict[str, str]:
@@ -83,6 +93,18 @@ class ResendEmailBackend(BaseEmailBackend):
             payload["headers"] = headers
         attachments = []
         for attachment in message.attachments or []:
+            if isinstance(attachment, MIMEBase):
+                # An inline image (apps.mailer.messages): Resend references it by content id.
+                item = {
+                    "filename": attachment.get_filename() or "attachment",
+                    "content": base64.b64encode(attachment.get_payload(decode=True) or b"").decode(),
+                    "content_type": attachment.get_content_type(),
+                }
+                content_id = (attachment.get("Content-ID") or "").strip("<>")
+                if content_id:
+                    item["content_id"] = content_id
+                attachments.append(item)
+                continue
             filename, content, _mimetype = attachment
             raw = content if isinstance(content, bytes) else str(content).encode()
             attachments.append({"filename": filename, "content": base64.b64encode(raw).decode()})
