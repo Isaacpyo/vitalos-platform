@@ -119,7 +119,7 @@ def sparkline(values, target=None, classes="h-10 w-full", width=120, height=36):
     """Inline SVG trend line over ``values`` (oldest first) with an optional dashed target line."""
     numbers = [Decimal(str(v.value if hasattr(v, "value") else v)) for v in values or []]
     if not numbers:
-        return format_html('<span class="text-xs text-slate-400">No data yet</span>')
+        return format_html('<span class="text-xs text-slate-400">{}</span>', "No data yet")
     scale = list(numbers) + ([Decimal(str(target))] if target is not None else [])
     low, high = min(scale), max(scale)
     span = (high - low) or Decimal(1)
