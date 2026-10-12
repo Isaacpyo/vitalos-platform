@@ -23,6 +23,14 @@
 #   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
 # Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
 # run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN, BOOTSTRAP_ADMIN_EMAIL.
+# Optional mail and enquiry settings (superadmin/docs/email-setup.md), each passed through only when set:
+#   plain variables  PRIMARY_OWNER_EMAIL (also reaches the release job), EMAIL_TRANSPORT, INBOUND_PROVIDER,
+#                    NOTIFY_OWNER_EMAIL, OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_BUCKET,
+#                    OBJECT_STORAGE_REGION, RETENTION_ENFORCE
+#   secrets          RESEND_API_KEY, RESEND_WEBHOOK_SECRET, INBOUND_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY,
+#                    OBJECT_STORAGE_ACCESS_KEY_ID, OBJECT_STORAGE_SECRET_ACCESS_KEY, SLACK_WEBHOOK_URL
+#                    (Container Apps secrets, referenced with secretref:; an empty value never overwrites
+#                    a secret that is already stored). APP_BASE_URL is always https://<domain>.
 set -euo pipefail
 
 DRY_RUN=0
@@ -75,6 +83,13 @@ Will create or update:
        django-secret-key, bootstrap-admin-password (generated once, then kept),
        database-url (Supabase session pooler or Neon pooled, from the GitHub production environment);
        no registry credentials
+       Optional, added only when the workflow provides a non-empty value (an existing secret is never
+       overwritten with an empty one): sentry-dsn, resend-api-key, resend-webhook-secret,
+       inbound-webhook-secret, turnstile-secret-key, object-storage-access-key-id,
+       object-storage-secret-access-key, slack-webhook-url
+       Environment variables: APP_BASE_URL=https://${DOMAIN} always; PRIMARY_OWNER_EMAIL (release job too),
+       EMAIL_TRANSPORT, INBOUND_PROVIDER, NOTIFY_OWNER_EMAIL, OBJECT_STORAGE_ENDPOINT/BUCKET/REGION and
+       RETENTION_ENFORCE only when provided (mail stays EMAIL_TRANSPORT=log until a human sets resend)
   4. Cloudflare DNS (zone $ZONE, DNS only / grey cloud, TTL 300):
        CNAME ${DOMAIN%%."$ZONE"} -> <app FQDN>.$LOCATION.azurecontainerapps.io
        TXT   asuid.${DOMAIN%%."$ZONE"} -> <custom domain verification ID>
@@ -90,6 +105,8 @@ Free-grant assumptions (per subscription per month; check Azure Cost Management,
     One $CPU vCPU / $MEMORY replica uses both grants at the same rate: 180,000 / $CPU = 720,000 s ~= 200 h/month.
     Scaled to zero when idle, an internal tool stays far below that; release-job runs are seconds.
   - Log Analytics: first 5 GB/month ingestion and 31 days retention free; daily cap 0.1 GB (~3 GB/month).
+  - Optional notification job (not created by this script; email-setup.md section 8): about 8,600 short runs a
+    month, estimated at roughly 32,000 vCPU-s and 65,000 GiB-s, which should stay inside the same grants.
   - Managed certificate and the consumption-only environment: no charge.
   - Supabase free plan (500 MB database; paused after 7 days without activity, which the nightly backup
     prevents) or Neon free plan (0.5 GB, autosuspend after 5 min); Cloudflare free DNS; GitHub Packages
@@ -217,6 +234,31 @@ if [ -n "${SENTRY_DSN:-}" ]; then
   SECRETS+=("sentry-dsn=$SENTRY_DSN")
   ENV_VARS+=(SENTRY_DSN=secretref:sentry-dsn)
 fi
+ENV_VARS+=("APP_BASE_URL=https://$DOMAIN")
+
+# Optional mail and enquiry settings. Added only when the workflow provides a non-empty value, so a deploy
+# without them leaves whatever the app already holds untouched (az keeps existing secrets and variables).
+for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_EMAIL \
+  OBJECT_STORAGE_ENDPOINT OBJECT_STORAGE_BUCKET OBJECT_STORAGE_REGION RETENTION_ENFORCE; do
+  if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
+done
+add_optional_secret() {  # env var name, Container Apps secret name
+  local value="${!1:-}"
+  if [ -n "$value" ]; then
+    mask "$value"
+    SECRETS+=("$2=$value")
+    ENV_VARS+=("$1=secretref:$2")
+  fi
+}
+add_optional_secret RESEND_API_KEY resend-api-key
+add_optional_secret RESEND_WEBHOOK_SECRET resend-webhook-secret
+add_optional_secret INBOUND_WEBHOOK_SECRET inbound-webhook-secret
+add_optional_secret TURNSTILE_SECRET_KEY turnstile-secret-key
+add_optional_secret OBJECT_STORAGE_ACCESS_KEY_ID object-storage-access-key-id
+add_optional_secret OBJECT_STORAGE_SECRET_ACCESS_KEY object-storage-secret-access-key
+add_optional_secret SLACK_WEBHOOK_URL slack-webhook-url
+unset _name
+# JOB_ENV is built from ENV_VARS, so PRIMARY_OWNER_EMAIL reaches the release job (create_owner).
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)
 
 log "Release job $RELEASE_JOB (migrations run before the app takes the new image)"

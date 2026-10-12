@@ -1,0 +1,10 @@
+# Vitalos inbound mail Worker. Prepared only: deploying it is an owner step (superadmin/docs/email-setup.md).
+# No secrets here. Set these once, from this folder, with wrangler (it prompts for each value):
+#
+#   npx wrangler secret put INBOUND_WEBHOOK_URL      # https://admin.vitalos.co.uk/api/inbound/email
+#   npx wrangler secret put INBOUND_WEBHOOK_SECRET   # same value as the app's INBOUND_WEBHOOK_SECRET
+#   npx wrangler secret put FORWARD_TO               # the existing shared inbox; must be a verified destination
+name = "vitalos-inbound"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false

@@ -1,0 +1,29 @@
+From: Jane Customer <jane@customer.example>
+To: support@vitalos.co.uk
+Subject: Documents attached
+Date: Mon, 12 Oct 2026 10:10:00 +0100
+Message-ID: <attach-1@customer.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix"
+
+--mix
+Content-Type: text/plain; charset="utf-8"
+
+Please see the attached brief.
+
+--mix
+Content-Type: application/pdf; name="brief.pdf"
+Content-Disposition: attachment; filename="brief.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAv
+Um9vdCAxIDAgUiA+PgolJUVPRgo=
+
+--mix
+Content-Type: application/pdf; name="invoice.pdf"
+Content-Disposition: attachment; filename="invoice.pdf"
+Content-Transfer-Encoding: base64
+
+TVqQAAMAAAAEAAAA//8AAFRoaXMgcHJvZ3JhbSBjYW5ub3QgYmUgcnVuIGluIERPUyBtb2RlLg==
+
+--mix--

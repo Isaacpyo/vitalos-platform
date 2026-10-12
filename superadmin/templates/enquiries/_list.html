@@ -1,0 +1,42 @@
+{% load ui humanize %}
+<p class="muted border-b border-slate-200 px-3 py-1.5 text-xs dark:border-slate-800" aria-live="polite">{% if rows %}{{ rows|length }} enquir{{ rows|length|pluralize:"y,ies" }}{% if rows|length == 50 %} (newest 50){% endif %}{% else %}No enquiries{% endif %}{% if query %} matching “{{ query }}”{% endif %}</p>
+<ul data-enquiry-list>
+  {% for row in rows %}
+    {% with e=row.enquiry %}
+      <li>
+        <a href="{{ e.get_absolute_url }}{% if querystring %}?{{ querystring }}{% endif %}"
+           hx-get="{{ e.get_absolute_url }}{% if querystring %}?{{ querystring }}{% endif %}" hx-target="#enquiry-thread" hx-swap="innerHTML" hx-push-url="true"
+           class="block border-b border-slate-100 px-3 py-2.5 hover:bg-slate-50 aria-[current=page]:bg-cobalt-600/8 dark:border-slate-800 dark:hover:bg-slate-800/60 dark:aria-[current=page]:bg-cobalt/15"
+           {% if selected and selected.pk == e.pk %}aria-current="page"{% endif %} data-enquiry-row>
+          <div class="flex items-center gap-2">
+            {% if e.unread %}<span class="h-2 w-2 shrink-0 rounded-full bg-cobalt" aria-hidden="true"></span><span class="sr-only">Unread.</span>{% endif %}
+            <span class="min-w-0 flex-1 truncate text-sm {% if e.unread %}font-semibold{% endif %}">{{ e.from_name|default:e.from_email }}</span>
+            <time class="muted shrink-0 text-xs" datetime="{{ e.last_message_at|date:'c' }}">{{ e.last_message_at|naturaltime }}</time>
+          </div>
+          <p class="mt-0.5 truncate text-sm {% if e.unread %}font-medium{% endif %}">{{ e.subject|default:"(no subject)" }}</p>
+          <p class="muted mt-0.5 truncate text-xs">{{ e.snippet }}</p>
+          <div class="mt-1.5 flex items-center gap-1.5">
+            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">{{ e.ref }}</span>
+            <span class="{{ e.status|badge_class }}">{{ e.get_status_display }}</span>
+            {% if e.priority == "urgent" or e.priority == "high" %}<span class="{{ e.priority|badge_class }}">{{ e.get_priority_display }}</span>{% endif %}
+            {% if row.sla.0 == "overdue" %}
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300">{% icon "alert" "h-3.5 w-3.5" %}{{ row.sla.1 }}</span>
+            {% elif row.sla.0 == "due_soon" %}
+              <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 dark:text-amber-300">{% icon "clock" "h-3.5 w-3.5" %}{{ row.sla.1 }}</span>
+            {% endif %}
+            {% if e.source == "web_form" %}<span class="muted" title="Website form">{% icon "globe" "h-3.5 w-3.5" %}<span class="sr-only">Website form</span></span>{% endif %}
+            <span class="ml-auto">
+              {% if e.assignee %}<span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100" title="Assigned to {{ e.assignee.email }}">{{ e.assignee|initials }}<span class="sr-only">Assigned to {{ e.assignee.email }}</span></span>
+              {% else %}<span class="muted text-[11px]">Unassigned</span>{% endif %}
+            </span>
+          </div>
+        </a>
+      </li>
+    {% endwith %}
+  {% empty %}
+    <li class="p-6 text-center text-sm">
+      <p class="font-medium">Nothing here</p>
+      <p class="muted mt-1">{% if query or tag %}Try a different search or filter.{% else %}New enquiries from support@vitalos.co.uk and the website form appear here.{% endif %}</p>
+    </li>
+  {% endfor %}
+</ul>

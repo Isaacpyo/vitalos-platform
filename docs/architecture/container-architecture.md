@@ -55,7 +55,7 @@ Notes:
 - The web app runs on the `repo` content source (ADR-028): the approved subset of the drafted content, static per deploy. `empty` is an honest empty state with all publication gates closed. `fixtures` (artificial content) is for tests and local work and is rejected in production; `draft` (content drafted from the strategy library, pending approval, ADR-025) is for review in local, preview and staging and is likewise rejected in production. See `docs/operations/local-development.md`.
 - No CMS SDK is a dependency of the repository (ADR-028).
 - Storybook is private by default and is not deployed.
-- The web, Storybook and Super Admin are independent build/deployment units. Super Admin is an internal Django application with its own database and toolchain and no source imports in either direction (ADR-026).
+- The web, Storybook and Super Admin are independent build/deployment units. Super Admin is an internal Django application with its own database and toolchain and no source imports in either direction (ADR-026). Its planned enquiry mail path (proposed, not live): Cloudflare Email Routing, an Email Worker (`infra/cloudflare-email-worker`) that forwards to the existing inbox and posts signed mail to the Super Admin, and Resend for outbound mail (ADR-029).
 
 ## Runtime responsibilities (`apps/web`)
 

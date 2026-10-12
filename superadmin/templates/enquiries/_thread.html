@@ -1,0 +1,217 @@
+{% load ui humanize %}
+<div class="xl:grid xl:min-h-full xl:grid-cols-[minmax(0,1fr)_17rem]" data-thread="{{ enquiry.ref }}">
+  <div class="min-w-0 p-4 sm:p-6">
+    {# Header #}
+    <div class="mb-4 flex flex-wrap items-start gap-3">
+      <a href="{% url 'enquiries:inbox' %}" class="btn btn-ghost btn-sm lg:hidden" data-back-to-list>{% icon "arrow-right" "h-4 w-4 rotate-180" %} Inbox</a>
+      <div class="min-w-0 flex-1">
+        <p class="font-mono text-xs text-slate-500 dark:text-slate-400">{{ enquiry.ref }} · {{ enquiry.get_source_display }}</p>
+        <h2 class="mt-0.5 text-xl font-bold break-words">{{ enquiry.subject|default:"(no subject)" }}</h2>
+        <p class="muted mt-0.5 text-sm">{{ enquiry.from_name|default:"" }} &lt;{{ enquiry.from_email }}&gt;</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5" aria-label="Enquiry actions" role="group">
+        {% if enquiry.assignee_id != request.user.pk %}
+          <form method="post" action="{% url 'enquiries:assign' enquiry.ref %}" hx-post="{% url 'enquiries:assign' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="assignee" value="me">
+            <button type="submit" class="btn btn-secondary btn-sm" data-action="assign-me" aria-keyshortcuts="A">{% icon "user" "h-4 w-4" %} Assign to me</button>
+          </form>
+        {% endif %}
+        {% if enquiry.status != "resolved" %}
+          <form method="post" action="{% url 'enquiries:status' enquiry.ref %}" hx-post="{% url 'enquiries:status' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="status" value="resolved">
+            <button type="submit" class="btn btn-secondary btn-sm" data-action="resolve" aria-keyshortcuts="E">{% icon "check" "h-4 w-4" %} Resolve</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'enquiries:status' enquiry.ref %}" hx-post="{% url 'enquiries:status' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="status" value="open">
+            <button type="submit" class="btn btn-secondary btn-sm">{% icon "restore" "h-4 w-4" %} Reopen</button>
+          </form>
+        {% endif %}
+        {% if enquiry.status != "spam" %}
+          <form method="post" action="{% url 'enquiries:status' enquiry.ref %}" hx-post="{% url 'enquiries:status' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+            {% csrf_token %}<input type="hidden" name="status" value="spam">
+            <button type="submit" class="btn btn-ghost btn-sm" data-action="spam" aria-keyshortcuts="S">{% icon "ban" "h-4 w-4" %} Spam</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{% url 'enquiries:unread' enquiry.ref %}" hx-post="{% url 'enquiries:unread' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+          {% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% icon "mail" "h-4 w-4" %} Mark unread</button>
+        </form>
+        <a href="{% url 'enquiries:export' enquiry.ref %}" class="btn btn-ghost btn-sm" download>{% icon "download" "h-4 w-4" %} Export</a>
+      </div>
+    </div>
+
+    {# Timeline: messages and internal notes #}
+    <ol class="space-y-3" aria-label="Conversation">
+      {% for entry in timeline %}
+        {% if entry.kind == "message" %}
+          {% with m=entry.item %}
+            <li>
+              <article class="card overflow-hidden {% if m.direction == 'outbound' %}border-l-2 border-l-cobalt-600 dark:border-l-cobalt-300{% endif %}" aria-labelledby="msg-{{ m.pk }}-from">
+                <header class="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-slate-100 px-4 py-2 text-sm dark:border-slate-800">
+                  <span id="msg-{{ m.pk }}-from" class="font-medium">{% if m.direction == "outbound" %}Vitalos Support{% if m.sent_by %} · {{ m.sent_by.email }}{% endif %}{% else %}{{ m.from_name|default:m.from_email }}{% endif %}</span>
+                  <span class="muted text-xs">{% if m.direction == "outbound" %}to {{ m.to_emails|join:", " }}{% else %}{{ m.from_email }}{% endif %}</span>
+                  {% if m.is_auto %}<span class="{{ 'slate'|badge_class }}">Automated</span>{% endif %}
+                  {% if m.direction == "outbound" and m.delivery_status %}
+                    <span class="{% if m.delivery_status == 'failed' or m.delivery_status == 'bounced' or m.delivery_status == 'complained' %}{{ 'cancelled'|badge_class }}{% elif m.delivery_status == 'delivered' %}{{ 'resolved'|badge_class }}{% else %}{{ 'slate'|badge_class }}{% endif %}">{% if m.delivery_status == "logged" %}Logged, not sent{% else %}{{ m.delivery_status|capfirst }}{% endif %}</span>
+                  {% endif %}
+                  <time class="muted ml-auto text-xs" datetime="{{ m.created_at|date:'c' }}" title="{{ m.created_at|date:'j M Y, H:i' }}">{{ m.created_at|date:"j M Y, H:i" }}</time>
+                </header>
+                <div class="px-4 py-3">
+                  {% if m.html_body_sanitised %}
+                    <iframe name="msg-frame-{{ m.pk }}" src="{% url 'enquiries:message_body' m.pk %}" sandbox="" referrerpolicy="no-referrer" loading="lazy"
+                            title="Message from {{ m.from_email }}" class="h-80 w-full resize-y rounded border border-slate-200 bg-white dark:border-slate-700"></iframe>
+                    <div class="mt-2 flex flex-wrap gap-3 text-xs">
+                      <a href="{% url 'enquiries:message_body' m.pk %}?images=1" target="msg-frame-{{ m.pk }}" class="text-cobalt-600 hover:underline dark:text-cobalt-300">{% icon "image" "inline h-3.5 w-3.5" %} Load images</a>
+                      {% if m.text_body %}
+                        <details class="w-full">
+                          <summary class="cursor-pointer text-cobalt-600 dark:text-cobalt-300">Show plain text</summary>
+                          <div class="mt-2 text-sm whitespace-pre-wrap break-words">{{ m.text_body }}</div>
+                        </details>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <div class="text-sm whitespace-pre-wrap break-words">{{ m.text_body|default:"(empty message)" }}</div>
+                  {% endif %}
+                  {% if m.attachments.all %}
+                    <ul class="mt-3 space-y-1 border-t border-slate-100 pt-2 text-sm dark:border-slate-800" aria-label="Attachments">
+                      {% for a in m.attachments.all %}
+                        <li class="flex flex-wrap items-center gap-2">
+                          {% icon "paperclip" "h-4 w-4 text-slate-500" %}
+                          {% if a.storage_key %}
+                            <a href="{% url 'enquiries:attachment' a.pk %}" class="text-cobalt-600 hover:underline dark:text-cobalt-300" rel="noopener">{{ a.filename }}</a>
+                          {% else %}
+                            <span>{{ a.filename }}</span>
+                          {% endif %}
+                          <span class="muted text-xs">{{ a.size_bytes|filesizeformat }}</span>
+                          {% if a.refused_reason %}<span class="muted text-xs">· {{ a.refused_reason }}</span>{% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </div>
+              </article>
+            </li>
+          {% endwith %}
+        {% else %}
+          {% with n=entry.item %}
+            <li>
+              <aside class="rounded-md border border-slate-300 bg-slate-100 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-800" aria-label="{% if n.is_system %}System note{% else %}Internal note{% endif %}">
+                <p class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="mono-label font-semibold text-slate-700 dark:text-slate-200">{% icon "note" "inline h-3.5 w-3.5" %} {% if n.is_system %}System note{% else %}Internal note{% endif %}</span>
+                  {% if n.author %}<span class="muted">{{ n.author.email }}</span>{% endif %}
+                  <time class="muted ml-auto" datetime="{{ n.created_at|date:'c' }}">{{ n.created_at|date:"j M Y, H:i" }}</time>
+                </p>
+                <div class="mt-1.5 whitespace-pre-wrap break-words">{{ n.body }}</div>
+              </aside>
+            </li>
+          {% endwith %}
+        {% endif %}
+      {% endfor %}
+    </ol>
+
+    {# Composer #}
+    <section class="card mt-4 p-4" aria-label="Respond" data-composer data-mode="{{ mode }}">
+      <div class="mb-3 flex gap-1" role="tablist" aria-label="Response type">
+        <button type="button" role="tab" class="tab" id="composer-tab-reply" aria-controls="composer-reply" aria-selected="{% if mode == 'reply' %}true{% else %}false{% endif %}" data-composer-tab="reply" aria-keyshortcuts="R">{% icon "reply" "inline h-4 w-4" %} Reply</button>
+        <button type="button" role="tab" class="tab" id="composer-tab-note" aria-controls="composer-note" aria-selected="{% if mode == 'note' %}true{% else %}false{% endif %}" data-composer-tab="note" aria-keyshortcuts="N">{% icon "note" "inline h-4 w-4" %} Internal note</button>
+      </div>
+
+      <div id="composer-reply" role="tabpanel" aria-labelledby="composer-tab-reply" {% if mode != "reply" %}hidden{% endif %}>
+        {% if is_automated %}
+          <p class="rounded-md bg-slate-100 p-3 text-sm dark:bg-slate-800">This sender is automated (an auto-reply, bounce or spam). Replies are turned off to avoid mail loops.</p>
+        {% else %}
+          <form method="post" action="{% url 'enquiries:reply' enquiry.ref %}" enctype="multipart/form-data"
+                hx-post="{% url 'enquiries:reply' enquiry.ref %}" hx-encoding="multipart/form-data" hx-target="#enquiry-thread" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]">
+            {% csrf_token %}
+            <dl class="mb-3 grid grid-cols-[3.5rem_1fr] gap-y-1 text-sm">
+              <dt class="muted">From</dt><dd>Vitalos Support &lt;{{ support_mailbox }}&gt;</dd>
+              <dt class="muted">To</dt><dd>{{ enquiry.from_email }}</dd>
+            </dl>
+            {% if reply_form.non_field_errors %}<div class="mb-3 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in reply_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+            {% if canned %}
+              <label for="canned-{{ enquiry.pk }}" class="field-label">Insert a canned response</label>
+              <select id="canned-{{ enquiry.pk }}" class="mb-3 block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800" data-canned-select>
+                <option value="">Choose…</option>
+                {% for item in canned %}<option value="{{ item.pk }}" data-body="{{ item.body_text }}">{{ item.title }}</option>{% endfor %}
+              </select>
+            {% endif %}
+            <label for="{{ reply_form.body_text.id_for_label }}" class="field-label">Reply</label>
+            {{ reply_form.body_text }}
+            {% for error in reply_form.body_text.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            <p class="field-help">Your signature is added automatically. Edit it in Settings → Email.</p>
+            <label for="{{ reply_form.files.id_for_label }}" class="field-label mt-3">Attachments</label>
+            {{ reply_form.files }}
+            {% for error in reply_form.files.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            {% if email_transport == "log" %}<p class="field-help">Outbound email is in log mode: replies are recorded here but not sent.</p>{% endif %}
+            <div class="mt-4 flex flex-wrap justify-end gap-2">
+              <button type="submit" name="resolve" value="1" class="btn btn-secondary">Send and resolve</button>
+              <button type="submit" class="btn btn-primary">{% icon "reply" "h-4 w-4" %} Send reply</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+
+      <div id="composer-note" role="tabpanel" aria-labelledby="composer-tab-note" {% if mode != "note" %}hidden{% endif %}>
+        <form method="post" action="{% url 'enquiries:note' enquiry.ref %}" hx-post="{% url 'enquiries:note' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML">
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=note_form %}
+          <div class="mt-4 flex justify-end"><button type="submit" class="btn btn-primary">{% icon "note" "h-4 w-4" %} Add note</button></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  {# Details panel #}
+  <aside class="border-t border-slate-200 bg-white p-4 text-sm xl:border-t-0 xl:border-l dark:border-slate-800 dark:bg-slate-900" aria-label="Details">
+    <h3 class="mono-label muted">Details</h3>
+    <dl class="mt-3 space-y-4">
+      <div>
+        <dt><label for="status-{{ enquiry.pk }}" class="field-label">Status</label></dt>
+        <dd><form method="post" action="{% url 'enquiries:status' enquiry.ref %}" hx-post="{% url 'enquiries:status' enquiry.ref %}" hx-trigger="change" hx-target="#enquiry-thread" hx-swap="innerHTML">{% csrf_token %}
+          <select id="status-{{ enquiry.pk }}" name="status" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800">{% for value, label in statuses %}<option value="{{ value }}" {% if value == enquiry.status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+          <noscript><button class="btn btn-secondary btn-sm mt-1">Save</button></noscript></form></dd>
+      </div>
+      <div>
+        <dt><label for="priority-{{ enquiry.pk }}" class="field-label">Priority</label></dt>
+        <dd><form method="post" action="{% url 'enquiries:priority' enquiry.ref %}" hx-post="{% url 'enquiries:priority' enquiry.ref %}" hx-trigger="change" hx-target="#enquiry-thread" hx-swap="innerHTML">{% csrf_token %}
+          <select id="priority-{{ enquiry.pk }}" name="priority" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800">{% for value, label in priorities %}<option value="{{ value }}" {% if value == enquiry.priority %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+          <noscript><button class="btn btn-secondary btn-sm mt-1">Save</button></noscript></form></dd>
+      </div>
+      <div>
+        <dt><label for="assignee-{{ enquiry.pk }}" class="field-label">Assignee</label></dt>
+        <dd><form method="post" action="{% url 'enquiries:assign' enquiry.ref %}" hx-post="{% url 'enquiries:assign' enquiry.ref %}" hx-trigger="change" hx-target="#enquiry-thread" hx-swap="innerHTML">{% csrf_token %}
+          <select id="assignee-{{ enquiry.pk }}" name="assignee" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800">
+            <option value="" {% if not enquiry.assignee_id %}selected{% endif %}>Unassigned</option>
+            {% for person in assignees %}<option value="{{ person.pk }}" {% if person.pk == enquiry.assignee_id %}selected{% endif %}>{{ person.email }}</option>{% endfor %}
+          </select>
+          <noscript><button class="btn btn-secondary btn-sm mt-1">Save</button></noscript></form></dd>
+      </div>
+      <div>
+        <dt><label for="tags-{{ enquiry.pk }}" class="field-label">Tags</label></dt>
+        <dd><form method="post" action="{% url 'enquiries:tags' enquiry.ref %}" hx-post="{% url 'enquiries:tags' enquiry.ref %}" hx-target="#enquiry-thread" hx-swap="innerHTML" class="flex gap-1">{% csrf_token %}
+          <input id="tags-{{ enquiry.pk }}" name="tags" value="{{ tag_text }}" placeholder="e.g. proposal, ai" aria-describedby="tags-help-{{ enquiry.pk }}" class="block w-full min-w-0 rounded-md border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-800">
+          <button class="btn btn-secondary btn-sm">Save</button></form>
+          <p id="tags-help-{{ enquiry.pk }}" class="field-help">Separate with commas.</p></dd>
+      </div>
+      <div><dt class="muted text-xs">Received</dt><dd class="mt-0.5">{{ enquiry.created_at|date:"j M Y, H:i" }}</dd></div>
+      <div><dt class="muted text-xs">First response</dt><dd class="mt-0.5 tabular">{% if first_response %}{{ first_response|duration }}{% else %}Not yet{% endif %}</dd></div>
+      <div>
+        <dt class="muted text-xs">First-response target</dt>
+        <dd class="mt-0.5" data-testid="sla">
+          {% if sla_state == "overdue" %}<span class="inline-flex items-center gap-1 font-medium text-rose-700 dark:text-rose-300">{% icon "alert" "h-4 w-4" %} {{ sla_label }}</span>
+          {% elif sla_state == "due_soon" %}<span class="inline-flex items-center gap-1 font-medium text-amber-800 dark:text-amber-300">{% icon "clock" "h-4 w-4" %} {{ sla_label }}</span>
+          {% elif sla_state == "ok" %}<span class="inline-flex items-center gap-1">{% icon "clock" "h-4 w-4" %} {{ sla_label }}</span>
+          {% elif sla_state == "met" %}<span class="inline-flex items-center gap-1 text-mineral-700 dark:text-mineral-300">{% icon "check" "h-4 w-4" %} Met</span>
+          {% else %}<span class="muted">No target</span>{% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt class="muted text-xs">Earlier enquiries from this sender</dt>
+        <dd class="mt-1">
+          {% for item in previous %}<a href="{{ item.get_absolute_url }}" class="block truncate hover:underline"><span class="font-mono text-xs">{{ item.ref }}</span> {{ item.subject|default:"(no subject)" }}</a>
+          {% empty %}<span class="muted">None</span>{% endfor %}
+        </dd>
+      </div>
+    </dl>
+  </aside>
+</div>

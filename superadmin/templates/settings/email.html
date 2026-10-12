@@ -1,0 +1,57 @@
+{% extends "settings/_shell.html" %}
+{% load ui %}
+{% block settings_panel %}
+  <div class="grid gap-6 lg:grid-cols-2">
+    <section class="card p-5" aria-labelledby="inbound-heading">
+      <h2 id="inbound-heading" class="font-semibold">Inbound mail</h2>
+      <dl class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Mailbox</dt><dd>{{ support_mailbox }}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Provider</dt><dd>{% if inbound_provider == "resend" %}Resend Inbound (fallback){% elif inbound_provider == "graph" %}Microsoft Graph (not implemented){% else %}Cloudflare Email Worker{% endif %}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Webhook secret</dt><dd>{% if webhook_configured %}<span class="inline-flex items-center gap-1">{% icon "check" "h-4 w-4" %} Set</span>{% else %}<span class="inline-flex items-center gap-1">{% icon "alert" "h-4 w-4" %} Not set: inbound mail is refused</span>{% endif %}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Endpoint</dt><dd class="font-mono text-xs break-all">{{ inbound_url }}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Last message received</dt><dd>{{ inbox.last_inbound_at|date:"j M Y, H:i"|default:"None yet" }}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Last inbound error</dt><dd class="text-right">{% if inbox.last_inbound_error %}{{ inbox.last_inbound_error }} <span class="muted">({{ inbox.last_inbound_error_at|date:"j M, H:i" }})</span>{% else %}None{% endif %}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Attachments</dt><dd class="text-right">{% if storage_enabled %}Stored{% else %}Not stored: object storage is not configured{% endif %}</dd></div>
+      </dl>
+    </section>
+    <section class="card p-5" aria-labelledby="outbound-heading">
+      <h2 id="outbound-heading" class="font-semibold">Outbound mail</h2>
+      <dl class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Transport</dt><dd>{% if email_transport == "resend" %}Resend{% else %}Log only: nothing is sent{% endif %}</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Replies from</dt><dd>Vitalos Support &lt;{{ support_mailbox }}&gt;</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Notifications from</dt><dd>Vitalos Admin &lt;{{ notify_from }}&gt;</dd></div>
+        <div class="flex justify-between gap-4 py-2"><dt class="muted">Sending domain</dt><dd>{{ inbox.domain_status|default:"Not checked" }}{% if inbox.domain_checked_at %} <span class="muted">({{ inbox.domain_checked_at|date:"j M, H:i" }})</span>{% endif %}</dd></div>
+      </dl>
+      <p class="muted mt-3 text-xs">Switching to Resend, DNS records and the Worker are set up by the owner. See docs/email-setup.md.</p>
+    </section>
+  </div>
+
+  <section class="card mt-6 p-5" aria-labelledby="inbox-settings-heading">
+    <h2 id="inbox-settings-heading" class="font-semibold">Signature, target and retention</h2>
+    <form method="post" class="mt-4 max-w-2xl">
+      {% csrf_token %}<input type="hidden" name="action" value="settings">
+      {% include "partials/form_fields.html" %}
+      <p class="field-help mt-2">Retention runs as a proposal only until RETENTION_ENFORCE is switched on.</p>
+      <button type="submit" class="btn btn-primary mt-4">Save settings</button>
+    </form>
+  </section>
+
+  <section class="card mt-6 p-5" aria-labelledby="canned-heading">
+    <h2 id="canned-heading" class="font-semibold">Canned responses</h2>
+    {% if canned %}
+      <ul class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+        {% for item in canned %}
+          <li class="flex items-start gap-3 py-2">
+            <div class="min-w-0 flex-1"><p class="font-medium">{{ item.title }}</p><p class="muted line-clamp-2">{{ item.body_text }}</p></div>
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_canned"><input type="hidden" name="pk" value="{{ item.pk }}"><button class="btn btn-danger btn-sm" aria-label="Delete {{ item.title }}">Delete</button></form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}<p class="muted mt-2 text-sm">None yet.</p>{% endif %}
+    <form method="post" class="mt-4 max-w-2xl">
+      {% csrf_token %}<input type="hidden" name="action" value="canned">
+      {% include "partials/form_fields.html" with form=canned_form %}
+      <button type="submit" class="btn btn-secondary mt-4">Add canned response</button>
+    </form>
+  </section>
+{% endblock %}

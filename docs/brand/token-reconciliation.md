@@ -18,7 +18,9 @@ The Stage 1 baseline disagreed with Stage 9 section 4. The code now carries the 
 
 Unchanged and already correct: midnight-950 `#081A2A`, cloud-50 `#F7F9FC`, white `#FFFFFF`.
 
-## Open: Vitalos Blue `#2457FF` versus Cobalt `#2F6BFF` (owner decision)
+## Decided: Vitalos Blue `#2457FF` versus Cobalt `#2F6BFF` (12 Oct 2026)
+
+**Decision (owner, 12 Oct 2026, delegated "go with the best"):** keep `#2457FF` as the website's action and link blue. It is, to within one step, the Cobalt-600 role in the brief's palette (`#2458E6`, "buttons and text on light"), and it clears WCAG AA with margin, where Cobalt `#2F6BFF` sits at the 4.5:1 boundary. Cobalt `#2F6BFF` is used only as a non-text fill and accent (for example the Super Admin's active-item bar and unread dot), and Cobalt-300 `#7FA3FF` is the blue for text on Midnight. The website keeps Midnight `#081A2A`; the Super Admin uses the brief's Midnight `#0B1320` (ADR-029). No website token or component changes. The analysis that led here is kept below.
 
 - The strategy source locks Vitalos Blue as `#2457FF`; the approved Figma board (`docs/brand/asset-approval.md`) labels its primary Cobalt `#2F6BFF`. The plan and the specification keep `#2457FF` as authoritative until the Figma styles are reconciled, so `blue600` is `#2457FF` in code, with a comment pointing here.
 - Measured effect of the choice (WCAG contrast):
@@ -62,9 +64,11 @@ The eyebrow is now Vitalos Blue on light surfaces (5.4:1 on white, 5.1:1 on clou
 
 The comp uses Manrope and PR #31 used Inter. Neither is adopted: the site keeps the provisional Geist set above and no font dependency was added. Choosing Geist, Inter, Manrope or another family remains an owner decision; it is a token and loader change only.
 
-## Open: logo and favicon
+## Logo and favicon
 
-Figma exports for the wordmark and symbol are not yet available. `Wordmark` is a typed slot (`logo?: { src, width, height, alt? }`) and renders the text `VITALOS` until the approved SVG is supplied. Favicon, app icons, Open Graph images and the Organization logo remain typed slots in the application layer and are not invented here. The descriptor shown in a logo lockup versus the website descriptor is tracked in `docs/delivery/stage-1-plan.md` and `docs/brand/asset-approval.md`.
+**Source files (12 Oct 2026):** the owner-supplied PNG exports are kept in `docs/brand/assets/`: `vitalos-wordmark.png` (Midnight type, for light grounds), `vitalos-wordmark-reversed.png` (white type, for dark grounds), `vitalos-wordmark-black.png` (mono), `vitalos-wordmark-on-midnight.png`, `vitalos-symbol.png` (colour V), `vitalos-symbol-outline.png`, `vitalos-lockup-stacked.png` and `vitalos-app-icons.png` (Midnight, Cobalt and white app tiles). The Super Admin uses trimmed and resized copies of the reversed wordmark, the symbol and the Midnight app tile (`superadmin/static/brand/`). Vector (SVG) masters are still to come; use these PNGs, never redraw or recolour them.
+
+The website still renders its wordmark from text: `Wordmark` is a typed slot (`logo?: { src, width, height, alt? }`) and renders the text `VITALOS` until the approved SVG is supplied. Favicon, app icons, Open Graph images and the Organization logo remain typed slots in the application layer and are not invented here. The descriptor shown in a logo lockup versus the website descriptor is tracked in `docs/delivery/stage-1-plan.md` and `docs/brand/asset-approval.md`.
 
 ## Contrast notes used by components
 

@@ -37,9 +37,12 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "apps.core",
+    "apps.audit",
+    "apps.mailer",
     "apps.accounts",
     "apps.notifications",
     "apps.architecture",
+    "apps.enquiries",
     "apps.api",
 ]
 
@@ -126,8 +129,48 @@ AXES_SENSITIVE_PARAMETERS = ["password"]
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
 # django-otp: TOTP is mandatory for SuperAdmin and for anyone who enrolled a device.
+# REQUIRE_MFA_FOR_SUPER_ADMIN is accepted as an alias for OTP_REQUIRED_FOR_SUPERADMIN.
 OTP_TOTP_ISSUER = "Vitalos Super Admin"
-OTP_REQUIRED_FOR_SUPERADMIN = env.bool("OTP_REQUIRED_FOR_SUPERADMIN", default=True)
+OTP_REQUIRED_FOR_SUPERADMIN = env.bool(
+    "OTP_REQUIRED_FOR_SUPERADMIN", default=env.bool("REQUIRE_MFA_FOR_SUPER_ADMIN", default=True)
+)
+
+# Primary owner and sign-in. The owner is created by `manage.py create_owner` with no password.
+APP_BASE_URL = env("APP_BASE_URL", default="http://localhost:8000").rstrip("/")
+PRIMARY_OWNER_EMAIL = env("PRIMARY_OWNER_EMAIL", default="").strip().lower()
+# Pre-fills the sign-in email when set. Empty by default: pre-filling a public page reveals the login.
+DEFAULT_SIGNIN_EMAIL = env("DEFAULT_SIGNIN_EMAIL", default="").strip().lower()
+
+# Outbound email. EMAIL_TRANSPORT=log (default) never sends; resend is switched on by a human only.
+EMAIL_TRANSPORT = env("EMAIL_TRANSPORT", default="log")
+EMAIL_BACKEND = {
+    "log": "apps.mailer.backends.LogEmailBackend",
+    "resend": "apps.mailer.backends.ResendEmailBackend",
+}.get(EMAIL_TRANSPORT, "apps.mailer.backends.LogEmailBackend")
+RESEND_API_KEY = env("RESEND_API_KEY", default="")
+RESEND_API_URL = "https://api.resend.com/emails"
+NOTIFY_FROM = env("NOTIFY_FROM", default="notifications@vitalos.co.uk")
+NOTIFY_FROM_HEADER = f"Vitalos Admin <{NOTIFY_FROM}>"
+DEFAULT_FROM_EMAIL = NOTIFY_FROM_HEADER
+SERVER_EMAIL = NOTIFY_FROM_HEADER
+SUPPORT_MAILBOX = env("SUPPORT_MAILBOX", default="support@vitalos.co.uk")
+SUPPORT_FROM_HEADER = f"Vitalos Support <{SUPPORT_MAILBOX}>"
+NOTIFY_OWNER_EMAIL = env("NOTIFY_OWNER_EMAIL", default=PRIMARY_OWNER_EMAIL or "admin@vitalos.co.uk")
+# Enquiries inbox. Inbound mail arrives from a Cloudflare Email Worker (or Resend Inbound) as signed
+# webhooks; an empty secret makes the endpoint refuse everything (fail closed).
+INBOUND_PROVIDER = env("INBOUND_PROVIDER", default="cloudflare")
+INBOUND_WEBHOOK_SECRET = env("INBOUND_WEBHOOK_SECRET", default="")
+RESEND_WEBHOOK_SECRET = env("RESEND_WEBHOOK_SECRET", default="")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="")
+SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL", default="")
+# Retention runs as a dry run (proposal only) until a human sets RETENTION_ENFORCE=true.
+RETENTION_ENFORCE = env.bool("RETENTION_ENFORCE", default=False)
+# Resend free tier: 100 emails a day. Notification emails roll into the digest before the limit.
+RESEND_DAILY_LIMIT = env.int("RESEND_DAILY_LIMIT", default=100)
+# Forgot-password emails only make sense when mail can actually be delivered (or locally).
+PASSWORD_RESET_ENABLED = env.bool(
+    "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"
+)
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Europe/London"
@@ -141,6 +184,37 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+# Enquiry attachments: S3-compatible object storage (Cloudflare R2) when a bucket is configured,
+# local disk otherwise. Without a bucket, bytes are kept only in development (attachments.py).
+OBJECT_STORAGE_ENDPOINT = env("OBJECT_STORAGE_ENDPOINT", default="")
+OBJECT_STORAGE_BUCKET = env("OBJECT_STORAGE_BUCKET", default="")
+OBJECT_STORAGE_ACCESS_KEY_ID = env("OBJECT_STORAGE_ACCESS_KEY_ID", default="")
+OBJECT_STORAGE_SECRET_ACCESS_KEY = env("OBJECT_STORAGE_SECRET_ACCESS_KEY", default="")
+OBJECT_STORAGE_REGION = env("OBJECT_STORAGE_REGION", default="auto")
+if OBJECT_STORAGE_BUCKET:
+    ATTACHMENTS_STORAGE = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": OBJECT_STORAGE_BUCKET,
+            "endpoint_url": OBJECT_STORAGE_ENDPOINT or None,
+            "access_key": OBJECT_STORAGE_ACCESS_KEY_ID,
+            "secret_key": OBJECT_STORAGE_SECRET_ACCESS_KEY,
+            "region_name": OBJECT_STORAGE_REGION,
+            "signature_version": "s3v4",
+            "querystring_auth": True,
+            "querystring_expire": 300,
+            "default_acl": None,
+            "file_overwrite": False,
+        },
+    }
+else:
+    ATTACHMENTS_STORAGE = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": BASE_DIR / "media" / "attachments"},
+    }
+STORAGES["attachments"] = ATTACHMENTS_STORAGE
+ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET) or APP_ENVIRONMENT == "development"
+
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 CSV_IMPORT_MAX_BYTES = 2 * 1024 * 1024
@@ -161,6 +235,8 @@ CONTENT_SECURITY_POLICY = {
         "font-src": [SELF],
         "connect-src": [SELF],
         "manifest-src": [SELF],
+        # Enquiry message bodies render in a sandboxed same-origin iframe with their own CSP.
+        "frame-src": [SELF],
         "form-action": [SELF],
         "frame-ancestors": [NONE],
         "base-uri": [NONE],
@@ -185,7 +261,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Vitalos Super Admin API",
     "DESCRIPTION": "Read-only API over the Vitalos company architecture. "
-    "Authenticate with `Authorization: Bearer <token>` using a token from Settings → API tokens.",
+    "Authenticate with `Authorization: Bearer <token>` using a token from Settings â†’ API tokens.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["apps.api.permissions.HasAnyRole"],

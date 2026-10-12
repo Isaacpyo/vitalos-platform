@@ -33,6 +33,15 @@ The real deploy is the "What Temitope does once" checklist below.
 - **No approval pause:** required reviewers aren't available on this private repository's plan, so step 6 below relies on the public-image check instead.
 - **Database:** Supabase project `vitalos-superadmin` (ref `uhvcjsnuxdthjfainvmm`), London, PostgreSQL 17.11. The Data API was disabled at creation, the lock-down SQL (§2.3) was applied, and `backup_reader` (§6.1) was created and verified.
 
+## Email and enquiries (owner steps)
+
+The deploy works without any mail settings: `EMAIL_TRANSPORT` defaults to `log`, so nothing is sent. To receive support@ mail in the Enquiries tab and send sign-in, set-password and notification mail, follow [email-setup.md](email-setup.md). In short, and each step needs your approval:
+
+1. Deploy the Cloudflare Email Worker (`infra/cloudflare-email-worker`) and bind it to the support@ route, and add routes for admin@ and notifications@.
+2. Verify a Resend sending domain, add the DKIM, SPF and return-path records, and create a restricted API key and a webhook to `https://admin.vitalos.co.uk/api/webhooks/resend`.
+3. Add the secrets (`RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `INBOUND_WEBHOOK_SECRET`, and optionally `TURNSTILE_SECRET_KEY`, the `OBJECT_STORAGE_*` keys and `SLACK_WEBHOOK_URL`) and variables (`PRIMARY_OWNER_EMAIL`, `EMAIL_TRANSPORT`, `INBOUND_PROVIDER`, `NOTIFY_OWNER_EMAIL`, `OBJECT_STORAGE_ENDPOINT`, `OBJECT_STORAGE_BUCKET`, `OBJECT_STORAGE_REGION`, `RETENTION_ENFORCE`) to the `Production` environment, then run the deploy. The workflow passes through only those that are set and never overwrites a stored secret with an empty value.
+4. Schedule `send_enquiry_notifications` every 5 minutes as a Container Apps job, then run `issue_setup_link --email admin@vitalos.co.uk` to give the primary owner a first password (a one-time link, 30 minutes, printed to the terminal only).
+
 ## What Temitope does once
 
 1. **Database (§2.3).** **Supabase** is the default; Neon works the same way.
