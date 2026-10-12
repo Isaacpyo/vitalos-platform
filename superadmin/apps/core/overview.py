@@ -8,12 +8,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from statistics import median
 
-from django.conf import settings
 from django.db.models import F
 from django.utils import timezone
 
 from apps.enquiries import sla
-from apps.enquiries.models import Enquiry, InboxSettings
+from apps.enquiries.models import Enquiry
 from apps.enquiries.selectors import OPEN_STATUSES
 
 WEEK = timedelta(days=7)
@@ -191,17 +190,3 @@ def needs_attention(now: datetime | None = None, limit: int = ATTENTION_LIMIT) -
     rank = {"overdue": 0, "due_soon": 1, "unassigned": 2}
     items.sort(key=lambda item: rank[item["state"]])
     return items[:limit]
-
-
-def system_status() -> dict:
-    inbox = InboxSettings.load()
-    transport = getattr(settings, "EMAIL_TRANSPORT", "log")
-    return {
-        "last_inbound_at": inbox.last_inbound_at,
-        "last_inbound_error": inbox.last_inbound_error,
-        "last_inbound_error_at": inbox.last_inbound_error_at,
-        "outbound": "Resend" if transport == "resend" else "Log only (not sending)",
-        "sending": transport == "resend",
-        "domain_status": inbox.domain_status or "Not checked",
-        "environment": getattr(settings, "APP_ENVIRONMENT", "development"),
-    }

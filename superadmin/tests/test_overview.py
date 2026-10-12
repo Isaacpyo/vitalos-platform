@@ -160,17 +160,6 @@ def test_needs_attention_selection(superadmin):
 
 
 @pytest.mark.django_db
-def test_system_status_defaults(settings):
-    settings.EMAIL_TRANSPORT = "log"
-    status = overview.system_status()
-    assert status["outbound"] == "Log only (not sending)"
-    assert status["domain_status"] == "Not checked"
-    assert status["last_inbound_at"] is None
-    settings.EMAIL_TRANSPORT = "resend"
-    assert overview.system_status()["outbound"] == "Resend"
-
-
-@pytest.mark.django_db
 def test_overview_renders_for_superadmin(client_for, superadmin, seeded):
     make_enquiry(subject="Overdue thing", sla_due_at=timezone.now() - timedelta(hours=2), assignee=superadmin)
     inbox = InboxSettings.load()
@@ -183,11 +172,10 @@ def test_overview_renders_for_superadmin(client_for, superadmin, seeded):
     for label in ("Open enquiries", "Median first response (7 days)", "New this week", "Unassigned"):
         assert label in html
     assert "No responses yet" in html
-    assert "Overdue thing" in html
-    assert "VIT-" in html
-    assert "No mail received yet" in html
-    assert "Worker timed out" in html
-    assert "Log only (not sending)" in html
+    # Needs attention and system status moved to Notifications and the footer / System health page.
+    assert "Overdue thing" not in html and "Worker timed out" not in html
+    assert 'data-testid="attention-link"' in html and "1 enquiry needs attention" in html
+    assert 'data-testid="health-footer"' in html
 
 
 @pytest.mark.django_db
@@ -199,4 +187,5 @@ def test_overview_hides_enquiry_kpis_for_viewer(client_for, viewer, seeded):
     assert "Open enquiries" not in html
     assert "Needs attention" not in html
     assert "Private matter" not in html
-    assert "System status" in html
+    assert 'data-testid="attention-link"' not in html
+    assert 'data-testid="health-footer"' in html

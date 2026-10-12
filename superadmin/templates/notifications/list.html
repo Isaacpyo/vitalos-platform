@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% load ui humanize %}
 {% block title %}Notifications · Vitalos Super Admin{% endblock %}
+{% block breadcrumb_title %}Notifications{% endblock %}
 {% block content %}
   <div class="flex flex-wrap items-end justify-between gap-4">
     <h1 class="text-2xl font-semibold">Notifications</h1>
     <form method="post" action="{% url 'notifications:read_all' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">{% icon "check" "h-4 w-4" %} Mark all as read</button></form>
   </div>
+  {% include "notifications/_tabs.html" %}
   <ul class="card mt-6 divide-y divide-slate-100 dark:divide-slate-800" data-testid="notification-list">
     {% for notification in notifications %}
       <li class="{% if not notification.is_read %}bg-cobalt-600/5 dark:bg-cobalt/10{% endif %}">

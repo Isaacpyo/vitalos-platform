@@ -5,7 +5,7 @@ from django.views.decorators.http import require_GET
 
 from apps.accounts.roles import role_required
 
-from . import palette
+from . import health, palette
 
 
 def permission_denied(request, exception=None):
@@ -36,3 +36,17 @@ def palette_results(request):
 @require_GET
 def help_page(request):
     return render(request, "core/help.html")
+
+
+@role_required()
+@require_GET
+def health_page(request):
+    results = health.checks()
+    return render(request, "core/health.html", {"checks": results, "overall": health.overall(results)})
+
+
+@role_required()
+@require_GET
+def health_footer(request):
+    """Loaded after each page renders, so health checks never slow a page down."""
+    return render(request, "partials/health_footer.html", {"overall": health.overall(health.checks())})

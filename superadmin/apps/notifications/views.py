@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -10,11 +11,35 @@ from . import services
 from .models import Notification
 
 
+def _attention_items(user):
+    """Enquiries needing attention, for users who may see enquiries; otherwise None (no tab)."""
+    from apps.core.overview import needs_attention
+    from apps.enquiries.selectors import can_access
+
+    return needs_attention() if can_access(user) else None
+
+
 @login_required
 @require_GET
 def notification_list(request):
     notifications = Notification.objects.filter(recipient=request.user)[:100]
-    return render(request, "notifications/list.html", {"notifications": notifications})
+    attention = _attention_items(request.user)
+    context = {
+        "notifications": notifications,
+        "tab": "all",
+        "attention_count": len(attention) if attention is not None else None,
+    }
+    return render(request, "notifications/list.html", context)
+
+
+@login_required
+@require_GET
+def attention(request):
+    items = _attention_items(request.user)
+    if items is None:
+        raise PermissionDenied
+    context = {"attention": items, "tab": "attention", "attention_count": len(items)}
+    return render(request, "notifications/attention.html", context)
 
 
 @login_required

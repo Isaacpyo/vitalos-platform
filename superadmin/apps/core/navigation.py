@@ -82,6 +82,7 @@ NAV_ITEMS = (
     NavItem(
         "architecture", "Architecture", "architecture:architecture", "network", "System", ("/architecture",)
     ),
+    NavItem("health", "System health", "core:health", "heart-pulse", "System", ("/system/health",)),
     NavItem("settings", "Settings", "accounts:settings", "settings", "System", ("/settings",)),
 )
 
