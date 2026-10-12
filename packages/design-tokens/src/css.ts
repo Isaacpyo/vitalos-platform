@@ -121,12 +121,6 @@ html {
   }
 }
 
-@keyframes hero-panel {
-  from {
-    translate: 0 0.75rem;
-  }
-}
-
 /* Hero headline settle (ADR-024): each word is visible from the first frame and only rises a
    little into place (no opacity, no clip), so the largest text paints at once and stays legible. */
 @keyframes hero-word {
@@ -135,10 +129,92 @@ html {
   }
 }
 
-/* Slow drift of the floating hero panel (ADR-024). Decorative, aria-hidden, behind motion-safe. */
-@keyframes hero-drift {
+/* Hero process card (owner decision 2026-10-12). Everything here is inside no-preference, so under
+   reduced motion (or if CSS animation fails) the card simply renders in its final state: ticks
+   drawn, last step blue, bars at full height. Transform, opacity and stroke-dashoffset only, so
+   nothing shifts layout. Delays come from --d, set per element in HeroVisual. Every animation is
+   finite (no infinite loops) so all motion ends within about 6s of load (WCAG 2.2.2). */
+@keyframes hv-card {
+  from {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+@keyframes hv-dot {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@keyframes hv-tick {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* Labels slide only: text is never drawn faint, so it is fully legible at every moment, with or
+   without JavaScript (tests/end-to-end/motion.nojs.spec.ts). The checks carry the sequence. */
+@keyframes hv-label {
+  from {
+    translate: -0.25rem 0;
+  }
+}
+
+@keyframes hv-ring {
+  from {
+    opacity: 0.55;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 2.1;
+  }
+}
+
+@keyframes hv-bar {
+  from {
+    scale: 1 0;
+  }
+}
+
+@keyframes hv-wave {
   50% {
-    translate: 0 -0.375rem;
+    scale: 1 0.78;
+  }
+}
+
+@keyframes hv-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hv-card {
+    animation: hv-card var(--duration-diagram) var(--ease-emphasis) 240ms both;
+  }
+  .hv-dot {
+    animation: hv-dot var(--duration-entrance) var(--ease-emphasis) var(--d) both;
+  }
+  .hv-tick {
+    animation: hv-tick var(--duration-entrance) var(--ease-standard) var(--d) both;
+  }
+  .hv-label {
+    animation: hv-label var(--duration-entrance) var(--ease-standard) var(--d) both;
+  }
+  .hv-ring {
+    animation: hv-ring var(--duration-diagram) var(--ease-standard) var(--d) both;
+  }
+  .hv-bar {
+    transform-origin: bottom;
+    animation:
+      hv-bar var(--duration-entrance) var(--ease-emphasis) var(--d) both,
+      hv-wave 2500ms ease-in-out calc(var(--d) + 600ms + var(--w)) 1;
+  }
+  .hv-flow {
+    animation: hv-flow 4s ease-out 240ms 1 both;
   }
 }
 

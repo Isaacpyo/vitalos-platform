@@ -15,13 +15,15 @@ import {
   practiceNames,
   priorityOfferNames,
   proposition,
+  propositionLong,
   solutionNames,
 } from "./locked-copy";
 
 describe("locked copy (verbatim from the specs)", () => {
   it("holds the descriptor, proposition and brand line", () => {
     expect(descriptor).toBe("Technology Consulting, Engineering & Digital Transformation");
-    expect(proposition).toBe(
+    expect(proposition).toBe("Modernise. Build. Adopt AI.");
+    expect(propositionLong).toBe(
       "We help ambitious organisations modernise operations, build digital products and adopt AI.",
     );
     expect(brandLine).toBe("From strategy to production.");

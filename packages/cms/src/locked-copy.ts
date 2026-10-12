@@ -8,11 +8,14 @@
  * Source abbreviations: "Stage N §M" refers to the Vitalos stage specification documents.
  */
 
-/** Category descriptor / hero eyebrow. Stage 0 §0 (Authoritative Vitalos context); Stage 8 §8 (Homepage hero); Stage 11 §9. */
+/** Category descriptor. No longer shown as the hero eyebrow (owner decision 2026-10-12); kept for non-visible metadata (the root meta description). Stage 0 §0; Stage 8 §8; Stage 11 §9. */
 export const descriptor = "Technology Consulting, Engineering & Digital Transformation";
 
-/** Commercial proposition; the homepage H1. Stage 0 §0; Stage 8 §8 (Homepage hero); Stage 11 §9 (H1). */
-export const proposition =
+/** Homepage H1. Owner-approved 2026-10-12; replaces the Stage 0 / Stage 8 §8 / Stage 11 §9 sentence (see propositionLong). */
+export const proposition = "Modernise. Build. Adopt AI.";
+
+/** The earlier long proposition sentence (Stage 0 §0; Stage 8 §8; Stage 11 §9). Not shown on the page; non-visible SEO text only (default meta description). */
+export const propositionLong =
   "We help ambitious organisations modernise operations, build digital products and adopt AI.";
 
 /** Brand line; supporting line beneath the H1, never the H1. Stage 0 §0; Stage 8 §8 (Homepage hero). */

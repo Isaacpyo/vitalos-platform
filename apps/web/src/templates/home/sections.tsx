@@ -4,7 +4,6 @@ import {
   aiJourneyStages,
   brandLine,
   ctas,
-  descriptor,
   howWeWorkStages,
   megaMenuColumns,
   navLabels,
@@ -22,7 +21,6 @@ import {
   CaseStudyRow,
   Container,
   Display,
-  Eyebrow,
   HeroVisual,
   LabAssetRow,
   LinkCard,
@@ -84,20 +82,17 @@ const heading = (context: HomeContext, key: HomeSectionKey) => context.home.head
  * accessible name) is the locked string.
  */
 function PropositionTitle() {
-  const split = proposition.lastIndexOf(" and ");
+  const split = proposition.lastIndexOf("Adopt ");
   const parts =
     split === -1
       ? [{ text: proposition }]
-      : [
-          { text: proposition.slice(0, split + 5) },
-          { text: proposition.slice(split + 5), accent: true },
-        ];
+      : [{ text: proposition.slice(0, split) }, { text: proposition.slice(split), accent: true }];
   // The words settle into place in under 400ms, drawn at full colour from the first paint (CSS).
   return <SettleText parts={parts} />;
 }
 
 /**
- * 1. Hero (the comp's split hero). Locked copy only: descriptor, proposition as the h1, brand
+ * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, brand
  * line and two actions on the left; the decorative hero visual on the right (below the copy on
  * compact screens), carrying the locked AI journey stage names and no figures.
  */
@@ -109,7 +104,6 @@ export function HeroSection(): ReactNode {
         className="grid items-center gap-x-(--space-7) gap-y-(--space-8) lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
       >
         <div className="min-w-0">
-          <Eyebrow className="mb-(--space-4)">{descriptor}</Eyebrow>
           <Display size="xl" as="h1" className="break-words">
             <PropositionTitle />
           </Display>

@@ -4,7 +4,7 @@
  * index headings are adapted from Stage 11 section titles or composed from the cited sections
  * (marked where they are defined). All are pending owner confirmation like everything else here.
  */
-import { brandName, ctas, homeSections, howWeWorkStages, proposition } from "../../locked-copy";
+import { brandName, ctas, homeSections, howWeWorkStages, propositionLong } from "../../locked-copy";
 import type { HomeSectionKey } from "../../locked-copy";
 import type {
   ContactPageView,
@@ -24,7 +24,7 @@ import type { DraftProvenance } from "../provenance";
  * number, registered address, contact and security email, social links and logo are not supplied.
  */
 export const settingsDraft: { view: SiteSettingsView; provenance: DraftProvenance } = {
-  view: { defaultSeo: { title: brandName, description: proposition } },
+  view: { defaultSeo: { title: brandName, description: propositionLong } },
   provenance: drafted(
     [cite(0, "0. AUTHORITATIVE VITALOS CONTEXT"), cite(7, "7. Messaging hierarchy")],
     "Legal name, company number, registered address, contact and security emails, social links and logo: the specs do not state them (Stage 6 §4.1 lists them as owner-supplied).",
