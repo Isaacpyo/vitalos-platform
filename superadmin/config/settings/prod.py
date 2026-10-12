@@ -3,7 +3,14 @@
 from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa: F403
-from .base import EMAIL_TRANSPORT, RESEND_API_KEY, SENTRY_DSN, env
+from .base import (
+    ATTACHMENTS_STORAGE,
+    EMAIL_TRANSPORT,
+    OBJECT_STORAGE_BUCKET,
+    RESEND_API_KEY,
+    SENTRY_DSN,
+    env,
+)
 
 DEBUG = False
 SECRET_KEY = env("DJANGO_SECRET_KEY")
@@ -42,7 +49,10 @@ TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=1)
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "attachments": ATTACHMENTS_STORAGE,
 }
+# Production keeps attachment bytes only in object storage; the container disk is not durable.
+ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET)
 
 if SENTRY_DSN:
     import sentry_sdk

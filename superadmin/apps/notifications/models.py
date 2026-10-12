@@ -8,6 +8,9 @@ class Notification(models.Model):
         ROLE_ASSIGNED = "role_assigned", "Role assigned"
         PROJECT_STATUS = "project_status", "Project status changed"
         KPI_BREACH = "kpi_breach", "KPI target breached"
+        ENQUIRY_NEW = "enquiry_new", "New enquiry"
+        ENQUIRY_ASSIGNED = "enquiry_assigned", "Enquiry assigned to you"
+        ENQUIRY_REPLY = "enquiry_reply", "Customer replied to an enquiry"
 
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

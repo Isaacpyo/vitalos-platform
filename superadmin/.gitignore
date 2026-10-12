@@ -16,3 +16,4 @@ bin/tailwindcss
 e2e/.artifacts/
 test.sqlite3
 bin/.tailwind-version
+media/

@@ -1,0 +1,24 @@
+From: Mail Delivery System <MAILER-DAEMON@mx.customer.example>
+To: support@vitalos.co.uk
+Subject: Undelivered Mail Returned to Sender
+Date: Mon, 12 Oct 2026 12:00:00 +0100
+Message-ID: <bounce-1@mx.customer.example>
+In-Reply-To: <plain-1@customer.example>
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status; boundary="rep"
+
+--rep
+Content-Type: text/plain; charset="utf-8"
+
+This is the mail system. Your message could not be delivered.
+
+--rep
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mx.customer.example
+Final-Recipient: rfc822; jane@customer.example
+Action: failed
+Status: 5.1.1
+
+--rep--
