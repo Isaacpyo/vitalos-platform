@@ -17,8 +17,7 @@ export interface SecurityHeaderOptions {
  *
  * Per-environment decisions live here; `@vitalos/security` only builds strings:
  * - Turnstile origins only when both Turnstile keys are configured.
- * - Sanity API connections (draft/preview, visual editing) only outside production.
- * - Sanity Studio may frame the site (Presentation) only outside production.
+ * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
  */
 export function getSecurityHeaders(
@@ -26,14 +25,10 @@ export function getSecurityHeaders(
   options: SecurityHeaderOptions = {},
 ): HeaderRules {
   const isDev = options.isDev ?? process.env.NODE_ENV === "development";
-  const nonProduction = env.deployEnv !== "production";
 
   const policy = {
     isDev,
     turnstile: env.turnstileEnabled,
-    ...(env.sanityProjectId ? { sanityProjectId: env.sanityProjectId } : {}),
-    sanityApiConnect: nonProduction,
-    frameAncestors: nonProduction && env.sanityStudioOrigin ? [env.sanityStudioOrigin] : [],
     upgradeInsecureRequests: env.deployEnv !== "local",
   };
 

@@ -31,21 +31,21 @@ const ldJson = "application/ld+json";
 describe("pages that render placeholder content", () => {
   it("shows the notice and emits no structured data on an article page", () => {
     const insight = documents.insight[0] as InsightView;
-    const markup = html(<ArticlePage data={{ insight, gates, draft: false }} />);
+    const markup = html(<ArticlePage data={{ insight, gates }} />);
     expect(markup).toContain(notice);
     expect(markup).not.toContain(ldJson);
   });
 
   it("shows the notice and emits no structured data on a persona page", () => {
     const person = documents.person[0] as PersonView;
-    const markup = html(<ProfilePage data={{ person, gates, draft: false }} />);
+    const markup = html(<ProfilePage data={{ person, gates }} />);
     expect(markup).toContain(notice);
     expect(markup).not.toContain(ldJson);
   });
 
   it("shows the notice and emits no structured data on the role page", () => {
     const job = documents.job[0] as JobView;
-    const markup = html(<JobPage data={{ job, gates, now, draft: false }} />);
+    const markup = html(<JobPage data={{ job, gates, now }} />);
     expect(markup).toContain(notice);
     expect(markup).not.toContain(ldJson);
     // No salary; the application link is the careers contact route.
@@ -55,7 +55,7 @@ describe("pages that render placeholder content", () => {
 
   it("shows the notice and no outcome, metric or testimonial on a case study page", () => {
     const study = documents.caseStudy[0] as CaseStudyView;
-    const markup = html(<CaseStudyPage data={{ study, gates, draft: false }} />);
+    const markup = html(<CaseStudyPage data={{ study, gates }} />);
     expect(markup).toContain(notice);
     expect(markup).not.toContain(ldJson);
     expect(markup).toContain("Illustrative scenario (placeholder)");
@@ -68,7 +68,7 @@ describe("pages that render placeholder content", () => {
     expect(
       html(
         <InsightsIndex
-          data={{ page: null, insights: [...(documents.insight as InsightView[])], draft: false }}
+          data={{ page: null, insights: [...(documents.insight as InsightView[])] }}
         />,
       ),
     ).toContain(notice);
@@ -78,34 +78,27 @@ describe("pages that render placeholder content", () => {
           data={{
             page: null,
             studies: [...(documents.caseStudy as CaseStudyView[])],
-            draft: false,
           }}
         />,
       ),
     ).toContain(notice);
     expect(
-      html(
-        <CareersIndex
-          data={{ page: null, jobs: [{ ...(documents.job[0] as JobView) }], draft: false }}
-        />,
-      ),
+      html(<CareersIndex data={{ page: null, jobs: [{ ...(documents.job[0] as JobView) }] }} />),
     ).toContain(notice);
-    expect(html(<LeadershipPage data={{ page: null, leaders, draft: false }} />)).toContain(notice);
-    expect(html(<AboutPage data={{ page: null, leaders, gates, draft: false }} />)).toContain(
-      notice,
-    );
+    expect(html(<LeadershipPage data={{ page: null, leaders }} />)).toContain(notice);
+    expect(html(<AboutPage data={{ page: null, leaders, gates }} />)).toContain(notice);
   });
 
   it("emits no breadcrumb structured data on placeholder pages", () => {
     const insight = documents.insight[0] as InsightView;
-    expect(html(<ArticlePage data={{ insight, gates, draft: false }} />)).not.toContain("ListItem");
+    expect(html(<ArticlePage data={{ insight, gates }} />)).not.toContain("ListItem");
   });
 });
 
 describe("pages that render real content", () => {
   it("show no placeholder notice and keep their structured data", () => {
     const insight = fullFixtureSet.documents.insight[0] as InsightView;
-    const markup = html(<ArticlePage data={{ insight, gates, draft: false }} />);
+    const markup = html(<ArticlePage data={{ insight, gates }} />);
     expect(markup).not.toContain(notice);
     expect(markup).toContain(ldJson);
   });

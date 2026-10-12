@@ -1,6 +1,6 @@
 # ADR 028 Repo-file content replaces Sanity for the public site
 
-Status: Accepted (owner decision, 11 October 2026). Supersedes ADR-005 in part: Sanity is no longer the editorial platform for the public site. Code removal follows in a separate change.
+Status: Accepted (owner decision, 11 October 2026). Supersedes ADR-005 in part: Sanity is no longer the editorial platform for the public site. Sanity removal completed on 12 October 2026 (see Status update).
 
 ## Context
 
@@ -29,3 +29,9 @@ Content changes need a deploy and a developer. Gains: no external editorial prov
 ## Revisit triggers
 
 A non-developer needs to edit content regularly; more than a handful of legal pages or articles exist; the removal change lands (then record it here).
+
+## Status update (12 October 2026): Sanity removal complete
+
+Sanity has been removed from the repository. Removed: `apps/studio`; from `@vitalos/cms` the Sanity adapter, GROQ queries, raw-to-view mappers, Studio schemas, structure, actions, presentation, generated types and the `./schemas`, `./structure`, `./actions`, `./queries` and `./presentation` exports; the draft-to-Sanity NDJSON export and `check-cms-types`; from `apps/web` the Sanity client, fetcher, cache tags, webhook, `/api/revalidate`, Draft Mode, the draft indicator and the Sanity image loader; the `sanity` content-source kind; all `SANITY_*` and `NEXT_PUBLIC_SANITY_*` variables; the Sanity and `cdn.sanity.io` CSP origins; and the dependencies `sanity`, `@sanity/client`, `groq`, `@sanity/image-url` and `next-sanity`.
+
+Consequences: content is static per deploy (pages and the sitemap are built at build time; nothing waits on a webhook); images are same-origin only (`apps/web/public`); `VITALOS_CONTENT_SOURCE` is `repo`, `draft`, `fixtures` or `empty`; redirects beyond the seed live in `apps/web/src/features/redirects/additional-redirects.ts`; the editing guide is `docs/cms/editing-site-content.md`. ADR-005, ADR-017 and ADR-018 are superseded by this ADR.

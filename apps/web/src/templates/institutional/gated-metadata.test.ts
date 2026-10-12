@@ -11,9 +11,7 @@ const state = vi.hoisted(() => ({ set: "sparse" as "full" | "sparse" }));
 
 vi.mock("../../lib/cms/get-content-source", () => ({
   getContentSource: async () => createFixtureContentSource(state.set),
-  getPublishedContentSource: async () => createFixtureContentSource(state.set),
 }));
-vi.mock("../../lib/cms/draft", () => ({ isDraftModeEnabled: async () => false }));
 vi.mock("../../features/seo/context", () => ({
   getSeoContext: () => ({ siteUrl: "https://example.invalid", indexable: true }),
 }));

@@ -78,7 +78,7 @@ describe("composeMetadata", () => {
 
   it("includes an Open Graph image only when approved and renderable", () => {
     const ogImage = {
-      url: "https://cdn.sanity.io/images/p/d/og.png",
+      url: "/images/og.png",
       alt: "Cover",
       width: 1200,
       height: 630,

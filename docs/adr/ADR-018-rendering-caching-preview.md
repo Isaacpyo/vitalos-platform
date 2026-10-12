@@ -1,6 +1,6 @@
 # ADR 018 Rendering, caching, preview and content-source selection
 
-Status: Accepted.
+Status: Superseded by [ADR-028](ADR-028-repo-file-content.md) (11 Oct 2026): content is static per deploy, so Sanity reads, tag caching, the webhook and Draft Mode are gone. Content-source selection (`VITALOS_CONTENT_SOURCE`) and the redirect and 410 handling continue. Original record below.
 
 ## Context
 

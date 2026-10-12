@@ -14,16 +14,15 @@ Details: [`docs/delivery/stage-status.md`](docs/delivery/stage-status.md) (what 
 
 ## What is in the repository
 
-- `apps/web`: server-first Next.js 16 site. All routes of the information architecture, an enquiry pipeline (Postgres record plus durable outbox, Turnstile, rate limiting), SEO, redirects, security headers and publication gates. Reads content through a `ContentSource` (`empty`, `fixtures` or `sanity`).
-- `apps/studio`: isolated Sanity Studio built from governed schemas in `@vitalos/cms`. Not deployed.
+- `apps/web`: server-first Next.js 16 site. All routes of the information architecture, an enquiry pipeline (Postgres record plus durable outbox, Turnstile, rate limiting), SEO, redirects, security headers and publication gates. Reads content through a `ContentSource` (`repo` in production; `draft`, `fixtures` and `empty` for development and tests).
 - `apps/storybook`: private component workbench (not deployed).
-- `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, queries, fixtures, schemas), `config` (validated environment), `validation`, `security`, `observability`, `testing`.
+- `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, view models, repo content, drafts, fixtures), `config` (validated environment), `validation`, `security`, `observability`, `testing`.
 - `supabase`: local PostgreSQL 17 configuration, three migrations and pgTAP tests.
 - `superadmin`: internal Django Super Admin for the Vitalos company architecture (`admin.vitalos.co.uk`); see `superadmin/README.md` and ADR-026.
 - `tests`, `tooling`: Playwright, axe, budget and integration suites; check and helper scripts.
 - `infra`, `services`, `workers`: policy placeholders only; nothing is provisioned or extracted.
 
-Without Sanity or Supabase configuration the site builds and runs on the empty content source with enquiries disabled: an honest empty state, not placeholder content.
+Without Supabase configuration the site builds and runs on the `repo` content with enquiries disabled. Site content is edited in the repository: see `docs/cms/editing-site-content.md`.
 
 ## Start
 
@@ -43,7 +42,7 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Decisions               | [`docs/adr/`](docs/adr/README.md) (ADR 001-022 indexed)                                                                                 |
 | Architecture            | `ARCHITECTURE.md`, `docs/architecture/` (containers, data ownership, dependency rules, enquiry sequence, environments, future services) |
-| Content and editorial   | `docs/cms/content-model.md`, `docs/cms/editorial-workflow.md`                                                                           |
+| Content and editorial   | `docs/cms/editing-site-content.md`                                                                                                      |
 | Delivery                | `docs/delivery/` (Stage 1 plan, launch gates, stage status, owner decisions)                                                            |
 | Operations and runbooks | `docs/operations/` (local development, deployment, observability), `docs/runbooks/` (cutover, rollback, enquiry delivery failure)       |
 | Security                | `SECURITY.md`, `docs/security/` (threat model, secret management)                                                                       |
@@ -51,7 +50,7 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 
 ## Sources of truth
 
-Code owns production behaviour and locked copy; Sanity owns routine editorial content; Supabase/PostgreSQL owns operational records; Figma owns approved visual composition; controlled evidence does not belong in the public CMS. Approved Stage 7-11 documents in the private Vitalos Drive govern brand, information architecture, experience, build and design handoff.
+Code owns production behaviour and locked copy; editorial content lives in the repo (`packages/cms/src/repo`, ADR-028); Supabase/PostgreSQL owns operational records; Figma owns approved visual composition; controlled evidence does not belong in the public site. Approved Stage 7-11 documents in the private Vitalos Drive govern brand, information architecture, experience, build and design handoff.
 
 ## Rules that matter
 

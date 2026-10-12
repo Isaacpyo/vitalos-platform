@@ -17,7 +17,7 @@ describe("DraftContentRibbon", () => {
     expect(html).not.toMatch(/#[0-9a-f]{3,8}\b|rgb\(/i);
   });
 
-  it.each(["sanity", "empty", "fixtures"] as const)("renders nothing for %s", (kind) => {
+  it.each(["repo", "empty", "fixtures"] as const)("renders nothing for %s", (kind) => {
     expect(renderToStaticMarkup(<DraftContentRibbon kind={kind} />)).toBe("");
   });
 });

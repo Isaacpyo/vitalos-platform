@@ -2,7 +2,7 @@
  * Placeholder insights (owner directive of 11 October 2026, ADR-025 status note): six articles on
  * the Stage 13 narrative pillars, attributed to the invented placeholder personas in `people.ts`.
  * Each is flagged `placeholder`, so it never emits structured data, is always `noindex` and stays
- * out of the default Sanity export. They claim no client experience, no results and no statistics.
+ * out of the repo content source. They claim no client experience, no results and no statistics.
  */
 import type { InsightView } from "../../content/types";
 import { seo } from "../build";

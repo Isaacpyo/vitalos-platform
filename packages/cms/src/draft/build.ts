@@ -19,7 +19,7 @@ export const h2 = (text: string): Node => ({ kind: "h2", text });
 export const h3 = (text: string): Node => ({ kind: "h3", text });
 /**
  * A paragraph with one internal link (same-site path from routes.ts), in the resolved form the
- * mappers produce. The Sanity export turns it back into an `internalLink` reference.
+ * content sources serve.
  */
 export const pLink = (before: string, text: string, href: string, after = ""): Node => ({
   kind: "link",

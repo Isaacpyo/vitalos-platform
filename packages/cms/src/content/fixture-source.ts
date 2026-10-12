@@ -3,13 +3,13 @@
  *
  * Fixtures are obviously artificial and are forbidden in production (`@vitalos/config` rejects
  * VITALOS_CONTENT_SOURCE=fixtures there). The source applies the same publication rules as the
- * Sanity source: closed gates keep their pages reachable but out of the sitemap, closed roles keep
+ * repo content source: closed gates keep their pages reachable but out of the sitemap, closed roles keep
  * their page but leave the index, and `noindex` documents stay out of the sitemap.
  */
 import { evaluateGates, gateForKind, isSitemapEligible } from "./gates";
 import type { PublicationGates } from "./gates";
 import { isJobOpenOn, isJobSitemapEligible, labTypeSitemapEntries } from "./sitemap-rules";
-import { clean, paramsFromSummaries } from "./mappers";
+import { clean, paramsFromSummaries } from "./helpers";
 import type { ContentSource, GetDocumentArgs, ReadOpts, SlugFor } from "./source";
 import { hrefForDocument } from "../routes";
 import type { DocumentRef, LabType, RoutePageKey } from "../routes";
@@ -47,7 +47,7 @@ export interface FixtureContentSourceOptions {
   /**
    * Count case studies flagged `placeholder` towards the Work gate even though their evidence is
    * not verified. Only the draft content source sets this (ADR-025); the fixtures, the sparse set
-   * and the Sanity source never do, so the production rule (verified evidence only) is unchanged.
+   * and the repo source never do, so the production rule (verified evidence only) is unchanged.
    */
   countPlaceholderCaseStudies?: boolean;
 }

@@ -10,10 +10,6 @@ const schema = z.object(publicEnvShape);
 
 export interface PublicEnv {
   siteUrl: string;
-  sanityProjectId: string | undefined;
-  sanityDataset: string;
-  sanityApiVersion: string;
-  sanityStudioUrl: string | undefined;
   turnstileSiteKey: string | undefined;
 }
 
@@ -22,10 +18,6 @@ export type PublicEnvSource = Readonly<Record<string, string | undefined>>;
 export function publicProcessEnv(): PublicEnvSource {
   return {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET,
-    NEXT_PUBLIC_SANITY_API_VERSION: process.env.NEXT_PUBLIC_SANITY_API_VERSION,
-    NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   };
 }
@@ -36,10 +28,6 @@ const blankToUndefined = (value: string | undefined) =>
 export function readPublicEnv(source: PublicEnvSource = publicProcessEnv()): PublicEnv {
   const parsed = schema.parse({
     NEXT_PUBLIC_SITE_URL: blankToUndefined(source.NEXT_PUBLIC_SITE_URL),
-    NEXT_PUBLIC_SANITY_PROJECT_ID: blankToUndefined(source.NEXT_PUBLIC_SANITY_PROJECT_ID),
-    NEXT_PUBLIC_SANITY_DATASET: blankToUndefined(source.NEXT_PUBLIC_SANITY_DATASET),
-    NEXT_PUBLIC_SANITY_API_VERSION: blankToUndefined(source.NEXT_PUBLIC_SANITY_API_VERSION),
-    NEXT_PUBLIC_SANITY_STUDIO_URL: blankToUndefined(source.NEXT_PUBLIC_SANITY_STUDIO_URL),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: blankToUndefined(source.NEXT_PUBLIC_TURNSTILE_SITE_KEY),
   });
   // next.config.ts injects the resolved site URL (localhost only for the local deploy env), so
@@ -51,10 +39,6 @@ export function readPublicEnv(source: PublicEnvSource = publicProcessEnv()): Pub
   }
   return {
     siteUrl: parsed.NEXT_PUBLIC_SITE_URL,
-    sanityProjectId: parsed.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    sanityDataset: parsed.NEXT_PUBLIC_SANITY_DATASET ?? "development",
-    sanityApiVersion: parsed.NEXT_PUBLIC_SANITY_API_VERSION ?? "2025-02-19",
-    sanityStudioUrl: parsed.NEXT_PUBLIC_SANITY_STUDIO_URL,
     turnstileSiteKey: parsed.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   };
 }

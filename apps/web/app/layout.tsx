@@ -3,7 +3,6 @@ import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { descriptor, brandName } from "@vitalos/cms";
 import { readPublicEnv } from "@vitalos/config/public";
-import { DraftIndicator } from "../src/components/draft-indicator";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,7 +26,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip-link" href="#main">
           Skip to main content
         </a>
-        <DraftIndicator />
         {children}
       </body>
     </html>

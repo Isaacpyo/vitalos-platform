@@ -3,7 +3,7 @@ import { richTextToPlainText } from "../cms/rich-text";
 
 /**
  * The How We Work page shows the delivery stages in the order the spec fixes (locked copy,
- * Stage 8 section 17). The description of each stage is authored in Sanity: in the route page
+ * Stage 8 section 17). The description of each stage is authored in the content files: in the route page
  * body, a heading (h2 to h4) whose text is the stage name starts a stage, and the blocks up to the
  * next stage heading are its description. Convention only: editors write the stage name as a
  * heading and describe it underneath; nothing is generated here.

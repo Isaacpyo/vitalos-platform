@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { routes } from "@vitalos/cms";
-import { isDraftModeEnabled } from "../../../../src/lib/cms/draft";
 import { pageMetadata } from "../../../../src/templates/institutional/metadata";
 import { LegalPage } from "../../../../src/templates/legal/LegalPage";
 import { listLegalParams, loadLegalPage } from "../../../../src/templates/legal/load";
@@ -26,5 +25,5 @@ export default async function LegalRoute({ params }: Readonly<{ params: Promise<
   // Unknown slug or unpublished page: 404.
   const page = await loadLegalPage(slug);
   if (!page) notFound();
-  return <LegalPage page={page} draft={await isDraftModeEnabled()} />;
+  return <LegalPage page={page} />;
 }

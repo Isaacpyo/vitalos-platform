@@ -32,11 +32,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SolutionPage({ params }: Props) {
   const { slug } = await params;
-  const { doc, gates, draft } = await loadDetailPage("solution", slug);
+  const { doc, gates } = await loadDetailPage("solution", slug);
   return (
     <>
       <JsonLd data={breadcrumbNode(solutionTrail(doc))} />
-      <SolutionTemplate solution={doc} gates={gates} draft={draft} />
+      <SolutionTemplate solution={doc} gates={gates} />
     </>
   );
 }

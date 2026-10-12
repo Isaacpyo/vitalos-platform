@@ -29,11 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function OfferPage({ params }: Props) {
   const { slug } = await params;
-  const { doc, draft } = await loadDetailPage("offer", slug);
+  const { doc } = await loadDetailPage("offer", slug);
   return (
     <>
       <JsonLd data={breadcrumbNode(offerTrail(doc))} />
-      <OfferTemplate offer={doc} draft={draft} />
+      <OfferTemplate offer={doc} />
     </>
   );
 }

@@ -41,11 +41,11 @@ test.describe("redirects (seed map, ADR-018)", () => {
 
 test.describe("retired paths answer 410 Gone (ADR-018)", () => {
   // The redirect map has no 410 rules until the owner approves some (plan section 6), so this
-  // reads whatever is approved and published to apps/web/src/features/redirects/generated.ts and
+  // reads whatever is approved in apps/web/src/features/redirects/additional-redirects.ts and
   // asserts each one end to end. The proxy mechanism itself is unit-tested in proxy.gone.test.ts
   // with a stubbed rule. With no rules the loop is empty and the assertions below still hold.
   const generated = readFileSync(
-    resolve(__dirname, "../../apps/web/src/features/redirects/generated.ts"),
+    resolve(__dirname, "../../apps/web/src/features/redirects/additional-redirects.ts"),
     "utf8",
   );
   const gone = [...generated.matchAll(/source:\s*"([^"]+)"[^}]*status:\s*410/g)].map(
@@ -180,7 +180,7 @@ test.describe("security headers (ADR-020)", () => {
       expect(directives.get("object-src")).toEqual(["'none'"]);
       expect(directives.get("base-uri")).toEqual(["'self'"]);
       expect(directives.get("form-action")).toEqual(["'self'"]);
-      // No Studio origin is configured here, so nothing may frame the site.
+      // Nothing may frame the site.
       expect(directives.get("frame-ancestors")).toEqual(["'none'"]);
       // Production build: React's dev tooling needs no eval.
       expect(directives.get("script-src") ?? []).not.toContain("'unsafe-eval'");
