@@ -1,0 +1,19 @@
+From: Hostile Sender <mallory@attacker.example>
+To: support@vitalos.co.uk
+Subject: Look at this
+Date: Mon, 12 Oct 2026 10:05:00 +0100
+Message-ID: <html-1@attacker.example>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="alt"
+
+--alt
+Content-Type: text/plain; charset="utf-8"
+
+Plain version of the message.
+
+--alt
+Content-Type: text/html; charset="utf-8"
+
+<html><body><p>Hello</p><script>alert('xss')</script><img src="x" onerror="alert(1)"><a href="javascript:alert(2)">Click</a><img src="https://tracker.example/pixel.gif"><p onclick="steal()">Body</p></body></html>
+
+--alt--
