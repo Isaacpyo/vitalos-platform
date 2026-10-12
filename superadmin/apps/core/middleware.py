@@ -10,6 +10,12 @@ from .logging import request_id_var
 
 access_logger = logging.getLogger("superadmin.access")
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
+# One-time set-password links carry a token in the path; never write it to the logs.
+_SECRET_PATH_RE = re.compile(r"^(/account/set-password/)[^/]+/[^/]+/?$")
+
+
+def loggable_path(path: str) -> str:
+    return _SECRET_PATH_RE.sub(r"\1[redacted]/", path)
 
 
 class HealthCheckMiddleware:
@@ -50,7 +56,7 @@ class RequestIDMiddleware:
                 "request",
                 extra={
                     "method": request.method,
-                    "path": request.path,
+                    "path": loggable_path(request.path),
                     "status": response.status_code,
                     "duration_ms": round((time.monotonic() - started) * 1000, 1),
                     "user_id": user.pk if user is not None and user.is_authenticated else None,

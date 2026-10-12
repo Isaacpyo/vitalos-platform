@@ -34,6 +34,7 @@ from .models import Attachment, CannedResponse, Enquiry, InboxSettings, Message,
 
 PAGE_SIZE = 50
 CHANGED = "vsa-enquiries-changed"
+DETAILS_COOKIE = "enquiry_details"
 
 
 def _require_access(request):
@@ -101,6 +102,7 @@ def _thread_context(request, enquiry, reply_form=None, note_form=None, mode="rep
         "reply_form": reply_form or ReplyForm(),
         "note_form": note_form or NoteForm(),
         "mode": mode,
+        "details_collapsed": request.COOKIES.get(DETAILS_COOKIE) == "collapsed",
         "canned": CannedResponse.objects.all(),
         "support_mailbox": settings.SUPPORT_MAILBOX,
         "email_transport": settings.EMAIL_TRANSPORT,

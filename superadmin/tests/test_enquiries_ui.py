@@ -174,3 +174,12 @@ def test_notification_preferences_page(client_for, lead, db):
     from apps.enquiries import notifications
 
     assert notifications.get_preferences(lead)["new_enquiry"] == "daily_digest"
+
+
+def test_details_panel_collapse_is_remembered(client_for, superadmin, enquiry):
+    client = client_for(superadmin)
+    body = client.get(enquiry.get_absolute_url()).content.decode()
+    assert 'data-details="expanded"' in body and 'aria-controls="enquiry-details-body"' in body
+    client.cookies["enquiry_details"] = "collapsed"
+    body = client.get(enquiry.get_absolute_url()).content.decode()
+    assert 'data-details="collapsed"' in body and "Show details" in body

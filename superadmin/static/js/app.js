@@ -270,12 +270,27 @@
     }
   }
 
+  // Details panel beside a thread: collapsible, remembered in a cookie the server reads (no flash).
+  function toggleDetails() {
+    var thread = document.querySelector("[data-thread]");
+    if (!thread) return;
+    var collapse = thread.getAttribute("data-details") !== "collapsed";
+    thread.setAttribute("data-details", collapse ? "collapsed" : "expanded");
+    setCookie("enquiry_details", collapse ? "collapsed" : "expanded");
+    thread.querySelectorAll("[data-details-toggle]").forEach(function (button) {
+      button.setAttribute("aria-expanded", collapse ? "false" : "true");
+      var label = button.querySelector("[data-details-label]");
+      if (label) label.textContent = collapse ? "Show details" : "Hide details";
+    });
+  }
+
   function clickAction(name) {
     var button = document.querySelector('[data-action="' + name + '"]');
     if (button) button.click();
   }
 
   document.addEventListener("click", function (event) {
+    if (event.target.closest("[data-details-toggle]")) toggleDetails();
     var tab = event.target.closest("[data-composer-tab]");
     if (tab) setComposerMode(tab.getAttribute("data-composer-tab"), true);
     var back = event.target.closest("[data-back-to-list]");
@@ -309,6 +324,7 @@
       e: function () { clickAction("resolve"); },
       a: function () { clickAction("assign-me"); },
       s: function () { clickAction("spam"); },
+      d: toggleDetails,
       "/": function () {
         var search = document.querySelector("[data-enquiry-search]");
         if (search) search.focus();
