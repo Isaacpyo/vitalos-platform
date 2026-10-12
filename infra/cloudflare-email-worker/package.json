@@ -1,0 +1,9 @@
+{
+  "name": "vitalos-inbound-worker",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Email Worker that forwards support mail and posts it, signed, to the Super Admin. Not a pnpm workspace package (infra/ is outside pnpm-workspace.yaml); no dependencies.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
