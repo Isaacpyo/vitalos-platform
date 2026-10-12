@@ -11,7 +11,7 @@ import type {
   SolutionSummary,
   TrustTopicSummary,
 } from "@vitalos/cms";
-import { crumbsToJsonLd, crumbsToUi, trail } from "./breadcrumbs";
+import { crumbsToJsonLd, trail } from "./breadcrumbs";
 import { contactHref, ctaToLink, hrefForSummary } from "./hrefs";
 import { durationLabel, engagementBasisLabel } from "./labels";
 import { orderByLockedNames, pickByLockedNames } from "./ordering";
@@ -297,10 +297,6 @@ describe("breadcrumbs", () => {
   it("always starts at Home and gives every step a path", () => {
     const crumbs = trail({ label: "What We Do", path: "/what-we-do" });
     expect(crumbs[0]).toEqual({ label: "Home", path: "/" });
-    expect(crumbsToUi(crumbs)).toEqual([
-      { label: "Home", href: "/" },
-      { label: "What We Do", href: "/what-we-do" },
-    ]);
     expect(crumbsToJsonLd(crumbs)).toEqual([
       { name: "Home", path: "/" },
       { name: "What We Do", path: "/what-we-do" },

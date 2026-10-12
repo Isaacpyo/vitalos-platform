@@ -1,7 +1,6 @@
 import { Children, Fragment, isValidElement, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
 import {
-  Breadcrumb,
   Button,
   CTAGroup,
   Container,
@@ -13,7 +12,6 @@ import {
   SectionHeading,
 } from "@vitalos/ui";
 import type { PatternLink, RevealItemProps, SectionSpacing, SectionTone } from "@vitalos/ui";
-import { crumbsToUi } from "../../lib/view-mapping/breadcrumbs";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
 
 /**
@@ -23,6 +21,7 @@ import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
  */
 
 export interface PageIntroProps {
+  /** Retained for callers; the visible trail was removed (owner decision 2026-10-12). */
   crumbs?: readonly Crumb[] | undefined;
   /** Small category line above the title (locked copy or CMS text). */
   eyebrow?: string | undefined;
@@ -36,18 +35,12 @@ export interface PageIntroProps {
 }
 
 /**
- * First band of a page (the owner comp's page hero): breadcrumb, eyebrow, h1, lead and actions
+ * First band of a page (the owner comp's page hero): eyebrow, h1, lead and actions
  * on a light field with a decorative angled plane. The page has no other h1.
  */
-export function PageIntro({ crumbs, eyebrow, title, lead, actions, children }: PageIntroProps) {
+export function PageIntro({ eyebrow, title, lead, actions, children }: PageIntroProps) {
   return (
-    <PageHero
-      title={title}
-      eyebrow={eyebrow}
-      lead={lead}
-      before={crumbs && crumbs.length > 1 ? <Breadcrumb items={crumbsToUi(crumbs)} /> : undefined}
-      actions={actions}
-    >
+    <PageHero title={title} eyebrow={eyebrow} lead={lead} actions={actions}>
       {children}
     </PageHero>
   );
