@@ -193,10 +193,8 @@
           <button class="btn btn-secondary btn-sm">Save</button></form>
           <p id="tags-help-{{ enquiry.pk }}" class="field-help">Separate with commas.</p></dd>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><dt class="muted text-xs">Received</dt><dd class="mt-0.5">{{ enquiry.created_at|date:"j M Y, H:i" }}</dd></div>
-        <div><dt class="muted text-xs">First response</dt><dd class="mt-0.5 tabular">{% if first_response %}{{ first_response|duration }}{% else %}Not yet{% endif %}</dd></div>
-      </div>
+      <div><dt class="muted text-xs">Received</dt><dd class="mt-0.5">{{ enquiry.created_at|date:"j M Y, H:i" }}</dd></div>
+      <div><dt class="muted text-xs">First response</dt><dd class="mt-0.5 tabular">{% if first_response %}{{ first_response|duration }}{% else %}Not yet{% endif %}</dd></div>
       <div>
         <dt class="muted text-xs">First-response target</dt>
         <dd class="mt-0.5" data-testid="sla">

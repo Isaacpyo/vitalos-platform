@@ -110,6 +110,7 @@ jobs:
             echo "SECURE_SSL_REDIRECT=False"
             echo "BOOTSTRAP_ADMIN_EMAIL=ci-admin@example.test"
             echo "BOOTSTRAP_ADMIN_PASSWORD=$(python -c 'import secrets; print(secrets.token_urlsafe(18))')"
+            echo "INBOUND_WEBHOOK_SECRET=$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
           } > "$RUNNER_TEMP/app.env"
           docker run --rm --network host --env-file "$RUNNER_TEMP/app.env" vitalos-superadmin:ci bin/release.sh
           docker run --rm --network host --env-file "$RUNNER_TEMP/app.env" vitalos-superadmin:ci bin/release.sh
@@ -133,6 +134,28 @@ jobs:
           SMOKE_PASSWORD="$(grep '^BOOTSTRAP_ADMIN_PASSWORD=' "$RUNNER_TEMP/app.env" | cut -d= -f2-)"
           export SMOKE_PASSWORD
           python e2e/smoke.py --screenshots "$RUNNER_TEMP/screenshots"
+      - name: Accessibility (axe-core, WCAG 2.2 AA, light and dark)
+        run: |
+          # axe-core from the npm registry (npm verifies the package integrity), pinned to one version.
+          npm pack --silent axe-core@4.13.0 --pack-destination "$RUNNER_TEMP" > /dev/null
+          tar -xzf "$RUNNER_TEMP/axe-core-4.13.0.tgz" -C "$RUNNER_TEMP"
+          # A signed-in, second-factor-verified session for the CI admin, minted inside the container.
+          SESSION="$(docker exec web python manage.py shell -c "
+          from django.contrib.auth import get_user_model
+          from django.contrib.sessions.backends.db import SessionStore
+          from django_otp import DEVICE_ID_SESSION_KEY
+          from django_otp.plugins.otp_totp.models import TOTPDevice
+          user = get_user_model().objects.get(email='ci-admin@example.test')
+          device, _ = TOTPDevice.objects.get_or_create(user=user, name='ci-a11y', defaults={'confirmed': True})
+          session = SessionStore()
+          session.update({'_auth_user_id': str(user.pk), '_auth_user_backend': 'django.contrib.auth.backends.ModelBackend',
+                          '_auth_user_hash': user.get_session_auth_hash(), DEVICE_ID_SESSION_KEY: device.persistent_id})
+          session.create()
+          print(session.session_key)" | tail -n 1)"
+          echo "::add-mask::$SESSION"
+          INBOUND_SECRET="$(grep '^INBOUND_WEBHOOK_SECRET=' "$RUNNER_TEMP/app.env" | cut -d= -f2-)"
+          echo "::add-mask::$INBOUND_SECRET"
+          python e2e/a11y.py --base http://localhost:8000 --axe "$RUNNER_TEMP/package/axe.min.js"             --session "$SESSION" --inbound-secret "$INBOUND_SECRET"
       - name: Container logs
         if: always()
         run: docker logs web 2>&1 | tail -200 || true
