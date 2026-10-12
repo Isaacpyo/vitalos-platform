@@ -35,7 +35,7 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
           <div className="grid min-w-0 gap-(--space-7) lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
             {toc.length > 0 ? (
               <div className="min-w-0 lg:order-last">
-                <div className="lg:sticky lg:top-(--space-6)">
+                <div className="lg:sticky lg:top-[calc(var(--size-header)+var(--space-4))]">
                   <TableOfContents
                     items={toc.map((entry) => ({
                       id: entry.id,
