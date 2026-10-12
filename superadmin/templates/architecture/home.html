@@ -2,33 +2,88 @@
 {% load ui %}
 {% block title %}Overview · Vitalos Super Admin{% endblock %}
 {% block content %}
+  <h1 class="font-display text-2xl font-semibold">Overview</h1>
+
   {% if company %}
-    <section class="overflow-hidden rounded-2xl bg-midnight text-white shadow-sm" aria-labelledby="north-star">
-      <div class="px-6 py-8 sm:px-10">
-        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-aqua">{{ company.name }} north star</p>
-        <h1 id="north-star" class="mt-2 text-3xl font-semibold sm:text-4xl">{{ company.tagline }}</h1>
-        <dl class="mt-6 grid gap-6 text-sm sm:grid-cols-2">
-          <div>
-            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Vision</dt>
-            <dd class="mt-1 text-slate-100">{{ company.vision }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Mission</dt>
-            <dd class="mt-1 text-slate-100">{{ company.mission }}</dd>
-          </div>
-        </dl>
-        <div class="mt-6 flex flex-wrap items-center gap-2 text-xs font-semibold tracking-widest text-slate-300">
-          {% for mode in company.business_modes %}<span class="rounded-full border border-slate-600 px-3 py-1">{{ mode }}</span>{% if not forloop.last %}<span aria-hidden="true">·</span>{% endif %}{% endfor %}
+    <section class="mt-4 rounded-md bg-midnight px-5 py-4 text-white" aria-labelledby="north-star">
+      <p class="mono-label text-cobalt-300">{{ company.name }} north star</p>
+      <h2 id="north-star" class="font-display mt-1 text-lg font-semibold sm:text-xl">{{ company.tagline }}</h2>
+      <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <dt class="text-xs font-semibold tracking-wide text-slate-300 uppercase">Vision</dt>
+          <dd class="mt-0.5 text-slate-100">{{ company.vision }}</dd>
         </div>
-      </div>
+        <div>
+          <dt class="text-xs font-semibold tracking-wide text-slate-300 uppercase">Mission</dt>
+          <dd class="mt-0.5 text-slate-100">{{ company.mission }}</dd>
+        </div>
+      </dl>
     </section>
   {% else %}
-    <div class="card p-6 text-sm">The company profile has not been seeded yet. Run <code>manage.py seed_architecture</code>.</div>
+    <div class="card mt-4 p-6 text-sm">The company profile has not been seeded yet. Run <code>manage.py seed_architecture</code>.</div>
   {% endif %}
+
+  {% if show_enquiry_kpis %}
+    <section class="mt-6" aria-labelledby="kpi-heading">
+      <h2 id="kpi-heading" class="sr-only">Enquiry measures</h2>
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="kpi-grid">
+        {% for kpi in kpis %}{% include "partials/kpi_card.html" %}{% endfor %}
+      </div>
+    </section>
+
+    <section class="card mt-6" aria-labelledby="attention-heading" data-testid="needs-attention">
+      <div class="flex items-center justify-between px-4 py-3">
+        <h2 id="attention-heading" class="font-display text-base font-semibold">Needs attention</h2>
+        <a href="{% url 'enquiries:inbox' %}" class="inline-flex min-h-6 items-center text-sm text-cobalt-600 hover:underline dark:text-cobalt-300">Open inbox</a>
+      </div>
+      <ul class="divide-y divide-slate-100 border-t border-slate-100 dark:divide-slate-800 dark:border-slate-800">
+        {% for item in attention %}
+          <li>
+            <a href="{{ item.enquiry.get_absolute_url }}" class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+              <span class="font-mono text-xs text-slate-600 dark:text-slate-300">{{ item.enquiry.ref }}</span>
+              <span class="min-w-0 flex-1 truncate">{{ item.enquiry.subject|default:"(no subject)" }}</span>
+              <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                {% if item.state == "overdue" %}{% icon "alert" "h-4 w-4" %}{% else %}{% icon "clock" "h-4 w-4" %}{% endif %}
+                {{ item.label }}
+              </span>
+              {% if item.unassigned %}<span class="text-xs text-slate-600 dark:text-slate-300">Unassigned</span>{% endif %}
+            </a>
+          </li>
+        {% empty %}
+          <li class="muted flex items-center gap-2 px-4 py-4 text-sm">{% icon "check" "h-4 w-4" %} Nothing needs attention.</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <section class="card mt-6 px-4 py-3" aria-labelledby="status-heading" data-testid="system-status">
+    <h2 id="status-heading" class="font-display text-base font-semibold">System status</h2>
+    <dl class="mt-2 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <dt class="muted text-xs">Inbound mail last received</dt>
+        <dd>{% if system.last_inbound_at %}{{ system.last_inbound_at|date:"j M Y, H:i" }}{% else %}No mail received yet{% endif %}</dd>
+        {% if system.last_inbound_error %}
+          <dd class="mt-1 flex items-start gap-1.5 text-slate-700 dark:text-slate-200" data-testid="inbound-error">{% icon "alert" "mt-0.5 h-4 w-4 shrink-0" %}<span>Last error: {{ system.last_inbound_error }}</span></dd>
+        {% endif %}
+      </div>
+      <div>
+        <dt class="muted text-xs">Outbound email</dt>
+        <dd>{{ system.outbound }}</dd>
+      </div>
+      <div>
+        <dt class="muted text-xs">Sending domain</dt>
+        <dd>{{ system.domain_status }}</dd>
+      </div>
+      <div>
+        <dt class="muted text-xs">Environment</dt>
+        <dd class="font-mono text-xs">{{ system.environment }}</dd>
+      </div>
+    </dl>
+  </section>
 
   <div class="mt-10 flex items-end justify-between gap-4">
     <div>
-      <h2 class="text-xl font-semibold">Service lines</h2>
+      <h2 class="font-display text-xl font-semibold">Service lines</h2>
       <p class="muted text-sm">Practices → Solutions → Offers, owned line by line.</p>
     </div>
     {% if is_superadmin %}<a href="{% url 'architecture:architecture' %}" class="btn btn-secondary">{% icon "tree" "h-4 w-4" %} Manage architecture</a>{% endif %}
