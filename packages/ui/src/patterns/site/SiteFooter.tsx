@@ -2,8 +2,10 @@ import { useId } from "react";
 import { Reveal, RevealItem } from "../../motion/Reveal";
 import { cx } from "../../primitives/_internal/cx";
 import { Container } from "../../primitives/Container";
+import { Icon } from "../../primitives/Icon";
 import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import { hasText } from "../_internal/types";
+import { FooterNav } from "./FooterNav";
 import { quietLinkClasses } from "./nav-styles";
 import type { SiteNavLink } from "./types";
 
@@ -53,7 +55,8 @@ export interface SiteFooterProps {
 /**
  * Midnight institutional close of the page. Every string comes from props. The brand block and
  * the link columns rise in, in sequence, the first time they scroll into view (Reveal; static
- * without JavaScript and under reduced motion). Below lg every link is a 44px row.
+ * without JavaScript and under reduced motion). Below md each link column collapses to its heading
+ * and expands on its own (FooterNav); below lg every link is a 44px row.
  */
 export function SiteFooter({
   brand,
@@ -104,38 +107,57 @@ export function SiteFooter({
             </RevealItem>
           ) : null}
           {visibleColumns.length > 0 ? (
-            <nav aria-label={navLabel} className="min-w-0">
-              <div className="grid grid-cols-1 gap-x-(--space-6) gap-y-(--space-6) sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            <FooterNav
+              label={navLabel}
+              className="min-w-0 border-t border-tone-border md:border-t-0"
+            >
+              <div className="grid grid-cols-1 gap-x-(--space-6) md:grid-cols-3 md:gap-y-(--space-6) xl:grid-cols-5">
                 {visibleColumns.map((column) => {
                   const headingId = `${footerId}-${column.key}`;
                   return (
                     <RevealItem
                       key={column.key}
-                      className="min-w-0 md:border-l md:border-tone-border md:pl-(--space-5)"
+                      className="min-w-0 border-b border-tone-border md:border-b-0 md:border-l md:pl-(--space-5)"
                     >
-                      <h2 id={headingId} className="text-eyebrow text-tone-heading uppercase">
-                        {column.heading}
-                      </h2>
-                      <ul aria-labelledby={headingId} className="m-0 mt-(--space-3) list-none p-0">
-                        {column.links.map((link) => (
-                          <li key={`${link.href}-${link.label}`}>
-                            <a
-                              href={link.href}
-                              className={cx(
-                                quietLinkClasses,
-                                "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
-                              )}
-                            >
-                              {link.label}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
+                      <details open className="group/column">
+                        <summary
+                          className={cx(
+                            "flex min-h-11 cursor-pointer list-none items-center justify-between gap-(--space-4) py-(--space-2)",
+                            "marker:hidden md:min-h-0 md:cursor-default md:py-0 [&::-webkit-details-marker]:hidden",
+                          )}
+                        >
+                          <h2 id={headingId} className="text-eyebrow text-tone-heading uppercase">
+                            {column.heading}
+                          </h2>
+                          <Icon
+                            name="chevron-down"
+                            className="shrink-0 text-tone-muted transition-transform duration-(--duration-disclosure) ease-(--ease-standard) group-open/column:rotate-180 md:hidden"
+                          />
+                        </summary>
+                        <ul
+                          aria-labelledby={headingId}
+                          className="m-0 list-none p-0 pb-(--space-4) md:mt-(--space-3) md:pb-0"
+                        >
+                          {column.links.map((link) => (
+                            <li key={`${link.href}-${link.label}`}>
+                              <a
+                                href={link.href}
+                                className={cx(
+                                  quietLinkClasses,
+                                  "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
+                                )}
+                              >
+                                {link.label}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
                     </RevealItem>
                   );
                 })}
               </div>
-            </nav>
+            </FooterNav>
           ) : null}
         </Reveal>
         {showContact || identityLines.length > 0 ? (

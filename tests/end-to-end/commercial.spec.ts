@@ -230,6 +230,11 @@ test.describe("site shell", () => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/");
     const footer = page.getByRole("contentinfo");
+    if ((page.viewportSize()?.width ?? 1440) < 768) {
+      // Below md the link columns start collapsed to their headings; each one opens on its own.
+      await expect(footer.locator("details[open]")).toHaveCount(0);
+      for (const heading of await footer.locator("summary").all()) await heading.click();
+    }
     for (const label of ["Industries", "Work", "Insights", "Labs", "Careers", "Leadership"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }

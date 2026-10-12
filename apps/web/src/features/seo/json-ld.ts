@@ -95,7 +95,8 @@ export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContex
         })
       : undefined,
     email: settings.contactEmail,
-    address: settings.registeredAddress,
+    // No address: the registered office is published only in the privacy notice (owner decision,
+    // 12 Oct 2026), not in markup on every page.
     sameAs,
   }) as JsonLdNode;
 }

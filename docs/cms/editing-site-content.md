@@ -4,20 +4,20 @@ Site content lives in the repository and ships with each deployment (ADR-028). T
 
 ## Where each page's words live
 
-| What you want to change                                                                                   | File                                                                 |
-| --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Page headings, introductions and bodies for the route pages (Home, About, How we work, Trust, and so on)  | `packages/cms/src/draft/content/pages.ts`                            |
-| What we do: the five practices                                                                            | `packages/cms/src/draft/content/practices.ts`                        |
-| Solutions                                                                                                 | `packages/cms/src/draft/content/solutions.ts`                        |
-| Offers                                                                                                    | `packages/cms/src/draft/content/offers.ts`                           |
-| Industries                                                                                                | `packages/cms/src/draft/content/industries.ts`                       |
-| Labs assets                                                                                               | `packages/cms/src/draft/content/labs.ts`                             |
-| Trust Centre topics                                                                                       | `packages/cms/src/draft/content/trust.ts`                            |
-| Legal pages that are served (today the privacy notice)                                                    | `packages/cms/src/repo/legal.ts`                                     |
-| Company facts shown in the footer and contact page (legal name, company number, registered office, email) | `packages/cms/src/repo/settings.ts`                                  |
-| Navigation labels, button labels, practice, solution and offer names (locked copy)                        | `packages/cms/src/locked-copy.ts`                                    |
-| Redirects and retired URLs                                                                                | `apps/web/src/features/redirects/additional-redirects.ts`            |
-| Images                                                                                                    | `apps/web/public/` (same-origin paths such as `/images/example.png`) |
+| What you want to change                                                                                                                                 | File                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Page headings, introductions and bodies for the route pages (Home, About, How we work, Trust, and so on)                                                | `packages/cms/src/draft/content/pages.ts`                            |
+| What we do: the five practices                                                                                                                          | `packages/cms/src/draft/content/practices.ts`                        |
+| Solutions                                                                                                                                               | `packages/cms/src/draft/content/solutions.ts`                        |
+| Offers                                                                                                                                                  | `packages/cms/src/draft/content/offers.ts`                           |
+| Industries                                                                                                                                              | `packages/cms/src/draft/content/industries.ts`                       |
+| Labs assets                                                                                                                                             | `packages/cms/src/draft/content/labs.ts`                             |
+| Trust Centre topics                                                                                                                                     | `packages/cms/src/draft/content/trust.ts`                            |
+| Legal pages that are served (today the privacy notice)                                                                                                  | `packages/cms/src/repo/legal.ts`                                     |
+| Company facts (legal name, company number and email in the footer and on the contact page; the registered office only in the privacy notice and emails) | `packages/cms/src/repo/settings.ts`                                  |
+| Navigation labels, button labels, practice, solution and offer names (locked copy)                                                                      | `packages/cms/src/locked-copy.ts`                                    |
+| Redirects and retired URLs                                                                                                                              | `apps/web/src/features/redirects/additional-redirects.ts`            |
+| Images                                                                                                                                                  | `apps/web/public/` (same-origin paths such as `/images/example.png`) |
 
 The `draft/content` folder name is historical: those files are the source for the `repo` content source that production serves. The `repo` source (`packages/cms/src/repo/index.ts`) serves the drafted content with four rules applied: invented placeholder documents are dropped, only the legal pages in `repo/legal.ts` are served, site settings come from `repo/settings.ts`, and any paragraph still containing a bracketed placeholder such as `[to be confirmed]` is left out (with a heading that would be left empty). Nothing is substituted, so an unconfirmed fact simply does not appear.
 

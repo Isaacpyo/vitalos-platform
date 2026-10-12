@@ -63,6 +63,16 @@ export type HeaderModel = Pick<
 
 export type FooterModel = Pick<SiteFooterProps, "brand" | "columns" | "contact" | "legalIdentity">;
 
+/**
+ * White monochrome lockup for the midnight footer, made from the owner-supplied logo (12 Oct 2026;
+ * docs/brand/asset-approval.md). Served from apps/web/public.
+ */
+export const footerLogo = {
+  src: "/brand/vitalos-logo-white.png",
+  width: 937,
+  height: 160,
+} as const;
+
 const link = (item: NavItem): SiteNavLink => ({
   key: item.key,
   label: item.label,
@@ -188,10 +198,11 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     },
   ];
 
+  // The registered office address is not repeated on every page (owner decision, 12 Oct 2026);
+  // it stays in the privacy notice, which identifies the controller.
   const identityLines = [
     settings.legalName,
     settings.companyNumber ? `Company number ${settings.companyNumber}` : undefined,
-    settings.registeredAddress,
   ].filter((line): line is string => typeof line === "string" && line.trim() !== "");
 
   const social = (settings.social ?? []).filter((item) => item.label.trim() !== "");
@@ -200,7 +211,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     brand: {
       homeHref: routes.home(),
       wordmarkText,
-      ...(settings.logo ? { logo: settings.logo } : {}),
+      logo: footerLogo,
     },
     columns: columns.filter((column) => column.links.length > 0),
     contact: {

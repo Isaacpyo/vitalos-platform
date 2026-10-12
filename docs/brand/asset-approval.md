@@ -25,3 +25,11 @@ the Figma styles are reconciled. Midnight remains `#081A2A`.
 No production photography or image library is present in the reviewed Figma
 file. Imagery is therefore not approved by this record. It requires a separate
 rights-cleared asset handoff and approval before publication.
+
+## Interim footer logo (owner direction, 12 Oct 2026)
+
+The owner directed that the supplied raster logo (`vitalos-logo (8).png`, 2172x724) be used in
+the site footer, recoloured white. `apps/web/public/brand/vitalos-logo-white.png` (937x160) is that
+file with every visible pixel set to white, its alpha kept and the transparent margin trimmed. It
+replaces the text wordmark in the footer only; the header still uses the text wordmark. It is
+interim until the Figma vector exports above are produced, when an SVG should replace it.
