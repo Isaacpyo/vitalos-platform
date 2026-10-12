@@ -1,0 +1,221 @@
+[
+  {
+    "key": "client-welcome",
+    "name": "Welcome new client",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent once an engagement is signed, to welcome the client and set out the first steps.",
+    "header_label": "Welcome",
+    "subject": "Welcome to Vitalos, {{first_name}}",
+    "preheader": "What happens over the next few days, and who to contact in the meantime.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Glad to be working with you" },
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for choosing Vitalos for {{project_name}}. We are pleased to be working with {{organisation}}, and we want the start to feel organised and unhurried.\n\nOver the next few days we will:\n- propose a time for the kickoff meeting\n- share a short agenda and the information we need from you\n- agree who on each side owns decisions, access and approvals\n\nI will be your main point of contact. If anything comes up before we meet, reply to this email or write to support@vitalos.co.uk." },
+      { "type": "details", "rows": [["Project", "{{project_name}}"], ["Service", "{{service}}"], ["Your contact", "{{sender_name}}"], ["Email", "{{sender_email}}"]] },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "kickoff-meeting-scheduling",
+    "name": "Kickoff meeting scheduling",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent after the welcome email to ask the client to choose a time for the kickoff meeting.",
+    "header_label": "Kickoff",
+    "subject": "Scheduling the kickoff for {{project_name}}",
+    "preheader": "Choose a time that works for the people who need to be in the room.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Let us find a time, {{first_name}}" },
+      { "type": "text", "text": "The next step for {{project_name}} is a kickoff meeting. It is where we confirm scope, priorities, ways of working and who makes which decisions, so it helps to have the people who will sponsor, approve and use the work in the room.\n\nPlease choose a time that suits your key stakeholders using the link below. If none of the available times work, reply with a few options and we will fit around you." },
+      { "type": "button", "label": "Choose a time", "url": "{{action_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "kickoff-agenda-and-preparation",
+    "name": "Kickoff agenda and preparation",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent once the kickoff is booked, with the agenda and what we need from the client beforehand.",
+    "header_label": "Kickoff",
+    "subject": "Kickoff agenda and what we need from you",
+    "preheader": "A short preparation list so we make the most of the time together.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for confirming the kickoff for {{project_name}}. Here is what we plan to cover:\n- goals, scope and what success looks like for {{organisation}}\n- roles, decision-making and how we will communicate\n- timeline, milestones and known constraints\n- risks, dependencies and open questions\n\nBefore the meeting, it would help to have, where available:\n- existing documentation, diagrams or previous reports\n- the names of your sponsor, day-to-day contact and approvers\n- a list of the systems we will need access to, so we can plan requests properly\n\nDo not worry if some of this is not ready. We can work through the gaps together." },
+      { "type": "details", "rows": [["Project", "{{project_name}}"], ["When", "{{meeting_time}}"]] },
+      { "type": "button", "label": "Join the meeting", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "system-access-request",
+    "name": "System access request",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent when we need access to client systems, asking for named, least-privilege accounts granted through the client's own tooling.",
+    "header_label": "Access",
+    "subject": "Access we need for {{project_name}}",
+    "preheader": "Named accounts, least privilege, and never a password by email.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nTo start work on {{project_name}}, we need access to a small number of systems. The linked document lists each request, the named Vitalos people who need it and the level of access required.\n\nPlease grant access to those named accounts through your own identity or access-management tooling, or a secure method we agree together. We ask only for the least privilege the work needs, and we will tell you when access can be reduced or removed.\n\nWe will never ask for passwords, security codes or other credentials by email. If you receive a request like that appearing to come from us, please do not act on it and let us know.\n\nCould you also tell us who at {{organisation}} approves access, so future requests go to the right person?" },
+      { "type": "button", "label": "Review access request", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "project-plan-shared",
+    "name": "Project plan shared",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent after kickoff to share the project plan and ask the client to review and confirm it.",
+    "header_label": "Project plan",
+    "subject": "Project plan for {{project_name}}",
+    "preheader": "Milestones, responsibilities and dependencies, ready for your review.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nThe project plan for {{project_name}} is ready. It reflects what we agreed at kickoff and sets out:\n- milestones and target dates\n- who is responsible for each piece of work, on both sides\n- dependencies, assumptions and the risks we are tracking\n\nPlease review it with your team and tell us about anything that does not match your understanding. It is much easier to adjust the plan now than midway through delivery. Once you are comfortable with it, a short reply confirming so is all we need." },
+      { "type": "details", "rows": [["Project", "{{project_name}}"], ["Link available until", "{{link_expiry}}"]] },
+      { "type": "button", "label": "View the plan", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "project-status-update",
+    "name": "Project status update",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Regular weekly or fortnightly update on progress, risks and next steps.",
+    "header_label": "Status update",
+    "subject": "{{project_name}}: status update",
+    "preheader": "Where things stand, what comes next and anything we need from you.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nHere is the latest update on {{project_name}}." },
+      { "type": "details", "rows": [["Project", "{{project_name}}"], ["Current milestone", "{{milestone_name}}"]] },
+      { "type": "quote", "text": "{{status_summary}}" },
+      { "type": "text", "text": "Coming up next:\n\n{{next_steps}}\n\nIf anything here affects your plans, or you would like to go through a point in more detail, reply to this email or raise it at our next check-in." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "milestone-completed",
+    "name": "Milestone completed",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent when a project milestone is delivered, summarising what was completed and what comes next.",
+    "header_label": "Milestone",
+    "subject": "Milestone complete: {{milestone_name}}",
+    "preheader": "What was delivered on {{project_name}}, and what we move on to next.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Good progress, {{first_name}}" },
+      { "type": "text", "text": "We have completed {{milestone_name}} on {{project_name}}. Thank you to everyone at {{organisation}} who gave their time, feedback and decisions along the way.\n\nA summary of what was delivered, with any notes or follow-up items, is in the linked document. Please take a look and let us know if anything needs clarifying.\n\nNext, we will move on to:\n\n{{next_steps}}" },
+      { "type": "button", "label": "View the summary", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "change-request-raised",
+    "name": "Change request raised",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent when a proposed change to scope, timeline or cost needs the client's review and decision.",
+    "header_label": "Change request",
+    "subject": "Change request {{change_reference}} for your review",
+    "preheader": "What would change, why, and the effect on scope, timeline and cost.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nDuring work on {{project_name}} we have identified a change that needs a decision from you. We have written it up as a formal change request so the impact is clear before anything moves.\n\nThe request sets out:\n- what would change, and why\n- the effect on scope, timeline and cost\n- the options, including leaving things as they are\n\nNo work on the change will start until you approve it in writing. Please review it and let us know your decision, or reply with a time to talk it through." },
+      { "type": "details", "rows": [["Reference", "{{change_reference}}"], ["Project", "{{project_name}}"]] },
+      { "type": "button", "label": "Review the change", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "change-request-approved",
+    "name": "Change request approved",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent after the client approves a change request, confirming it is recorded and how it will be taken forward.",
+    "header_label": "Change approved",
+    "subject": "Change {{change_reference}} approved: next steps",
+    "preheader": "Thank you for the decision. Here is how we will take it forward.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thanks, {{first_name}}" },
+      { "type": "text", "text": "Thank you for approving change request {{change_reference}}. We have recorded your approval and updated the plan for {{project_name}} to reflect the agreed scope, timeline and cost.\n\nWhat happens next:\n\n{{next_steps}}\n\nYou will see the change reflected in our next status update. If anything in the updated plan looks different from what you expected, please tell us straight away." },
+      { "type": "details", "rows": [["Reference", "{{change_reference}}"], ["Project", "{{project_name}}"]] },
+      { "type": "button", "label": "View updated plan", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "uat-sign-off-request",
+    "name": "Acceptance testing and sign-off request",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent when work is ready for user acceptance testing, asking the client to test and confirm sign-off.",
+    "header_label": "Sign-off",
+    "subject": "Ready for acceptance testing: {{milestone_name}}",
+    "preheader": "How to test, how to report issues and when we need your sign-off.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\n{{milestone_name}} for {{project_name}} is ready for user acceptance testing. This is your team's opportunity to confirm that what we have built works for the people who will use it, in the way you expect.\n\nThe linked test pack explains:\n- what is in scope for testing, with suggested scenarios\n- how to report issues and how we will prioritise them\n- what sign-off means and who should give it\n\nPlease complete testing and confirm sign-off by the date below. If you find issues, we will fix those within scope and agree the rest with you before asking for sign-off again." },
+      { "type": "details", "rows": [["Milestone", "{{milestone_name}}"], ["Sign-off requested by", "{{due_date}}"]] },
+      { "type": "button", "label": "Open the test pack", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "go-live-announcement",
+    "name": "Go-live announcement",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent when a project goes live, confirming launch support and how to report issues.",
+    "header_label": "Go-live",
+    "subject": "{{project_name}} is live",
+    "preheader": "How we are supporting the launch, and who to contact if anything looks wrong.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Congratulations, {{first_name}}!" },
+      { "type": "text", "text": "{{project_name}} is now live. Thank you to everyone at {{organisation}} who tested, decided and supported the work to get here.\n\nOver the coming days we will:\n- monitor closely and deal with any issues as they arise\n- keep you informed of anything that needs your attention\n- confirm when we move from launch support to the agreed handover\n\nIf you or your users notice anything unexpected, please email support@vitalos.co.uk with as much detail as you can, including what you were doing and when it happened." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "project-handover-and-close",
+    "name": "Project handover and close",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent at the end of a project with the handover pack, asking the client to confirm closure.",
+    "header_label": "Handover",
+    "subject": "Handover and close for {{project_name}}",
+    "preheader": "Documentation, ownership, open items and the access we will remove.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nWe have reached the end of {{project_name}}. Thank you for your trust and partnership throughout.\n\nThe handover pack includes:\n- documentation, runbooks and where everything lives\n- who owns what from here\n- open items and our recommendations\n- the access we will give up, and when\n\nPlease review it and confirm you are happy for us to close the project. We also recommend that your team checks and removes any Vitalos accounts once handover is complete, in line with your own access policies." },
+      { "type": "button", "label": "Open handover pack", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "support-and-maintenance-offer",
+    "name": "Support and maintenance offer",
+    "category": "delivery",
+    "kind": "transactional",
+    "description": "Sent around handover to offer ongoing support and maintenance through Vitalos Managed Services.",
+    "header_label": "Ongoing support",
+    "subject": "Keeping {{project_name}} healthy after handover",
+    "preheader": "An option for ongoing support and improvement, with no obligation.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nNow that {{project_name}} is with your team, I wanted to mention an option that may be useful. Systems need care after launch: updates, security patches, monitoring and steady improvement as needs change.\n\nThrough Vitalos Managed Services, our Managed Engineering & Application Care offer can cover:\n- day-to-day support and issue resolution\n- maintenance, updates and dependency management\n- monitoring and reliability improvements\n- a planned backlog of enhancements\n\nThere is no obligation. If it would help, we can talk through the level of support that would suit {{organisation}} and put a proposal together." },
+      { "type": "button", "label": "Book a conversation", "url": "{{action_link}}" },
+      { "type": "signature" }
+    ]
+  }
+]

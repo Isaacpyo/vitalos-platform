@@ -8,6 +8,10 @@
       "text": "Example Person"
     },
     {
+      "type": "text",
+      "text": "A plain paragraph straight after a heading."
+    },
+    {
       "type": "button",
       "label": "Reply to Example",
       "url": "mailto:person@example.invalid?subject=Re%3A%20Hi"

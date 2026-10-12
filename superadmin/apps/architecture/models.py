@@ -49,6 +49,16 @@ class Company(GovernedModel):
     classification = models.CharField(
         max_length=16, choices=Classification.choices, default=Classification.PUBLIC
     )
+    # Facts for email footers (UK company law: name, number and registered office on business email).
+    legal_name = models.CharField(max_length=200, blank=True)
+    company_number = models.CharField(max_length=20, blank=True)
+    registered_office = models.CharField(max_length=300, blank=True)
+    website = models.URLField(blank=True)
+    support_email = models.EmailField(blank=True)
+    linkedin_url = models.URLField("LinkedIn URL", blank=True)
+    x_url = models.URLField("X URL", blank=True)
+    instagram_url = models.URLField("Instagram URL", blank=True)
+    facebook_url = models.URLField("Facebook URL", blank=True)
 
     class Meta:
         verbose_name_plural = "company"

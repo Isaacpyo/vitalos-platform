@@ -1,0 +1,104 @@
+[
+  {
+    "key": "quote-sent",
+    "name": "Quote sent",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent with a quote or estimate after scoping, inviting the client to review and raise questions.",
+    "header_label": "Quote",
+    "subject": "Your quote {{quote_number}} from Vitalos",
+    "preheader": "What is included, the assumptions behind it and what is out of scope.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for the time spent discussing {{project_name}}. As agreed, here is our quote. It sets out what is included, the assumptions it rests on and what is out of scope, so there are no surprises later. It also states how long the quote remains valid.\n\nIf the scope or any assumption does not match your understanding, tell us and we will revise it. We are also happy to walk through it on a call if that is easier." },
+      { "type": "details", "rows": [["Quote", "{{quote_number}}"], ["Project", "{{project_name}}"], ["Amount", "{{amount}}"]] },
+      { "type": "button", "label": "View the quote", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "invoice-sent",
+    "name": "Invoice sent",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent with a new invoice, giving the amount, due date and a secure link to the invoice.",
+    "header_label": "Invoice",
+    "subject": "Invoice {{invoice_number}} from Vitalos",
+    "preheader": "The amount and due date, with a secure link to the full invoice.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nPlease find our invoice for {{project_name}} at the link below. Payment details are on the invoice itself.\n\nIf you need a purchase order number added, or the invoice should go to someone else in your accounts team, reply and we will reissue it.\n\nFor your security, our bank details will not change by email. If you ever receive a message saying they have, please check with {{sender_name}} through a contact route you already know before making any payment." },
+      { "type": "details", "rows": [["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Due date", "{{due_date}}"]] },
+      { "type": "button", "label": "View invoice", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "payment-reminder-friendly",
+    "name": "Payment reminder: friendly",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent shortly before or on the due date as a gentle reminder that an invoice is due.",
+    "header_label": "Reminder",
+    "subject": "Friendly reminder: invoice {{invoice_number}}",
+    "preheader": "Due on {{due_date}}. Please ignore this if payment is already on its way.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nA gentle reminder that invoice {{invoice_number}} for {{amount}} is due on {{due_date}}. If payment is already arranged, thank you, and please ignore this email.\n\nIf anything is holding it up, such as a missing purchase order or a query on the invoice, let us know and we will help sort it out." },
+      { "type": "details", "rows": [["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Due date", "{{due_date}}"]] },
+      { "type": "button", "label": "View invoice", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "payment-reminder-overdue",
+    "name": "Payment reminder: overdue",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent when an invoice has passed its due date without payment.",
+    "header_label": "Overdue",
+    "subject": "Invoice {{invoice_number}} is now overdue",
+    "preheader": "Please let us know if there is a query, or if payment is already on its way.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nOur records show that invoice {{invoice_number}} for {{amount}}, due on {{due_date}}, has not yet been paid. It is now {{days_overdue}} days overdue.\n\nIf you have paid in the last few days, thank you; please send the remittance details so we can match the payment. If something is holding it up, reply and tell us, and we will work through it with you.\n\nOtherwise, we would be grateful if you could arrange payment as soon as possible." },
+      { "type": "details", "rows": [["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Due date", "{{due_date}}"], ["Days overdue", "{{days_overdue}}"]] },
+      { "type": "button", "label": "View invoice", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "payment-reminder-final-notice",
+    "name": "Payment reminder: final notice",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent when an invoice remains unpaid after earlier reminders, stating the next step neutrally.",
+    "header_label": "Final notice",
+    "subject": "Final notice: invoice {{invoice_number}}",
+    "preheader": "Please arrange payment, or talk to us so we can agree a way forward.",
+    "reason": null,
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nDespite our earlier reminders, invoice {{invoice_number}} for {{amount}} remains unpaid. It was due on {{due_date}} and is now {{days_overdue}} days overdue.\n\nWe value our relationship with {{organisation}} and would much rather resolve this directly. Please arrange payment, or reply to let us know when it will be made or whether there is a query we need to address.\n\nIf we do not hear from you, we may need to pause work and refer the matter on." },
+      { "type": "details", "rows": [["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Due date", "{{due_date}}"], ["Days overdue", "{{days_overdue}}"]] },
+      { "type": "button", "label": "View invoice", "url": "{{document_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "payment-received-receipt",
+    "name": "Payment received",
+    "category": "finance",
+    "kind": "transactional",
+    "description": "Sent to the client to confirm a payment has been received, for their records.",
+    "header_label": "Receipt",
+    "subject": "Payment received for invoice {{invoice_number}}",
+    "preheader": "Thank you. This email confirms receipt for your records.",
+    "reason": null,
+    "blocks": [
+      { "type": "heading", "text": "Thank you, {{first_name}}" },
+      { "type": "text", "text": "We have received your payment for invoice {{invoice_number}}. Thank you for settling it.\n\nPlease keep this email for your records. If your finance team needs a formal receipt or a statement of account, reply and we will send one." },
+      { "type": "details", "rows": [["Invoice", "{{invoice_number}}"], ["Amount received", "{{amount}}"], ["Project", "{{project_name}}"]] },
+      { "type": "signature" }
+    ]
+  }
+]

@@ -27,3 +27,7 @@ Trade-offs: mail passes through a Worker the owner must deploy and monitor; Clou
 Consequences: new management commands `create_owner`, `issue_setup_link`, `send_enquiry_notifications` and `enforce_enquiry_retention` (a dry run unless `RETENTION_ENFORCE=true`; retention is 24 months, approved 11 Oct 2026). New secrets live only in Container Apps and the GitHub `Production` environment (`superadmin/docs/DEPLOY.md`). The architecture documentation for the Super Admin is updated in `superadmin/README.md` and `superadmin/docs/DECISIONS.md` (#63 onward).
 
 Revisit triggers: Microsoft 365 going live (add the Graph adapters); Entra SSO (Phase 2 item 1); Resend limits or terms changing; the owner settling the website palette; moving DMARC to `quarantine`; mail volume exceeding the free tiers.
+
+## Status note (12 October 2026): email templates
+
+The Mail section is now a sidebar dropdown with Enquiries and Email templates (SuperAdmin only). Templates render on the shared layout of ADR-030; see `superadmin/docs/DECISIONS.md` 78 to 88 for the library, versions, send test and unsubscribe rules.

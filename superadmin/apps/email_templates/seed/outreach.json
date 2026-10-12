@@ -1,0 +1,129 @@
+[
+  {
+    "key": "outreach-cold-introduction",
+    "name": "Cold introduction",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "First, unsolicited introduction to a prospect who has had no previous contact with Vitalos.",
+    "header_label": "Introduction",
+    "subject": "A short introduction from Vitalos",
+    "preheader": "Who we are, where we help, and an easy way to say no thanks.",
+    "reason": "We are contacting you because {{organisation}} works in an area where we help organisations like yours. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI am getting in touch because Vitalos works with organisations like {{organisation}} on technology decisions and delivery, and I thought a brief introduction might be useful.\n\nWe are a UK technology consulting, engineering and digital transformation company. Our work usually falls into a few areas:\n- Clarifying transformation choices, roadmaps and architecture before expensive execution\n- Building and modernising production software, platforms and integrations\n- Taking AI and data from early opportunity through to production\n\nIf any of this is on your agenda, I would be glad to arrange a short conversation to understand your priorities. There is no obligation, and if the timing is wrong, a one-line reply is enough and I will not follow up." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-cold-follow-up-1",
+    "name": "Cold follow-up 1",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "First follow-up to a cold introduction that has had no reply, offering a concrete starting point.",
+    "header_label": "Follow-up",
+    "subject": "Following up on my note to {{organisation}}",
+    "preheader": "In case my earlier email was buried, here is one practical place to start.",
+    "reason": "We are contacting you because {{organisation}} works in an area where we help organisations like yours. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI wrote recently with a brief introduction to Vitalos. Inboxes are busy, so I wanted to follow up once with something more specific.\n\nBefore committing budget to a significant change, some leaders find it helpful to get an independent view of where they stand. That is what our Technology Health Assessment and Digital Transformation Discovery are designed to provide: a clear picture of the current position and a prioritised view of what to do next.\n\nIf that would be useful for {{organisation}}, I would be happy to talk it through. If not, just let me know and I will close the thread." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-cold-follow-up-2",
+    "name": "Cold follow-up 2",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "Second follow-up to a cold introduction, offering a different angle focused on delivery and reliability.",
+    "header_label": "Follow-up",
+    "subject": "A different angle for {{organisation}}",
+    "preheader": "In case the pressing issue is a system or project rather than a strategy.",
+    "reason": "We are contacting you because {{organisation}} works in an area where we help organisations like yours. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI appreciate you may not have had time to reply to my earlier notes, so I will keep this short.\n\nNot every organisation needs a strategy exercise. Sometimes the pressing issue is a system that has become hard to change, an integration that keeps breaking, or a project that has lost momentum. Vitalos Engineering works on exactly these problems, through Application Modernisation, Systems Integration and, where a project needs steadying, Engineering Rescue.\n\nIf any of that sounds familiar, a short call is the quickest way to find out whether we can help. If not, there is no need to reply." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-closing-the-loop",
+    "name": "Closing the loop",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "Final, low-pressure email in a cold sequence, confirming we will stop following up and leaving the door open.",
+    "header_label": "Last note",
+    "subject": "Closing the loop on my earlier emails",
+    "preheader": "This is my last note for now. The door stays open if priorities change.",
+    "reason": "We are contacting you because {{organisation}} works in an area where we help organisations like yours. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI have written a few times about how Vitalos might support {{organisation}}, and I do not want to keep filling your inbox. This will be my last email on the subject.\n\nIf the timing is wrong, or this simply is not a priority, that is completely understandable. Should things change, you can reach me directly at {{sender_email}}, or find out more about our work at vitalos.co.uk.\n\nThank you for your time, and I wish you and the team well." },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-warm-referral-introduction",
+    "name": "Warm referral introduction",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "Introduction to a prospect after a mutual contact has suggested we get in touch; add the referrer's name before sending.",
+    "header_label": "Introduction",
+    "subject": "A mutual contact suggested we speak",
+    "preheader": "A brief introduction, and why a conversation might be worthwhile.",
+    "reason": "We are contacting you because a mutual contact suggested that Vitalos might be useful to {{organisation}}. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nA mutual contact suggested I get in touch, as they thought Vitalos might be helpful to {{organisation}}. I am grateful for the introduction and wanted to reach out personally.\n\nVitalos is a UK technology consulting, engineering and digital transformation company. We help organisations make clear technology decisions, then build, modernise and run the systems that follow from them.\n\nI would welcome a short conversation to understand what you are working on and whether there is a sensible way for us to help. If now is not the right time, simply let me know and I will leave it there." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-partner-alliance",
+    "name": "Partner or alliance outreach",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "First approach to an organisation whose work complements ours, to explore referrals or collaboration.",
+    "header_label": "Partnership",
+    "subject": "Exploring a partnership with {{organisation}}",
+    "preheader": "Where our work might complement yours, and a suggestion for a first conversation.",
+    "reason": "We are contacting you because the work of {{organisation}} appears to complement ours and we would like to explore working together. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI am getting in touch to explore whether there might be value in Vitalos and {{organisation}} working together.\n\nVitalos is a UK technology company working across five practices: Consulting, Engineering, AI & Data, Experience and Managed Services. From what I understand of your work, our strengths may complement yours. There could be opportunities to refer clients to one another, or to collaborate where a project needs both sets of skills.\n\nIf this is of interest, I would suggest an informal call to compare notes on the organisations we each serve and the gaps we each see. If it is not a fit, a quick reply would be appreciated so that I do not follow up unnecessarily." },
+      { "type": "button", "label": "Arrange a call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-event-meeting-follow-up",
+    "name": "Event or meeting follow-up",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "Follow-up to someone we met at an event or in an informal meeting, sent while the conversation is fresh.",
+    "header_label": "Follow-up",
+    "subject": "Good to meet you at {{event_name}}",
+    "preheader": "A short follow-up to our conversation, and a simple way to continue it.",
+    "reason": "We are contacting you because we met at {{event_name}}. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for taking the time to talk at {{event_name}}. I enjoyed our conversation and wanted to follow up while it was still fresh.\n\nIn case it is helpful, Vitalos is a UK technology consulting and engineering company. We help organisations make clear technology decisions and then deliver them, from roadmaps and architecture through to production software, AI and data, and ongoing support.\n\nIf you would like to continue the conversation, you can choose a time that suits you below. And if you would rather not hear from me again, just say so." },
+      { "type": "button", "label": "Choose a time", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  },
+  {
+    "key": "outreach-linkedin-connection-follow-up",
+    "name": "LinkedIn connection follow-up",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "Email follow-up to a new LinkedIn connection, giving a proper introduction without pressure.",
+    "header_label": "Introduction",
+    "subject": "Thanks for connecting on LinkedIn",
+    "preheader": "A brief hello, a little about Vitalos, and no pressure to reply.",
+    "reason": "We are contacting you because we recently connected on LinkedIn. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for accepting my connection on LinkedIn. I thought a short email would be a better introduction than a long message there.\n\nI work at Vitalos, a UK technology consulting, engineering and digital transformation company. We help organisations with technology strategy, production software, AI and data, digital experiences and the ongoing care of the systems they rely on.\n\nIf any of that overlaps with what you are focused on at {{organisation}}, I would be glad to have a short conversation. If not, I am happy simply to stay connected." },
+      { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
+      { "type": "signature" }
+    ]
+  }
+]

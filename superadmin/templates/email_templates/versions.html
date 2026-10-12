@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Version history · {{ template.name }} · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-semibold">Version history</h1>
+  <p class="muted mt-1 text-sm">{{ template.name }}. Every save keeps a copy. Restoring a version saves it again as the newest version, so nothing is lost.</p>
+  <div class="card mt-6 overflow-x-auto">
+    <table class="table-base">
+      <thead><tr><th scope="col">Version</th><th scope="col">Change</th><th scope="col">Subject</th><th scope="col">Saved</th><th scope="col">By</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for version in versions %}
+          <tr data-version="{{ version.number }}">
+            <td class="font-mono">v{{ version.number }}{% if version.number == template.version %} <span class="muted font-sans text-xs">(current)</span>{% endif %}</td>
+            <td>{{ version.note|default:"Edited" }}</td>
+            <td class="max-w-xs truncate">{{ version.content.subject }}</td>
+            <td class="whitespace-nowrap">{{ version.created_at|date:"j M Y, H:i" }}</td>
+            <td class="whitespace-nowrap">{% if version.created_by %}{{ version.created_by.email }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
+            <td class="text-right">
+              {% if version.number != template.version %}
+                <form method="post" action="{% url 'email_templates:restore' template.pk version.number %}">
+                  {% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">{% icon "restore" "h-4 w-4" %} Restore</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

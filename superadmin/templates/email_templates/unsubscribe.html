@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Unsubscribe · Vitalos{% endblock %}
+{% block main_width %}max-w-md{% endblock %}
+{% block content %}
+  <div class="mt-8 sm:mt-16">
+    <div class="flex items-center rounded-t-md bg-midnight px-6 py-5 sm:px-8">
+      <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28" class="h-7 w-auto">
+    </div>
+    <div class="card rounded-t-none border-t-0 p-6 sm:p-8">
+      {% if invalid %}
+        <h1 class="text-xl font-semibold">This link does not work</h1>
+        <p class="mt-3 text-sm">The unsubscribe link is incomplete or has been changed. To stop receiving Vitalos email, reply to any message with the word “unsubscribe”, or write to <a class="text-cobalt-600 underline dark:text-cobalt-300" href="mailto:support@vitalos.co.uk">support@vitalos.co.uk</a>.</p>
+      {% elif done %}
+        <h1 class="text-xl font-semibold" data-testid="unsubscribed">You are unsubscribed</h1>
+        <p class="mt-3 text-sm">We will not send you outreach or marketing email again. You may still get replies about anything you have asked us for.</p>
+      {% else %}
+        <h1 class="text-xl font-semibold">Unsubscribe from Vitalos email</h1>
+        <p class="mt-3 text-sm">Confirm and we will stop sending you outreach and marketing email.</p>
+        <form method="post" class="mt-6">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary w-full" data-testid="confirm-unsubscribe">Unsubscribe</button>
+        </form>
+      {% endif %}
+    </div>
+    <p class="muted mt-6 text-center text-xs">Vitalos Technologies Limited · <a class="underline" href="https://vitalos.co.uk/legal/privacy">Privacy notice</a></p>
+  </div>
+{% endblock %}

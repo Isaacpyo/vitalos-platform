@@ -1,0 +1,509 @@
+[
+  {
+    "key": "enquiry-received",
+    "name": "Enquiry received: internal notification",
+    "category": "enquiries",
+    "kind": "internal",
+    "description": "Sent to the Vitalos team whenever a new enquiry is submitted through the website form.",
+    "header_label": "New enquiry",
+    "subject": "New enquiry: {{intent}} · {{full_name}}, {{organisation}} · {{reference}}",
+    "preheader": "{{timeframe}} · {{goal}}",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "{{full_name}}"
+      },
+      {
+        "type": "text",
+        "text": "{{organisation}}"
+      },
+      {
+        "type": "badge",
+        "items": [
+          "{{intent}}",
+          "{{timeframe}}"
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Reply to {{first_name}}",
+        "url": "mailto:{{email}}"
+      },
+      {
+        "type": "quote",
+        "text": "{{goal}}"
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "Name",
+            "{{full_name}}"
+          ],
+          [
+            "Organisation",
+            "{{organisation}}"
+          ],
+          [
+            "Work email",
+            "{{email}}"
+          ],
+          [
+            "Intent",
+            "{{intent}}"
+          ],
+          [
+            "Timeframe",
+            "{{timeframe}}"
+          ],
+          [
+            "Source page",
+            "{{source_page}}"
+          ],
+          [
+            "Reference",
+            "{{reference}}"
+          ],
+          [
+            "Received",
+            "{{received_at}}"
+          ]
+        ]
+      }
+    ],
+    "managed_by": "website",
+    "footer_notice": "Internal notification. The enquiry is stored in the Vitalos database; this email is not the record."
+  },
+  {
+    "key": "enquiry-acknowledgement",
+    "name": "Enquiry acknowledgement",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent to the enquirer straight after they submit the website form, confirming receipt and explaining what happens next.",
+    "header_label": "Enquiry received",
+    "subject": "We have your enquiry ({{reference}})",
+    "preheader": "What happens next, and how to reach us in the meantime.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Thanks, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "Thank you for getting in touch with Vitalos. Your enquiry has reached us, and a senior member of the team will read it properly before replying, rather than sending you a standard pack.\n\nWhat happens next:\n- We review what you have shared and think about where we could genuinely help.\n- We reply shortly, either with a few clarifying questions or a suggested time to talk.\n- If a conversation makes sense, the first call is about understanding your situation, not selling to you.\n\nFor your records, this is what you told us:"
+      },
+      {
+        "type": "quote",
+        "text": "{{goal}}"
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "Reference",
+            "{{reference}}"
+          ],
+          [
+            "Topic",
+            "{{intent}}"
+          ],
+          [
+            "Timeframe",
+            "{{timeframe}}"
+          ],
+          [
+            "Received",
+            "{{received_at}}"
+          ]
+        ]
+      },
+      {
+        "type": "text",
+        "text": "If you would rather pick a time to talk now, you are welcome to book a call. Otherwise, simply reply to this email and quote your reference if anything changes in the meantime."
+      },
+      {
+        "type": "button",
+        "label": "Book a call",
+        "url": "{{meeting_link}}"
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "meeting-booked-confirmation",
+    "name": "Meeting booked confirmation",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent when a call has been booked, confirming the time, the joining link and how to change it.",
+    "header_label": "Meeting booked",
+    "subject": "Confirmed: our call on {{meeting_time}}",
+    "preheader": "Joining details, what to expect, and how to change the time if you need to.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "You are booked in, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "Thank you for making time to speak with us. The details are below; it is worth adding them to your calendar so the call does not get lost in a busy week.\n\nTo make the most of the time:\n- Come with the problem as you see it today. There is no need to prepare slides.\n- Feel free to invite colleagues who will be close to the decision or the work.\n- If a document would help explain the context, reply with it beforehand. Nothing confidential is needed at this stage."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "When",
+            "{{meeting_time}}"
+          ],
+          [
+            "With",
+            "{{sender_name}}"
+          ],
+          [
+            "Reference",
+            "{{reference}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Join the meeting",
+        "url": "{{meeting_link}}"
+      },
+      {
+        "type": "text",
+        "text": "If the time no longer works, you can choose another slot whenever suits you."
+      },
+      {
+        "type": "button",
+        "label": "Choose another time",
+        "url": "{{reschedule_link}}"
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "meeting-reminder-24-hours",
+    "name": "Meeting reminder: 24 hours before",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent automatically 24 hours before a booked call as a reminder with the joining link.",
+    "header_label": "Reminder",
+    "subject": "Tomorrow: our call at {{meeting_time}}",
+    "preheader": "Your joining link is inside, plus an easy way to move the call if plans have changed.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Speak tomorrow, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "A quick reminder that we are due to speak tomorrow. The details are below.\n\nIf you have a spare moment beforehand, it helps to think about what a good outcome would look like for {{organisation}}, and whether anything has changed since we were last in touch. We will take care of the rest."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "When",
+            "{{meeting_time}}"
+          ],
+          [
+            "With",
+            "{{sender_name}}"
+          ],
+          [
+            "Reference",
+            "{{reference}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Join the meeting",
+        "url": "{{meeting_link}}"
+      },
+      {
+        "type": "text",
+        "text": "If your plans have changed, that is no problem. Choose a new time, or simply reply to this email and we will sort it out."
+      },
+      {
+        "type": "button",
+        "label": "Choose another time",
+        "url": "{{reschedule_link}}"
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "meeting-reminder-1-hour",
+    "name": "Meeting reminder: 1 hour before",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent automatically one hour before a booked call with the joining link.",
+    "header_label": "Starting soon",
+    "subject": "Starting soon: our call at {{meeting_time}}",
+    "preheader": "Your joining link is inside. Reply if you are running late.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Speak soon, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "Our call starts in about an hour. You can join using the button below whenever you are ready."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "When",
+            "{{meeting_time}}"
+          ],
+          [
+            "With",
+            "{{sender_name}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Join the meeting",
+        "url": "{{meeting_link}}"
+      },
+      {
+        "type": "text",
+        "text": "Running late, or something urgent has come up? Just reply to this email and we will adjust."
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "meeting-rescheduled",
+    "name": "Meeting rescheduled",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent when a booked call moves to a new time, confirming the new details and replacing the old ones.",
+    "header_label": "Rescheduled",
+    "subject": "Our call has moved to {{meeting_time}}",
+    "preheader": "Updated details are inside. The previous time no longer applies.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "New time confirmed, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "Thank you for your flexibility. Our call has moved, and the updated details are below. Please update your calendar and disregard the earlier time."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "New time",
+            "{{meeting_time}}"
+          ],
+          [
+            "Previous time",
+            "{{previous_meeting_time}}"
+          ],
+          [
+            "With",
+            "{{sender_name}}"
+          ],
+          [
+            "Reference",
+            "{{reference}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Join the meeting",
+        "url": "{{meeting_link}}"
+      },
+      {
+        "type": "text",
+        "text": "If the new time does not work after all, reply to this email and we will find one that does."
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "meeting-cancelled",
+    "name": "Meeting cancelled",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent when a booked call is cancelled, confirming the cancellation and offering a way to rebook.",
+    "header_label": "Cancelled",
+    "subject": "Our call on {{meeting_time}} is cancelled",
+    "preheader": "Nothing further is needed from you. Here is how to book a new time if you want one.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Our call has been cancelled"
+      },
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nThis confirms that our call has been cancelled, so you can remove it from your calendar.\n\nIf you would still like to talk, you are welcome to book a new time whenever it suits you. If your priorities have shifted, that is fine too. Your enquiry stays on record under the reference below, and you can pick it up again at any point by replying to this email."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "Cancelled call",
+            "{{meeting_time}}"
+          ],
+          [
+            "Reference",
+            "{{reference}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Book a new time",
+        "url": "{{reschedule_link}}"
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "missed-meeting-follow-up",
+    "name": "Missed meeting follow-up",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent after a booked call where the other person did not join, offering an easy way to rebook.",
+    "header_label": "Missed call",
+    "subject": "Sorry we missed each other, {{first_name}}",
+    "preheader": "No problem at all. Choose a new time that works better for you.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nWe were set up to speak at {{meeting_time}} but did not manage to connect. Diaries move and inboxes fill up, so please do not worry about it.\n\nIf you would still like to talk, choose a time that suits you below. If now is not the right moment, a quick reply saying so is perfectly fine, and we will not keep chasing."
+      },
+      {
+        "type": "button",
+        "label": "Choose a new time",
+        "url": "{{reschedule_link}}"
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "user-invite",
+    "name": "Client portal or admin user invite",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent when someone is given access to the Vitalos client portal or admin console and needs to accept the invitation.",
+    "header_label": "Invitation",
+    "subject": "You are invited to your Vitalos account",
+    "preheader": "Accept the invitation to set up your sign-in. The link is personal to you.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "Your access is ready, {{first_name}}"
+      },
+      {
+        "type": "text",
+        "text": "{{sender_name}} has invited you to a Vitalos account for {{organisation}}. Use the button below to accept the invitation and set up your sign-in.\n\nThe link is personal to you, so please do not forward it."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "Organisation",
+            "{{organisation}}"
+          ],
+          [
+            "Invited by",
+            "{{sender_name}}"
+          ],
+          [
+            "Link expires",
+            "{{link_expiry}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Accept the invitation",
+        "url": "{{action_link}}"
+      },
+      {
+        "type": "text",
+        "text": "If the link has expired, reply to this email and we will send a new one. If you were not expecting this invitation, you can safely ignore it.\n\nWe will never ask for your password by email."
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  },
+  {
+    "key": "password-reset",
+    "name": "Password reset",
+    "category": "enquiries",
+    "kind": "transactional",
+    "description": "Sent when a user asks to reset the password for their Vitalos account.",
+    "header_label": "Account security",
+    "subject": "Reset your Vitalos password",
+    "preheader": "Use the secure link inside. If you did not ask for this, no action is needed.",
+    "reason": null,
+    "blocks": [
+      {
+        "type": "heading",
+        "text": "A request to reset your password"
+      },
+      {
+        "type": "text",
+        "text": "Hi {{first_name}},\n\nWe received a request to reset the password for your Vitalos account. Use the button below to choose a new one."
+      },
+      {
+        "type": "details",
+        "rows": [
+          [
+            "Account",
+            "{{email}}"
+          ],
+          [
+            "Link expires",
+            "{{link_expiry}}"
+          ]
+        ]
+      },
+      {
+        "type": "button",
+        "label": "Choose a new password",
+        "url": "{{action_link}}"
+      },
+      {
+        "type": "text",
+        "text": "If you did not ask to reset your password, you can ignore this email and your current password will keep working.\n\nFor your security, we will never send your password by email or ask you for it. If you think someone else may be trying to access your account, contact support@vitalos.co.uk."
+      },
+      {
+        "type": "signature"
+      }
+    ]
+  }
+]

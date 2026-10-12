@@ -35,6 +35,7 @@ def app_context(request):
         "sidebar_collapsed": request.COOKIES.get(SIDEBAR_COOKIE) == "collapsed",
         "nav_groups": navigation.nav_groups(path, user) if show_chrome else [],
         "nav_active": navigation.active_item(path) if show_chrome else None,
+        "nav_crumb": navigation.crumb_label(navigation.active_item(path)) if show_chrome else "",
         "csp_nonce": getattr(request, "csp_nonce", ""),
         "app_environment": settings.APP_ENVIRONMENT,
         "is_superadmin": authenticated and is_superadmin(user),

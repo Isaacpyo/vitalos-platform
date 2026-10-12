@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{% if template %}{{ template.name }}{% else %}New template{% endif %} · Email templates · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold">{% if template %}{{ template.name }}{% else %}New template{% endif %}</h1>
+      {% if template %}
+        <p class="muted mt-1 text-sm">
+          <span class="font-mono">{{ template.key }}</span> · {{ template.get_category_display }} · {{ template.get_status_display }} · version {{ template.version }}
+          · last edited {{ template.updated_at|date:"j M Y, H:i" }}{% if template.updated_by %} by {{ template.updated_by.email }}{% endif %}
+        </p>
+      {% endif %}
+    </div>
+    {% if template %}
+      <div class="flex flex-wrap items-center gap-2">
+        <a class="btn btn-secondary" href="{% url 'email_templates:versions' template.pk %}">{% icon "clock" "h-4 w-4" %} Version history</a>
+        <form method="post" action="{% url 'email_templates:duplicate' template.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "plus" "h-4 w-4" %} Duplicate</button></form>
+        <form method="post" action="{% url 'email_templates:archive' template.pk %}">
+          {% csrf_token %}
+          {% if template.status == "archived" %}
+            <input type="hidden" name="archived" value="0"><button type="submit" class="btn btn-secondary">{% icon "restore" "h-4 w-4" %} Unarchive</button>
+          {% else %}
+            <input type="hidden" name="archived" value="1"><button type="submit" class="btn btn-secondary">{% icon "archive" "h-4 w-4" %} Archive</button>
+          {% endif %}
+        </form>
+        <form method="post" action="{% url 'email_templates:send_test' template.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary" data-testid="send-test" aria-describedby="send-test-note">{% icon "mail" "h-4 w-4" %} Send test</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+  {% if template %}<p id="send-test-note" class="muted mt-2 text-xs">Send test emails the saved version, with sample data, to your own address only ({{ user.email }}); it must be an @vitalos.co.uk address.</p>{% endif %}
+
+  {% if read_only_note %}
+    <div class="mt-4 rounded-md border border-cobalt-600/30 bg-cobalt-600/5 p-3 text-sm" role="note">
+      This email is sent by the website (apps/web) from code, on the same layout. Editing it here changes the library copy and its previews, not what the website sends.
+    </div>
+  {% endif %}
+  {% if template.status == "archived" %}
+    <div class="mt-4 rounded-md border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-800" role="note">This template is archived. Unarchive it to use it again; saving it returns it to Draft.</div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    {% include "email_templates/_editor.html" %}
+
+    <section aria-labelledby="preview-heading" class="min-w-0">
+      <div class="xl:sticky xl:top-4">
+        <h2 id="preview-heading" class="mb-2 font-semibold">Live preview</h2>
+        <div id="preview-panel"
+             hx-post="{{ preview_url }}"
+             hx-include="#template-form" hx-trigger="input delay:700ms from:body, change from:body, vsa-preview from:body"
+             hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">
+          {% include "email_templates/_preview.html" %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

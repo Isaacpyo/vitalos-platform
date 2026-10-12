@@ -2,6 +2,8 @@ VITALOS · NEW ENQUIRY
 
 Example Person
 
+A plain paragraph straight after a heading.
+
 Reply to Example: mailto:person@example.invalid?subject=Re%3A%20Hi
 
 --

@@ -15,14 +15,34 @@
       <ul class="space-y-0.5" aria-labelledby="nav-group-{{ forloop.counter }}">
         {% for entry in group.items %}
           <li>
-            <a href="{{ entry.url }}" class="nav-item" {% if entry.active %}aria-current="page"{% endif %} data-nav="{{ entry.item.key }}">
-              {% icon entry.item.icon "h-[18px] w-[18px] shrink-0" %}
-              <span class="nav-label">{{ entry.item.label }}</span>
-              {% if entry.item.key == "enquiries" %}
-                <span hx-get="{% url 'enquiries:badge' %}" hx-trigger="load, every 30s" hx-swap="innerHTML" class="contents" data-testid="enquiries-badge-slot"></span>
-              {% endif %}
-              <span class="nav-tip" aria-hidden="true">{{ entry.item.label }}</span>
-            </a>
+            {% if entry.children %}
+              {# A dropdown (Mail). Open by default; the collapsed rail always shows the children as icons. #}
+              <button type="button" class="nav-item w-full md:collapsed:hidden" aria-expanded="true" aria-controls="nav-sub-{{ entry.item.key }}" data-nav-toggle data-nav-parent="{{ entry.item.key }}">
+                {% icon entry.item.icon "h-[18px] w-[18px] shrink-0" %}
+                <span class="nav-label">{{ entry.item.label }}</span>
+                <span class="nav-chevron ml-auto" aria-hidden="true">{% icon "down" "h-4 w-4" %}</span>
+              </button>
+              <ul id="nav-sub-{{ entry.item.key }}" class="nav-sub space-y-0.5" aria-label="{{ entry.item.label }}">
+                {% for child in entry.children %}
+                  <li>
+                    <a href="{{ child.url }}" class="nav-item nav-child" {% if child.active %}aria-current="page"{% endif %} data-nav="{{ child.item.key }}">
+                      {% icon child.item.icon "h-[18px] w-[18px] shrink-0" %}
+                      <span class="nav-label">{{ child.item.label }}</span>
+                      {% if child.item.key == "enquiries" %}
+                        <span hx-get="{% url 'enquiries:badge' %}" hx-trigger="load, every 30s" hx-swap="innerHTML" class="contents" data-testid="enquiries-badge-slot"></span>
+                      {% endif %}
+                      <span class="nav-tip" aria-hidden="true">{{ entry.item.label }}: {{ child.item.label }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <a href="{{ entry.url }}" class="nav-item" {% if entry.active %}aria-current="page"{% endif %} data-nav="{{ entry.item.key }}">
+                {% icon entry.item.icon "h-[18px] w-[18px] shrink-0" %}
+                <span class="nav-label">{{ entry.item.label }}</span>
+                <span class="nav-tip" aria-hidden="true">{{ entry.item.label }}</span>
+              </a>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>

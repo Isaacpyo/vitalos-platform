@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.architecture",
     "apps.enquiries",
+    "apps.email_templates",
     "apps.api",
 ]
 

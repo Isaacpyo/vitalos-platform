@@ -109,6 +109,7 @@ const fixtures: Record<string, EmailDocument> = {
     headerLabel: "New enquiry",
     blocks: [
       { type: "heading", text: "Example Person" },
+      { type: "text", text: "A plain paragraph straight after a heading." },
       {
         type: "button",
         label: "Reply to Example",

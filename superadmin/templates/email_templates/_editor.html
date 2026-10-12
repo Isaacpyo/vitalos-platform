@@ -1,0 +1,100 @@
+{% load ui %}
+<div id="editor-region" class="min-w-0">
+  <form id="template-form" method="post" data-template-form novalidate
+        action="{% if template %}{% url 'email_templates:edit' template.pk %}{% else %}{% url 'email_templates:create' %}{% endif %}">
+    {% csrf_token %}
+    {% if unsaved %}
+      <p class="mb-3 rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900 dark:bg-amber-400/15 dark:text-amber-100" role="status" data-testid="unsaved">Unsaved changes. Save to keep them.</p>
+    {% endif %}
+
+    <section class="card p-5" aria-labelledby="details-heading">
+      <h2 id="details-heading" class="mb-4 font-semibold">Details</h2>
+      {% include "partials/form_fields.html" %}
+    </section>
+
+    <section class="card mt-6 p-5" aria-labelledby="blocks-heading">
+      <h2 id="blocks-heading" class="font-semibold">Body</h2>
+      <p class="muted mb-4 text-sm">Blocks render on the shared Vitalos layout. The header, footer, company details, social links and (for outreach and marketing) the unsubscribe link are added for you.</p>
+      <input type="hidden" name="block-count" value="{{ block_count }}">
+      <ol class="space-y-3">
+        {% for block in blocks %}
+          <li class="rounded-md border border-slate-200 p-3 dark:border-slate-800" data-block="{{ block.type }}">
+            <fieldset>
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <legend class="text-sm font-semibold">{{ forloop.counter }}. {{ block.label_text }}</legend>
+                <div class="flex items-center gap-1">
+                  <button type="submit" name="op" value="up:{{ block.index }}" class="btn btn-ghost btn-sm" {% if block.first %}disabled{% endif %}
+                          hx-post="{{ request.path }}" hx-target="#editor-region" hx-select="#editor-region" hx-swap="outerHTML" aria-label="Move block {{ forloop.counter }} up">{% icon "up" "h-4 w-4" %}</button>
+                  <button type="submit" name="op" value="down:{{ block.index }}" class="btn btn-ghost btn-sm" {% if block.last %}disabled{% endif %}
+                          hx-post="{{ request.path }}" hx-target="#editor-region" hx-select="#editor-region" hx-swap="outerHTML" aria-label="Move block {{ forloop.counter }} down">{% icon "down" "h-4 w-4" %}</button>
+                  <button type="submit" name="op" value="remove:{{ block.index }}" class="btn btn-ghost btn-sm"
+                          hx-post="{{ request.path }}" hx-target="#editor-region" hx-select="#editor-region" hx-swap="outerHTML" aria-label="Remove block {{ forloop.counter }}">{% icon "x" "h-4 w-4" %}</button>
+                </div>
+              </div>
+              <input type="hidden" name="block-{{ block.index }}-type" value="{{ block.type }}">
+              {% if block.type == "heading" or block.type == "section" %}
+                <label class="sr-only" for="block-{{ block.index }}-text">Text</label>
+                <input type="text" id="block-{{ block.index }}-text" name="block-{{ block.index }}-text" value="{{ block.text }}" class="{{ input_class }}">
+              {% elif block.type == "text" or block.type == "quote" %}
+                <label class="sr-only" for="block-{{ block.index }}-text">Text</label>
+                <textarea id="block-{{ block.index }}-text" name="block-{{ block.index }}-text" rows="{% if block.type == 'text' %}6{% else %}3{% endif %}" class="{{ input_class }}">{{ block.text }}</textarea>
+                {% if block.type == "text" %}
+                  <p class="field-help">A blank line starts a new paragraph; a line starting with “- ” is a bullet.</p>
+                  <label class="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" name="block-{{ block.index }}-muted" value="1" {% if block.muted %}checked{% endif %}> Muted (secondary text)</label>
+                {% endif %}
+              {% elif block.type == "button" %}
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <div><label class="field-label" for="block-{{ block.index }}-label">Label</label><input type="text" id="block-{{ block.index }}-label" name="block-{{ block.index }}-label" value="{{ block.label }}" class="{{ input_class }}"></div>
+                  <div><label class="field-label" for="block-{{ block.index }}-url">Link</label><input type="text" id="block-{{ block.index }}-url" name="block-{{ block.index }}-url" value="{{ block.url }}" class="{{ input_class }}" placeholder="{% templatetag openvariable %}meeting_link{% templatetag closevariable %} or https://…"></div>
+                </div>
+                <p class="field-help">Only https:// and mailto: links are rendered.</p>
+              {% elif block.type == "badge" %}
+                <label class="field-label" for="block-{{ block.index }}-items">Badges, one per line (up to 3)</label>
+                <textarea id="block-{{ block.index }}-items" name="block-{{ block.index }}-items" rows="3" class="{{ input_class }}">{{ block.items }}</textarea>
+              {% elif block.type == "details" %}
+                <label class="field-label" for="block-{{ block.index }}-rows">Rows, one per line: Label | Value</label>
+                <textarea id="block-{{ block.index }}-rows" name="block-{{ block.index }}-rows" rows="4" class="{{ input_class }} font-mono">{{ block.rows }}</textarea>
+              {% elif block.type == "divider" %}
+                <p class="muted text-sm">A thin rule between sections.</p>
+              {% elif block.type == "signature" %}
+                <p class="muted text-sm">“Kind regards,” then your name and job title (from your account and team profile) and Vitalos Technologies.</p>
+              {% endif %}
+            </fieldset>
+          </li>
+        {% empty %}
+          <li class="muted text-sm">No blocks yet. Add one below.</li>
+        {% endfor %}
+      </ol>
+      <div class="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Add a block">
+        <span class="muted text-xs font-medium uppercase">Add</span>
+        {% for value, label in block_choices %}
+          <button type="submit" name="op" value="add:{{ value }}" class="btn btn-secondary btn-sm"
+                  hx-post="{{ request.path }}" hx-target="#editor-region" hx-select="#editor-region" hx-swap="outerHTML">{% icon "plus" "h-3.5 w-3.5" %} {{ label }}</button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card mt-6 p-5" aria-labelledby="variables-heading">
+      <h2 id="variables-heading" class="font-semibold">Merge variables</h2>
+      <p class="muted mb-3 text-sm">Click into a field, then click a variable to insert it. Missing values fall back to the value shown in the preview checks.</p>
+      <div class="space-y-3">
+        {% for group, items in variable_groups %}
+          <div>
+            <p class="mono-label muted mb-1">{{ group }}</p>
+            <div class="flex flex-wrap gap-1.5">
+              {% for variable in items %}
+                <button type="button" class="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-xs hover:border-cobalt-600 hover:text-cobalt-600 dark:border-slate-700 dark:bg-slate-800 dark:hover:text-cobalt-300"
+                        data-insert-variable="{% templatetag openvariable %}{{ variable.name }}{% templatetag closevariable %}" title="{{ variable.description }}">{{ variable.name }}</button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button type="submit" name="op" value="save" class="btn btn-primary" data-testid="save-template">Save{% if template %} as version {{ template.version|add:1 }}{% endif %}</button>
+      <a href="{% url 'email_templates:list' %}" class="btn btn-ghost">Back to the library</a>
+    </div>
+  </form>
+</div>
