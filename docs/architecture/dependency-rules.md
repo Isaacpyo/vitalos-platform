@@ -6,43 +6,35 @@ Rules from ADR-009, extended by ADR-022. They are enforced, not advisory: `corep
 flowchart LR
   subgraph Apps
     Web[apps/web]
-    Studio[apps/studio]
     Storybook[apps/storybook]
   end
   subgraph Packages
     UI[ui]
     Tokens[design-tokens]
-    CMS["cms (root, ./queries, ./fixtures)"]
-    CMSS["cms Studio-only<br/>./schemas ./structure ./actions ./presentation"]
+    CMS["cms (root, ./repo, ./draft, ./fixtures)"]
     Config[config]
     Validation[validation]
     Security[security]
     Obs[observability]
   end
   Web --> UI & Tokens & CMS & Config & Validation & Security & Obs
-  Studio --> CMS
-  Studio --> CMSS
   Storybook --> UI & Tokens
   Obs --> Security
-  Web -. forbidden .-> CMSS
-  Web -. forbidden .-> Sanity["sanity SDK"]
   UI -. forbidden .-> Next["next, @supabase, @vitalos/cms, @vitalos/config"]
   Packages -. forbidden .-> Apps
 ```
 
 ## Enforced rules (dependency-cruiser)
 
-| Rule                          | Meaning                                                                                                                     |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `no-circular`                 | No import cycles anywhere                                                                                                   |
-| `no-app-to-app`               | An app never imports another app's source                                                                                   |
-| `no-package-to-app`           | Shared packages never import apps                                                                                           |
-| `no-domain-to-ui`             | Code under `domain/` or `features/` never imports `packages/ui`                                                             |
-| `web-no-sanity`               | `apps/web` never imports the `sanity` Studio SDK (it uses `next-sanity`, `@sanity/client` and `@vitalos/cms`)               |
-| `web-no-cms-studio-internals` | `apps/web` never imports `@vitalos/cms` schemas, structure, actions or presentation                                         |
-| `cms-public-entry-no-sanity`  | The `@vitalos/cms` root entry, routes, navigation, locked copy and `content/` never import `sanity`, `groq` or `@sanity/*`  |
-| `ui-no-framework-or-platform` | `packages/ui` is presentation only: no `next`, `@supabase`, `@vitalos/cms` or `@vitalos/config`; links are plain anchors    |
-| `motion-only-in-ui`           | Only `packages/ui` imports `motion`, `framer-motion`, `motion-dom` or `motion-utils` (ADR-024); apps use its client islands |
+| Rule                              | Meaning                                                                                                                                               |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-circular`                     | No import cycles anywhere                                                                                                                             |
+| `no-app-to-app`                   | An app never imports another app's source                                                                                                             |
+| `no-package-to-app`               | Shared packages never import apps                                                                                                                     |
+| `no-domain-to-ui`                 | Code under `domain/` or `features/` never imports `packages/ui`                                                                                       |
+| `cms-public-entry-framework-free` | The `@vitalos/cms` root entry, routes, navigation, locked copy and `content/` never import `next`, `react`, `sanity`, `groq` or `@sanity/*` (ADR-028) |
+| `ui-no-framework-or-platform`     | `packages/ui` is presentation only: no `next`, `@supabase`, `@vitalos/cms` or `@vitalos/config`; links are plain anchors                              |
+| `motion-only-in-ui`               | Only `packages/ui` imports `motion`, `framer-motion`, `motion-dom` or `motion-utils` (ADR-024); apps use its client islands                           |
 
 ## Conventions (reviewed, partly tested)
 
@@ -50,10 +42,10 @@ flowchart LR
 - Server-only values stay server-only: `@vitalos/config` root imports `server-only`; `@vitalos/config/public` and `/build` are safe for client bundles and `next.config.ts`. `corepack pnpm check:bundle-secrets` scans the built client bundle for server env names and secret patterns.
 - No raw colours outside `packages/design-tokens` (`corepack pnpm check:raw-colours`, part of `check`).
 - Enquiry code is layered inside `apps/web/src/features/enquiries`: `domain` (model, events, ports) and `application` import no framework or provider; `adapters` implement the ports; `composition.ts` is the only place that picks adapters (ADR-019).
-- Pages get content only through `getContentSource()`; they never create Sanity clients (ADR-018). Public URLs come only from `routes.ts` (ADR-022).
+- Pages get content only through `getContentSource()`; they never construct a source themselves (ADR-028). Public URLs come only from `routes.ts` (ADR-022).
 - Business rules live outside UI and route handlers; route handlers validate external input and authorise on the server.
 - Provider code sits behind interfaces: `ContentSource`, `EnquiryRepository`, `RateLimiter`, `HumanVerifier`, `OutboxStore`, `Notifier`, `ErrorReporter`.
-- Only one open pull request may change `pnpm-lock.yaml` or a `package.json` at a time. Keep the `ui5` override in `pnpm-workspace.yaml` (pnpm 12 alias bug).
+- Only one open pull request may change `pnpm-lock.yaml` or a `package.json` at a time.
 
 ## Services and workers (future)
 

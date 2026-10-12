@@ -1,6 +1,6 @@
 import type { ImageView, RichText, RichTextBlock } from "@vitalos/cms";
 import { isSafeRelativeRedirect } from "@vitalos/security/url";
-import { classifyImageUrl } from "./images";
+import { isSameOriginImage } from "./images";
 
 /**
  * Framework-free model of a rich-text field: portable-text-like blocks are normalised into a
@@ -252,7 +252,7 @@ export function normaliseRichText(blocks: RichText | undefined | null): RichText
         const alt = typeof image?.["alt"] === "string" ? image["alt"] : "";
         const width = Number(image?.["width"]);
         const height = Number(image?.["height"]);
-        if (!url || !classifyImageUrl(url) || alt.trim() === "" || !(width > 0) || !(height > 0)) {
+        if (!url || !isSameOriginImage(url) || alt.trim() === "" || !(width > 0) || !(height > 0)) {
           return;
         }
         const caption = asString(block["caption"]);

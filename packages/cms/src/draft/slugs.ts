@@ -48,7 +48,7 @@ export const industrySlugs = [
 ] as const;
 export type IndustrySlug = (typeof industrySlugs)[number];
 
-/** Document id of a draft document: `<type>-<slug>`. The same id is used in the Sanity export. */
+/** Document id of a draft document: `<type>-<slug>`. */
 export const draftId = (type: string, slug: string): string => `${type}-${slug}`;
 
 /** Date the draft content was written; used as `updatedAt` on every draft document. */

@@ -1,8 +1,8 @@
 /**
  * Public view models: the only content shapes the web app renders.
  *
- * These are framework-free and Sanity-free. Mappers (workstream C2) translate Sanity documents
- * into these shapes and are responsible for excluding anything that must not be public:
+ * These are framework-free. Content sources (repo, draft, fixtures) produce these shapes and are
+ * responsible for excluding anything that must not be public:
  * controlled evidence, archived documents, unverified certifications, testimonials without
  * permission and images without approved rights. A view never carries an internal evidence
  * pointer.
@@ -175,7 +175,7 @@ interface DocBase {
   summary?: string;
   /**
    * Set only by the draft content source (ADR-025): the document is invented placeholder content
-   * that must be replaced before launch. Never produced by the Sanity mappers or the fixtures.
+   * that must be replaced before launch. Never produced by the fixtures.
    */
   placeholder?: true;
   seo: SeoView;
@@ -369,7 +369,7 @@ export interface ProofItemView {
 export interface HomePageView {
   seo: SeoView;
   /**
-   * Visitor-facing section headings, authored in Sanity. A section renders no heading when its
+   * Visitor-facing section headings, authored in the repo content files. A section renders no heading when its
    * entry is absent; the structural labels in locked-copy.ts are never rendered.
    */
   headings: Partial<Record<HomeSectionKey, string>>;

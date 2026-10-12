@@ -5,13 +5,12 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { toOfferRows } from "../../lib/view-mapping/patterns";
-import { Band, RowList, gapBand } from "../commercial/bands";
+import { Band, RowList } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface OfferIndexTemplateProps {
   page: RoutePageView | null;
   offers: readonly OfferSummary[];
-  draft: boolean;
 }
 
 export const offersTrail = () =>
@@ -21,7 +20,7 @@ export const offersTrail = () =>
   );
 
 /** Offers index: defined ways to start, in the order the specs fix. No prices. */
-export function OfferIndexTemplate({ page, offers, draft }: Readonly<OfferIndexTemplateProps>) {
+export function OfferIndexTemplate({ page, offers }: Readonly<OfferIndexTemplateProps>) {
   const rows = toOfferRows(orderByLockedNames(offers, offerNames), { headingLevel: 2 });
   return (
     <IndexLayout
@@ -39,9 +38,7 @@ export function OfferIndexTemplate({ page, offers, draft }: Readonly<OfferIndexT
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.offers, tone)
-          ),
+          ) : null,
       ]}
     />
   );

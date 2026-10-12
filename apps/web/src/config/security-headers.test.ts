@@ -5,12 +5,10 @@ import { getSecurityHeaders } from "./security-headers";
 const baseEnv: BuildEnv = {
   deployEnv: "production",
   siteUrl: "https://www.example.invalid",
-  contentSource: "sanity",
+  contentSource: "repo",
   indexable: true,
   enableHsts: false,
   turnstileEnabled: false,
-  sanityProjectId: "abc123",
-  sanityStudioOrigin: "https://studio.example.invalid",
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
@@ -31,19 +29,18 @@ describe("getSecurityHeaders", () => {
     expect(headersFor({}).has("X-Robots-Tag")).toBe(false);
   });
 
-  it("production CSP: no Studio framing, no Sanity API connections, no Turnstile", () => {
+  it("production CSP: no framing, no external connections, no Turnstile", () => {
     const csp = headersFor({}).get("Content-Security-Policy")!;
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("connect-src 'self';");
-    expect(csp).not.toContain("studio.example.invalid");
     expect(csp).not.toContain("challenges.cloudflare.com");
     expect(csp).toContain("upgrade-insecure-requests");
   });
 
-  it("preview CSP: Studio may frame and Sanity API is reachable", () => {
+  it("preview CSP is as strict as production", () => {
     const csp = headersFor({ deployEnv: "preview" }).get("Content-Security-Policy")!;
-    expect(csp).toContain("frame-ancestors https://studio.example.invalid");
-    expect(csp).toContain("https://abc123.api.sanity.io");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).toContain("connect-src 'self';");
   });
 
   it("local CSP does not upgrade insecure requests", () => {

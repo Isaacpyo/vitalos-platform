@@ -2,7 +2,7 @@
  * Locked copy: the ONLY place approved, owner-locked strings live in code.
  *
  * Every string cites the spec section it comes from and is copied verbatim. Everything else
- * shown on the website comes from Sanity. Do not add marketing copy, client names, outcomes,
+ * shown on the website comes from the repo content files (packages/cms/src/repo, ADR-028). Do not add marketing copy, client names, outcomes,
  * metrics, testimonials, certifications, bios or legal claims here.
  *
  * Source abbreviations: "Stage N §M" refers to the Vitalos stage specification documents.
@@ -183,8 +183,8 @@ export const trustTopicLabels = {
  * are STRUCTURAL labels for editors, tests and analytics and are never rendered.
  *
  * `visibleHeading` is present only where a spec quotes a visitor-facing title, and is cited per
- * entry. It is the spec-quoted value (for example a Studio initial value) and is not a render
- * fallback: visible headings come from Sanity (`HomePageView.headings`) and a section renders no
+ * entry. It is the spec-quoted value and is not a render
+ * fallback: visible headings come from the content source (`HomePageView.headings`) and a section renders no
  * heading when none is set. Titles marked "mockup brief" are quoted in Stage 11 §9 image prompts
  * and still need owner confirmation before use as production copy.
  */

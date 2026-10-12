@@ -27,42 +27,14 @@ module.exports = {
       to: { path: "^apps/" },
     },
     {
-      name: "web-no-sanity",
+      name: "cms-public-entry-framework-free",
       comment:
-        "The public web app must never import the Sanity Studio SDK. Use @vitalos/cms (view models, ContentSource) and next-sanity.",
-      severity: "error",
-      from: { path: "^apps/web/" },
-      to: { path: pkg("sanity") },
-    },
-    {
-      name: "web-no-cms-studio-internals",
-      comment:
-        "apps/web may only use the Sanity-free @vitalos/cms entry, never schemas, structure or presentation.",
-      severity: "error",
-      from: { path: "^apps/web/" },
-      to: {
-        path: "^packages/cms/src/(schemaTypes|structure|presentation|actions)(/|\\.|$)",
-      },
-    },
-    {
-      name: "cms-public-entry-no-sanity",
-      comment:
-        "The @vitalos/cms root entry (routes, navigation, locked copy, content types) must stay free of Sanity so it is safe in web bundles.",
+        "The @vitalos/cms root entry (routes, navigation, locked copy, content types) must stay free of framework and CMS SDK dependencies so it is safe in web bundles (ADR-028).",
       severity: "error",
       from: {
         path: "^packages/cms/src/(index|routes|navigation|locked-copy)\\.ts$|^packages/cms/src/content/",
       },
-      to: { path: pkg("sanity|groq|@sanity") },
-    },
-    {
-      name: "cms-draft-no-sanity",
-      comment:
-        "The draft content source (@vitalos/cms/draft, ADR-025) is loaded by the web app: no Sanity, GROQ, Studio schemas or queries. Its tests may use the schema validation harness.",
-      severity: "error",
-      from: { path: "^packages/cms/src/draft/", pathNot: "\\.test\\.ts$" },
-      to: {
-        path: `${pkg("sanity|groq|@sanity")}|^packages/cms/src/(schemaTypes|queries|structure|presentation|actions)(/|\\.ts$)`,
-      },
+      to: { path: pkg("next|react|@sanity|sanity|groq") },
     },
     {
       name: "ui-no-framework-or-platform",
@@ -86,7 +58,7 @@ module.exports = {
     // node_modules stays in the graph (as unfollowed leaves) so rules can forbid specific packages.
     exclude: "(^|/)(\\.next|storybook-static|dist)(/|$)",
     tsPreCompilationDeps: true,
-    // Resolve workspace packages through their `exports` map (e.g. @vitalos/cms/schemas) so
+    // Resolve workspace packages through their `exports` map (e.g. @vitalos/cms/repo) so
     // rules see real file paths instead of unresolved bare module names.
     enhancedResolveOptions: {
       exportsFields: ["exports"],

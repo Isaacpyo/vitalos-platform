@@ -15,13 +15,6 @@ export interface BuildCspInput {
   isDev: boolean;
   /** Allow Cloudflare Turnstile (script and frame). Only when both keys are configured. */
   turnstile: boolean;
-  /** Sanity project id; required for the Sanity API origins below. */
-  sanityProjectId?: string;
-  /**
-   * Allow browser connections to the Sanity API (draft/preview and visual editing). Off by
-   * default so the public production policy never trusts client-side Sanity calls.
-   */
-  sanityApiConnect?: boolean;
   /** Origins allowed to frame the site. Empty means `'none'`. */
   frameAncestors?: readonly string[];
   /** `enforced` (default) keeps `'unsafe-inline'` scripts; `strict` drops it (report-only). */
@@ -31,10 +24,8 @@ export interface BuildCspInput {
 }
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
-const SANITY_CDN_ORIGIN = "https://cdn.sanity.io";
 
 const originPattern = /^https?:\/\/[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{1,5})?$/i;
-const projectIdPattern = /^[a-z0-9-]+$/;
 
 /** Throws on anything that is not a bare http(s) origin: CSP values must never carry `;` or spaces. */
 export function assertCspOrigin(value: string): string {
@@ -42,18 +33,6 @@ export function assertCspOrigin(value: string): string {
     throw new Error("Invalid CSP origin: expected a bare http(s) origin without path or spaces");
   }
   return value;
-}
-
-/** Sanity API hosts for a project: query API, API CDN and the live-content websocket. */
-export function sanityApiOrigins(projectId: string): string[] {
-  if (!projectIdPattern.test(projectId)) {
-    throw new Error("Invalid Sanity project id for CSP");
-  }
-  return [
-    `https://${projectId}.api.sanity.io`,
-    `https://${projectId}.apicdn.sanity.io`,
-    `wss://${projectId}.api.sanity.io`,
-  ];
 }
 
 export function buildCsp(input: BuildCspInput): string {
@@ -65,9 +44,6 @@ export function buildCsp(input: BuildCspInput): string {
   if (input.turnstile) scriptSrc.push(TURNSTILE_ORIGIN);
 
   const connectSrc = ["'self'"];
-  if (input.sanityApiConnect && input.sanityProjectId) {
-    connectSrc.push(...sanityApiOrigins(input.sanityProjectId));
-  }
 
   const frameAncestors = (input.frameAncestors ?? []).map(assertCspOrigin);
 
@@ -77,7 +53,7 @@ export function buildCsp(input: BuildCspInput): string {
     // styled-components and React style attributes need inline styles; styles carry no script
     // execution risk once script-src is locked down.
     ["style-src", ["'self'", "'unsafe-inline'"]],
-    ["img-src", ["'self'", "data:", SANITY_CDN_ORIGIN]],
+    ["img-src", ["'self'", "data:"]],
     ["font-src", ["'self'"]],
     ["connect-src", connectSrc],
     ["frame-src", input.turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],

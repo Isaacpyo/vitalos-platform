@@ -2,10 +2,10 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 // pnpm `auditConfig.ignoreGhsas` ignores GHSA-vfj7-8cjw-p6xm (braces) on every path. This guard fails
-// if braces becomes reachable by a route other than the reviewed build/lint-time ones, so a new
+// if braces becomes reachable by a route other than the reviewed lint-time one, so a new
 // (possibly runtime) dependency on it is not silently covered by the exception.
 // See docs/security/dependency-advisories.md.
-const REVIEWED_ROUTES = ["@sanity/codegen", "@next/eslint-plugin-next"];
+const REVIEWED_ROUTES = ["@next/eslint-plugin-next"];
 
 type Node = { name: string; version?: string; dependents?: Node[] };
 

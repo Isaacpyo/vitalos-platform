@@ -5,7 +5,7 @@ A Cloudflare Email Worker for `support@vitalos.co.uk`. It does two things for ev
 1. Forwards the original message to the existing inbox (`FORWARD_TO`), so nothing is lost.
 2. Posts the raw MIME, signed with HMAC-SHA256, to the Super Admin at `https://admin.vitalos.co.uk/api/inbound/email`, where it appears in the Enquiries tab.
 
-It is **prepared, not deployed**. Deploying and binding it are owner steps in [superadmin/docs/email-setup.md](../../superadmin/docs/email-setup.md). Design: [ADR-028](../../docs/adr/ADR-028-superadmin-enquiries-mail-console.md).
+It is **prepared, not deployed**. Deploying and binding it are owner steps in [superadmin/docs/email-setup.md](../../superadmin/docs/email-setup.md). Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md).
 
 ## Behaviour
 

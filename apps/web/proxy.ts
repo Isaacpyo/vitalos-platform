@@ -22,9 +22,6 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
  * page, which would leave visitors without JavaScript with a blank 404.
  */
-/** Cookie Next.js sets while Draft Mode is on. */
-const DRAFT_MODE_COOKIE = "__prerender_bypass";
-
 export async function proxy(request: NextRequest) {
   const requestId = correlationId(request.headers);
 
@@ -37,12 +34,7 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
 
-  // Editors in Draft Mode may open unpublished documents, so the published list does not apply.
-  const inDraftMode = request.cookies.has(DRAFT_MODE_COOKIE);
-  const missing =
-    !inDraftMode &&
-    request.method === "GET" &&
-    (await isMissingDetailPath(request.nextUrl.pathname));
+  const missing = request.method === "GET" && (await isMissingDetailPath(request.nextUrl.pathname));
   const response = missing
     ? NextResponse.rewrite(new URL(UNMATCHED_PATH, request.url), {
         request: { headers: requestHeaders },

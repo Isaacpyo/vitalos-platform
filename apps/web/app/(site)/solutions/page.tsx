@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { routes } from "@vitalos/cms";
 import { JsonLd } from "../../../src/components/json-ld";
 import { loadChromeContent } from "../../../src/components/site-chrome/load";
-import { isDraftModeEnabled } from "../../../src/lib/cms/draft";
 import { structuralLabels } from "../../../src/lib/view-mapping/labels";
 import { loadRoutePage } from "../../../src/templates/commercial/load";
 import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
@@ -22,16 +21,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function SolutionsPage() {
-  const [page, { solutions }, draft] = await Promise.all([
+  const [page, { solutions }] = await Promise.all([
     loadRoutePage("solutions"),
     loadChromeContent(),
-    isDraftModeEnabled(),
   ]);
-  if (!page && solutions.length === 0 && !draft) notFound();
+  if (!page && solutions.length === 0) notFound();
   return (
     <>
       <JsonLd data={breadcrumbNode(solutionsTrail())} />
-      <SolutionIndexTemplate page={page} solutions={solutions} draft={draft} />
+      <SolutionIndexTemplate page={page} solutions={solutions} />
     </>
   );
 }

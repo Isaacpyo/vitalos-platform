@@ -1,10 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createFixtureSource } from "../content/fixture-source";
-import type { FixtureSet } from "../content/fixture-source";
-import { createSanityContentSource } from "../content/sanity-source";
 import { describeContentSourceContract, docKinds } from "../content/testing/contract";
-import { createFixtureSanityFetcher } from "../content/testing/sanity-fixture-fetcher";
 import type { DocKind, ViewFor } from "../content/types";
 import {
   homeSections,
@@ -22,69 +19,14 @@ import { singletonProvenanceKeys } from "./provenance";
 const NOW = () => new Date("2026-10-10T12:00:00Z");
 const { set, provenance } = draftContent;
 const draftSource = () => createDraftContentSource({ now: NOW });
-/**
- * The Sanity mappers know nothing about placeholder documents (they are never imported by default),
- * so the Sanity-shaped contract runs over the set without them.
- */
-const withoutPlaceholders: FixtureSet = {
-  ...set,
-  documents: Object.fromEntries(
-    Object.entries(set.documents).map(([kind, list]) => [
-      kind,
-      (list as readonly { placeholder?: true }[]).filter((doc) => doc.placeholder !== true),
-    ]),
-  ) as unknown as FixtureSet["documents"],
-};
-const sanitySource = () =>
-  createSanityContentSource(createFixtureSanityFetcher(withoutPlaceholders), { now: NOW });
-const draftWithoutPlaceholders = () => createFixtureSource(withoutPlaceholders, { now: NOW });
-
 describeContentSourceContract("Draft content", draftSource, {
   countsPlaceholderCaseStudies: true,
 });
-describeContentSourceContract("Sanity source (draft-shaped documents)", sanitySource);
 
 const allDocuments = (): { kind: DocKind; doc: ViewFor<DocKind> }[] =>
   docKinds.flatMap((kind) =>
     (set.documents[kind] as readonly ViewFor<DocKind>[]).map((doc) => ({ kind, doc })),
   );
-
-describe("draft content matches the fixture view-model contract through the Sanity mappers", () => {
-  const draft = draftWithoutPlaceholders();
-  const sanity = sanitySource();
-
-  it("site chrome, home page, gates and route pages", async () => {
-    await expect(sanity.getSiteChrome()).resolves.toEqual(await draft.getSiteChrome());
-    await expect(sanity.getHomePage()).resolves.toEqual(await draft.getHomePage());
-    for (const key of routePageKeys) {
-      await expect(sanity.getRoutePage(key), key).resolves.toEqual(await draft.getRoutePage(key));
-    }
-  });
-
-  it("summaries, params, sitemap and every document", async () => {
-    await expect(sanity.getSitemapEntries()).resolves.toEqual(await draft.getSitemapEntries());
-    for (const kind of docKinds) {
-      await expect(sanity.listSummaries(kind), kind).resolves.toEqual(
-        await draft.listSummaries(kind),
-      );
-      for (const params of await draft.listParams(kind)) {
-        const read = (source: typeof draft) =>
-          kind === "trustItem"
-            ? source.getDocument("trustItem", params.topic as "security")
-            : kind === "legalPage"
-              ? source.getDocument("legalPage", params.slug as "privacy")
-              : kind === "labAsset"
-                ? source.getDocument("labAsset", params.slug as string, {
-                    labType: params.type as "research",
-                  })
-                : source.getDocument(kind as "practice", params.slug as string);
-        await expect(read(sanity), `${kind} ${JSON.stringify(params)}`).resolves.toEqual(
-          await read(draft),
-        );
-      }
-    }
-  });
-});
 
 describe("publication gates in the draft source", () => {
   it("opens every gate: the placeholder content opens Work, Insights and Careers", async () => {
@@ -100,19 +42,10 @@ describe("publication gates in the draft source", () => {
   });
 
   it("opens Work only through the draft source: other sources ignore placeholder status", async () => {
-    // The same set served without the draft-only option (as fixtures, sparse or Sanity would be).
+    // The same set served without the draft-only option (as fixtures or sparse would be).
     const plain = await createFixtureSource(set, { now: NOW }).getPublicationGates();
     expect(plain.open.work).toBe(false);
     expect(plain.counts.work).toBe(0);
-    // The Sanity mappers see only the verified-evidence rule, and placeholders are not imported.
-    const sanity = await sanitySource().getPublicationGates();
-    expect(sanity.open).toEqual({
-      work: false,
-      insights: false,
-      labs: true,
-      industries: true,
-      careers: false,
-    });
   });
 
   it("drafts only placeholder case studies, insights, people and roles", () => {

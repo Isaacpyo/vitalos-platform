@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { ArticleFeature, ArticleRow, ContentGap, Stack } from "@vitalos/ui";
+import { ArticleFeature, ArticleRow, Stack } from "@vitalos/ui";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
@@ -18,7 +18,7 @@ const LIST_ID = "insights-list";
  * infinite card wall).
  */
 export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
-  const { page, insights, draft } = data;
+  const { page, insights } = data;
   const [featured, ...rest] = insights;
   const groups = insightFilterGroups(rest);
   const placeholder = hasPlaceholder(insights);
@@ -38,11 +38,6 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />
-          <ContentGap
-            draft={draft && !page}
-            title="The Insights page heading and introduction are not set"
-            description="Add an Insights route page in the Studio. Until then the page shows the navigation label as its heading."
-          />
           {featured ? <ArticleFeature {...insightCardProps(featured)} headingLevel={2} /> : null}
           <ListFilter listId={LIST_ID} groups={groups} total={rest.length} />
           <ul id={LIST_ID} className="m-0 list-none p-0">

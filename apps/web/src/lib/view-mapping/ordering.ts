@@ -1,6 +1,6 @@
 /**
  * Orders items by a locked list of names (for example the five practices in the order the specs
- * give them). The Sanity queries sort by title, which is alphabetical, so the order the specs
+ * give them). The content sources sort by title, which is alphabetical, so the order the specs
  * fix is applied here.
  *
  * An item matches a locked name when its title equals the name, or equals `Vitalos <name>`, ignoring

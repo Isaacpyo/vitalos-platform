@@ -17,20 +17,19 @@ cp .env.example .env.local        # optional; every variable is optional locally
 corepack pnpm dev:web             # http://localhost:3000
 ```
 
-Other apps: `corepack pnpm dev:studio` (Sanity Studio, default port 3333) and `corepack pnpm storybook` (port 6006). Run `corepack pnpm check` before a pull request.
+Storybook: `corepack pnpm storybook` (port 6006). Run `corepack pnpm check` before a pull request.
 
-Keep lockfile changes to one pull request at a time and keep the `ui5` override in `pnpm-workspace.yaml`.
+Keep lockfile changes to one pull request at a time.
 
 ## Content sources
 
-`VITALOS_CONTENT_SOURCE` selects where `apps/web` reads content (ADR-018). Defaults: `sanity` when `NEXT_PUBLIC_SANITY_PROJECT_ID` is set, otherwise `empty`.
+`VITALOS_CONTENT_SOURCE` selects where `apps/web` reads content (ADR-028). Default: `repo`, the approved repo-file content that production serves.
 
-| Source     | Use                           | Behaviour                                                                                                                                                                                               |
-| ---------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `empty`    | Default local, CI builds      | No documents, every publication gate closed. The homepage shows locked copy only; detail routes 404. This is the honest empty state                                                                     |
-| `fixtures` | UI work, tests                | Artificial content ("Example Practice (fixture)", `*.invalid` addresses). `VITALOS_FIXTURE_SET=full` (above all gates) or `sparse` (below them). Rejected in production                                 |
-| `draft`    | Content review, demos         | Repo-authored content drafted from `docs/strategy/`, pending owner approval (ADR-025). Shows a "Draft content, pending approval" ribbon. Rejected in production and with the `supabase` enquiry backend |
-| `sanity`   | Against a real Sanity project | Needs a project id, dataset and, for drafts, a read token. Not available until the owner provides a project                                                                                             |
+| Source     | Use                      | Behaviour                                                                                                                                                                                               |
+| ---------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `empty`    | Default local, CI builds | No documents, every publication gate closed. The homepage shows locked copy only; detail routes 404. This is the honest empty state                                                                     |
+| `fixtures` | UI work, tests           | Artificial content ("Example Practice (fixture)", `*.invalid` addresses). `VITALOS_FIXTURE_SET=full` (above all gates) or `sparse` (below them). Rejected in production                                 |
+| `draft`    | Content review, demos    | Repo-authored content drafted from `docs/strategy/`, pending owner approval (ADR-025). Shows a "Draft content, pending approval" ribbon. Rejected in production and with the `supabase` enquiry backend |
 
 Example, full fixtures with in-memory enquiries:
 
@@ -39,9 +38,9 @@ VITALOS_CONTENT_SOURCE=fixtures VITALOS_FIXTURE_SET=full VITALOS_ENQUIRY_BACKEND
   corepack pnpm dev:web
 ```
 
-Draft content: `VITALOS_CONTENT_SOURCE=draft VITALOS_ENQUIRY_BACKEND=memory`. The inventory is `docs/content/draft-inventory.md`; after editing `packages/cms/src/draft`, regenerate the Sanity export with `node tooling/scripts/export-draft-dataset.mjs`. End-to-end against it: `E2E_CONTENT_SOURCE=draft corepack pnpm test:e2e` (fixture-specific specs skip themselves).
+Draft content: `VITALOS_CONTENT_SOURCE=draft VITALOS_ENQUIRY_BACKEND=memory`. The inventory is `docs/content/draft-inventory.md`. End-to-end against it: `E2E_CONTENT_SOURCE=draft corepack pnpm test:e2e` (fixture-specific specs skip themselves).
 
-On the contact page the enquiry form renders only when enquiries can be stored and a privacy notice is published. With fixtures the full set includes one; with `empty` you see the email alternative instead.
+On the contact page the enquiry form renders only when enquiries can be stored and a privacy notice is published. With `repo` and the fixtures the full set include one; with `empty` you see the email alternative instead.
 
 Enquiry backends (`VITALOS_ENQUIRY_BACKEND`): `disabled` (default without Supabase variables; the endpoint answers 503), `memory` (tests only, process-local, forbidden in production) and `supabase`. Set `ENQUIRY_IP_HASH_SALT` (16 or more characters) for the Supabase backend. Turnstile keys must be set as a pair; for local work use Cloudflare's documented test keys (`1x00000000000000000000AA` and `1x0000000000000000000000000000000AA`), which the config rejects in production.
 
@@ -65,19 +64,6 @@ To run the web app against the local database, export (in your shell, not in a c
 OUTBOX_DISPATCH_SECRET=... node tooling/scripts/dispatch-outbox-local.mjs [--url http://localhost:3000] [--watch 30]
 ```
 
-## Studio without credentials
-
-`apps/studio` loads and builds with no Sanity project: without `SANITY_STUDIO_PROJECT_ID` it uses a placeholder project and cannot load content, so you can inspect schemas, desk structure, validation and actions but not documents. Set `SANITY_STUDIO_PROJECT_ID` and `SANITY_STUDIO_DATASET` only with an owner-provisioned project (never secrets: `SANITY_STUDIO_*` is bundled into the Studio). `SANITY_STUDIO_PREVIEW_URL` points Presentation at the web app (default `http://localhost:3000`). Do not run `sanity deploy`.
-
-## Typegen
-
-Sanity types in `packages/cms/src/generated` are generated from the schema and the GROQ queries and checked for drift:
-
-```sh
-corepack pnpm check:cms-types                          # CI check; fails on drift
-node tooling/scripts/check-cms-types.mjs --write       # regenerate the committed files
-```
-
 Design-token CSS is generated too: `UPDATE_TOKENS=1 corepack pnpm --filter @vitalos/design-tokens test`.
 
 ## Tests and checks
@@ -89,7 +75,6 @@ Design-token CSS is generated too: `UPDATE_TOKENS=1 corepack pnpm --filter @vita
 | `corepack pnpm lint`, `typecheck`, `test` | Turbo across workspaces (Vitest for unit tests)                                                                                            |
 | `corepack pnpm check:boundaries`          | dependency-cruiser rules (`docs/architecture/dependency-rules.md`)                                                                         |
 | `corepack pnpm check:raw-colours`         | no raw colour values outside `packages/design-tokens`                                                                                      |
-| `corepack pnpm check:cms-types`           | generated Sanity types match schema and queries (also a CI step)                                                                           |
 | `corepack pnpm check:security`            | tracked-file secret patterns and `pnpm audit --audit-level high` (also the blocking `audit` CI job)                                        |
 | `corepack pnpm build`                     | Turbo build; runs with no variables locally (set `NEXT_PUBLIC_SITE_URL` for any non-local deploy env)                                      |
 | `corepack pnpm storybook:build`           | Static Storybook                                                                                                                           |

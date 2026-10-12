@@ -246,7 +246,7 @@ describe("case studies, labs, insights, people", () => {
 
 describe("images", () => {
   const image = {
-    url: "https://cdn.sanity.io/images/p/d/a-800x600.jpg",
+    url: "/images/a-800x600.jpg",
     alt: "Alt",
     width: 800,
     height: 600,

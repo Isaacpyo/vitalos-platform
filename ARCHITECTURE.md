@@ -4,31 +4,30 @@ Vitalos uses a TypeScript-first modular monolith and independently deployable ap
 
 ## Current (stage-1 branch, 10 Oct 2026)
 
-- `apps/web`: Next.js 16 on the App Router. Pages come from one route manifest (`@vitalos/cms`), read content only through a `ContentSource` (`empty`, `fixtures`, `sanity`; ADR-018, ADR-022) and are statically generated with tag-based revalidation. Closed publication gates hide thin sections. Enquiries go through ports and adapters into a PostgreSQL record and durable outbox (ADR-019). Security headers, CSP, correlation ids and non-production `noindex` are built from validated configuration (ADR-020).
-- `apps/studio`: isolated Sanity Studio with governed schemas, a guarded Publish action and slug-change redirect drafts (ADR-017). Not deployed.
+- `apps/web`: Next.js 16 on the App Router. Pages come from one route manifest (`@vitalos/cms`), read content only through a `ContentSource` (`repo`, `draft`, `fixtures`, `empty`; ADR-022, ADR-028) and are statically generated: content is static per deploy and nothing is revalidated by a webhook. Closed publication gates hide thin sections. Enquiries go through ports and adapters into a PostgreSQL record and durable outbox (ADR-019). Security headers, CSP, correlation ids and non-production `noindex` are built from validated configuration (ADR-020).
 - `apps/storybook`: private component workbench.
 - `packages`: `design-tokens`, `ui`, `cms`, `config`, `validation`, `security`, `observability`, `testing`.
 - `supabase`: local migrations and pgTAP tests. No remote project is used.
 - `superadmin`: the isolated Django Super Admin (internal, `admin.vitalos.co.uk`, own PostgreSQL; ADR-026). Python toolchain, no source imports to or from the TypeScript apps.
-- Quality gates run in CI: format, lint, typecheck, unit tests, boundaries, type drift, build, Storybook build, end-to-end and accessibility, JS budgets, client-bundle secret scan, Storybook axe, pgTAP, CodeQL and gitleaks (ADR-021).
+- Quality gates run in CI: format, lint, typecheck, unit tests, boundaries, build, Storybook build, end-to-end and accessibility, JS budgets, client-bundle secret scan, Storybook axe, pgTAP, CodeQL and gitleaks (ADR-021).
 
 ## Future (documented, not built)
 
-Production Sanity and Supabase projects, an email notifier adapter and outbox scheduler, error and analytics providers; later client, operations and documentation apps, mobile apps, workers, public APIs, containers and regional deployment. `services/` and `workers/` hold templates only; `infra/` holds policy placeholders.
+A production Supabase project, an email notifier adapter and outbox scheduler, error and analytics providers; later client, operations and documentation apps, mobile apps, workers, public APIs, containers and regional deployment. `services/` and `workers/` hold templates only; `infra/` holds policy placeholders.
 
 ## Boundaries (enforced by `corepack pnpm check:boundaries`)
 
 - No app-to-app imports, no cycles, no package-to-app imports.
-- `apps/web` never imports the `sanity` SDK or the Studio-only `@vitalos/cms` entries (`schemas`, `structure`, `actions`, `presentation`).
+- The `@vitalos/cms` root entry stays free of framework and CMS SDK dependencies; no CMS SDK is a dependency of the repository (ADR-028).
 - `packages/ui` is presentation only: no `next`, `@supabase`, `@vitalos/cms` or `@vitalos/config`.
 - Secrets stay server-side; `@vitalos/config` root is `server-only` and the client bundle is scanned in CI.
 
 ## Data ownership
 
-Sanity: editorial content. PostgreSQL: enquiries, outbox, rate limits. Super Admin PostgreSQL (separate database): internal company architecture records. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public CMS. Email is a notification channel, never the record.
+Repo (`packages/cms/src/repo`, ADR-028): editorial content. PostgreSQL: enquiries, outbox, rate limits. Super Admin PostgreSQL (separate database): internal company architecture records. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public site. Email is a notification channel, never the record.
 
 ## Read next
 
 - `docs/architecture/container-architecture.md`, `data-ownership.md`, `dependency-rules.md`, `enquiry-sequence.md`, `environment-model.md`, `future-service-model.md`, `system-context.md`
-- `docs/adr/README.md` (ADR 001-022)
+- `docs/adr/README.md` (ADR 001-028)
 - `docs/delivery/stage-status.md` and `docs/delivery/owner-decisions.md`

@@ -1,5 +1,5 @@
 /**
- * A redirect rule. `status` follows the Sanity `redirect` document: 301 or 308 redirect to
+ * A redirect rule. 301 or 308 redirect to
  * `destination`; 410 marks a path as permanently gone and has no destination.
  */
 export type RedirectRule =

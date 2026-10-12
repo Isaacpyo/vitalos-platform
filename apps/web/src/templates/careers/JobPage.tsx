@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { Button, ContentGap, MetaRow, Stack, Tag } from "@vitalos/ui";
+import { Button, MetaRow, Stack, Tag } from "@vitalos/ui";
 import type { MetaItem } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { PlaceholderNotice } from "../../components/placeholder-notice";
@@ -24,7 +24,7 @@ function time(label: string, value: string | undefined): MetaItem | null {
  * otherwise); a closed role keeps its page, says so, and offers no application link.
  */
 export function JobPage({ data }: Readonly<{ data: JobData }>) {
-  const { job, gates, now, draft } = data;
+  const { job, gates, now } = data;
   const open = isOpenRole(job, now);
   const apply = applyLink(job);
   const type = employmentTypeLabel(job.employmentType);
@@ -64,11 +64,6 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
       <PageBand>
         <Stack gap={8}>
           {hasRichText(job.description) ? <RichText value={job.description} /> : null}
-          <ContentGap
-            draft={draft && !hasRichText(job.description)}
-            title="This role has no description"
-            description="A role needs a description before it can be described to search engines."
-          />
           {open ? (
             <div>
               <Button href={apply.href} {...(apply.external ? { rel: "noopener noreferrer" } : {})}>

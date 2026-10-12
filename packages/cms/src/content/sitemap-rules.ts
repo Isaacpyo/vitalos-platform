@@ -1,6 +1,6 @@
 /**
- * Pure sitemap publication rules shared by every content source (Sanity, fixtures and any
- * draft-aware wrapper). No I/O, no framework imports; the clock is always injected as `today`.
+ * Pure sitemap publication rules shared by every content source (repo, draft, fixtures and any
+ * wrapper). No I/O, no framework imports; the clock is always injected as `today`.
  */
 import { isSitemapEligible } from "./gates";
 import type { PublicationGates } from "./gates";

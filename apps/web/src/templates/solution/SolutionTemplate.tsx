@@ -22,14 +22,12 @@ import {
   PageIntro,
   RowList,
   StatementList,
-  gapBand,
   renderBands,
 } from "../commercial/bands";
 
 export interface SolutionTemplateProps {
   solution: SolutionView;
   gates: PublicationGates;
-  draft: boolean;
 }
 
 export const solutionTrail = (solution: Pick<SolutionView, "title" | "slug">) =>
@@ -42,9 +40,9 @@ export const solutionTrail = (solution: Pick<SolutionView, "title" | "slug">) =>
 /**
  * Solution page (Stage 9 section 22): the executive problem statement, signals, business impact,
  * approach, typical journey, offers and practices that deliver it, industries and work as proof,
- * and common questions. Sections without content are omitted (editor notice in Draft Mode).
+ * and common questions. Sections without content are omitted.
  */
-export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTemplateProps>) {
+export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateProps>) {
   const cta = ctaToLink(solution.cta) ?? { label: ctas.primary, href: contactHref() };
   const stages = solution.phases.map((phase) => ({
     title: phase.title,
@@ -73,9 +71,7 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
             <Band tone={tone} heading={structuralLabels.signals}>
               <StatementList items={solution.signals} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.signals, tone)
-          ),
+          ) : null,
         (tone) =>
           solution.impact?.trim() ? (
             <Band tone={tone} heading={structuralLabels.impact}>
@@ -83,17 +79,13 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
                 {solution.impact}
               </p>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.impact, tone)
-          ),
+          ) : null,
         (tone) =>
           solution.approach && solution.approach.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.approach}>
               <RichText value={solution.approach} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.approach, tone)
-          ),
+          ) : null,
         (tone) =>
           isNonEmpty(stages) ? (
             <Band tone={tone} heading={structuralLabels.journey}>
@@ -103,9 +95,7 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
                 aria-label={structuralLabels.journey}
               />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.journey, tone)
-          ),
+          ) : null,
         (tone) =>
           offerRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedOffers}>
@@ -115,9 +105,7 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.relatedOffers, tone)
-          ),
+          ) : null,
         (tone) =>
           practiceRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedPractices}>
@@ -127,9 +115,7 @@ export function SolutionTemplate({ solution, gates, draft }: Readonly<SolutionTe
                 ))}
               </RowList>
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.relatedPractices, tone)
-          ),
+          ) : null,
         (tone) =>
           gates.open.industries && industryRows.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.relatedIndustries}>

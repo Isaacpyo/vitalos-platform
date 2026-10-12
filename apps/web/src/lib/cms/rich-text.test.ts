@@ -115,7 +115,7 @@ describe("normaliseRichText", () => {
 
   it("requires alt text and a renderable URL for figures", () => {
     const image = {
-      url: "https://cdn.sanity.io/images/p/d/a.jpg",
+      url: "/images/a.jpg",
       alt: "A diagram",
       width: 800,
       height: 600,

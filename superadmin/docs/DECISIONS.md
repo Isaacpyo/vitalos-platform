@@ -206,7 +206,7 @@ The brief asked for autonomous delivery, so every judgement call made without as
 
 ## Enquiries, mail and console upgrade (12 Oct 2026)
 
-Design: [ADR-028](../../docs/adr/ADR-028-superadmin-enquiries-mail-console.md) (Proposed). Operator steps: [email-setup.md](email-setup.md).
+Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md) (Proposed). Operator steps: [email-setup.md](email-setup.md).
 
 63. **Sidebar and information architecture.** The Overview is at `/`. The service line cards moved to `/service-lines/`. There is no `hx-boost`: full page loads with cookie-rendered state (sidebar collapsed or open) avoid a flash of the wrong layout and keep the Content-Security-Policy simple. Tailwind is hand-rolled rather than Basecoat: the Tailwind CLI is standalone with no npm in this project, and the CSP forbids inline styles, which Basecoat's JavaScript needs.
 64. **Brand assets.** The reversed wordmark and the colour symbol come from the supplied PNGs in `apps/web/app/assets/`, only trimmed and resized, not redrawn. The favicon comes from the Midnight app tile. No pure-white monochrome mark exists, so none is shown; a one-colour mark needs a supplied asset.
@@ -222,4 +222,4 @@ Design: [ADR-028](../../docs/adr/ADR-028-superadmin-enquiries-mail-console.md) (
 74. **New dependencies:** `nh3` (HTML sanitising) and `django-storages[s3]` (attachment storage). The lockfiles are compiled with `--python-platform linux` so they match the Linux image.
 75. **Passkeys deferred.** TOTP is already mandatory for SuperAdmin. `django-otp-webauthn` is the suggested package later.
 76. **Entra OIDC remains Phase 2 item 1** ([PHASE2.md](PHASE2.md)); nothing in this upgrade replaces it.
-77. **Mail design.** Inbound is a Cloudflare Email Worker (primary), with Resend Inbound on a subdomain as the fallback and Microsoft Graph later, all behind a `MailProvider` interface. Outbound is Resend. `EMAIL_TRANSPORT` defaults to `log`, so nothing is sent until a person turns it on. See ADR-028.
+77. **Mail design.** Inbound is a Cloudflare Email Worker (primary), with Resend Inbound on a subdomain as the fallback and Microsoft Graph later, all behind a `MailProvider` interface. Outbound is Resend. `EMAIL_TRANSPORT` defaults to `log`, so nothing is sent until a person turns it on. See ADR-029.

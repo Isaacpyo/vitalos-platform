@@ -12,8 +12,6 @@ export interface BuildEnv {
   indexable: boolean;
   enableHsts: boolean;
   turnstileEnabled: boolean;
-  sanityProjectId: string | undefined;
-  sanityStudioOrigin: string | undefined;
 }
 
 export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
@@ -26,8 +24,6 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     indexable: features.indexable,
     enableHsts: env.enableHsts,
     turnstileEnabled: features.turnstile,
-    sanityProjectId: env.sanity.projectId,
-    sanityStudioOrigin: env.sanity.studioOrigin,
   };
 }
 

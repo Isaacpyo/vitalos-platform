@@ -45,7 +45,7 @@ describe("organizationJsonLd", () => {
           { label: "LinkedIn", href: "https://www.linkedin.com/company/example" },
           { label: "Bad", href: "javascript:alert(1)" },
         ],
-        logo: { src: "https://cdn.sanity.io/images/p/d/logo.svg", width: 120, height: 32 },
+        logo: { src: "/images/logo.svg", width: 120, height: 32 },
       },
       ctx,
     );
@@ -54,13 +54,17 @@ describe("organizationJsonLd", () => {
       email: "hello@example.invalid",
       address: "1 Example Street, Example Town",
       sameAs: ["https://www.linkedin.com/company/example"],
-      logo: { "@type": "ImageObject", url: "https://cdn.sanity.io/images/p/d/logo.svg" },
+      logo: { "@type": "ImageObject", url: "https://www.example.invalid/images/logo.svg" },
     });
   });
 
-  it("skips a logo that is not https and blank values", () => {
+  it("skips a logo that is neither same-site nor https, and blank values", () => {
     const node = organizationJsonLd(
-      { legalName: "  ", logo: { src: "/logo.svg", width: 1, height: 1 }, social: [] },
+      {
+        legalName: "  ",
+        logo: { src: "http://insecure.invalid/logo.svg", width: 1, height: 1 },
+        social: [],
+      },
       ctx,
     );
     expect(node).not.toHaveProperty("logo");
@@ -203,7 +207,7 @@ describe("profilePageJsonLd", () => {
       person({
         role: "Example role",
         portrait: {
-          url: "https://cdn.sanity.io/images/p/d/portrait.jpg",
+          url: "/images/portrait.jpg",
           alt: "Portrait",
           width: 400,
           height: 400,
@@ -215,7 +219,7 @@ describe("profilePageJsonLd", () => {
     expect(node.mainEntity).toMatchObject({
       jobTitle: "Example role",
       sameAs: ["https://www.linkedin.com/in/example"],
-      image: { url: "https://cdn.sanity.io/images/p/d/portrait.jpg" },
+      image: { url: "https://www.example.invalid/images/portrait.jpg" },
     });
   });
 });

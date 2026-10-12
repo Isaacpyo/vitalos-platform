@@ -1,7 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import {
   CertificationItem,
-  ContentGap,
   EvidenceRequestCTA,
   MetaRow,
   Stack,
@@ -31,13 +30,11 @@ import {
  * procurement intent and never links to controlled evidence.
  */
 export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
-  const { topic, view, draft } = data;
+  const { topic, view } = data;
   const certifications = publishableCertifications(view);
   const subprocessors = subprocessorRows(view);
   const email = safeEmail(view.contactEmail);
   const updated = formatDate(view.updatedAt);
-  const empty =
-    !hasRichText(view.publicSummary) && certifications.length === 0 && subprocessors.length === 0;
 
   return (
     <PageMain>
@@ -69,11 +66,6 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
       <PageBand>
         <Stack gap={8}>
           {hasRichText(view.publicSummary) ? <RichText value={view.publicSummary} /> : null}
-          <ContentGap
-            draft={draft && empty}
-            title="This Trust Centre topic has no public statement"
-            description="Add the public summary, and certifications or subprocessors where they exist. Empty blocks are not shown."
-          />
 
           {certifications.length > 0 ? (
             <ContentSection id="certifications" heading={trustLabels.certifications}>

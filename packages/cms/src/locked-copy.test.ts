@@ -70,7 +70,7 @@ describe("locked copy (verbatim from the specs)", () => {
   });
 });
 
-describe("@vitalos/cms public entry stays Sanity-free", () => {
+describe("@vitalos/cms public entry stays framework-free", () => {
   const root = fileURLToPath(new URL(".", import.meta.url));
   const publicEntryFiles = [
     "index.ts",
@@ -82,10 +82,10 @@ describe("@vitalos/cms public entry stays Sanity-free", () => {
       .map((file) => join("content", file)),
   ];
 
-  it.each(publicEntryFiles)("%s imports neither sanity nor groq nor next", (file) => {
+  it.each(publicEntryFiles)("%s imports no CMS SDK and no next", (file) => {
     const path = join(root, file);
     expect(statSync(path).isFile()).toBe(true);
     const source = readFileSync(path, "utf8");
-    expect(source).not.toMatch(/from\s+["'](sanity|groq|next|@sanity)[/"']/);
+    expect(source).not.toMatch(/from\s+["'](next|@sanity)[/"']/);
   });
 });

@@ -5,24 +5,15 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schemas": "./src/schemaTypes/index.ts",
-    "./structure": "./src/structure.ts",
-    "./actions": "./src/actions/index.ts",
-    "./queries": "./src/queries/index.ts",
-    "./presentation": "./src/presentation.ts",
     "./fixtures": "./src/fixtures/index.ts",
-    "./draft": "./src/draft/index.ts"
+    "./draft": "./src/draft/index.ts",
+    "./repo": "./src/repo/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
-  },
-  "dependencies": {
-    "@sanity/client": "8.9.0",
-    "groq": "6.18.0",
-    "sanity": "6.18.0"
   },
   "devDependencies": {
     "@types/node": "24.19.1",

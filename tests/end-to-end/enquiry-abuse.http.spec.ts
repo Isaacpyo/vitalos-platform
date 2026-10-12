@@ -186,17 +186,16 @@ test.describe("other server surfaces refuse unauthenticated callers", () => {
     }
   });
 
-  test("draft mode cannot be enabled without a valid preview secret", async ({ request }) => {
-    const response = await request.get("/api/draft-mode/enable", { maxRedirects: 0 });
-    expect([400, 401, 403, 503]).toContain(response.status());
-    expect(response.headers()["set-cookie"] ?? "").not.toContain("__prerender_bypass");
-  });
-
-  test("the revalidate webhook refuses unsigned requests", async ({ request }) => {
-    const response = await request.post("/api/revalidate", {
+  test("the removed CMS draft-mode and revalidate endpoints no longer exist", async ({
+    request,
+  }) => {
+    const draft = await request.get("/api/draft-mode/enable", { maxRedirects: 0 });
+    expect(draft.status()).toBe(404);
+    expect(draft.headers()["set-cookie"] ?? "").not.toContain("__prerender_bypass");
+    const revalidate = await request.post("/api/revalidate", {
       headers: json,
       data: JSON.stringify({ _type: "legalPage", slug: "privacy" }),
     });
-    expect([400, 401, 403, 503]).toContain(response.status());
+    expect(revalidate.status()).toBe(404);
   });
 });

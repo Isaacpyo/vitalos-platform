@@ -2,7 +2,7 @@
 
 For Temitope. This turns on mail for the Super Admin: support@ mail appearing in the Enquiries tab, sign-in and set-password links, notifications and the website contact form. Everything here changes a live account, so **every step is marked "Needs approval"**: nothing in the repository has done any of it, and nothing happens until you run the step.
 
-Design and reasons: [ADR-028](../../docs/adr/ADR-028-superadmin-enquiries-mail-console.md). The Worker: [infra/cloudflare-email-worker](../../infra/cloudflare-email-worker/README.md).
+Design and reasons: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md). The Worker: [infra/cloudflare-email-worker](../../infra/cloudflare-email-worker/README.md).
 
 ## What is known, and what is not
 

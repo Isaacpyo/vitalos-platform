@@ -34,11 +34,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function IndustryPage({ params }: Props) {
   const { slug } = await params;
-  const { doc, gates, draft } = await loadDetailPage("industry", slug);
+  const { doc, gates } = await loadDetailPage("industry", slug);
   return (
     <>
       <JsonLd data={breadcrumbNode(industryTrail(doc))} />
-      <IndustryTemplate industry={doc} gates={gates} draft={draft} />
+      <IndustryTemplate industry={doc} gates={gates} />
     </>
   );
 }

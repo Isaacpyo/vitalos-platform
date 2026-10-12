@@ -6,18 +6,17 @@ import { JsonLd } from "./json-ld";
 import { RichText } from "./rich-text";
 
 const image: ImageView = {
-  url: "https://cdn.sanity.io/images/p/d/a-800x600.jpg",
+  url: "/images/a-800x600.jpg",
   alt: "A labelled diagram",
   width: 800,
   height: 600,
 };
 
 describe("CmsImage", () => {
-  it("renders an approved Sanity image through the CDN loader with alt text", () => {
+  it("renders an approved same-origin image with alt text", () => {
     const html = renderToStaticMarkup(<CmsImage image={image} />);
     expect(html).toContain('alt="A labelled diagram"');
-    expect(html).toContain("cdn.sanity.io/images/p/d/a-800x600.jpg");
-    expect(html).toContain("auto=format");
+    expect(html).toContain("/images/a-800x600.jpg");
     expect(html).toContain('width="800"');
   });
 

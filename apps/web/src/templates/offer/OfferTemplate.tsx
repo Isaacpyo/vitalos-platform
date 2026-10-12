@@ -7,18 +7,10 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { toRailItems } from "../../lib/view-mapping/patterns";
-import {
-  Band,
-  ClosingAction,
-  PageIntro,
-  StatementList,
-  gapBand,
-  renderBands,
-} from "../commercial/bands";
+import { Band, ClosingAction, PageIntro, StatementList, renderBands } from "../commercial/bands";
 
 export interface OfferTemplateProps {
   offer: OfferView;
-  draft: boolean;
 }
 
 export const offerTrail = (offer: Pick<OfferView, "title" | "slug">) =>
@@ -50,7 +42,7 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
  * receives, what is required from them, what is not included, and where the offer leads. The call
  * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
  */
-export function OfferTemplate({ offer, draft }: Readonly<OfferTemplateProps>) {
+export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
   const cta = ctaToLink(offer.cta) ?? {
     label: ctas.primary,
     href: contactHref("offer", offer.slug),
@@ -83,25 +75,19 @@ export function OfferTemplate({ offer, draft }: Readonly<OfferTemplateProps>) {
             <Band tone={tone} heading={structuralLabels.outputs}>
               <StatementList items={offer.outputs} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.outputs, tone)
-          ),
+          ) : null,
         (tone) =>
           offer.requirements.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.requirements}>
               <StatementList items={offer.requirements} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.requirements, tone)
-          ),
+          ) : null,
         (tone) =>
           offer.exclusions.length > 0 ? (
             <Band tone={tone} heading={structuralLabels.exclusions}>
               <StatementList items={offer.exclusions} />
             </Band>
-          ) : (
-            gapBand(draft, structuralLabels.exclusions, tone)
-          ),
+          ) : null,
         (tone) =>
           solutionCards ? (
             <Band tone={tone}>

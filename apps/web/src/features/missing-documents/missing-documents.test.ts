@@ -89,7 +89,7 @@ describe("createMissingDocumentChecker", () => {
     let clock = 0;
     const listParams = vi
       .fn<(kind: string) => Promise<Record<string, string>[]>>()
-      .mockRejectedValueOnce(new Error("sanity down"))
+      .mockRejectedValueOnce(new Error("content source down"))
       .mockResolvedValue([{ slug: "known" }]);
     const checker = make({ listParams, now: () => clock, failureTtlMs: 5000 });
     expect(await checker.isMissing("/solutions/anything")).toBe(false);

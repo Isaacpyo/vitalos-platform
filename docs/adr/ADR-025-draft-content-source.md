@@ -1,6 +1,6 @@
 # ADR 025 Draft content source
 
-Status: Accepted (engineering). Every draft document is pending owner approval; nothing here is approved copy. See the status note at the end (11 October 2026): the placeholder-content directive amends decision 5.
+Status: Accepted (engineering). Production content is now served by the `repo` source (ADR-028), which reuses this content set minus placeholders and draft legal skeletons; `draft` remains a non-production review source. Every draft document is pending owner approval; nothing here is approved copy. See the status note at the end (11 October 2026): the placeholder-content directive amends decision 5.
 
 ## Context
 

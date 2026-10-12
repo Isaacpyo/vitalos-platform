@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { LegalPageView } from "@vitalos/cms";
-import { getContentSource, getPublishedContentSource } from "../../lib/cms/get-content-source";
+import { getContentSource } from "../../lib/cms/get-content-source";
 import { isLegalSlug } from "./map";
 
 /** Null (a 404) for an unknown slug or an unpublished page. */
@@ -11,7 +11,7 @@ export const loadLegalPage = cache(async (slug: string): Promise<LegalPageView |
 });
 
 export async function listLegalParams(): Promise<{ slug: string }[]> {
-  const source = await getPublishedContentSource();
+  const source = await getContentSource();
   return (await source.listParams("legalPage")).flatMap((params) =>
     params.slug ? [{ slug: params.slug }] : [],
   );

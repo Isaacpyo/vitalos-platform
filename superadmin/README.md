@@ -96,6 +96,6 @@ CI also builds the image, runs the release job twice, checks a backup, and drive
 - `send_enquiry_notifications` flushes pending enquiry notifications and sends the 08:00 digest. Schedule it every 5 minutes (a Container Apps job, [docs/email-setup.md](docs/email-setup.md) section 8).
 - `enforce_enquiry_retention` applies the 24-month retention. It is a dry run unless `RETENTION_ENFORCE=true`.
 
-Mail (inbound Worker, Resend, DNS, secrets) is set up by the owner with [docs/email-setup.md](docs/email-setup.md); design in [ADR-028](../docs/adr/ADR-028-superadmin-enquiries-mail-console.md).
+Mail (inbound Worker, Resend, DNS, secrets) is set up by the owner with [docs/email-setup.md](docs/email-setup.md); design in [ADR-029](../docs/adr/ADR-029-superadmin-enquiries-mail-console.md).
 
 Decisions and assumptions: [docs/DECISIONS.md](docs/DECISIONS.md). Next phase: [docs/PHASE2.md](docs/PHASE2.md).
