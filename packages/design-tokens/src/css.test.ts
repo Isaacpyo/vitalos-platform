@@ -51,6 +51,21 @@ describe("generated CSS stays in sync with the TypeScript tokens", () => {
     expect(themeCss).toContain(":focus-visible");
     expect(themeCss).toContain("prefers-reduced-motion");
   });
+
+  it("only animates the hero process card when motion is allowed", () => {
+    const start = themeCss.indexOf("@media (prefers-reduced-motion: no-preference)");
+    expect(start).toBeGreaterThan(-1);
+    // Every hv-* animation rule sits inside the no-preference gate, none before it.
+    expect(themeCss.slice(0, start)).not.toMatch(/\.hv-[a-z]+ \{/);
+    expect(themeCss.slice(start)).toContain("animation: hv-card");
+  });
+
+  it("never loops hero motion forever (WCAG 2.2.2: motion stops within seconds)", () => {
+    const start = themeCss.indexOf("@media (prefers-reduced-motion: no-preference)");
+    const hero = themeCss.slice(start, themeCss.indexOf("}\n}", start));
+    expect(hero).toContain("hv-wave");
+    expect(hero).not.toContain("infinite");
+  });
 });
 
 describe("helpers", () => {

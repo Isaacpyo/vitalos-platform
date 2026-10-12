@@ -96,14 +96,9 @@ test.describe("homepage", () => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/");
     // 1. Hero: locked copy only.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
-    );
-    await expect(
-      page.getByText("Technology Consulting, Engineering & Digital Transformation", {
-        exact: true,
-      }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modernise. Build. Adopt AI.");
+    // The category eyebrow was removed (owner decision 2026-10-12).
+    await expect(page.getByText("Technology Consulting, Engineering")).toHaveCount(0);
     await expect(page.getByText("From strategy to production.", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Explore what we do" })).toHaveAttribute(
       "href",
@@ -270,7 +265,7 @@ test.describe("commercial pages", () => {
     );
   });
 
-  test("a practice page shows its sections and a breadcrumb trail", async ({ page }) => {
+  test("a practice page shows its sections and no visible breadcrumb", async ({ page }) => {
     await page.goto("/what-we-do/example-practice");
     const main = page.locator("main");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Example Practice (fixture)");
@@ -278,11 +273,7 @@ test.describe("commercial pages", () => {
     for (const heading of ["Problems", "Capabilities", "Related offers", "Industries"]) {
       await expect(main.getByRole("heading", { level: 2, name: heading })).toBeVisible();
     }
-    await expect(
-      page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", {
-        name: "What We Do",
-      }),
-    ).toHaveAttribute("href", "/what-we-do");
+    await expect(page.locator('nav[aria-label*="readcrumb"]')).toHaveCount(0);
   });
 
   test("a solution page shows the problem statement, the journey and its offers", async ({

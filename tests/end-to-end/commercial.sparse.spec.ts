@@ -95,9 +95,7 @@ test.describe("sections without data are omitted", () => {
     page,
   }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modernise. Build. Adopt AI.");
     const main = page.locator("main");
     // The sparse home page has Solutions and Practices only, and no authored headings.
     await expect(main.getByRole("link", { name: "Example Solution (fixture)" })).toBeVisible();

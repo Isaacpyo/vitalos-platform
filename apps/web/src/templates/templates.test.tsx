@@ -81,17 +81,17 @@ describe("homepage sections", () => {
     expect(count(markup, /<h1/g)).toBe(1);
     expect(count(markup, /<h2/g)).toBe(0);
     // The h1 is exactly the locked proposition (its words are settle spans, ADR-024); only the
-    // closing clause, "adopt AI.", is in the colour of a link.
+    // closing clause, "Adopt AI.", is in the colour of a link.
     const h1 = /<h1[^>]*>(.*?)<\/h1>/.exec(markup)?.[1] ?? "";
-    expect(h1.split(/<[^>]*>/).join("")).toBe(
-      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
-    );
+    expect(h1.split(/<[^>]*>/).join("")).toBe("Modernise. Build. Adopt AI.");
     const accented = [...h1.matchAll(/<span[^>]*text-tone-link[^>]*>([^<]*)<\/span>/g)].map(
       (match) => match[1],
     );
-    expect(accented).toEqual(["adopt", "AI."]);
+    expect(accented).toEqual(["Adopt", "AI."]);
     expect(h1).not.toMatch(/opacity/);
     expect(markup).toContain("From strategy to production.");
+    expect(markup).not.toContain("Technology Consulting, Engineering");
+    expect(markup).not.toMatch(/aria-label="Breadcrumb"/);
     expect(markup).toContain('href="/contact"');
     expect(markup).toContain('href="/what-we-do"');
   });
@@ -100,7 +100,7 @@ describe("homepage sections", () => {
     const markup = html(<HomeTemplate home={fullHome} gates={openGates} howWeWorkIntro="x" />);
     expect(count(markup, /<h1/g)).toBe(1);
     const h1 = /<h1[^>]*>(.*?)<\/h1>/.exec(markup)?.[1] ?? "";
-    expect(h1.split(/<[^>]*>/).join("")).toMatch(/^We help ambitious organisations/);
+    expect(h1.split(/<[^>]*>/).join("")).toBe("Modernise. Build. Adopt AI.");
     expect(markup).not.toMatch(/<h1[^>]*>From strategy to production/);
   });
 

@@ -80,9 +80,7 @@ test.describe("draft content source", () => {
   test("home keeps the locked hero and renders the drafted sections", async ({ page }) => {
     await page.goto("/");
     const main = page.locator("main");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
-    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modernise. Build. Adopt AI.");
     for (const heading of [
       "Problems we solve",
       "From strategy to production",
