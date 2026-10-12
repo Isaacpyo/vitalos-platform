@@ -1,0 +1,112 @@
+{
+  "title": "Your proposal from Vitalos (VIT-0F867CE48552)",
+  "preheader": "Everything we discussed, priced and planned.",
+  "headerLabel": "Proposal",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Hi Temitope,"
+    },
+    {
+      "type": "text",
+      "text": "Rttg",
+      "tone": "muted"
+    },
+    {
+      "type": "badge",
+      "items": [
+        "Vitalos Consulting",
+        "Within 3 months",
+        {
+          "text": "Draft",
+          "tone": "none"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "Thanks for your time on Tuesday.\nHere is what we agreed.\n\n- Discovery in two weeks\n- A written roadmap\nThen a review.\n\nSpeak soon."
+    },
+    {
+      "type": "button",
+      "label": "Read the proposal",
+      "url": "https://vitalos.co.uk/p/abc?x=1&y=2"
+    },
+    {
+      "type": "section",
+      "text": "Your words"
+    },
+    {
+      "type": "quote",
+      "text": "Line one\n\nLine three"
+    },
+    {
+      "type": "section",
+      "text": "Details"
+    },
+    {
+      "type": "details",
+      "rows": [
+        {
+          "label": "Work email",
+          "value": "t@gmail.com",
+          "href": "mailto:t@gmail.com",
+          "hint": "Personal email domain"
+        },
+        {
+          "label": "Intent",
+          "value": "New project",
+          "note": "project"
+        },
+        {
+          "label": "Organisation",
+          "value": ""
+        },
+        {
+          "label": "Reference",
+          "value": "VIT-0F867CE48552",
+          "code": true
+        },
+        {
+          "label": "Received",
+          "value": "Mon 12 Oct 2026, 12:09 BST",
+          "subvalue": "2026-10-12T11:09:40.655046+00:00",
+          "subvalueLabel": "raw"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "signature",
+      "name": "Temitope Agbola",
+      "title": "Founder"
+    }
+  ],
+  "footer": {
+    "social": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/company/vitalos",
+        "contentId": "social-linkedin"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com/vitalos",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": "Vitalos Technologies Limited",
+      "companyNumber": "16696895",
+      "registeredOffice": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+      "website": "https://vitalos.co.uk",
+      "supportEmail": "support@vitalos.co.uk"
+    },
+    "unsubscribe": {
+      "reason": "You are receiving this because you subscribed at vitalos.co.uk.",
+      "url": "https://vitalos.co.uk/unsubscribe?t=abc"
+    }
+  }
+}

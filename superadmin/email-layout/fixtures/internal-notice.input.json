@@ -1,0 +1,38 @@
+{
+  "title": "New enquiry: New project · Example Person · VIT-0F867CE48552",
+  "preheader": "Within 3 months · Example goal",
+  "headerLabel": "New enquiry",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Example Person"
+    },
+    {
+      "type": "button",
+      "label": "Reply to Example",
+      "url": "mailto:person@example.invalid?subject=Re%3A%20Hi"
+    }
+  ],
+  "footer": {
+    "notice": "Internal notification. The enquiry is stored in the Vitalos database; this email is not the record.",
+    "social": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/company/vitalos",
+        "contentId": "social-linkedin"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com/vitalos",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": "Vitalos Technologies Limited",
+      "companyNumber": "16696895",
+      "registeredOffice": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+      "website": "https://vitalos.co.uk",
+      "supportEmail": "support@vitalos.co.uk"
+    }
+  }
+}

@@ -16,7 +16,7 @@ Details: [`docs/delivery/stage-status.md`](docs/delivery/stage-status.md) (what 
 
 - `apps/web`: server-first Next.js 16 site. All routes of the information architecture, an enquiry pipeline (Postgres record plus durable outbox, Turnstile, rate limiting), SEO, redirects, security headers and publication gates. Reads content through a `ContentSource` (`repo` in production; `draft`, `fixtures` and `empty` for development and tests).
 - `apps/storybook`: private component workbench (not deployed).
-- `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, view models, repo content, drafts, fixtures), `config` (validated environment), `validation`, `security`, `observability`, `testing`.
+- `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, view models, repo content, drafts, fixtures), `config` (validated environment), `validation`, `security`, `observability`, `testing`, `email-layout` (shared email layout, ADR-030).
 - `supabase`: local PostgreSQL 17 configuration, three migrations and pgTAP tests.
 - `superadmin`: internal Django Super Admin for the Vitalos company architecture (`admin.vitalos.co.uk`); see `superadmin/README.md` and ADR-026.
 - `tests`, `tooling`: Playwright, axe, budget and integration suites; check and helper scripts.

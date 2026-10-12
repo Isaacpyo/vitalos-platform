@@ -1,0 +1,15 @@
+VITALOS · NEW ENQUIRY
+
+Example Person
+
+Reply to Example: mailto:person@example.invalid?subject=Re%3A%20Hi
+
+--
+Internal notification. The enquiry is stored in the Vitalos database; this email is not the record.
+
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk

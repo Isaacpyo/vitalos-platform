@@ -9,7 +9,7 @@ import {
   escapeHtml,
   renderEnquiryNotification,
 } from "./enquiry-notification-email";
-import type { InlineImage } from "./email-inline-images";
+import type { InlineImage } from "@vitalos/email-layout";
 
 /**
  * Local preview of the notification email. Skipped unless EMAIL_PREVIEW_DIR is set:

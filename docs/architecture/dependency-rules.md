@@ -16,8 +16,10 @@ flowchart LR
     Validation[validation]
     Security[security]
     Obs[observability]
+    EmailLayout[email-layout]
   end
-  Web --> UI & Tokens & CMS & Config & Validation & Security & Obs
+  Web --> UI & Tokens & CMS & Config & Validation & Security & Obs & EmailLayout
+  EmailLayout --> Tokens
   Storybook --> UI & Tokens
   Obs --> Security
   UI -. forbidden .-> Next["next, @supabase, @vitalos/cms, @vitalos/config"]

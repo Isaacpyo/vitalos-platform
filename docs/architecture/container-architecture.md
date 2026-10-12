@@ -22,12 +22,14 @@ flowchart TB
     Validation["@vitalos/validation"]
     Security["@vitalos/security"]
     Obs["@vitalos/observability"]
+    EmailLayout["@vitalos/email-layout<br/>shared email layout (ADR-030)"]
   end
 
   Repo[("packages/cms/src/repo<br/>editorial content in Git<br/>(static per deploy)")]
   PG[("Supabase PostgreSQL<br/>enquiries, outbox, rate limits<br/>(local stack only)")]
   Turnstile["Cloudflare Turnstile<br/>(production keys pending)"]
-  Email["Email provider<br/>(none approved; no adapter)"]
+  Email["Email provider<br/>(Resend or Postmark adapter)"]
+  LayoutSpec[("superadmin/email-layout<br/>generated layout spec + golden fixtures")]
 
   SuperAdmin["superadmin<br/>Django deployable<br/>(internal, admin.vitalos.co.uk)"]
   SADB[("Super Admin PostgreSQL<br/>company architecture records")]
@@ -39,9 +41,12 @@ flowchart TB
   Repo -->|build-time content| Web
   Web -->|"server-only RPC with secret key"| PG
   Web -->|server-side verify| Turnstile
-  Web -.->|"Notifier port (future adapter)"| Email
+  Web -->|"Notifier port (Resend/Postmark adapter)"| Email
 
-  Web --> UI & Tokens & CMS & Config & Validation & Security & Obs
+  Web --> UI & Tokens & CMS & Config & Validation & Security & Obs & EmailLayout
+  EmailLayout --> Tokens
+  EmailLayout -->|"vitest file snapshots"| LayoutSpec
+  LayoutSpec -->|"rendered by the Python mirror"| SuperAdmin
   Storybook --> UI & Tokens
 
   Staff -->|HTTPS| SuperAdmin
