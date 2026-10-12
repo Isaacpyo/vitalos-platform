@@ -4,9 +4,10 @@
 //   node tooling/scripts/ci-changes.mjs            pull request: diff HEAD^1..HEAD (the PR merge commit)
 //   node tooling/scripts/ci-changes.mjs --full     push to main or manual run: everything runs
 //
-// Turborepo's --affected only sees files inside workspace packages, so files elsewhere (tests/,
-// tooling/, root config, the lockfile, ci.yml) force a full run. Files the workflow's `paths`
-// filter already ignores (Markdown, docs/, superadmin/) are ignored here too.
+// Turborepo's --affected only sees files inside workspace packages. The root browser suites (tests/,
+// playwright.config.ts) run the browser jobs; any other file outside a package (tooling/, root
+// config, the lockfile, ci.yml) forces a full run. Files the workflow's `paths` filter already
+// ignores (Markdown, docs/, superadmin/) are ignored here too.
 import { execFileSync, execSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -16,6 +17,8 @@ const PACKAGE_DIRS = ["apps/", "packages/", "services/", "workers/"];
 // Editorial content (ADR-028). TypeScript, so `quality` still lints and typechecks it; builds, unit
 // tests and browser suites are skipped when a change touches nothing else.
 const CONTENT_DIR = "packages/cms/src/repo/";
+// Read only by the Playwright and integration suites, never by a workspace package.
+const BROWSER_SUITES = ["tests/", "playwright.config.ts"];
 const OTHER_WORKFLOWS = [
   "audit",
   "backup",
@@ -31,7 +34,7 @@ export function isIgnored(file) {
   if (file.endsWith(".md") || file.startsWith("docs/") || file.startsWith("superadmin/"))
     return true;
   if (OTHER_WORKFLOWS.some((name) => file === `.github/workflows/${name}.yml`)) return true;
-  return file === ".github/dependabot.yml" || file === ".github/CODEOWNERS";
+  return [".github/dependabot.yml", ".github/CODEOWNERS", ".env.example"].includes(file);
 }
 
 /**
@@ -45,10 +48,11 @@ export function classify(files, affected = []) {
     (file) => !file.startsWith(CONTENT_DIR) && PACKAGE_DIRS.some((dir) => file.startsWith(dir)),
   );
   const database = relevant.some((file) => file.startsWith("supabase/"));
+  const browser = relevant.some((file) => BROWSER_SUITES.some((path) => file.startsWith(path)));
   const full = relevant.some(
     (file) =>
       !file.startsWith("supabase/") &&
-      !file.startsWith(CONTENT_DIR) &&
+      !BROWSER_SUITES.some((path) => file.startsWith(path)) &&
       !PACKAGE_DIRS.some((dir) => file.startsWith(dir)),
   );
   if (full) return everything();
@@ -57,8 +61,8 @@ export function classify(files, affected = []) {
     full: false,
     static: builds || content.length > 0,
     unit: builds,
-    web: builds && affected.includes("@vitalos/web"),
-    storybook: builds && affected.includes("@vitalos/storybook"),
+    web: browser || (builds && affected.includes("@vitalos/web")),
+    storybook: browser || (builds && affected.includes("@vitalos/storybook")),
     database,
   };
 }

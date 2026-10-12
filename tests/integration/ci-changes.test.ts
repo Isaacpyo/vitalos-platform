@@ -21,6 +21,7 @@ describe("CI change classifier", () => {
       ".github/workflows/superadmin.yml",
       ".github/workflows/codeql.yml",
       ".github/dependabot.yml",
+      ".env.example",
     ]) {
       expect(isIgnored(file), file).toBe(true);
     }
@@ -35,12 +36,16 @@ describe("CI change classifier", () => {
     for (const file of [
       "pnpm-lock.yaml",
       "turbo.json",
-      "playwright.config.ts",
-      "tests/end-to-end/home.spec.ts",
       "tooling/scripts/check-secrets.mjs",
       ".github/workflows/ci.yml",
     ]) {
       expect(classify([file]), file).toEqual(everything());
+    }
+  });
+
+  it("runs only the browser suites for root test files", () => {
+    for (const file of ["tests/end-to-end/home.spec.ts", "playwright.config.ts"]) {
+      expect(classify([file]), file).toEqual({ ...none, web: true, storybook: true });
     }
   });
 
