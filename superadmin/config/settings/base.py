@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.notifications",
     "apps.architecture",
+    "apps.enquiries",
     "apps.api",
 ]
 

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Enquiries · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold">Enquiries</h1>
+  <ul class="mt-4">{% for item in enquiries %}<li><a href="{{ item.get_absolute_url }}">{{ item.ref }} {{ item.subject }}</a></li>{% empty %}<li class="muted">No enquiries yet.</li>{% endfor %}</ul>
+{% endblock %}
