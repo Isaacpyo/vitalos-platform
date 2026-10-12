@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@vitalos/eslint-config": "workspace:*",
-    "dependency-cruiser": "17.1.0",
+    "dependency-cruiser": "18.5.0",
     "prettier": "3.9.9",
     "turbo": "2.11.7",
     "typescript": "5.9.2",
