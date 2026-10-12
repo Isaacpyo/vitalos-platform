@@ -5,7 +5,7 @@
     <p>
       <span class="font-medium">{% if entry.actor %}{{ entry.actor }}{% else %}System{% endif %}</span>
       {{ entry.action }} {{ entry.model_label|lower }}
-      {% if entry.url %}<a href="{{ entry.url }}" class="font-medium text-vitalos-blue hover:underline dark:text-blue-400">{{ entry.object_label }}</a>{% else %}<span class="font-medium">{{ entry.object_label }}</span>{% endif %}
+      {% if entry.url %}<a href="{{ entry.url }}" class="font-medium text-vitalos-blue hover:underline dark:text-cobalt-300">{{ entry.object_label }}</a>{% else %}<span class="font-medium">{{ entry.object_label }}</span>{% endif %}
     </p>
     {% if entry.changes %}
       <ul class="muted mt-1 space-y-0.5 text-xs">

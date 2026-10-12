@@ -76,3 +76,22 @@ def search(user, query: str, per_group: int = 5) -> list[SearchGroup]:
         if results:
             groups.append(SearchGroup(label=label, results=results))
     return groups
+
+
+def palette_provider(user, query: str):
+    """Architecture records for the command palette."""
+    from apps.core.palette import PaletteResult
+
+    return [
+        PaletteResult(
+            group.label,
+            str(result),
+            result.get_absolute_url(),
+            getattr(getattr(result, "service_line", None), "name", "")
+            if result.__class__ is not ServiceLine
+            else "",
+            "layers",
+        )
+        for group in search(user, query, per_group=4)
+        for result in group.results
+    ]

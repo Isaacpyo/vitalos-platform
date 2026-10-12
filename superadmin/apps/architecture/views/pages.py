@@ -44,6 +44,13 @@ def home(request):
     return render(request, "architecture/home.html", context)
 
 
+@role_required()
+@require_GET
+def service_lines(request):
+    context = {"service_lines": selectors.service_lines_for_home(request.user)}
+    return render(request, "architecture/service_lines.html", context)
+
+
 def _overview(request, line, archived):
     user = request.user
     return {

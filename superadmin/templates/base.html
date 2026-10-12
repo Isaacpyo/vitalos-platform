@@ -1,26 +1,36 @@
 {% load static django_htmx %}<!doctype html>
-<html lang="en-GB" class="h-full">
+<html lang="en-GB" class="h-full" data-theme="{{ theme|default:'system' }}" data-sidebar="{% if sidebar_collapsed %}collapsed{% else %}expanded{% endif %}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0B1320">
     <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false, "historyCacheSize": 0, "refreshOnHistoryMiss": true, "selfRequestsOnly": true, "disableInheritance": true}'>
     <title>{% block title %}Vitalos Super Admin{% endblock %}</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    <link rel="icon" href="{% static 'brand/favicon-32.png' %}" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
+    <link rel="preload" href="{% static 'fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% htmx_script %}
     <script src="{% static 'js/app.js' %}" nonce="{{ csp_nonce }}" defer></script>
   </head>
-  <body class="min-h-full bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-inherit="hx-headers">
-    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow">Skip to content</a>
-    {% if show_chrome %}{% include "partials/topbar.html" %}{% endif %}
-    {% if app_environment != "production" and show_chrome %}
-      <div class="bg-amber-100 px-4 py-1 text-center text-xs font-medium text-amber-900 dark:bg-amber-900 dark:text-amber-100">{{ app_environment|capfirst }} environment</div>
+  <body class="min-h-full bg-offwhite text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-inherit="hx-headers">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:text-slate-900 focus:shadow">Skip to content</a>
+    {% if show_chrome %}
+      {% include "partials/sidebar.html" %}
+      <div class="fixed inset-0 z-40 hidden bg-midnight/60 md:hidden" data-sidebar-backdrop></div>
+      <div class="content">
+      {% include "partials/topbar.html" %}
     {% endif %}
-    <main id="main" tabindex="-1" class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <main id="main" tabindex="-1" class="mx-auto {% block main_width %}max-w-7xl{% endblock %} px-4 py-6 sm:px-6 lg:px-8">
       {% include "partials/messages.html" %}
       {% block content %}{% endblock %}
     </main>
+    {% if show_chrome %}
+      </div>
+      {% include "partials/palette.html" %}
+    {% endif %}
     <div id="modal"></div>
     <div id="toasts" class="fixed bottom-4 right-4 z-[60] flex max-w-sm flex-col gap-2" aria-live="polite"></div>
   </body>

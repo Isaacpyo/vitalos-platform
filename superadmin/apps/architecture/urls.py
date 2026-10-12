@@ -8,6 +8,7 @@ ENTITY = r"(?P<kind>serviceline|practice|solution|offer|teammember|project|kpi|k
 
 urlpatterns = [
     path("", pages.home, name="home"),
+    path("service-lines/", pages.service_lines, name="service_lines"),
     path("s/<slug:slug>/", pages.service_dashboard, name="service_dashboard"),
     path("architecture/", pages.architecture, name="architecture"),
     path(

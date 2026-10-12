@@ -14,7 +14,7 @@
         <p class="muted text-sm">Unit: {{ kpi.unit|default:"—" }} · Target: {% if kpi.target is not None %}{{ kpi.target|floatformat:"-2" }}{% else %}—{% endif %} · {{ kpi.get_direction_display }}</p>
         <p class="mt-3 text-3xl font-semibold">{% if kpi.latest %}{{ kpi.latest.value|floatformat:"-2" }}<span class="muted ml-1 text-base font-normal">{{ kpi.unit }}</span>{% else %}<span class="muted text-base font-normal">No values yet</span>{% endif %}</p>
         {% if kpi.breached %}<p class="mt-1 text-sm font-medium text-rose-600 dark:text-rose-400">{% icon "alert" "inline h-4 w-4" %} Off target</p>{% endif %}
-        <div class="mt-3 {% if kpi.breached %}text-rose-500{% else %}text-vitalos-blue dark:text-blue-400{% endif %}">{% sparkline kpi.recent_values kpi.target "h-14 w-full" %}</div>
+        <div class="mt-3 {% if kpi.breached %}text-rose-500{% else %}text-vitalos-blue dark:text-cobalt-300{% endif %}">{% sparkline kpi.recent_values kpi.target "h-14 w-full" %}</div>
       </div>
       <div class="lg:col-span-2">
         {% if can_edit %}

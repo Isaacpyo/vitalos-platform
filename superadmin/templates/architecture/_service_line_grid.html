@@ -1,0 +1,39 @@
+{% load ui %}
+<ul class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-testid="service-line-grid">
+  {% for line in service_lines %}
+    <li>
+      <a href="{{ line.get_absolute_url }}" class="card group flex h-full flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md" data-testid="service-line-card">
+        {% accent_bar line.colour %}
+        <div class="flex flex-1 flex-col p-5">
+          <div class="flex items-center gap-3">
+            <span class="rounded-lg bg-slate-100 p-2 dark:bg-slate-800">{% icon line.icon "h-5 w-5" line.colour %}</span>
+            <h3 class="font-semibold group-hover:text-vitalos-blue dark:group-hover:text-cobalt-300">{{ line.name }}</h3>
+          </div>
+          <p class="muted mt-3 text-sm">{{ line.tagline|default:"No tagline yet." }}</p>
+          <div class="mt-3 flex flex-wrap gap-1">{% badges line.business_modes %}</div>
+          <dl class="mt-auto grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">
+            <div>
+              <dt class="muted text-xs">Active projects</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{{ line.active_projects }}</dd>
+            </div>
+            <div class="col-span-2 min-w-0">
+              <dt class="muted text-xs">Headline KPI</dt>
+              <dd class="mt-0.5 truncate">
+                {% if line.headline_kpi %}
+                  <span class="font-semibold">{% if line.headline_value %}{{ line.headline_value.value|floatformat:"-2" }}{{ line.headline_kpi.unit }}{% else %}—{% endif %}</span>
+                  <span class="muted text-xs">{{ line.headline_kpi.name }}</span>
+                {% else %}<span class="muted">Not set</span>{% endif %}
+              </dd>
+            </div>
+            <div class="col-span-3">
+              <dt class="sr-only">Owner</dt>
+              <dd class="muted flex items-center gap-1.5 text-xs">{% icon "user" "h-3.5 w-3.5" %} {{ line.owner|default:"Owner not assigned" }}</dd>
+            </div>
+          </dl>
+        </div>
+      </a>
+    </li>
+  {% empty %}
+    <li class="card muted p-6 text-sm sm:col-span-2 xl:col-span-3">No active service lines are visible to you.</li>
+  {% endfor %}
+</ul>

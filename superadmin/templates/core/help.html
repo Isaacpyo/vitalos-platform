@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Help · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}<li class="truncate font-medium" aria-current="page">Help &amp; docs</li>{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold">Help and keyboard shortcuts</h1>
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <section class="card p-5" aria-labelledby="shortcuts-global">
+      <h2 id="shortcuts-global" class="font-semibold">Everywhere</h2>
+      <dl class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+        <div class="flex justify-between py-2"><dt>Open the command palette</dt><dd><kbd class="font-mono text-xs">Ctrl/⌘ K</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Collapse or expand the sidebar</dt><dd><kbd class="font-mono text-xs">Ctrl/⌘ B</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Close a dialog, menu or the mobile navigation</dt><dd><kbd class="font-mono text-xs">Esc</kbd></dd></div>
+      </dl>
+    </section>
+    <section class="card p-5" aria-labelledby="shortcuts-enquiries">
+      <h2 id="shortcuts-enquiries" class="font-semibold">Enquiries</h2>
+      <dl class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+        <div class="flex justify-between py-2"><dt>Next / previous enquiry</dt><dd><kbd class="font-mono text-xs">J</kbd> / <kbd class="font-mono text-xs">K</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Open the selected enquiry</dt><dd><kbd class="font-mono text-xs">Enter</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Reply / internal note</dt><dd><kbd class="font-mono text-xs">R</kbd> / <kbd class="font-mono text-xs">N</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Resolve / assign to me / mark as spam</dt><dd><kbd class="font-mono text-xs">E</kbd> / <kbd class="font-mono text-xs">A</kbd> / <kbd class="font-mono text-xs">S</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Search enquiries</dt><dd><kbd class="font-mono text-xs">/</kbd></dd></div>
+        <div class="flex justify-between py-2"><dt>Show these shortcuts</dt><dd><kbd class="font-mono text-xs">?</kbd></dd></div>
+      </dl>
+      <p class="muted mt-3 text-xs">Shortcuts are off while you are typing in a field.</p>
+    </section>
+    <section class="card p-5 lg:col-span-2" aria-labelledby="docs">
+      <h2 id="docs" class="font-semibold">Documentation</h2>
+      <ul class="mt-3 space-y-2 text-sm">
+        <li><a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'api:docs' %}">REST API reference</a> (read-only, Bearer tokens from Settings).</li>
+        <li>Records are archived rather than deleted, and every change appears in <a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'architecture:activity' %}">Activity</a>.</li>
+        <li>Security questions or a suspected incident: contact the primary owner straight away.</li>
+      </ul>
+    </section>
+  </div>
+{% endblock %}

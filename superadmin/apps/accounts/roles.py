@@ -40,6 +40,16 @@ def primary_role(user) -> str | None:
     return next((role for role in ROLES if role in roles), None)
 
 
+ROLE_LABELS = {SUPERADMIN: "Super admin", SERVICE_LEAD: "Service lead", VIEWER: "Viewer"}
+
+
+def role_label(user) -> str:
+    """Human label for the user menu, e.g. "Owner · Super admin" for the primary owner."""
+    role = primary_role(user)
+    label = ROLE_LABELS.get(role, "No role")
+    return f"Owner · {label}" if getattr(user, "is_primary_owner", False) else label
+
+
 def is_superadmin(user) -> bool:
     return SUPERADMIN in user_roles(user)
 

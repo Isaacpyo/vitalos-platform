@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Service lines · Vitalos Super Admin{% endblock %}
+{% block page_actions %}{% if is_superadmin %}<a href="{% url 'architecture:architecture' %}" class="btn btn-secondary">{% icon "tree" "h-4 w-4" %} Manage architecture</a>{% endif %}{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold">Service lines</h1>
+  <p class="muted text-sm">Practices → Solutions → Offers, owned line by line.</p>
+  {% include "architecture/_service_line_grid.html" %}
+{% endblock %}

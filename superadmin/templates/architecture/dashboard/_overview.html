@@ -43,7 +43,7 @@
   <section class="card p-5">
     <div class="flex items-center justify-between">
       <h2 class="font-semibold">Activity</h2>
-      <a href="{% url 'architecture:activity' %}?service_line={{ line.slug }}" class="text-sm text-vitalos-blue hover:underline dark:text-blue-400">View all</a>
+      <a href="{% url 'architecture:activity' %}?service_line={{ line.slug }}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300">View all</a>
     </div>
     {% include "activity/_widget.html" with entries=activity_entries %}
   </section>

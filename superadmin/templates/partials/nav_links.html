@@ -1,7 +1,0 @@
-{% with path=request.path %}
-<a href="{% url 'architecture:home' %}" class="tab" {% if path == '/' or path|slice:':3' == '/s/' %}aria-current="page" aria-selected="true"{% endif %}>Service lines</a>
-<a href="{% url 'architecture:architecture' %}" class="tab" {% if path|slice:':13' == '/architecture' %}aria-current="page" aria-selected="true"{% endif %}>Architecture</a>
-<a href="{% url 'architecture:team' %}" class="tab" {% if path|slice:':5' == '/team' %}aria-current="page" aria-selected="true"{% endif %}>Team</a>
-<a href="{% url 'architecture:activity' %}" class="tab" {% if path|slice:':9' == '/activity' %}aria-current="page" aria-selected="true"{% endif %}>Activity</a>
-<a href="{% url 'accounts:settings' %}" class="tab" {% if path|slice:':9' == '/settings' %}aria-current="page" aria-selected="true"{% endif %}>Settings</a>
-{% endwith %}
