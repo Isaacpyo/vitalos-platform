@@ -22,7 +22,6 @@ Unchanged and already correct: midnight-950 `#081A2A`, cloud-50 `#F7F9FC`, white
 
 **Decision (owner, 12 Oct 2026, delegated "go with the best"):** keep `#2457FF` as the website's action and link blue. It is, to within one step, the Cobalt-600 role in the brief's palette (`#2458E6`, "buttons and text on light"), and it clears WCAG AA with margin, where Cobalt `#2F6BFF` sits at the 4.5:1 boundary. Cobalt `#2F6BFF` is used only as a non-text fill and accent (for example the Super Admin's active-item bar and unread dot), and Cobalt-300 `#7FA3FF` is the blue for text on Midnight. The website keeps Midnight `#081A2A`; the Super Admin uses the brief's Midnight `#0B1320` (ADR-029). No website token or component changes. The analysis that led here is kept below.
 
-
 - The strategy source locks Vitalos Blue as `#2457FF`; the approved Figma board (`docs/brand/asset-approval.md`) labels its primary Cobalt `#2F6BFF`. The plan and the specification keep `#2457FF` as authoritative until the Figma styles are reconciled, so `blue600` is `#2457FF` in code, with a comment pointing here.
 - Measured effect of the choice (WCAG contrast):
 
