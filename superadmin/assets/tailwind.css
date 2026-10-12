@@ -250,7 +250,8 @@
       md:collapsed:min-w-4 md:collapsed:px-1 md:collapsed:text-[10px];
   }
   .content {
-    @apply min-w-0 flex-1 transition-[padding] duration-200 md:pl-64 md:collapsed:pl-12;
+    /* A column the full height of the viewport, so the status footer sits at the bottom on short pages. */
+    @apply flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 md:pl-64 md:collapsed:pl-12;
   }
   .env-badge {
     @apply inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-wider uppercase;

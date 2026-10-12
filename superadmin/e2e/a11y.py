@@ -38,6 +38,9 @@ PAGES = [
     "/settings/notifications/",
     "/settings/users/",
     "/help/",
+    "/system/health/",
+    "/notifications/",
+    "/notifications/attention/",
 ]
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "eml"

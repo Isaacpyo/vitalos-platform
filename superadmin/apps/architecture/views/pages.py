@@ -42,12 +42,11 @@ def home(request):
         "company": selectors.company(user),
         "service_lines": selectors.service_lines_for_home(user),
         "recent_activity": activity.feed(user, limit=8),
-        "system": overview.system_status(),
         "show_enquiry_kpis": can_access_enquiries(user),
     }
     if context["show_enquiry_kpis"]:
         context["kpis"] = overview.enquiry_kpis()
-        context["attention"] = overview.needs_attention()
+        context["attention_count"] = len(overview.needs_attention())
     return render(request, "architecture/home.html", context)
 
 
