@@ -40,6 +40,8 @@ export interface ContentSourceLoaders {
   loadFixturesModule(): Promise<Record<string, unknown>>;
   /** Module that exports `createDraftContentSource()` (`@vitalos/cms/draft`, ADR-025). */
   loadDraftModule(): Promise<Record<string, unknown>>;
+  /** Module that exports `createRepoContentSource()` (`@vitalos/cms/repo`, ADR-028). */
+  loadRepoModule(): Promise<Record<string, unknown>>;
   warn(message: string): void;
 }
 
@@ -112,11 +114,28 @@ const draftFactory: ContentSourceFactory = async (config, loaders) => {
   return (create as () => ContentSource)();
 };
 
+/**
+ * Repo-file content (ADR-028): the approved subset of the drafted content, stored in the repo. The
+ * production content source. No fallback: asking for repo content and silently getting an empty site
+ * would hide a packaging error.
+ */
+const repoFactory: ContentSourceFactory = async (_config, loaders) => {
+  const mod = await loaders.loadRepoModule();
+  const create = mod["createRepoContentSource"];
+  if (typeof create !== "function") {
+    throw new Error(
+      "The repo content source is not available: @vitalos/cms/repo does not export createRepoContentSource.",
+    );
+  }
+  return (create as () => ContentSource)();
+};
+
 export const contentSourceFactories: Record<ContentSourceKind, ContentSourceFactory> = {
   empty: emptyFactory,
   sanity: sanityFactory,
   fixtures: fixturesFactory,
   draft: draftFactory,
+  repo: repoFactory,
 };
 
 export function resolveContentSource(

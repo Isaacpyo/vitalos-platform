@@ -108,6 +108,13 @@ describe("Wordmark", () => {
     expect(img.getAttribute("height")).toBe("24");
   });
 
+  it("constrains a large logo export to a 32px high, width-auto, capped slot", () => {
+    render(<Wordmark logo={{ src: "/logo.png", width: 2172, height: 724 }} />);
+    const classes = screen.getByRole("img", { name: "VITALOS" }).className.split(" ");
+    expect(classes).toEqual(expect.arrayContaining(["h-8", "w-auto", "max-w-48"]));
+    expect(classes).not.toContain("h-auto");
+  });
+
   it("links home with a plain anchor when href is given", () => {
     render(<Wordmark href="/" />);
     const link = screen.getByRole("link", { name: "VITALOS" });
