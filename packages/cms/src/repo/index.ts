@@ -19,7 +19,8 @@ import { repoSettingsFacts } from "./settings";
 export { approvedLegalPages, PRIVACY_NOTICE_VERSION } from "./legal";
 export { repoSettingsFacts } from "./settings";
 
-const BRACKETED = /\[[^\]]+\]/;
+// The inner class excludes "[" too, so matching stays linear on text with many unclosed brackets.
+const BRACKETED = /\[[^[\]]+\]/;
 
 const blockText = (block: RichText[number]): string =>
   (block.children as readonly { text?: unknown }[] | undefined)
