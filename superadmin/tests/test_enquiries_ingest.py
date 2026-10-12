@@ -222,3 +222,12 @@ def test_parse_failures_record_the_error_without_content(post):
 def test_only_post_is_allowed(client, settings):
     settings.INBOUND_WEBHOOK_SECRET = SECRET
     assert client.get(URL).status_code == 405
+
+
+def test_success_is_logged_at_info_without_breaking_the_response(post, owner, caplog):
+    """Regression: an `extra` key that clashes with a LogRecord attribute raised KeyError (HTTP 500)
+    in production, where INFO is logged. The test suite logs at WARNING, so force INFO here."""
+    with caplog.at_level("INFO", logger="apps.enquiries.api"):
+        response = post(eml("plain.eml"))
+    assert response.status_code == 200
+    assert any(record.message == "Inbound email" and record.stored is True for record in caplog.records)

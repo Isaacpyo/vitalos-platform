@@ -85,7 +85,7 @@ def inbound_email(request):
         logger.warning("Inbound email rejected", extra={"reason": reason})
         return _error(reason, 400)
     ref = message.enquiry.ref if message is not None else ""
-    logger.info("Inbound email", extra={"ref": ref, "created": created})
+    logger.info("Inbound email", extra={"ref": ref, "stored": created})
     return JsonResponse({"status": "stored" if created else "duplicate", "ref": ref})
 
 
