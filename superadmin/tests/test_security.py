@@ -112,3 +112,12 @@ def test_production_settings_are_hardened():
 def test_production_refuses_a_weak_secret_key():
     result = _check_prod("import django;django.setup()", DJANGO_SECRET_KEY="short")
     assert result.returncode != 0 and "DJANGO_SECRET_KEY" in result.stderr
+
+
+def test_set_password_tokens_never_reach_the_access_log():
+    from apps.core.middleware import loggable_path
+
+    assert loggable_path("/account/set-password/MQ/dgcgj6-664337ad5168497bc2704decd4441ec7/") == (
+        "/account/set-password/[redacted]/"
+    )
+    assert loggable_path("/enquiries/VIT-0001/") == "/enquiries/VIT-0001/"
