@@ -1,0 +1,4 @@
+/* Replaces the inline style="border-top: 0" in simple_history's history list (blocked by the strict CSP). */
+.paginator.paginator-flush {
+  border-top: 0;
+}

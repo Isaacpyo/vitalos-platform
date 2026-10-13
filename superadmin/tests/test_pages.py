@@ -1,5 +1,6 @@
 """Every page and HTMX partial renders for the roles that may see it."""
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -166,3 +167,19 @@ def test_login_page_renders_for_anonymous(client):
 def test_error_pages(seeded, superadmin, client_for):
     assert client_for(superadmin).get("/s/does-not-exist/").status_code == 404
     assert client_for(superadmin).get("/nope/").status_code == 404
+
+
+@pytest.mark.django_db
+def test_django_admin_pages_have_no_inline_styles(populated, make_user, client_for):
+    """The admin CSP carries a nonce, which makes 'unsafe-inline' inert: no style attributes or <style>."""
+    client = client_for(make_user("SuperAdmin", is_superuser=True, is_staff=True))
+    practice = populated["practice"]
+    urls = [
+        "/django-admin/",
+        "/django-admin/architecture/practice/",
+        f"/django-admin/architecture/practice/{practice.pk}/change/",
+        f"/django-admin/architecture/practice/{practice.pk}/history/",
+    ]
+    for url in urls:
+        body = client.get(url).content.decode()
+        assert not re.search(r"<style\b|\sstyle\s*=", body), f"inline style on {url}"
