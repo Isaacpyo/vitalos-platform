@@ -13,7 +13,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "motion": "14.0.0"
+    "motion": "14.1.0"
   },
   "peerDependencies": {
     "react": "^19.0.0"
