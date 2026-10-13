@@ -5,11 +5,13 @@ on:
     branches: [main]
   schedule:
     - cron: "17 4 * * 1"
-# Code scanning uploads are unavailable for this user-owned private repository,
-# so results stay in the run: published as an artifact and enforced below (ADR-014).
+# Results go to code scanning (Security tab; free for a public repository) and are also enforced
+# below, so a finding fails the run (ADR-014). Pull requests from forks get a read-only token and
+# cannot upload, so they keep the results in the run only.
 permissions:
   contents: read
   actions: read
+  security-events: write
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -19,7 +21,7 @@ jobs:
         with: { languages: javascript-typescript }
       - uses: github/codeql-action/analyze@v4
         with:
-          upload: never
+          upload: ${{ github.event.pull_request.head.repo.fork && 'never' || 'always' }}
           output: codeql-results
       - uses: actions/upload-artifact@v7
         if: always()

@@ -3,8 +3,9 @@ name: Super Admin backup
 # 14 days as a workflow artifact (free). On Supabase's free plan this is the only backup, and the daily
 # connection also keeps the project from being paused for inactivity. Uses the "backup" environment,
 # which has no required reviewers so the schedule is never held for approval; it holds DATABASE_URL
-# (the read-only backup_reader role, DEPLOY.md §6.1) and, optionally, BACKUP_PASSPHRASE to encrypt the
-# dump. Scheduled runs only start once this file is on main.
+# (the read-only backup_reader role, DEPLOY.md §6.1) and BACKUP_PASSPHRASE, which is required: the
+# repository is public, so any signed-in GitHub user can download its artifacts, and the dump is only
+# ever uploaded encrypted. Scheduled runs only start once this file is on main.
 # Restore steps: superadmin/docs/DEPLOY.md §6.
 on:
   schedule:
@@ -33,6 +34,11 @@ jobs:
             echo "::error::DATABASE_URL is not set in the 'backup' environment (see DEPLOY.md)"
             exit 1
           fi
+          if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::error::BACKUP_PASSPHRASE is not set in the 'backup' environment. Artifacts of this public"
+            echo "::error::repository are downloadable by anyone signed in, so an unencrypted dump is never uploaded."
+            exit 1
+          fi
           # pg_dump needs a session. Supabase's session pooler (port 5432) provides one, so its URL is
           # used as is. Neon's pooler is PgBouncer in transaction mode, so switch to its direct host.
           direct="${DATABASE_URL/-pooler./.}"
@@ -52,11 +58,9 @@ jobs:
           gzip -t "$file"
           header="$(zcat "$file" | head -n 20 || true)"  # head closes the pipe early; ignore SIGPIPE
           grep -q "PostgreSQL database dump" <<< "$header" || { echo "::error::dump looks empty"; exit 1; }
-          if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
-            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
-              -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
-            rm "$file"
-          fi
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+            -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
+          rm "$file"
           ls -l dump
           echo "name=superadmin-db-$stamp-pg$major" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
