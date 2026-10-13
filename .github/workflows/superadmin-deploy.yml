@@ -142,12 +142,4 @@ jobs:
           pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
           SMOKE_BASE_URL=https://admin.vitalos.co.uk SMOKE_EMAIL="$SMOKE_EMAIL" SMOKE_PASSWORD="$password" \
-            python e2e/smoke.py --skip-if-enrolled --screenshots "$RUNNER_TEMP/screenshots"
-      - name: Upload screenshots
-        if: always() && inputs.smoke_test && steps.deploy.outputs.bound == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: superadmin-live-smoke-screenshots
-          path: ${{ runner.temp }}/screenshots
-          if-no-files-found: ignore
-          retention-days: 7
+            python e2e/smoke.py --skip-if-enrolled

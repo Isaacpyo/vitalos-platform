@@ -53,7 +53,7 @@ The deploy works without any mail settings: `EMAIL_TRANSPORT` defaults to `log`,
 3. **Azure.** Run the §2.1 one-time setup as subscription Owner. A card on file is required, but nothing is charged within the free grant. A free-trial subscription must be upgraded to Pay-As-You-Go before its credit expires (for "Azure subscription 1", 10 Nov 2026).
 4. **GitHub.** Go to **Settings → Environments**.
    - `production`: this repository uses the existing Vercel-created `Production` environment; names match case-insensitively. Required reviewers aren't available on this private repository's plan, so there is no approval gate. The environment is shared with the website, so the Super Admin's database string has its own name: add `SUPERADMIN_DATABASE_URL` (step 1; never the website's database), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1). Optionally add `SENTRY_DSN`. No registry token is needed: the image is public.
-   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production), and `BACKUP_PASSPHRASE` to encrypt dumps (recommended). On Supabase's free plan this nightly dump is the **only** backup, and it also keeps the project from being paused (§2.3).
+   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production), and `BACKUP_PASSPHRASE` to encrypt dumps (required: the repository is public, so its artifacts are downloadable by any signed-in GitHub user, and the workflow refuses to upload an unencrypted dump). Keep a copy of the passphrase outside GitHub, in the owner's password manager; without it no backup can be restored. On Supabase's free plan this nightly dump is the **only** backup, and it also keeps the project from being paused (§2.3).
 5. **Deploy.** Merge PR #50. Open **Actions → Super Admin deploy → Run workflow** on `main`, type `DEPLOY`, and tick **smoke test** (first run only).
 6. **Make the image public (first run only).** The build job creates the package `vitalos-platform/superadmin` on ghcr.io as private, which GitHub always does for a new package, and the API can't change it. There is no approval pause, so:
    1. Run the deploy (step 5) and let it stop at the **public-image check**. It fails before touching Azure and prints the package settings link.
@@ -280,7 +280,7 @@ What you can restore from depends on the database:
 
 **Daily dump.** `.github/workflows/backup.yml` runs at 02:00 UTC (once on `main`), or on demand with **Actions → Super Admin backup → Run workflow**.
 
-- Each run uploads `superadmin-db-<UTC timestamp>-pg<major>`: a gzipped plain SQL dump of the app's `public` schema, encrypted as `.gpg` if `BACKUP_PASSPHRASE` is set. Artifacts are kept **14 days**.
+- Each run uploads `superadmin-db-<UTC timestamp>-pg<major>`: a gzipped plain SQL dump of the app's `public` schema, always encrypted as `.gpg` with `BACKUP_PASSPHRASE`. Artifacts are kept **14 days**.
 - The workflow reads the server's version first and dumps with the matching client (for example `postgres:15` for Supabase on 15), so the dump restores on that version.
 - Supabase's own schemas (`auth`, `storage` and others) are not included. The app doesn't use them, and `backup_reader` can't read them.
 
