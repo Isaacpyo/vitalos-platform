@@ -14,7 +14,7 @@ import logging
 import urllib.error
 import urllib.request
 import uuid
-from email.mime.base import MIMEBase
+from email.message import MIMEPart
 
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
@@ -93,7 +93,7 @@ class ResendEmailBackend(BaseEmailBackend):
             payload["headers"] = headers
         attachments = []
         for attachment in message.attachments or []:
-            if isinstance(attachment, MIMEBase):
+            if isinstance(attachment, MIMEPart):
                 # An inline image (apps.mailer.messages): Resend references it by content id.
                 item = {
                     "filename": attachment.get_filename() or "attachment",
