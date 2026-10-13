@@ -29,7 +29,7 @@ The real deploy is the "What Temitope does once" checklist below.
 **Set up on 11 Oct 2026** (DECISIONS.md 54-57):
 
 - **Azure:** the personal **"Azure subscription 1"**, a free trial. Its credit expires on **10 Nov 2026**: **upgrade it to Pay-As-You-Go before then**, or the subscription is disabled and the app stops. Moving it to the Vitalos Entra tenant is a Phase 2 item.
-- **GitHub environment:** the existing Vercel-created **`Production`**. GitHub matches environment names case-insensitively, so the workflow's `production` resolves to it. The Azure app `github-vitalos-superadmin-deploy` (client ID `a6bc0a8d-c742-4f14-9e31-7112b1963fef`) trusts the subject `repo:Isaacpyo@54102915/vitalos-platform@1372649383:environment:production` (§2.1).
+- **GitHub environment:** the existing Vercel-created **`Production`**. GitHub matches environment names case-insensitively, so the workflow's `production` resolves to it. The Azure app `github-vitalos-superadmin-deploy` (client ID `a6bc0a8d-c742-4f14-9e31-7112b1963fef`) trusts the subject `repo:Isaacpyo@54102915/vitalos-platform@1417273525:environment:production` (§2.1).
 - **No approval pause:** required reviewers aren't available on this private repository's plan, so step 6 below relies on the public-image check instead.
 - **Database:** Supabase project `vitalos-superadmin` (ref `uhvcjsnuxdthjfainvmm`), London, PostgreSQL 17.11. The Data API was disabled at creation, the lock-down SQL (§2.3) was applied, and `backup_reader` (§6.1) was created and verified.
 
@@ -129,7 +129,7 @@ SP_ID=$(az ad sp create --id "$APP_ID" --query id -o tsv)
 az ad app federated-credential create --id "$APP_ID" --parameters '{
   "name": "github-production-immutable",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:Isaacpyo@54102915/vitalos-platform@1372649383:environment:production",
+  "subject": "repo:Isaacpyo@54102915/vitalos-platform@1417273525:environment:production",
   "audiences": ["api://AzureADTokenExchange"]}'
 az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-type ServicePrincipal \
   --role Contributor --scope "$(az group show -n "$RG" --query id -o tsv)"
