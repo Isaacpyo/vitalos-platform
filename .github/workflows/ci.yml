@@ -1,25 +1,14 @@
 name: CI
-# Cost rules: AGENTS.md "CI cost". Markdown, docs/ (except docs/strategy, which a unit test reads),
-# the Super Admin and the other workflows never start this workflow. `quality` runs first and decides
-# what else a pull request needs (tooling/scripts/ci-changes.mjs): Turborepo --affected on pull
-# requests, the full suite on main. Browser suites and pgTAP skip draft pull requests.
+# Cost rules: AGENTS.md "CI cost". `quality` runs first and decides what else a pull request needs
+# (tooling/scripts/ci-changes.mjs): Turborepo --affected on pull requests, the full suite on main.
+# Every pull request starts this workflow, because `quality` is a required check and a check that
+# never reports blocks the merge; for Markdown, docs/ (except docs/strategy, which a unit test
+# reads), the Super Admin and the other workflows it runs only the secret scan, audit and format
+# check, and every other job skips. Pushes to main skip the workflow for those files. Browser suites
+# and pgTAP skip draft pull requests.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - "**"
-      - "!**.md"
-      - "!docs/**"
-      - "docs/strategy/**"
-      - "!superadmin/**"
-      - "!.github/workflows/audit.yml"
-      - "!.github/workflows/backup.yml"
-      - "!.github/workflows/codeql.yml"
-      - "!.github/workflows/secret-scan.yml"
-      - "!.github/workflows/superadmin.yml"
-      - "!.github/workflows/superadmin-deploy.yml"
-      - "!.github/dependabot.yml"
-      - "!.github/CODEOWNERS"
   push:
     branches: [main]
     paths:

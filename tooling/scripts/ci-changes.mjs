@@ -6,8 +6,8 @@
 //
 // Turborepo's --affected only sees files inside workspace packages. The root browser suites (tests/,
 // playwright.config.ts) run the browser jobs; any other file outside a package (tooling/, root
-// config, the lockfile, ci.yml) forces a full run. Files the workflow's `paths` filter already
-// ignores (Markdown, docs/, superadmin/) are ignored here too.
+// config, the lockfile, ci.yml) forces a full run. Markdown, docs/, superadmin/ and the other
+// workflows start nothing beyond `quality` itself (the same files skip pushes to main).
 import { execFileSync, execSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
