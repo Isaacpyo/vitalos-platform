@@ -251,7 +251,23 @@ Turn the proxy on only **after** the first deploy has bound the domain and issue
    Also change it in `deploy.sh`, or each redeploy resets it to 1.
 4. **Certificate renewal:** Azure renews managed certificates only while the CNAME is visible. Around renewal, which is roughly every 6 months, set the record back to **DNS only** for a day. Alternatively, upload a free Cloudflare Origin CA certificate to the environment and bind it instead.
 
-## 5. Redeploy and roll back
+## 5. Automatic deploy, redeploy and roll back
+
+### 5.1 Automatic deploy (from 14 Oct 2026)
+
+Merging a Super Admin change to `main` deploys it, under the standing approval for merge-triggered production deploys.
+
+1. A push to `main` that touches `superadmin/` (not `superadmin/docs/` or markdown) or `.github/workflows/superadmin*.yml` starts the **Super Admin** CI workflow.
+2. When that run **completes**, **Super Admin deploy** starts through `workflow_run` (branch `main`, push events only). The plan job proceeds only if the CI conclusion is `success` and every one of its jobs is `success` (a skipped or cancelled job stops it), and the commit changed Super Admin runtime files or the deploy workflow (`git diff --name-only <sha>^ <sha>`; a squash merge is one commit). Docs-only and non-Super Admin pushes never start CI, so they never deploy.
+3. It builds, migrates and deploys exactly `workflow_run.head_sha`, the commit CI tested, never the moving branch tip. Super Admin CI no longer cancels in-progress runs on `main`, so each commit gets its own finished run.
+4. **Migration guard.** Migration files added by that commit (`superadmin/apps/*/migrations/*.py`) are scanned for `RemoveField`, `DeleteModel`, `RenameField`, `RenameModel`, `AlterField` (flagged for review) and `RunSQL`. Any hit fails the plan job: "deploy manually with confirm=DEPLOY after review". Only the newest commit's additions are scanned, and a queued deploy is replaced by a newer one, so merge Super Admin PRs one at a time.
+5. **Pre-migration backup.** The `backup` job dispatches **Super Admin backup** (`backup.yml`, which stores an encrypted dump as its own artifact for 14 days) and waits for it to succeed before the deploy job runs. A failed backup stops the deploy before any migration. The deploy workflow itself never creates or uploads a dump, because this repository is public and personal data stays out of its artifacts and logs.
+6. **Post-deploy check.** After `deploy.sh`, the job polls `https://admin.vitalos.co.uk/healthz/` for up to 5 minutes and confirms the app runs the new image tag. On failure the run fails and prints the rollback command. **Nothing rolls back automatically.**
+7. Deploys queue in the `superadmin-deploy` group and never cancel one another mid-migration.
+
+**Manual override:** run **Super Admin deploy** (`workflow_dispatch`, `confirm=DEPLOY`) from any ref. It skips the changed-files and migration guards, not the backup. Use it for a reviewed destructive migration, a redeploy or a rollback.
+
+### 5.2 Redeploy and roll back
 
 **Redeploy:** run **Super Admin deploy** again from the commit you want. It builds `ghcr.io/<owner>/vitalos-platform/superadmin:<sha>` and runs the release job (migrations first). Then it updates the app. Secrets and the domain binding are kept, and the 3 newest images are retained.
 

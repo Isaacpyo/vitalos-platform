@@ -250,3 +250,8 @@ Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md) (
 ` and `` to `
 ` in every field and block, and `blocks_from_post` does the same.
 
+## Automatic deploy (14 Oct 2026)
+
+96. **Merging Super Admin changes to `main` deploys them.** `superadmin-deploy.yml` also runs on `workflow_run` of the Super Admin CI workflow (completed, `main`, push events). It deploys only a fully green run (every job `success`) for a commit that changed `superadmin/` runtime files or the deploy workflow, and deploys exactly `head_sha`. `workflow_dispatch` with `confirm=DEPLOY` stays for redeploys, rollbacks and reviewed destructive migrations. This is the merge-triggered production deploy the owner already pre-authorised (AGENTS.md, Autonomy). It supersedes the manual-only trigger in #49 and #56.
+97. **Guards.** The plan job refuses automatic deploys whose added migrations contain `RemoveField`, `DeleteModel`, `RenameField`, `RenameModel`, `AlterField` or `RunSQL`. A fresh backup is taken before migrations by dispatching `backup.yml` and waiting for it (a failure blocks the deploy); the deploy workflow uploads no dump, because artifacts of this public repository are world-downloadable and carry personal data (#90). A post-deploy check polls `/healthz/` and the served image tag and prints the rollback command on failure; it does not roll back by itself. Super Admin CI no longer cancels in-progress runs on `main` (each commit needs its own finished run), and the deploy workflow's path is in its trigger paths, so a deploy-workflow change always gets a real green run first. Known limit: the migration guard reads only the newest commit, so merge Super Admin PRs one at a time.
+
