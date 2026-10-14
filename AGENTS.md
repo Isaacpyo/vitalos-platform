@@ -20,7 +20,7 @@
 
 ### Pre-authorized production actions
 
-- The production deploy triggered by merging to `main`.
+- The production deploy triggered by merging to `main`. A Super Admin change merged to `main` deploys automatically through `.github/workflows/superadmin-deploy.yml` (CI-green, guarded, backed up, health-checked); manual deploys and rollbacks use `workflow_dispatch` with `confirm=DEPLOY`.
 - Applying Supabase migrations to production (`supabase db push` against the linked project, or the CI migration job). Before applying:
   - Pass the migration locally (`supabase db reset`) and on a preview/branch database.
   - Confirm production backups or PITR are current. For destructive changes (drop/rename column or table, type narrowing), use expand/contract and take a `supabase db dump` stored outside the repo first.

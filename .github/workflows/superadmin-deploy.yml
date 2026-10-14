@@ -1,14 +1,29 @@
 name: Super Admin deploy
-# Manual production deploy of superadmin/ to Azure Container Apps (consumption plan, UK South) at zero
+run-name: Super Admin deploy ${{ github.event.workflow_run.head_sha || github.sha }}
+# Production deploy of superadmin/ to Azure Container Apps (consumption plan, UK South) at zero
 # monthly cost: public image on ghcr.io (pulled without credentials), free-tier PostgreSQL (Supabase by
 # default, or Neon), Cloudflare free DNS, Azure managed TLS.
-# Never runs automatically. The deploy job uses the "production" environment (it resolves to the
-# Vercel-created "Production"; no required reviewer on this plan) holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC, no stored Azure keys),
+# Two triggers. (1) Automatic: when the "Super Admin" CI workflow completes successfully for a push to
+# main that changed superadmin/ (not its docs or markdown) or this file, the exact commit CI tested
+# (workflow_run.head_sha, never the moving branch tip) is deployed. A failed, cancelled or skipped CI
+# run never deploys; destructive migrations stop the run (guard in "plan"); the database is dumped
+# and encrypted before migrations run; the live /healthz/ and image are checked afterwards.
+# (2) Manual: workflow_dispatch with confirm=DEPLOY, for redeploys, rollbacks and reviewed destructive
+# migrations. Manual runs skip the changed-files and migration guards.
+# Deploys queue (group superadmin-deploy, never cancelled mid-migration). The deploy job uses the
+# "production" environment (it resolves to the Vercel-created "Production"; no required reviewer on
+# this plan) holding AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (OIDC, no stored Azure keys),
 # SUPERADMIN_DATABASE_URL (the Super Admin's own Supabase session pooler or Neon pooled string, never the
 # website's) and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN, plus the optional mail and enquiry
-# secrets and variables listed in superadmin/docs/email-setup.md section 9.
+# secrets and variables listed in superadmin/docs/email-setup.md section 9. The pre-migration backup job
+# uses the "backup" environment (read-only backup_reader DATABASE_URL and BACKUP_PASSPHRASE), the same
+# as the nightly backup, because artifacts of this public repository are downloadable by anyone.
 # See superadmin/docs/DEPLOY.md.
 on:
+  workflow_run:
+    workflows: ["Super Admin"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       confirm:
@@ -23,18 +38,88 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: superadmin-deploy
+  # Only runs that can deploy join the queue; an ignored workflow_run (failed CI, say) gets its own
+  # group so it can never replace a queued real deploy.
+  group: >-
+    ${{ (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    && 'superadmin-deploy' || format('superadmin-deploy-ignored-{0}', github.run_id) }}
   cancel-in-progress: false
 
 jobs:
   plan:
-    name: Plan (resources and expected cost)
-    if: inputs.confirm == 'DEPLOY'
+    name: Plan (guards, resources and expected cost)
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.confirm == 'DEPLOY') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      deploy: ${{ steps.decide.outputs.deploy }}
+      sha: ${{ steps.decide.outputs.sha }}
     steps:
+      - id: decide
+        name: Decide the commit to deploy
+        env:
+          EVENT: ${{ github.event_name }}
+          DISPATCH_SHA: ${{ github.sha }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = workflow_dispatch ]; then
+            echo "Manual deploy of $DISPATCH_SHA: changed-files and migration guards skipped."
+            { echo "deploy=true"; echo "sha=$DISPATCH_SHA"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [[ "$CI_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected head_sha"; exit 1; }
+          # A skipped or cancelled job inside a "successful" CI run must not deploy either.
+          conclusions="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID/jobs" --paginate --jq '.jobs[].conclusion')"
+          total="$(grep -c . <<< "$conclusions" || true)"
+          not_green="$(grep -vc '^success$' <<< "$conclusions" || true)"
+          if [ "$total" -eq 0 ] || [ "$not_green" -ne 0 ]; then
+            echo "::notice::Super Admin CI run $CI_RUN_ID has $not_green of $total jobs not green; not deploying."
+            { echo "deploy=false"; echo "sha=$CI_SHA"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git init -q .
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          git fetch -q --depth=2 origin "$CI_SHA"
+          changed="$(git diff --name-only "$CI_SHA^" "$CI_SHA")"
+          echo "Files in $CI_SHA:"; echo "$changed"
+          # Same scope as the Super Admin CI paths filter (its docs and markdown start nothing).
+          relevant="$(grep -E '^(superadmin/|\.github/workflows/superadmin-deploy\.yml$)' <<< "$changed" |
+            grep -vE '^superadmin/docs/|\.md$' || true)"
+          if [ -z "$relevant" ]; then
+            echo "::notice::No Super Admin runtime files changed in $CI_SHA; not deploying."
+            { echo "deploy=false"; echo "sha=$CI_SHA"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Destructive-migration guard: migrations added by this commit (a squash merge is one commit).
+          added="$(git diff --name-only --diff-filter=A "$CI_SHA^" "$CI_SHA" -- 'superadmin/apps/*/migrations/*.py' |
+            grep -v '__init__\.py$' || true)"
+          bad=0
+          for f in $added; do
+            if hits="$(git show "$CI_SHA:$f" | grep -nE '\b(RemoveField|DeleteModel|RenameField|RenameModel|AlterField|RunSQL)\b')"; then
+              echo "::error file=$f::Destructive or risky migration operation (AlterField needs review): $(tr '\n' ' ' <<< "$hits")"
+              bad=1
+            fi
+          done
+          if [ "$bad" -ne 0 ]; then
+            echo "::error::Automatic deploy stopped: deploy manually with confirm=DEPLOY after review."
+            exit 1
+          fi
+          { echo "deploy=true"; echo "sha=$CI_SHA"; } >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
+        if: steps.decide.outputs.deploy == 'true'
+        with:
+          ref: ${{ steps.decide.outputs.sha }}
       - name: Print the deployment plan
+        if: steps.decide.outputs.deploy == 'true'
         run: |
           superadmin/deploy/azure/deploy.sh --dry-run | tee plan.txt
           { echo '```'; cat plan.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
@@ -42,6 +127,7 @@ jobs:
   build:
     name: Build and push image to ghcr.io
     needs: plan
+    if: needs.plan.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -51,10 +137,14 @@ jobs:
       image: ${{ steps.image.outputs.image }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
       - id: image
         name: Image name
         # Package "vitalos-platform/superadmin", public so Container Apps pulls it without a token.
-        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vitalos-platform/superadmin:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        env:
+          SHA: ${{ needs.plan.outputs.sha }}
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/vitalos-platform/superadmin:${SHA}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
@@ -77,9 +167,55 @@ jobs:
           package-type: container
           min-versions-to-keep: 3
 
+  backup:
+    name: Pre-migration database backup
+    needs: [plan, build]
+    if: needs.plan.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: backup
+    timeout-minutes: 20
+    steps:
+      - name: pg_dump (same approach as backup.yml; the dump is uploaded only encrypted)
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          SHA: ${{ needs.plan.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ] || [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::error::DATABASE_URL and BACKUP_PASSPHRASE must be set in the 'backup' environment; no deploy without a backup."
+            exit 1
+          fi
+          direct="${DATABASE_URL/-pooler./.}"
+          echo "::add-mask::$direct"
+          server="$(docker run --rm -e PGURL="$direct" postgres:17 sh -c 'psql "$PGURL" -tAc "show server_version_num"')"
+          major="$((server / 10000))"
+          case "$major" in 1[4-9]) echo "Server is PostgreSQL $major" ;; *) echo "::error::unexpected server version $server"; exit 1 ;; esac
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          mkdir -p dump
+          file="dump/superadmin-pre-deploy-${SHA:0:12}-$stamp-pg$major.sql.gz"
+          docker run --rm -e PGURL="$direct" "postgres:$major" \
+            sh -c 'pg_dump --schema=public --no-owner --no-privileges --dbname="$PGURL"' | gzip -9 > "$file"
+          gzip -t "$file"
+          header="$(zcat "$file" | head -n 20 || true)"
+          grep -q "PostgreSQL database dump" <<< "$header" || { echo "::error::dump looks empty"; exit 1; }
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
+            -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
+          rm "$file"
+          ls -l dump
+          echo "name=superadmin-pre-deploy-${SHA:0:12}-$stamp" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: dump/
+          if-no-files-found: error
+          retention-days: 7
+
   deploy:
     name: Deploy to Azure Container Apps
-    needs: build
+    needs: [plan, build, backup]
+    if: needs.plan.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -90,11 +226,20 @@ jobs:
       url: https://admin.vitalos.co.uk
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
       - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - id: prev
+        name: Record the image running now (for the rollback command)
+        run: |
+          image="$(az containerapp show -n superadmin -g rg-vitalos-superadmin \
+            --query 'properties.template.containers[0].image' -o tsv 2>/dev/null || true)"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "Currently running: ${image:-none (first deploy)}"
       - name: Deploy (secrets generated here, written only to Container Apps secrets)
         id: deploy
         env:
@@ -129,6 +274,30 @@ jobs:
           echo "::add-mask::$NEW_BOOTSTRAP_ADMIN_PASSWORD"
           export NEW_DJANGO_SECRET_KEY NEW_BOOTSTRAP_ADMIN_PASSWORD
           superadmin/deploy/azure/deploy.sh
+      - name: Post-deploy check (live health and served image)
+        env:
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          set -euo pipefail
+          ok=0
+          for attempt in $(seq 1 30); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://admin.vitalos.co.uk/healthz/ || true)"
+            if [ "$code" = 200 ]; then ok=1; break; fi
+            echo "healthz returned $code (attempt $attempt of 30)"; sleep 10
+          done
+          [ "$ok" = 1 ] || { echo "::error::https://admin.vitalos.co.uk/healthz/ did not return 200 within 5 minutes"; exit 1; }
+          running="$(az containerapp show -n superadmin -g rg-vitalos-superadmin \
+            --query 'properties.template.containers[0].image' -o tsv)"
+          [ "$running" = "$IMAGE" ] || { echo "::error::app runs $running, expected $IMAGE"; exit 1; }
+          echo "Healthy and serving $IMAGE"
+      - name: Rollback command (run it yourself; nothing is rolled back automatically)
+        if: failure()
+        env:
+          PREVIOUS: ${{ steps.prev.outputs.image }}
+        run: |
+          echo "::error::Deploy failed. If the app already took the new image, roll back the code with:"
+          echo "::error::az containerapp update -n superadmin -g rg-vitalos-superadmin --image ${PREVIOUS:-<previous image>}"
+          echo "::error::Migrations only move forward; restore the pre-migration backup artifact (DEPLOY.md section 6) only if the data is damaged."
       - uses: actions/setup-python@v7
         if: inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         with:

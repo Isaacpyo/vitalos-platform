@@ -9,6 +9,7 @@ on:
       - "!superadmin/**.md"
       - "!superadmin/docs/**"
       - ".github/workflows/superadmin.yml"
+      - ".github/workflows/superadmin-deploy.yml"
   push:
     branches: [main]
     paths:
@@ -16,11 +17,13 @@ on:
       - "!superadmin/**.md"
       - "!superadmin/docs/**"
       - ".github/workflows/superadmin.yml"
+      - ".github/workflows/superadmin-deploy.yml"
 permissions:
   contents: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a main push: every superadmin commit needs its own finished run for the auto-deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 defaults:
   run:
     working-directory: superadmin
