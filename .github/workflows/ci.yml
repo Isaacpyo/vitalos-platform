@@ -59,7 +59,7 @@ jobs:
       - name: Decide which jobs this change needs
         id: changes
         run: node tooling/scripts/ci-changes.mjs ${{ github.event_name != 'pull_request' && '--full' || '' }}
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: .turbo/cache
           key: turbo-quality-${{ github.sha }}
@@ -72,7 +72,7 @@ jobs:
         env: { TURBO_SCM_BASE: "HEAD^1" }
       - if: steps.changes.outputs.static == 'true'
         run: pnpm check:boundaries
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: github.ref == 'refs/heads/main'
         with:
           path: .turbo/cache
@@ -91,7 +91,7 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: .turbo/cache
           key: turbo-unit-${{ github.sha }}
@@ -99,7 +99,7 @@ jobs:
       - name: Unit tests and build (affected packages on pull requests)
         run: pnpm turbo run test build ${{ needs.quality.outputs.full != 'true' && '--affected' || '' }}
         env: { TURBO_SCM_BASE: "HEAD^1" }
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: github.ref == 'refs/heads/main'
         with:
           path: .turbo/cache
@@ -137,7 +137,7 @@ jobs:
       - name: Integration tests (no Docker, so database-backed tests skip)
         run: pnpm test:integration
         if: ${{ !cancelled() }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -165,7 +165,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Sparse-content end-to-end (builds and starts apps/web with the sparse set)
         run: pnpm test:e2e:sparse
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-sparse
@@ -204,7 +204,7 @@ jobs:
       - name: Client bundle secret scan
         run: pnpm check:bundle-secrets
         if: ${{ !cancelled() }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-draft
@@ -251,7 +251,7 @@ jobs:
         run: pnpm test:visual --update-snapshots=all
       - name: Baselines for adoption
         if: ${{ !cancelled() && steps.baselines.outputs.present == 'false' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-baselines-for-adoption
           path: tests/visual/__screenshots__/linux-ci
@@ -259,7 +259,7 @@ jobs:
           retention-days: 7
       - name: Diff report
         if: ${{ !cancelled() && steps.baselines.outputs.present == 'true' && failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-diff-report
           path: |
@@ -284,7 +284,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm storybook:build
       - run: pnpm test:storybook-a11y
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: storybook-a11y-report
