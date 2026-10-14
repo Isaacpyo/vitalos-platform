@@ -16,8 +16,8 @@ run-name: Super Admin deploy ${{ github.event.workflow_run.head_sha || github.sh
 # SUPERADMIN_DATABASE_URL (the Super Admin's own Supabase session pooler or Neon pooled string, never the
 # website's) and, optionally, CLOUDFLARE_API_TOKEN and SENTRY_DSN, plus the optional mail and enquiry
 # secrets and variables listed in superadmin/docs/email-setup.md section 9. The pre-migration backup job
-# uses the "backup" environment (read-only backup_reader DATABASE_URL and BACKUP_PASSPHRASE), the same
-# as the nightly backup, because artifacts of this public repository are downloadable by anyone.
+# dispatches backup.yml (the "backup" environment, encrypted dump) and waits for it to succeed; this
+# workflow never creates or uploads a dump itself, because the repository is public.
 # See superadmin/docs/DEPLOY.md.
 on:
   workflow_run:
@@ -172,45 +172,31 @@ jobs:
     needs: [plan, build]
     if: needs.plan.outputs.deploy == 'true'
     runs-on: ubuntu-latest
-    environment: backup
-    timeout-minutes: 20
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: write
     steps:
-      - name: pg_dump (same approach as backup.yml; the dump is uploaded only encrypted)
-        id: dump
+      - name: Run the Super Admin backup workflow and wait for it
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-          SHA: ${{ needs.plan.outputs.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          # No dump is created or uploaded here: this repository is public, so personal data stays out
+          # of this workflow's artifacts and logs. backup.yml (the 'backup' environment) owns the dump.
           set -euo pipefail
-          if [ -z "$DATABASE_URL" ] || [ -z "${BACKUP_PASSPHRASE:-}" ]; then
-            echo "::error::DATABASE_URL and BACKUP_PASSPHRASE must be set in the 'backup' environment; no deploy without a backup."
-            exit 1
-          fi
-          direct="${DATABASE_URL/-pooler./.}"
-          echo "::add-mask::$direct"
-          server="$(docker run --rm -e PGURL="$direct" postgres:17 sh -c 'psql "$PGURL" -tAc "show server_version_num"')"
-          major="$((server / 10000))"
-          case "$major" in 1[4-9]) echo "Server is PostgreSQL $major" ;; *) echo "::error::unexpected server version $server"; exit 1 ;; esac
-          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-          mkdir -p dump
-          file="dump/superadmin-pre-deploy-${SHA:0:12}-$stamp-pg$major.sql.gz"
-          docker run --rm -e PGURL="$direct" "postgres:$major" \
-            sh -c 'pg_dump --schema=public --no-owner --no-privileges --dbname="$PGURL"' | gzip -9 > "$file"
-          gzip -t "$file"
-          header="$(zcat "$file" | head -n 20 || true)"
-          grep -q "PostgreSQL database dump" <<< "$header" || { echo "::error::dump looks empty"; exit 1; }
-          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 \
-            -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
-          rm "$file"
-          ls -l dump
-          echo "name=superadmin-pre-deploy-${SHA:0:12}-$stamp" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ${{ steps.dump.outputs.name }}
-          path: dump/
-          if-no-files-found: error
-          retention-days: 7
+          start="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh workflow run backup.yml --repo "$GITHUB_REPOSITORY" --ref main
+          id=""
+          for attempt in $(seq 1 30); do
+            id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow backup.yml --event workflow_dispatch \
+              --json databaseId,createdAt --jq "[.[] | select(.createdAt >= \"$start\")] | sort_by(.createdAt) | last | .databaseId // empty")"
+            [ -n "$id" ] && break
+            sleep 5
+          done
+          [ -n "$id" ] || { echo "::error::backup run did not start; no deploy without a fresh backup"; exit 1; }
+          echo "Backup run $id"
+          gh run watch "$id" --repo "$GITHUB_REPOSITORY" --exit-status --interval 15 ||
+            { echo "::error::backup run $id failed; deploy stopped before migrations"; exit 1; }
 
   deploy:
     name: Deploy to Azure Container Apps
@@ -297,7 +283,7 @@ jobs:
         run: |
           echo "::error::Deploy failed. If the app already took the new image, roll back the code with:"
           echo "::error::az containerapp update -n superadmin -g rg-vitalos-superadmin --image ${PREVIOUS:-<previous image>}"
-          echo "::error::Migrations only move forward; restore the pre-migration backup artifact (DEPLOY.md section 6) only if the data is damaged."
+          echo "::error::Migrations only move forward; restore the backup taken just before this deploy (DEPLOY.md section 6) only if the data is damaged."
       - uses: actions/setup-python@v7
         if: inputs.smoke_test && steps.deploy.outputs.bound == 'true'
         with:
