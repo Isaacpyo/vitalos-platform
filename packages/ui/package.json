@@ -24,7 +24,7 @@
     "@types/react-dom": "19.3.0",
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/typescript-config": "workspace:*",
-    "eslint": "9.35.0",
+    "eslint": "10.12.0",
     "jsdom": "30.1.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
