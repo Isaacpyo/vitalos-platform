@@ -535,6 +535,24 @@ describe("insights, journey and footer", () => {
     expect(container.querySelectorAll("footer h2")).toHaveLength(1);
   });
 
+  it("SiteFooter renders each link column as a disclosure that starts open", () => {
+    const { container } = render(
+      <SiteFooter
+        columns={[
+          {
+            key: "a",
+            heading: "Example column (fixture)",
+            links: [{ label: "Example link (fixture)", href: url("l") }],
+          },
+        ]}
+      />,
+    );
+    const column = container.querySelector("footer nav details");
+    expect(column?.hasAttribute("open")).toBe(true);
+    expect(column?.querySelector("summary h2")?.textContent).toBe("Example column (fixture)");
+    expect(screen.getByRole("list", { name: "Example column (fixture)" })).toBeTruthy();
+  });
+
   it("SiteFooter renders brand, contact and legal identity from props only", () => {
     render(
       <SiteFooter

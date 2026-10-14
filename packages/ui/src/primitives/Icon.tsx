@@ -89,6 +89,7 @@ const paths = {
   shield: <path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Zm-3 9 2 2 4-4" />,
   building: <path d="M4 21V5l8-2v18m0-13h8v13M3 21h18M7.5 8h1m-1 4h1m-1 4h1m7-4h1m-1 4h1" />,
   document: <path d="M6 3h8l4 4v14H6V3Zm8 0v4h4M9 12h6m-6 4h6" />,
+  mail: <path d="M3 5h18v14H3V5Zm0 0 9 7.5L21 5" />,
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

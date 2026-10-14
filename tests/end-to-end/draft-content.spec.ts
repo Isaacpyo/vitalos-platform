@@ -105,7 +105,9 @@ test.describe("draft content source", () => {
     await page.goto("/");
     const nav = page.getByRole("navigation").first();
     for (const open of ["Industries", "Labs", "Work", "Insights"]) {
-      await expect(nav.getByRole("link", { name: open, exact: true }).first()).toBeAttached();
+      await expect(
+        nav.getByRole("link", { name: open, exact: true, includeHidden: true }).first(),
+      ).toBeAttached();
     }
   });
 

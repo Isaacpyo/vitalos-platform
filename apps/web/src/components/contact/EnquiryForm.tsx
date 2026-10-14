@@ -76,6 +76,9 @@ const visibleFieldOrder = [
 
 const FORM_ID = "enquiry-form";
 
+/** Two fields side by side from sm; stacked below. */
+const PAIR_CLASSES = "grid gap-(--space-6) sm:grid-cols-2";
+
 const emailLink = (email: string) => (
   <a className="underline underline-offset-4" href={`mailto:${email}`}>
     {email}
@@ -161,40 +164,38 @@ export function EnquiryFormView({
       className="flex flex-col gap-(--space-6) outline-none"
       aria-label="Enquiry"
     >
-      <div>
-        {outcomeMessage ? (
-          <div ref={outcome} tabIndex={-1} id="enquiry-outcome" className="outline-offset-4">
-            <StatusMessage
-              variant={outcomeMessage.status === "rate-limited" ? "warning" : "error"}
-              title={
-                outcomeMessage.status === "unavailable"
-                  ? "Enquiries are unavailable right now"
-                  : outcomeMessage.status === "rate-limited"
-                    ? "Please wait before sending again"
-                    : "Your enquiry was not sent"
-              }
-            >
-              <p>{outcomeMessage.message}</p>
-              {outcomeMessage.status === "rate-limited" ? (
-                <p className="mt-(--space-2)">
-                  Your details are still in the form. You can try again later
-                  {contactEmail ? <>, or email {emailLink(contactEmail)}</> : null}.
-                </p>
-              ) : null}
-              {outcomeMessage.status === "rejected" ? (
-                <p className="mt-(--space-2)">
-                  {turnstileSiteKey ? "The security check needs JavaScript. " : null}
-                  Your details are still in the form.
-                  {contactEmail ? <> You can also email {emailLink(contactEmail)}.</> : null}
-                </p>
-              ) : null}
-              {outcomeMessage.status === "unavailable" && contactEmail ? (
-                <p className="mt-(--space-2)">Email {emailLink(contactEmail)}.</p>
-              ) : null}
-            </StatusMessage>
-          </div>
-        ) : null}
-      </div>
+      {outcomeMessage ? (
+        <div ref={outcome} tabIndex={-1} id="enquiry-outcome" className="outline-offset-4">
+          <StatusMessage
+            variant={outcomeMessage.status === "rate-limited" ? "warning" : "error"}
+            title={
+              outcomeMessage.status === "unavailable"
+                ? "Enquiries are unavailable right now"
+                : outcomeMessage.status === "rate-limited"
+                  ? "Please wait before sending again"
+                  : "Your enquiry was not sent"
+            }
+          >
+            <p>{outcomeMessage.message}</p>
+            {outcomeMessage.status === "rate-limited" ? (
+              <p className="mt-(--space-2)">
+                Your details are still in the form. You can try again later
+                {contactEmail ? <>, or email {emailLink(contactEmail)}</> : null}.
+              </p>
+            ) : null}
+            {outcomeMessage.status === "rejected" ? (
+              <p className="mt-(--space-2)">
+                {turnstileSiteKey ? "The security check needs JavaScript. " : null}
+                Your details are still in the form.
+                {contactEmail ? <> You can also email {emailLink(contactEmail)}.</> : null}
+              </p>
+            ) : null}
+            {outcomeMessage.status === "unavailable" && contactEmail ? (
+              <p className="mt-(--space-2)">Email {emailLink(contactEmail)}.</p>
+            ) : null}
+          </StatusMessage>
+        </div>
+      ) : null}
 
       {state.status === "invalid" ? (
         <FormErrorSummary errors={summary} title={state.message} focusKey={state} />
@@ -211,34 +212,42 @@ export function EnquiryFormView({
         ) : null;
       })}
 
-      <Field label="Name" id={fieldIds.name} required error={fieldErrors.name}>
-        <TextInput name="name" autoComplete="name" defaultValue={values.name ?? ""} />
-      </Field>
-      <Field label="Work email" id={fieldIds.workEmail} required error={fieldErrors.workEmail}>
-        <TextInput
-          name="workEmail"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          spellCheck={false}
-          defaultValue={values.workEmail ?? ""}
-        />
-      </Field>
-      <Field
-        label="Organisation"
-        id={fieldIds.organisation}
-        required
-        error={fieldErrors.organisation}
-      >
-        <TextInput
-          name="organisation"
-          autoComplete="organization"
-          defaultValue={values.organisation ?? ""}
-        />
-      </Field>
-      <Field label="Role" id={fieldIds.role} optional error={fieldErrors.role}>
-        <TextInput name="role" autoComplete="organization-title" defaultValue={values.role ?? ""} />
-      </Field>
+      <div className={PAIR_CLASSES}>
+        <Field label="Name" id={fieldIds.name} required error={fieldErrors.name}>
+          <TextInput name="name" autoComplete="name" defaultValue={values.name ?? ""} />
+        </Field>
+        <Field label="Work email" id={fieldIds.workEmail} required error={fieldErrors.workEmail}>
+          <TextInput
+            name="workEmail"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            spellCheck={false}
+            defaultValue={values.workEmail ?? ""}
+          />
+        </Field>
+      </div>
+      <div className={PAIR_CLASSES}>
+        <Field
+          label="Organisation"
+          id={fieldIds.organisation}
+          required
+          error={fieldErrors.organisation}
+        >
+          <TextInput
+            name="organisation"
+            autoComplete="organization"
+            defaultValue={values.organisation ?? ""}
+          />
+        </Field>
+        <Field label="Role" id={fieldIds.role} optional error={fieldErrors.role}>
+          <TextInput
+            name="role"
+            autoComplete="organization-title"
+            defaultValue={values.role ?? ""}
+          />
+        </Field>
+      </div>
       <Field
         label="What would you like to talk about?"
         id={fieldIds.intent}

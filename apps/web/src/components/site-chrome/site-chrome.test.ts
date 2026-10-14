@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { closedGates, evaluateGates } from "@vitalos/cms";
 import type { OfferSummary, PracticeSummary, SolutionSummary } from "@vitalos/cms";
-import { buildFooterModel, buildHeaderModel, buildWhatWeDoColumns } from "./nav-model";
+import { buildFooterModel, buildHeaderModel, buildWhatWeDoColumns, footerLogo } from "./nav-model";
 import type { ChromeContent } from "./nav-model";
 import { activeSectionForPath } from "./section-for-path";
 
@@ -53,6 +53,10 @@ describe("header model", () => {
     expect(buildHeaderModel(base).logo).toBeUndefined();
     const logo = { src: "/images/logo.svg", width: 10, height: 10 };
     expect(buildHeaderModel({ ...base, settings: { logo } }).logo).toEqual(logo);
+  });
+
+  it("puts the white monochrome lockup in the footer", () => {
+    expect(buildFooterModel(base).brand?.logo).toEqual(footerLogo);
   });
 });
 
@@ -144,12 +148,12 @@ describe("footer model", () => {
     expect(open).toContain("/careers");
   });
 
-  it("takes the legal identity from site settings only, line by line", () => {
+  it("takes the legal identity from site settings only, line by line, without the address", () => {
     const { legalIdentity } = buildFooterModel({
       ...base,
       settings: { legalName: "Example Ltd", companyNumber: "123", registeredAddress: "1 Street" },
     });
-    expect(legalIdentity?.lines).toEqual(["Example Ltd", "Company number 123", "1 Street"]);
+    expect(legalIdentity?.lines).toEqual(["Example Ltd", "Company number 123"]);
     const partial = buildFooterModel({ ...base, settings: { legalName: "Example Ltd" } });
     expect(partial.legalIdentity?.lines).toEqual(["Example Ltd"]);
   });

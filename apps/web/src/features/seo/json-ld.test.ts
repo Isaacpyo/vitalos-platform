@@ -52,10 +52,10 @@ describe("organizationJsonLd", () => {
     expect(node).toMatchObject({
       legalName: "Example Legal Name Ltd",
       email: "hello@example.invalid",
-      address: "1 Example Street, Example Town",
       sameAs: ["https://www.linkedin.com/company/example"],
       logo: { "@type": "ImageObject", url: "https://www.example.invalid/images/logo.svg" },
     });
+    expect(node).not.toHaveProperty("address");
   });
 
   it("skips a logo that is neither same-site nor https, and blank values", () => {
