@@ -26,7 +26,7 @@
     "@vitalos/typescript-config": "workspace:*",
     "eslint": "9.35.0",
     "tailwindcss": "4.3.3",
-    "typescript": "5.9.2",
-    "vitest": "3.2.6"
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
   }
 }
