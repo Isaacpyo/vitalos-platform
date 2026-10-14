@@ -1,0 +1,22 @@
+services:
+  db:
+    ports: !override
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
+  web:
+    volumes: !reset []
+    ports: !override
+      - "127.0.0.1:${WEB_PORT:-8000}:8000"
+    environment:
+      CSRF_TRUSTED_ORIGINS: http://localhost:${WEB_PORT:-8000},http://127.0.0.1:${WEB_PORT:-8000}
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: /app
+          ignore:
+            - .git/
+            - node_modules/
+            - __pycache__/
+            - "*.pyc"
+        - action: rebuild
+          path: requirements.txt
