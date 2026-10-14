@@ -110,7 +110,7 @@ jobs:
           cache-dependency-path: superadmin/requirements*.txt
       - uses: docker/setup-buildx-action@v3
       - name: Build image (layers cached in GitHub Actions; main writes the cache)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: superadmin
           load: true
