@@ -1,4 +1,5 @@
 {% extends "accounts/auth_base.html" %}
+{% load static %}
 {% block title %}Set up two-factor authentication · Vitalos Super Admin{% endblock %}
 {% block auth_body %}
   <h1 class="mb-2 text-xl font-semibold">Set up two-factor authentication</h1>
@@ -16,3 +17,4 @@
     {% csrf_token %}<button type="submit" class="text-sm text-slate-500 underline hover:text-slate-700">Sign out</button>
   </form>
 {% endblock %}
+{% block scripts %}<script src="{% static 'js/otp.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}

@@ -77,6 +77,9 @@ def test_superadmin_enrols_and_uses_totp(seeded, password):
     setup = client.get(response.url)
     assert setup.status_code == 200 and b"<svg" in setup.content
     assert b"global-search" not in setup.content  # no app chrome before the second factor
+    assert (
+        b'data-autosubmit="6"' in setup.content and b"js/otp.js" in setup.content
+    )  # submits on the sixth digit
     device = TOTPDevice.objects.get(user=user, confirmed=False)
     assert client.post("/account/2fa/setup/", {"token": "000000"}).status_code == 200
     reset_throttle(device)  # failures are throttled; a real user waits a moment before retrying
@@ -92,6 +95,8 @@ def test_superadmin_enrols_and_uses_totp(seeded, password):
     response = client.post("/login/", {"email": "founder@example.test", "password": password})
     assert response.url.startswith("/login/verify/")
     assert client.get("/").url.startswith("/login/verify/")
+    verify = client.get("/login/verify/")
+    assert b'data-autosubmit="6"' in verify.content and b"js/otp.js" in verify.content
     bad = client.post("/login/verify/", {"token": "123456"})
     assert bad.status_code == 200 and b"not valid" in bad.content
     reset_throttle(device)

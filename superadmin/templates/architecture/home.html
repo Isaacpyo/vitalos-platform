@@ -4,24 +4,6 @@
 {% block content %}
   <h1 class="font-display text-2xl font-semibold">Overview</h1>
 
-  {% if company %}
-    <section class="mt-4 rounded-md bg-midnight px-5 py-4 text-white" aria-labelledby="north-star">
-      <p class="mono-label text-cobalt-300">{{ company.name }} north star</p>
-      <h2 id="north-star" class="font-display mt-1 text-lg font-semibold sm:text-xl">{{ company.tagline }}</h2>
-      <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
-        <div>
-          <dt class="text-xs font-semibold tracking-wide text-slate-300 uppercase">Vision</dt>
-          <dd class="mt-0.5 text-slate-100">{{ company.vision }}</dd>
-        </div>
-        <div>
-          <dt class="text-xs font-semibold tracking-wide text-slate-300 uppercase">Mission</dt>
-          <dd class="mt-0.5 text-slate-100">{{ company.mission }}</dd>
-        </div>
-      </dl>
-    </section>
-  {% else %}
-    <div class="card mt-4 p-6 text-sm">The company profile has not been seeded yet. Run <code>manage.py seed_architecture</code>.</div>
-  {% endif %}
 
   {% if show_enquiry_kpis %}
     <section class="mt-6" aria-labelledby="kpi-heading">

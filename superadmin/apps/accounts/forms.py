@@ -40,6 +40,7 @@ class OTPTokenForm(StyledFormMixin, forms.Form):
                 "inputmode": "numeric",
                 "autofocus": True,
                 "pattern": "[0-9 ]*",
+                "data-autosubmit": "6",
             }
         ),
     )
