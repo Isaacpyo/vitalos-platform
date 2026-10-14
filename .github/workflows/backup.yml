@@ -1,6 +1,6 @@
 name: Super Admin backup
 # Daily logical backup of the Super Admin's database (Supabase by default, or Neon) at 02:00 UTC, kept
-# 14 days as a workflow artifact (free). On Supabase's free plan this is the only backup, and the daily
+# 7 days as a workflow artifact (free). On Supabase's free plan this is the only backup, and the daily
 # connection also keeps the project from being paused for inactivity. Uses the "backup" environment,
 # which has no required reviewers so the schedule is never held for approval; it holds DATABASE_URL
 # (the read-only backup_reader role, DEPLOY.md §6.1) and BACKUP_PASSPHRASE, which is required: the
@@ -63,9 +63,9 @@ jobs:
           rm "$file"
           ls -l dump
           echo "name=superadmin-db-$stamp-pg$major" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ steps.dump.outputs.name }}
           path: dump/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7 # TODO: move the dump to private storage (Azure Blob via OIDC) once the owner approves; a public repo should not hold dumps even encrypted
