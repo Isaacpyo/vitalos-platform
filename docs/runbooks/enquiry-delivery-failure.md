@@ -93,6 +93,16 @@ where id = '<outbox id>' and state in ('pending', 'failed');
 
 An authorised owner reads the enquiry from `public.enquiries` (columns `name`, `email`, `organisation`, `message`, `role`, `timeframe`, `intent`, `offer_slug`, `received_at`) and tells the responsible person through an approved channel, quoting only the reference. Then mark the outbox row `sent` as above so it is not sent twice, and keep the enquiry `status` honest (`received`, `acknowledged`, `actioned`, `closed`).
 
+## Retention and deletion
+
+Enquiries are deleted 24 months after receipt (owner decision, 11 October 2026; ADR-019, Retention). A daily cron calls `/api/internal/retention/purge` and the response is a count only. If a conversation is still active and its enquiry is about to expire, extend it by hand (use the reference, never paste personal data into tickets):
+
+```sql
+update public.enquiries set retention_until = now() + interval '24 months' where id = '<enquiry id>';
+```
+
+To check what is due without deleting anything: `select count(*) from public.enquiries where retention_until < now();`. If that count stays above zero after a day, check Settings, Cron Jobs for the purge job, `CRON_SECRET`, and that migration `20261011110000_enquiry_retention.sql` is applied (the route answers 503 without it).
+
 ## 7. After the incident
 
 - Record the timeline, cause and affected references (no personal data).

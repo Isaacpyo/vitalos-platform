@@ -39,6 +39,8 @@ Public variables are inlined at build time (`NEXT_PUBLIC_*`); changing one needs
 
 ### Outbox scheduler
 
+`apps/web/vercel.json` also declares a second daily cron, `/api/internal/retention/purge` (`30 3 * * *`, UTC), which deletes enquiries older than 24 months (ADR-019, Retention). It uses the same `CRON_SECRET` or `OUTBOX_DISPATCH_SECRET` bearer and needs no new variable. After the first production deploy, Settings, Cron Jobs should list both jobs. The migration `20261011110000_enquiry_retention.sql` must be applied to the production Supabase project first.
+
 `apps/web/vercel.json` declares one Vercel Cron job that calls `/api/internal/outbox/dispatch` once a day (`0 6 * * *`, UTC). The Hobby plan allows one run per day. `after()` after an accepted enquiry remains the immediate dispatch path; the cron is the safety net that drains anything `after()` missed (a crash, a timeout, a provider outage). Set `CRON_SECRET` (32+ characters) in the Vercel project; Vercel then sends `Authorization: Bearer $CRON_SECRET`. The route accepts `CRON_SECRET` or `OUTBOX_DISPATCH_SECRET` (timing-safe comparison), and answers 503 when neither is set. A paid plan can shorten the schedule without code changes beyond `vercel.json`.
 
 Caveats: Vercel runs crons **only on production deployments** (not previews), and reads `vercel.json` from the project's **Root Directory**, so the Vercel project must have Root Directory set to `apps/web`. To check, open the project in Vercel, Settings, General, Root Directory; after the first production deploy, Settings, Cron Jobs must list `/api/internal/outbox/dispatch` with its schedule. If it is missing, the Root Directory is wrong. The owner approved enabling the cron on 11 October 2026.

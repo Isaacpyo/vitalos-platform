@@ -8,6 +8,7 @@ const service = (overrides: Partial<EnquiryService> = {}): EnquiryService => ({
   available: true,
   receive: () => Promise.resolve({ kind: "unavailable" }),
   dispatch: vi.fn(() => Promise.resolve({ claimed: 2, sent: 2, retried: 0, failed: 0 })),
+  purgeExpired: () => Promise.resolve({ purged: 0 }),
   ...overrides,
 });
 const request = (authorization?: string) =>

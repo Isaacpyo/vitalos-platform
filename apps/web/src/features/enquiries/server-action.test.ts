@@ -121,6 +121,7 @@ describe("submitEnquiryAction", () => {
       available: true,
       receive: () => Promise.reject(new Error("boom")),
       dispatch: () => Promise.resolve(null),
+      purgeExpired: () => Promise.resolve({ purged: 0 }),
     };
     expect((await submitEnquiryAction(initialEnquiryFormState, form(validBody()))).status).toBe(
       "unavailable",

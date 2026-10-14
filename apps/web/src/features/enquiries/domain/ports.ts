@@ -100,3 +100,11 @@ export interface EnquiryLogger {
 }
 
 export const systemClock: Clock = { now: () => new Date() };
+
+/**
+ * Retention enforcement (owner decision 2026-10-11: 24 months after last contact, then delete).
+ * Implementations delete expired enquiries together with their outbox rows and return a count only.
+ */
+export interface RetentionStore {
+  purgeExpired(): Promise<number>;
+}
