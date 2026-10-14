@@ -66,8 +66,22 @@ def _rows(value: str) -> list[list[str]]:
     return rows
 
 
+class _LF:
+    """A POST view whose text always uses LF line breaks (browsers send CRLF)."""
+
+    def __init__(self, data):
+        self._data = data
+
+    def get(self, key, default=None):
+        value = self._data.get(key, default)
+        if isinstance(value, str):
+            return value.replace("\r\n", "\n").replace("\r", "\n")
+        return value
+
+
 def blocks_from_post(data) -> list[dict]:
     """Reads ``block-N-*`` fields back into block dicts, in order."""
+    data = _LF(data)
     try:
         count = min(int(data.get("block-count", 0)), MAX_BLOCKS)
     except (TypeError, ValueError):

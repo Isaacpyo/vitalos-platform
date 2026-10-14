@@ -28,6 +28,7 @@ PAGES = [
     "/mail/templates/",
     "/mail/templates/1/",
     "/mail/templates/1/versions/",
+    "/mail/templates/1/use/",
     "/activity/",
     "/audit/",
     "/service-lines/",

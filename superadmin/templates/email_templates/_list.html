@@ -9,6 +9,7 @@
         <th scope="col">Status</th>
         <th scope="col">Last edited</th>
         <th scope="col">Edited by</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -28,9 +29,10 @@
           </td>
           <td class="whitespace-nowrap"><time datetime="{{ template.updated_at|date:'c' }}">{{ template.updated_at|date:"j M Y, H:i" }}</time></td>
           <td class="whitespace-nowrap">{% if template.updated_by %}{{ template.updated_by.email }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
+          <td class="whitespace-nowrap text-right">{% if template.status != "archived" %}<a class="btn btn-secondary btn-sm" href="{% url 'email_templates:use' template.pk %}" data-testid="use-template" aria-label="Use {{ template.name }}">{% icon "mail" "h-4 w-4" %} Use</a>{% endif %}</td>
         </tr>
       {% empty %}
-        <tr><td colspan="5" class="muted py-8 text-center">No templates match. {% if total == 0 %}Run <code>manage.py seed_email_templates</code> to load the library.{% endif %}</td></tr>
+        <tr><td colspan="6" class="muted py-8 text-center">No templates match. {% if total == 0 %}Run <code>manage.py seed_email_templates</code> to load the library.{% endif %}</td></tr>
       {% endfor %}
     </tbody>
   </table>

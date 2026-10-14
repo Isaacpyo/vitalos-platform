@@ -14,7 +14,7 @@ Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (stand
 | `/`                                                         | Overview: north-star header, KPIs, items needing attention and system status                                               |
 | `/service-lines/`                                           | Service line cards: modes, active projects, headline KPI, owner (moved from `/`)                                           |
 | `/enquiries/`                                               | Enquiries from support@ mail and the website form: inbox, reply, assign, SLA. SuperAdmin and ServiceLead only              |
-| `/mail/templates/`                                          | Email templates (SuperAdmin): library with search and filters, block editor, live preview (desktop/mobile, light/dark, plain text), version history, duplicate, archive and send test |
+| `/mail/templates/`                                          | Email templates (SuperAdmin): library with search and filters, block editor, live preview (desktop/mobile, light/dark, plain text), version history, duplicate, archive, send test and Use template (fill details, prefill from an enquiry, copy or download an .eml draft) |
 | `/mail/unsubscribe/<token>/`                                | Public, signed unsubscribe for outreach and marketing email (one-click supported)                |
 | `/audit/`                                                   | Append-only audit trail with filters and CSV export                                                                        |
 | `/help/`                                                    | In-app help                                                                                                                |

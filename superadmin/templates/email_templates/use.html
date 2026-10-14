@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Use {{ template.name }} · Email templates · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <p class="text-sm"><a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'email_templates:list' %}">Email templates</a> / <a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'email_templates:edit' template.pk %}">{{ template.name }}</a></p>
+      <h1 class="mt-1 text-2xl font-semibold">Use template</h1>
+      <p class="muted mt-1 text-sm">
+        {{ template.name }} · <span class="font-mono">{{ template.key }}</span> · {{ template.get_category_display }} · {{ template.get_status_display }} · version {{ template.version }}
+      </p>
+    </div>
+    <a class="btn btn-secondary" href="{% url 'email_templates:edit' template.pk %}">{% icon "edit" "h-4 w-4" %} Edit template</a>
+  </div>
+
+  {% if template.status == "draft" %}
+    <div class="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100" role="note" data-testid="draft-notice">
+      <strong>Draft, wording not yet approved.</strong> Check the wording yourself before you send this to anyone.
+    </div>
+  {% endif %}
+  {% if template.needs_opt_out %}
+    <div class="mt-4 rounded-md border border-cobalt-600/30 bg-cobalt-600/5 p-3 text-sm" role="note" data-testid="opt-out-notice">
+      This is {{ template.get_kind_display|lower }} email. It needs the recipient's email address, because the footer carries their personal one-click unsubscribe link, and it is refused for anyone who has unsubscribed.
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="prefill-heading">
+        <h2 id="prefill-heading" class="mb-1 font-semibold">Prefill from enquiry <span class="muted font-normal">(optional)</span></h2>
+        <p class="muted mb-3 text-sm">Fills the name, email, reference and other details the enquiry holds, and the recipient. You can change any value afterwards.</p>
+        <label for="use-enquiry" class="field-label">Recent enquiry</label>
+        <select id="use-enquiry" name="enquiry" form="use-form" class="{{ input_class }}"
+                hx-post="{% url 'email_templates:use_prefill' template.pk %}" hx-include="#use-form" hx-trigger="change"
+                hx-target="#use-fields" hx-swap="innerHTML" hx-sync="#use-form:replace">
+          <option value="">None, fill in by hand</option>
+          {% for enquiry in enquiries %}
+            <option value="{{ enquiry.pk }}" {% if enquiry_id == enquiry.pk|stringformat:"s" %}selected{% endif %}>{{ enquiry.ref }}{% if enquiry.from_name %} · {{ enquiry.from_name }}{% endif %} · {{ enquiry.created_at|date:"j M Y" }}</option>
+          {% empty %}
+            <option value="" disabled>No recent enquiries</option>
+          {% endfor %}
+        </select>
+      </section>
+
+      <form id="use-form" method="post" action="{% url 'email_templates:use_eml' template.pk %}" data-use-form novalidate
+            hx-post="{% url 'email_templates:use_preview' template.pk %}" hx-target="#use-panel" hx-swap="innerHTML"
+            hx-trigger="input delay:600ms, change, vsa-use-preview from:body" hx-sync="this:replace">
+        {% csrf_token %}
+        <section class="card p-5" aria-labelledby="values-heading">
+          <h2 id="values-heading" class="mb-1 font-semibold">Recipient and details</h2>
+          <p class="muted mb-4 text-sm">Empty details are highlighted. The email shows a fallback in their place until you fill them in.</p>
+          <div id="use-fields">
+            {% include "email_templates/_use_fields.html" %}
+          </div>
+        </section>
+      </form>
+    </div>
+
+    <section aria-labelledby="use-preview-heading" class="min-w-0">
+      <div class="xl:sticky xl:top-4">
+        <h2 id="use-preview-heading" class="mb-2 font-semibold">Preview and actions</h2>
+        <p id="use-status" class="mb-2 min-h-6 text-sm font-medium text-mineral-700 data-[state=error]:text-rose-700 dark:text-mineral-300 dark:data-[state=error]:text-rose-300" role="status" aria-live="polite" data-testid="use-status"></p>
+        <div id="use-panel">
+          {% include "email_templates/_use_panel.html" %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

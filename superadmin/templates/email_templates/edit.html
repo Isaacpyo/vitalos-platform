@@ -15,6 +15,7 @@
     </div>
     {% if template %}
       <div class="flex flex-wrap items-center gap-2">
+        {% if template.status != "archived" %}<a class="btn btn-primary" href="{% url 'email_templates:use' template.pk %}" data-testid="use-template">{% icon "mail" "h-4 w-4" %} Use template</a>{% endif %}
         <a class="btn btn-secondary" href="{% url 'email_templates:versions' template.pk %}">{% icon "clock" "h-4 w-4" %} Version history</a>
         <form method="post" action="{% url 'email_templates:duplicate' template.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "plus" "h-4 w-4" %} Duplicate</button></form>
         <form method="post" action="{% url 'email_templates:archive' template.pk %}">
@@ -27,7 +28,7 @@
         </form>
         <form method="post" action="{% url 'email_templates:send_test' template.pk %}">
           {% csrf_token %}
-          <button type="submit" class="btn btn-primary" data-testid="send-test" aria-describedby="send-test-note">{% icon "mail" "h-4 w-4" %} Send test</button>
+          <button type="submit" class="btn btn-secondary" data-testid="send-test" aria-describedby="send-test-note">{% icon "mail" "h-4 w-4" %} Send test</button>
         </form>
       </div>
     {% endif %}

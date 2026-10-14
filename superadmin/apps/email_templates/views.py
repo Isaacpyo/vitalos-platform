@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -24,6 +24,7 @@ from .rendering import check_content, preview_html, read_unsubscribe_token, rend
 from .variables import groups as variable_groups
 
 PREVIEW_SESSION_KEY = "email_template_preview"
+USE_SESSION_KEY = "email_template_use"
 DEVICES = ("desktop", "mobile")
 THEMES = ("light", "dark")
 VIEWS = ("html", "text")
@@ -249,7 +250,11 @@ def preview_frame(request, slot):
     rendered = render_content(
         content, values, key=template.key if template else "new-template", recipient=request.user.email
     )
-    response = HttpResponse(preview_html(rendered, theme if theme in THEMES else "light"))
+    return _frame_response(preview_html(rendered, theme if theme in THEMES else "light"))
+
+
+def _frame_response(html: str) -> HttpResponse:
+    response = HttpResponse(html)
     response["Content-Security-Policy"] = FRAME_CSP
     response._csp_exempt = True  # django-csp must not replace this document's policy.
     response["Cache-Control"] = "private, no-store"
@@ -310,6 +315,196 @@ def template_send_test(request, pk):
     else:
         messages.success(request, f"Test email sent to {recipient} (saved version {template.version}).")
     return redirect("email_templates:edit", pk=template.pk)
+
+
+# --- Use a template ---------------------------------------------------------------------------------
+# The page fills a template's merge variables, previews it and hands it over to copy or download.
+# Rules (archived, recipient, suppression, audit) live in services; these views only translate.
+
+
+def _use_template(request, pk) -> EmailTemplate:
+    services.require_superadmin(request.user)
+    return get_object_or_404(EmailTemplate, pk=pk)
+
+
+def _safe_recipient(raw: str) -> tuple[str, str]:
+    """(recipient, error): an invalid address is shown as an error, never rendered."""
+    try:
+        return services.clean_recipient(raw), ""
+    except ValidationError as exc:
+        return "", " ".join(exc.messages)
+
+
+def _archived_response(template) -> HttpResponse:
+    return HttpResponse(f"“{template.name}” is archived and cannot be used.", status=409)
+
+
+def _use_context(request, template, values, recipient, *, enquiry_id="", error="") -> dict:
+    """Preview and form state for the Use page. Also parks the values in the session for the frame."""
+    package = services.preview_use(template, user=request.user, values=values, recipient=recipient)
+    state = _preview_state(request)
+    request.session[PREVIEW_SESSION_KEY] = state
+    counter = request.session.get(USE_SESSION_KEY, {}).get("counter", 0) + 1
+    request.session[USE_SESSION_KEY] = {
+        "pk": template.pk,
+        "values": package.values,
+        "recipient": recipient,
+        "counter": counter,
+    }
+    fields = [
+        {
+            "variable": variable,
+            "value": values.get(variable.name, ""),
+            "empty": not values.get(variable.name) and bool(variable.fallback),
+        }
+        for variable in services.use_variables(template)
+    ]
+    return {
+        "template": template,
+        "package": package,
+        "fields": fields,
+        "recipient": recipient,
+        "enquiries": services.recent_enquiries(),
+        "enquiry_id": str(enquiry_id),
+        "error": error,
+        "use_mode": True,
+        "input_class": INPUT,
+        "preview_url": reverse("email_templates:use_preview", args=[template.pk]),
+        "include_selector": "#use-form",
+        "preview_target": "#use-panel",
+        "preview_devices": (("desktop", "Desktop"), ("mobile", "Mobile")),
+        "preview_themes": (("light", "Light"), ("dark", "Dark")),
+        "preview_views": (("html", "Email"), ("text", "Plain text")),
+        "prefs": state["prefs"],
+        "frame_url": reverse("email_templates:use_frame", args=[template.pk])
+        + f"?theme={state['prefs']['theme']}&v={counter}",
+        "rendered": package.rendered,
+        "validation": check_content(template.content(), package.values),
+    }
+
+
+@role_required(SUPERADMIN)
+@require_GET
+@never_cache
+def template_use(request, pk):
+    template = _use_template(request, pk)
+    if not services.can_use(template):
+        messages.error(request, f"“{template.name}” is archived. Unarchive it to use it.")
+        return redirect("email_templates:edit", pk=template.pk)
+    context = _use_context(request, template, services.use_defaults(request.user), "")
+    return render(request, "email_templates/use.html", context)
+
+
+@role_required(SUPERADMIN)
+@require_POST
+@never_cache
+def use_preview(request, pk):
+    """HTMX: re-renders the preview, warnings and actions from the form's current values."""
+    template = _use_template(request, pk)
+    if not services.can_use(template):
+        return _archived_response(template)
+    recipient, error = _safe_recipient(request.POST.get("recipient", ""))
+    context = _use_context(
+        request, template, services.clean_values(template, request.POST), recipient, error=error
+    )
+    return render(request, "email_templates/_use_panel.html", context)
+
+
+@role_required(SUPERADMIN)
+@require_POST
+@never_cache
+def use_prefill(request, pk):
+    """HTMX: fills the fields from a chosen enquiry, then asks the preview to refresh."""
+    template = _use_template(request, pk)
+    if not services.can_use(template):
+        return _archived_response(template)
+    values = services.clean_values(template, request.POST)
+    recipient = request.POST.get("recipient", "")
+    enquiry_id = request.POST.get("enquiry", "")
+    enquiry = services.enquiry_for_prefill(enquiry_id)
+    if enquiry is not None:
+        values = services.prefill_values(enquiry, values)
+        used = {variable.name for variable in services.use_variables(template)}
+        values = {name: value for name, value in values.items() if name in used}
+        recipient = enquiry.from_email
+    else:
+        enquiry_id = ""
+    recipient, error = _safe_recipient(recipient)
+    context = _use_context(request, template, values, recipient, enquiry_id=enquiry_id, error=error)
+    response = render(request, "email_templates/_use_fields.html", context)
+    response["HX-Trigger-After-Swap"] = "vsa-use-preview"
+    return response
+
+
+@role_required(SUPERADMIN)
+@require_GET
+@xframe_options_sameorigin
+def use_frame(request, pk):
+    """The email as filled in so far, for the Use page iframe, with its own restrictive policy."""
+    template = _use_template(request, pk)
+    state = request.session.get(USE_SESSION_KEY, {})
+    if state.get("pk") != template.pk or not services.can_use(template):
+        raise Http404
+    package = services.preview_use(
+        template, user=request.user, values=state.get("values", {}), recipient=state.get("recipient", "")
+    )
+    theme = request.GET.get("theme", "light")
+    return _frame_response(preview_html(package.rendered, theme if theme in THEMES else "light"))
+
+
+def _use_package(request, template, action):
+    recipient = services.clean_recipient(request.POST.get("recipient", ""))
+    return services.prepare_use(
+        template,
+        user=request.user,
+        values=services.clean_values(template, request.POST),
+        recipient=recipient,
+        action=action,
+        request=request,
+    )
+
+
+@role_required(SUPERADMIN)
+@require_POST
+@never_cache
+def use_payload(request, pk):
+    """JSON for the copy buttons: subject, HTML and plain text, rendered for this recipient."""
+    template = _use_template(request, pk)
+    action = request.POST.get("action", "")
+    if action not in ("copy_subject", "copy_email", "copy_text"):
+        return JsonResponse({"error": "Unknown action."}, status=400)
+    if not services.can_use(template):
+        return JsonResponse({"error": f"“{template.name}” is archived and cannot be used."}, status=409)
+    try:
+        package = _use_package(request, template, action)
+    except ValidationError as exc:
+        return JsonResponse({"error": " ".join(exc.messages)}, status=400)
+    response = JsonResponse({"subject": package.subject, "html": package.html, "text": package.text})
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@role_required(SUPERADMIN)
+@require_POST
+@never_cache
+def use_eml(request, pk):
+    """An unsent .eml draft (X-Unsent) for Outlook or Apple Mail."""
+    template = _use_template(request, pk)
+    if not services.can_use(template):
+        return _archived_response(template)
+    try:
+        package = _use_package(request, template, "download_eml")
+    except ValidationError as exc:
+        # Show the form again, as typed, with the reason.
+        values = services.clean_values(template, request.POST)
+        recipient, _ = _safe_recipient(request.POST.get("recipient", ""))
+        context = _use_context(request, template, values, recipient, error=" ".join(exc.messages))
+        return render(request, "email_templates/use.html", context, status=400)
+    message = services.eml_message(template, package, user=request.user)
+    response = HttpResponse(message.message().as_bytes(), content_type="message/rfc822")
+    response["Content-Disposition"] = f'attachment; filename="{template.key}.eml"'
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 # --- Public: unsubscribe ---------------------------------------------------------------------------

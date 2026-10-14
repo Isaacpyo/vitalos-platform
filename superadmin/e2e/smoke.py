@@ -267,6 +267,26 @@ class Smoke:
         self.page.goto(self.url("/"))
         expect(self.page.get_by_test_id("bell")).to_be_visible()
 
+    def use_template(self) -> None:
+        """Mail > Email templates > Use: fill a detail, see the live preview and the not-ready warning."""
+        self.page.goto(self.url("/mail/templates/?q=proposal-sent"))
+        link = self.page.get_by_test_id("use-template").first
+        if link.count() == 0:
+            self.check("email template Use page (no templates seeded, skipped)", True)
+            return
+        link.click()
+        self.page.wait_for_load_state("networkidle")
+        expect(self.page.get_by_role("heading", name="Use template")).to_be_visible()
+        self.check("Use template page opens from the list", "/use/" in self.page.url)
+        expect(self.page.get_by_test_id("preview-frame")).to_be_visible()
+        self.page.get_by_label("Recipient email").fill("smoke.test@example.test")
+        self.page.get_by_label("Recipient's first name").fill("Smoke")
+        self.wait_htmx()
+        expect(self.page.get_by_test_id("empty-variables")).to_be_visible()
+        self.check("Use template preview re-renders and warns about empty details", True)
+        expect(self.page.get_by_test_id("download-eml")).to_be_enabled()
+        self.shot("17-use-template")
+
     def cleanup(self, names: dict[str, str], project: str, kpi: str, password: str) -> None:
         def archive_in(tab: str, locator_css: str, label: str) -> None:
             self.page.goto(self.url(f"/s/consulting/?tab={tab}"))
@@ -332,6 +352,7 @@ def main() -> int:
             smoke.search()
             smoke.activity_and_history(names)
             smoke.tour()
+            smoke.use_template()
             csp = [error for error in console_errors if "Content Security Policy" in error]
             smoke.check("no CSP violations in the browser console", not csp, "; ".join(csp)[:300])
             if not args.keep:
