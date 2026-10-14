@@ -48,6 +48,7 @@ The repo is public. Standard GitHub-hosted runners are free, but logs, artifacts
 ### Speed
 
 - Every PR workflow sets `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }`.
+- Push-to-main runs of a workflow that gates a deploy (the Super Admin CI) must not be cancelled, so every main commit gets a complete run to deploy from.
 - Trigger on `pull_request` and `push` to `main` only. Use `paths`/`paths-ignore` so docs- or content-only changes skip build, test and E2E jobs.
 - Build and test only affected packages (e.g. Turborepo `--filter=...[origin/main]`); run the full suite on `main` only.
 - Cache dependencies and build outputs (setup-node cache, Turborepo cache).
