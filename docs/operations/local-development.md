@@ -92,7 +92,7 @@ To run the Supabase integration tests: `supabase start && supabase db reset`, th
 
 ## CI jobs
 
-`quality` (format, lint, typecheck, unit tests, boundaries, CMS type drift, build, Storybook build), `e2e` (end-to-end, accessibility, budgets, bundle-secret scan, integration), `storybook-a11y`, `database` (local Supabase and pgTAP), plus CodeQL and gitleaks. Releases need all of them green. No CI job holds a secret, project reference or database password.
+`quality` (change detection, secret scan and audit, format, lint, typecheck, boundaries) runs first. The rest wait for it: `unit` (unit tests, build), `e2e` (end-to-end, accessibility, budgets, bundle-secret scan, integration), `e2e-sparse`, `e2e-draft`, `visual` (non-gating), `storybook-a11y` and `database` (local Supabase and pgTAP). CodeQL and gitleaks run alongside. Pull requests run only what their change affects (`tooling/scripts/ci-changes.mjs`, ADR-021 "CI cost rules"); `main` runs everything. For docs-only and Super Admin-only pull requests `quality` runs just the secret scan, audit and format check (it is a required check, so it always reports), and draft pull requests skip the browser suites and pgTAP. Releases need every job that ran to be green. No CI job holds a secret, project reference or database password.
 
 ## Next.js note
 

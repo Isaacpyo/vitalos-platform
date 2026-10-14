@@ -1,51 +1,116 @@
 name: CI
+# Cost rules: AGENTS.md "CI cost". `quality` runs first and decides what else a pull request needs
+# (tooling/scripts/ci-changes.mjs): Turborepo --affected on pull requests, the full suite on main.
+# Every pull request starts this workflow, because `quality` is a required check and a check that
+# never reports blocks the merge; for Markdown, docs/ (except docs/strategy, which a unit test
+# reads), the Super Admin and the other workflows it runs only the secret scan, audit and format
+# check, and every other job skips. Pushes to main skip the workflow for those files. Browser suites
+# and pgTAP skip draft pull requests.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: [main, stage-1]
+    branches: [main]
+    paths:
+      - "**"
+      - "!**.md"
+      - "!docs/**"
+      - "docs/strategy/**"
+      - "!superadmin/**"
+      - "!.github/workflows/audit.yml"
+      - "!.github/workflows/backup.yml"
+      - "!.github/workflows/codeql.yml"
+      - "!.github/workflows/secret-scan.yml"
+      - "!.github/workflows/superadmin.yml"
+      - "!.github/workflows/superadmin-deploy.yml"
+      - "!.github/dependabot.yml"
+      - "!.github/CODEOWNERS"
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
   # Canonical origin used by builds. The e2e server overrides it with its own local origin.
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
 jobs:
-  # Secret scan plus `pnpm audit --audit-level high` (G8). Exceptions: docs/security/dependency-advisories.md.
-  audit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with: { run_install: false }
-      - uses: actions/setup-node@v7
-        with: { node-version: 24, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check:security
-
+  # Fail fast: change detection, the G8 secret scan and `pnpm audit --audit-level high`
+  # (exceptions: docs/security/dependency-advisories.md), format, lint, typecheck and boundaries.
+  # Every other job waits for it.
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      full: ${{ steps.changes.outputs.full }}
+      unit: ${{ steps.changes.outputs.unit }}
+      web: ${{ steps.changes.outputs.web }}
+      storybook: ${{ steps.changes.outputs.storybook }}
+      database: ${{ steps.changes.outputs.database }}
     steps:
       - uses: actions/checkout@v7
+        # A pull request checks out its merge commit; its first parent is the base branch tip.
+        with: { fetch-depth: 2 }
       - uses: pnpm/action-setup@v6
         with: { run_install: false }
       - uses: actions/setup-node@v7
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - name: Decide which jobs this change needs
+        id: changes
+        run: node tooling/scripts/ci-changes.mjs ${{ github.event_name != 'pull_request' && '--full' || '' }}
+      - uses: actions/cache/restore@v4
+        with:
+          path: .turbo/cache
+          key: turbo-quality-${{ github.sha }}
+          restore-keys: turbo-quality-
+      - run: pnpm check:security
       - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm check:boundaries
-      - run: pnpm build
-      - run: pnpm storybook:build
+      - name: Lint and typecheck (affected packages on pull requests)
+        if: steps.changes.outputs.static == 'true'
+        run: pnpm turbo run lint typecheck ${{ steps.changes.outputs.full != 'true' && '--affected' || '' }}
+        env: { TURBO_SCM_BASE: "HEAD^1" }
+      - if: steps.changes.outputs.static == 'true'
+        run: pnpm check:boundaries
+      - uses: actions/cache/save@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: .turbo/cache
+          key: turbo-quality-${{ github.sha }}
+
+  unit:
+    needs: quality
+    if: needs.quality.outputs.unit == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 2 }
+      - uses: pnpm/action-setup@v6
+        with: { run_install: false }
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache/restore@v4
+        with:
+          path: .turbo/cache
+          key: turbo-unit-${{ github.sha }}
+          restore-keys: turbo-unit-
+      - name: Unit tests and build (affected packages on pull requests)
+        run: pnpm turbo run test build ${{ needs.quality.outputs.full != 'true' && '--affected' || '' }}
+        env: { TURBO_SCM_BASE: "HEAD^1" }
+      - uses: actions/cache/save@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: .turbo/cache
+          key: turbo-unit-${{ github.sha }}
 
   # Browser suites against a production build (ADR-021). The Playwright config builds and starts
   # apps/web itself with fixture content, the in-memory enquiry backend and Cloudflare's dummy
   # Turnstile keys; nothing here needs a secret or a remote service.
   e2e:
+    needs: quality
+    if: needs.quality.outputs.web == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -86,6 +151,8 @@ jobs:
   # time and a second build would overwrite `.next`, so it is its own job: it builds and serves
   # apps/web with VITALOS_FIXTURE_SET=sparse and runs only the *.sparse.spec.ts files (ADR-021).
   e2e-sparse:
+    needs: quality
+    if: needs.quality.outputs.web == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -114,6 +181,8 @@ jobs:
   # memory enquiry backend and the dummy Turnstile keys. Fixture-specific specs skip themselves
   # (tests/support/content-source.ts). No secrets, no remote services.
   e2e-draft:
+    needs: quality
+    if: needs.quality.outputs.web == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -151,6 +220,8 @@ jobs:
   # `linux-ci` baselines it records them and uploads `visual-baselines-for-adoption`; with them it
   # compares and uploads `visual-diff-report` on any difference. See tests/visual/README.md.
   visual:
+    needs: quality
+    if: needs.quality.outputs.web == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     continue-on-error: true
@@ -185,7 +256,7 @@ jobs:
           name: visual-baselines-for-adoption
           path: tests/visual/__screenshots__/linux-ci
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7
       - name: Diff report
         if: ${{ !cancelled() && steps.baselines.outputs.present == 'true' && failure() }}
         uses: actions/upload-artifact@v4
@@ -199,6 +270,8 @@ jobs:
 
   # axe against every story in the static Storybook build.
   storybook-a11y:
+    needs: quality
+    if: needs.quality.outputs.storybook == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -224,6 +297,8 @@ jobs:
   # pgTAP tests against a LOCAL Supabase stack in Docker. Never links to or pushes to a remote
   # project: there is no access token, project ref or database password in this job.
   database:
+    needs: quality
+    if: needs.quality.outputs.database == 'true' && github.event.pull_request.draft != true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

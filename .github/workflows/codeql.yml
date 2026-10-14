@@ -1,10 +1,37 @@
 name: CodeQL
+# JavaScript/TypeScript analysis, so only changes to those files (or this workflow) start it on pull
+# requests and pushes. The weekly run re-analyses main with the latest queries so new alerts reach
+# code scanning without a code change. Draft pull requests skip it until ready_for_review.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "**.js"
+      - "**.jsx"
+      - "**.mjs"
+      - "**.cjs"
+      - "**.ts"
+      - "**.tsx"
+      - "**.mts"
+      - "**.cts"
+      - "**.html"
+      - ".github/workflows/codeql.yml"
   push:
     branches: [main]
+    paths:
+      - "**.js"
+      - "**.jsx"
+      - "**.mjs"
+      - "**.cjs"
+      - "**.ts"
+      - "**.tsx"
+      - "**.mts"
+      - "**.cts"
+      - "**.html"
+      - ".github/workflows/codeql.yml"
   schedule:
     - cron: "17 4 * * 1"
+  workflow_dispatch:
 # Results go to code scanning (Security tab; free for a public repository) and are also enforced
 # below, so a finding fails the run (ADR-014). Pull requests from forks get a read-only token and
 # cannot upload, so they keep the results in the run only.
@@ -12,9 +39,14 @@ permissions:
   contents: read
   actions: read
   security-events: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   analyze:
+    if: github.event.pull_request.draft != true
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
@@ -29,6 +61,7 @@ jobs:
           name: codeql-sarif
           path: codeql-results
           if-no-files-found: ignore
+          retention-days: 7
       - name: Fail on findings
         run: |
           findings=$(jq -r '.runs[].results[]? | select((.level // "warning") | IN("error", "warning"))

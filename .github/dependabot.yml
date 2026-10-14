@@ -1,8 +1,10 @@
 version: 2
+# Monthly: every Dependabot pull request runs CI. Security updates are separate and still open as
+# soon as an advisory is published.
 updates:
   - package-ecosystem: npm
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     ignore:
       # Keep @types/node on the Node 24 major (engines: >=24 <25).
       - dependency-name: "@types/node"
@@ -12,9 +14,11 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
+    groups:
+      github-actions: { patterns: ["*"] }
   - package-ecosystem: pip
     directory: /superadmin
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
     groups:
       python-minor-and-patch: { update-types: [minor, patch] }
   - package-ecosystem: docker
