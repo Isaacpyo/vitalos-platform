@@ -456,6 +456,104 @@
     field.dispatchEvent(new Event("input", { bubbles: true }));
   });
 
+  // Use template: highlight a detail as soon as it is emptied (the server re-checks on every preview).
+  document.addEventListener("input", function (event) {
+    var field = event.target;
+    if (!field.matches || !field.matches("[data-use-field]")) return;
+    var empty = field.value.trim() === "";
+    field.setAttribute("data-empty", empty ? "true" : "false");
+    var hint = document.getElementById(field.getAttribute("aria-describedby"));
+    if (hint && hint.hasAttribute("data-use-hint")) hint.hidden = !empty;
+  });
+
+  // Use template: copy buttons. The server renders the email for this recipient (and audits it);
+  // the clipboard write starts inside the click so Safari and Chrome accept it, with the payload as a promise.
+  function useStatus(message, failed) {
+    var region = document.getElementById("use-status");
+    if (!region) return;
+    region.setAttribute("data-state", failed ? "error" : "ok");
+    region.textContent = "";
+    window.setTimeout(function () {
+      region.textContent = message;
+    }, 50);
+  }
+
+  function usePayload(button) {
+    var form = document.getElementById("use-form");
+    var data = new FormData(form);
+    data.append("action", button.getAttribute("data-use-copy"));
+    return fetch(button.getAttribute("data-use-url"), {
+      method: "POST",
+      body: data,
+      credentials: "same-origin",
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    }).then(function (response) {
+      return response.json().then(
+        function (body) {
+          if (!response.ok) throw new Error(body.error || "Could not prepare the email.");
+          return body;
+        },
+        function () {
+          throw new Error("Could not prepare the email.");
+        },
+      );
+    });
+  }
+
+  function textBlob(value) {
+    return new Blob([value], { type: "text/plain" });
+  }
+
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-use-copy]");
+    if (!button || button.disabled) return;
+    event.preventDefault();
+    var action = button.getAttribute("data-use-copy");
+    var labels = { copy_subject: "subject", copy_email: "email", copy_text: "plain text" };
+    var payload = usePayload(button);
+    var rich = action === "copy_email" && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write;
+    var done;
+    if (!navigator.clipboard) {
+      payload.catch(function () {});
+      useStatus("This browser cannot copy to the clipboard here. Use Download .eml instead.", true);
+      return;
+    }
+    if (window.ClipboardItem && navigator.clipboard.write) {
+      var item = {
+        "text/plain": payload.then(function (body) {
+          return textBlob(action === "copy_subject" ? body.subject : body.text);
+        }),
+      };
+      if (rich) {
+        item["text/html"] = payload.then(function (body) {
+          return new Blob([body.html], { type: "text/html" });
+        });
+      }
+      done = navigator.clipboard.write([new window.ClipboardItem(item)]);
+    } else {
+      // No ClipboardItem: plain text only.
+      done = payload.then(function (body) {
+        return navigator.clipboard.writeText(action === "copy_subject" ? body.subject : body.text);
+      });
+    }
+    done.then(
+      function () {
+        var plainOnly = action === "copy_email" && !rich;
+        useStatus(
+          "Copied " + labels[action] + (plainOnly ? " as plain text (this browser cannot copy the layout)." : "."),
+          false,
+        );
+      },
+      function (error) {
+        payload.catch(function () {});
+        useStatus(
+          error && error.message && error.name !== "NotAllowedError" ? error.message : "Could not copy. Try again.",
+          true,
+        );
+      },
+    );
+  });
+
   // Auto-dismiss server-rendered flash messages.
   window.setTimeout(function () {
     document.querySelectorAll("[data-autodismiss]").forEach(function (element) {

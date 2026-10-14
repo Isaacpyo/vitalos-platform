@@ -3,24 +3,24 @@
   <div class="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Preview options">
     {% for value, label in preview_devices %}
       <button type="button" class="tab" aria-pressed="{% if prefs.device == value %}true{% else %}false{% endif %}"
-              hx-post="{{ preview_url }}" hx-include="#template-form" hx-vals='{"preview_device": "{{ value }}"}' hx-target="#preview-panel" hx-swap="innerHTML">{{ label }}</button>
+              hx-post="{{ preview_url }}" hx-include="{{ include_selector|default:'#template-form' }}" hx-vals='{"preview_device": "{{ value }}"}' hx-target="{{ preview_target|default:'#preview-panel' }}" hx-swap="innerHTML">{{ label }}</button>
     {% endfor %}
     <span class="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>
     {% for value, label in preview_themes %}
       <button type="button" class="tab" aria-pressed="{% if prefs.theme == value %}true{% else %}false{% endif %}"
-              hx-post="{{ preview_url }}" hx-include="#template-form" hx-vals='{"preview_theme": "{{ value }}"}' hx-target="#preview-panel" hx-swap="innerHTML">{{ label }}</button>
+              hx-post="{{ preview_url }}" hx-include="{{ include_selector|default:'#template-form' }}" hx-vals='{"preview_theme": "{{ value }}"}' hx-target="{{ preview_target|default:'#preview-panel' }}" hx-swap="innerHTML">{{ label }}</button>
     {% endfor %}
     <span class="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" aria-hidden="true"></span>
     {% for value, label in preview_views %}
       <button type="button" class="tab" aria-pressed="{% if prefs.view == value %}true{% else %}false{% endif %}"
-              hx-post="{{ preview_url }}" hx-include="#template-form" hx-vals='{"preview_view": "{{ value }}"}' hx-target="#preview-panel" hx-swap="innerHTML">{{ label }}</button>
+              hx-post="{{ preview_url }}" hx-include="{{ include_selector|default:'#template-form' }}" hx-vals='{"preview_view": "{{ value }}"}' hx-target="{{ preview_target|default:'#preview-panel' }}" hx-swap="innerHTML">{{ label }}</button>
     {% endfor %}
   </div>
 
   <dl class="mt-3 space-y-1 text-sm">
     <div class="flex gap-2"><dt class="muted w-20 shrink-0">Subject</dt><dd class="min-w-0 break-words font-medium" data-testid="preview-subject">{{ rendered.subject }}</dd></div>
     <div class="flex gap-2"><dt class="muted w-20 shrink-0">Preheader</dt><dd class="min-w-0 break-words">{{ rendered.preheader|default:"None" }}</dd></div>
-    <div class="flex gap-2"><dt class="muted w-20 shrink-0">Sample</dt><dd class="min-w-0">{% if sample_enquiry %}Enquiry {{ sample_enquiry.ref }}{% if sample_enquiry.from_name %} from {{ sample_enquiry.from_name }}{% endif %}, with you as the sender{% else %}No enquiries yet, so fallback values are shown{% endif %}</dd></div>
+    {% if not use_mode %}<div class="flex gap-2"><dt class="muted w-20 shrink-0">Sample</dt><dd class="min-w-0">{% if sample_enquiry %}Enquiry {{ sample_enquiry.ref }}{% if sample_enquiry.from_name %} from {{ sample_enquiry.from_name }}{% endif %}, with you as the sender{% else %}No enquiries yet, so fallback values are shown{% endif %}</dd></div>{% endif %}
   </dl>
 
   {% if validation.unknown %}
@@ -29,7 +29,7 @@
       <p class="mt-1 font-mono text-xs">{% for name in validation.unknown %}{% templatetag openvariable %}{{ name }}{% templatetag closevariable %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
     </div>
   {% endif %}
-  {% if validation.fallbacks %}
+  {% if validation.fallbacks and not use_mode %}
     <details class="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-100" data-testid="fallback-variables">
       <summary class="cursor-pointer font-medium">{{ validation.fallbacks|length }} variable{{ validation.fallbacks|length|pluralize }} not in the sample data, shown with a fallback</summary>
       <ul class="mt-2 space-y-0.5 font-mono text-xs">

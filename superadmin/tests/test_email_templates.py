@@ -13,7 +13,7 @@ from apps.architecture.models import Company
 from apps.audit.models import AuditEvent
 from apps.email_templates import services
 from apps.email_templates.models import Category, EmailSuppression, EmailTemplate, Kind, Status
-from apps.email_templates.rendering import render_content, unsubscribe_url
+from apps.email_templates.rendering import read_unsubscribe_token, render_content, unsubscribe_url
 from apps.email_templates.variables import VARIABLES, merge, validate
 from apps.enquiries.models import Enquiry
 from apps.mailer.backends import ResendEmailBackend
@@ -395,3 +395,295 @@ def test_merge_uses_fallbacks_and_leaves_unknown_names():
         "unsubscribe_link",
     ):
         assert name in VARIABLES
+
+
+# --- Use a template ----------------------------------------------------------------------------------
+
+
+def _use_url(template, name=""):
+    return f"/mail/templates/{template.pk}/use/{name}"
+
+
+def _use_post(client, template, name, **data):
+    return client.post(_use_url(template, name), data)
+
+
+def _parse(response):
+    import email
+    from email import policy
+
+    return email.message_from_bytes(response.content, policy=policy.default)
+
+
+def test_use_page_is_superadmin_only(client_for, viewer, lead, library):
+    template = _template()
+    for user in (viewer, lead):
+        client = client_for(user)
+        assert client.get(_use_url(template)).status_code == 403
+        for name in ("preview/", "prefill/", "payload/", "eml/"):
+            assert _use_post(client, template, name, action="copy_email").status_code == 403
+        assert client.get(_use_url(template, "frame/")).status_code == 403
+    assert not AuditEvent.objects.filter(action="email_templates.used").exists()
+
+
+def test_use_page_lists_the_variables_the_template_uses(client_for, owner, library):
+    template = _template()
+    html = client_for(owner).get(_use_url(template)).content.decode()
+    assert "Draft, wording not yet approved" in html
+    assert 'name="var-first_name"' in html and 'name="recipient"' in html
+    assert 'data-testid="empty-variables"' in html
+    assert 'name="var-unsubscribe_link"' not in html
+
+
+def test_entry_points_on_the_list_and_the_editor_hide_for_archived(client_for, owner, library):
+    template = _template()
+    client = client_for(owner)
+    assert _use_url(template) in client.get("/mail/templates/?q=proposal-sent").content.decode()
+    assert _use_url(template) in client.get(f"/mail/templates/{template.pk}/").content.decode()
+    services.set_archived(template, True, user=owner)
+    assert _use_url(template) not in client.get(f"/mail/templates/{template.pk}/").content.decode()
+    assert (
+        _use_url(template) not in client.get("/mail/templates/?status=all&q=proposal-sent").content.decode()
+    )
+
+
+def test_archived_templates_cannot_be_used(client_for, owner, library):
+    template = _template()
+    services.set_archived(template, True, user=owner)
+    client = client_for(owner)
+    assert client.get(_use_url(template)).status_code == 302
+    for name in ("preview/", "prefill/", "payload/", "eml/"):
+        assert _use_post(client, template, name, action="copy_email").status_code == 409
+    assert client.get(_use_url(template, "frame/")).status_code == 404
+    assert not AuditEvent.objects.filter(action="email_templates.used").exists()
+
+
+def test_preview_substitutes_values_and_flags_the_empty_ones(client_for, owner, library):
+    template = _template("invoice-sent")
+    client = client_for(owner)
+    names = [v.name for v in services.use_variables(template)]
+    data = {"var-first_name": "Ada", "preview_view": "text"}
+    if "invoice_number" in names:
+        data["var-invoice_number"] = "INV-42"
+    html = _use_post(client, template, "preview/", **data).content.decode()
+    assert "Hi Ada" in html
+    assert 'data-testid="empty-variables"' in html and "Not ready to send" in html
+    assert "fallbacks such as" in html
+    frame = client.get(_use_url(template, "frame/")).content.decode()
+    assert "Ada" in frame
+
+
+def test_preview_frame_is_isolated(client_for, owner, library):
+    template = _template("invoice-sent")
+    client = client_for(owner)
+    _use_post(client, template, "preview/", **{"var-first_name": "Ada"})
+    response = client.get(_use_url(template, "frame/") + "?theme=dark")
+    assert "sandbox" in response["Content-Security-Policy"] and "Ada" in response.content.decode()
+
+
+def test_preview_is_ready_when_everything_is_filled(client_for, owner, library):
+    template = _template("invoice-sent")
+    data = {f"var-{v.name}": f"{v.name} value" for v in services.use_variables(template)}
+    html = _use_post(client_for(owner), template, "preview/", **data).content.decode()
+    assert 'data-testid="ready"' in html and 'data-testid="empty-variables"' not in html
+
+
+def test_values_are_escaped(client_for, owner, library):
+    template = _template("invoice-sent")
+    payload = _use_post(
+        client_for(owner),
+        template,
+        "payload/",
+        action="copy_email",
+        **{"var-first_name": "<script>alert(1)</script>"},
+    ).json()
+    assert "<script>alert(1)</script>" not in payload["html"]
+    assert "&lt;script&gt;" in payload["html"]
+
+
+def test_prefill_from_an_enquiry_fills_the_fields_and_recipient(client_for, owner, library):
+    enquiry = Enquiry.objects.create(
+        number=1, from_name="Ada Lovelace", from_email="ada@example.test", subject="Hi"
+    )
+    spam = Enquiry.objects.create(
+        number=2, from_name="Spammer", from_email="spam@example.test", status="spam"
+    )
+    client = client_for(owner)
+    template = _template()
+    page = client.get(_use_url(template)).content.decode()
+    assert enquiry.ref in page and spam.ref not in page
+    response = _use_post(client, template, "prefill/", enquiry=str(enquiry.pk))
+    html = response.content.decode()
+    assert 'value="Ada"' in html and 'value="ada@example.test"' in html
+    assert response["HX-Trigger-After-Swap"] == "vsa-use-preview"
+    # A spam enquiry cannot be used to prefill.
+    assert "Spammer" not in _use_post(client, template, "prefill/", enquiry=str(spam.pk)).content.decode()
+
+
+def test_copy_payload_is_audited_without_the_recipient(client_for, owner, library):
+    template = _template("invoice-sent")
+    response = _use_post(
+        client_for(owner),
+        template,
+        "payload/",
+        action="copy_email",
+        recipient="Client@Example.test",
+        **{"var-first_name": "Ada"},
+    )
+    assert response.status_code == 200 and response["Cache-Control"].startswith("private")
+    body = response.json()
+    assert "Ada" in body["html"] and "Hi Ada" in body["text"] and body["subject"]
+    assert "cid:" not in body["html"] and "data:image/png;base64," in body["html"]
+    event = AuditEvent.objects.get(action="email_templates.used")
+    assert template.name in event.summary and "copy_email" in event.summary
+    dump = " ".join(str(v) for v in (event.summary, event.metadata, event.entity_id, event.actor_email))
+    assert "client@example.test" not in dump.lower()
+
+
+def test_unknown_copy_action_is_refused(client_for, owner, library):
+    response = _use_post(client_for(owner), _template(), "payload/", action="something-else")
+    assert response.status_code == 400
+    assert not AuditEvent.objects.filter(action="email_templates.used").exists()
+
+
+def test_eml_download_is_an_unsent_draft_with_both_parts(client_for, owner, library):
+    template = _template("invoice-sent")
+    response = _use_post(
+        client_for(owner), template, "eml/", recipient="ada@example.test", **{"var-first_name": "Ada"}
+    )
+    assert response.status_code == 200
+    assert response["Content-Type"] == "message/rfc822"
+    assert response["Content-Disposition"] == f'attachment; filename="{template.key}.eml"'
+    message = _parse(response)
+    assert message["X-Unsent"] == "1"
+    assert message["To"] == "ada@example.test"
+    assert message["From"] == "Temitope Agbola <owner@vitalos.co.uk>"
+    assert message["Subject"] and message["Date"]
+    assert message.get_content_type() == "multipart/related"
+    assert message.get_body(("plain",)).get_content().strip()
+    assert "Ada" in message.get_body(("html",)).get_content()
+    assert any(part["Content-ID"] == "<vitalos-logo>" for part in message.iter_attachments())
+    assert "List-Unsubscribe" not in message  # transactional
+    event = AuditEvent.objects.get(action="email_templates.used")
+    assert "download_eml" in event.summary and "ada@example.test" not in str(event.summary)
+
+
+def test_eml_without_a_recipient_has_no_to_line_for_transactional_email(client_for, owner, library):
+    response = _use_post(client_for(owner), _template("invoice-sent"), "eml/")
+    message = _parse(response)
+    assert response.status_code == 200 and message["To"] is None and message["X-Unsent"] == "1"
+
+
+def test_outreach_needs_a_recipient_for_copy_and_download(client_for, owner, library):
+    template = _template("outreach-cold-introduction")
+    client = client_for(owner)
+    page = _use_post(client, template, "preview/").content.decode()
+    assert 'data-testid="needs-recipient"' in page and page.count(" disabled") >= 4
+    payload = _use_post(client, template, "payload/", action="copy_email")
+    assert payload.status_code == 400 and "needs a recipient" in payload.json()["error"]
+    eml = _use_post(client, template, "eml/")
+    assert eml.status_code == 400 and "needs a recipient" in eml.content.decode()
+    assert not AuditEvent.objects.filter(action="email_templates.used").exists()
+
+
+def test_outreach_carries_the_real_signed_unsubscribe_link_for_the_recipient(
+    client_for, owner, library, settings
+):
+    settings.APP_BASE_URL = "https://admin.vitalos.co.uk"
+    template = _template("outreach-cold-introduction")
+    client = client_for(owner)
+    payload = _use_post(
+        client, template, "payload/", action="copy_email", recipient="Ada@Example.test"
+    ).json()
+    link = re.search(r"https://admin\.vitalos\.co\.uk/mail/unsubscribe/([^\"<>\s]+?)/", payload["html"])
+    assert link, payload["html"][-800:]
+    assert read_unsubscribe_token(link.group(1)) == {"e": "ada@example.test", "k": template.key}
+    message = _parse(_use_post(client, template, "eml/", recipient="ada@example.test"))
+    assert "/mail/unsubscribe/" in message["List-Unsubscribe"]
+    assert message["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    assert message["To"] == "ada@example.test"
+
+
+def test_suppressed_recipients_are_refused(client_for, owner, library):
+    EmailSuppression.objects.create(email="gone@example.test")
+    template = _template("outreach-cold-introduction")
+    client = client_for(owner)
+    payload = _use_post(client, template, "payload/", action="copy_email", recipient="Gone@Example.test")
+    assert payload.status_code == 400 and "unsubscribed" in payload.json()["error"]
+    eml = _use_post(client, template, "eml/", recipient="gone@example.test")
+    assert eml.status_code == 400 and "unsubscribed" in eml.content.decode()
+    assert not AuditEvent.objects.filter(action="email_templates.used").exists()
+
+
+def test_an_invalid_recipient_is_refused(client_for, owner, library):
+    payload = _use_post(
+        client_for(owner), _template(), "payload/", action="copy_text", recipient="not an email"
+    )
+    assert payload.status_code == 400 and "valid recipient" in payload.json()["error"]
+
+
+def test_use_endpoints_only_accept_post(client_for, owner, library):
+    client = client_for(owner)
+    template = _template()
+    for name in ("preview/", "prefill/", "payload/", "eml/"):
+        assert client.get(_use_url(template, name)).status_code == 405
+
+
+# --- Line endings from the editor ---------------------------------------------------------------------
+
+
+def _browser_post(template, **overrides):
+    """The editor's POST as a browser sends it: textarea line breaks are CRLF."""
+    from apps.email_templates.forms import block_rows
+
+    rows = block_rows(template.blocks)
+    data = _form_data(template, **overrides)
+    for key in ("name", "description", "header_label", "subject", "preheader", "reason", "footer_notice"):
+        data[key] = data[key].replace("\n", "\r\n")
+    for key in [key for key in data if key.startswith("block-")]:
+        del data[key]
+    data["block-count"] = str(len(rows))
+    for row in rows:
+        prefix = f"block-{row['index']}-"
+        data[prefix + "type"] = row["type"]
+        for field in ("text", "label", "url", "items", "rows"):
+            if row[field]:
+                data[prefix + field] = row[field].replace("\n", "\r\n")
+        if row["muted"]:
+            data[prefix + "muted"] = "on"
+    return data
+
+
+def test_a_status_only_save_with_crlf_text_does_not_bump_the_version(client_for, superadmin, library):
+    template = _template()
+    blocks = [dict(block) for block in template.blocks]
+    next(block for block in blocks if block["type"] == "text")["text"] = (
+        "First line\n\nSecond paragraph\nthird"
+    )
+    services.update_template(
+        template, content={**template.content(), "blocks": blocks}, status=Status.DRAFT, user=superadmin
+    )
+    template.refresh_from_db()
+    version = template.version
+    response = client_for(superadmin).post(
+        f"/mail/templates/{template.pk}/", _browser_post(template, status="active")
+    )
+    assert response.status_code == 302
+    template.refresh_from_db()
+    assert template.status == Status.ACTIVE
+    assert template.version == version
+    assert template.versions.count() == version
+
+
+def test_crlf_is_stored_as_lf(client_for, superadmin, library):
+    template = _template()
+    data = _browser_post(template)
+    index = next(i for i, block in enumerate(template.blocks) if block["type"] == "text")
+    data[f"block-{index}-text"] = "One\r\nTwo\rThree"
+    data["description"] = "Used when\r\nsomething happens"
+    assert client_for(superadmin).post(f"/mail/templates/{template.pk}/", data).status_code == 302
+    template.refresh_from_db()
+    assert template.blocks[index]["text"] == "One\nTwo\nThree"
+    assert template.description == "Used when\nsomething happens"
+    assert "\r" not in str(template.content())
+    assert "\r" not in str(template.versions.first().content)

@@ -3,16 +3,22 @@
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from email.utils import formataddr
 from pathlib import Path
 
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from django.utils.text import slugify
 
 from apps.accounts.roles import is_superadmin
 from apps.audit.services import record
+from apps.mailer.layout import clean_line
 from apps.mailer.messages import build_message
 
 from .models import (
@@ -25,8 +31,8 @@ from .models import (
     ManagedBy,
     Status,
 )
-from .rendering import render_content, sample_values, unsubscribe_url
-from .variables import VARIABLES, names_in
+from .rendering import RenderedTemplate, preview_html, render_content, sample_values, unsubscribe_url
+from .variables import VARIABLES, Variable, names_in
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
 BLOCK_TYPES = ("heading", "section", "text", "button", "badge", "quote", "details", "divider", "signature")
@@ -37,6 +43,17 @@ TEST_SENDS_PER_HOUR = 10
 def require_superadmin(user) -> None:
     if not is_superadmin(user):
         raise PermissionDenied
+
+
+def normalise_newlines(value):
+    """Browsers post textarea line breaks as CRLF; store LF so unchanged text compares equal."""
+    if isinstance(value, str):
+        return value.replace("\r\n", "\n").replace("\r", "\n")
+    if isinstance(value, list):
+        return [normalise_newlines(item) for item in value]
+    if isinstance(value, dict):
+        return {key: normalise_newlines(item) for key, item in value.items()}
+    return value
 
 
 def content_errors(content: dict) -> list[str]:
@@ -77,6 +94,7 @@ def create_template(
     *, content: dict, status: str, user, request=None, note: str = "Created"
 ) -> EmailTemplate:
     require_superadmin(user)
+    content = normalise_newlines(content)
     errors = content_errors(content)
     if errors:
         raise ValidationError(errors)
@@ -102,6 +120,7 @@ def update_template(
 ) -> bool:
     """Saves edits. A content change bumps the version and writes a snapshot. Returns False if unchanged."""
     require_superadmin(user)
+    content = normalise_newlines(content)
     errors = content_errors(content)
     if errors:
         raise ValidationError(errors)
@@ -210,6 +229,195 @@ def send_test(template: EmailTemplate, *, user, request=None) -> str:
         summary=f"{template.name} (v{template.version})",
     )
     return recipient
+
+
+# --- Use a template ----------------------------------------------------------------------------------
+
+VALUE_MAX_LENGTH = 1000
+RECENT_ENQUIRIES = 25
+USE_ACTIONS = ("copy_subject", "copy_email", "copy_text", "download_eml")
+_CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+_USE_FIELDS = ("subject", "preheader", "reason", "footer_notice", "blocks")
+
+
+@dataclass
+class UsePackage:
+    """A template rendered for one recipient, with what the Use page needs to show and send."""
+
+    rendered: RenderedTemplate
+    recipient: str
+    values: dict[str, str]
+    #: Variables still empty, so their fallback is in the email: (name, fallback).
+    empty: list[tuple[str, str]] = field(default_factory=list)
+    needs_recipient: bool = False
+
+    @property
+    def ready(self) -> bool:
+        return not self.empty and not self.needs_recipient
+
+    @property
+    def subject(self) -> str:
+        return self.rendered.subject
+
+    @property
+    def text(self) -> str:
+        return self.rendered.email.text
+
+    @property
+    def html(self) -> str:
+        """HTML for pasting: inline images as data URIs, light theme (mail clients apply their own)."""
+        return preview_html(self.rendered, "light")
+
+
+def can_use(template: EmailTemplate) -> bool:
+    return template.status != Status.ARCHIVED
+
+
+def use_variables(template: EmailTemplate) -> list[Variable]:
+    """The known merge variables the template uses, in order of first use. The footer unsubscribe link
+    is added for the recipient, so it is not a field."""
+    content = template.content()
+    names = names_in({key: content[key] for key in _USE_FIELDS})
+    return [VARIABLES[name] for name in names if name in VARIABLES and name != "unsubscribe_link"]
+
+
+def recent_enquiries(limit: int = RECENT_ENQUIRIES) -> list:
+    """Recent real enquiries (not spam, not anonymised) to prefill from."""
+    from apps.enquiries.models import Enquiry
+
+    return list(
+        Enquiry.objects.filter(anonymised_at__isnull=True)
+        .exclude(status="spam")
+        .order_by("-created_at")[:limit]
+    )
+
+
+def enquiry_for_prefill(pk):
+    from apps.enquiries.models import Enquiry
+
+    if not str(pk or "").isdigit():
+        return None
+    return Enquiry.objects.filter(pk=int(pk), anonymised_at__isnull=True).exclude(status="spam").first()
+
+
+def use_defaults(user) -> dict[str, str]:
+    """Starting values: the sender is the signed-in admin. The rest is for the user to fill."""
+    return {key: value for key, value in sample_values(user, None).items() if value}
+
+
+def prefill_values(enquiry, current: Mapping[str, str]) -> dict[str, str]:
+    """Current values with the enquiry's details laid over them."""
+    values = dict(current)
+    for name, value in sample_values(None, enquiry).items():
+        if value:
+            values[name] = value
+    return values
+
+
+def clean_values(template: EmailTemplate, posted: Mapping[str, str], prefix: str = "var-") -> dict[str, str]:
+    """Values for the template's variables from a form post: single-line, trimmed, length-limited."""
+    values: dict[str, str] = {}
+    for variable in use_variables(template):
+        raw = posted.get(f"{prefix}{variable.name}", "") or ""
+        values[variable.name] = clean_line(_CONTROL_CHARS.sub("", raw))[:VALUE_MAX_LENGTH].strip()
+    return values
+
+
+def clean_recipient(raw: str) -> str:
+    recipient = (raw or "").strip().lower()
+    if not recipient:
+        return ""
+    try:
+        validate_email(recipient)
+    except ValidationError:
+        raise ValidationError("Enter a valid recipient email address.") from None
+    return recipient
+
+
+def _use_render(template: EmailTemplate, values: Mapping[str, str], recipient: str) -> UsePackage:
+    merged = {name: value for name, value in values.items() if value}
+    if recipient and not merged.get("email"):
+        merged["email"] = recipient
+    rendered = render_content(template.content(), merged, key=template.key, recipient=recipient)
+    empty = [
+        (variable.name, variable.fallback)
+        for variable in use_variables(template)
+        if not merged.get(variable.name) and variable.fallback
+    ]
+    return UsePackage(
+        rendered=rendered,
+        recipient=recipient,
+        values=merged,
+        empty=empty,
+        needs_recipient=template.needs_opt_out and not recipient,
+    )
+
+
+def preview_use(
+    template: EmailTemplate, *, user, values: Mapping[str, str], recipient: str = ""
+) -> UsePackage:
+    """Renders for the Use page preview. Never refuses on compliance: the page shows what is missing."""
+    require_superadmin(user)
+    if not can_use(template):
+        raise ValidationError("Archived templates cannot be used. Unarchive it first.")
+    return _use_render(template, values, recipient)
+
+
+def prepare_use(
+    template: EmailTemplate,
+    *,
+    user,
+    values: Mapping[str, str],
+    recipient: str,
+    action: str,
+    request=None,
+) -> UsePackage:
+    """Renders for copying or downloading, enforcing the compliance rules, and audits the use.
+
+    Outreach and marketing email needs a recipient (its unsubscribe link is signed for them) and the
+    recipient must not have unsubscribed. The audit event never holds the recipient's address.
+    """
+    require_superadmin(user)
+    if action not in USE_ACTIONS:
+        raise ValidationError("Unknown action.")
+    if not can_use(template):
+        raise ValidationError("Archived templates cannot be used. Unarchive it first.")
+    if template.needs_opt_out:
+        if not recipient:
+            raise ValidationError(
+                "Outreach and marketing email needs a recipient address, because its unsubscribe link is "
+                "signed for them."
+            )
+        if is_suppressed(recipient):
+            raise ValidationError(
+                "This recipient has unsubscribed from outreach and marketing email. Do not send it to them."
+            )
+    package = _use_render(template, values, recipient)
+    record(
+        "email_templates.used",
+        request=request,
+        actor=user,
+        entity=template,
+        summary=f"{template.name} (v{template.version}): {action}",
+    )
+    return package
+
+
+def eml_message(template: EmailTemplate, package: UsePackage, *, user):
+    """An unsent draft for Outlook or Apple Mail: from the signed-in user, to the recipient if given."""
+    name = clean_line(user.get_full_name() or "")
+    sender = formataddr(("" if name == user.email else name, user.email))
+    headers = {"X-Unsent": "1"}
+    if template.needs_opt_out:
+        headers["List-Unsubscribe"] = f"<{unsubscribe_url(package.recipient, template.key)}>"
+        headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    return build_message(
+        package.rendered.email,
+        subject=package.subject,
+        to=[package.recipient] if package.recipient else [],
+        from_email=sender,
+        headers=headers,
+    )
 
 
 def unsubscribe(email: str, template_key: str, request=None) -> None:

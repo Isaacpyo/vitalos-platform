@@ -12,6 +12,8 @@ Captured from `manage.py runserver` (development settings, scratch SQLite) with 
 | 04-proposal-sent            | Preview at 375px, light and dark                                            |
 | 05-invoice-reminder         | Preview at 375px (friendly payment reminder), light and dark                |
 | 06-versions                 | Version history with restore                                                |
+| 07-use                      | Use template: prefilled from an enquiry, empty details flagged (`-full` is the page) |
+| 08-use-outreach             | Use template for outreach email: recipient required before copy and download |
 
 ## Console upgrade (12 Oct 2026): `console/`
 
