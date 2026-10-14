@@ -71,6 +71,7 @@ The repo is public. Standard GitHub-hosted runners are free, but logs, artifacts
 - Ask first before adding larger runners, paid Actions features, or changing spending limits.
 
 ## Docker runs on the Oracle VM, never on this laptop
+
 - Docker context `oracle` is active: `docker` / `docker compose` run on the VM. Never start Docker Desktop or run `docker context use default`.
 - The Supabase CLI ignores the context. Never run `supabase` or `pnpm db:test` locally.
 - The main checkout (`~/vitalos-platform`) is slot 0: stack on the VM in `~/vitalos-platform`, ports 55321-55324, tunnel `ssh -fN oracle-tunnel`. Run its CLI as `ssh oracle-vm "cd ~/vitalos-platform && supabase <cmd>"`.
