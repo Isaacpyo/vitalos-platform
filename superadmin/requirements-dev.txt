@@ -4,8 +4,10 @@ bandit==1.9.4
     # via -r requirements-dev.in
 boolean-py==5.0
     # via license-expression
-cachecontrol==0.14.4
-    # via pip-audit
+cachecontrol[filecache]==0.14.4
+    # via
+    #   cachecontrol
+    #   pip-audit
 certifi==2026.7.22
     # via
     #   -c requirements.txt
@@ -40,8 +42,6 @@ packaging==26.3
     #   pip-audit
     #   pip-requirements-parser
     #   pytest
-pip==26.2.1
-    # via pip-api
 pip-api==0.0.35
     # via pip-audit
 pip-audit==2.10.1
@@ -50,7 +50,7 @@ pip-requirements-parser==32.0.1
     # via pip-audit
 platformdirs==4.12.4
     # via pip-audit
-playwright==1.56.0
+playwright==1.63.0
     # via -r requirements-dev.in
 pluggy==1.6.0
     # via pytest
