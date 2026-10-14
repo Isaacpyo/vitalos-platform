@@ -135,7 +135,7 @@ def test_homepage_cards_show_counts_and_headline_kpi(populated, superadmin, clie
     services.change_project_status(project, "active", superadmin)
     body = client_for(superadmin).get("/").content.decode()
     assert body.count('data-testid="service-line-card"') == 6
-    assert "From strategy to production." in body
+    assert "From strategy to production." not in body  # the north star block was removed (owner, 2026-10-14)
     assert "Utilisation" in body and "72" in body
 
 

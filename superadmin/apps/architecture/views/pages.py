@@ -39,7 +39,6 @@ def _partial(request, target: str) -> bool:
 def home(request):
     user = request.user
     context = {
-        "company": selectors.company(user),
         "service_lines": selectors.service_lines_for_home(user),
         "recent_activity": activity.feed(user, limit=8),
         "show_enquiry_kpis": can_access_enquiries(user),

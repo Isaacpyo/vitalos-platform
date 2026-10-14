@@ -206,10 +206,10 @@
     @apply translate-x-0;
   }
   .sidebar-group-label {
-    @apply px-3 pt-4 pb-1 text-[11px] font-semibold tracking-[0.12em] text-slate-300 uppercase md:collapsed:sr-only;
+    @apply px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[0.12em] text-slate-300 uppercase md:collapsed:sr-only;
   }
   .nav-item {
-    @apply relative flex min-h-9 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-300
+    @apply relative flex min-h-8 items-center gap-3 rounded-md px-3 py-1.5 text-[13px] font-medium text-slate-300
       hover:bg-white/6 hover:text-white md:collapsed:justify-center md:collapsed:px-0;
   }
   .nav-item[aria-current="page"] {

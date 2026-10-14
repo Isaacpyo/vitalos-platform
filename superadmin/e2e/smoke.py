@@ -95,8 +95,8 @@ class Smoke:
         if "/account/2fa/setup/" in self.page.url:
             secret = self.page.get_by_test_id("totp-secret").inner_text().strip()
             self.shot("02-totp-enrolment")
-            self.page.get_by_label("6-digit code").fill(totp(secret))
-            self.page.get_by_role("button", name="Turn on two-factor authentication").click()
+            self.page.get_by_label("6-digit code").fill(totp(secret))  # submits itself on the sixth digit
+            self.page.wait_for_url(lambda url: "/account/2fa/setup/" not in url)
             self.enrolled_secret = secret
         elif "/login/verify/" in self.page.url:
             secret = os.environ.get("SMOKE_TOTP_SECRET", "")
@@ -105,8 +105,8 @@ class Smoke:
             self.check("TOTP secret supplied for an enrolled account", bool(secret))
             if os.environ.get("SMOKE_WAIT_FRESH_TOTP"):
                 time.sleep(31 - time.time() % 30)  # a code is accepted once; wait for the next window
-            self.page.get_by_label("6-digit code").fill(totp(secret))
-            self.page.get_by_role("button", name="Verify").click()
+            self.page.get_by_label("6-digit code").fill(totp(secret))  # submits itself on the sixth digit
+            self.page.wait_for_url(lambda url: "/login/verify/" not in url)
         self.page.wait_for_load_state("networkidle")
         self.check(
             "signed in and on the homepage", self.page.url.rstrip("/") == self.base.rstrip("/"), self.page.url

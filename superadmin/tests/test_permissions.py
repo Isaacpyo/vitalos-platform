@@ -303,5 +303,7 @@ def test_restricted_company_profile_is_hidden_from_viewers(seeded, superadmin, v
     company = Company.load()
     company.classification = Classification.RESTRICTED
     company.save()
-    assert "From strategy to production." not in client_for(viewer, verified=False).get("/").content.decode()
-    assert "From strategy to production." in client_for(superadmin).get("/").content.decode()
+    from apps.architecture import selectors
+
+    assert selectors.company(viewer) is None
+    assert selectors.company(superadmin) == company
