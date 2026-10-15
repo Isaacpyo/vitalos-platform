@@ -1,0 +1,25 @@
+{
+  "$comment": "Lighthouse lab budgets per template (docs/seo/AUDIT.md). One URL stands for each template. Mobile emulation with simulated throttling. Targets: LCP <= 2.5 s, CLS <= 0.1; INP is a field metric (Speed Insights), so TBT stands in for it in the lab.",
+  "urls": {
+    "home": "/",
+    "section-index": "/what-we-do",
+    "practice": "/what-we-do/engineering",
+    "solution": "/solutions/application-modernisation",
+    "offer": "/offers/engineering-rescue",
+    "industry": "/industries/health-care",
+    "how-we-work": "/how-we-work",
+    "lab-asset": "/labs/research/production-ai-evaluation-harness",
+    "trust-topic": "/trust/security",
+    "faq": "/faq",
+    "contact": "/contact",
+    "legal": "/legal/privacy"
+  },
+  "default": {
+    "seo": 100,
+    "performance": 85,
+    "accessibility": 95,
+    "lcpMs": 2500,
+    "cls": 0.1,
+    "tbtMs": 300
+  }
+}
