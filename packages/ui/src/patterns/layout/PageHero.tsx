@@ -113,6 +113,9 @@ export function PageHero({
   );
 }
 
+/** Black is not in the locked palette; the owner asked for it on the hero photograph. */
+const blackOverlay = "bg-[#000]/80"; // raw-colour-ok: owner-directed black overlay (15 Oct 2026)
+
 /**
  * The dark page hero (owner direction, 15 Oct 2026: every page takes the homepage's design). The
  * band starts under the clear header and runs to the top; its bottom corners are rounded like the
@@ -163,13 +166,13 @@ function DarkPageHero({
               decoding="async"
               className="size-full object-cover object-[70%_center]"
             />
-            {/* Black is not in the locked palette; the owner asked for it on the homepage hero. */}
-            <div className="absolute inset-0 bg-[#000]/80" />
+            <div className={`absolute inset-0 ${blackOverlay}`} />
           </>
         ) : null}
-        <div className="absolute -bottom-40 -left-32 size-[34rem] rounded-full bg-blue-600/25 blur-3xl" />
-        <div className="absolute -top-32 right-[-8rem] size-[28rem] rounded-full bg-aqua-600/15 blur-3xl" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_75%)]" />
+        {/* Glows as gradients inside the band (never boxes past its edge, which accessibility
+            checkers would read as the background of the band below). */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_40rem_28rem_at_0%_100%,color-mix(in_srgb,var(--color-blue-600)_28%,transparent),transparent_70%),radial-gradient(ellipse_32rem_24rem_at_100%_0%,color-mix(in_srgb,var(--color-aqua-600)_16%,transparent),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--color-white)_4%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_srgb,var(--color-white)_4%,transparent)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_75%)]" />
       </div>
       <Container
         size={containerSize ?? "wide"}
@@ -197,7 +200,11 @@ function DarkPageHero({
           {actions ? <CTAGroup className="mt-(--space-7)">{actions}</CTAGroup> : null}
           {children ? <div className="mt-(--space-7)">{children}</div> : null}
         </div>
-        {media ? <div className="min-w-0">{media}</div> : null}
+        {/* Compact screens: the media stays small under the copy, so the first screen keeps the
+            title, lead and action (designed for 390px, not shrunk). */}
+        {media ? (
+          <div className="w-full max-w-60 min-w-0 md:max-w-sm lg:max-w-none">{media}</div>
+        ) : null}
       </Container>
     </Section>
   );

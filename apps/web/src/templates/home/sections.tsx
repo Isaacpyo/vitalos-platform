@@ -1,9 +1,7 @@
-import { useId } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   aiJourneyStages,
   ctas,
-  howWeWorkStages,
   labTypeLabels,
   megaMenuColumns,
   navLabels,
@@ -22,33 +20,30 @@ import {
   Container,
   Display,
   HeroVisual,
-  IndustryShowcase,
   LabShowcase,
   ArticleRow,
-  AuroraBackdrop,
   MotionPause,
   Lead,
   PracticeShowcase,
-  ProcessCycle,
   ProofStrip,
-  Reveal,
   Section,
-  SectionHeading,
   SettleText,
   SolutionShowcase,
   TerminalCTA,
 } from "@vitalos/ui";
-import type { ProcessCycleStage, SectionTone } from "@vitalos/ui";
+import type { SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
+import {
+  industryShowcaseItems,
+  lifecycleStages,
+  practiceShowcaseItems,
+  solutionShowcaseItems,
+} from "../../lib/view-mapping/showcase";
+import { IndustryBand, LifecycleBand } from "../commercial/dark-bands";
 import { heroPhotograph } from "../../lib/view-mapping/hero-images";
-import { iconFor } from "../../lib/view-mapping/icons";
 import { heroMotionPauseLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
-import { industryImageFor } from "../../lib/view-mapping/industry-images";
-import { practiceImageFor } from "../../lib/view-mapping/practice-images";
 import { typesWithAssets } from "../labs/map";
-import { solutionImageFor } from "../../lib/view-mapping/solution-images";
-import { stageImageFor } from "../../lib/view-mapping/stage-images";
 import type { DerivedStage } from "../../lib/view-mapping/stages";
 import {
   caseStudyMeta,
@@ -56,8 +51,6 @@ import {
   toArticleRow,
   toProofStripItems,
   toRow,
-  toRows,
-  toSolutionCard,
 } from "../../lib/view-mapping/patterns";
 import { Band, RowList, itemLevel } from "../commercial/bands";
 
@@ -105,6 +98,9 @@ function PropositionTitle() {
  */
 const heroBackdrop = heroPhotograph;
 
+/** Black is not in the locked palette (--color-*: initial); the owner asked for it here. */
+const blackOverlay = "bg-[#000]/72"; // raw-colour-ok: owner-directed black overlay (15 Oct 2026)
+
 function HeroBackdrop() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
@@ -120,8 +116,7 @@ function HeroBackdrop() {
         decoding="async"
         className="hv-drift size-full object-cover object-[70%_center]"
       />
-      {/* Black is not in the locked palette (--color-*: initial); the owner asked for it here. */}
-      <div className="absolute inset-0 bg-[#000]/72" />
+      <div className={`absolute inset-0 ${blackOverlay}`} />
       {heroGlints.map((glint, index) => (
         <span
           key={index}
@@ -206,11 +201,10 @@ export const credibilitySection: SectionRender = (context, tone) => {
  */
 export const problemsSection: SectionRender = (context, tone) => {
   const title = heading(context, "problems");
-  const cards = orderByLockedNames(context.home.solutions, solutionNames).flatMap((solution) => {
-    const card = toSolutionCard(solution, { headingLevel: itemLevel(title) });
-    return card ? [card] : [];
+  const items = solutionShowcaseItems(orderByLockedNames(context.home.solutions, solutionNames), {
+    headingLevel: itemLevel(title),
   });
-  if (cards.length === 0) return null;
+  if (items.length === 0) return null;
   return (
     <Band
       tone={tone}
@@ -218,19 +212,7 @@ export const problemsSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.solutions}
       link={{ label: navLabels.allWhatWeDo, href: routes.whatWeDo() }}
     >
-      <SolutionShowcase
-        headingLevel={itemLevel(title)}
-        items={cards.map((card) => {
-          const image = solutionImageFor(card.title);
-          return {
-            title: card.title,
-            href: card.href,
-            ...(card.summary ? { summary: card.summary } : {}),
-            icon: iconFor("solution", card.title),
-            ...(image ? { image } : {}),
-          };
-        })}
-      />
+      <SolutionShowcase headingLevel={itemLevel(title)} items={items} />
     </Band>
   );
 };
@@ -244,51 +226,10 @@ export const strategyToProductionSection: SectionRender = (context) => {
   const title = heading(context, "strategyToProduction");
   const intro = context.howWeWorkIntro?.trim();
   if (!title || !intro) return null;
-  const summaries = new Map(
-    (context.howWeWorkStages ?? []).map((stage) => [stage.title, stage.summary]),
-  );
-  const stages = howWeWorkStages.map((stage) => {
-    const image = stageImageFor(stage);
-    const summary = summaries.get(stage);
-    return {
-      title: stage as string,
-      ...(summary ? { summary } : {}),
-      ...(image ? { image } : {}),
-    };
-  });
-  return <StrategyBand title={title} intro={intro} stages={stages} />;
-};
-
-function StrategyBand({
-  title,
-  intro,
-  stages,
-}: Readonly<{ title: string; intro: string; stages: ProcessCycleStage[] }>) {
-  const headingId = useId();
   return (
-    <Section tone="dark" aria-labelledby={headingId} className="relative isolate overflow-hidden">
-      <span
-        aria-hidden="true"
-        className="absolute top-1/2 right-[-10%] -z-10 size-[46rem] -translate-y-1/2 rounded-full bg-blue-600/20 blur-3xl"
-      />
-      <Container
-        size="wide"
-        className="grid gap-x-(--space-8) gap-y-(--space-8) xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:items-center"
-      >
-        <Reveal>
-          <SectionHeading id={headingId} eyebrow={navLabels.howWeWork} title={title} />
-          <Lead className="mt-(--space-5)">{intro}</Lead>
-          <CTAGroup className="mt-(--space-6)">
-            <Button href={routes.howWeWork()} arrow>
-              {navLabels.howWeWork}
-            </Button>
-          </CTAGroup>
-        </Reveal>
-        <ProcessCycle stages={stages} label={navLabels.howWeWork} className="pb-(--space-6)" />
-      </Container>
-    </Section>
+    <LifecycleBand title={title} intro={intro} stages={lifecycleStages(context.howWeWorkStages)} />
   );
-}
+};
 
 /**
  * 5. Practices: the five, in the order the specs fix, as a showcase: a numbered list beside a
@@ -296,10 +237,10 @@ function StrategyBand({
  */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
-  const rows = toRows("practice", orderByLockedNames(context.home.practices, practiceNames), {
+  const items = practiceShowcaseItems(orderByLockedNames(context.home.practices, practiceNames), {
     headingLevel: itemLevel(title),
   });
-  if (rows.length === 0) return null;
+  if (items.length === 0) return null;
   return (
     <Band
       tone={tone}
@@ -307,19 +248,7 @@ export const practicesSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.practices}
       link={{ label: navLabels.whatWeDo, href: routes.whatWeDo() }}
     >
-      <PracticeShowcase
-        headingLevel={itemLevel(title)}
-        items={rows.map((row) => {
-          const image = practiceImageFor(row.title);
-          return {
-            title: row.title,
-            href: row.href,
-            ...(row.summary ? { summary: row.summary } : {}),
-            icon: iconFor("practice", row.title),
-            ...(image ? { image } : {}),
-          };
-        })}
-      />
+      <PracticeShowcase headingLevel={itemLevel(title)} items={items} />
     </Band>
   );
 };
@@ -375,57 +304,10 @@ export const selectedWorkSection: SectionRender = (context, tone) => {
 export const industriesSection: SectionRender = (context) => {
   if (!context.gates.open.industries) return null;
   const title = heading(context, "industries");
-  const rows = toRows("industry", context.home.industries, { headingLevel: itemLevel(title) });
-  if (rows.length === 0) return null;
-  return <IndustriesBand title={title} rows={rows} />;
+  const items = industryShowcaseItems(context.home.industries, { headingLevel: itemLevel(title) });
+  if (items.length === 0) return null;
+  return <IndustryBand title={title} items={items} />;
 };
-
-function IndustriesBand({
-  title,
-  rows,
-}: Readonly<{ title: string | undefined; rows: ReturnType<typeof toRows<"industry">> }>) {
-  const headingId = useId();
-  return (
-    <Section
-      tone="dark"
-      data-motion-scope=""
-      {...(title ? { "aria-labelledby": headingId } : { as: "div" as const })}
-      className="relative isolate overflow-hidden"
-    >
-      <AuroraBackdrop />
-      <MotionPause
-        label={heroMotionPauseLabel}
-        className="absolute right-(--space-4) bottom-(--space-4) z-10"
-      />
-      <Container size="wide">
-        {title ? (
-          <Reveal>
-            <SectionHeading
-              id={headingId}
-              title={title}
-              eyebrow={navLabels.industries}
-              link={{ label: navLabels.industries, href: routes.industries() }}
-            />
-          </Reveal>
-        ) : null}
-        <IndustryShowcase
-          className={title ? "mt-(--space-7)" : undefined}
-          headingLevel={itemLevel(title)}
-          items={rows.map((row) => {
-            const image = industryImageFor(row.title);
-            return {
-              title: row.title,
-              href: row.href,
-              ...(row.summary ? { summary: row.summary } : {}),
-              icon: iconFor("industry", row.title),
-              ...(image ? { image } : {}),
-            };
-          })}
-        />
-      </Container>
-    </Section>
-  );
-}
 /**
  * 10. Labs: only when the Labs gate is open. A bench of specimen cards (owner direction, 15 Oct
  * 2026); maturity is stated in words on every asset.

@@ -1,86 +1,118 @@
-import { navLabels, offerNames, practiceNames, routes, solutionNames } from "@vitalos/cms";
+import {
+  ctas,
+  homeSections,
+  megaMenuColumns,
+  navLabels,
+  offerNames,
+  practiceNames,
+  routes,
+  solutionNames,
+} from "@vitalos/cms";
 import type { OfferSummary, PracticeSummary, RoutePageView, SolutionSummary } from "@vitalos/cms";
-import { OfferRow, PracticeRow, SolutionCard, TextLink } from "@vitalos/ui";
+import { Button, FeatureGrid, PracticeShowcase, SolutionShowcase } from "@vitalos/ui";
+import type { ProcessCycleStage } from "@vitalos/ui";
+import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
+import { ctaToLink, contactHref } from "../../lib/view-mapping/hrefs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
-import { toOfferRows, toRows, toSolutionCard } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid, RowList } from "../commercial/bands";
-import { IndexLayout } from "../commercial/IndexLayout";
+import {
+  offerFeatureItems,
+  practiceShowcaseItems,
+  solutionShowcaseItems,
+} from "../../lib/view-mapping/showcase";
+import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
+import { bodyBands } from "../commercial/body-bands";
+import { LifecycleBand } from "../commercial/dark-bands";
 
 export interface WhatWeDoTemplateProps {
   page: RoutePageView | null;
   practices: readonly PracticeSummary[];
   solutions: readonly SolutionSummary[];
   offers: readonly OfferSummary[];
+  /** The How We Work introduction and its nine stages, for the lifecycle band. */
+  howWeWorkIntro?: string | undefined;
+  howWeWorkStages?: readonly ProcessCycleStage[] | undefined;
 }
 
 export const whatWeDoTrail = () => trail({ label: navLabels.whatWeDo, path: routes.whatWeDo() });
 
+/** The homepage's lifecycle heading (locked copy). */
+const lifecycleHeading = homeSections.find(
+  (section) => section.key === "strategyToProduction",
+)?.visibleHeading;
+
+/** The three layers, in the order the body lists them: practices, solutions, offers. */
+const layerIcons = ["layers", "workflow", "document"] as const;
+
 /**
- * What We Do (Stage 8 section 9): the three commercial layers in one overview. Practices answer
- * what capabilities Vitalos has, Solutions which problems it solves, Offers what you can start
- * with; How We Work links to how delivery is controlled. The page heading and introduction come
- * from the CMS route page, with the locked navigation label as the h1 fallback.
+ * What We Do (Stage 8 section 9), in the homepage's design (pages redesign, 15 Oct 2026): the dark
+ * hero; the three layers as icon cards; the practices and solutions as the homepage showcases;
+ * the offers as icon cards with their typical duration; the delivery lifecycle on the dark band
+ * (linking to How We Work); the closing card. Heading and introduction come from the route page,
+ * with the locked navigation label as the h1 fallback.
  */
 export function WhatWeDoTemplate({
   page,
   practices,
   solutions,
   offers,
+  howWeWorkIntro,
+  howWeWorkStages,
 }: Readonly<WhatWeDoTemplateProps>) {
-  const practiceRows = toRows("practice", orderByLockedNames(practices, practiceNames));
-  const solutionCards = orderByLockedNames(solutions, solutionNames).flatMap((solution) => {
-    const card = toSolutionCard(solution);
-    return card ? [card] : [];
-  });
-  const offerRows = toOfferRows(orderByLockedNames(offers, offerNames));
+  const practiceItems = practiceShowcaseItems(orderByLockedNames(practices, practiceNames));
+  const solutionItems = solutionShowcaseItems(orderByLockedNames(solutions, solutionNames));
+  const offerItems = offerFeatureItems(orderByLockedNames(offers, offerNames));
+  const primary = ctaToLink(page?.cta) ?? { label: ctas.primary, href: contactHref() };
 
   return (
-    <IndexLayout
-      crumbs={whatWeDoTrail()}
-      title={page?.heading ?? navLabels.whatWeDo}
-      lead={page?.intro}
-      body={page?.body}
-      bands={[
-        (tone) =>
-          practiceRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.practices}>
-              <RowList>
-                {practiceRows.map((row) => (
-                  <PracticeRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          solutionCards.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.solutions}>
-              <CardGrid>
-                {solutionCards.map((card) => (
-                  <li key={card.href} className="min-w-0">
-                    <SolutionCard {...card} />
-                  </li>
-                ))}
-              </CardGrid>
-            </Band>
-          ) : null,
-        (tone) =>
-          offerRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.offers}>
-              <RowList>
-                {offerRows.map((row) => (
-                  <OfferRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) => (
-          <Band tone={tone}>
-            <TextLink href={routes.howWeWork()}>{navLabels.howWeWork}</TextLink>
-          </Band>
-        ),
-      ]}
-    />
+    <PageMain>
+      <PageIntro
+        title={page?.heading ?? navLabels.whatWeDo}
+        lead={page?.intro}
+        actions={
+          <Button href={primary.href} variant="secondary" size="lg" arrow>
+            {primary.label}
+          </Button>
+        }
+      />
+      {renderBands(
+        [
+          ...bodyBands(page?.body, { listIcons: layerIcons }),
+          (tone) =>
+            practiceItems.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.practices} eyebrow={navLabels.whatWeDo}>
+                <PracticeShowcase items={practiceItems} />
+              </Band>
+            ) : null,
+          (tone) =>
+            solutionItems.length > 0 ? (
+              <Band
+                tone={tone}
+                heading={structuralLabels.solutions}
+                eyebrow={megaMenuColumns.solutions}
+              >
+                <SolutionShowcase items={solutionItems} />
+              </Band>
+            ) : null,
+          (tone) =>
+            offerItems.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.offers} eyebrow={navLabels.whatWeDo}>
+                <FeatureGrid items={offerItems} />
+              </Band>
+            ) : null,
+          () =>
+            lifecycleHeading && howWeWorkStages ? (
+              <LifecycleBand
+                title={lifecycleHeading}
+                intro={howWeWorkIntro}
+                stages={howWeWorkStages}
+              />
+            ) : null,
+        ],
+        "light",
+      )}
+      <ClosingBand primary={primary} secondary={null} />
+    </PageMain>
   );
 }

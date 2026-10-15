@@ -164,9 +164,9 @@ const whatWeDo: RoutePageDraft = {
       "route-what-we-do",
       h2("Three ways to look at what we do"),
       ul(
-        "Practices are our capabilities: Consulting, Engineering, AI & Data, Experience and Managed Services.",
-        "Solutions are the problems we solve, bringing several practices together around one outcome.",
-        "Offers are practical ways to start: bounded engagements you can scope and buy.",
+        "Practices are our capabilities.",
+        "Solutions are problems we solve across practices.",
+        "Offers are bounded, practical ways to start.",
       ),
       p(
         "Complex problems often need more than one practice. You still work with one integrated team and one accountable engagement lead.",
@@ -213,7 +213,7 @@ const offers: RoutePageDraft = {
     // Adapted from the Stage 11 §13 section title "Offers — practical ways to start".
     heading: "Offers: practical ways to start.",
     intro:
-      "Offers are bounded entry points and defined delivery engagements, not discount packages. Each sets out the problem, the shape of the work, what you receive, what we need from you and the likely next stage. Pricing is set in a proposal once scope is understood.",
+      "Offers are bounded engagements, not discount packages. Each sets out the work, what you get and what we need; pricing comes in a proposal once scope is understood.",
     cta: cta(ctas.primary, "offer"),
     seo: seo(
       "Offers",

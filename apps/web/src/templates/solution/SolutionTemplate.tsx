@@ -1,29 +1,25 @@
-import { ctas, routes } from "@vitalos/cms";
+import { ctas, megaMenuColumns, navLabels, routes } from "@vitalos/cms";
 import type { PublicationGates, SolutionView } from "@vitalos/cms";
 import {
   Button,
   CaseStudyRow,
   Disclosure,
-  IndustryRow,
-  OfferRow,
-  PracticeRow,
+  FeatureGrid,
   ProcessJourney,
   isNonEmpty,
 } from "@vitalos/ui";
-import { RichText } from "../../components/rich-text";
+import { HeroImage } from "../../components/hero-image";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
+import { iconFor } from "../../lib/view-mapping/icons";
 import { structuralLabels } from "../../lib/view-mapping/labels";
-import { caseStudyMeta, toOfferRows, toRows } from "../../lib/view-mapping/patterns";
-import {
-  Band,
-  ClosingBand,
-  PageIntro,
-  RowList,
-  StatementList,
-  renderBands,
-} from "../commercial/bands";
+import { caseStudyMeta, toRows } from "../../lib/view-mapping/patterns";
+import { industryShowcaseItems, offerFeatureItems } from "../../lib/view-mapping/showcase";
+import { solutionImageFor } from "../../lib/view-mapping/solution-images";
+import { Band, ClosingBand, PageIntro, RowList, renderBands } from "../commercial/bands";
+import { bodyBands } from "../commercial/body-bands";
+import { IndustryBand } from "../commercial/dark-bands";
 
 export interface SolutionTemplateProps {
   solution: SolutionView;
@@ -38,9 +34,10 @@ export const solutionTrail = (solution: Pick<SolutionView, "title" | "slug">) =>
   );
 
 /**
- * Solution page (Stage 9 section 22): the executive problem statement, signals, business impact,
- * approach, typical journey, offers and practices that deliver it, industries and work as proof,
- * and common questions. Sections without content are omitted.
+ * Solution page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
+ * compact dark hero with the solution illustration; signals; business impact; approach; the
+ * typical journey on a dark band; offers and practices as icon cards; industries on the dark
+ * aurora band; work as proof; common questions; the closing card. Empty sections are omitted.
  */
 export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateProps>) {
   const cta = ctaToLink(solution.cta) ?? { label: ctas.primary, href: contactHref() };
@@ -48,107 +45,114 @@ export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateP
     title: phase.title,
     ...(phase.description ? { summary: phase.description } : {}),
   }));
-  const offerRows = toOfferRows(solution.offers);
-  const practiceRows = toRows("practice", solution.practices);
-  const industryRows = toRows("industry", solution.industries);
+  const offerItems = offerFeatureItems(solution.offers);
+  const practiceItems = toRows("practice", solution.practices).map((row) => ({
+    title: row.title,
+    href: row.href,
+    ...(row.summary ? { text: row.summary } : {}),
+    icon: iconFor("practice", row.title),
+  }));
+  const industryItems = industryShowcaseItems(solution.industries);
   const workRows = solution.work.flatMap((work) => {
     const [row] = toRows("caseStudy", [work], { meta: caseStudyMeta(work) });
     return row ? [row] : [];
   });
+  const image = solutionImageFor(solution.title);
 
   return (
     <PageMain>
       <PageIntro
         crumbs={solutionTrail(solution)}
+        compact
         eyebrow={structuralLabels.solutions}
         title={solution.title}
         lead={solution.problemStatement}
-        actions={<Button href={cta.href}>{cta.label}</Button>}
+        actions={
+          <Button href={cta.href} variant="secondary" size="lg" arrow>
+            {cta.label}
+          </Button>
+        }
+        media={image ? <HeroImage image={image} fit="contain" /> : undefined}
       />
-      {renderBands([
-        (tone) =>
-          solution.signals.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.signals}>
-              <StatementList items={solution.signals} />
-            </Band>
-          ) : null,
-        (tone) =>
-          solution.impact?.trim() ? (
-            <Band tone={tone} heading={structuralLabels.impact}>
-              <p className="m-0 max-w-(--container-prose) text-body-l text-tone-text text-pretty">
-                {solution.impact}
-              </p>
-            </Band>
-          ) : null,
-        (tone) =>
-          solution.approach && solution.approach.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.approach}>
-              <RichText value={solution.approach} />
-            </Band>
-          ) : null,
-        (tone) =>
-          isNonEmpty(stages) ? (
-            <Band tone={tone} heading={structuralLabels.journey}>
-              <ProcessJourney
-                stages={stages}
-                headingLevel={3}
-                aria-label={structuralLabels.journey}
-              />
-            </Band>
-          ) : null,
-        (tone) =>
-          offerRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.relatedOffers}>
-              <RowList>
-                {offerRows.map((row) => (
-                  <OfferRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          practiceRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.relatedPractices}>
-              <RowList>
-                {practiceRows.map((row) => (
-                  <PracticeRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          gates.open.industries && industryRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.relatedIndustries}>
-              <RowList>
-                {industryRows.map((row) => (
-                  <IndustryRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          gates.open.work && workRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.selectedWork}>
-              <RowList>
-                {workRows.map((row) => (
-                  <CaseStudyRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          solution.faq.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.questions}>
-              <div className="grid max-w-(--container-content) gap-(--space-3)">
-                {solution.faq.map((entry, index) => (
-                  <Disclosure key={`${entry.question}-${index}`} summary={entry.question}>
-                    <p className="m-0 max-w-(--container-prose) text-pretty">{entry.answer}</p>
-                  </Disclosure>
-                ))}
-              </div>
-            </Band>
-          ) : null,
-      ])}
+      {renderBands(
+        [
+          (tone) =>
+            solution.signals.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.signals} eyebrow={solution.title}>
+                <FeatureGrid variant="rows" items={solution.signals.map((text) => ({ text }))} />
+              </Band>
+            ) : null,
+          (tone) =>
+            solution.impact?.trim() ? (
+              <Band tone={tone} heading={structuralLabels.impact} eyebrow={solution.title}>
+                <p className="m-0 max-w-(--container-prose) text-body-l text-tone-text text-pretty">
+                  {solution.impact}
+                </p>
+              </Band>
+            ) : null,
+          ...bodyBands(solution.approach, {
+            heading: structuralLabels.approach,
+            eyebrow: solution.title,
+          }),
+          () =>
+            isNonEmpty(stages) ? (
+              <Band tone="dark" heading={structuralLabels.journey} eyebrow={solution.title}>
+                <ProcessJourney
+                  stages={stages}
+                  headingLevel={3}
+                  aria-label={structuralLabels.journey}
+                />
+              </Band>
+            ) : null,
+          (tone) =>
+            offerItems.length > 0 ? (
+              <Band
+                tone={tone}
+                heading={structuralLabels.relatedOffers}
+                eyebrow={navLabels.whatWeDo}
+              >
+                <FeatureGrid items={offerItems} />
+              </Band>
+            ) : null,
+          (tone) =>
+            practiceItems.length > 0 ? (
+              <Band
+                tone={tone}
+                heading={structuralLabels.relatedPractices}
+                eyebrow={megaMenuColumns.practices}
+              >
+                <FeatureGrid items={practiceItems} columns={practiceItems.length === 4 ? 4 : 3} />
+              </Band>
+            ) : null,
+          () =>
+            gates.open.industries && industryItems.length > 0 ? (
+              <IndustryBand title={structuralLabels.relatedIndustries} items={industryItems} />
+            ) : null,
+          (tone) =>
+            gates.open.work && workRows.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.selectedWork}>
+                <RowList>
+                  {workRows.map((row) => (
+                    <CaseStudyRow key={row.href} {...row} />
+                  ))}
+                </RowList>
+              </Band>
+            ) : null,
+          (tone) =>
+            solution.faq.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.questions} eyebrow={solution.title}>
+                <div className="grid max-w-(--container-content) gap-(--space-3)">
+                  {solution.faq.map((entry, index) => (
+                    <Disclosure key={`${entry.question}-${index}`} summary={entry.question}>
+                      <p className="m-0 max-w-(--container-prose) text-pretty">{entry.answer}</p>
+                    </Disclosure>
+                  ))}
+                </div>
+              </Band>
+            ) : null,
+        ],
+        "light",
+      )}
       <ClosingBand primary={cta} />
     </PageMain>
   );

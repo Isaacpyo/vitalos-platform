@@ -102,7 +102,7 @@ export function IndustryShowcase({ items, headingLevel = 3, className }: Industr
                   />
                   <span
                     aria-hidden="true"
-                    className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgb(8_26_42/0.55),rgb(8_26_42/0.2)_35%,rgb(8_26_42/0.85)_72%,rgb(8_26_42/0.96))]"
+                    className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,color-mix(in_srgb,var(--color-midnight-950)_55%,transparent),color-mix(in_srgb,var(--color-midnight-950)_20%,transparent)_35%,color-mix(in_srgb,var(--color-midnight-950)_85%,transparent)_72%,color-mix(in_srgb,var(--color-midnight-950)_96%,transparent))]"
                   />
                   <span
                     aria-hidden="true"
@@ -116,7 +116,7 @@ export function IndustryShowcase({ items, headingLevel = 3, className }: Industr
               <span
                 aria-hidden="true"
                 className={cx(
-                  "absolute inset-0 -z-10 bg-[radial-gradient(22rem_circle_at_var(--spot-x,30%)_var(--spot-y,20%),rgb(36_87_255/0.35),transparent_65%)]",
+                  "absolute inset-0 -z-10 bg-[radial-gradient(22rem_circle_at_var(--spot-x,30%)_var(--spot-y,20%),color-mix(in_srgb,var(--color-blue-600)_35%,transparent),transparent_65%)]",
                   "transition-opacity duration-(--duration-reveal)",
                   on ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                 )}

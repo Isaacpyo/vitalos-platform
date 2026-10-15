@@ -20,7 +20,7 @@ export function AuroraBackdrop({ className }: AuroraBackdropProps) {
       <span className="hv-aurora-a absolute -top-1/3 -left-1/4 size-[42rem] rounded-full bg-blue-600/45 blur-[120px]" />
       <span className="hv-aurora-b absolute top-1/4 -right-1/4 size-[38rem] rounded-full bg-aqua-600/35 blur-[120px]" />
       <span className="hv-aurora-c absolute -bottom-1/3 left-1/3 size-[34rem] rounded-full bg-blue-700/40 blur-[110px]" />
-      <span className="absolute inset-0 bg-[linear-gradient(rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-[length:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)]" />
+      <span className="absolute inset-0 bg-[linear-gradient(color-mix(in_srgb,var(--color-white)_5%,transparent)_1px,transparent_1px),linear-gradient(90deg,color-mix(in_srgb,var(--color-white)_5%,transparent)_1px,transparent_1px)] bg-[length:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)]" />
     </div>
   );
 }

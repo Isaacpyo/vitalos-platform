@@ -170,7 +170,7 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
             : "lg:flex lg:flex-col",
         )}
       >
-        <span className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,rgb(255_255_255/0.07)_1px,transparent_0)] bg-[length:22px_22px]" />
+        <span className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,color-mix(in_srgb,var(--color-white)_7%,transparent)_1px,transparent_0)] bg-[length:22px_22px]" />
         <span
           className="absolute -top-28 -z-10 size-96 rounded-full bg-blue-600/25 blur-3xl transition-[left] duration-(--duration-diagram) ease-(--ease-emphasis)"
           style={{ left: `calc(${share * 100}% - 12rem)` }}
@@ -223,7 +223,7 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
             {items.map((item, index) => {
               const on = index === active;
               const look = cx(
-                "absolute inset-0 size-full object-contain drop-shadow-[0_24px_48px_rgb(36_87_255/0.35)]",
+                "absolute inset-0 size-full object-contain drop-shadow-[0_24px_48px_color-mix(in_srgb,var(--color-blue-600)_35%,transparent)]",
                 "transition-[opacity,scale,rotate] duration-(--duration-diagram) ease-(--ease-emphasis)",
                 on ? "scale-100 rotate-0 opacity-100" : "scale-90 -rotate-6 opacity-0",
               );

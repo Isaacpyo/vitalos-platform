@@ -10,6 +10,8 @@ export interface FeatureGridItem {
   /** One line (fifteen words or fewer). */
   text?: string | undefined;
   icon?: IconName | undefined;
+  /** A short fact under the title, for example the typical duration of an offer. */
+  meta?: string | undefined;
   /** Makes the whole card a link to this address. */
   href?: string | undefined;
 }
@@ -56,7 +58,7 @@ export function FeatureGrid({
       className={cx(
         "m-0 grid list-none grid-cols-1 p-0",
         rows ? "gap-x-(--space-7)" : "gap-(--space-4)",
-        shown.length > 1 && (rows ? "md:grid-cols-2" : columnClasses[columns]),
+        rows ? shown.length > 1 && "md:grid-cols-2" : columnClasses[columns],
         className,
       )}
     >
@@ -83,6 +85,9 @@ export function FeatureGrid({
                 >
                   {item.title}
                 </Heading>
+              ) : null}
+              {hasText(item.meta) ? (
+                <span className="mt-(--space-1) block text-small text-tone-muted">{item.meta}</span>
               ) : null}
               {hasText(item.text) ? (
                 <span

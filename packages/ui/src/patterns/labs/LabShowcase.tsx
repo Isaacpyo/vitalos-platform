@@ -130,7 +130,7 @@ function SpecimenCard({
       {/* Faint dot grid, strongest in the top-right corner. */}
       <span
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,rgb(36_87_255/0.16)_1px,transparent_0)] bg-[length:18px_18px] [mask-image:radial-gradient(circle_at_100%_0%,black,transparent_70%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,color-mix(in_srgb,var(--color-blue-600)_16%,transparent)_1px,transparent_0)] bg-[length:18px_18px] [mask-image:radial-gradient(circle_at_100%_0%,black,transparent_70%)]"
       />
       {/* The scan line: sweeps across once on hover or focus. */}
       <span
