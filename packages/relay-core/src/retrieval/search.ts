@@ -76,6 +76,24 @@ function trimToBudget(chunks: MatchedChunk[], maxTokens: number): MatchedChunk[]
   return out;
 }
 
+/**
+ * One chunk per document first, in rank order, then the remaining chunks in rank order. Stops a
+ * long page from filling the top slots (and the three citations) with near-duplicate chunks.
+ */
+export function diversify(chunks: readonly MatchedChunk[], limit: number): MatchedChunk[] {
+  const seen = new Set<string>();
+  const firsts: MatchedChunk[] = [];
+  const rest: MatchedChunk[] = [];
+  for (const c of chunks) {
+    if (seen.has(c.documentId)) rest.push(c);
+    else {
+      seen.add(c.documentId);
+      firsts.push(c);
+    }
+  }
+  return [...firsts, ...rest].slice(0, limit);
+}
+
 /** Hybrid retrieval with confidence (ADR-033). Embedding failures fall back to full text. */
 export async function retrieve(
   store: RelayStore,
@@ -89,11 +107,15 @@ export async function retrieve(
   const matched = await store.matchChunks({
     queryText: query,
     embedding,
-    matchCount: options.matchCount ?? 6,
+    // Over-fetch so diversify() can still return `matchCount` distinct documents.
+    matchCount: (options.matchCount ?? 6) * 2,
     pagePath: options.pagePath ?? null,
     pageBonus: options.pageBonus ?? 0.25,
   });
-  const chunks = trimToBudget(matched, options.maxContextTokens ?? 2400);
+  const chunks = trimToBudget(
+    diversify(matched, options.matchCount ?? 6),
+    options.maxContextTokens ?? 2400,
+  );
   const top = chunks[0];
   const topSimilarity = chunks.reduce<number | null>(
     (best, c) =>

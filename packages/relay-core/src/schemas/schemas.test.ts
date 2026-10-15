@@ -6,7 +6,7 @@ describe("settings schema", () => {
   it("fills defaults and rejects retired models and bad hours", () => {
     const s = parseStoredSettings({});
     expect(s.model).toBe("deepseek-flash");
-    expect(s.confidenceThreshold).toBe(0.55);
+    expect(s.confidenceThreshold).toBe(0.4);
     expect(s.suggestedQuestions).toHaveLength(4);
     expect(relaySettingsSchema.safeParse({ model: "deepseek-reasoner" }).success).toBe(false);
     expect(

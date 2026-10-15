@@ -416,7 +416,7 @@ def test_knowledge_page_shows_sources_entries_and_gaps(client_for, superadmin, r
     assert "Draft · review" in body and "Published" in body and "ABT-01" in body and "Open in Notion" in body
     assert "Do you hold ISO 27001 certification?" in body and "Add to Master FAQ" in body
     assert "https://app.notion.com/p/3fae4b3411f9808cb450c69d43e8f22c" in body
-    assert "Answer threshold 0.55" in body
+    assert "Answer threshold 0.4" in body
 
 
 def test_knowledge_faq_views(client_for, superadmin, lead, relay):
@@ -436,7 +436,7 @@ def test_retrieval_test_marks_chunks_above_the_threshold(client_for, superadmin,
     )
     assert "Engineering Rescue · §2" in body and "0.82" in body
     assert body.count("above the threshold") == 2
-    assert "Answer threshold 0.55 · below it Relay offers a person" in body
+    assert "Answer threshold 0.4 · below it Relay offers a person" in body
 
 
 def test_markdown_preview_is_safe(client_for, superadmin, relay):

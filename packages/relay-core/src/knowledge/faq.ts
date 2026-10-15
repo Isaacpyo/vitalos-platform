@@ -166,6 +166,9 @@ export function nextStepFor(
   return routeExists(href) ? { kind: "link", label: first, href } : null;
 }
 
+/** Bump when the FAQ embedding text changes, so the next ingest re-embeds every entry. */
+export const FAQ_EMBEDDING_VERSION = 2;
+
 export interface FaqMapOptions {
   routeExists: (path: string) => boolean;
   /** Production with RELAY_FAQ_REQUIRE_HUB_ACTIVE and a Draft hub page: publish nothing. */
@@ -233,13 +236,17 @@ export function mapFaqRow(row: FaqRow, options: FaqMapOptions): FaqMapped {
           {
             heading: question,
             content: `${shortAnswer}\n\n${fullAnswer}`,
-            embeddingText: `FAQ — ${question}: ${shortAnswer} ${fullAnswer}`,
+            // Question and short answer only: gte-small reads 512 tokens, and long full answers
+            // dilute the match with visitors' short questions. The full answer stays searchable
+            // through full text and is what the model reads.
+            embeddingText: `${question}\n${shortAnswer}`,
           },
         ]
       : [],
     checksum: "",
   };
   entry.checksum = checksumOf({
+    embedding: FAQ_EMBEDDING_VERSION,
     question,
     shortAnswer,
     fullAnswer,

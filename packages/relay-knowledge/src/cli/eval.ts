@@ -1,8 +1,8 @@
 /**
  * pnpm relay:eval --retrieval [--json out.json]   retrieval eval (no model calls, no cost)
- * pnpm relay:eval --answers                         answer eval against the configured provider
- *                                                    (spends a little DeepSeek credit when
- *                                                    RELAY_LLM_PROVIDER=deepseek; keep runs small)
+ * pnpm relay:eval --answers [--base url]            answer eval through a running website's
+ *                                                    visitor API (eval-answers.ts); spends a
+ *                                                    little DeepSeek credit on a DeepSeek server
  *
  * Retrieval eval (Relay follow-up, section 11): every live FAQ question must retrieve its entry in
  * the top 3 (target ≥ 95%), and every paraphrase in docs/relay/evals/faq-paraphrases.jsonl must too
@@ -31,6 +31,11 @@ const opt = (f: string) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 
+if (has("answers")) {
+  await import("./eval-answers");
+  process.exit(process.exitCode ?? 0);
+}
+
 const url = process.env.SUPABASE_URL;
 const secretKey = process.env.SUPABASE_SECRET_KEY;
 if (!url || !secretKey) {
@@ -46,7 +51,7 @@ const embedder =
       })
     : nullEmbedder;
 const simFloor = Number(opt("floor") ?? process.env.RELAY_SIM_FLOOR ?? 0.7);
-const threshold = Number(opt("threshold") ?? 0.55);
+const threshold = Number(opt("threshold") ?? 0.4);
 const pageBonus = Number(opt("page-bonus") ?? 0.25);
 
 async function ask(question: string, pagePath?: string): Promise<RetrievalResult> {
@@ -122,8 +127,10 @@ if (has("retrieval")) {
   }
   let paraHits = 0;
   const paraMisses: string[] = [];
+  const paraConf: number[] = [];
   for (const p of paraphrases) {
     const r = await ask(p.q);
+    paraConf.push(r.confidence);
     if (r.chunks.slice(0, 3).some((c) => c.source === "faq" && c.externalId === p.id))
       paraHits += 1;
     else
@@ -156,11 +163,15 @@ if (has("retrieval")) {
   const negSims: number[] = [];
   const negConf: number[] = [];
   let negBelow = 0;
+  const negLines: string[] = [];
   for (const q of negatives) {
     const r = await ask(q);
     if (r.topSimilarity !== null) negSims.push(r.topSimilarity);
     negConf.push(r.confidence);
     if (!r.confident) negBelow += 1;
+    negLines.push(
+      `  ${r.confident ? "ANSWERS" : "below  "} conf ${r.confidence.toFixed(2)} sim ${r.topSimilarity?.toFixed(3) ?? "-"} ${q} → ${r.chunks[0]?.externalId ?? r.chunks[0]?.title ?? "nothing"}`,
+    );
   }
   console.log(`\nSimilarity (answerable FAQ questions): ${quantiles(positiveSims)}`);
   console.log(`Similarity (off-topic / unanswerable):  ${quantiles(negSims)}`);
@@ -168,9 +179,14 @@ if (has("retrieval")) {
     `Confidence answerable: ${quantiles(positiveConf)}; below threshold: ${positiveConf.filter((c) => c < threshold).length}`,
   );
   console.log(
+    `Confidence paraphrases: ${quantiles(paraConf)}; below threshold: ${paraConf.filter((c) => c < threshold).length}/${paraConf.length}`,
+  );
+  console.log(
     `Confidence off-topic:  ${quantiles(negConf)}; below threshold: ${negBelow}/${negatives.length}`,
   );
+  console.log(negLines.join("\n"));
   report.similarity = { positive: positiveSims, negative: negSims };
+  report.confidence = { exact: positiveConf, paraphrases: paraConf, negative: negConf };
 
   // 4. Phase 1 acceptance
   const rescue = await ask("rescue a failing project");

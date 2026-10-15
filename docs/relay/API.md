@@ -73,7 +73,7 @@ Times are ISO-8601 UTC. Ids are uuids. `displayName` = contact name, or `Visitor
 | PUT `/settings` | `{settings: RelaySettings}` (full replace; zod-validated) | `{settings}` |
 | GET `/email-log` | | `{emails:[{id,to,subject,provider,status,createdAt}]}` (visitor emails only) |
 
-`RelaySettings` (defaults in `relay-core/src/schemas/settings.ts`): `{aiEnabled:true, model:'deepseek-flash', businessHours:{days:[1,2,3,4,5], start:'09:00', end:'17:30', timezone:'Europe/London'}, outOfHoursText, reminderMinutes:10, secondReminderMinutes:30, emailSnippet:true, visitorEmailsEnabled:false, greeting, suggestedQuestions:string[4], confidenceThreshold:0.55, dailyTokenCap:2000000, retention:{noContactDays:90, withContactDays:365}, allowedOrigins:string[]}`.
+`RelaySettings` (defaults in `relay-core/src/schemas/settings.ts`): `{aiEnabled:true, model:'deepseek-flash', businessHours:{days:[1,2,3,4,5], start:'09:00', end:'17:30', timezone:'Europe/London'}, outOfHoursText, reminderMinutes:10, secondReminderMinutes:30, emailSnippet:true, visitorEmailsEnabled:false, greeting, suggestedQuestions:string[4], confidenceThreshold:0.4, dailyTokenCap:2000000, retention:{noContactDays:90, withContactDays:365}, allowedOrigins:string[]}`.
 
 ## Webhook (website → Super Admin): POST `{RELAY_SUPERADMIN_WEBHOOK_URL}` (`/api/inbound/relay`)
 

@@ -164,8 +164,9 @@ describe("mapFaqRow", () => {
     expect(entry.status).toBe("published");
     expect(entry.url).toBe("/trust/certifications");
     expect(entry.chunks).toHaveLength(1);
+    // Embedded on the question and short answer only; the full answer stays in the content.
     expect(
-      entry.chunks?.[0]?.embeddingText?.startsWith("FAQ — Is Vitalos ISO 27001 certified?: No."),
+      entry.chunks?.[0]?.embeddingText?.startsWith("Is Vitalos ISO 27001 certified?\nNo."),
     ).toBe(true);
     const publicText = JSON.stringify({
       title: entry.title,

@@ -51,7 +51,7 @@ export const relaySettingsSchema = z
       .array(z.string().min(3).max(120))
       .max(4)
       .default([...DEFAULT_SUGGESTED_QUESTIONS]),
-    confidenceThreshold: z.number().min(0).max(1).default(0.55),
+    confidenceThreshold: z.number().min(0).max(1).default(0.4),
     dailyTokenCap: z.number().int().min(10_000).max(100_000_000).default(2_000_000),
     retention: z
       .object({

@@ -21,7 +21,7 @@ Relay must answer only from published Vitalos knowledge, cite it, and say when i
 4. `relay.match_chunks(query_text, query_embedding, match_count, rrf_k, page_path)` fuses two rankings by reciprocal rank fusion: a `websearch_to_tsquery` full-text ranking and an inner-product vector ranking. Documents placed on the visitor's current page get a small bonus. With no embedding, it ranks on full text only.
 5. Confidence:
    - The top similarity is normalised from `[RELAY_SIM_FLOOR, 1]`, plus 0.1 when full text also matched.
-   - Below the threshold (Settings, default 0.55), the model gets no sources and Relay offers a person.
+   - Below the threshold (Settings, default 0.40; calibrated in docs/relay/evals/REPORT.md), the model gets no sources and Relay offers a person.
    - The full-text-only fallback uses a calibrated `ts_rank_cd` mapping.
    - `pnpm relay:eval` calibrates the floor and the threshold.
 

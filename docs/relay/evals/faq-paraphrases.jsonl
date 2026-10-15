@@ -1,0 +1,88 @@
+{"id": "ABT-01", "q": "what does your company actually do"}
+{"id": "ABT-01", "q": "in a nutshell, what services does vitalos offer?"}
+{"id": "ABT-02", "q": "who runs vitalos?"}
+{"id": "ABT-02", "q": "who is the founder"}
+{"id": "ABT-06", "q": "do you take on clients outside the UK?"}
+{"id": "ABT-07", "q": "where's your office?"}
+{"id": "ABT-08", "q": "how are you different from Accenture or Deloitte?"}
+{"id": "ABT-11", "q": "what type of clients do you work with"}
+{"id": "ABT-12", "q": "are you an AI firm?"}
+{"id": "AI-02", "q": "can we just start building an AI tool without an assessment?"}
+{"id": "AI-03", "q": "our AI proof of concept works, is it ready to go live?"}
+{"id": "AI-04", "q": "which LLMs do you use? OpenAI, Claude?"}
+{"id": "AI-06", "q": "will you train models on our data?"}
+{"id": "AI-08", "q": "what about hallucinations from chatbots?"}
+{"id": "AI-10", "q": "can you guarantee the AI never gets it wrong?"}
+{"id": "AI-14", "q": "who owns the prompts and outputs from the AI you build?"}
+{"id": "AI-15", "q": "how do you keep LLM costs under control?"}
+{"id": "AI-16", "q": "when is AI the wrong answer?"}
+{"id": "AI-17", "q": "do you build autonomous agents?"}
+{"id": "AI-18", "q": "will we be tied to one AI provider?"}
+{"id": "AI-20", "q": "what ROI can we expect from AI?"}
+{"id": "CAR-03", "q": "how do I apply for a job with you?"}
+{"id": "CAR-04", "q": "do you hire contractors or freelancers?"}
+{"id": "CAR-08", "q": "are you an AWS partner?"}
+{"id": "CON-01", "q": "how can I get in touch?"}
+{"id": "CON-03", "q": "what should I prepare before a first call?"}
+{"id": "CON-05", "q": "will I end up on your newsletter if I send an enquiry?"}
+{"id": "DEL-01", "q": "what's your delivery approach?"}
+{"id": "DEL-03", "q": "how do you report progress on a project?"}
+{"id": "DEL-05", "q": "what's your approach to testing?"}
+{"id": "DEL-06", "q": "is your work accessible to WCAG standards?"}
+{"id": "DEL-08", "q": "what docs do we get at the end?"}
+{"id": "DEL-10", "q": "how do you deploy to production without breaking things?"}
+{"id": "DEL-11", "q": "do we have to use your tech stack?"}
+{"id": "DEL-12", "q": "another agency built our app, can you take it over?"}
+{"id": "DEL-14", "q": "do you use scrum?"}
+{"id": "ENG-01", "q": "how do we get started with you?"}
+{"id": "ENG-04", "q": "how do you charge?"}
+{"id": "ENG-04", "q": "how much does it cost to work with you?"}
+{"id": "ENG-05", "q": "do you have a price list?"}
+{"id": "ENG-08", "q": "do you do fixed price projects?"}
+{"id": "ENG-09", "q": "what are your invoice terms?"}
+{"id": "ENG-13", "q": "can you sign our non-disclosure agreement?"}
+{"id": "ENG-14", "q": "do we own the source code you write?"}
+{"id": "ENG-16", "q": "what if the scope changes halfway through?"}
+{"id": "ENG-21", "q": "do you come on site or is it remote?"}
+{"id": "ENG-23", "q": "can we cancel the contract early?"}
+{"id": "ENG-25", "q": "can you work with our internal developers?"}
+{"id": "ENG-26", "q": "any discounts available?"}
+{"id": "HQ-01", "q": "you're a new company, why should we trust you?"}
+{"id": "HQ-03", "q": "what if the founder gets ill?"}
+{"id": "HQ-04", "q": "should we just hire our own developers instead?"}
+{"id": "HQ-06", "q": "what happens if the project goes wrong?"}
+{"id": "HQ-11", "q": "what if you go out of business?"}
+{"id": "IND-01", "q": "which sectors do you specialise in?"}
+{"id": "IND-03", "q": "do you work with the NHS or care providers?"}
+{"id": "IND-05", "q": "have you done the DSPT?"}
+{"id": "IND-11", "q": "can you integrate Shopify with our stock system?"}
+{"id": "IND-14", "q": "can you build an app for our warehouse staff?"}
+{"id": "IND-16", "q": "do you work with startups?"}
+{"id": "INS-02", "q": "is your blog written by AI?"}
+{"id": "LAB-02", "q": "can we buy the Labs products?"}
+{"id": "LAB-05", "q": "can we be a design partner for Labs?"}
+{"id": "MS-03", "q": "do you offer round the clock support?"}
+{"id": "MS-05", "q": "what happens when something breaks in production?"}
+{"id": "MS-06", "q": "can you support software you didn't build?"}
+{"id": "OFF-04", "q": "what is a technology health check?"}
+{"id": "OFF-10", "q": "what's in an AI prototype sprint?"}
+{"id": "OFF-31", "q": "can you rescue a project that's going badly?"}
+{"id": "OFF-31", "q": "our software project is failing, can you help?"}
+{"id": "OFF-37", "q": "what is product discovery?"}
+{"id": "SOL-09", "q": "do we need to replace our old system in one go?"}
+{"id": "SOL-11", "q": "do we need a data warehouse before doing AI?"}
+{"id": "TRU-01", "q": "do you have cyber essentials?"}
+{"id": "TRU-02", "q": "are you ISO27001 accredited?"}
+{"id": "TRU-04", "q": "will you sign a DPA?"}
+{"id": "TRU-05", "q": "are you a controller or processor under GDPR?"}
+{"id": "TRU-17", "q": "can you fill in our supplier security questionnaire?"}
+{"id": "TRU-18", "q": "do you do pen tests?"}
+{"id": "TRU-19", "q": "what happens if there's a data breach?"}
+{"id": "TRU-20", "q": "are your staff background checked?"}
+{"id": "WRK-03", "q": "why are there no client logos on your site?"}
+{"id": "WRK-05", "q": "will you put our logo in your case studies?"}
+{"id": "WWD-03", "q": "what does your consulting practice do?"}
+{"id": "WWD-05", "q": "what kind of software do you build?"}
+{"id": "WWD-13", "q": "do you do cyber security services?"}
+{"id": "WWD-14", "q": "are you Salesforce implementers?"}
+{"id": "WWD-15", "q": "can you build us a website?"}
