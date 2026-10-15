@@ -13,6 +13,8 @@ import { buildArticleBody, tocForDisplay } from "./body-model";
 import { formatLabel, insightLabels } from "./labels";
 import type { InsightData } from "./load";
 import { authorCardProps, authorLinks, insightCardProps } from "./map";
+import { MediaSlot } from "../../components/media-slot";
+import { ClosingBand } from "../commercial/bands";
 
 /**
  * Article page. Structured data (Article) is emitted only with a real author and date (the
@@ -30,9 +32,9 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
 
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <JsonLd data={articleJsonLd(insight, { siteUrl: getSeoContext().siteUrl })} />
       <PageHeroBand
+        media={<MediaSlot id="insights.article" item={insight.slug} priority />}
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -56,6 +58,7 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
           updatedAt={insight.updatedAt}
         />
       </PageHeroBand>
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           <div className="grid min-w-0 gap-(--space-7) lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]">
@@ -106,6 +109,7 @@ export function ArticlePage({ data }: Readonly<{ data: InsightData }>) {
           ) : null}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

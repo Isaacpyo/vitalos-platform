@@ -44,10 +44,9 @@ export function PageHeroBand({
   actions,
   media,
   full = false,
-  size = "content",
   children,
 }: Readonly<{
-  /** Content width; match the PageBand that follows. */
+  /** Retained for callers: every hero now uses the wide container, like the homepage. */
   size?: ContainerSize;
   /** Invisible BreadcrumbList JSON-LD element (Breadcrumbs); no visible trail. */
   crumbs?: ReactNode;
@@ -71,7 +70,7 @@ export function PageHeroBand({
         tone="dark"
         backdrop={heroPhotograph}
         size={full ? "display" : "title"}
-        containerSize={media ? "wide" : size}
+        containerSize="wide"
         title={title}
         eyebrow={eyebrow}
         lead={lead}

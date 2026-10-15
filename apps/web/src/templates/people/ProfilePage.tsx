@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { ArticleRow, PersonHero, Stack } from "@vitalos/ui";
+import { ArticleRow, Container, PersonHero, Section, Stack } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
@@ -13,6 +13,7 @@ import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { PersonData } from "./load";
 import { personHeroProps, personLabels, verifiedCredentials } from "./map";
+import { ClosingBand } from "../commercial/bands";
 
 /**
  * Person profile (ProfilePage structured data). Works without a portrait (monogram) and without a
@@ -29,14 +30,22 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
 
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <JsonLd data={profilePageJsonLd(person, { siteUrl: getSeoContext().siteUrl })} />
+      <Breadcrumbs trail={trail} jsonLd={!placeholder} />
+      {/* The dark hero of every page (pages redesign, 15 Oct 2026), around the person heading. */}
+      <Section
+        as="div"
+        tone="dark"
+        className="relative isolate -mt-(--size-header) overflow-hidden rounded-b-[1.75rem] pt-[calc(var(--section-compact)+var(--size-header))] pb-(--section-compact) lg:rounded-b-[3rem]"
+      >
+        <Container size="content">
+          <PersonHero {...personHeroProps(person)} />
+        </Container>
+      </Section>
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
-          <Breadcrumbs trail={trail} jsonLd={!placeholder} />
-          <PersonHero {...personHeroProps(person)}>
-            {hasRichText(person.bio) ? <RichText value={person.bio} /> : null}
-          </PersonHero>
+          {hasRichText(person.bio) ? <RichText value={person.bio} /> : null}
 
           {credentials.length > 0 ? (
             <ContentSection id="credentials" heading={personLabels.credentials}>
@@ -63,6 +72,7 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
           ) : null}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

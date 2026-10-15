@@ -1,8 +1,15 @@
 import { howWeWorkStages } from "@vitalos/cms";
-import type { IndustrySummary, OfferSummary, PracticeSummary, SolutionSummary } from "@vitalos/cms";
+import type {
+  IndustrySummary,
+  LabAssetSummary,
+  OfferSummary,
+  PracticeSummary,
+  SolutionSummary,
+} from "@vitalos/cms";
 import type {
   FeatureGridItem,
   IndustryShowcaseItem,
+  LabShowcaseItem,
   PracticeShowcaseItem,
   ProcessCycleStage,
   SolutionShowcaseItem,
@@ -10,7 +17,7 @@ import type {
 import { iconFor } from "./icons";
 import { industryImageFor } from "./industry-images";
 import type { MapOptions } from "./patterns";
-import { toOfferRows, toRows, toSolutionCard } from "./patterns";
+import { labAssetPresentation, toOfferRows, toRow, toRows, toSolutionCard } from "./patterns";
 import { practiceImageFor } from "./practice-images";
 import { solutionImageFor } from "./solution-images";
 import { stageImageFor } from "./stage-images";
@@ -101,5 +108,17 @@ export function lifecycleStages(described: readonly DerivedStage[] = []): Proces
       ...(summary ? { summary } : {}),
       ...(image ? { image } : {}),
     };
+  });
+}
+
+/** Lab assets for the Labs bench (LabShowcase), each with its type and maturity in words. */
+export function labShowcaseItems(
+  assets: readonly LabAssetSummary[],
+  options: MapOptions = {},
+): LabShowcaseItem[] {
+  return assets.flatMap((asset) => {
+    const { eyebrow, maturity, maturityLabel } = labAssetPresentation(asset);
+    const row = toRow("labAsset", asset, { ...options, eyebrow });
+    return row ? [{ ...row, maturity, maturityLabel }] : [];
   });
 }

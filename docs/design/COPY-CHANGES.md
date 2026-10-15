@@ -136,7 +136,10 @@ Field paths read as `field › block n › kind`, where `block n` is the positio
 
 ## Insights and Labs
 
-No changes.
+| Page                                            | Section / field | Before                                                                                                                                                                 | After                                                                                                                                |
+| ----------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| ai-opportunity-readiness-framework (Labs asset) | summary         | A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk, so assessments reach consistent recommendations.            | A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk.                           |
+| production-ai-evaluation-harness (Labs asset)   | summary         | A concept for repeatable testing of AI models and agents against agreed quality and risk criteria, before release and whenever a model, prompt or data source changes. | A concept for repeatable testing of AI models and agents against agreed quality and risk criteria, before release and after changes. |
 
 ## Careers, Trust Centre, Contact and other route pages
 
@@ -181,3 +184,9 @@ Changes where shortening dropped a detail or reworded a commitment. Restore from
 - **About, why Vitalos exists:** dropped "not choosing a model or buying another tool", "making good engineering decisions" and "that gap between ambition and execution".
 - **About, from strategy to production:** "engineer the products and platforms required" became "build it".
 - **About, operating principles:** "you have access to people who can … make decisions about it" became "people who … can decide"; "we prefer a verifiable fact to an adjective" became "facts over adjectives".
+
+### Insights and Labs
+
+- **AI opportunity framework summary:** dropped "so assessments reach consistent recommendations" (the purpose); the asset body still says it.
+- **Evaluation harness summary:** "whenever a model, prompt or data source changes" became "after changes".
+- **Not shortened:** the /insights and /labs intros are already within the rules. The /labs maturity-label list keeps all six items (above the five-bullet cap) because each item defines a label used on Labs assets; "separately" and "genuinely" in the Production product item are qualifiers that limit the claim, so it is unchanged.
