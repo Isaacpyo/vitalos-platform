@@ -19,8 +19,12 @@ export interface SiteHeaderProps {
   activeSection?: string | undefined;
   /** Where the wordmark links. */
   homeHref?: string | undefined;
-  /** Approved logo export; omitted until the production SVG exists (text fallback renders). */
+  /** Logo export; the text wordmark renders when it is omitted. */
   logo?: WordmarkLogo | undefined;
+  /** Logo for the clear bar over a dark first band (see `overlay`), for example white. */
+  logoOnDark?: WordmarkLogo | undefined;
+  /** Transparent over a dark first band until the page scrolls (StickyHeader `overlay`). */
+  overlay?: boolean | undefined;
   wordmarkText?: string | undefined;
   /** Visible label of the compact menu trigger. */
   menuLabel?: string | undefined;
@@ -45,6 +49,8 @@ export function SiteHeader({
   activeSection,
   homeHref = "/",
   logo,
+  logoOnDark,
+  overlay,
   wordmarkText,
   menuLabel,
   navLabel = "Primary",
@@ -52,12 +58,13 @@ export function SiteHeader({
   className,
 }: SiteHeaderProps) {
   return (
-    <StickyHeader className={className} defaultCondensed={defaultCondensed}>
+    <StickyHeader className={className} defaultCondensed={defaultCondensed} overlay={overlay}>
       <Container size="wide">
         <div className="flex h-(--header-h) items-center gap-(--space-3) transition-[height] duration-(--duration-reveal) ease-(--ease-standard) sm:gap-(--space-4) lg:gap-(--space-5)">
           <Wordmark
             href={homeHref}
             {...(logo ? { logo } : {})}
+            {...(logoOnDark ? { darkLogo: logoOnDark } : {})}
             {...(wordmarkText ? { text: wordmarkText } : {})}
             className="shrink-0"
           />

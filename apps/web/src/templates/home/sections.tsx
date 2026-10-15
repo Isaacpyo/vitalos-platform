@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   aiJourneyStages,
   brandLine,
@@ -25,6 +25,7 @@ import {
   LabAssetRow,
   LinkCard,
   ArticleRow,
+  MotionPause,
   Lead,
   PersonCard,
   PracticeRow,
@@ -44,7 +45,7 @@ import type { MediaPlaceholderVariant } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
-import { carouselLabels } from "../../lib/view-mapping/labels";
+import { carouselLabels, heroMotionPauseLabel } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import {
   caseStudyMeta,
@@ -92,13 +93,78 @@ function PropositionTitle() {
 }
 
 /**
+ * The hero backdrop: the owner-supplied photograph (15 Oct 2026; docs/brand/asset-approval.md)
+ * under a solid black overlay, so the copy reads as on a dark band. It drifts slowly and a few
+ * points of light glint over the data centre (token CSS, "Ambient hero motion"). Decorative:
+ * hidden from assistive technology. Served from apps/web/public as pre-sized WebP, so it skips
+ * the image optimiser.
+ */
+const heroBackdrop = {
+  src: "/images/hero/cloud-infrastructure-1672.webp",
+  srcSet:
+    "/images/hero/cloud-infrastructure-960.webp 960w, /images/hero/cloud-infrastructure-1672.webp 1672w",
+  width: 1672,
+  height: 941,
+} as const;
+
+function HeroBackdrop() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP with its own srcset */}
+      <img
+        src={heroBackdrop.src}
+        srcSet={heroBackdrop.srcSet}
+        sizes="100vw"
+        width={heroBackdrop.width}
+        height={heroBackdrop.height}
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        className="hv-drift size-full object-cover object-[70%_center]"
+      />
+      {/* Black is not in the locked palette (--color-*: initial); the owner asked for it here. */}
+      <div className="absolute inset-0 bg-[#000]/60" />
+      {heroGlints.map((glint, index) => (
+        <span
+          key={index}
+          className="hv-glint absolute size-1.5 rounded-full bg-white opacity-0 shadow-[0_0_14px_4px_var(--color-blue-600)] motion-reduce:hidden"
+          style={{ top: glint.top, left: glint.left, "--d": glint.delay } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Where the glints light up, over the right of the photograph, and when (staggered). */
+const heroGlints = [
+  { top: "24%", left: "64%", delay: "0s" },
+  { top: "41%", left: "81%", delay: "1.1s" },
+  { top: "63%", left: "72%", delay: "2.3s" },
+  { top: "31%", left: "91%", delay: "3.2s" },
+  { top: "74%", left: "88%", delay: "0.6s" },
+  { top: "52%", left: "57%", delay: "4s" },
+] as const;
+
+/**
  * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, brand
  * line and two actions on the left; the decorative hero visual on the right (below the copy on
  * compact screens), carrying the locked AI journey stage names and no figures.
  */
 export function HeroSection(): ReactNode {
   return (
-    <Section as="div" tone="light" spacing="default" className="relative isolate overflow-hidden">
+    <Section
+      as="div"
+      tone="dark"
+      spacing="default"
+      data-motion-scope=""
+      // Starts under the clear header (SiteHeader `overlay`), so the photograph runs to the top.
+      className="relative isolate -mt-(--size-header) overflow-hidden pt-[calc(var(--section-default)+var(--size-header))]"
+    >
+      <HeroBackdrop />
+      <MotionPause
+        label={heroMotionPauseLabel}
+        className="absolute right-(--space-4) bottom-(--space-4) z-10"
+      />
       <Container
         size="wide"
         className="grid items-center gap-x-(--space-7) gap-y-(--space-8) lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
@@ -119,6 +185,7 @@ export function HeroSection(): ReactNode {
         </div>
         <HeroVisual
           steps={aiJourneyStages}
+          variant="glass"
           className="aspect-[4/3] w-full sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cx } from "../../primitives/_internal/cx";
 
 /** Scroll distance after which the header condenses, and below which it expands again. */
@@ -12,6 +12,12 @@ export interface StickyHeaderProps {
   className?: string | undefined;
   /** Render condensed on first paint (Storybook, documentation). */
   defaultCondensed?: boolean | undefined;
+  /**
+   * Sit over a dark first band (the homepage hero): at the top of the page, with no menu open,
+   * the bar is transparent and on the dark tone; once the page scrolls or a menu opens it takes
+   * its usual light surface. The band underneath must start under the bar.
+   */
+  overlay?: boolean | undefined;
 }
 
 /**
@@ -26,9 +32,35 @@ export interface StickyHeaderProps {
  * - The children read the current bar height from `--header-h` (menus size themselves with it).
  * - A passive scroll listener batched to one check per frame; no Motion runtime. Under reduced
  *   motion the global rule makes the change instant.
+ * - With `overlay`, the expanded bar is clear (transparent, `data-tone="dark"`) until the page
+ *   scrolls or a menu inside it opens (a `details[open]` or an `aria-expanded="true"` trigger,
+ *   watched with a MutationObserver), so open menus always sit on the light surface. Server HTML
+ *   and no-JS render it clear.
  */
-export function StickyHeader({ children, className, defaultCondensed }: StickyHeaderProps) {
+export function StickyHeader({
+  children,
+  className,
+  defaultCondensed,
+  overlay,
+}: StickyHeaderProps) {
   const [condensed, setCondensed] = useState(defaultCondensed === true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const header = ref.current;
+    if (!overlay || !header) return;
+    const sync = () =>
+      setMenuOpen(header.querySelector('details[open], [aria-expanded="true"]') !== null);
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(header, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["open", "aria-expanded"],
+    });
+    return () => observer.disconnect();
+  }, [overlay]);
 
   useEffect(() => {
     if (defaultCondensed) return;
@@ -49,15 +81,20 @@ export function StickyHeader({ children, className, defaultCondensed }: StickyHe
     };
   }, [defaultCondensed]);
 
+  const clear = overlay === true && !condensed && !menuOpen;
+
   return (
     <header
+      ref={ref}
       {...(condensed ? { "data-condensed": "" } : {})}
+      {...(clear ? { "data-tone": "dark", "data-clear": "" } : {})}
       className={cx(
-        "sticky top-0 z-40 border-b border-tone-border bg-tone-bg text-tone-text",
+        "sticky top-0 z-40 border-b text-tone-text",
+        clear ? "border-transparent bg-transparent" : "border-tone-border bg-tone-bg",
         "[--header-h:var(--size-header)] data-condensed:[--header-h:var(--size-header-condensed)]",
         "data-condensed:mb-[calc(var(--size-header)-var(--size-header-condensed))]",
         "data-condensed:bg-tone-bg/92 data-condensed:backdrop-blur-md",
-        "transition-[margin,background-color] duration-(--duration-reveal) ease-(--ease-standard)",
+        "transition-[margin,background-color,border-color] duration-(--duration-reveal) ease-(--ease-standard)",
         className,
       )}
     >

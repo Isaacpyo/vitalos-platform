@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { closedGates, evaluateGates } from "@vitalos/cms";
 import type { OfferSummary, PracticeSummary, SolutionSummary } from "@vitalos/cms";
-import { buildFooterModel, buildHeaderModel, buildWhatWeDoColumns, footerLogo } from "./nav-model";
+import {
+  buildFooterModel,
+  buildHeaderModel,
+  buildWhatWeDoColumns,
+  colourLogo,
+  whiteLogo,
+} from "./nav-model";
 import type { ChromeContent } from "./nav-model";
 import { activeSectionForPath } from "./section-for-path";
 
@@ -49,14 +55,15 @@ describe("header model", () => {
     expect(cta).toEqual({ label: "Talk to Vitalos", href: "/contact" });
   });
 
-  it("uses the approved logo only when site settings carry one", () => {
-    expect(buildHeaderModel(base).logo).toBeUndefined();
+  it("puts the colour lockup in the header unless site settings carry a logo", () => {
+    expect(buildHeaderModel(base).logo).toEqual(colourLogo);
+    expect(buildHeaderModel(base).logoOnDark).toEqual(whiteLogo);
     const logo = { src: "/images/logo.svg", width: 10, height: 10 };
     expect(buildHeaderModel({ ...base, settings: { logo } }).logo).toEqual(logo);
   });
 
   it("puts the white monochrome lockup in the footer", () => {
-    expect(buildFooterModel(base).brand?.logo).toEqual(footerLogo);
+    expect(buildFooterModel(base).brand?.logo).toEqual(whiteLogo);
   });
 });
 

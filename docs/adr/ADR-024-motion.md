@@ -83,3 +83,28 @@ Every `Reveal`, menu and parallax layer is now a client component, so hydration 
 ## Revisit triggers
 
 The site adopts `next/link` soft navigations (then use React `<ViewTransition>`, not `AnimatePresence`); approved Figma motion specifications arrive; field data shows the hydration cost matters; CSS scroll-driven animations become reliable enough to replace the `Reveal` island; a Motion major release (re-pin after two weeks, re-measure budgets).
+
+## Amendment, 15 Oct 2026: ambient hero motion and the clear header (owner direction)
+
+The owner asked for the homepage hero to sit on a supplied photograph under a black overlay, for
+"a little movement here and there" in it, and for the header to be clear over the hero until the
+page scrolls. This amends decision 5 (all automatic movement ends within five seconds) for the
+homepage hero only:
+
+- **Looping ambient motion, with a pause switch.** The hero photograph drifts (40 s, alternating);
+  six points of light glint over it in turn; the `HeroVisual` `glass` panel floats a few pixels,
+  its last step pulses, its bars breathe and a dashed data stream flows into it. These loop
+  indefinitely, so WCAG 2.2.2 requires a way to stop them: `MotionPause` is a native checkbox
+  ("Pause background motion") in the hero's bottom-right corner, and while it is checked every
+  animation inside the hero's `[data-motion-scope]` is held (token CSS, "Ambient hero motion"). It
+  works without JavaScript. Under reduced motion nothing in the hero runs, the glints are not
+  drawn and the switch is hidden. Transform, opacity and stroke-dashoffset only; the panel fades in
+  within 840 ms and its labels only slide, so decision 4 and `motion.nojs.spec.ts` still hold.
+- **Clear header on the homepage.** `SiteHeader overlay` makes the expanded bar transparent and on
+  the dark tone (white lockup) at the top of the page; it takes the light surface when the page
+  scrolls (the existing condense threshold) or when a menu inside it opens, so open menus always
+  sit on white. The hero starts under the bar (`-mt-(--size-header)`, with the same height added to
+  its top padding), so the condense still moves no content. Every other page keeps the light bar.
+  Server HTML and no-JS render the clear bar.
+
+The finite rule still applies everywhere else, including the `planes` variant of `HeroVisual`.

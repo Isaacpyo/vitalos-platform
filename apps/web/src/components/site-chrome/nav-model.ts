@@ -58,16 +58,27 @@ export interface ChromeContent {
 
 export type HeaderModel = Pick<
   SiteHeaderProps,
-  "items" | "utility" | "cta" | "logo" | "wordmarkText" | "homeHref"
+  "items" | "utility" | "cta" | "logo" | "logoOnDark" | "wordmarkText" | "homeHref"
 > & { items: readonly SiteNavItem[]; cta: PatternLink };
 
 export type FooterModel = Pick<SiteFooterProps, "brand" | "columns" | "contact" | "legalIdentity">;
 
 /**
- * White monochrome lockup for the midnight footer, made from the owner-supplied logo (12 Oct 2026;
- * docs/brand/asset-approval.md). Served from apps/web/public.
+ * Full-colour lockup for the light header, made from the owner-supplied logo (15 Oct 2026;
+ * docs/brand/asset-approval.md). Served from apps/web/public. A logo in site settings wins.
  */
-export const footerLogo = {
+export const colourLogo = {
+  src: "/brand/vitalos-logo.png",
+  width: 940,
+  height: 160,
+} as const;
+
+/**
+ * White monochrome lockup for dark surfaces (the midnight footer, and the clear header over the
+ * homepage hero), made from the owner-supplied logo (12 Oct 2026; docs/brand/asset-approval.md).
+ * Served from apps/web/public.
+ */
+export const whiteLogo = {
   src: "/brand/vitalos-logo-white.png",
   width: 937,
   height: 160,
@@ -133,14 +144,14 @@ export function buildHeaderModel(content: ChromeContent): HeaderModel {
     const columns = buildWhatWeDoColumns(content);
     return columns.length > 0 ? { ...base, menu: { columns } } : base;
   });
-  const logo = content.settings.logo;
   return {
     items,
     utility: filterNavByGates(utilityNav, content.gates).map(link),
     cta: { label: ctaNav.label, href: ctaNav.href },
     homeHref: routes.home(),
     wordmarkText,
-    ...(logo ? { logo } : {}),
+    logo: content.settings.logo ?? colourLogo,
+    logoOnDark: whiteLogo,
   };
 }
 
@@ -211,7 +222,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     brand: {
       homeHref: routes.home(),
       wordmarkText,
-      logo: footerLogo,
+      logo: whiteLogo,
     },
     columns: columns.filter((column) => column.links.length > 0),
     contact: {

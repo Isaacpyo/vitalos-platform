@@ -14,6 +14,8 @@ const paths = {
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  pause: <path d="M9 5v14m6-14v14" />,
+  play: <path d="M8 5v14l11-7-11-7Z" />,
   external: <path d="M14 4h6v6m0-6-9 9M18 14v5H5V6h5" />,
   info: (
     <>

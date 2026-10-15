@@ -12,11 +12,13 @@ export interface WordmarkLogo {
 
 export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   /**
-   * Approved logo export (SVG from the Figma source). INTERIM: the production exports are not yet
-   * available (docs/brand/asset-approval.md), so callers normally omit this and the text fallback
-   * renders. Do not substitute raster files or hand-drawn marks.
+   * Approved logo export. The Figma SVG exports are not yet available, so the site header and
+   * footer pass the owner-directed interim raster lockups (docs/brand/asset-approval.md). Do not
+   * substitute any other raster file or a hand-drawn mark.
    */
   logo?: WordmarkLogo;
+  /** Shown instead of `logo` inside a dark tone scope (`data-tone="dark"`), for example white. */
+  darkLogo?: WordmarkLogo | undefined;
   /** Fallback text. Defaults to "VITALOS". */
   text?: string;
   /** Wrap in a plain anchor, for example the header home link. */
@@ -29,18 +31,38 @@ export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "c
  * slot (the header and footer lockup height), width from the aspect ratio, never wider than 12rem
  * or the container.
  */
-export const LOGO_IMAGE_CLASSES = "block h-8 w-auto max-w-48 object-contain object-left";
+const LOGO_SIZE_CLASSES = "h-8 w-auto max-w-48 object-contain object-left";
+export const LOGO_IMAGE_CLASSES = `block ${LOGO_SIZE_CLASSES}`;
 
 /** The VITALOS wordmark: a typed logo slot with a text fallback. */
-export function Wordmark({ logo, text = "VITALOS", href, className, ...props }: WordmarkProps) {
-  const mark = logo ? (
+export function Wordmark({
+  logo,
+  darkLogo,
+  text = "VITALOS",
+  href,
+  className,
+  ...props
+}: WordmarkProps) {
+  const image = (asset: WordmarkLogo, classes: string) => (
     <img
-      src={logo.src}
-      width={logo.width}
-      height={logo.height}
-      alt={logo.alt ?? text}
-      className={LOGO_IMAGE_CLASSES}
+      src={asset.src}
+      width={asset.width}
+      height={asset.height}
+      alt={asset.alt ?? text}
+      className={classes}
     />
+  );
+  // With a dark-surface logo, a dark tone scope around the wordmark decides which of the two is
+  // drawn; the other is display:none, so only one is ever in the accessibility tree.
+  const mark = logo ? (
+    darkLogo ? (
+      <>
+        {image(logo, cx(LOGO_SIZE_CLASSES, "block [[data-tone=dark]_&]:hidden"))}
+        {image(darkLogo, cx(LOGO_SIZE_CLASSES, "hidden [[data-tone=dark]_&]:block"))}
+      </>
+    ) : (
+      image(logo, LOGO_IMAGE_CLASSES)
+    )
   ) : (
     <span className="text-body-l font-semibold tracking-widest text-tone-heading">{text}</span>
   );
