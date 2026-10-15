@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.name }} · Topics · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Insights / Topic</p>
+  <h1 class="mt-1 text-2xl font-semibold">{{ topic.name }}</h1>
+  {% with section="topics" %}{% include "insights/_nav.html" %}{% endwith %}
+  <form method="post" class="card mt-6 max-w-2xl p-5">
+    {% csrf_token %}
+    <fieldset {% if not can_edit_topics %}disabled{% endif %}>
+      <legend class="sr-only">Topic</legend>
+      {% include "partials/form_fields.html" %}
+      <p class="field-help mt-3">Used by {{ used }} post{{ used|pluralize }}.{% if topic.is_seeded %} This is an approved seed topic: it cannot be deleted while posts use it.{% endif %}</p>
+      <div class="mt-4 flex gap-2">
+        <button type="submit" class="btn btn-primary">Save topic</button>
+        <a href="{% url 'insights:topics' %}" class="btn btn-secondary">Back to topics</a>
+      </div>
+    </fieldset>
+  </form>
+{% endblock %}

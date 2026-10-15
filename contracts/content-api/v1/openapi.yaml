@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: |
     The only interface between the Super Admin (Django, admin.vitalos.co.uk) and the website
-    (Next.js, apps/web) for Insights and Careers (ADR-031, ADR-032). Neither app reads the other's
+    (Next.js, apps/web) for Insights and Careers (ADR-035, ADR-036). Neither app reads the other's
     database. This file is the source of truth: Django serializers are tested against it and the
     website's zod schemas mirror it; shared fixtures in `fixtures/` are validated by both sides.
 
@@ -84,6 +84,16 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
     Unauthorized:
       description: Missing, tampered, stale or wrong-scope signature.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    BadRequest:
+      description: Invalid request body or parameters.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    PayloadTooLarge:
+      description: Body larger than the endpoint allows.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -271,7 +281,10 @@ components:
         - type: object
           required: [bodyMarkdown, seo, cta, related, lastModified]
           properties:
-            bodyMarkdown: { type: string, maxLength: 200000 }
+            bodyMarkdown:
+              type: string
+              maxLength: 200000
+              description: 'Markdown (brief 4.4). Body images uploaded through the admin carry their stored dimensions as a URL fragment, `![alt](https://media.../content/{uuid}.jpg#w=1600&h=900 "caption")`; the renderer uses them for width and height and strips the fragment.'
             seo:
               type: object
               additionalProperties: false
@@ -572,7 +585,7 @@ components:
         insightsOpen: { type: boolean }
         careersOpen: { type: boolean }
         nextDueAt:
-          description: Earliest future scheduled publish, role closing or sync retry; the website's tick calls the admin only once it has passed (ADR-038).
+          description: Earliest pending scheduled publish, role closing or sync retry, including overdue ones; the website's tick calls the admin only once it has passed (ADR-038).
           type: [string, "null"]
           format: date-time
         insights: { $ref: "#/components/schemas/InsightsCopy" }
@@ -976,7 +989,7 @@ paths:
   /api/content/v1/preview/{entity}/{id}:
     get:
       operationId: getPreview
-      summary: The working copy, shaped like the published snapshot. Needs a valid preview token for the same entity and id.
+      summary: The working copy, shaped like the published snapshot. Signed with a read key (scope `read`) and needs a valid preview token for the same entity and id. Post slugs `page`, `authors`, `topics` and `feed` are reserved and refused by the admin.
       security: [{ vitalosSignature: [] }]
       parameters:
         - { name: entity, in: path, required: true, schema: { type: string, enum: [post, role] } }
@@ -1087,9 +1100,9 @@ paths:
             { schema: { type: string, format: binary } }
       responses:
         "204": { description: Stored }
-        "400": { $ref: "#/components/responses/NotFound" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "403": { $ref: "#/components/responses/Unauthorized" }
-        "413": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
 
   /api/careers/v1/applications:
     post:
@@ -1159,7 +1172,7 @@ paths:
             content:
               { application/json: { schema: { $ref: "#/components/schemas/RevalidateResponse" } } },
           }
-        "400": { $ref: "#/components/responses/NotFound" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
 
@@ -1179,7 +1192,7 @@ paths:
               { application/json: { schema: { $ref: "#/components/schemas/RenderResponse" } } },
           }
         "401": { $ref: "#/components/responses/Unauthorized" }
-        "413": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /api/content/preview:

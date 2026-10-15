@@ -1,0 +1,9 @@
+{
+  "name": "vitalos-content-tick-worker",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker cron that calls the website's content tick route every minute (ADR-038). Not a pnpm workspace package (infra/ is outside pnpm-workspace.yaml); no dependencies.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

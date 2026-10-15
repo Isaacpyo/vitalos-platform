@@ -12,6 +12,9 @@
       {% if is_superadmin %}
         <a role="tab" class="tab" href="{% url 'enquiries_settings:email' %}" aria-selected="{% if tab == 'email' %}true{% else %}false{% endif %}">Email</a>
       {% endif %}
+      {% if is_superadmin %}
+        <a role="tab" class="tab" href="{% url 'content_settings:site' %}" aria-selected="{% if tab == 'content' %}true{% else %}false{% endif %}">Website content</a>
+      {% endif %}
       {% if can_enquiries %}
         <a role="tab" class="tab" href="{% url 'enquiries_settings:notifications' %}" aria-selected="{% if tab == 'notifications' %}true{% else %}false{% endif %}">Notifications</a>
       {% endif %}

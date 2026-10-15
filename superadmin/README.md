@@ -16,6 +16,10 @@ Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (stand
 | `/enquiries/`                                               | Enquiries from support@ mail and the website form: inbox, reply, assign, SLA. SuperAdmin and ServiceLead only              |
 | `/mail/templates/`                                          | Email templates (SuperAdmin): library with search and filters, block editor, live preview (desktop/mobile, light/dark, plain text), version history, duplicate, archive, send test and Use template (fill details, prefill from an enquiry, copy or download an .eml draft) |
 | `/mail/unsubscribe/<token>/`                                | Public, signed unsubscribe for outreach and marketing email (one-click supported)                |
+| `/insights/`                                                | Insights (ADR-035): posts list and editor (working copy, editorial checks, publish, schedule, revisions, render preview in a sandboxed frame), authors, topics, homepage section and page copy |
+| `/content/sync/`                                            | Website sync log: the last 200 outbox events, Retry, Resync everything; status polls every 5 s while anything is pending |
+| `/settings/content/`                                        | Open or close Insights and Careers on the website (SuperAdmin; both closed by default)                                     |
+| `/api/content/v1/…`                                         | Signed read API for the website (scheme v1, `contracts/content-api/v1/openapi.yaml`); `POST tick` runs the content tick   |
 | `/audit/`                                                   | Append-only audit trail with filters and CSV export                                                                        |
 | `/help/`                                                    | In-app help                                                                                                                |
 | `/settings/email/`, `/settings/notifications/`              | Mail transport status and notification preferences                                                                         |
@@ -41,6 +45,9 @@ apps/notifications in-app notifications
 apps/audit/        append-only audit trail
 apps/mailer/       MailProvider interface, log and Resend email backends, Resend webhook
 apps/enquiries/    enquiry model, MIME ingest, inbound endpoints, selectors, SLA, notifications
+apps/content_sync/ outbox (SyncEvent), signing (scheme v1, preview tokens), read API, tick, render client, site state
+apps/insights/     posts, authors, topics, revisions, editorial checks, read-API builders, admin views
+apps/careers/      roles, applications, careers settings (models and read-API builders; admin in Phase 4)
 apps/architecture/ models, services (write rules), selectors (visibility), search, activity, CSV, views
 apps/api/          DRF read-only API
 templates/, static/, assets/tailwind.css
@@ -97,6 +104,7 @@ CI also builds the image, runs the release job twice, checks a backup, and drive
 - `issue_setup_link --email admin@vitalos.co.uk` prints a single-use set-password link, valid for 30 minutes, to the terminal only.
 - `send_enquiry_notifications` flushes pending enquiry notifications and sends the 08:00 digest. Schedule it every 5 minutes (a Container Apps job, [docs/email-setup.md](docs/email-setup.md) section 8).
 - `enforce_enquiry_retention` applies the 24-month retention. It is a dry run unless `RETENTION_ENFORCE=true`.
+- `content_tick [--loop]` promotes due scheduled posts, closes roles past their closing date and delivers pending website sync events (ADR-038). `--loop` runs it every 60 seconds for local development. The admin also runs it in the background, at most once a minute, when it serves the content API or an Insights, Careers or Content page.
 
 Mail (inbound Worker, Resend, DNS, secrets) is set up by the owner with [docs/email-setup.md](docs/email-setup.md); design in [ADR-029](../docs/adr/ADR-029-superadmin-enquiries-mail-console.md).
 

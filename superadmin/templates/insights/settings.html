@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Settings · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Insights</p>
+  <h1 class="mt-1 text-2xl font-semibold">Insights settings</h1>
+  {% with section="settings" %}{% include "insights/_nav.html" %}{% endwith %}
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="card p-5" aria-labelledby="home-section-heading">
+      <h2 id="home-section-heading" class="font-semibold">Homepage section</h2>
+      <p class="muted mt-1 text-sm">With no published posts the section is not shown at all.</p>
+      <form method="post" class="mt-4" id="home-section-form"
+            hx-post="{% url 'insights:settings_preview' %}" hx-trigger="input delay:400ms, change" hx-target="#home-preview" hx-swap="innerHTML">
+        {% csrf_token %}<input type="hidden" name="action" value="section">
+        <fieldset {% if not can_edit_settings %}disabled{% endif %}>
+          <legend class="sr-only">Homepage section</legend>
+          {% include "partials/form_fields.html" with form=section_form %}
+          <button type="submit" class="btn btn-primary mt-4">Save section</button>
+        </fieldset>
+      </form>
+    </section>
+    <section class="card p-5" aria-labelledby="home-preview-heading">
+      <h2 id="home-preview-heading" class="font-semibold">Preview</h2>
+      <div id="home-preview" class="mt-3" aria-live="polite">{% include "insights/_home_preview.html" %}</div>
+    </section>
+    <section class="card p-5 xl:col-span-2" aria-labelledby="copy-heading">
+      <h2 id="copy-heading" class="font-semibold">Insights page copy</h2>
+      <p class="muted mt-1 text-sm">The index heading and intro, and the editorial note at the end of every article.</p>
+      <form method="post" class="mt-4 max-w-3xl">
+        {% csrf_token %}<input type="hidden" name="action" value="copy">
+        <fieldset {% if not can_edit_settings %}disabled{% endif %}>
+          <legend class="sr-only">Insights page copy</legend>
+          {% include "partials/form_fields.html" with form=copy_form %}
+          <button type="submit" class="btn btn-primary mt-4">Save copy</button>
+        </fieldset>
+      </form>
+    </section>
+  </div>
+{% endblock %}

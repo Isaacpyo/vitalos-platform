@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block title %}{{ post.title|default:"Untitled" }} · Insights · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block scripts %}<script src="{% static 'js/insights-editor.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block">Operate</li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li><a href="{% url 'insights:posts' %}" class="muted hover:underline">Insights</a></li>
+  <li class="muted" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">{{ post.title|default:"Untitled" }}</li>
+{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="min-w-0">
+      <p class="mono-label muted">Insights / {{ post.get_format_display }}</p>
+      <h1 class="mt-1 truncate text-2xl font-semibold" data-title-mirror>{{ post.title|default:"Untitled" }}</h1>
+    </div>
+    <p class="mono-label muted" id="autosave-status" aria-live="polite" data-testid="autosave-status">{% if can_edit %}Saved {{ post.updated_at|date:"H:i" }}{% else %}Read only{% endif %}</p>
+  </div>
+  {% with section="posts" %}{% include "insights/_nav.html" %}{% endwith %}
+
+  <div id="conflict-banner" class="mt-4 rounded-md border border-slate-300 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900" role="alert" hidden data-conflict>
+    <p class="font-medium">This post changed since you opened it.</p>
+    <p class="muted mt-1">Someone else saved a newer version. Reload to see it, or keep your version and overwrite theirs.</p>
+    <div class="mt-2 flex gap-2">
+      <a class="btn btn-secondary btn-sm" href="{% url 'insights:post' post.pk %}">Reload</a>
+      <button type="button" class="btn btn-primary btn-sm" data-keep-mine>Keep mine</button>
+    </div>
+  </div>
+
+  {% if form.errors %}
+    <div class="mt-4 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200" role="alert">
+      <p class="font-medium">The post was not saved.</p>
+      <ul class="mt-1 list-disc pl-5">{% for field, errors in form.errors.items %}{% for error in errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <fieldset class="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]" {% if not can_edit %}disabled{% endif %}>
+    <legend class="sr-only">Edit post</legend>
+    <form id="post-form" method="post" action="{% url 'insights:post' post.pk %}" class="min-w-0 space-y-5" novalidate
+          data-autosave-url="{% url 'insights:post_autosave' post.pk %}"
+          data-preview-url="{% url 'insights:post_preview_panel' post.pk %}"
+          data-media-url="{% url 'insights:media_upload' %}"
+          {% if can_edit %}data-editable{% endif %}>
+      {% csrf_token %}
+      {{ form.updated_at }}{{ form.force }}
+      <div>
+        <label for="{{ form.title.id_for_label }}" class="field-label">Title</label>
+        {{ form.title }}
+        {% for error in form.title.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      </div>
+      <div>
+        <div class="flex items-baseline justify-between gap-2">
+          <label for="{{ form.excerpt.id_for_label }}" class="field-label">Excerpt</label>
+          <span class="mono-label muted" data-counter-for="{{ form.excerpt.id_for_label }}">{{ post.excerpt|length }} / 220</span>
+        </div>
+        {{ form.excerpt }}
+        <p class="field-help">Shown on the index, in search results and as the article's dek.</p>
+      </div>
+
+      <div class="card" data-md-root>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-2 py-1.5 dark:border-slate-800">
+          <div class="flex flex-wrap items-center gap-0.5" role="toolbar" aria-label="Formatting" aria-controls="{{ form.body_md.id_for_label }}" data-md-toolbar>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="h2" title="Heading 2">H2</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="h3" title="Heading 3">H3</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="h4" title="Heading 4">H4</button>
+            <button type="button" class="btn btn-ghost btn-sm font-bold" data-md-action="bold" title="Bold (Ctrl+B)" aria-keyshortcuts="Control+B Meta+B">B</button>
+            <button type="button" class="btn btn-ghost btn-sm italic" data-md-action="italic" title="Italic (Ctrl+I)" aria-keyshortcuts="Control+I Meta+I">I</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="link" title="Link (Ctrl+K)" aria-keyshortcuts="Control+K Meta+K">Link</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="ul" title="Bulleted list">List</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="ol" title="Numbered list">1.</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="quote" title="Quote">Quote</button>
+            <button type="button" class="btn btn-ghost btn-sm font-mono" data-md-action="code" title="Code">&lt;/&gt;</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="table" title="Table">Table</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="image" title="Image" {% if not media_enabled %}disabled{% endif %}>Image</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="footnote" title="Footnote">Footnote</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-md-action="callout" title="Callout">Callout</button>
+          </div>
+          <div class="hidden items-center gap-1" role="tablist" aria-label="Editor view" data-md-tabs>
+            <button type="button" role="tab" class="tab" aria-selected="true" data-md-view="write">Write</button>
+            <button type="button" role="tab" class="tab" aria-selected="false" data-md-view="preview">Preview</button>
+            <button type="button" role="tab" class="tab" aria-selected="false" data-md-view="split">Split</button>
+          </div>
+        </div>
+        <div class="grid gap-0" data-md-panes data-view="write">
+          <div class="min-w-0 p-2" data-md-write>
+            <label for="{{ form.body_md.id_for_label }}" class="sr-only">Body (Markdown)</label>
+            {{ form.body_md }}
+            <p class="field-help">Markdown. Headings start at H2 (the title is the H1). {% if media_enabled %}Drop or paste an image to upload it; you will be asked for alt text first.{% else %}Image uploads need object storage (CONTENT_MEDIA_BUCKET).{% endif %} <span class="mono-label" data-reading>{{ post.reading_minutes }} min read</span></p>
+          </div>
+          <div class="min-w-0 border-t border-slate-200 p-2 dark:border-slate-800" data-md-preview hidden>
+            <div id="preview-panel" aria-live="polite"><p class="muted p-4 text-sm">Preview loads here.</p></div>
+          </div>
+        </div>
+      </div>
+
+      {% if can_edit %}
+        <div class="flex items-center gap-3">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <span class="field-help">Saving changes the working copy only. The website changes when you publish.</span>
+        </div>
+      {% endif %}
+    </form>
+
+    <aside class="min-w-0 space-y-4" aria-label="Post settings">
+      {% include "insights/_rail.html" %}
+
+      <section class="card space-y-3 p-4" aria-labelledby="slug-heading">
+        <h2 id="slug-heading" class="mono-label muted">Address</h2>
+        <div>
+          <label for="{{ form.slug.id_for_label }}" class="field-label">Slug</label>
+          {{ form.slug }}
+          {% for error in form.slug.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          <p class="field-help">/insights/<span data-slug-mirror>{{ post.slug }}</span></p>
+          <div data-slug-notes>{% for note in slug_notes %}<p class="mt-1 text-xs font-medium text-slate-800 dark:text-slate-100" role="note">{{ note }}</p>{% endfor %}</div>
+        </div>
+        <div>
+          <label for="{{ form.format.id_for_label }}" class="field-label">Format</label>
+          {{ form.format }}
+        </div>
+        <div>
+          <label for="{{ form.practice.id_for_label }}" class="field-label">Practice</label>
+          {{ form.practice }}
+        </div>
+      </section>
+
+      <section class="card space-y-3 p-4" aria-labelledby="authors-heading">
+        <h2 id="authors-heading" class="mono-label muted">Authors</h2>
+        <p class="field-help">In byline order. Only confirmed authors can be published.</p>
+        {% for field in form %}{% if field.name|slice:":7" == "author_" %}
+          <div><label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>{{ field }}</div>
+        {% endif %}{% endfor %}
+        <a href="{% url 'insights:authors' %}" class="text-sm text-cobalt-600 hover:underline dark:text-cobalt-300">Manage authors</a>
+      </section>
+
+      <section class="card p-4" aria-labelledby="topics-heading">
+        <fieldset>
+          <legend id="topics-heading" class="mono-label muted">Topics and sectors</legend>
+          <div class="mt-2 grid gap-1.5">
+            {% for choice in form.topics %}<label class="flex items-center gap-2 text-sm">{{ choice.tag }} {{ choice.choice_label }}</label>{% endfor %}
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="card space-y-3 p-4" aria-labelledby="cover-heading">
+        <h2 id="cover-heading" class="mono-label muted">Cover image</h2>
+        {% if post.cover_path %}
+          <img src="{{ cover_url }}" alt="{{ post.cover_alt }}" width="{{ post.cover_width }}" height="{{ post.cover_height }}" class="h-auto w-full border border-slate-200 dark:border-slate-800" loading="lazy">
+          <p class="mono-label muted">{{ post.cover_width }} × {{ post.cover_height }}</p>
+          <div><label for="{{ form.cover_alt.id_for_label }}" class="field-label">Alt text</label>{{ form.cover_alt }}</div>
+          <div><label for="{{ form.cover_caption.id_for_label }}" class="field-label">Caption</label>{{ form.cover_caption }}</div>
+          <form method="post" action="{% url 'insights:post_cover' post.pk %}">{% csrf_token %}<input type="hidden" name="remove" value="1"><button type="submit" class="btn btn-ghost btn-sm">Remove cover</button></form>
+        {% endif %}
+        {% if media_enabled %}
+          <form method="post" action="{% url 'insights:post_cover' post.pk %}" enctype="multipart/form-data" class="space-y-2" data-flush>
+            {% csrf_token %}
+            <div><label for="cover-image" class="field-label">{% if post.cover_path %}Replace image{% else %}Image{% endif %}</label><input id="cover-image" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/avif" required class="block w-full text-sm"></div>
+            <div><label for="cover-alt-new" class="field-label">Alt text</label><input id="cover-alt-new" type="text" name="alt" maxlength="300" required class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"></div>
+            <p class="field-help">JPEG, PNG, WebP or AVIF, 5 MB at most. Shown at 16:9 on the website.</p>
+            <button type="submit" class="btn btn-secondary btn-sm">{% icon "upload" "h-4 w-4" %} Upload cover</button>
+          </form>
+        {% else %}
+          <p class="field-help">Image uploads need object storage (CONTENT_MEDIA_BUCKET).</p>
+        {% endif %}
+      </section>
+
+      <section class="card space-y-2 p-4" aria-labelledby="home-heading">
+        <h2 id="home-heading" class="mono-label muted">Homepage</h2>
+        <label class="flex items-center gap-2 text-sm">{{ form.featured }} {{ form.featured.label }}</label>
+        <label class="flex items-center gap-2 text-sm">{{ form.pin_home }} {{ form.pin_home.label }}</label>
+      </section>
+
+      <section class="card space-y-3 p-4" aria-labelledby="cta-heading">
+        <h2 id="cta-heading" class="mono-label muted">Call to action</h2>
+        <div><label for="{{ form.cta_label.id_for_label }}" class="field-label">Label</label>{{ form.cta_label }}</div>
+        <div>
+          <label for="{{ form.cta_href.id_for_label }}" class="field-label">Link</label>{{ form.cta_href }}
+          {% for error in form.cta_href.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          <p class="field-help">An internal path such as /contact, or an https://vitalos.co.uk address. Empty uses “Talk to Vitalos”.</p>
+        </div>
+      </section>
+
+      <section class="card space-y-3 p-4" aria-labelledby="seo-heading">
+        <h2 id="seo-heading" class="mono-label muted">Search</h2>
+        <div>
+          <div class="flex items-baseline justify-between"><label for="{{ form.seo_title.id_for_label }}" class="field-label">SEO title</label><span class="mono-label muted" data-counter-for="{{ form.seo_title.id_for_label }}">{{ post.seo_title|length }} / 60</span></div>
+          {{ form.seo_title }}
+        </div>
+        <div>
+          <div class="flex items-baseline justify-between"><label for="{{ form.seo_description.id_for_label }}" class="field-label">SEO description</label><span class="mono-label muted" data-counter-for="{{ form.seo_description.id_for_label }}">{{ post.seo_description|length }} / 160</span></div>
+          {{ form.seo_description }}
+        </div>
+        <div>
+          <label for="{{ form.canonical_url.id_for_label }}" class="field-label">Canonical URL</label>{{ form.canonical_url }}
+          {% for error in form.canonical_url.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        </div>
+        <label class="flex items-center gap-2 text-sm">{{ form.noindex }} {{ form.noindex.label }}</label>
+        <div class="rounded-md border border-slate-200 p-3 dark:border-slate-800" aria-label="Search result preview" role="img" data-seo-preview>
+          <p class="truncate text-xs text-mineral-700 dark:text-mineral-300">vitalos.co.uk › insights › <span data-seo-slug>{{ post.slug }}</span></p>
+          <p class="truncate text-base text-cobalt-600 dark:text-cobalt-300"><span data-seo-title>{{ post.seo_title|default:post.title }}</span> | Vitalos Insights</p>
+          <p class="line-clamp-2 text-sm text-slate-600 dark:text-slate-300" data-seo-description>{{ post.seo_description|default:post.excerpt }}</p>
+        </div>
+      </section>
+
+      <section class="card space-y-3 p-4" aria-labelledby="more-heading">
+        <h2 id="more-heading" class="mono-label muted">Updates and related posts</h2>
+        <label class="flex items-start gap-2 text-sm">{{ form.material_update }} <span>{{ form.material_update.label }}<span class="field-help block">Shows “Updated {date}” on the article after the next publish.</span></span></label>
+        {% for field in form %}{% if field.name|slice:":8" == "related_" %}
+          <div><label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>{{ field }}</div>
+        {% endif %}{% endfor %}
+      </section>
+
+      <section class="card p-4" aria-labelledby="revisions-heading">
+        <h2 id="revisions-heading" class="mono-label muted">Revisions</h2>
+        {% if revisions %}
+          <ul class="mt-2 divide-y divide-slate-200 text-sm dark:divide-slate-800" data-testid="revisions">
+            {% for revision in revisions %}
+              <li class="flex items-center justify-between gap-2 py-2">
+                <span><span class="block">{{ revision.published_at|date:"j M Y, H:i" }}</span><span class="muted text-xs">{{ revision.note }} · {{ revision.published_by.email|default:"Schedule" }}</span></span>
+                <a class="btn btn-ghost btn-sm" href="{% url 'insights:revision' post.pk revision.pk %}">View</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted mt-2 text-sm">No published revisions yet.</p>
+        {% endif %}
+      </section>
+    </aside>
+  </fieldset>
+{% endblock %}

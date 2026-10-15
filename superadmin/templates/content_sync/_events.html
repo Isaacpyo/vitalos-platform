@@ -1,0 +1,43 @@
+<div class="card overflow-x-auto">
+  <table class="table-base" data-testid="sync-table">
+    <caption class="sr-only">The last {{ events|length }} sync events, newest first</caption>
+    <thead>
+      <tr>
+        <th scope="col">Created</th>
+        <th scope="col">Item</th>
+        <th scope="col">Action</th>
+        <th scope="col">Tags</th>
+        <th scope="col">Targets</th>
+        <th scope="col">Attempts</th>
+        <th scope="col">Delivered</th>
+        <th scope="col">Error</th>
+        <th scope="col"><span class="sr-only">Retry</span></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+      {% for event in events %}
+        <tr data-event="{{ event.pk }}">
+          <td class="whitespace-nowrap"><time datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|date:"j M, H:i:s" }}</time></td>
+          <td><span class="mono-label muted">{{ event.get_entity_display }}</span><br>{{ event.title|default:"—" }}</td>
+          <td class="whitespace-nowrap font-mono text-xs">{{ event.action }}<br><span class="muted">{{ event.kind }}</span></td>
+          <td class="max-w-xs font-mono text-xs break-words">{{ event.tags|join:", " }}</td>
+          <td class="font-mono text-xs">{{ event.delivered_targets|length }} / {{ targets|length }}</td>
+          <td class="tabular-nums">{{ event.attempts }}</td>
+          <td class="whitespace-nowrap">
+            {% if event.delivered_at %}<span class="mono-label text-mineral-700 dark:text-mineral-300">Synced {{ event.delivered_at|date:"H:i:s" }}</span>
+            {% elif event.attempts >= 3 or event.attempts and not event.next_attempt_at %}<span class="mono-label">Sync failed</span>{% if event.next_attempt_at %}<br><span class="muted text-xs">Next try {{ event.next_attempt_at|date:"H:i" }}</span>{% endif %}
+            {% else %}<span class="mono-label muted">Pending</span>{% endif %}
+          </td>
+          <td class="font-mono text-xs">{{ event.last_error|default:"—" }}</td>
+          <td class="text-right">
+            {% if not event.delivered_at and can_retry %}
+              <form method="post" action="{% url 'content_sync:retry' event.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Retry</button></form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="muted py-10 text-center">No sync events yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

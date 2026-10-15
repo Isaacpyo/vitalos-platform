@@ -1,0 +1,15 @@
+{# The website renderer's output for the saved body. The HTML only ever appears in a sandboxed frame. #}
+<div data-testid="preview-panel" data-render="{% if result.available %}ok{% else %}unavailable{% endif %}">
+  {% if not result.available %}
+    <p class="p-4 text-sm" role="status" data-testid="preview-unavailable">Preview unavailable. Your changes are saved.</p>
+  {% else %}
+    {% if result.warnings %}
+      <ul class="mb-2 space-y-1 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800" aria-label="Renderer warnings" data-testid="render-warnings">
+        {% for warning in result.warnings %}
+          <li class="{% if warning.blocking %}font-medium text-slate-900 dark:text-white{% else %}muted{% endif %}"><span class="mono-label">{% if warning.blocking %}Blocks publishing{% else %}Note{% endif %}</span> · {{ warning.message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <iframe src="{{ frame_url }}" title="Article preview" sandbox referrerpolicy="no-referrer" loading="lazy" class="block h-[70vh] w-full border border-slate-200 bg-white dark:border-slate-800" data-testid="preview-frame"></iframe>
+  {% endif %}
+</div>

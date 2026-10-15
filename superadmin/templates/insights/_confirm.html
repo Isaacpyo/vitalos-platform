@@ -1,0 +1,11 @@
+{# Inline confirmation for a destructive action (no modal, no JavaScript needed). #}
+<details class="relative inline-block text-left" data-menu>
+  <summary class="btn {{ style|default:'btn-danger' }} btn-sm cursor-pointer list-none" aria-label="{{ label }}{% if target %} {{ target }}{% endif %}">{{ label }}</summary>
+  <div class="card absolute right-0 z-20 mt-1 w-72 p-3 text-sm" role="group" aria-label="Confirm {{ label|lower }}">
+    <p>{{ question }}</p>
+    <form method="post" action="{{ url }}" class="mt-3 flex justify-end gap-2" {% if flush %}data-flush{% endif %}>
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-sm">{{ confirm_label }}</button>
+    </form>
+  </div>
+</details>

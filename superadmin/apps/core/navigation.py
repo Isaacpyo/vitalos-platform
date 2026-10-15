@@ -69,6 +69,15 @@ NAV_ITEMS = (
             ),
         ),
     ),
+    NavItem(
+        "insights",
+        "Insights",
+        "insights:posts",
+        "note",
+        "Operate",
+        ("/insights",),
+        permission="apps.insights.access.can_view",
+    ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem(
         "service_lines",
@@ -83,6 +92,7 @@ NAV_ITEMS = (
         "architecture", "Architecture", "architecture:architecture", "network", "System", ("/architecture",)
     ),
     NavItem("health", "System health", "core:health", "heart-pulse", "System", ("/system/health",)),
+    NavItem("content_sync", "Website sync", "content_sync:sync", "globe", "System", ("/content",)),
     NavItem("settings", "Settings", "accounts:settings", "settings", "System", ("/settings",)),
 )
 

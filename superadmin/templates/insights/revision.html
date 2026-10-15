@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Revision · {{ post.title }} · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Insights / Revision</p>
+  <h1 class="mt-1 text-2xl font-semibold">{{ revision.snapshot.title }}</h1>
+  <p class="muted mt-1 text-sm">{{ revision.note }} on {{ revision.published_at|date:"j M Y, H:i" }} by {{ revision.published_by.email|default:"the schedule" }}</p>
+  {% with section="posts" %}{% include "insights/_nav.html" %}{% endwith %}
+  <div class="mt-4 flex flex-wrap gap-2">
+    <a class="btn btn-secondary" href="{% url 'insights:post' post.pk %}">Back to the post</a>
+    {% if can_edit %}
+      <form method="post" action="{% url 'insights:revision_restore' post.pk revision.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary">Restore to working copy</button></form>
+    {% endif %}
+  </div>
+  <p class="field-help mt-2">Restoring copies this revision into the working copy (the slug stays as it is). The website changes only when you publish.</p>
+
+  <section class="mt-6" aria-labelledby="compare-heading">
+    <h2 id="compare-heading" class="font-semibold">Compared with the current working copy</h2>
+    {% for block in diff %}
+      <div class="card mt-3 p-4">
+        <h3 class="mono-label muted">{{ block.label }}</h3>
+        {% if block.same %}
+          <p class="muted mt-2 text-sm">No difference.</p>
+        {% else %}
+          <pre class="mt-2 max-h-[60vh] overflow-auto whitespace-pre-wrap font-mono text-xs leading-5" data-testid="diff">{% for line in block.lines %}<span class="{% if line|slice:':1' == '+' %}text-mineral-700 dark:text-mineral-300{% elif line|slice:':1' == '-' %}text-rose-700 dark:text-rose-300{% else %}muted{% endif %}">{{ line }}</span>
+{% endfor %}</pre>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </section>
+
+  <details class="card mt-6 p-4">
+    <summary class="cursor-pointer font-medium">Revision body (Markdown)</summary>
+    <pre class="mt-3 max-h-[60vh] overflow-auto whitespace-pre-wrap font-mono text-xs leading-5">{{ revision.snapshot.bodyMarkdown }}</pre>
+  </details>
+{% endblock %}

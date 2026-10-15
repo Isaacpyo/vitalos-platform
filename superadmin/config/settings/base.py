@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     "apps.enquiries",
     "apps.email_templates",
     "apps.api",
+    "apps.content_sync",
+    "apps.insights",
+    "apps.careers",
 ]
 
 MIDDLEWARE = [
@@ -65,6 +68,7 @@ MIDDLEWARE = [
     "django_htmx.middleware.HtmxMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     "axes.middleware.AxesMiddleware",
+    "apps.content_sync.middleware.OpportunisticTickMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -215,6 +219,73 @@ else:
     }
 STORAGES["attachments"] = ATTACHMENTS_STORAGE
 ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET) or APP_ENVIRONMENT == "development"
+
+# Insights and Careers (ADR-035 to ADR-038). Signing keys are "keyId:secret[,keyId:secret...]" lists:
+# the signer uses the first entry, the verifier accepts any entry (rotation with no downtime). A scope
+# with no keys fails closed (503). Values are secrets; set them only in the platform's secret store.
+CONTENT_WEB_TARGETS = [url.rstrip("/") for url in env.list("CONTENT_WEB_TARGETS", default=[]) if url.strip()]
+CONTENT_READ_CLIENT_KEYS = env("CONTENT_READ_CLIENT_KEYS", default="")
+CAREERS_SUBMIT_CLIENT_KEYS = env("CAREERS_SUBMIT_CLIENT_KEYS", default="")
+CONTENT_REVALIDATE_SECRET = env("CONTENT_REVALIDATE_SECRET", default="")
+CONTENT_RENDER_SECRET = env("CONTENT_RENDER_SECRET", default="")
+CONTENT_PREVIEW_SECRET = env("CONTENT_PREVIEW_SECRET", default="")
+CONTENT_MEDIA_BUCKET = env("CONTENT_MEDIA_BUCKET", default="")
+CONTENT_MEDIA_PUBLIC_BASE_URL = env("CONTENT_MEDIA_PUBLIC_BASE_URL", default="").rstrip("/")
+CAREERS_CV_BUCKET = env("CAREERS_CV_BUCKET", default="")
+CAREERS_CV_MAX_MB = env.int("CAREERS_CV_MAX_MB", default=10)
+CAREERS_EMAIL_FROM = env("CAREERS_EMAIL_FROM", default="")
+CAREERS_CANDIDATE_EMAILS_ENABLED = env.bool("CAREERS_CANDIDATE_EMAILS_ENABLED", default=False)
+CONTENT_RELAY_SYNC_ENABLED = env.bool("CONTENT_RELAY_SYNC_ENABLED", default=False)
+CONTENT_IP_SALT = env("CONTENT_IP_SALT", default="")
+# Requests per minute per read key id (simple per-process counter).
+CONTENT_READ_RATE_LIMIT = env.int("CONTENT_READ_RATE_LIMIT", default=600)
+# The admin runs the content tick itself at most once a minute when it serves content requests (ADR-038).
+CONTENT_OPPORTUNISTIC_TICK = env.bool("CONTENT_OPPORTUNISTIC_TICK", default=True)
+
+
+def _s3_options(bucket: str, *, private: bool) -> dict:
+    return {
+        "bucket_name": bucket,
+        "endpoint_url": OBJECT_STORAGE_ENDPOINT or None,
+        "access_key": OBJECT_STORAGE_ACCESS_KEY_ID,
+        "secret_key": OBJECT_STORAGE_SECRET_ACCESS_KEY,
+        "region_name": OBJECT_STORAGE_REGION,
+        "signature_version": "s3v4",
+        "querystring_auth": private,
+        "querystring_expire": 60,
+        "default_acl": None,
+        "file_overwrite": False,
+    }
+
+
+# Post and author images: public-read object storage when CONTENT_MEDIA_BUCKET is set (served from
+# CONTENT_MEDIA_PUBLIC_BASE_URL), local disk under media/public otherwise (served by a dev-only URL).
+if CONTENT_MEDIA_BUCKET:
+    CONTENT_MEDIA_STORAGE = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": _s3_options(CONTENT_MEDIA_BUCKET, private=False),
+    }
+else:
+    CONTENT_MEDIA_STORAGE = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": BASE_DIR / "media" / "public", "base_url": "/media/"},
+    }
+# CVs: a private bucket with 60-second signed URLs (ADR-037), local disk otherwise.
+if CAREERS_CV_BUCKET:
+    CAREERS_CV_STORAGE = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": _s3_options(CAREERS_CV_BUCKET, private=True),
+    }
+else:
+    CAREERS_CV_STORAGE = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": BASE_DIR / "media" / "careers-cvs"},
+    }
+STORAGES["content_media"] = CONTENT_MEDIA_STORAGE
+STORAGES["careers_cvs"] = CAREERS_CV_STORAGE
+# Without a bucket, bytes are kept only in development (the production container disk is not durable).
+CONTENT_MEDIA_STORAGE_ENABLED = bool(CONTENT_MEDIA_BUCKET) or APP_ENVIRONMENT == "development"
+CAREERS_CV_STORAGE_ENABLED = bool(CAREERS_CV_BUCKET) or APP_ENVIRONMENT == "development"
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
