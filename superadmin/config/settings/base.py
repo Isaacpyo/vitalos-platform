@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.architecture",
     "apps.enquiries",
     "apps.email_templates",
+    "apps.relay",
     "apps.api",
 ]
 
@@ -168,6 +169,16 @@ SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL", default="")
 RETENTION_ENFORCE = env.bool("RETENTION_ENFORCE", default=False)
 # Resend free tier: 100 emails a day. Notification emails roll into the digest before the limit.
 RESEND_DAILY_LIMIT = env.int("RESEND_DAILY_LIMIT", default=100)
+# Vitalos Relay (website chat with hand-off to staff, ADR-031). The website owns conversations and knowledge;
+# this app presents them through the website's signed admin API and receives alerts on a signed webhook.
+# An empty RELAY_API_BASE_URL hides the Relay tab and makes /api/inbound/relay answer 404.
+RELAY_API_BASE_URL = env("RELAY_API_BASE_URL", default="").strip().rstrip("/")
+RELAY_ADMIN_API_SECRET = env("RELAY_ADMIN_API_SECRET", default="")
+RELAY_WEBHOOK_SECRET = env("RELAY_WEBHOOK_SECRET", default="")
+RELAY_REALTIME_ENABLED = env.bool("RELAY_REALTIME_ENABLED", default=True)
+# "http" (default) talks to the website; "fake" is in-memory sample data for local UI work and tests only.
+RELAY_CLIENT = env("RELAY_CLIENT", default="http").strip().lower()
+RELAY_EMAIL_FROM = env("RELAY_EMAIL_FROM", default="Vitalos Relay <relay@notify.vitalos.co.uk>")
 # Forgot-password emails only make sense when mail can actually be delivered (or locally).
 PASSWORD_RESET_ENABLED = env.bool(
     "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"

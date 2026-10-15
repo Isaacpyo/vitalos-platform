@@ -1,0 +1,121 @@
+{% extends "relay/_shell.html" %}
+{% block relay_title %}Relay settings{% endblock %}
+{% block relay_content %}
+  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-4 py-7 sm:px-6">
+    <div>
+      <h2 class="font-display text-[28px] leading-tight font-bold tracking-[-0.01em]">Settings<span class="text-cobalt-600 dark:text-cobalt-300">.</span></h2>
+      <p class="relay-muted mt-1.5 text-[15px] leading-[22px]">How Relay behaves on the website. Every change is recorded in the audit trail.</p>
+    </div>
+
+    {% if relay_error %}
+      <p class="relay-panel p-4 text-sm" role="alert">{{ relay_error }}</p>
+    {% else %}
+      <form method="post" class="flex flex-col gap-6" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="relay-panel p-4 text-sm text-rose-700 dark:text-rose-300" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+
+        <fieldset class="relay-panel grid gap-4 p-5 md:grid-cols-2">
+          <legend class="relay-mono relay-muted float-left mb-1 w-full md:col-span-2">Relay AI</legend>
+          {% include "relay/_field.html" with field=form.ai_enabled %}
+          {% include "relay/_field.html" with field=form.model %}
+          {% include "relay/_field.html" with field=form.confidence_threshold help="Below this confidence Relay says it does not know and offers a person." %}
+          {% include "relay/_field.html" with field=form.daily_token_cap help="Relay stops answering for the day at this many tokens." %}
+        </fieldset>
+
+        <fieldset class="relay-panel grid gap-4 p-5 md:grid-cols-2">
+          <legend class="relay-mono relay-muted float-left mb-1 w-full md:col-span-2">Business hours · Europe/London</legend>
+          <div class="md:col-span-2">{% include "relay/_field.html" with field=form.days %}</div>
+          {% include "relay/_field.html" with field=form.start %}
+          {% include "relay/_field.html" with field=form.end %}
+          <div class="md:col-span-2">{% include "relay/_field.html" with field=form.out_of_hours_text %}</div>
+        </fieldset>
+
+        <fieldset class="relay-panel grid gap-4 p-5 md:grid-cols-2">
+          <legend class="relay-mono relay-muted float-left mb-1 w-full md:col-span-2">Hand-off and email</legend>
+          {% include "relay/_field.html" with field=form.reminder_minutes %}
+          {% include "relay/_field.html" with field=form.second_reminder_minutes %}
+          {% include "relay/_field.html" with field=form.email_snippet help="Up to 280 characters of the visitor's own words in admin alert emails." %}
+          {% include "relay/_field.html" with field=form.visitor_emails_enabled help="Needs owner approval in production." %}
+        </fieldset>
+
+        <fieldset class="relay-panel grid gap-4 p-5 md:grid-cols-2">
+          <legend class="relay-mono relay-muted float-left mb-1 w-full md:col-span-2">Welcome</legend>
+          <div class="md:col-span-2">{% include "relay/_field.html" with field=form.greeting %}</div>
+          {% include "relay/_field.html" with field=form.question_1 %}
+          {% include "relay/_field.html" with field=form.question_2 %}
+          {% include "relay/_field.html" with field=form.question_3 %}
+          {% include "relay/_field.html" with field=form.question_4 %}
+        </fieldset>
+
+        <fieldset class="relay-panel grid gap-4 p-5 md:grid-cols-2">
+          <legend class="relay-mono relay-muted float-left mb-1 w-full md:col-span-2">Retention and origins</legend>
+          {% include "relay/_field.html" with field=form.no_contact_days %}
+          {% include "relay/_field.html" with field=form.with_contact_days %}
+          <div class="md:col-span-2">{% include "relay/_field.html" with field=form.allowed_origins help="Websites allowed to embed Relay, such as https://www.vitalos.co.uk." %}</div>
+        </fieldset>
+
+        <div><button type="submit" class="relay-btn relay-btn-primary">Save settings</button></div>
+      </form>
+
+      <section aria-labelledby="relay-recipients" class="relay-panel">
+        <div class="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3.5 dark:border-slate-800">
+          <h3 id="relay-recipients" class="min-w-0 flex-1 font-display text-base font-bold">Notification recipients</h3>
+          <a href="{% url 'relay:prefs' %}" class="relay-link text-[13px]">My notifications</a>
+        </div>
+        <p class="relay-muted px-4 pt-3 text-[13px]">Everyone with Relay access (super admins and service leads). Each person chooses their own alerts.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[520px] border-collapse text-sm">
+            <thead>
+              <tr class="text-left">
+                <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Person</th>
+                <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">In-app alerts</th>
+                <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Email alerts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in recipients %}
+                <tr class="border-b border-line last:border-b-0 dark:border-slate-800">
+                  <td class="px-4 py-2.5">{{ row.user.full_name|default:row.user.email }}<span class="relay-muted block text-xs">{{ row.user.email }}{% if row.superadmin %} · Super admin{% else %} · Service lead{% endif %}</span></td>
+                  <td class="tabular px-2 py-2.5">{{ row.in_app|length }} of {{ in_app_total }} events</td>
+                  <td class="tabular px-4 py-2.5">{{ row.email|length }} of {{ email_total }} events</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="relay-email-log" class="relay-panel">
+        <h3 id="relay-email-log" class="border-b border-line px-4 py-3.5 font-display text-base font-bold dark:border-slate-800">Email log · visitor emails</h3>
+        {% if email_log_error %}
+          <p class="relay-muted px-4 py-4 text-sm">The email log could not be loaded.</p>
+        {% else %}
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[560px] border-collapse text-sm">
+              <thead>
+                <tr class="text-left">
+                  <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Subject</th>
+                  <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">To</th>
+                  <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">Status</th>
+                  <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Sent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for email in email_log %}
+                  <tr class="border-b border-line last:border-b-0 dark:border-slate-800">
+                    <td class="px-4 py-2.5">{{ email.subject }}</td>
+                    <td class="px-2 py-2.5 break-all">{{ email.to }}</td>
+                    <td class="relay-muted px-2 py-2.5">{{ email.status }} · {{ email.provider }}</td>
+                    <td class="relay-muted px-4 py-2.5 whitespace-nowrap">{{ email.createdAt|slice:":10" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="4" class="relay-muted px-4 py-4">No visitor emails yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

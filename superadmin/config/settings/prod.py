@@ -7,6 +7,7 @@ from .base import (
     ATTACHMENTS_STORAGE,
     EMAIL_TRANSPORT,
     OBJECT_STORAGE_BUCKET,
+    RELAY_CLIENT,
     RESEND_API_KEY,
     SENTRY_DSN,
     env,
@@ -29,6 +30,10 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT", default="production")
 APP_BASE_URL = env("APP_BASE_URL", default="https://admin.vitalos.co.uk").rstrip("/")
 if EMAIL_TRANSPORT == "resend" and not RESEND_API_KEY:
     raise ImproperlyConfigured("EMAIL_TRANSPORT=resend needs RESEND_API_KEY.")
+if RELAY_CLIENT != "http":
+    raise ImproperlyConfigured(
+        "RELAY_CLIENT must be http in production (fake is sample data for local work)."
+    )
 # In production the reset email is offered only when it can actually be delivered.
 PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 

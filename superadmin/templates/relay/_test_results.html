@@ -1,0 +1,15 @@
+{% if form_error %}
+  <p class="text-sm text-rose-700 dark:text-rose-300" role="alert">{{ form_error }}</p>
+{% else %}
+  <ul data-testid="relay-test-results">
+    {% for chunk in chunks %}
+      <li class="flex justify-between gap-3 border-t border-line py-2 text-[13px] dark:border-slate-800">
+        <span class="min-w-0">{{ chunk.title }}{% if chunk.heading %} · {{ chunk.heading }}{% endif %}</span>
+        <span class="shrink-0 font-mono text-xs {% if chunk.above %}relay-mineral{% else %}relay-muted{% endif %}">{{ chunk.confidence|floatformat:2 }}{% if chunk.above %}<span class="sr-only"> (above the threshold)</span>{% endif %}</span>
+      </li>
+    {% empty %}
+      <li class="relay-muted border-t border-line py-2 text-[13px] dark:border-slate-800">Nothing in published knowledge matches. Relay would offer a person.</li>
+    {% endfor %}
+  </ul>
+  {% if threshold is not None %}<p class="relay-mono relay-muted mt-2">Answer threshold {{ threshold }} · below it Relay offers a person</p>{% endif %}
+{% endif %}

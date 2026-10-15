@@ -1,0 +1,32 @@
+{% if oob is not False %}{% include "relay/_tabs.html" with oob=True %}{% endif %}
+<p class="sr-only" aria-live="polite">{{ rows|length }} conversation{{ rows|length|pluralize }}{% if query %} matching “{{ query }}”{% endif %}</p>
+<ul data-relay-list>
+  {% for row in rows %}
+    <li>
+      <a href="{% url 'relay:thread' row.id %}{% if querystring %}?{{ querystring }}{% endif %}"
+         hx-get="{% url 'relay:thread' row.id %}{% if querystring %}?{{ querystring }}{% endif %}" hx-target="#relay-thread" hx-swap="innerHTML" hx-push-url="true"
+         class="relay-row flex gap-3 border-t border-line px-4 py-3.5 text-midnight hover:bg-offwhite dark:border-slate-800 dark:text-slate-100 dark:hover:bg-slate-800"
+         {% if row.id == selected_id %}aria-current="page"{% endif %} data-relay-row="{{ row.id }}">
+        <span class="relay-node mt-[5px]" data-node="{{ row.node }}" aria-hidden="true"></span>
+        <span class="flex min-w-0 flex-1 flex-col gap-1">
+          <span class="flex justify-between gap-2">
+            <span class="truncate text-sm {% if row.emphasis %}font-semibold{% else %}font-medium{% endif %}">{{ row.name }}</span>
+            <span class="relay-mono shrink-0 {% if row.status_tone == 'mineral' %}relay-mineral font-medium{% else %}relay-muted{% endif %}">{{ row.status_label }}</span>
+          </span>
+          {% if row.last_message %}<span class="relay-muted line-clamp-2 text-[13px] leading-[18px]">{{ row.last_message }}</span>{% endif %}
+          {% if row.tag or row.page_path %}
+            <span class="relay-muted flex min-w-0 flex-wrap items-center gap-2 font-mono text-[11px] leading-4">
+              {% if row.tag %}<span class="relay-tag">{{ row.tag }}</span>{% endif %}
+              {% if row.page_path %}<span class="min-w-0 truncate">{{ row.page_path }}</span>{% endif %}
+            </span>
+          {% endif %}
+        </span>
+      </a>
+    </li>
+  {% empty %}
+    <li class="border-t border-line px-4 py-6 text-sm dark:border-slate-800">
+      <p class="font-medium">Nothing here</p>
+      <p class="relay-muted mt-1">{% if query %}Try a different search.{% elif tab == "needs" %}No one is waiting for a person.{% else %}No conversations in this list.{% endif %}</p>
+    </li>
+  {% endfor %}
+</ul>
