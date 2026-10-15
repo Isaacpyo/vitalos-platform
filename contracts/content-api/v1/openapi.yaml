@@ -1,0 +1,1193 @@
+openapi: 3.1.0
+info:
+  title: Vitalos content API
+  version: 1.0.0
+  description: |
+    The only interface between the Super Admin (Django, admin.vitalos.co.uk) and the website
+    (Next.js, apps/web) for Insights and Careers (ADR-031, ADR-032). Neither app reads the other's
+    database. This file is the source of truth: Django serializers are tested against it and the
+    website's zod schemas mirror it; shared fixtures in `fixtures/` are validated by both sides.
+
+    ## Signing (scheme `v1`)
+
+    Every machine-to-machine request carries three headers:
+
+    - `X-Vitalos-Key-Id`: the id of the signing key (`[a-z0-9-]{1,32}`).
+    - `X-Vitalos-Timestamp`: Unix seconds. Requests more than 300 s from the receiver's clock are refused.
+    - `X-Vitalos-Signature`: `v1=` + lowercase hex HMAC-SHA256 of the canonical string below.
+
+    Canonical string (fields joined with `\n`, no trailing newline):
+
+        v1
+        {scope}
+        {timestamp}
+        {METHOD}
+        {path and query string exactly as sent, e.g. /api/content/v1/insights/posts?page=2}
+        {lowercase hex SHA-256 of the raw body; the hash of the empty string for GET}
+
+    `scope` is one of `read`, `tick`, `submit`, `revalidate`, `render`, `preview` (`tick` is signed with a `read` key). Each scope has its own
+    keys, so a key for one scope is refused by every other endpoint (401). Comparisons are
+    constant-time. Key material is configured as a comma-separated list of `keyId:secret`; the
+    signer uses the first entry and the verifier accepts any listed entry, which allows rotation
+    with no downtime (docs/content/README.md, "Rotating keys").
+
+    This extends the Enquiries scheme (`HMAC(secret, "{timestamp}." + body)`, ADR-029), which
+    covers only POST bodies, to the method, path, query string and scope.
+
+    ## Preview tokens (scope `preview`)
+
+    `base64url(JSON payload) + "." + base64url(HMAC-SHA256(secret, base64url(JSON payload)))`,
+    payload `{ "v": 1, "kid": string, "entity": "post"|"role", "id": uuid, "rev": string, "exp": unix seconds }`,
+    expiry 15 minutes. Signed with `CONTENT_PREVIEW_SECRET` by the admin; verified by the website
+    (to enable Draft Mode) and again by the admin on `GET preview/{entity}/{id}`.
+
+    ## Formatting
+
+    The admin formats every human-facing derived value (dates in Europe/London, salary strings,
+    reading time, labels) so the two apps cannot disagree.
+
+    ## Event tags
+
+    `tags.json` lists the cache tags, the tags each read carries and the tags each event emits.
+    A tag ending in `*` in `tags.json` expands to one tag per old and new related item.
+servers:
+  - url: https://admin.vitalos.co.uk
+    description: Super Admin (read and submit scopes)
+  - url: https://www.vitalos.co.uk
+    description: Website (revalidate, render and preview scopes)
+
+components:
+  securitySchemes:
+    vitalosSignature:
+      type: apiKey
+      in: header
+      name: X-Vitalos-Signature
+      description: Scheme v1 (see the description). Also requires X-Vitalos-Key-Id and X-Vitalos-Timestamp.
+
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema: { $ref: "#/components/schemas/Slug" }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 9999, default: 1 }
+
+  responses:
+    NotFound:
+      description: Unknown, or not public.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Missing, tampered, stale or wrong-scope signature.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooManyRequests:
+      description: Rate limited.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error: { type: string, maxLength: 200 }
+
+    Slug:
+      type: string
+      pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      maxLength: 80
+
+    Uuid:
+      type: string
+      format: uuid
+
+    Choice:
+      description: An enum value with its public label.
+      type: object
+      additionalProperties: false
+      required: [key, label]
+      properties:
+        key: { type: string, maxLength: 40 }
+        label: { type: string, maxLength: 80 }
+
+    FormatChoice:
+      description: A post format. `slug` is the URL form used in `?format=`.
+      type: object
+      required: [key, label, plural, slug]
+      properties:
+        key:
+          type: string
+          enum:
+            [
+              executive_briefing,
+              insight_article,
+              point_of_view,
+              engineering_note,
+              guide,
+              research_report,
+              case_derived_insight,
+            ]
+        label: { type: string, maxLength: 80 }
+        plural: { type: string, maxLength: 80 }
+        slug: { $ref: "#/components/schemas/Slug" }
+
+    PracticeChoice:
+      type: object
+      additionalProperties: false
+      required: [key, label]
+      properties:
+        key:
+          type: string
+          enum: [consulting, engineering, ai_data, experience, managed_services, labs]
+        label: { type: string, maxLength: 80 }
+
+    DateValue:
+      description: A moment with its Europe/London display forms, e.g. long "12 October 2026", short "12 Oct 2026".
+      type: object
+      additionalProperties: false
+      required: [iso, long, short]
+      properties:
+        iso: { type: string, format: date-time }
+        long: { type: string, maxLength: 40 }
+        short: { type: string, maxLength: 20 }
+
+    Image:
+      type: object
+      additionalProperties: false
+      required: [url, alt, width, height]
+      properties:
+        url: { type: string, format: uri, maxLength: 500 }
+        alt: { type: string, maxLength: 300 }
+        width: { type: integer, minimum: 1, maximum: 10000 }
+        height: { type: integer, minimum: 1, maximum: 10000 }
+        caption: { type: [string, "null"], maxLength: 300 }
+
+    AuthorRef:
+      type: object
+      required: [id, slug, name, roleTitle, initials, avatar]
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        roleTitle: { type: string, maxLength: 120 }
+        initials: { type: string, maxLength: 3 }
+        avatar:
+          oneOf:
+            - $ref: "#/components/schemas/Image"
+            - type: "null"
+
+    AuthorDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/AuthorRef"
+        - type: object
+          required: [firstName, bioMarkdown, linkedinUrl]
+          properties:
+            firstName: { type: string, maxLength: 60 }
+            bioMarkdown: { type: string, maxLength: 5000 }
+            linkedinUrl: { type: [string, "null"], format: uri, maxLength: 300 }
+
+    TopicRef:
+      type: object
+      required: [id, slug, name, kind]
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        name: { type: string, maxLength: 120 }
+        kind: { type: string, enum: [topic, sector] }
+        count:
+          { type: integer, minimum: 0, description: "Published posts in the topic (lists only)." }
+
+    TopicDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/TopicRef"
+        - type: object
+          required: [description]
+          properties:
+            description: { type: string, maxLength: 1000 }
+
+    PostSummary:
+      type: object
+      required:
+        [
+          id,
+          slug,
+          title,
+          excerpt,
+          format,
+          authors,
+          topics,
+          practice,
+          cover,
+          publishedAt,
+          updatedAt,
+          readingMinutes,
+          featured,
+        ]
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        title: { type: string, maxLength: 200 }
+        excerpt: { type: string, maxLength: 220 }
+        format: { $ref: "#/components/schemas/FormatChoice" }
+        authors:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/AuthorRef" }
+        topics:
+          type: array
+          items: { $ref: "#/components/schemas/TopicRef" }
+        practice:
+          oneOf:
+            - $ref: "#/components/schemas/PracticeChoice"
+            - type: "null"
+        cover:
+          oneOf:
+            - $ref: "#/components/schemas/Image"
+            - type: "null"
+        publishedAt: { $ref: "#/components/schemas/DateValue" }
+        updatedAt:
+          description: The public "Updated" date; set only for material updates.
+          oneOf:
+            - $ref: "#/components/schemas/DateValue"
+            - type: "null"
+        readingMinutes: { type: integer, minimum: 1 }
+        featured: { type: boolean }
+
+    PostDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/PostSummary"
+        - type: object
+          required: [bodyMarkdown, seo, cta, related, lastModified]
+          properties:
+            bodyMarkdown: { type: string, maxLength: 200000 }
+            seo:
+              type: object
+              additionalProperties: false
+              required: [title, description, canonicalUrl, noindex]
+              properties:
+                title: { type: string, maxLength: 200 }
+                description: { type: string, maxLength: 320 }
+                canonicalUrl: { type: [string, "null"], format: uri, maxLength: 500 }
+                noindex: { type: boolean }
+            cta:
+              type: object
+              additionalProperties: false
+              required: [label, href]
+              properties:
+                label: { type: string, maxLength: 80 }
+                href:
+                  {
+                    type: string,
+                    maxLength: 300,
+                    description: "An internal path or an https://vitalos.co.uk URL.",
+                  }
+            related:
+              type: array
+              maxItems: 3
+              items: { $ref: "#/components/schemas/PostSummary" }
+            lastModified: { type: string, format: date-time }
+
+    PostPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, pageSize, total, totalPages, featured, formats, topics]
+      properties:
+        items:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/PostSummary" }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, const: 12 }
+        total: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+        featured:
+          description: Only on page 1 of an unfiltered list; never repeated in `items` of any page.
+          oneOf:
+            - $ref: "#/components/schemas/PostSummary"
+            - type: "null"
+        formats:
+          description: Formats with at least one published post, in the fixed format order.
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/FormatChoice"
+              - type: object
+                required: [count]
+                properties:
+                  count: { type: integer, minimum: 1 }
+        topics:
+          description: Topics and sectors with at least one published post, in sort order.
+          type: array
+          items: { $ref: "#/components/schemas/TopicRef" }
+
+    Redirect:
+      type: object
+      additionalProperties: false
+      required: [redirect]
+      properties:
+        redirect: { $ref: "#/components/schemas/Slug" }
+
+    InsightsCopy:
+      type: object
+      additionalProperties: false
+      required: [heading, intro, editorialNote]
+      properties:
+        heading: { type: string, maxLength: 200 }
+        intro: { type: string, maxLength: 500 }
+        editorialNote: { type: string, maxLength: 1000 }
+
+    SalaryValue:
+      type: object
+      additionalProperties: false
+      required: [min, max, currency, period, label]
+      properties:
+        min: { type: integer, minimum: 0 }
+        max: { type: integer, minimum: 0 }
+        currency: { type: string, pattern: "^[A-Z]{3}$" }
+        period: { type: string, enum: [year, day] }
+        label: { type: string, maxLength: 80, description: "e.g. £55,000–£65,000 a year" }
+
+    RoleSummary:
+      type: object
+      required:
+        [
+          id,
+          slug,
+          title,
+          practice,
+          level,
+          location,
+          workModel,
+          employmentType,
+          salary,
+          closesAt,
+          showOnHome,
+        ]
+      properties:
+        id: { $ref: "#/components/schemas/Uuid" }
+        slug: { $ref: "#/components/schemas/Slug" }
+        title: { type: string, maxLength: 200 }
+        practice: { $ref: "#/components/schemas/PracticeChoice" }
+        level:
+          description: Null when the level is hidden.
+          oneOf:
+            - $ref: "#/components/schemas/Choice"
+            - type: "null"
+        location: { type: string, maxLength: 120 }
+        workModel: { $ref: "#/components/schemas/Choice" }
+        employmentType: { $ref: "#/components/schemas/Choice" }
+        salary:
+          description: Null when the salary is hidden.
+          oneOf:
+            - $ref: "#/components/schemas/SalaryValue"
+            - type: "null"
+        closesAt:
+          oneOf:
+            - $ref: "#/components/schemas/DateValue"
+            - type: "null"
+        showOnHome: { type: boolean }
+
+    RoleDetail:
+      unevaluatedProperties: false
+      allOf:
+        - $ref: "#/components/schemas/RoleSummary"
+        - type: object
+          required:
+            [state, summary, sections, sponsorship, apply, datePosted, lastModified, privacy]
+          properties:
+            state: { const: open }
+            summary: { type: string, maxLength: 220 }
+            sections:
+              type: object
+              additionalProperties: false
+              required:
+                [about, responsibilities, requirements, niceToHave, process, equalOpportunities]
+              description: Markdown; empty strings are not shown.
+              properties:
+                about: { type: string, maxLength: 20000 }
+                responsibilities: { type: string, maxLength: 20000 }
+                requirements: { type: string, maxLength: 20000 }
+                niceToHave: { type: string, maxLength: 20000 }
+                process:
+                  {
+                    type: string,
+                    maxLength: 20000,
+                    description: "The role's own text, else the careers default.",
+                  }
+                equalOpportunities: { type: string, maxLength: 20000 }
+            sponsorship:
+              description: Null when not stated.
+              oneOf:
+                - $ref: "#/components/schemas/Choice"
+                - type: "null"
+            apply:
+              type: object
+              additionalProperties: false
+              required: [mode, externalUrl]
+              properties:
+                mode: { type: string, enum: [form, external] }
+                externalUrl: { type: [string, "null"], format: uri, maxLength: 500 }
+            datePosted: { $ref: "#/components/schemas/DateValue" }
+            lastModified: { type: string, format: date-time }
+            privacy:
+              type: object
+              additionalProperties: false
+              required: [noticeUrl, noticeVersion]
+              properties:
+                noticeUrl: { type: [string, "null"], maxLength: 300 }
+                noticeVersion: { type: [string, "null"], maxLength: 40 }
+
+    ClosedRole:
+      type: object
+      additionalProperties: false
+      required: [state, slug, title, practice, closedAt]
+      properties:
+        state: { const: closed }
+        slug: { $ref: "#/components/schemas/Slug" }
+        title: { type: string, maxLength: 200 }
+        practice: { $ref: "#/components/schemas/PracticeChoice" }
+        closedAt: { $ref: "#/components/schemas/DateValue" }
+
+    CareersCopy:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          heading,
+          intro,
+          values,
+          statements,
+          emptyState,
+          associatesLine,
+          benefits,
+          process,
+          salaryPolicy,
+          equalOpportunities,
+          privacyNoticeUrl,
+          privacyNoticeVersion,
+          speculativeApplications,
+        ]
+      properties:
+        heading: { type: string, maxLength: 200 }
+        intro: { type: string, maxLength: 1000 }
+        values: { type: array, maxItems: 20, items: { type: string, maxLength: 80 } }
+        statements: { type: array, maxItems: 10, items: { type: string, maxLength: 500 } }
+        emptyState: { type: string, maxLength: 500 }
+        associatesLine:
+          description: Null unless the associates line is enabled (CAR-01).
+          type: [string, "null"]
+          maxLength: 500
+        benefits: { type: string, maxLength: 20000, description: "Markdown; hidden when empty." }
+        process: { type: string, maxLength: 20000 }
+        salaryPolicy: { type: string, maxLength: 20000 }
+        equalOpportunities: { type: string, maxLength: 20000 }
+        privacyNoticeUrl: { type: [string, "null"], maxLength: 300 }
+        privacyNoticeVersion: { type: [string, "null"], maxLength: 40 }
+        speculativeApplications: { type: boolean }
+
+    CareersPage:
+      type: object
+      additionalProperties: false
+      required: [copy, groups, total]
+      properties:
+        copy: { $ref: "#/components/schemas/CareersCopy" }
+        groups:
+          description: Open roles by practice, in the fixed practice order; empty practices are left out.
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [practice, roles]
+            properties:
+              practice: { $ref: "#/components/schemas/PracticeChoice" }
+              roles:
+                type: array
+                minItems: 1
+                items: { $ref: "#/components/schemas/RoleSummary" }
+        total: { type: integer, minimum: 0 }
+
+    HomeInsights:
+      type: object
+      additionalProperties: false
+      required: [heading, intro, items]
+      properties:
+        heading: { type: string, maxLength: 200 }
+        intro: { type: string, maxLength: 500 }
+        items:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: "#/components/schemas/PostSummary" }
+
+    HomeCareers:
+      type: object
+      additionalProperties: false
+      required: [heading, intro, roles, message, associatesLine]
+      properties:
+        heading: { type: string, maxLength: 200 }
+        intro: { type: string, maxLength: 500 }
+        roles:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/RoleSummary" }
+        message:
+          description: The empty-state copy, only when no roles are open and the section is set to show a message.
+          type: [string, "null"]
+          maxLength: 500
+        associatesLine: { type: [string, "null"], maxLength: 500 }
+
+    Home:
+      type: object
+      additionalProperties: false
+      required: [insights, careers]
+      properties:
+        insights:
+          description: Null when Insights is closed, the section is disabled, or nothing is published.
+          oneOf:
+            - $ref: "#/components/schemas/HomeInsights"
+            - type: "null"
+        careers:
+          description: Null when Careers is closed, the section is disabled, or no roles are open and the section hides.
+          oneOf:
+            - $ref: "#/components/schemas/HomeCareers"
+            - type: "null"
+
+    SiteState:
+      type: object
+      additionalProperties: false
+      required: [insightsOpen, careersOpen, insights, nextDueAt]
+      properties:
+        insightsOpen: { type: boolean }
+        careersOpen: { type: boolean }
+        nextDueAt:
+          description: Earliest future scheduled publish, role closing or sync retry; the website's tick calls the admin only once it has passed (ADR-038).
+          type: [string, "null"]
+          format: date-time
+        insights: { $ref: "#/components/schemas/InsightsCopy" }
+
+    Sitemap:
+      type: object
+      additionalProperties: false
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, lastModified]
+            properties:
+              path: { type: string, maxLength: 200 }
+              lastModified: { type: string, format: date-time }
+
+    Preview:
+      type: object
+      additionalProperties: false
+      required: [entity, status, post, role]
+      properties:
+        entity: { type: string, enum: [post, role] }
+        status:
+          { type: string, maxLength: 20, description: "The working copy's status, e.g. draft." }
+        post:
+          oneOf:
+            - $ref: "#/components/schemas/PostDetail"
+            - type: "null"
+        role:
+          oneOf:
+            - $ref: "#/components/schemas/RoleDetail"
+            - type: "null"
+
+    RevalidateRequest:
+      type: object
+      additionalProperties: false
+      required: [eventId, kind, tags, paths]
+      properties:
+        eventId: { $ref: "#/components/schemas/Uuid" }
+        kind:
+          type: string
+          enum: [publish, remove]
+          description: "publish: stale-while-revalidate then warm the paths; remove: expire immediately."
+        tags:
+          type: array
+          minItems: 1
+          maxItems: 64
+          items: { type: string, pattern: "^[a-z]+(:[a-z0-9-]{1,80})*$" }
+        paths:
+          type: array
+          maxItems: 64
+          items: { type: string, maxLength: 200 }
+
+    RevalidateResponse:
+      type: object
+      additionalProperties: false
+      required: [revalidated]
+      properties:
+        revalidated: { type: array, items: { type: string } }
+
+    RenderRequest:
+      type: object
+      additionalProperties: false
+      required: [markdown, context]
+      properties:
+        markdown: { type: string, maxLength: 200000 }
+        context: { type: string, enum: [post, role, author, settings] }
+
+    RenderWarning:
+      type: object
+      additionalProperties: false
+      required: [code, message, blocking]
+      properties:
+        code:
+          {
+            type: string,
+            enum: [missing_alt, h1_in_body, image_host, html_stripped, heading_level],
+          }
+        message: { type: string, maxLength: 300 }
+        blocking: { type: boolean }
+
+    RenderResponse:
+      type: object
+      additionalProperties: false
+      required: [html, toc, footnotes, warnings]
+      properties:
+        html: { type: string }
+        toc:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, text, depth]
+            properties:
+              id: { type: string, maxLength: 100 }
+              text: { type: string, maxLength: 200 }
+              depth: { type: integer, minimum: 2, maximum: 4 }
+        footnotes: { type: integer, minimum: 0 }
+        warnings:
+          type: array
+          items: { $ref: "#/components/schemas/RenderWarning" }
+
+    UploadTicketRequest:
+      type: object
+      additionalProperties: false
+      required: [roleSlug, filename, size, mime]
+      properties:
+        roleSlug: { $ref: "#/components/schemas/Slug" }
+        filename: { type: string, minLength: 1, maxLength: 200 }
+        size: { type: integer, minimum: 1, maximum: 10485760 }
+        mime:
+          type: string
+          enum:
+            - application/pdf
+            - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+    UploadTicket:
+      type: object
+      additionalProperties: false
+      required: [uploadId, uploadUrl, method, headers, expiresAt]
+      properties:
+        uploadId: { $ref: "#/components/schemas/Uuid" }
+        uploadUrl: { type: string, format: uri, maxLength: 2000 }
+        method: { const: PUT }
+        headers:
+          description: Headers the browser must send with the PUT (Content-Type and nothing secret).
+          type: object
+          additionalProperties: { type: string, maxLength: 200 }
+        expiresAt: { type: string, format: date-time }
+
+    ApplicationRequest:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          submissionId,
+          roleSlug,
+          uploadId,
+          name,
+          email,
+          rightToWork,
+          consent,
+          noticeVersion,
+          source,
+          clientIp,
+          userAgent,
+        ]
+      properties:
+        submissionId: { $ref: "#/components/schemas/Uuid" }
+        roleSlug: { $ref: "#/components/schemas/Slug" }
+        uploadId: { $ref: "#/components/schemas/Uuid" }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        email: { type: string, format: email, maxLength: 254 }
+        phone: { type: string, maxLength: 40 }
+        location: { type: string, maxLength: 120 }
+        linkedinUrl: { type: string, maxLength: 300 }
+        portfolioUrl: { type: string, maxLength: 300 }
+        rightToWork: { type: string, enum: ["yes", needs_sponsorship, prefer_to_discuss] }
+        noticePeriod: { type: string, maxLength: 100 }
+        coverNote: { type: string, maxLength: 3000 }
+        consent: { const: true }
+        noticeVersion: { type: string, maxLength: 40 }
+        source: { type: string, enum: [careers_page, homepage, role_page] }
+        clientIp:
+          {
+            type: string,
+            maxLength: 45,
+            description: "Hashed with a salt by the admin; never stored raw.",
+          }
+        userAgent: { type: string, maxLength: 300 }
+
+    ApplicationAccepted:
+      type: object
+      additionalProperties: false
+      required: [applicationId, roleTitle, process]
+      properties:
+        applicationId: { $ref: "#/components/schemas/Uuid" }
+        roleTitle: { type: string, maxLength: 200 }
+        process:
+          { type: string, maxLength: 20000, description: "Hiring process Markdown, or empty." }
+
+    ApplicationErrors:
+      type: object
+      additionalProperties: false
+      required: [errors]
+      properties:
+        errors:
+          type: object
+          description: Field name to error code.
+          additionalProperties:
+            type: string
+            enum:
+              [
+                required,
+                invalid,
+                too_long,
+                upload_missing,
+                upload_type,
+                upload_size,
+                role_closed,
+                rate_limited,
+              ]
+
+paths:
+  /api/content/v1/site-state:
+    get:
+      operationId: getSiteState
+      summary: Whether Insights and Careers are open, plus Insights page copy.
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/SiteState" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/insights/posts:
+    get:
+      operationId: listPosts
+      summary: Published posts, 12 per page, newest first.
+      security: [{ vitalosSignature: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - { name: format, in: query, schema: { $ref: "#/components/schemas/Slug" } }
+        - { name: topic, in: query, schema: { $ref: "#/components/schemas/Slug" } }
+        - { name: author, in: query, schema: { $ref: "#/components/schemas/Slug" } }
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/PostPage" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/insights/posts/{slug}:
+    get:
+      operationId: getPost
+      summary: A published post, or a redirect for an old slug.
+      security: [{ vitalosSignature: [] }]
+      parameters: [{ $ref: "#/components/parameters/Slug" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PostDetail"
+                  - $ref: "#/components/schemas/Redirect"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/insights/authors/{slug}:
+    get:
+      operationId: getAuthor
+      summary: An author with published posts, and those posts (newest first, at most 100).
+      security: [{ vitalosSignature: [] }]
+      parameters: [{ $ref: "#/components/parameters/Slug" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    additionalProperties: false
+                    required: [author, posts]
+                    properties:
+                      author: { $ref: "#/components/schemas/AuthorDetail" }
+                      posts: { type: array, items: { $ref: "#/components/schemas/PostSummary" } }
+                  - $ref: "#/components/schemas/Redirect"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/insights/topics:
+    get:
+      operationId: listTopics
+      summary: Topics and sectors with at least one published post.
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [topics]
+                properties:
+                  topics: { type: array, items: { $ref: "#/components/schemas/TopicRef" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/insights/topics/{slug}:
+    get:
+      operationId: getTopic
+      summary: A topic with published posts, and one page of them.
+      security: [{ vitalosSignature: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Slug"
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [topic, posts]
+                properties:
+                  topic: { $ref: "#/components/schemas/TopicDetail" }
+                  posts: { $ref: "#/components/schemas/PostPage" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/insights/feed:
+    get:
+      operationId: getFeed
+      summary: The newest 20 published posts.
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    {
+                      type: array,
+                      maxItems: 20,
+                      items: { $ref: "#/components/schemas/PostSummary" },
+                    }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/careers/page:
+    get:
+      operationId: getCareersPage
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/CareersPage" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/careers/roles/{slug}:
+    get:
+      operationId: getRole
+      summary: An open role, a closed role's notice, or a redirect. Paused, draft, archived and unknown roles are 404.
+      security: [{ vitalosSignature: [] }]
+      parameters: [{ $ref: "#/components/parameters/Slug" }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RoleDetail"
+                  - $ref: "#/components/schemas/ClosedRole"
+                  - $ref: "#/components/schemas/Redirect"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/home:
+    get:
+      operationId: getHome
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/Home" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/sitemap:
+    get:
+      operationId: getSitemap
+      summary: Every public Insights and Careers URL with its last modification. Closed sections contribute nothing.
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/Sitemap" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/preview/{entity}/{id}:
+    get:
+      operationId: getPreview
+      summary: The working copy, shaped like the published snapshot. Needs a valid preview token for the same entity and id.
+      security: [{ vitalosSignature: [] }]
+      parameters:
+        - { name: entity, in: path, required: true, schema: { type: string, enum: [post, role] } }
+        - { name: id, in: path, required: true, schema: { $ref: "#/components/schemas/Uuid" } }
+        - {
+            name: X-Vitalos-Preview-Token,
+            in: header,
+            required: true,
+            schema: { type: string, maxLength: 2000 },
+          }
+      responses:
+        "200":
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: "#/components/schemas/Preview" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/content/v1/tick:
+    post:
+      operationId: tick
+      summary: Runs the due work of content_tick now (ADR-038). Signed with a read key and scope `tick`; empty JSON body `{}`.
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [promoted, closed, delivered, nextDueAt]
+                properties:
+                  promoted: { type: integer, minimum: 0 }
+                  closed: { type: integer, minimum: 0 }
+                  delivered: { type: integer, minimum: 0 }
+                  nextDueAt: { type: [string, "null"], format: date-time }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/content/v1/health:
+    get:
+      operationId: getHealth
+      security: [{ vitalosSignature: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: { const: ok }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/careers/v1/upload-tickets:
+    post:
+      operationId: createUploadTicket
+      summary: A single-use, 10-minute upload URL for a CV under pending/ (scope submit).
+      security: [{ vitalosSignature: [] }]
+      requestBody:
+        required: true
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/UploadTicketRequest" } } }
+      responses:
+        "201":
+          {
+            description: Created,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/UploadTicket" } } },
+          }
+        "400":
+          {
+            description: Invalid,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          {
+            description: The role is not accepting applications.,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+
+  /api/careers/v1/uploads/{uploadId}:
+    put:
+      operationId: putUpload
+      summary: |
+        Fallback upload target when no object storage is configured. Called by the browser, not
+        signed: the `token` query parameter is the single-use capability. CORS allows only the
+        website origins. The exact declared size and the 10 MB limit are enforced.
+      parameters:
+        - {
+            name: uploadId,
+            in: path,
+            required: true,
+            schema: { $ref: "#/components/schemas/Uuid" },
+          }
+        - { name: token, in: query, required: true, schema: { type: string, maxLength: 200 } }
+      requestBody:
+        required: true
+        content:
+          application/pdf: { schema: { type: string, format: binary } }
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+            { schema: { type: string, format: binary } }
+      responses:
+        "204": { description: Stored }
+        "400": { $ref: "#/components/responses/NotFound" }
+        "403": { $ref: "#/components/responses/Unauthorized" }
+        "413": { $ref: "#/components/responses/NotFound" }
+
+  /api/careers/v1/applications:
+    post:
+      operationId: createApplication
+      summary: Creates an application from a completed upload (scope submit). Idempotent by submissionId.
+      security: [{ vitalosSignature: [] }]
+      requestBody:
+        required: true
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/ApplicationRequest" } } }
+      responses:
+        "200":
+          {
+            description: Already received (same submissionId).,
+            content:
+              {
+                application/json: { schema: { $ref: "#/components/schemas/ApplicationAccepted" } },
+              },
+          }
+        "201":
+          {
+            description: Created,
+            content:
+              {
+                application/json: { schema: { $ref: "#/components/schemas/ApplicationAccepted" } },
+              },
+          }
+        "400":
+          {
+            description: Invalid,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          {
+            description: Role closed,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "422":
+          {
+            description: The upload is missing or invalid,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "429":
+          {
+            description: Rate limited,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+
+  /api/content/revalidate:
+    post:
+      operationId: revalidate
+      summary: Website. Revalidates tags and paths for one sync event (scope revalidate).
+      security: [{ vitalosSignature: [] }]
+      requestBody:
+        required: true
+        content:
+          { application/json: { schema: { $ref: "#/components/schemas/RevalidateRequest" } } }
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/RevalidateResponse" } } },
+          }
+        "400": { $ref: "#/components/responses/NotFound" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /api/content/render:
+    post:
+      operationId: render
+      summary: Website. Renders Markdown with the site's one renderer (scope render). Body at most 200 KB.
+      security: [{ vitalosSignature: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/RenderRequest" } } }
+      responses:
+        "200":
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/RenderResponse" } } },
+          }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "413": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /api/content/preview:
+    get:
+      operationId: enterPreview
+      summary: Website. Verifies a preview token, enables Draft Mode and redirects to the item's path.
+      parameters:
+        - { name: token, in: query, required: true, schema: { type: string, maxLength: 2000 } }
+      responses:
+        "307": { description: Redirect to the item }
+        "401": { $ref: "#/components/responses/Unauthorized" }

@@ -1,0 +1,32 @@
+{
+  "$comment": "Fixture name -> schema. Names ending in Response are the inline 200 response of an operation in openapi.yaml: AuthorResponse = getAuthor (non-redirect branch), TopicsResponse = listTopics, TopicResponse = getTopic, FeedResponse = getFeed.",
+  "fixtures": {
+    "site-state": "SiteState",
+    "site-state-closed": "SiteState",
+    "post-page": "PostPage",
+    "post-page-empty": "PostPage",
+    "post-detail": "PostDetail",
+    "redirect": "Redirect",
+    "author": "AuthorResponse",
+    "topics": "TopicsResponse",
+    "topic": "TopicResponse",
+    "feed": "FeedResponse",
+    "careers-page": "CareersPage",
+    "careers-page-empty": "CareersPage",
+    "role-open": "RoleDetail",
+    "role-closed": "ClosedRole",
+    "home": "Home",
+    "home-empty": "Home",
+    "sitemap": "Sitemap",
+    "preview-post": "Preview",
+    "preview-role": "Preview",
+    "revalidate-request": "RevalidateRequest",
+    "render-request": "RenderRequest",
+    "render-response": "RenderResponse",
+    "upload-ticket-request": "UploadTicketRequest",
+    "upload-ticket": "UploadTicket",
+    "application-request": "ApplicationRequest",
+    "application-accepted": "ApplicationAccepted",
+    "application-errors": "ApplicationErrors"
+  }
+}

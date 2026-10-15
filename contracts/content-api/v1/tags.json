@@ -1,0 +1,197 @@
+{
+  "$comment": "Cache tags shared by the Super Admin (emits them in sync events) and the website (tags its cached reads with them). Source of truth: docs/adr/ADR-032-content-api-contract-and-sync.md. Detail tags are keyed by slug, not id, because the website must know a read's tags before the read (unstable_cache).",
+  "version": 1,
+  "tagPattern": "^[a-z]+(:[a-z0-9-]{1,80})*$",
+  "tags": {
+    "site": {
+      "pattern": "^site$",
+      "description": "Site state: whether Insights and Careers are open."
+    },
+    "insights": { "pattern": "^insights$", "description": "Every Insights read (broad)." },
+    "insights:list": {
+      "pattern": "^insights:list$",
+      "description": "Index pages, pagination and filters."
+    },
+    "insights:post:{slug}": {
+      "pattern": "^insights:post:[a-z0-9-]{1,80}$",
+      "description": "One article by slug."
+    },
+    "insights:author:{slug}": {
+      "pattern": "^insights:author:[a-z0-9-]{1,80}$",
+      "description": "One author page by slug."
+    },
+    "insights:topic:{slug}": {
+      "pattern": "^insights:topic:[a-z0-9-]{1,80}$",
+      "description": "One topic page by slug."
+    },
+    "careers": { "pattern": "^careers$", "description": "Every Careers read (broad)." },
+    "careers:list": {
+      "pattern": "^careers:list$",
+      "description": "The careers page and its role list."
+    },
+    "careers:role:{slug}": {
+      "pattern": "^careers:role:[a-z0-9-]{1,80}$",
+      "description": "One role page by slug."
+    },
+    "home": { "pattern": "^home$", "description": "Both homepage sections." },
+    "feed": { "pattern": "^feed$", "description": "The Insights RSS feed." },
+    "sitemap": { "pattern": "^sitemap$", "description": "The sitemap." }
+  },
+  "reads": {
+    "site-state": ["site"],
+    "insights/posts": ["insights", "insights:list"],
+    "insights/posts/{slug}": ["insights", "insights:post:{slug}"],
+    "insights/authors/{slug}": ["insights", "insights:author:{slug}"],
+    "insights/topics": ["insights", "insights:list"],
+    "insights/topics/{slug}": ["insights", "insights:topic:{slug}"],
+    "insights/feed": ["insights", "feed"],
+    "careers/page": ["careers", "careers:list"],
+    "careers/roles/{slug}": ["careers", "careers:role:{slug}"],
+    "home": ["home"],
+    "sitemap": ["sitemap"]
+  },
+  "events": {
+    "post.published": {
+      "kind": "publish",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "post.changes_published": {
+      "kind": "publish",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "post.unpublished": {
+      "kind": "remove",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "post.archived": {
+      "kind": "remove",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "post.deleted": {
+      "kind": "remove",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "post.slug_changed": {
+      "kind": "remove",
+      "tags": [
+        "insights",
+        "insights:list",
+        "insights:post:{oldSlug}",
+        "insights:post:{slug}",
+        "insights:author:{authorSlug}*",
+        "insights:topic:{topicSlug}*",
+        "home",
+        "feed",
+        "sitemap"
+      ]
+    },
+    "author.updated": { "kind": "remove", "tags": ["insights"] },
+    "topic.updated": { "kind": "remove", "tags": ["insights"] },
+    "role.opened": {
+      "kind": "publish",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.changes_published": {
+      "kind": "publish",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.paused": {
+      "kind": "remove",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.closed": {
+      "kind": "remove",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.archived": {
+      "kind": "remove",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.deleted": {
+      "kind": "remove",
+      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+    },
+    "role.slug_changed": {
+      "kind": "remove",
+      "tags": [
+        "careers",
+        "careers:list",
+        "careers:role:{oldSlug}",
+        "careers:role:{slug}",
+        "home",
+        "sitemap"
+      ]
+    },
+    "careers_settings.updated": { "kind": "publish", "tags": ["careers", "home"] },
+    "home_section.updated": { "kind": "publish", "tags": ["home"] },
+    "site.opened": {
+      "kind": "publish",
+      "tags": ["site", "insights", "careers", "home", "feed", "sitemap"]
+    },
+    "site.closed": {
+      "kind": "remove",
+      "tags": ["site", "insights", "careers", "home", "feed", "sitemap"]
+    },
+    "site.resync": {
+      "kind": "remove",
+      "tags": ["site", "insights", "careers", "home", "feed", "sitemap"]
+    }
+  },
+  "pathPatterns": [
+    "^/$",
+    "^/insights$",
+    "^/insights/page/[1-9][0-9]{0,3}$",
+    "^/insights/feed\\.xml$",
+    "^/insights/[a-z0-9-]{1,80}$",
+    "^/insights/authors/[a-z0-9-]{1,80}$",
+    "^/insights/topics/[a-z0-9-]{1,80}$",
+    "^/careers$",
+    "^/careers/[a-z0-9-]{1,80}$",
+    "^/sitemap\\.xml$"
+  ]
+}
