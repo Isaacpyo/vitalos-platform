@@ -53,7 +53,7 @@ The golden answer evals check that none of these answers invents a figure or a c
 - marker stripping;
 - the global checks: no currency amounts, at most 3 citations, no banned words, no leaked `[[handoff]]`.
 
-**DeepSeek:** the eval has not run against DeepSeek, because there is no API key yet (decision 21). Run `pnpm relay:eval --answers --base <preview url>` once the key exists. A run is 15 short questions, about 15,000 input tokens.
+**DeepSeek (15 Oct, preview `feat/relay` against the production database):** 15/15 pass, with `deepseek-flash` and thinking disabled. Run it with `VERCEL_AUTOMATION_BYPASS_SECRET` set, because previews sit behind Vercel Authentication.
 
 | Case               | Checks                                                                |
 | ------------------ | --------------------------------------------------------------------- |
@@ -85,3 +85,31 @@ This proves the concurrency path: rate limits, the store, SSE, and conversation 
 
 - `pnpm relay:load --base <preview url> --concurrency 50` on a preview with DeepSeek. That needs the preview database (production migration) and the DeepSeek key.
 - The Phase 2 target: with DeepSeek, first token p50 below 1.5 s over 20 runs (`--concurrency 1 --questions 20`).
+
+## Preview with DeepSeek (15 Oct)
+
+The preview runs against the production database: 227 entries, 443 chunks, all embedded.
+
+**Retrieval against production:**
+
+- Exact questions: 187/187.
+- Paraphrases: 76/88 (86.4%).
+
+**Latency, single questions, warm** (functions in `dub1`, decision 29):
+
+| Stage                                 | Time         |
+| ------------------------------------- | ------------ |
+| Before the model starts (first event) | about 0.38 s |
+| First token                           | 1.38–1.43 s  |
+| Complete answer                       | 1.8–2.3 s    |
+
+DeepSeek alone takes 0.35–0.5 s to its first token. In `iad1` the first token took about 3 s.
+
+**Load:**
+
+| Run               | Answers | First token p50 / p95 | Errors |
+| ----------------- | ------- | --------------------- | ------ |
+| 20 concurrent × 1 | 20/20   | 4.6 / 6.0 s           | none   |
+| 50 concurrent × 2 | 100/100 | 10.4 / 14.3 s         | none   |
+
+Everything completes under 50 concurrent conversations. The time to the first token grows with concurrency. The likely bottleneck is the free-tier `relay-embed` Edge Function, which runs one gte-small embedding per question. If traffic needs it, cache embeddings of repeated questions or move embeddings to a paid tier. The preview uses `RELAY_RATE_LIMIT_MULTIPLIER=100` so these runs can come from one IP; production rejects that setting.
