@@ -34,8 +34,15 @@ const fail = (kind: string): void => {
   errors.set(kind, (errors.get(kind) ?? 0) + 1);
 };
 
+// Protected Vercel previews: the project's automation bypass secret (never logged).
+const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
 async function conversation(n: number): Promise<void> {
-  const headers = { origin: base, "content-type": "application/json" };
+  const headers = {
+    origin: base,
+    "content-type": "application/json",
+    ...(bypass ? { "x-vercel-protection-bypass": bypass } : {}),
+  };
   const created = await fetch(`${base}/api/relay/conversations`, {
     method: "POST",
     headers,

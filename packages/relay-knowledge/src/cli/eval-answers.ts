@@ -7,6 +7,8 @@
  * The answers come from whichever provider that server runs: the mock locally (a pipeline check),
  * DeepSeek on a preview (spends a little credit; 15 short questions).
  *
+ * A protected Vercel preview needs VERCEL_AUTOMATION_BYPASS_SECRET (the project's automation bypass).
+ *
  * Each golden line: {id, q, page?, cite?: [FAQ ids, all required], citeAny?: [FAQ ids],
  * must?: [regex], mustNot?: [regex], lowConfidence?: true, allowLowConfidence?: true,
  * handoff?: true}. Every answer is also checked for leaked markers, currency amounts, more than
@@ -63,8 +65,15 @@ const questionOf = (id: string) => faqSnapshot.entries.find((e) => e.id === id)?
 const CURRENCY = /[£$€]\s?\d|\b\d[\d,.]*\s?(GBP|USD|EUR|pounds)\b/i;
 const MARKER = /\[\[\s*handoff\s*\]\]/i;
 
+// Protected Vercel previews: pass the project's automation bypass secret (never logged).
+const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+
 async function ask(g: Golden): Promise<Done> {
-  const headers = { origin: base, "content-type": "application/json" };
+  const headers = {
+    origin: base,
+    "content-type": "application/json",
+    ...(bypass ? { "x-vercel-protection-bypass": bypass } : {}),
+  };
   const pageUrl = `${base}${g.page ?? "/"}`;
   const created = await fetch(`${base}/api/relay/conversations`, {
     method: "POST",
