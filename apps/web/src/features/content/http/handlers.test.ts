@@ -85,7 +85,9 @@ describe("POST /api/content/revalidate", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({ revalidated: event.tags });
-    expect(deps.revalidateTag.mock.calls).toEqual(event.tags.map((tag) => [tag, "max"]));
+    expect(deps.revalidateTag.mock.calls).toEqual(
+      event.tags.map((tag) => [tag, tag === "sitemap" ? { expire: 0 } : "max"]),
+    );
     expect(deps.warm).toHaveBeenCalledWith(event.paths);
     expect(deps.revalidatePath).not.toHaveBeenCalled();
     expect(deps.clearLookupVerdicts).toHaveBeenCalledTimes(1);

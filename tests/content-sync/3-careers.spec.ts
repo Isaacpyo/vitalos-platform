@@ -63,6 +63,11 @@ test("applying with a PDF: the admin shows the application, the CV download and 
   await page
     .getByRole("checkbox", { name: /I agree that Vitalos may process my application/ })
     .check();
+  // The Turnstile widget (Cloudflare's always-pass test key) must issue its token first, as it
+  // does long before a real applicant finishes the form.
+  await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue("", {
+    timeout: 30_000,
+  });
   await page.getByRole("button", { name: "Send application" }).click();
   await expect(page.getByText("Application received.")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(`We've received your application for ${title}.`)).toBeVisible();

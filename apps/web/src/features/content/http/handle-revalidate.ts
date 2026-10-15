@@ -85,7 +85,10 @@ export async function handleRevalidateRequest(
   const tags = [...new Set(event.tags)];
   const paths = [...new Set(event.paths)];
   if (event.kind === "publish") {
-    for (const tag of tags) deps.revalidateTag(tag, "max");
+    // Pages are stale-while-revalidate ("max") and warmed. The sitemap read is expired at once:
+    // the proxy lookup checks slugs against it, so a stale sitemap would answer a just-published
+    // post as missing (DECISIONS 109). It is one small read, shared across instances.
+    for (const tag of tags) deps.revalidateTag(tag, tag === "sitemap" ? { expire: 0 } : "max");
     if (paths.length > 0) deps.warm(paths);
   } else {
     for (const tag of tags) deps.revalidateTag(tag, { expire: 0 });
