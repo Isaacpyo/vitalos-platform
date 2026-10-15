@@ -9,6 +9,7 @@ import { rowFilterAttributes } from "../institutional/list-filter-model";
 import { PageMain } from "../institutional/page-main";
 import type { WorkIndexData } from "./load";
 import { caseStudyRowProps, workFilterDimensions, workFilterGroups } from "./map";
+import { ClosingBand } from "../commercial/bands";
 
 const LIST_ID = "work-list";
 
@@ -23,8 +24,8 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
   const placeholder = hasPlaceholder(studies);
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
+        full
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -34,6 +35,7 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
         title={page?.heading ?? navLabels.work}
         lead={page?.intro}
       />
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />
@@ -47,6 +49,7 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
           </ul>
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

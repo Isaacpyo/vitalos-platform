@@ -65,6 +65,8 @@ test.describe("every commercial route", () => {
     });
 
     test(`${route}: internal links resolve`, async ({ page, request }) => {
+      // A crawl of every link on the page (dozens of requests): allow it more time than one page.
+      test.slow();
       await page.goto(route);
       const hrefs = await internalLinks(page);
       expect(hrefs.length).toBeGreaterThan(0);
