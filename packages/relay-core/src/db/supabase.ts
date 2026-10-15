@@ -516,6 +516,24 @@ export class SupabaseRelayStore implements RelayStore {
     }));
   }
 
+  async listAdminMetaForSource(source: KbSource) {
+    const rows = check(
+      await this.db
+        .from("kb_documents")
+        .select("id, external_id, title, status, meta, admin_meta")
+        .eq("source", source)
+        .limit(5000),
+    ) as Row[];
+    return rows.map((r) => ({
+      id: String(r.id),
+      externalId: (r.external_id as string | null) ?? null,
+      title: String(r.title),
+      status: r.status as KbStatus,
+      meta: (r.meta as KbDocumentRecord["meta"]) ?? {},
+      adminMeta: (r.admin_meta as KbDocumentRecord["adminMeta"]) ?? {},
+    }));
+  }
+
   // -------------------------------------------------------------------------------------------
   async recordGap(
     questionNorm: string,

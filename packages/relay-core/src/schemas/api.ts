@@ -3,10 +3,12 @@ import { LIMITS } from "../contract";
 
 /** Strips control and bidi-override characters and trims; keeps newlines and tabs. */
 export function cleanText(value: string): string {
-  // eslint-disable-next-line no-control-regex
-  return value
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/g, "")
-    .trim();
+  return (
+    value
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/g, "")
+      .trim()
+  );
 }
 
 const clean = (max: number) =>

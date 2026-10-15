@@ -51,19 +51,17 @@ export function plainText(items: readonly { plain_text?: unknown }[] | null | un
 }
 
 export function normaliseWhitespace(value: string): string {
-  return (
-    value
+  return value
+    .replace(
       // eslint-disable-next-line no-control-regex
-      .replace(
-        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B\u202A-\u202E\u2066-\u2069]/g,
-        "",
-      )
-      .replace(/\r\n?/g, "\n")
-      .replace(/[ \t\u00A0]+/g, " ")
-      .replace(/ *\n */g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim()
-  );
+      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B\u202A-\u202E\u2066-\u2069]/g,
+      "",
+    )
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t\u00A0]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /**

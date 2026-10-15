@@ -8,7 +8,7 @@
     ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts",
     "./knowledge": "./src/knowledge/index.ts",
-    "./testing": "./src/testing/index.ts"
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

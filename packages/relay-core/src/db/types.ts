@@ -65,7 +65,7 @@ export type NewConversation = Pick<
 >;
 
 export type ConversationPatch = Partial<
-  Omit<ConversationRecord, "id" | "visitorTokenHash" | "channelKey" | "createdAt">
+  Omit<ConversationRecord, "id" | "channelKey" | "createdAt">
 >;
 
 export interface MessageRecord {
@@ -362,6 +362,17 @@ export interface RelayStore {
   listChunksForDocument(
     documentId: string,
   ): Promise<{ ix: number; heading: string; content: string; hasEmbedding: boolean }[]>;
+  /** ADMIN ONLY (FAQ Needs confirmation / Held views). Never called by retrieval or visitor code. */
+  listAdminMetaForSource(source: KbSource): Promise<
+    {
+      id: string;
+      externalId: string | null;
+      title: string;
+      status: KbStatus;
+      meta: KbPublicMeta;
+      adminMeta: KbAdminMeta;
+    }[]
+  >;
 
   // Gaps and sync runs
   recordGap(questionNorm: string, example: string, conversationId: string | null): Promise<void>;

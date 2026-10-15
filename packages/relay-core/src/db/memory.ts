@@ -546,6 +546,21 @@ export class MemoryRelayStore implements RelayStore {
     );
   }
 
+  listAdminMetaForSource(source: KbSource) {
+    return Promise.resolve(
+      [...this.documents.values()]
+        .filter((d) => d.source === source)
+        .map((d) => ({
+          id: d.id,
+          externalId: d.externalId,
+          title: d.title,
+          status: d.status,
+          meta: d.meta,
+          adminMeta: d.adminMeta,
+        })),
+    );
+  }
+
   // -------------------------------------------------------------------------------------------
   recordGap(questionNorm: string, example: string, conversationId: string | null): Promise<void> {
     const key = questionNorm.slice(0, 300);
