@@ -60,6 +60,12 @@ export {
   type PracticeShowcaseProps,
 } from "./commercial/PracticeShowcase";
 export {
+  IndustryShowcase,
+  type IndustryShowcaseItem,
+  type IndustryShowcaseProps,
+} from "./commercial/IndustryShowcase";
+export { AuroraBackdrop, type AuroraBackdropProps } from "./media/AuroraBackdrop";
+export {
   SolutionShowcase,
   type SolutionShowcaseImage,
   type SolutionShowcaseItem,

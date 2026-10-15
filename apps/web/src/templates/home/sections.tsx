@@ -16,15 +16,15 @@ import type { HomePageView, HomeSectionKey, PublicationGates } from "@vitalos/cm
 import {
   Button,
   CTAGroup,
-  Carousel,
   CaseStudyFeature,
   CaseStudyRow,
   Container,
   Display,
   HeroVisual,
+  IndustryShowcase,
   LabAssetRow,
-  LinkCard,
   ArticleRow,
+  AuroraBackdrop,
   MotionPause,
   Lead,
   PracticeShowcase,
@@ -37,11 +37,10 @@ import {
   SolutionShowcase,
   TerminalCTA,
 } from "@vitalos/ui";
-import type { MediaPlaceholderVariant } from "@vitalos/ui";
 import type { ProcessCycleStage, SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
-import { carouselLabels, heroMotionPauseLabel } from "../../lib/view-mapping/labels";
+import { heroMotionPauseLabel } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { practiceImageFor } from "../../lib/view-mapping/practice-images";
 import { solutionImageFor } from "../../lib/view-mapping/solution-images";
@@ -370,42 +369,61 @@ export const selectedWorkSection: SectionRender = (context, tone) => {
   );
 };
 
-const placeholderCycle: readonly MediaPlaceholderVariant[] = [0, 1, 2, 3];
-
 /**
- * 8. Industries: only when the Industries gate is open. The comp's browsable row of cards (a
- * vertical list on phones), each with a token placeholder where the comp shows a photograph.
+ * 9. Industries: only when the Industries gate is open. A dark band with a drifting aurora (its own
+ * pause switch, WCAG 2.2.2) and the industries as expanding glass panels (owner direction, 15 Oct
+ * 2026).
  */
-export const industriesSection: SectionRender = (context, tone) => {
+export const industriesSection: SectionRender = (context) => {
   if (!context.gates.open.industries) return null;
   const title = heading(context, "industries");
   const rows = toRows("industry", context.home.industries, { headingLevel: itemLevel(title) });
   if (rows.length === 0) return null;
-  const label = title ?? navLabels.industries;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.industries}
-      link={{ label: navLabels.industries, href: routes.industries() }}
-    >
-      <Carousel label={label} {...carouselLabels(label)}>
-        {rows.map((row, index) => (
-          <li key={row.href}>
-            <LinkCard
-              kind="industry"
-              {...row}
-              icon={iconFor("industry", row.title)}
-              placeholder={placeholderCycle[index % placeholderCycle.length]}
-              titleSize="h4"
-            />
-          </li>
-        ))}
-      </Carousel>
-    </Band>
-  );
+  return <IndustriesBand title={title} rows={rows} />;
 };
 
+function IndustriesBand({
+  title,
+  rows,
+}: Readonly<{ title: string | undefined; rows: ReturnType<typeof toRows<"industry">> }>) {
+  const headingId = useId();
+  return (
+    <Section
+      tone="dark"
+      data-motion-scope=""
+      {...(title ? { "aria-labelledby": headingId } : { as: "div" as const })}
+      className="relative isolate overflow-hidden"
+    >
+      <AuroraBackdrop />
+      <MotionPause
+        label={heroMotionPauseLabel}
+        className="absolute right-(--space-4) bottom-(--space-4) z-10"
+      />
+      <Container size="wide">
+        {title ? (
+          <Reveal>
+            <SectionHeading
+              id={headingId}
+              title={title}
+              eyebrow={navLabels.industries}
+              link={{ label: navLabels.industries, href: routes.industries() }}
+            />
+          </Reveal>
+        ) : null}
+        <IndustryShowcase
+          className={title ? "mt-(--space-7)" : undefined}
+          headingLevel={itemLevel(title)}
+          items={rows.map((row) => ({
+            title: row.title,
+            href: row.href,
+            ...(row.summary ? { summary: row.summary } : {}),
+            icon: iconFor("industry", row.title),
+          }))}
+        />
+      </Container>
+    </Section>
+  );
+}
 /** 10. Labs: only when the Labs gate is open. Maturity is stated in words on every asset. */
 export const labsSection: SectionRender = (context, tone) => {
   if (!context.gates.open.labs) return null;

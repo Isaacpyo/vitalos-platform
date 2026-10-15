@@ -107,4 +107,6 @@ homepage hero only:
   its top padding), so the condense still moves no content. Every other page keeps the light bar.
   Server HTML and no-JS render the clear bar.
 
+The same day the Industries band gained a looping aurora (`AuroraBackdrop`) under the same rules: its band is a `[data-motion-scope]` with its own MotionPause switch, and nothing moves under reduced motion.
+
 The finite rule still applies everywhere else, including the `planes` variant of `HeroVisual`.

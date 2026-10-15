@@ -279,7 +279,7 @@ html {
 }
 
 /* Ambient hero motion (owner decision 2026-10-15): small, slow, looping movement on the homepage
-   hero photograph and its glass panel. It is the one exception to the finite rule above, so it
+   hero photograph and its glass panel, and the Industries band's aurora. It is the one exception to the finite rule above, so it
    comes with a pause switch (WCAG 2.2.2): while a [data-motion-pause] checkbox inside a
    [data-motion-scope] is checked, every animation in that scope is held. Under reduced motion none
    of it runs and the switch is hidden. Transform, opacity and stroke-dashoffset only. */
@@ -336,6 +336,28 @@ html {
   }
 }
 
+/* The Industries band's aurora (AuroraBackdrop): three light fields drifting out of step. */
+@keyframes hv-aurora-a {
+  50% {
+    translate: 14% 10%;
+    scale: 1.15;
+  }
+}
+
+@keyframes hv-aurora-b {
+  50% {
+    translate: -12% -8%;
+    scale: 1.2;
+  }
+}
+
+@keyframes hv-aurora-c {
+  50% {
+    translate: 10% -12%;
+    scale: 0.9;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .hv-drift {
     animation: hv-drift 40s ease-in-out infinite alternate both;
@@ -355,6 +377,15 @@ html {
   }
   .hv-stream {
     animation: hv-stream 3s linear infinite;
+  }
+  .hv-aurora-a {
+    animation: hv-aurora-a 22s ease-in-out infinite;
+  }
+  .hv-aurora-b {
+    animation: hv-aurora-b 26s ease-in-out infinite;
+  }
+  .hv-aurora-c {
+    animation: hv-aurora-c 30s ease-in-out infinite;
   }
   .hv-bar-idle {
     transform-origin: bottom;

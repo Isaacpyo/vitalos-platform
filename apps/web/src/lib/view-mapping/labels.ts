@@ -97,7 +97,7 @@ export function engagementBasisLabel(basis: EngagementBasis): string {
 }
 
 /** Accessible names of a carousel's paging buttons, from the carousel's own name. Structural. */
-/** Accessible name of the homepage hero's pause switch for its looping motion (WCAG 2.2.2). */
+/** Accessible name of the pause switch for looping background motion (hero, Industries; WCAG 2.2.2). */
 export const heroMotionPauseLabel = "Pause background motion";
 
 export function carouselLabels(label: string): { previousLabel: string; nextLabel: string } {

@@ -32,7 +32,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "health-care",
     title: healthTitle,
     summary:
-      "Technology that improves care, operations and access, for healthcare providers, care organisations, health and care technology and related operational services.",
+      "Technology that improves care, operations and access for providers and care organisations.",
     seo: seo(
       "Health & Care",
       "Modernising care operations, digital services, data and AI while managing privacy, accessibility, safety and trust.",
@@ -94,7 +94,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "retail-commerce-consumer",
     title: retailTitle,
     summary:
-      "Commerce platforms, order and inventory integration, customer experience, data and AI-enabled operations for retailers, e-commerce businesses, consumer brands, wholesalers and distributors.",
+      "Commerce platforms, integration and AI-enabled operations for retailers and consumer brands.",
     seo: seo(
       "Retail, Commerce & Consumer",
       "Commerce platforms, inventory and order integration, customer experience, data and AI-enabled operations.",
@@ -153,7 +153,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "operations-industry-logistics",
     title: operationsTitle,
     summary:
-      "Workflow modernisation, integration, operational intelligence and AI-assisted operations for manufacturing, logistics, supply chain, field operations and engineering-intensive businesses.",
+      "Workflow modernisation and operational intelligence for manufacturing, logistics and field operations.",
     seo: seo(
       "Operations, Industry & Logistics",
       "Process digitisation, integration, field and warehouse tools, operational intelligence and AI-assisted operations.",
@@ -209,7 +209,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "growth-technology",
     title: growthTitle,
     summary:
-      "Selective work with startups, scale-ups and technology businesses: architecture, product engineering, platform modernisation, AI implementation and engineering rescue.",
+      "Selective work with startups and scale-ups: architecture, product engineering and AI.",
     seo: seo(
       "Growth & Technology",
       "Architecture, product engineering, platform modernisation, AI implementation and engineering rescue for technology companies.",
