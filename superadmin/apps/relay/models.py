@@ -1,4 +1,4 @@
-"""Relay records owned by the Super Admin (ADR-031, docs/relay/API.md).
+"""Relay records owned by the Super Admin (ADR-035, docs/relay/API.md).
 
 Conversations, messages and knowledge live in the website's database and are only read and changed
 through the signed admin API. This app keeps what belongs to staff: in-app alerts, notification

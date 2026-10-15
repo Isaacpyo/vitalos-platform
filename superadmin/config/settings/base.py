@@ -169,7 +169,7 @@ SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL", default="")
 RETENTION_ENFORCE = env.bool("RETENTION_ENFORCE", default=False)
 # Resend free tier: 100 emails a day. Notification emails roll into the digest before the limit.
 RESEND_DAILY_LIMIT = env.int("RESEND_DAILY_LIMIT", default=100)
-# Vitalos Relay (website chat with hand-off to staff, ADR-031). The website owns conversations and knowledge;
+# Vitalos Relay (website chat with hand-off to staff, ADR-035). The website owns conversations and knowledge;
 # this app presents them through the website's signed admin API and receives alerts on a signed webhook.
 # An empty RELAY_API_BASE_URL hides the Relay tab and makes /api/inbound/relay answer 404.
 RELAY_API_BASE_URL = env("RELAY_API_BASE_URL", default="").strip().rstrip("/")

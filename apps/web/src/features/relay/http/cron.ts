@@ -12,7 +12,7 @@ function authorised(request: Request, secret: string | undefined): boolean {
 }
 
 /**
- * Scheduled jobs (ADR-034), called by pg_cron through pg_net with `CRON_SECRET`:
+ * Scheduled jobs (ADR-038), called by pg_cron through pg_net with `CRON_SECRET`:
  * reminders (every 5 min), digest (hourly; sends at 08:45 London), faq-sync (every 15 min,
  * `?mode=full` nightly).
  */

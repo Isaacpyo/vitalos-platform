@@ -1,5 +1,5 @@
 /**
- * LLM provider port (ADR-032). The widget and the API never depend on a concrete provider, so a
+ * LLM provider port (ADR-036). The widget and the API never depend on a concrete provider, so a
  * UK/EU-hosted model can replace DeepSeek by adding one adapter.
  */
 export interface ChatTurn {

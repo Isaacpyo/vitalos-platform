@@ -1,6 +1,6 @@
 # Relay: server-to-server contract (website ⇄ Super Admin)
 
-The website (`apps/web`, `@vitalos/relay-core`) owns conversations and knowledge in the `relay` schema of the website database. The Super Admin (Django) owns staff, roles, alerts, preferences and admin email (ADR-031). They talk only through the two signed HTTP interfaces below. Neither side reads the other's database.
+The website (`apps/web`, `@vitalos/relay-core`) owns conversations and knowledge in the `relay` schema of the website database. The Super Admin (Django) owns staff, roles, alerts, preferences and admin email (ADR-035). They talk only through the two signed HTTP interfaces below. Neither side reads the other's database.
 
 ## Signing (both directions)
 

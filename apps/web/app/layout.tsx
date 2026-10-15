@@ -23,7 +23,7 @@ export const metadata: Metadata = {
  * then falls back to system fonts. Source Serif 4 is not loaded yet (see token-reconciliation).
  */
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Vitalos Relay (ADR-031): rendered only when RELAY_ENABLED is on for this deployment.
+  // Vitalos Relay (ADR-035): rendered only when RELAY_ENABLED is on for this deployment.
   const relay = readBuildEnv().relayEnabled;
   const turnstileSiteKey = readPublicEnv().turnstileSiteKey;
   return (

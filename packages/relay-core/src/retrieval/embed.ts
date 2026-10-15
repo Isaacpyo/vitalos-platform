@@ -1,6 +1,6 @@
 /**
  * Embedding client for the `relay-embed` Edge Function (gte-small, 384 dimensions, normalised).
- * Failures return null so retrieval can fall back to full-text search (ADR-033).
+ * Failures return null so retrieval can fall back to full-text search (ADR-037).
  */
 export interface Embedder {
   /** One vector per text, or null when embeddings are unavailable. */

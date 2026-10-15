@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Vitalos Relay server-side domain logic (ADR-031 to ADR-034). Server-only except ./contract.",
+  "description": "Vitalos Relay server-side domain logic (ADR-035 to ADR-038). Server-only except ./contract.",
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts",

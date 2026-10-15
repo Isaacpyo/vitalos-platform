@@ -37,7 +37,7 @@ export function composeQuery(question: string, previous?: string | null): string
 
 /**
  * Full-text-only confidence (no embeddings): ts_rank_cd of the best chunk mapped to [0, 1].
- * Calibrated with `pnpm relay:eval --retrieval` on the bundled knowledge (ADR-033): ranks at or
+ * Calibrated with `pnpm relay:eval --retrieval` on the bundled knowledge (ADR-037): ranks at or
  * above FTS_RANK_FULL map to 1; a bare match maps to FTS_RANK_BASE.
  */
 export const FTS_RANK_FULL = 0.5;
@@ -94,7 +94,7 @@ export function diversify(chunks: readonly MatchedChunk[], limit: number): Match
   return [...firsts, ...rest].slice(0, limit);
 }
 
-/** Hybrid retrieval with confidence (ADR-033). Embedding failures fall back to full text. */
+/** Hybrid retrieval with confidence (ADR-037). Embedding failures fall back to full text. */
 export async function retrieve(
   store: RelayStore,
   embedder: Embedder,

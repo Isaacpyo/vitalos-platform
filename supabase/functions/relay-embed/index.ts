@@ -1,4 +1,4 @@
-// Vitalos Relay embeddings (ADR-033): gte-small, 384 dimensions, mean-pooled and normalised.
+// Vitalos Relay embeddings (ADR-037): gte-small, 384 dimensions, mean-pooled and normalised.
 //
 // POST { "texts": string[] } (1 to 32 items, each at most 8,000 characters)
 // -> 200 { "embeddings": number[][] }

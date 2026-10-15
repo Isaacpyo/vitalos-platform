@@ -31,7 +31,7 @@ export function getSecurityHeaders(
     isDev,
     turnstile: env.turnstileEnabled,
     upgradeInsecureRequests: env.deployEnv !== "local",
-    // Relay realtime pings (ADR-034): only when Relay is on and realtime is configured.
+    // Relay realtime pings (ADR-038): only when Relay is on and realtime is configured.
     connect: env.relayRealtimeOrigin ? [env.relayRealtimeOrigin] : [],
   };
 

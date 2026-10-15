@@ -1,7 +1,7 @@
 import "server-only";
 
 /**
- * @vitalos/relay-core: Vitalos Relay server-side domain logic (ADR-031 to ADR-034).
+ * @vitalos/relay-core: Vitalos Relay server-side domain logic (ADR-035 to ADR-038).
  * Server-only. The browser imports `@vitalos/relay-core/contract` only.
  */
 export * from "./contract";

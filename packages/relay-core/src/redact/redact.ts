@@ -1,5 +1,5 @@
 /**
- * Personal-data redaction before every model call (section 6.2 step 4, ADR-032). The original
+ * Personal-data redaction before every model call (section 6.2 step 4, ADR-036). The original
  * text is stored; the model sees only the redacted copy (`messages.body_redacted`).
  *
  * Order matters: structured identifiers with checksums (IBAN, card, NHS) are removed before the

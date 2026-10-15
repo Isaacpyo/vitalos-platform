@@ -1,6 +1,6 @@
 name: Relay knowledge
 # Re-indexes Relay's bundled knowledge (repo seed, website content, Master FAQ snapshot) into the
-# production `relay` schema after content changes land on main (ADR-033). Idempotent by checksum.
+# production `relay` schema after content changes land on main (ADR-037). Idempotent by checksum.
 # Off until Relay is enabled in production: set the repository variable RELAY_INGEST_ENABLED=true
 # and the production-environment secrets below. Runs only from main through the `production`
 # environment; pull requests never run it and it never sees PR code.

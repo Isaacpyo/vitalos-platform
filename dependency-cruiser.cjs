@@ -47,7 +47,7 @@ module.exports = {
     {
       name: "relay-widget-contract-only",
       comment:
-        "The Relay widget runs in the browser: it may use only the browser-safe contract of relay-core (types and copy), never its server code (ADR-031).",
+        "The Relay widget runs in the browser: it may use only the browser-safe contract of relay-core (types and copy), never its server code (ADR-035).",
       severity: "error",
       from: { path: "^packages/relay-widget/" },
       to: { path: "^packages/relay-core/src/", pathNot: "^packages/relay-core/src/contract/" },

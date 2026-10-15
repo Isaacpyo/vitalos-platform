@@ -23,7 +23,7 @@ export interface BuildCspInput {
   upgradeInsecureRequests?: boolean;
   /**
    * Extra `connect-src` origins: the Relay realtime WebSocket (`wss://<project>.supabase.co`,
-   * ADR-034). Bare ws(s)/http(s) origins only.
+   * ADR-038). Bare ws(s)/http(s) origins only.
    */
   connect?: readonly string[];
 }

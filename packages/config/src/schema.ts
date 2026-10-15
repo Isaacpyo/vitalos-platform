@@ -94,7 +94,7 @@ const rawSchema = z.object({
   // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
   CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
-  // ---- Vitalos Relay (ADR-031 to ADR-034). Off unless RELAY_ENABLED=true. ----
+  // ---- Vitalos Relay (ADR-035 to ADR-038). Off unless RELAY_ENABLED=true. ----
   RELAY_ENABLED: booleanFlag,
   RELAY_STORE: z.enum(relayStores).optional(),
   RELAY_LLM_PROVIDER: z.enum(relayProviders).optional(),

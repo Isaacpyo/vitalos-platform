@@ -19,5 +19,5 @@ enabled = true
 RELAY_EMBED_SECRET = "env(RELAY_EMBED_SECRET)"
 [functions.relay-embed]
 # The project uses the new sb_secret_/sb_publishable_ API keys, which are not JWTs, so gateway JWT
-# verification cannot be used; the function requires the shared secret header instead (ADR-033).
+# verification cannot be used; the function requires the shared secret header instead (ADR-037).
 verify_jwt = false

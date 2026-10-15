@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 
 /**
- * Content-free realtime pings (ADR-034): `{ type, conversationId?, at }` only. Clients fetch the
+ * Content-free realtime pings (ADR-038): `{ type, conversationId?, at }` only. Clients fetch the
  * real data from authorised endpoints. Broadcast channels are public, so each topic is
  * unguessable: visitors get their own random key, and the admin topic is derived from the admin
  * API secret, which visitors never see (otherwise any visitor could watch conversation ids and

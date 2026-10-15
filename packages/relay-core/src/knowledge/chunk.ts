@@ -1,5 +1,5 @@
 /**
- * Markdown chunking for retrieval (ADR-033): split by headings, keep the heading path, cap each
+ * Markdown chunking for retrieval (ADR-037): split by headings, keep the heading path, cap each
  * chunk at about 300 words with about 40 words of overlap.
  */
 export interface Chunk {
@@ -71,7 +71,7 @@ export function chunkMarkdown(title: string, body: string): Chunk[] {
   return chunks;
 }
 
-/** Text sent to the embedding model for a chunk (ADR-033): "{title} — {heading}: {content}". */
+/** Text sent to the embedding model for a chunk (ADR-037): "{title} — {heading}: {content}". */
 export function embeddingInput(title: string, heading: string, content: string): string {
   const lastHeading = heading.split(" › ").at(-1) ?? heading;
   const prefix = lastHeading && lastHeading !== title ? `${title} — ${lastHeading}` : title;

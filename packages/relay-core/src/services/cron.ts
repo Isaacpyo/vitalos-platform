@@ -4,7 +4,7 @@ import { visitorLabel } from "../util/tokens";
 import type { RelayContext } from "./context";
 
 /**
- * Scheduled work (ADR-034), called by pg_cron through the website's cron routes. Every job is
+ * Scheduled work (ADR-038), called by pg_cron through the website's cron routes. Every job is
  * idempotent: calling it twice sends nothing twice.
  */
 export class CronService {

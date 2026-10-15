@@ -6,7 +6,7 @@ export interface Ping {
 }
 
 /**
- * Minimal Phoenix v1 client for Supabase Realtime Broadcast (ADR-034): join one public channel,
+ * Minimal Phoenix v1 client for Supabase Realtime Broadcast (ADR-038): join one public channel,
  * heartbeat every 25 s, reconnect with backoff. Pings carry no content; the panel fetches the real
  * data from the visitor API. Replaces supabase-js in the browser (bundle size).
  */

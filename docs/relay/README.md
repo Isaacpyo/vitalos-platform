@@ -5,7 +5,7 @@ Relay is the chat assistant on vitalos.co.uk. It answers questions from publishe
 Design documents:
 
 - Decisions: `DECISIONS.md`.
-- Architecture: ADR-031 to ADR-034.
+- Architecture: ADR-035 to ADR-038.
 - The server-to-server contract: `API.md`.
 - Privacy draft: `PRIVACY.md`.
 - Evals: `evals/REPORT.md`.

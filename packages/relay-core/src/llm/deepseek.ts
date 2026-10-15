@@ -17,7 +17,7 @@ import {
   TOTAL_TIMEOUT_MS,
 } from "./provider";
 
-/** Thinking is on by default in DeepSeek V4 models; Relay always turns it off (ADR-032). */
+/** Thinking is on by default in DeepSeek V4 models; Relay always turns it off (ADR-036). */
 const NO_THINKING = { deepseek: { thinking: { type: "disabled" as const } } };
 
 const summarySchema = z.object({

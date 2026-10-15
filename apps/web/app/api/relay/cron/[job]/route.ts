@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-/** Scheduled jobs called by pg_cron (ADR-034) with `Authorization: Bearer $CRON_SECRET`. */
+/** Scheduled jobs called by pg_cron (ADR-038) with `Authorization: Bearer $CRON_SECRET`. */
 async function handle(
   request: Request,
   ctx: { params: Promise<{ job: string }> },

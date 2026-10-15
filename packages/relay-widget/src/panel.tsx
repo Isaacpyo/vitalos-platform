@@ -370,7 +370,7 @@ export function Panel(props: PanelProps) {
     [persist, props],
   );
 
-  // --- Realtime pings with polling fallback (ADR-034) ----------------------------------------
+  // --- Realtime pings with polling fallback (ADR-038) ----------------------------------------
   const watching =
     state.conv &&
     (state.status === "awaiting_human" || state.status === "human" || state.conv.personJoined);
