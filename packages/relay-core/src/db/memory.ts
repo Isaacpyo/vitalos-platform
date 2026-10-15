@@ -246,7 +246,7 @@ export class MemoryRelayStore implements RelayStore {
       }
     }
     const message: MessageRecord = {
-      id: crypto.randomUUID(),
+      id: input.id ?? crypto.randomUUID(),
       adminId: null,
       adminName: null,
       adminInitials: null,

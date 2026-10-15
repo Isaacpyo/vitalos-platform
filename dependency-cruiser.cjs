@@ -45,6 +45,22 @@ module.exports = {
       to: { path: `${pkg("next|@supabase|@vitalos/cms|@vitalos/config")}|^packages/(cms|config)/` },
     },
     {
+      name: "relay-widget-contract-only",
+      comment:
+        "The Relay widget runs in the browser: it may use only the browser-safe contract of relay-core (types and copy), never its server code (ADR-031).",
+      severity: "error",
+      from: { path: "^packages/relay-widget/" },
+      to: { path: "^packages/relay-core/src/", pathNot: "^packages/relay-core/src/contract/" },
+    },
+    {
+      name: "relay-knowledge-cli-not-in-web",
+      comment:
+        "The ingest, FAQ sync and eval CLIs are run with node, never bundled into the website.",
+      severity: "error",
+      from: { path: "^apps/" },
+      to: { path: "^packages/relay-knowledge/(src/cli|scripts)/" },
+    },
+    {
       name: "motion-only-in-ui",
       comment:
         "Motion for React is used only inside @vitalos/ui client islands (ADR-024): apps and other packages use the islands, so every animation keeps the shared reduced-motion, LazyMotion and no-hidden-server-HTML rules.",

@@ -125,7 +125,8 @@ export interface HandoffRequest {
   noticeVersion: string;
 }
 
-export interface SuggestionsResponse {
+/** GET /api/relay/suggestions?page=…: the welcome screen before a conversation exists. */
+export interface SuggestionsResponse extends WidgetSettings {
   questions: string[];
 }
 

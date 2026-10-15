@@ -126,8 +126,12 @@ export async function handleVisitorRequest(
       case "GET suggestions": {
         const page = new URL(request.url).searchParams.get("page") ?? "/";
         const safe = /^\/[a-z0-9/_-]{0,200}$/i.test(page) ? page : "/";
-        return json({ questions: await relay.visitor.suggestions(safe) }, 200, {
-          "cache-control": "public, max-age=300",
+        // The welcome screen before any conversation exists: START WITH, greeting, team status.
+        const settings = await relay.visitor.settings();
+        const team = await relay.visitor.teamStatus(settings);
+        return json({
+          questions: await relay.visitor.suggestions(safe),
+          ...relay.visitor.widgetSettings(settings, team),
         });
       }
 

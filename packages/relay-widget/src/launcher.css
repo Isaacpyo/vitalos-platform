@@ -1,0 +1,111 @@
+/* Vitalos Relay launcher (section 4.2). Tokens: @vitalos/design-tokens/relay.css (--relay-*). */
+
+.relay-launcher-wrap {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+}
+
+/* A 2px off-white keyline that follows the tile and its tail, so the launcher stays visible on
+   midnight sections; on light grounds it disappears by design. */
+.relay-launcher-keyline {
+  filter: drop-shadow(2px 0 0 var(--relay-off-white)) drop-shadow(-2px 0 0 var(--relay-off-white))
+    drop-shadow(0 2px 0 var(--relay-off-white)) drop-shadow(0 -2px 0 var(--relay-off-white));
+}
+
+.relay-launcher {
+  display: flex;
+  align-items: flex-start;
+  width: 56px;
+  height: 70px;
+  padding: 0;
+  border: 0;
+  background: var(--relay-midnight);
+  color: var(--relay-off-white);
+  cursor: pointer;
+  clip-path: polygon(0 0, 56px 0, 56px 70px, 32px 56px, 0 56px);
+}
+
+.relay-launcher-tile {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+
+.relay-launcher-tile img {
+  width: 44px;
+  height: 44px;
+  display: block;
+}
+
+.relay-launcher-label {
+  display: none;
+}
+
+/* Desktop, until the first open: "Ask Vitalos" + tile, with the tail at the bottom right. */
+@media (min-width: 1024px) {
+  .relay-launcher--labelled {
+    width: auto;
+    clip-path: polygon(0 0, 100% 0, 100% 70px, calc(100% - 24px) 56px, 0 56px);
+  }
+  .relay-launcher--labelled .relay-launcher-label {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    padding-left: 20px;
+    font-family: var(--font-sans, system-ui, sans-serif);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 359px) {
+  .relay-launcher {
+    width: 48px;
+    height: 60px;
+    clip-path: polygon(0 0, 48px 0, 48px 60px, 28px 48px, 0 48px);
+  }
+  .relay-launcher-tile {
+    width: 48px;
+    height: 48px;
+  }
+  .relay-launcher-tile img {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+.relay-launcher:focus-visible {
+  outline: 2px solid var(--relay-focus-ring);
+  outline-offset: 2px;
+}
+
+.relay-launcher-badge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--relay-off-white);
+  border-radius: 999px;
+  background: var(--relay-mineral);
+  color: var(--relay-midnight);
+  font: 600 12px/1 var(--font-sans, system-ui, sans-serif);
+  box-sizing: border-box;
+}
+
+/* Hidden while the panel is open on mobile and tablet (the panel covers it). */
+@media (max-width: 1023px) {
+  .relay-launcher-wrap--open {
+    display: none;
+  }
+}

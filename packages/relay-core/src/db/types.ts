@@ -99,8 +99,9 @@ export interface StoredCitation extends Citation {
   chunkId: string;
 }
 
+/** `id` may be supplied so a streamed answer keeps the id announced in its `meta` event. */
 export type NewMessage = Pick<MessageRecord, "conversationId" | "senderType" | "body"> &
-  Partial<Omit<MessageRecord, "id" | "conversationId" | "senderType" | "body" | "createdAt">>;
+  Partial<Omit<MessageRecord, "conversationId" | "senderType" | "body" | "createdAt">>;
 
 export type MessagePatch = Partial<Omit<MessageRecord, "id" | "conversationId" | "createdAt">>;
 

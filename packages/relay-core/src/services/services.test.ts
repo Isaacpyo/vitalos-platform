@@ -394,3 +394,21 @@ describe("cron", () => {
     expect((await new CronService(weekend.ctx).digest()).sent).toBe(false);
   });
 });
+
+describe("message ids", () => {
+  it("stores the AI answer under the id announced in the meta event, so feedback finds it", async () => {
+    const { visitor, created, store } = await setup();
+    const result = await ask(visitor, created, "Can you rescue a failing project?");
+    if (result.kind !== "stream") throw new Error("expected stream");
+    const events = await collect(result.events);
+    const meta = events.find((e) => e.event === "meta");
+    const announced = meta?.event === "meta" ? meta.data.messageId : "";
+    expect(await store.getMessage(announced)).toMatchObject({ senderType: "ai" });
+    await expect(
+      visitor.feedback(
+        { conversationId: created.conversationId, messageId: announced, value: 1 },
+        created.visitorToken,
+      ),
+    ).resolves.toEqual({ showHandoff: false });
+  });
+});

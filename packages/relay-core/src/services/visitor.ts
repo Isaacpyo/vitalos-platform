@@ -352,6 +352,7 @@ export class VisitorService {
         if (partial && (abortSignal.aborted || failed === "aborted")) {
           const { text, citations } = finaliseCitations(partial, sources);
           await deps.store.insertMessage({
+            id: aiMessageId,
             conversationId: conversation.id,
             senderType: "ai",
             body: text,
@@ -383,6 +384,7 @@ export class VisitorService {
     const latencyMs = Date.now() - started;
 
     await deps.store.insertMessage({
+      id: aiMessageId,
       conversationId: conversation.id,
       senderType: "ai",
       body: text,
@@ -450,6 +452,7 @@ export class VisitorService {
     options: { handoff: boolean },
   ): AsyncGenerator<ChatEvent> {
     await this.store.insertMessage({
+      id: messageId,
       conversationId: conversation.id,
       senderType: "ai",
       body: text,
