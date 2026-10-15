@@ -27,7 +27,13 @@ export const trustTopics = [
 ] as const;
 export type TrustTopic = (typeof trustTopics)[number];
 
-export const legalSlugs = ["privacy", "cookies", "terms", "acceptable-use"] as const;
+export const legalSlugs = [
+  "privacy",
+  "cookies",
+  "terms",
+  "acceptable-use",
+  "accessibility",
+] as const;
 export type LegalSlug = (typeof legalSlugs)[number];
 
 /** Keys of the singleton "route page" documents that back index pages. */
@@ -112,6 +118,9 @@ export const routes = {
   careers: () => "/careers",
   job: (slug: string) => `/careers/${seg(slug)}`,
   contact: (intent?: ContactIntent) => (intent ? `/contact?intent=${intent}` : "/contact"),
+  /** Where an accepted enquiry lands (owner direction, 15 Oct 2026). Never indexed. */
+  contactThankYou: (reference?: string) =>
+    reference ? `/contact/thank-you?ref=${seg(reference)}` : "/contact/thank-you",
   legal: (slug: LegalSlug) => `/legal/${slug}`,
   sitemap: () => "/sitemap.xml",
   robots: () => "/robots.txt",
