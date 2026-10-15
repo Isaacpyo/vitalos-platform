@@ -33,7 +33,11 @@ export function getSecurityHeaders(
     turnstile: env.turnstileEnabled,
     upgradeInsecureRequests: env.deployEnv !== "local",
     imgOrigins: env.contentMediaOrigin ? [env.contentMediaOrigin] : [],
-    connectOrigins: env.careersUploadOrigin ? [env.careersUploadOrigin] : [],
+    // The browser uploads CVs straight to the ticket's host: the upload host, or the admin itself
+    // (the A9 fallback) when no upload host is configured.
+    connectOrigins: [env.careersUploadOrigin ?? env.contentApiOrigin].filter(
+      (origin): origin is string => Boolean(origin),
+    ),
   };
 
   const headers = buildSecurityHeaders({

@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { REQUEST_ID_HEADER, correlationId } from "@vitalos/observability";
 import { contentProxyDecision, unavailableResponse } from "./src/features/content/proxy";
-import {
-  UNMATCHED_PATH,
-  isMissingDetailPath,
-  isMissingLegacyContentPath,
-} from "./src/features/missing-documents";
+import { UNMATCHED_PATH, isMissingDetailPath } from "./src/features/missing-documents";
 import { goneResponse, isGone } from "./src/features/redirects/gone";
 
 /**
@@ -56,7 +52,6 @@ export async function proxy(request: NextRequest) {
 
   const missing =
     content === "missing" ||
-    (content === "legacy" && (await isMissingLegacyContentPath(pathname))) ||
     (content === "not-applicable" &&
       request.method === "GET" &&
       (await isMissingDetailPath(pathname)));

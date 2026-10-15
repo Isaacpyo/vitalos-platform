@@ -37,6 +37,11 @@ const contentEnv = {
   CONTENT_REVALIDATE_SECRET: "e2e-revalidate:e2e-revalidate-secret-not-a-secret-000",
   CONTENT_RENDER_SECRET: "e2e-render:e2e-render-secret-not-a-secret-000000000",
   CONTENT_MEDIA_HOST: "https://media.example.test",
+  CAREERS_SUBMIT_KEY_ID: "e2e-submit",
+  CAREERS_SUBMIT_SECRET: "e2e-submit-secret-not-a-secret-0000000000",
+  // The fake admin is also the CV upload target (the A9 fallback).
+  CAREERS_UPLOAD_HOST: `http://127.0.0.1:${adminPort}`,
+  // No Turnstile keys: the check is off outside production, so the form flow is deterministic.
 };
 
 export default defineConfig({
@@ -58,7 +63,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `node tests/content/support/fake-admin.mjs --port ${adminPort}`,
+      command: `node tests/content/support/fake-admin.mjs --port ${adminPort} --web-origin ${baseURL}`,
       url: `http://127.0.0.1:${adminPort}/__hits`,
       cwd: "../..",
       reuseExistingServer: false,

@@ -2,13 +2,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { draftContent } from "@vitalos/cms/draft";
 import { fullFixtureSet } from "@vitalos/cms/fixtures";
-import type { CaseStudyView, JobView, PersonView } from "@vitalos/cms";
+import type { CaseStudyView, PersonView } from "@vitalos/cms";
 import { evaluateGates } from "@vitalos/cms";
 import { placeholderNoticeText } from "../components/placeholder-notice";
 import { AboutPage } from "./about/AboutPage";
 import { LeadershipPage } from "./about/LeadershipPage";
-import { CareersIndex } from "./careers/CareersIndex";
-import { JobPage } from "./careers/JobPage";
 import { ProfilePage } from "./people/ProfilePage";
 import { CaseStudyPage } from "./work/CaseStudyPage";
 import { WorkIndex } from "./work/WorkIndex";
@@ -20,7 +18,6 @@ vi.mock("../features/seo/context", () => ({
 
 const html = (node: React.ReactNode) => renderToStaticMarkup(<>{node}</>);
 const gates = evaluateGates({ work: 2, insights: 6, labs: 1, industries: 1, careers: 1 });
-const now = new Date("2026-10-11T00:00:00Z");
 const { documents } = draftContent.set;
 
 const notice = placeholderNoticeText.title;
@@ -32,16 +29,6 @@ describe("pages that render placeholder content", () => {
     const markup = html(<ProfilePage data={{ person, gates }} />);
     expect(markup).toContain(notice);
     expect(markup).not.toContain(ldJson);
-  });
-
-  it("shows the notice and emits no structured data on the role page", () => {
-    const job = documents.job[0] as JobView;
-    const markup = html(<JobPage data={{ job, gates, now }} />);
-    expect(markup).toContain(notice);
-    expect(markup).not.toContain(ldJson);
-    // No salary; the application link is the careers contact route.
-    expect(markup).not.toMatch(/salary|£/i);
-    expect(markup).toContain('href="/contact?intent=careers"');
   });
 
   it("shows the notice and no outcome, metric or testimonial on a case study page", () => {
@@ -65,9 +52,6 @@ describe("pages that render placeholder content", () => {
           }}
         />,
       ),
-    ).toContain(notice);
-    expect(
-      html(<CareersIndex data={{ page: null, jobs: [{ ...(documents.job[0] as JobView) }] }} />),
     ).toContain(notice);
     expect(html(<LeadershipPage data={{ page: null, leaders }} />)).toContain(notice);
     expect(html(<AboutPage data={{ page: null, leaders, gates }} />)).toContain(notice);

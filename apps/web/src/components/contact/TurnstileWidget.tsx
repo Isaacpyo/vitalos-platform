@@ -66,9 +66,16 @@ export interface TurnstileWidgetProps {
   resetKey?: unknown;
   /** Shown in the fallback text so a visitor who cannot complete the check has another route. */
   contactEmail?: string | undefined;
+  /** Turnstile action, pinned by the server: `enquiry` (default) or `careers`. */
+  action?: "enquiry" | "careers";
 }
 
-export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWidgetProps) {
+export function TurnstileWidget({
+  siteKey,
+  resetKey,
+  contactEmail,
+  action = "enquiry",
+}: TurnstileWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
   const [failed, setFailed] = useState(false);
@@ -82,7 +89,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
         api = turnstile;
         widgetId.current = turnstile.render(container.current, {
           sitekey: siteKey,
-          action: "enquiry",
+          action,
           size: container.current.clientWidth < MIN_FLEXIBLE_WIDTH ? "compact" : "flexible",
           "error-callback": () => setFailed(true),
           "expired-callback": () => {
@@ -98,7 +105,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
       if (api && widgetId.current) api.remove(widgetId.current);
       widgetId.current = undefined;
     };
-  }, [siteKey]);
+  }, [siteKey, action]);
 
   useEffect(() => {
     if (widgetId.current && window.turnstile) {
@@ -123,7 +130,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
       <p className="text-small text-tone-muted">
         This form uses a security check to keep out automated submissions.
       </p>
-      <div ref={container} data-action="enquiry" className="min-h-16 max-w-full" />
+      <div ref={container} data-action={action} className="min-h-16 max-w-full" />
       <div aria-live="polite" className="text-small">
         {failed ? (
           <p className="text-danger">
@@ -134,7 +141,7 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
       </div>
       <noscript>
         <p className="text-small text-tone-text">
-          The security check needs JavaScript, so this enquiry may not be accepted without it.
+          The security check needs JavaScript, so this form may not be accepted without it.
           {alternative}
         </p>
       </noscript>

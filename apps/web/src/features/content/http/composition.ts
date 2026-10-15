@@ -15,6 +15,8 @@ import type { RenderDeps } from "./handle-render";
 import type { RevalidateDeps } from "./handle-revalidate";
 import { warmPaths } from "./handle-revalidate";
 import type { TickDeps } from "./handle-tick";
+import { TURNSTILE_PROVIDER_ERRORS, verifyTurnstileToken } from "@vitalos/security/turnstile";
+import type { CareersDeps, HumanCheck } from "../careers/http";
 
 /**
  * Wires the framework-free content handlers to Next.js and the validated environment. Route
@@ -94,6 +96,37 @@ export function tickDeps(): TickDeps {
     readers: getContentReaders(),
     client: getContentClient(),
     expireSiteState: () => revalidateTag("site", { expire: 0 }),
+    logger: getLogger(),
+  };
+}
+
+export function careersDeps(): CareersDeps {
+  const env = getEnv();
+  const secret = env.turnstile.secretKey;
+  const production = env.deployEnv === "production";
+  const verifyHuman = async (token: string, ip: string | undefined): Promise<HumanCheck> => {
+    // Without Turnstile keys the check is off outside production and fails closed in it.
+    if (!secret) return production ? "unavailable" : "disabled";
+    const result = await verifyTurnstileToken({
+      secret,
+      token,
+      expectedAction: "careers",
+      ...(ip ? { remoteIp: ip } : {}),
+      ...(production ? { expectedHostname: new URL(env.siteUrl).hostname } : {}),
+    });
+    if (result.success) return "passed";
+    return result.errorCodes.some((code) => TURNSTILE_PROVIDER_ERRORS.includes(code))
+      ? "unavailable"
+      : "failed";
+  };
+  return {
+    client: env.content.submitKey ? getContentClient() : null,
+    limiter,
+    siteOrigin: env.siteUrl,
+    verifyHuman,
+    readers: getContentReaders(),
+    renderProcess: (markdown) =>
+      renderMarkdown(markdown, { context: "settings", siteHosts: siteHosts() }),
     logger: getLogger(),
   };
 }

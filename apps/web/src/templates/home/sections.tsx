@@ -56,6 +56,7 @@ import {
 } from "../../lib/view-mapping/patterns";
 import { Band, CardGrid, RowList, itemLevel } from "../commercial/bands";
 import type { HomeData } from "../../features/content/schemas";
+import { HomeCareers } from "../careers/HomeCareers";
 import { HomeInsights } from "../insights/HomeInsights";
 
 /**
@@ -418,10 +419,14 @@ export const insightsSection: SectionRender = (context) => {
 };
 
 /**
- * 11b. Careers (brief 6.5), directly after Insights. SLOT: Phase 4 renders
- * `context.content?.careers` here; until then it renders nothing.
+ * 11b. Careers, from the admin's `home` read (brief 6.5), directly after Insights on its muted
+ * band. Absent when the admin returns no section (closed, disabled, or no roles and set to hide)
+ * and when the read failed.
  */
-export const careersSection: SectionRender = () => null;
+export const careersSection: SectionRender = (context) => {
+  const section = context.content?.careers;
+  return section ? <HomeCareers section={section} /> : null;
+};
 
 /** 12. Leadership: named, accountable people with an approved portrait when there is one. */
 export const leadershipSection: SectionRender = (context, tone) => {

@@ -9,10 +9,6 @@ import { isContentLookupPath } from "./lookup/verdict";
  * `contentProxyDecision` for every GET and acts on the answer:
  *
  * - `not-applicable`: not an Insights or Careers page; the proxy carries on as before;
- * - `legacy`: a Careers path while the content API is NOT configured. Until Phase 4 moves the
- *   Careers pages to the admin they still render from `@vitalos/cms`, so the proxy keeps the
- *   ADR-027 check for them (closed in production: the repo source serves no role). Insights
- *   paths are `missing` then: Insights is closed when the content API is not configured;
  * - `pass`: let the page render (verdict ok, a Draft Mode request, or the lookup failed);
  * - `missing`: rewrite to the server-rendered 404;
  * - `unavailable`: 503 with `Retry-After`;
@@ -20,7 +16,7 @@ import { isContentLookupPath } from "./lookup/verdict";
  */
 
 export type ContentProxyResult =
-  "not-applicable" | "legacy" | "pass" | "missing" | "unavailable" | { redirect: string };
+  "not-applicable" | "pass" | "missing" | "unavailable" | { redirect: string };
 
 /** The cookie Next.js sets for Draft Mode. Draft requests always reach the page. */
 export const DRAFT_MODE_COOKIE = "__prerender_bypass";
@@ -79,7 +75,8 @@ export async function contentProxyDecision(request: ProxyRequestLike): Promise<C
   const { pathname } = request.nextUrl;
   if (request.method !== "GET" || !isContentLookupPath(pathname)) return "not-applicable";
   const config = contentConfig();
-  if (!config) return pathname.startsWith("/careers") ? "legacy" : "missing";
+  // Not configured: both sections are closed (server-rendered 404, ADR-035 4).
+  if (!config) return "missing";
   if (request.cookies.has(DRAFT_MODE_COOKIE)) return "pass";
   const origin = lookupOrigin(request.nextUrl.origin, config.siteUrl);
   const verdict = await proxyLookup(config.readSecret, origin).verdict(pathname);

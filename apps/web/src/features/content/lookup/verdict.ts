@@ -24,6 +24,7 @@ type Route =
   | { kind: "insights-post"; slug: string }
   | { kind: "insights-author"; slug: string }
   | { kind: "insights-topic"; slug: string }
+  | { kind: "insights-topic-page"; slug: string; page: number }
   | { kind: "careers-index" }
   | { kind: "careers-role"; slug: string };
 
@@ -34,6 +35,10 @@ const patterns: [RegExp, (match: RegExpExecArray) => Route][] = [
   [/^\/insights\/feed\.xml$/, () => ({ kind: "insights-feed" })],
   [new RegExp(`^/insights/authors/${SLUG}$`), (m) => ({ kind: "insights-author", slug: m[1]! })],
   [new RegExp(`^/insights/topics/${SLUG}$`), (m) => ({ kind: "insights-topic", slug: m[1]! })],
+  [
+    new RegExp(`^/insights/topics/${SLUG}/page/([1-9][0-9]{0,3})$`),
+    (m) => ({ kind: "insights-topic-page", slug: m[1]!, page: Number(m[2]) }),
+  ],
   [new RegExp(`^/insights/${SLUG}$`), (m) => ({ kind: "insights-post", slug: m[1]! })],
   [/^\/careers$/, () => ({ kind: "careers-index" })],
   [new RegExp(`^/careers/${SLUG}$`), (m) => ({ kind: "careers-role", slug: m[1]! })],
@@ -103,6 +108,15 @@ export async function lookupVerdict(path: string, readers: ContentReaders): Prom
         return fromResult(await readers.author(route.slug), redirectOf(`${INSIGHTS_BASE}/authors`));
       case "insights-topic":
         return fromResult(await readers.topic(route.slug, 1));
+      case "insights-topic-page": {
+        // Page 1 lives at the topic's own path.
+        if (route.page === 1) {
+          return { verdict: "redirect", location: `${INSIGHTS_BASE}/topics/${route.slug}` };
+        }
+        const result = await readers.topic(route.slug, route.page);
+        if (result.kind === "missing" || route.page > result.data.posts.totalPages) return missing;
+        return ok;
+      }
       case "careers-index":
         return fromResult(await readers.careersPage());
       case "careers-role":

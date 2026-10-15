@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { readBuildEnv } from "@vitalos/config/build";
 import { imagesConfig } from "./src/config/images";
 import { getSecurityHeaders } from "./src/config/security-headers";
+import { careersRewrites } from "./src/features/content/careers/rewrites";
 import { insightsRewrites } from "./src/features/content/insights/rewrites";
 import { nextRedirects } from "./src/features/redirects/next-redirects";
 
@@ -24,8 +25,13 @@ const config: NextConfig = {
   ...(images ? { images } : {}),
   headers: () => getSecurityHeaders(buildEnv),
   redirects: () => nextRedirects(),
-  // Insights format filters keep `?format=` in the URL and stay static (ISR).
-  rewrites: () => Promise.resolve({ beforeFiles: insightsRewrites, afterFiles: [], fallback: [] }),
+  // Insights format and Careers filters keep their query strings and stay static (ISR).
+  rewrites: () =>
+    Promise.resolve({
+      beforeFiles: [...insightsRewrites, ...careersRewrites],
+      afterFiles: [],
+      fallback: [],
+    }),
 };
 
 export default config;

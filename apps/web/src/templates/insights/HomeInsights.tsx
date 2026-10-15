@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { Container, Section } from "@vitalos/ui";
+import { Button, Container, Section } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
 import { insightsCopy, metaLine, postHref } from "../../features/content/insights/model";
 import type { PostSummary } from "../../features/content/insights/model";
@@ -67,13 +67,9 @@ export function HomeInsights({
               <p className="mt-(--space-4) text-body-l text-tone-muted">{section.intro}</p>
             ) : null}
           </div>
-          <a
-            href={INSIGHTS_BASE}
-            className="inline-flex items-center gap-(--space-2) text-body font-semibold text-tone-link underline-offset-4 hover:underline"
-          >
+          <Button href={INSIGHTS_BASE} variant="text" arrow>
             {insightsCopy.allInsights}
-            <span aria-hidden="true">→</span>
-          </a>
+          </Button>
         </div>
         <ul className="m-0 mt-(--space-7) grid list-none grid-cols-1 gap-x-(--space-6) gap-y-(--space-6) p-0 md:grid-cols-2 lg:grid-cols-12">
           {section.items.map((post, index) => (

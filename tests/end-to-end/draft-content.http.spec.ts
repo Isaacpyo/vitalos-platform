@@ -15,15 +15,16 @@ test("placeholder sections are served but never listed in the sitemap", async ({
 }) => {
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
   // Insights comes from the Super Admin (ADR-035) and is closed with no content API configured.
+  // Careers too (ADR-035).
   expect((await request.get("/insights")).status()).toBe(404);
-  for (const section of ["/work", "/careers"]) {
+  expect((await request.get("/careers")).status()).toBe(404);
+  for (const section of ["/work"]) {
     expect((await request.get(section)).status(), section).toBe(200);
     expect(paths.some((path) => path === section || path.startsWith(`${section}/`))).toBe(false);
   }
   for (const path of [
     "/work/connecting-field-and-warehouse-systems",
     "/people/alex-morgan",
-    "/careers/senior-engineer-technical-lead",
     "/about/leadership",
   ]) {
     const response = await request.get(path);

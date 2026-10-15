@@ -24,3 +24,10 @@ export const INSIGHTS_PAGES = [
   { name: "author", path: "/insights/authors/example-author" },
   { name: "home", path: "/" },
 ] as const;
+
+/** Every Careers page the suites visit. */
+export const CAREERS_PAGES = [
+  { name: "careers", path: "/careers" },
+  { name: "role", path: "/careers/example-role-fixture" },
+  { name: "closed-role", path: "/careers/closed-role" },
+] as const;

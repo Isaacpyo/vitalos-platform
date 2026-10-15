@@ -43,7 +43,7 @@ describe("contentProxyDecision", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("closes Insights and keeps the legacy CMS check for Careers when not configured", async () => {
+  it("closes Insights and Careers when not configured", async () => {
     env.configured = false;
     expect(await contentProxyDecision(new NextRequest("https://www.example.test/insights/a"))).toBe(
       "missing",
@@ -52,7 +52,7 @@ describe("contentProxyDecision", () => {
       "missing",
     );
     expect(await contentProxyDecision(new NextRequest("https://www.example.test/careers/a"))).toBe(
-      "legacy",
+      "missing",
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });

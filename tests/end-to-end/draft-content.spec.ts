@@ -117,8 +117,6 @@ test.describe("draft content source", () => {
     "/work/connecting-field-and-warehouse-systems",
     "/people/alex-morgan",
     "/about/leadership",
-    "/careers",
-    "/careers/senior-engineer-technical-lead",
   ]) {
     test(`${path}: placeholder notice, noindex and no structured data`, async ({ page }) => {
       await page.goto(path);
@@ -135,12 +133,6 @@ test.describe("draft content source", () => {
       await page.goto(path);
       await expect(page.locator("[data-placeholder-notice]"), path).toHaveCount(0);
     }
-  });
-
-  test("the placeholder role applies through the careers contact route", async ({ page }) => {
-    await page.goto("/careers/senior-engineer-technical-lead");
-    await expect(page.locator('main a[href="/contact?intent=careers"]')).toHaveCount(1);
-    await expect(page.locator("main")).not.toContainText(/salary|£/i);
   });
 
   test("offers carry no prices", async ({ page }) => {

@@ -23,10 +23,10 @@ test("sitemap.xml is valid, lists only live pages and covers every template", as
   // Gated sections are listed exactly when their gates are open: all of them in the full fixture
   // set; only Industries and Labs under the draft source (ADR-025), which has no case studies,
   // insights or roles.
-  // Insights is opened in the Super Admin (ADR-035) and is closed with no content API configured.
+  // Insights and Careers are opened in the Super Admin (ADR-035): closed with no content API.
   const open: readonly string[] = isDraftRun
     ? ["/industries", "/labs"]
-    : GATED_PREFIXES.filter((prefix) => prefix !== "/insights");
+    : GATED_PREFIXES.filter((prefix) => prefix !== "/insights" && prefix !== "/careers");
   for (const prefix of GATED_PREFIXES) {
     expect(
       paths.some((path) => path === prefix || path.startsWith(`${prefix}/`)),
@@ -49,7 +49,7 @@ test("content that is not publishable is neither listed nor served", async ({
   expect(paths).toContain("/legal/privacy");
 });
 
-test("closed roles are not listed but keep their page; open roles and lab types are listed", async ({
+test("lab types are listed; Careers (from the Super Admin) is not", async ({
   request,
   baseURL,
 }) => {
@@ -57,9 +57,8 @@ test("closed roles are not listed but keep their page; open roles and lab types 
   // draft-content.http.spec.ts.
   test.skip(isDraftRun, FIXTURE_SPECIFIC);
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
-  expect(paths).toContain("/careers/example-role");
-  expect(paths).not.toContain("/careers/example-closed-role");
-  expect((await request.get("/careers/example-closed-role")).status()).toBe(200);
+  // Careers comes from the Super Admin (ADR-035) and is closed with no content API configured.
+  expect(paths.some((path) => path.startsWith("/careers"))).toBe(false);
   // The Labs gate is open and the type has assets, so its category page is listed (and serves 200,
   // which fetchAndCheckSitemap asserts for every listed URL).
   expect(paths).toContain("/labs/open-source");

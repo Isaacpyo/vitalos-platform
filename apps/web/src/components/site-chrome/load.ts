@@ -23,7 +23,7 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
     getSiteStateOrClosed(),
   ]);
   return {
-    gates: withContentSections(chrome.gates, state.insightsOpen),
+    gates: withContentSections(chrome.gates, state),
     settings: chrome.settings,
     practices,
     solutions,
@@ -34,14 +34,18 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
 });
 
 /**
- * Insights is opened in the Super Admin (`insights_open`, ADR-035), not by the CMS gate: the
- * navigation, footer and homepage follow the admin's site state, failing closed.
+ * Insights and Careers are opened in the Super Admin (`insights_open`, `careers_open`, ADR-035),
+ * not by the CMS gates: the navigation, footer, About and homepage follow the admin's site state,
+ * failing closed.
  */
 export function withContentSections(
   gates: PublicationGates,
-  insightsOpen: boolean,
+  state: { insightsOpen: boolean; careersOpen: boolean },
 ): PublicationGates {
-  return { ...gates, open: { ...gates.open, insights: insightsOpen } };
+  return {
+    ...gates,
+    open: { ...gates.open, insights: state.insightsOpen, careers: state.careersOpen },
+  };
 }
 
 export interface SiteChromeModel {

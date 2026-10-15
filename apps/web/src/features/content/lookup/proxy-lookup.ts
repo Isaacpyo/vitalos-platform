@@ -24,7 +24,7 @@ export const VerdictSchema: z.ZodType<Verdict> = z.discriminatedUnion("verdict",
     location: z
       .string()
       .max(200)
-      .regex(/^\/(insights|careers)(\/[a-z0-9-]{1,80}){0,2}$/),
+      .regex(/^\/(insights|careers)(\/[a-z0-9-]{1,80}){0,3}$/),
   }),
 ]);
 

@@ -141,4 +141,17 @@ describe("Cloudflare dummy secrets are answered without the network", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     spy.mockRestore();
   });
+
+  it("pins the careers action too", async () => {
+    const result = await verifyTurnstileToken({
+      secret: "real-secret-value",
+      token: "token",
+      expectedAction: "careers",
+      fetch: () =>
+        Promise.resolve(
+          new Response(JSON.stringify({ success: true, hostname: "x", action: "enquiry" })),
+        ),
+    });
+    expect(result).toEqual({ success: false, errorCodes: ["action-mismatch"] });
+  });
 });

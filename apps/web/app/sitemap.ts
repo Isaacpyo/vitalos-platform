@@ -22,5 +22,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .then((result) => (result.kind === "ok" ? result.data : null))
       .catch(() => null),
   ]);
-  return mergeContentSitemap(base, content, { siteUrl, contentConfigured: readers.configured });
+  return mergeContentSitemap(base, content, { siteUrl });
 }

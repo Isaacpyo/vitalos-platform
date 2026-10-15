@@ -62,11 +62,31 @@ describe("homepage sections", () => {
 
   it("renders every band from the full fixtures when the gates are open", () => {
     const ctx = context(fullHome, openGates, "Example how-we-work intro", contentHome);
-    // The Careers slot renders nothing until Phase 4.
-    const rendered = homeBands
-      .filter((band) => band !== careersSection)
-      .map((band) => band(ctx, "light"));
+    const rendered = homeBands.map((band) => band(ctx, "light"));
     expect(rendered.every((node) => node !== null)).toBe(true);
+  });
+
+  it("renders the Careers section after Insights from the admin's home read", () => {
+    const markup = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={contentHome}
+      />,
+    );
+    expect(markup).toContain("All open roles");
+    expect(markup).toContain('href="/careers/example-role-fixture"');
+    expect(markup.indexOf("All insights")).toBeLessThan(markup.indexOf("All open roles"));
+    const none = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={{ insights: contentHome.insights, careers: null }}
+      />,
+    );
+    expect(none).not.toContain("All open roles");
   });
 
   it("renders the Insights section from the admin's home read, and omits it without one", () => {

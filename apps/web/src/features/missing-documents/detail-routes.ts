@@ -36,15 +36,6 @@ export const families: Families = {
 };
 
 /**
- * TRANSITIONAL: roles from `@vitalos/cms`, checked only while the content API is not configured
- * (the Careers pages still render from the CMS until Phase 4 moves them to the admin). Delete
- * with those pages. Insights is served only from the admin (Phase 3).
- */
-export const legacyContentFamilies: Families = {
-  careers: [{ kind: "job", fields: ["slug"] }],
-};
-
-/**
  * Which detail route, if any, a request path addresses. `null` for every other path (index pages,
  * static pages, API routes, assets), which the caller must leave alone. A trailing slash is
  * ignored; a malformed percent-escape returns `null` so the page itself decides.

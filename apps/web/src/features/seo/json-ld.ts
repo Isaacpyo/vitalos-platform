@@ -1,13 +1,5 @@
 import { absoluteUrl, brandName, routes } from "@vitalos/cms";
-import type {
-  ImageView,
-  InsightView,
-  JobView,
-  PersonView,
-  RichText,
-  SiteSettingsView,
-} from "@vitalos/cms";
-import { richTextToPlainText } from "../../lib/cms/rich-text";
+import type { ImageView, PersonView, SiteSettingsView } from "@vitalos/cms";
 import { isSameOriginImage } from "../../lib/cms/images";
 
 /**
@@ -141,40 +133,6 @@ export function breadcrumbJsonLd(
 const validDate = (value: string | undefined) =>
   value !== undefined && !Number.isNaN(Date.parse(value)) ? value : undefined;
 
-const personRef = (author: { name?: string; title?: string; slug: string }, ctx: JsonLdContext) => {
-  const name = author.name ?? author.title;
-  if (!name) return null;
-  return { "@type": "Person", name, url: absoluteUrl(ctx.siteUrl, routes.person(author.slug)) };
-};
-
-/**
- * Article. Requires a published date and at least one named author (Stage 10 §18); otherwise
- * `null`. `description` is only the document summary, never generated.
- */
-export function articleJsonLd(insight: InsightView, ctx: JsonLdContext): JsonLdNode | null {
-  // Placeholder content (ADR-025) never emits structured data.
-  if (insight.placeholder === true) return null;
-  const datePublished = validDate(insight.publishedAt);
-  const authors = insight.authors
-    .map((author) => personRef(author, ctx))
-    .filter((author): author is NonNullable<typeof author> => author !== null);
-  if (!datePublished || authors.length === 0) return null;
-  return compact({
-    "@context": CONTEXT,
-    "@type": "Article",
-    headline: insight.title,
-    description: insight.seo.description ?? insight.summary,
-    url: absoluteUrl(ctx.siteUrl, routes.insight(insight.slug)),
-    mainEntityOfPage: absoluteUrl(ctx.siteUrl, routes.insight(insight.slug)),
-    datePublished,
-    dateModified: validDate(insight.updatedAt),
-    author: authors,
-    publisher: { "@id": organizationId(ctx) },
-    image: imageObject(ctx, insight.seo.ogImage),
-    inLanguage: "en-GB",
-  }) as JsonLdNode;
-}
-
 /** ProfilePage with a Person. `sameAs` carries verified profile links only (view contract). */
 export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonLdNode | null {
   // Placeholder personas (ADR-025) never emit a Person or ProfilePage.
@@ -195,56 +153,5 @@ export function profilePageJsonLd(person: PersonView, ctx: JsonLdContext): JsonL
       sameAs: person.sameAs.filter(isHttps),
       worksFor: { "@id": organizationId(ctx) },
     }),
-  }) as JsonLdNode;
-}
-
-/** Schema.org employmentType values. Anything else is omitted rather than guessed. */
-const employmentTypes: Record<string, string> = {
-  "full-time": "FULL_TIME",
-  "full time": "FULL_TIME",
-  "part-time": "PART_TIME",
-  "part time": "PART_TIME",
-  contract: "CONTRACTOR",
-  contractor: "CONTRACTOR",
-  temporary: "TEMPORARY",
-  internship: "INTERN",
-  intern: "INTERN",
-};
-
-/**
- * JobPosting, only for an open role that has not expired and has a description. `now` is
- * injectable so expiry is testable. No salary, no remote claims, no direct-apply claims.
- */
-export function jobPostingJsonLd(
-  job: JobView,
-  ctx: JsonLdContext,
-  now: Date = new Date(),
-): JsonLdNode | null {
-  // Placeholder roles (ADR-025) never emit a JobPosting.
-  if (job.status !== "open" || job.placeholder === true) return null;
-  const datePosted = validDate(job.datePosted);
-  if (!datePosted) return null;
-  const validThrough = validDate(job.validThrough);
-  if (validThrough && Date.parse(validThrough) < now.getTime()) return null;
-  const description = job.description ? richTextToPlainText(job.description as RichText) : "";
-  // Google requires a location; a posting without one is not described rather than half-described.
-  if (description === "" || !job.location?.trim()) return null;
-  return compact({
-    "@context": CONTEXT,
-    "@type": "JobPosting",
-    title: job.title,
-    description,
-    datePosted,
-    validThrough,
-    employmentType: job.employmentType
-      ? employmentTypes[job.employmentType.toLowerCase()]
-      : undefined,
-    hiringOrganization: {
-      "@type": "Organization",
-      name: brandName,
-      url: absoluteUrl(ctx.siteUrl, routes.home()),
-    },
-    jobLocation: { "@type": "Place", address: job.location },
-    url: absoluteUrl(ctx.siteUrl, routes.job(job.slug)),
   }) as JsonLdNode;
 }

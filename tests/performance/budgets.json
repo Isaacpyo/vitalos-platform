@@ -64,12 +64,6 @@
     "/trust/security": {
       "maxJsGzipBytes": 205000
     },
-    "/careers": {
-      "maxJsGzipBytes": 205000
-    },
-    "/careers/example-role": {
-      "maxJsGzipBytes": 205000
-    },
     "/legal/privacy": {
       "maxJsGzipBytes": 205000
     },

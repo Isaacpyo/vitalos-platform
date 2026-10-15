@@ -36,11 +36,6 @@ const pages: { name: string; path: string; h1: string }[] = [
   { name: "leadership", path: "/about/leadership", h1: "Leadership" },
   { name: "trust overview", path: "/trust", h1: "Trust Centre" },
   { name: "trust topic", path: "/trust/security", h1: "Example trust topic: security (fixture)" },
-  {
-    name: "closed role",
-    path: "/careers/example-closed-role",
-    h1: "Example Closed Role (fixture)",
-  },
   { name: "legal", path: "/legal/privacy", h1: "Example privacy page (fixture)" },
 ];
 
@@ -81,19 +76,6 @@ test.describe("sparse content", () => {
       "href",
       "/contact?intent=procurement",
     );
-  });
-
-  test("a closed role is not a JobPosting and has no apply link or Careers breadcrumb", async ({
-    page,
-  }) => {
-    await page.goto("/careers/example-closed-role");
-    await expect(page.getByText("This role is closed")).toBeVisible();
-    const types = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((nodes) => nodes.map((n) => JSON.parse(n.textContent ?? "{}")["@type"]));
-    expect(types).not.toContain("JobPosting");
-    await expect(page.getByRole("link", { name: "Apply for this role" })).toHaveCount(0);
-    await expect(page.locator('nav[aria-label="Breadcrumb"] a[href="/careers"]')).toHaveCount(0);
   });
 
   test("topics and legal pages with no document are 404s", async ({ page }) => {

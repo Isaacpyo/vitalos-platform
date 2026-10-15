@@ -60,6 +60,26 @@ export interface RequestOptions {
   scope?: SigningScope;
   /** Extra headers (for example the preview token). Never logged. */
   headers?: Record<string, string>;
+  /**
+   * For endpoints that explain a refusal (400, 409, 422, 429 with `{ errors }`): the body is
+   * validated with this schema and thrown as `ContentRejectedError`. Never logged.
+   */
+  errorSchema?: z.ZodType;
+}
+
+/** Statuses whose body carries the contract's `{ errors }` explanation. */
+const EXPLAINED = new Set([400, 409, 422, 429]);
+
+/** The admin refused the request and said why (`{ errors: { field: code } }`). */
+export class ContentRejectedError extends Error {
+  readonly status: number;
+  readonly body: unknown;
+  constructor(status: number, body: unknown) {
+    super(`Content API refused the request (${status})`);
+    this.name = "ContentRejectedError";
+    this.status = status;
+    this.body = body;
+  }
 }
 
 export interface ContentClient {
@@ -98,6 +118,7 @@ export function createContentClient(deps: ContentClientDeps): ContentClient {
     body: string | undefined,
     scope: SigningScope,
     extra: Record<string, string>,
+    explained: boolean,
   ): Promise<Attempt> {
     const key = scope === "submit" ? deps.submitKey : deps.readKey;
     if (!key) throw new ContentUnavailableError("not_configured");
@@ -118,6 +139,18 @@ export function createContentClient(deps: ContentClientDeps): ContentClient {
         cache: "no-store",
         redirect: "error",
       });
+      if (explained && EXPLAINED.has(response.status)) {
+        try {
+          return {
+            kind: "response",
+            status: response.status,
+            json: await response.json(),
+            parsed: true,
+          };
+        } catch {
+          return { kind: "response", status: response.status, json: undefined, parsed: false };
+        }
+      }
       if (response.status < 200 || response.status >= 300) {
         await response.body?.cancel().catch(() => undefined);
         return { kind: "response", status: response.status, json: undefined, parsed: false };
@@ -165,7 +198,14 @@ export function createContentClient(deps: ContentClientDeps): ContentClient {
 
     for (let attemptNo = 1; ; attemptNo += 1) {
       const started = Date.now();
-      const result = await attempt(method, pathAndQuery, body, scope, options.headers ?? {});
+      const result = await attempt(
+        method,
+        pathAndQuery,
+        body,
+        scope,
+        options.headers ?? {},
+        options.errorSchema !== undefined,
+      );
       const last = attemptNo >= 2;
 
       if (result.kind === "error") {
@@ -189,6 +229,12 @@ export function createContentClient(deps: ContentClientDeps): ContentClient {
       if (status === 404) {
         log("info", { attempt: attemptNo, status, started });
         throw new ContentNotFoundError();
+      }
+      if (options.errorSchema && EXPLAINED.has(status)) {
+        const explanation = result.parsed ? options.errorSchema.safeParse(result.json) : null;
+        log("info", { attempt: attemptNo, status, code: "rejected", started });
+        if (explanation?.success) throw new ContentRejectedError(status, explanation.data);
+        throw new ContentUnavailableError("invalid_payload", status);
       }
       if (status < 200 || status >= 300) {
         log("warn", { attempt: attemptNo, status, code: "http_4xx", started });

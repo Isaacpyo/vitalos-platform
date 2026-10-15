@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { InsightView, JobView, PersonView } from "@vitalos/cms";
+import type { PersonView } from "@vitalos/cms";
 import {
-  articleJsonLd,
   breadcrumbJsonLd,
-  jobPostingJsonLd,
   organizationJsonLd,
   profilePageJsonLd,
   serializeJsonLd,
@@ -124,56 +122,6 @@ describe("breadcrumbJsonLd", () => {
   });
 });
 
-const insight = (overrides: Partial<InsightView> = {}): InsightView => ({
-  id: "i1",
-  slug: "example-insight",
-  title: "Example insight (fixture)",
-  seo: {},
-  format: "article",
-  topics: [],
-  authors: [{ id: "p1", slug: "example-person", title: "Example Person (fixture)" }],
-  publishedAt: "2026-03-01T09:00:00Z",
-  body: [],
-  related: [],
-  ...overrides,
-});
-
-describe("articleJsonLd", () => {
-  it("describes an article with a named author and a published date", () => {
-    const node = articleJsonLd(
-      insight({ updatedAt: "2026-03-05T09:00:00Z", summary: "A summary." }),
-      ctx,
-    );
-    expect(node).toMatchObject({
-      "@type": "Article",
-      headline: "Example insight (fixture)",
-      description: "A summary.",
-      datePublished: "2026-03-01T09:00:00Z",
-      dateModified: "2026-03-05T09:00:00Z",
-      author: [
-        {
-          "@type": "Person",
-          name: "Example Person (fixture)",
-          url: "https://www.example.invalid/people/example-person",
-        },
-      ],
-    });
-    expect(node).not.toHaveProperty("image");
-  });
-
-  it("is null for placeholder content, even with a named author and a valid date", () => {
-    expect(articleJsonLd(insight({ placeholder: true }), ctx)).toBeNull();
-  });
-
-  it("is null without a named author or a valid date", () => {
-    expect(articleJsonLd(insight({ authors: [] }), ctx)).toBeNull();
-    expect(
-      articleJsonLd(insight({ authors: [{ id: "p", slug: "s", title: "" }] }), ctx),
-    ).toBeNull();
-    expect(articleJsonLd(insight({ publishedAt: "not a date" }), ctx)).toBeNull();
-  });
-});
-
 describe("profilePageJsonLd", () => {
   const person = (overrides: Partial<PersonView> = {}): PersonView => ({
     id: "p1",
@@ -221,70 +169,6 @@ describe("profilePageJsonLd", () => {
       sameAs: ["https://www.linkedin.com/in/example"],
       image: { url: "https://www.example.invalid/images/portrait.jpg" },
     });
-  });
-});
-
-describe("jobPostingJsonLd", () => {
-  const now = new Date("2026-06-01T00:00:00Z");
-  const job = (overrides: Partial<JobView> = {}): JobView => ({
-    id: "j1",
-    slug: "example-role",
-    title: "Example role (fixture)",
-    seo: {},
-    status: "open",
-    datePosted: "2026-05-01",
-    location: "Example Town",
-    employmentType: "Full-time",
-    description: [
-      {
-        _type: "block",
-        children: [{ _type: "span", text: "Role description.", marks: [] }],
-        markDefs: [],
-      },
-    ],
-    ...overrides,
-  });
-
-  it("is null for a placeholder role, even when open with a description and location", () => {
-    expect(jobPostingJsonLd(job({ placeholder: true }), ctx, now)).toBeNull();
-  });
-
-  it("describes an open role with no invented salary or remote claims", () => {
-    const node = jobPostingJsonLd(job({ validThrough: "2026-07-01" }), ctx, now);
-    expect(node).toMatchObject({
-      "@type": "JobPosting",
-      title: "Example role (fixture)",
-      description: "Role description.",
-      datePosted: "2026-05-01",
-      validThrough: "2026-07-01",
-      employmentType: "FULL_TIME",
-      jobLocation: { "@type": "Place", address: "Example Town" },
-    });
-    for (const invented of [
-      "baseSalary",
-      "jobLocationType",
-      "directApply",
-      "applicantLocationRequirements",
-    ]) {
-      expect(node).not.toHaveProperty(invented);
-    }
-  });
-
-  it("is null for closed, expired, undescribed or locationless roles", () => {
-    expect(jobPostingJsonLd(job({ status: "closed" }), ctx, now)).toBeNull();
-    expect(jobPostingJsonLd(job({ validThrough: "2026-05-15" }), ctx, now)).toBeNull();
-    expect(jobPostingJsonLd(job({ description: [] }), ctx, now)).toBeNull();
-    const noDescription = { ...job(), description: undefined } as unknown as JobView;
-    expect(jobPostingJsonLd(noDescription, ctx, now)).toBeNull();
-    expect(jobPostingJsonLd(job({ datePosted: "never" }), ctx, now)).toBeNull();
-    const noLocation = { ...job(), location: undefined } as unknown as JobView;
-    expect(jobPostingJsonLd(noLocation, ctx, now)).toBeNull();
-  });
-
-  it("omits an employment type it cannot map", () => {
-    expect(
-      jobPostingJsonLd(job({ employmentType: "Portfolio career" }), ctx, now),
-    ).not.toHaveProperty("employmentType");
   });
 });
 

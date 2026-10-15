@@ -1,7 +1,7 @@
 /**
  * Route manifest for the quality suites (ADR-021). One entry per page TEMPLATE, using the
- * artificial fixture slugs from packages/cms/src/fixtures. Insights pages come from the Super Admin
- * (ADR-035) and are swept by tests/content against a fake admin. `pattern` is the route family as it
+ * artificial fixture slugs from packages/cms/src/fixtures. Insights and Careers pages come from the
+ * Super Admin (ADR-035) and are swept by tests/content against a fake admin. `pattern` is the route family as it
  * appears in sitemap.xml, so a suite can prove that the manifest has not drifted from the site: a
  * new template appears in the sitemap, matches no pattern and fails `sitemap.http.spec.ts` until it
  * is added here (and therefore to the axe, reflow, focus and JavaScript-budget sweeps).
@@ -48,8 +48,6 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "leadership", path: "/about/leadership", pattern: "/about/leadership" },
   { name: "trust overview", path: "/trust", pattern: "/trust" },
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
-  { name: "careers", path: "/careers", pattern: "/careers" },
-  { name: "role", path: "/careers/example-role", pattern: "/careers/:slug" },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug" },
   { name: "contact", path: "/contact", pattern: "/contact" },
 ];
@@ -95,13 +93,6 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   },
   { name: "trust overview", path: "/trust", pattern: "/trust" },
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
-  { name: "careers", path: "/careers", pattern: "/careers", inSitemap: false },
-  {
-    name: "role",
-    path: "/careers/senior-engineer-technical-lead",
-    pattern: "/careers/:slug",
-    inSitemap: false,
-  },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
   { name: "contact", path: "/contact", pattern: "/contact" },
 ];

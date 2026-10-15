@@ -542,6 +542,7 @@ describe("entries", () => {
     expect(build.indexable).toBe(true);
     expect(Object.keys(build).sort()).toEqual([
       "careersUploadOrigin",
+      "contentApiOrigin",
       "contentMediaOrigin",
       "contentSource",
       "deployEnv",

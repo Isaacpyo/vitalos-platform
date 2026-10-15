@@ -24,7 +24,7 @@ const urls = (entries: { url: string }[]) => entries.map((entry) => entry.url);
 
 describe("mergeContentSitemap", () => {
   it("replaces CMS Insights and Careers with the admin's entries once configured", () => {
-    const merged = mergeContentSitemap(base, content, { siteUrl: site, contentConfigured: true });
+    const merged = mergeContentSitemap(base, content, { siteUrl: site });
     expect(urls(merged)).toEqual([
       `${site}/`,
       `${site}/what-we-do`,
@@ -37,15 +37,10 @@ describe("mergeContentSitemap", () => {
     );
   });
 
-  it("is fail-soft: a failed read keeps the static entries (minus CMS Insights)", () => {
-    expect(
-      urls(mergeContentSitemap(base, null, { siteUrl: site, contentConfigured: true })),
-    ).toEqual([`${site}/`, `${site}/what-we-do`]);
-  });
-
-  it("keeps the CMS Careers entries while the content API is not configured", () => {
-    expect(
-      urls(mergeContentSitemap(base, null, { siteUrl: site, contentConfigured: false })),
-    ).toEqual([`${site}/`, `${site}/what-we-do`, `${site}/careers`, `${site}/careers/cms-role`]);
+  it("is fail-soft: a failed read keeps the static entries (minus CMS Insights and Careers)", () => {
+    expect(urls(mergeContentSitemap(base, null, { siteUrl: site }))).toEqual([
+      `${site}/`,
+      `${site}/what-we-do`,
+    ]);
   });
 });

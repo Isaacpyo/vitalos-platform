@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMissingDocumentChecker } from "./checker";
-import { legacyContentFamilies, matchDetailRoute } from "./detail-routes";
+import { matchDetailRoute } from "./detail-routes";
 
 describe("matchDetailRoute", () => {
   it("recognises every dynamic detail family", () => {
@@ -21,15 +21,9 @@ describe("matchDetailRoute", () => {
     }
   });
 
-  it("leaves Insights and Careers to the content lookup, except in the legacy table", () => {
+  it("leaves Insights and Careers to the content lookup", () => {
     expect(matchDetailRoute("/insights/a")).toBeNull();
     expect(matchDetailRoute("/careers/r")).toBeNull();
-    expect(matchDetailRoute("/insights/a", legacyContentFamilies)).toBeNull();
-    expect(matchDetailRoute("/careers/r", legacyContentFamilies)).toMatchObject({
-      kind: "job",
-      values: ["r"],
-    });
-    expect(matchDetailRoute("/solutions/s", legacyContentFamilies)).toBeNull();
     expect(matchDetailRoute("/constructor/x")).toBeNull();
   });
 

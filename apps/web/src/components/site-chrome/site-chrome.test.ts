@@ -219,15 +219,18 @@ describe("activeSectionForPath", () => {
   });
 });
 
-describe("Insights in the chrome follows the admin's site state", () => {
-  it("opens or closes only the Insights gate", () => {
+describe("Insights and Careers in the chrome follow the admin's site state", () => {
+  it("opens or closes only the Insights and Careers gates", () => {
     const gates = evaluateGates({ work: 3, insights: 0, labs: 2, industries: 2, careers: 1 });
-    expect(withContentSections(gates, true).open.insights).toBe(true);
+    const open = withContentSections(gates, { insightsOpen: true, careersOpen: true });
+    expect(open.open.insights).toBe(true);
+    expect(open.open.careers).toBe(true);
     const closed = withContentSections(
-      { ...gates, open: { ...gates.open, insights: true } },
-      false,
+      { ...gates, open: { ...gates.open, insights: true, careers: true } },
+      { insightsOpen: false, careersOpen: false },
     );
     expect(closed.open.insights).toBe(false);
+    expect(closed.open.careers).toBe(false);
     expect(closed.open.work).toBe(gates.open.work);
   });
 });

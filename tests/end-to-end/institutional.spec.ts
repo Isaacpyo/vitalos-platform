@@ -5,7 +5,8 @@ import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
- * Institutional templates (workstream G2b): About, Leadership, Trust Centre, Careers, Legal.
+ * Institutional templates (workstream G2b): About, Leadership, Trust Centre, Legal. Careers comes
+ * from the Super Admin (ADR-035) and is covered by tests/content against a fake admin.
  *
  * Runs against the production build with the `full` fixture set. Below-gate behaviour is covered
  * by institutional.sparse.spec.ts. Runs on the desktop and 390px mobile projects, and every
@@ -28,9 +29,6 @@ const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
   { name: "trust topic (certifications)", path: "/trust/certifications", ld: ["BreadcrumbList"] },
   { name: "trust topic (subprocessors)", path: "/trust/subprocessors", ld: ["BreadcrumbList"] },
   { name: "trust topic (procurement)", path: "/trust/procurement", ld: ["BreadcrumbList"] },
-  { name: "careers", path: "/careers", ld: ["BreadcrumbList"] },
-  { name: "open role", path: "/careers/example-role", ld: ["JobPosting", "BreadcrumbList"] },
-  { name: "closed role", path: "/careers/example-closed-role", ld: ["BreadcrumbList"] },
   { name: "legal (privacy)", path: "/legal/privacy", ld: ["BreadcrumbList"] },
   { name: "legal (terms)", path: "/legal/terms", ld: ["BreadcrumbList"] },
 ];
@@ -79,8 +77,8 @@ test.describe("about and leadership", () => {
       page.locator("main").getByRole("link", { name: "Example Person (fixture)" }),
     ).toBeVisible();
     await expect(page.locator("main").getByRole("link", { name: "Trust Centre" })).toBeVisible();
-    // Careers has open roles in the full set, so it is linked.
-    await expect(page.locator("main").getByRole("link", { name: "Careers" })).toBeVisible();
+    // Careers follows the Super Admin's `careers_open` (ADR-035): closed with no content API.
+    await expect(page.locator("main").getByRole("link", { name: "Careers" })).toHaveCount(0);
   });
 
   test("leadership lists leadership profiles only", async ({ page }) => {
@@ -136,41 +134,11 @@ test.describe("trust centre", () => {
 });
 
 test.describe("careers", () => {
-  test("lists the open role only and links to its page", async ({ page }) => {
-    test.skip(isDraftRun, FIXTURE_SPECIFIC);
-    await page.goto("/careers");
-    await expect(page.locator('main a[href^="/careers/"]')).toHaveCount(1);
-    await expect(page.locator('main a[href="/careers/example-role"]')).toBeVisible();
-    await expect(page.locator('main a[href="/careers/example-closed-role"]')).toHaveCount(0);
-  });
-
-  test("an open role has JobPosting data and an application link", async ({ page }) => {
-    test.skip(isDraftRun, FIXTURE_SPECIFIC);
-    await page.goto("/careers/example-role");
-    const nodes = await jsonLdNodes(page);
-    const job = nodes.find((node) => node["@type"] === "JobPosting");
-    expect(job?.["title"]).toBe("Example Role (fixture)");
-    expect(job?.["datePosted"]).toBe("2026-02-01");
-    expect(job).not.toHaveProperty("baseSalary");
-    await expect(page.getByRole("link", { name: "Apply for this role" })).toHaveAttribute(
-      "href",
-      /^https:\/\//,
-    );
-  });
-
-  test("a closed role says so, has no JobPosting data and no application link", async ({
-    page,
-  }) => {
-    test.skip(isDraftRun, FIXTURE_SPECIFIC);
-    await page.goto("/careers/example-closed-role");
-    await expect(page.getByText("This role is closed")).toBeVisible();
-    const types = (await jsonLdNodes(page)).map((node) => node["@type"]);
-    expect(types).not.toContain("JobPosting");
-    await expect(page.getByRole("link", { name: "Apply for this role" })).toHaveCount(0);
-  });
-
-  test("an unknown role is a 404", async ({ page }) => {
-    expect((await page.goto("/careers/does-not-exist"))?.status()).toBe(404);
+  // Careers comes from the Super Admin (ADR-035); with no content API configured it is closed.
+  test("the careers pages answer the server-rendered 404", async ({ page }) => {
+    for (const path of ["/careers", "/careers/example-role", "/careers/does-not-exist"]) {
+      expect((await page.goto(path))?.status(), path).toBe(404);
+    }
   });
 });
 

@@ -16,6 +16,8 @@ export interface BuildEnv {
   contentMediaOrigin: string | undefined;
   /** CV upload origin (CSP connect-src), or undefined. */
   careersUploadOrigin: string | undefined;
+  /** The Super Admin's origin (not secret): the CV upload fallback when no upload host is set. */
+  contentApiOrigin: string | undefined;
 }
 
 export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
@@ -30,6 +32,7 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     turnstileEnabled: features.turnstile,
     contentMediaOrigin: env.content.mediaOrigin,
     careersUploadOrigin: env.content.uploadOrigin,
+    contentApiOrigin: env.content.apiBaseUrl,
   };
 }
 

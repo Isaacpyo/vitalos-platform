@@ -2,24 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const isMissing = vi.fn((pathname: string) => Promise.resolve(pathname === "/solutions/nope"));
-const isMissingLegacy = vi.fn((pathname: string) => Promise.resolve(pathname === "/careers/nope"));
 vi.mock("./src/features/missing-documents", () => ({
   UNMATCHED_PATH: "/__unmatched__",
   isMissingDetailPath: (pathname: string) => isMissing(pathname),
-  isMissingLegacyContentPath: (pathname: string) => isMissingLegacy(pathname),
 }));
 
-type ContentResult =
-  "not-applicable" | "legacy" | "pass" | "missing" | "unavailable" | { redirect: string };
+type ContentResult = "not-applicable" | "pass" | "missing" | "unavailable" | { redirect: string };
 const contentDecision = vi.fn((request: NextRequest): Promise<ContentResult> =>
   Promise.resolve(
     request.method !== "GET"
       ? "not-applicable"
-      : request.nextUrl.pathname.startsWith("/careers")
-        ? "legacy"
-        : request.nextUrl.pathname.startsWith("/insights")
-          ? "missing"
-          : "not-applicable",
+      : /^\/(insights|careers)(\/|$)/.test(request.nextUrl.pathname)
+        ? "missing"
+        : "not-applicable",
   ),
 );
 vi.mock("./src/features/content/proxy", async (importOriginal) => {
@@ -128,24 +123,20 @@ describe("proxy: Insights and Careers (ADR-036)", () => {
     expect(isMissing).not.toHaveBeenCalledWith("/insights/live");
   });
 
-  it("keeps the CMS check for Careers while the content API is not configured", async () => {
-    const missing = await proxy(request("/careers/nope"));
-    expect(missing.headers.get("x-middleware-rewrite")).toBe("http://localhost:3000/__unmatched__");
-    const present = await proxy(request("/careers/real"));
-    expect(present.headers.get("x-middleware-rewrite")).toBeNull();
+  it("answers the server-rendered 404 for Insights and Careers while they are closed", async () => {
+    for (const path of ["/insights", "/careers", "/careers/a-role"]) {
+      const response = await proxy(request(path));
+      expect(response.headers.get("x-middleware-rewrite"), path).toBe(
+        "http://localhost:3000/__unmatched__",
+      );
+      expect(response.headers.get("cache-control")).toBe("no-store");
+    }
   });
 
-  it("answers the server-rendered 404 for Insights while it is closed", async () => {
-    const response = await proxy(request("/insights"));
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/__unmatched__",
-    );
-    expect(response.headers.get("cache-control")).toBe("no-store");
-  });
-
-  it("asks nothing about other paths", async () => {
-    isMissingLegacy.mockClear();
-    await proxy(request("/solutions/real"));
-    expect(isMissingLegacy).not.toHaveBeenCalled();
+  it("never asks the CMS about Insights or Careers", async () => {
+    isMissing.mockClear();
+    await proxy(request("/careers/a-role"));
+    await proxy(request("/insights/a-post"));
+    expect(isMissing).not.toHaveBeenCalled();
   });
 });

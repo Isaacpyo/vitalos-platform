@@ -28,7 +28,6 @@ const FIXTURE_OTHER_ROUTES = [
   "/about/leadership",
   "/trust",
   "/trust/security",
-  "/careers",
   "/legal/privacy",
   "/contact",
 ];
@@ -236,11 +235,12 @@ test.describe("site shell", () => {
       await expect(footer.locator("details[open]")).toHaveCount(0);
       for (const heading of await footer.locator("summary").all()) await heading.click();
     }
-    for (const label of ["Industries", "Work", "Labs", "Careers", "Leadership"]) {
+    for (const label of ["Industries", "Work", "Labs", "Leadership"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
     // Insights is opened in the Super Admin (ADR-035); with no content API configured it is closed.
     await expect(footer.getByRole("link", { name: "Insights", exact: true })).toHaveCount(0);
+    await expect(footer.getByRole("link", { name: "Careers", exact: true })).toHaveCount(0);
     await expect(footer.getByText("Example Practice Ltd (fixture)")).toBeVisible();
     await expect(footer.getByText("Company number 00000000 (fixture)")).toBeVisible();
   });

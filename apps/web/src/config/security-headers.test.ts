@@ -11,6 +11,7 @@ const baseEnv: BuildEnv = {
   turnstileEnabled: false,
   contentMediaOrigin: undefined,
   careersUploadOrigin: undefined,
+  contentApiOrigin: undefined,
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
@@ -82,5 +83,11 @@ describe("getSecurityHeaders", () => {
     expect(csp).toContain("img-src 'self' data: https://media.example.invalid;");
     expect(csp).toContain("connect-src 'self' https://uploads.example.invalid;");
     expect(headersFor({}).get("Content-Security-Policy")).toContain("img-src 'self' data:;");
+    // Without an upload host the admin's own origin is the upload target (A9 fallback).
+    expect(
+      headersFor({ contentApiOrigin: "https://admin.example.invalid" }).get(
+        "Content-Security-Policy",
+      ),
+    ).toContain("connect-src 'self' https://admin.example.invalid;");
   });
 });

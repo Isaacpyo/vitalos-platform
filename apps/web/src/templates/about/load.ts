@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { ContentSource, PersonView, PublicationGates, RoutePageView } from "@vitalos/cms";
+import { loadChromeContent } from "../../components/site-chrome/load";
 import { getContentSource } from "../../lib/cms/get-content-source";
 import { leadershipOf } from "./map";
 
@@ -18,10 +19,11 @@ export interface AboutData {
 
 export const loadAbout = cache(async (): Promise<AboutData> => {
   const source = await getContentSource();
-  const [page, people, gates] = await Promise.all([
+  // Gates from the chrome: Careers follows the Super Admin's `careers_open` (ADR-035).
+  const [page, people, { gates }] = await Promise.all([
     source.getRoutePage("about"),
     allPeople(source),
-    source.getPublicationGates(),
+    loadChromeContent(),
   ]);
   return { page, leaders: leadershipOf(people), gates };
 });

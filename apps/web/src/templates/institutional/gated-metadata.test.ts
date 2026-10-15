@@ -2,8 +2,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFixtureContentSource } from "@vitalos/cms/fixtures";
 
 /**
- * Route-level behaviour of the gated templates against the fixture sets (ADR-022; Insights is now
- * opened in the Super Admin and tested in src/features/content/insights): a closed gate
+ * Route-level behaviour of the gated templates against the fixture sets (ADR-022; Insights and
+ * Careers are now opened in the Super Admin and tested in src/features/content): a closed gate
  * means the index 404s and detail pages are `noindex`; an open gate indexes them. The deployment
  * is mocked as indexable so only the gate decision is visible in the robots metadata.
  */
@@ -27,8 +27,6 @@ beforeAll(async () => {
     import("../../../app/(site)/labs/page"),
     import("../../../app/(site)/labs/[type]/page"),
     import("../../../app/(site)/labs/[type]/[slug]/page"),
-    import("../../../app/(site)/careers/page"),
-    import("../../../app/(site)/careers/[slug]/page"),
     import("../../../app/(site)/about/page"),
     import("../../../app/(site)/trust/[topic]/page"),
     import("../../../app/(site)/legal/[slug]/page"),
@@ -48,7 +46,6 @@ describe("gated indexes", () => {
   const indexes = [
     ["work", () => import("../../../app/(site)/work/page")],
     ["labs", () => import("../../../app/(site)/labs/page")],
-    ["careers", () => import("../../../app/(site)/careers/page")],
   ] as const;
 
   for (const [name, load] of indexes) {
@@ -103,20 +100,6 @@ describe("detail pages of gated sections", () => {
       { slug: "example-case-study" },
       { slug: "example-case-study-two" },
     ]);
-  });
-
-  it("role: noindex when closed or below the Careers gate, indexed when open above it", async () => {
-    const page = await import("../../../app/(site)/careers/[slug]/page");
-    expect(
-      await robotsOf(await page.generateMetadata(params({ slug: "example-closed-role" }))),
-    ).toEqual({ index: false, follow: false });
-    state.set = "full";
-    expect(
-      await robotsOf(await page.generateMetadata(params({ slug: "example-closed-role" }))),
-    ).toEqual({ index: false, follow: false });
-    expect(
-      await robotsOf(await page.generateMetadata(params({ slug: "example-role" }))),
-    ).toBeUndefined();
   });
 
   it("lab asset: indexed above the Labs gate, and the wrong type is a 404", async () => {

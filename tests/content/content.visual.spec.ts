@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { waitForSettledLayout } from "../support/overflow";
-import { INSIGHTS_PAGES, stubMedia } from "./support/media";
+import { CAREERS_PAGES, INSIGHTS_PAGES, stubMedia } from "./support/media";
 
 /**
- * Screenshots of every Insights page and the homepage section at 1440, 768 and 390 CSS px, in
+ * Screenshots of every Insights and Careers page and the homepage sections at 1440, 768 and 390 CSS px, in
  * light and dark colour schemes (brief 13). The site has no dark theme yet, so the dark captures
  * record that the pages stay legible under `prefers-color-scheme: dark`.
  */
@@ -17,7 +17,7 @@ for (const scheme of ["light", "dark"] as const) {
   for (const viewport of viewports) {
     test.describe(`${scheme} ${viewport.width}`, () => {
       test.use({ viewport, colorScheme: scheme, deviceScaleFactor: 1 });
-      for (const { name, path } of INSIGHTS_PAGES) {
+      for (const { name, path } of [...INSIGHTS_PAGES, ...CAREERS_PAGES]) {
         test(name, async ({ page }) => {
           await stubMedia(page);
           await page.goto(path, { waitUntil: "load" });

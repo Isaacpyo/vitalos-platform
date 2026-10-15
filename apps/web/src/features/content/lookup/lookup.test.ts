@@ -50,6 +50,7 @@ describe("isContentLookupPath", () => {
       "/insights/a-post",
       "/insights/authors/a",
       "/insights/topics/t",
+      "/insights/topics/t/page/2",
       "/careers",
       "/careers/a-role",
     ]) {
@@ -132,12 +133,21 @@ describe("lookupVerdict", () => {
       verdict: "redirect",
       location: "/insights",
     });
+    expect(await verdict("/insights/topics/example-topic/page/1")).toEqual({
+      verdict: "redirect",
+      location: "/insights/topics/example-topic",
+    });
   });
 
   it("answers missing for unknown items and out-of-range pages", async () => {
     expect(await verdict("/insights/no-such-post")).toEqual({ verdict: "missing" });
     expect(await verdict("/careers/no-such-role")).toEqual({ verdict: "missing" });
     expect(await verdict("/insights/topics/none")).toEqual({ verdict: "missing" });
+    expect(await verdict("/insights/topics/none/page/2")).toEqual({ verdict: "missing" });
+    const topicPages = (fixture("topic") as { posts: { totalPages: number } }).posts.totalPages;
+    expect(await verdict(`/insights/topics/example-topic/page/${topicPages + 1}`)).toEqual({
+      verdict: "missing",
+    });
     const totalPages = (fixture("post-page") as { totalPages: number }).totalPages;
     expect(await verdict(`/insights/page/${totalPages + 1}`)).toEqual({ verdict: "missing" });
   });

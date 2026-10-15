@@ -65,6 +65,9 @@ export const rateLimits = {
   preview: { windowSeconds: 60, max: 30 },
   lookup: { windowSeconds: 60, max: 1200 },
   tick: { windowSeconds: 60, max: 30 },
+  // Brief section 9: per IP, 5 CV uploads and 3 applications an hour.
+  "careers-upload": { windowSeconds: 3600, max: 5 },
+  "careers-application": { windowSeconds: 3600, max: 3 },
 } as const;
 
 export type RateLimitScope = keyof typeof rateLimits;
@@ -79,6 +82,7 @@ export async function rateLimited(
   headers: Headers,
   scope: RateLimitScope,
   correlationId: string,
+  body: unknown = { error: "rate_limited" },
 ): Promise<Response | null> {
   const key = await rateLimitKey(
     `content:${scope}`,
@@ -87,7 +91,10 @@ export async function rateLimited(
   );
   const decision = await limiter.consume(key, rateLimits[scope]);
   if (decision.allowed) return null;
-  return json({ error: "rate_limited" }, 429, correlationId, {
+  return json(body, 429, correlationId, {
     "retry-after": String(decision.retryAfterSeconds),
   });
 }
+
+/** `rateLimited` with the endpoint's own refusal body (the careers routes use `{ errors }`). */
+export const rateLimitedFor = rateLimited;
