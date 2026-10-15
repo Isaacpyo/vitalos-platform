@@ -6,6 +6,7 @@ import type { Crumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { FaqGroup } from "./load";
+import { ClosingBand } from "../commercial/bands";
 
 export const faqTrail = (): Crumb[] => [homeCrumb, { name: navLabels.faq, path: routes.faq() }];
 
@@ -19,7 +20,7 @@ const groupId = (index: number) => `faq-${index}`;
 export function FaqPage({ groups }: Readonly<{ groups: readonly FaqGroup[] }>) {
   return (
     <PageMain>
-      <PageHeroBand crumbs={<Breadcrumbs trail={faqTrail()} />} title={structuralLabels.faq} />
+      <PageHeroBand full crumbs={<Breadcrumbs trail={faqTrail()} />} title={structuralLabels.faq} />
       <PageBand>
         <Stack gap={8}>
           {groups.map((group, index) => (
@@ -38,6 +39,7 @@ export function FaqPage({ groups }: Readonly<{ groups: readonly FaqGroup[] }>) {
           ))}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

@@ -189,7 +189,13 @@ test.describe("people", () => {
 
   test("a bare profile shows no empty sections and no unverified links", async ({ page }) => {
     await page.goto(PERSON_BARE);
-    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
+    // The closing card ends every page (pages redesign); no content section may be empty.
+    await expect(
+      page
+        .locator("main")
+        .getByRole("heading", { level: 2 })
+        .filter({ hasNotText: "Have a problem worth solving?" }),
+    ).toHaveCount(0);
     await expect(page.locator('main a[href^="https://"]')).toHaveCount(0);
   });
 

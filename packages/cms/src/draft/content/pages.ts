@@ -410,7 +410,9 @@ const careers: RoutePageDraft = {
 const contact: RoutePageDraft = {
   view: {
     key: "contact",
-    heading: headingFor("finalConversion"),
+    // Stage 11 §30. The homepage's closing heading changed on 15 Oct 2026; the contact page keeps
+    // this one (owner direction, locked-copy.ts finalConversion).
+    heading: "Bring us the problem.",
     intro:
       "Come to us for consulting, direct engineering, AI and data work or managed services. Tell us your goal and we will help find the right starting point.",
     expectations: richText(
