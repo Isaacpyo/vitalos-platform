@@ -492,6 +492,7 @@ describe("feature flags", () => {
       enquiryPersistence: false,
       emailNotifications: false,
       indexable: false,
+      relay: false,
     });
   });
 
@@ -513,6 +514,7 @@ describe("feature flags", () => {
       enquiryPersistence: true,
       emailNotifications: false,
       indexable: true,
+      relay: false,
     });
   });
 
@@ -543,6 +545,8 @@ describe("entries", () => {
       "deployEnv",
       "enableHsts",
       "indexable",
+      "relayEnabled",
+      "relayRealtimeOrigin",
       "siteUrl",
       "turnstileEnabled",
     ]);
@@ -573,5 +577,84 @@ describe("entries", () => {
       const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
       expect(source, file).not.toMatch(/(?:import|from)\s+["']server-only["']/);
     }
+  });
+});
+
+describe("Vitalos Relay", () => {
+  const base = {
+    RELAY_ENABLED: "true",
+    RELAY_TOKEN_PEPPER: "p".repeat(40),
+    RELAY_IP_SALT: "s".repeat(20),
+  };
+  const prod = {
+    ...production,
+    ...base,
+    SUPABASE_URL: "https://project.example.invalid",
+    SUPABASE_SECRET_KEY: "x".repeat(24),
+    RELAY_LLM_PROVIDER: "deepseek",
+    DEEPSEEK_API_KEY: "sk-fixture-fixture-fixture",
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: "0x4AAAAAAAfixturesitekey",
+    TURNSTILE_SECRET_KEY: "0x4AAAAAAAfixturesecretkey",
+    RELAY_ADMIN_API_SECRET: "a".repeat(40),
+    RELAY_WEBHOOK_SECRET: "w".repeat(40),
+    RELAY_SUPERADMIN_WEBHOOK_URL: "https://admin.example.invalid/api/inbound/relay",
+  };
+
+  it("is off by default and needs nothing then", () => {
+    const env = parseEnv({});
+    expect(env.relay.enabled).toBe(false);
+    expect(env.relay.store).toBe("memory");
+    expect(env.relay.provider).toBe("mock");
+    expect(issuePaths(production)).toEqual([]);
+  });
+
+  it("requires the token pepper and IP salt when enabled", () => {
+    expect(issuePaths({ RELAY_ENABLED: "true" }).sort()).toEqual([
+      "RELAY_IP_SALT",
+      "RELAY_TOKEN_PEPPER",
+    ]);
+    expect(issuePaths(base)).toEqual([]);
+  });
+
+  it("is complete in production with every secret and forbids mock and memory there", () => {
+    expect(issuePaths(prod)).toEqual([]);
+    expect(issuePaths({ ...prod, RELAY_LLM_PROVIDER: "mock" })).toEqual(["RELAY_LLM_PROVIDER"]);
+    expect(issuePaths({ ...prod, RELAY_STORE: "memory" })).toEqual(["RELAY_STORE"]);
+    const { RELAY_ADMIN_API_SECRET: _a, RELAY_SUPERADMIN_WEBHOOK_URL: _w, ...missing } = prod;
+    void _a;
+    void _w;
+    expect(issuePaths(missing).sort()).toEqual([
+      "RELAY_ADMIN_API_SECRET",
+      "RELAY_SUPERADMIN_WEBHOOK_URL",
+    ]);
+  });
+
+  it("rejects retired DeepSeek models and needs a key for the deepseek provider", () => {
+    expect(issuePaths({ ...base, RELAY_MODEL: "deepseek-chat" })).toEqual(["RELAY_MODEL"]);
+    expect(issuePaths({ ...base, RELAY_LLM_PROVIDER: "deepseek" })).toEqual(["DEEPSEEK_API_KEY"]);
+  });
+
+  it("gates the FAQ on the hub page only in production by default", () => {
+    expect(parseEnv(prod).relay.faqRequireHubActive).toBe(true);
+    expect(parseEnv(base).relay.faqRequireHubActive).toBe(false);
+  });
+
+  it("allows the site origin and production domains, and exposes the realtime origin to the build", () => {
+    expect(parseEnv(prod).relay.allowedOrigins).toEqual(
+      expect.arrayContaining(["https://www.example.invalid", "https://www.vitalos.co.uk"]),
+    );
+    const build = readBuildEnv({
+      ...prod,
+      RELAY_REALTIME_PUBLIC_KEY: "sb_publishable_fixture_fixture",
+    });
+    expect(build.relayEnabled).toBe(true);
+    expect(build.relayRealtimeOrigin).toBe("wss://project.example.invalid");
+    expect(JSON.stringify(build)).not.toContain("sb_publishable_fixture");
+  });
+
+  it("never echoes secret values in errors", () => {
+    const result = safeParseEnv({ ...prod, RELAY_ADMIN_API_SECRET: "short-secret-value" });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("short-secret-value");
   });
 });

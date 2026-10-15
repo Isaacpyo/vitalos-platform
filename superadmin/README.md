@@ -16,6 +16,8 @@ Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (stand
 | `/enquiries/`                                               | Enquiries from support@ mail and the website form: inbox, reply, assign, SLA. SuperAdmin and ServiceLead only              |
 | `/mail/templates/`                                          | Email templates (SuperAdmin): library with search and filters, block editor, live preview (desktop/mobile, light/dark, plain text), version history, duplicate, archive, send test and Use template (fill details, prefill from an enquiry, copy or download an .eml draft) |
 | `/mail/unsubscribe/<token>/`                                | Public, signed unsubscribe for outreach and marketing email (one-click supported)                |
+| `/relay/`                                                   | Vitalos Relay (website chat hand-off, ADR-035): Inbox (needs a person, live, AI, closed; join, assign, reply, notes, hand back, close, delete), Knowledge (entries, gaps, retrieval test, Master FAQ), Insights, Settings (SuperAdmin), My notifications. SuperAdmin and ServiceLead only; hidden while `RELAY_API_BASE_URL` is empty |
+| `/api/inbound/relay`                                        | Signed Relay alert webhook from the website (HMAC-SHA256 canonical string, 5-minute window, repeated event ids ignored) |
 | `/audit/`                                                   | Append-only audit trail with filters and CSV export                                                                        |
 | `/help/`                                                    | In-app help                                                                                                                |
 | `/settings/email/`, `/settings/notifications/`              | Mail transport status and notification preferences                                                                         |
@@ -41,6 +43,7 @@ apps/notifications in-app notifications
 apps/audit/        append-only audit trail
 apps/mailer/       MailProvider interface, log and Resend email backends, Resend webhook
 apps/enquiries/    enquiry model, MIME ingest, inbound endpoints, selectors, SLA, notifications
+apps/relay/        Relay tab: signed admin API client (+ in-memory fake), webhook alerts, emails, views
 apps/architecture/ models, services (write rules), selectors (visibility), search, activity, CSV, views
 apps/api/          DRF read-only API
 templates/, static/, assets/tailwind.css

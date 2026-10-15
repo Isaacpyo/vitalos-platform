@@ -1,0 +1,11 @@
+<form method="post" action="{% url 'relay:availability' %}" hx-post="{% url 'relay:availability' %}" hx-target="#relay-availability" hx-swap="innerHTML">
+  {% csrf_token %}
+  <input type="hidden" name="available" value="{% if relay_available %}0{% else %}1{% endif %}">
+  <button type="submit" role="switch" aria-checked="{% if relay_available %}true{% else %}false{% endif %}" data-relay-available="{% if relay_available %}1{% else %}0{% endif %}"
+          class="flex h-11 cursor-pointer items-center gap-2.5 rounded-[2px] border border-line bg-white pl-2 pr-3 text-[13px] font-semibold text-midnight dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+    <span aria-hidden="true" class="relative block h-5 w-[34px] rounded-full {% if relay_available %}bg-mineral-700{% else %}bg-line-strong dark:bg-slate-600{% endif %}">
+      <span class="absolute top-0.5 block h-4 w-4 rounded-full bg-white {% if relay_available %}right-0.5{% else %}left-0.5{% endif %}"></span>
+    </span>
+    Available
+  </button>
+</form>

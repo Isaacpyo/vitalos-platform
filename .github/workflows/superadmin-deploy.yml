@@ -304,6 +304,9 @@ jobs:
           OBJECT_STORAGE_BUCKET: ${{ vars.OBJECT_STORAGE_BUCKET }}
           OBJECT_STORAGE_REGION: ${{ vars.OBJECT_STORAGE_REGION }}
           RETENTION_ENFORCE: ${{ vars.RETENTION_ENFORCE }}
+          RELAY_API_BASE_URL: ${{ vars.RELAY_API_BASE_URL }}
+          RELAY_REALTIME_ENABLED: ${{ vars.RELAY_REALTIME_ENABLED }}
+          RELAY_EMAIL_FROM: ${{ vars.RELAY_EMAIL_FROM }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_WEBHOOK_SECRET: ${{ secrets.RESEND_WEBHOOK_SECRET }}
           INBOUND_WEBHOOK_SECRET: ${{ secrets.INBOUND_WEBHOOK_SECRET }}
@@ -311,6 +314,8 @@ jobs:
           OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY_ID }}
           OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.OBJECT_STORAGE_SECRET_ACCESS_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RELAY_ADMIN_API_SECRET: ${{ secrets.RELAY_ADMIN_API_SECRET }}
+          RELAY_WEBHOOK_SECRET: ${{ secrets.RELAY_WEBHOOK_SECRET }}
         run: |
           # Used only if the app has no such secret yet; existing values are always kept.
           NEW_DJANGO_SECRET_KEY="$(openssl rand -base64 64 | tr -d '\n')"

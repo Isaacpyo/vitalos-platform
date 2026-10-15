@@ -6,3 +6,6 @@ test-results/
 packages/cms/src/generated/
 docs/strategy/
 superadmin/
+
+# Vitalos Relay reference pack: supplied design files, kept byte-for-byte
+docs/relay/reference/

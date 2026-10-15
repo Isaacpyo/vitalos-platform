@@ -2,7 +2,7 @@ project_id = "kyrfilesutitygmuzvya"
 [api]
 enabled = true
 port = 55321
-schemas = ["public", "graphql_public"]
+schemas = ["public", "graphql_public", "relay"]
 [db]
 major_version = 17
 port = 55322
@@ -13,3 +13,11 @@ port = 55323
 port = 55324
 [analytics]
 port = 55327
+[edge_runtime]
+enabled = true
+[edge_runtime.secrets]
+RELAY_EMBED_SECRET = "env(RELAY_EMBED_SECRET)"
+[functions.relay-embed]
+# The project uses the new sb_secret_/sb_publishable_ API keys, which are not JWTs, so gateway JWT
+# verification cannot be used; the function requires the shared secret header instead (ADR-037).
+verify_jwt = false

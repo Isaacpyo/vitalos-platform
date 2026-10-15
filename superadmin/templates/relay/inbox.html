@@ -1,0 +1,37 @@
+{% extends "relay/_shell.html" %}
+{% load ui %}
+{% block relay_title %}{% if thread %}{{ thread.name }} · {% endif %}Relay inbox{% endblock %}
+{% block relay_frame %}lg:h-[calc(100dvh-3.5rem)]{% endblock %}
+{% block relay_content %}
+  <div class="group min-h-0 flex-1 lg:grid lg:grid-cols-[20rem_minmax(0,1fr)]" data-relay-inbox data-open="{% if thread %}thread{% else %}list{% endif %}">
+    <section aria-label="Conversations" class="flex min-h-0 flex-col border-line bg-white group-data-[open=thread]:hidden lg:border-r lg:group-data-[open=thread]:flex dark:border-slate-800 dark:bg-slate-900">
+      {% include "relay/_tabs.html" %}
+      <form action="{% url 'relay:inbox' %}" method="get" role="search" class="p-3"
+            hx-get="{% url 'relay:inbox' %}" hx-target="#relay-list" hx-swap="innerHTML" hx-push-url="true" hx-trigger="input changed delay:300ms from:find input[name=q], submit">
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <label for="relay-search" class="sr-only">Search conversations</label>
+        <input id="relay-search" type="search" name="q" value="{{ query }}" placeholder="Search name, email or message" autocomplete="off" class="relay-input h-10">
+      </form>
+      <div id="relay-list" class="min-h-0 flex-1 overflow-y-auto"
+           hx-get="{% url 'relay:inbox' %}{% if querystring %}?{{ querystring }}{% endif %}" hx-trigger="relay-inbox-changed from:body" hx-swap="innerHTML">
+        {% if relay_error %}
+          <p class="relay-muted border-t border-line px-4 py-6 text-sm dark:border-slate-800" role="alert">{{ relay_error }}</p>
+        {% else %}
+          {% include "relay/_list.html" with oob=False %}
+        {% endif %}
+      </div>
+    </section>
+
+    <section id="relay-thread" class="hidden min-h-0 bg-white group-data-[open=thread]:block lg:block lg:overflow-hidden dark:bg-slate-900" aria-label="Conversation" tabindex="-1">
+      {% if thread %}
+        {% include "relay/_thread.html" %}
+      {% else %}
+        <div class="flex h-full min-h-64 flex-col items-center justify-center gap-2 p-8 text-center">
+          <span class="relay-muted">{% icon "chat" "h-8 w-8" %}</span>
+          <p class="font-medium">Select a conversation</p>
+          <p class="relay-muted max-w-xs text-sm">Conversations that need a person are listed first, longest wait at the top.</p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

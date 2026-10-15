@@ -27,6 +27,14 @@ describe("buildCsp", () => {
     expect(csp).not.toContain("upgrade-insecure-requests");
   });
 
+  it("adds Relay realtime origins to connect-src and rejects anything that is not an origin", () => {
+    const csp = buildCsp({ ...base, connect: ["wss://project.supabase.co"] });
+    expect(directive(csp, "connect-src")).toBe("'self' wss://project.supabase.co");
+    for (const bad of ["wss://a.co; script-src *", "wss://a.co/path", "*", "javascript:x"]) {
+      expect(() => buildCsp({ ...base, connect: [bad] })).toThrow();
+    }
+  });
+
   it("allows unsafe-eval only in development", () => {
     expect(directive(buildCsp({ ...base, isDev: true }), "script-src")).toBe(
       "'self' 'unsafe-inline' 'unsafe-eval'",

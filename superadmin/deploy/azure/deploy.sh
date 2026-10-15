@@ -27,9 +27,11 @@
 # Optional mail and enquiry settings (superadmin/docs/email-setup.md), each passed through only when set:
 #   plain variables  PRIMARY_OWNER_EMAIL (also reaches the release job), EMAIL_TRANSPORT, INBOUND_PROVIDER,
 #                    NOTIFY_OWNER_EMAIL, OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_BUCKET,
-#                    OBJECT_STORAGE_REGION, RETENTION_ENFORCE
+#                    OBJECT_STORAGE_REGION, RETENTION_ENFORCE, RELAY_API_BASE_URL, RELAY_REALTIME_ENABLED,
+#                    RELAY_EMAIL_FROM
 #   secrets          RESEND_API_KEY, RESEND_WEBHOOK_SECRET, INBOUND_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY,
-#                    OBJECT_STORAGE_ACCESS_KEY_ID, OBJECT_STORAGE_SECRET_ACCESS_KEY, SLACK_WEBHOOK_URL
+#                    OBJECT_STORAGE_ACCESS_KEY_ID, OBJECT_STORAGE_SECRET_ACCESS_KEY, SLACK_WEBHOOK_URL,
+#                    RELAY_ADMIN_API_SECRET, RELAY_WEBHOOK_SECRET
 #                    (Container Apps secrets, referenced with secretref:; an empty value never overwrites
 #                    a secret that is already stored). APP_BASE_URL is always https://<domain>.
 set -euo pipefail
@@ -240,7 +242,8 @@ ENV_VARS+=("APP_BASE_URL=https://$DOMAIN")
 # Optional mail and enquiry settings. Added only when the workflow provides a non-empty value, so a deploy
 # without them leaves whatever the app already holds untouched (az keeps existing secrets and variables).
 for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_EMAIL \
-  OBJECT_STORAGE_ENDPOINT OBJECT_STORAGE_BUCKET OBJECT_STORAGE_REGION RETENTION_ENFORCE; do
+  OBJECT_STORAGE_ENDPOINT OBJECT_STORAGE_BUCKET OBJECT_STORAGE_REGION RETENTION_ENFORCE \
+  RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
 add_optional_secret() {  # env var name, Container Apps secret name
@@ -258,6 +261,8 @@ add_optional_secret TURNSTILE_SECRET_KEY turnstile-secret-key
 add_optional_secret OBJECT_STORAGE_ACCESS_KEY_ID object-storage-access-key-id
 add_optional_secret OBJECT_STORAGE_SECRET_ACCESS_KEY object-storage-secret-access-key
 add_optional_secret SLACK_WEBHOOK_URL slack-webhook-url
+add_optional_secret RELAY_ADMIN_API_SECRET relay-admin-api-secret
+add_optional_secret RELAY_WEBHOOK_SECRET relay-webhook-secret
 unset _name
 # JOB_ENV is built from ENV_VARS, so PRIMARY_OWNER_EMAIL reaches the release job (create_owner).
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)

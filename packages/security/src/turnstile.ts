@@ -13,7 +13,7 @@ export interface VerifyTurnstileInput {
   remoteIp?: string;
   /** When set, the hostname Cloudflare reports for the solved challenge must match. */
   expectedHostname?: string;
-  expectedAction: "enquiry";
+  expectedAction: "enquiry" | "relay";
   fetch?: typeof fetch;
   timeoutMs?: number;
 }

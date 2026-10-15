@@ -21,11 +21,25 @@ export interface BuildCspInput {
   variant?: "enforced" | "strict";
   /** Emit `upgrade-insecure-requests` (not for plain-http local runs). */
   upgradeInsecureRequests?: boolean;
+  /**
+   * Extra `connect-src` origins: the Relay realtime WebSocket (`wss://<project>.supabase.co`,
+   * ADR-038). Bare ws(s)/http(s) origins only.
+   */
+  connect?: readonly string[];
 }
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 
 const originPattern = /^https?:\/\/[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{1,5})?$/i;
+const connectPattern = /^(wss?|https?):\/\/[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{1,5})?$/i;
+
+/** Throws on anything that is not a bare ws(s)/http(s) origin (connect-src only). */
+export function assertConnectOrigin(value: string): string {
+  if (!connectPattern.test(value)) {
+    throw new Error("Invalid CSP connect origin: expected a bare ws(s) or http(s) origin");
+  }
+  return value;
+}
 
 /** Throws on anything that is not a bare http(s) origin: CSP values must never carry `;` or spaces. */
 export function assertCspOrigin(value: string): string {
@@ -43,7 +57,7 @@ export function buildCsp(input: BuildCspInput): string {
   if (input.isDev) scriptSrc.push("'unsafe-eval'");
   if (input.turnstile) scriptSrc.push(TURNSTILE_ORIGIN);
 
-  const connectSrc = ["'self'"];
+  const connectSrc = ["'self'", ...(input.connect ?? []).map(assertConnectOrigin)];
 
   const frameAncestors = (input.frameAncestors ?? []).map(assertCspOrigin);
 

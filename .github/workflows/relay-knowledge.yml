@@ -1,0 +1,44 @@
+name: Relay knowledge
+# Re-indexes Relay's bundled knowledge (repo seed, website content, Master FAQ snapshot) into the
+# production `relay` schema after content changes land on main (ADR-037). Idempotent by checksum.
+# Off until Relay is enabled in production: set the repository variable RELAY_INGEST_ENABLED=true
+# and the production-environment secrets below. Runs only from main through the `production`
+# environment; pull requests never run it and it never sees PR code.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/relay-knowledge/content/**"
+      - "packages/relay-knowledge/faq/**"
+      - "packages/relay-knowledge/src/**"
+      - "packages/relay-core/src/knowledge/**"
+      - "packages/cms/src/repo/**"
+      - "packages/cms/src/draft/content/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  ingest:
+    if: vars.RELAY_INGEST_ENABLED == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with: { run_install: false }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Ingest bundled knowledge
+        run: pnpm --filter @vitalos/relay-knowledge ingest
+        env:
+          VITALOS_DEPLOY_ENV: production
+          SUPABASE_URL: ${{ secrets.RELAY_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.RELAY_SUPABASE_SECRET_KEY }}
+          RELAY_EMBED_FUNCTION_URL: ${{ secrets.RELAY_EMBED_FUNCTION_URL }}
+          RELAY_EMBED_SECRET: ${{ secrets.RELAY_EMBED_SECRET }}
+          NOTION_FAQ_TOKEN: ${{ secrets.NOTION_FAQ_TOKEN }}

@@ -66,12 +66,12 @@ describe("repo content hygiene", () => {
     const privacy = await source().getDocument("legalPage", "privacy");
     expect(privacy).toMatchObject({
       title: "Privacy notice",
-      version: "2026-10",
-      effectiveDate: "2026-10-11",
+      version: "2026-10-relay",
+      effectiveDate: "2026-10-15",
     });
     expect(privacy?.seo.noindex).not.toBe(true);
     const headings = privacy?.body.filter((block) => block.style === "h2") ?? [];
-    expect(headings).toHaveLength(8);
+    expect(headings).toHaveLength(9); // includes "Relay, our website assistant" (15 Oct 2026)
   });
 
   it("carries the owner-published company facts and nothing invented beside them", async () => {

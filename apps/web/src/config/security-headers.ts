@@ -17,6 +17,7 @@ export interface SecurityHeaderOptions {
  *
  * Per-environment decisions live here; `@vitalos/security` only builds strings:
  * - Turnstile origins only when both Turnstile keys are configured.
+ * - The Relay realtime WebSocket origin only when Relay and its realtime key are configured.
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
  */
@@ -30,6 +31,8 @@ export function getSecurityHeaders(
     isDev,
     turnstile: env.turnstileEnabled,
     upgradeInsecureRequests: env.deployEnv !== "local",
+    // Relay realtime pings (ADR-038): only when Relay is on and realtime is configured.
+    connect: env.relayRealtimeOrigin ? [env.relayRealtimeOrigin] : [],
   };
 
   const headers = buildSecurityHeaders({

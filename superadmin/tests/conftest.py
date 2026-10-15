@@ -89,3 +89,22 @@ def client_for(db):
 
 
 HX = {"HTTP_HX_REQUEST": "true"}
+
+RELAY_WEBHOOK_SECRET = "test-relay-webhook-secret-0123456789"
+
+
+@pytest.fixture
+def relay(settings):
+    """Relay switched on against the in-memory fake website API, with fresh sample data and caches."""
+    from django.core.cache import cache
+
+    from apps.relay.fake import STATE
+
+    settings.RELAY_CLIENT = "fake"
+    settings.RELAY_API_BASE_URL = "https://www.example.com"
+    settings.RELAY_ADMIN_API_SECRET = "test-relay-admin-secret-0123456789"
+    settings.RELAY_WEBHOOK_SECRET = RELAY_WEBHOOK_SECRET
+    cache.clear()
+    STATE.reset()
+    yield STATE
+    cache.clear()

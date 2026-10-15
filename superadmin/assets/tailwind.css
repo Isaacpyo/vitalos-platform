@@ -60,6 +60,10 @@
   --color-mineral-300: #3fd0ba;
   --color-mineral-700: #0e7c6b;
   --color-offwhite: #f5f7fa;
+  /* Relay boards (docs/relay/reference/relay): hairlines, strong lines and the toast's dark stroke. */
+  --color-line: #d5dce6;
+  --color-line-strong: #7a879b;
+  --color-stroke-dark: #5f6e86;
 
   /* Legacy names used across templates, re-pointed at the brand palette. */
   --color-vitalos-blue: #2458e6;
@@ -249,6 +253,9 @@
       font-semibold text-white md:collapsed:absolute md:collapsed:-top-1 md:collapsed:-right-1 md:collapsed:h-4
       md:collapsed:min-w-4 md:collapsed:px-1 md:collapsed:text-[10px];
   }
+  .nav-badge-mineral {
+    @apply bg-mineral text-midnight;
+  }
   .content {
     /* A column the full height of the viewport, so the status footer sits at the bottom on short pages. */
     @apply flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-200 md:pl-64 md:collapsed:pl-12;
@@ -310,5 +317,135 @@
   }
   .dt-state {
     @apply flex items-center gap-3 px-4 py-8 text-sm text-slate-700 dark:text-slate-200;
+  }
+}
+
+/* ---- Relay (boards in docs/relay/reference/relay) ------------------------------------------ */
+/* Flat, hairlines, no shadows: 0 radius for panels and messages, 2px buttons and inputs, 4px tags. */
+@layer components {
+  .relay-mono {
+    @apply font-mono text-[11px] leading-4 tracking-[0.04em] uppercase;
+  }
+  .relay-btn {
+    @apply inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[2px] px-4 text-sm font-semibold
+      whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .relay-btn-primary {
+    @apply bg-cobalt-600 text-white hover:bg-cobalt-700 dark:bg-cobalt-300 dark:text-midnight dark:hover:bg-white;
+  }
+  .relay-btn-secondary {
+    @apply border border-line-strong bg-white text-midnight hover:bg-offwhite dark:border-slate-500 dark:bg-slate-900
+      dark:text-slate-100 dark:hover:bg-slate-800;
+  }
+  .relay-btn-danger {
+    @apply bg-rose-700 text-white hover:bg-rose-800;
+  }
+  .relay-tag {
+    @apply inline-flex items-center rounded-[4px] border border-line-strong px-1 font-mono text-[11px] leading-4
+      tracking-[0.04em] uppercase dark:border-slate-500;
+  }
+  .relay-panel {
+    @apply border border-line bg-white dark:border-slate-800 dark:bg-slate-900;
+  }
+  .relay-input {
+    @apply block w-full rounded-[2px] border border-line-strong bg-white px-3 py-2 text-sm text-midnight
+      placeholder:text-slate-500 focus:border-cobalt-600 focus:ring-2 focus:ring-cobalt-600/30 focus:outline-none
+      dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400;
+  }
+  .relay-link {
+    @apply font-semibold text-cobalt-600 underline hover:text-midnight dark:text-cobalt-300 dark:hover:text-white;
+  }
+  .relay-muted {
+    @apply text-slate-600 dark:text-slate-300;
+  }
+  .relay-mineral {
+    @apply text-mineral-700 dark:text-mineral-300;
+  }
+  .relay-subnav-link {
+    @apply px-3 py-2 text-sm text-slate-600 hover:text-midnight dark:text-slate-300 dark:hover:text-white;
+  }
+  .relay-subnav-link[aria-current="page"] {
+    @apply font-semibold text-midnight shadow-[inset_0_-2px_0_var(--color-cobalt-600)] dark:text-white
+      dark:shadow-[inset_0_-2px_0_var(--color-cobalt-300)];
+  }
+  .relay-tab {
+    @apply px-2 py-3 text-[13px] text-slate-600 hover:text-midnight dark:text-slate-300 dark:hover:text-white;
+  }
+  .relay-tab[aria-current="true"] {
+    @apply font-semibold text-midnight shadow-[inset_0_-2px_0_var(--color-mineral-700)] dark:text-white
+      dark:shadow-[inset_0_-2px_0_var(--color-mineral-300)];
+  }
+  .relay-segment {
+    @apply h-8 cursor-pointer rounded-[2px] border border-line bg-white px-3 text-[13px] text-midnight
+      dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
+  }
+  .relay-segment[aria-selected="true"],
+  .relay-segment[aria-current="true"] {
+    @apply border-midnight bg-midnight font-semibold text-offwhite dark:border-slate-100 dark:bg-slate-100
+      dark:text-midnight;
+  }
+  /* Status nodes: filled mineral = person live, mineral ring = waiting, cobalt dot = AI, grey ring = closed. */
+  .relay-node {
+    @apply block h-2.5 w-2.5 shrink-0 rounded-full;
+  }
+  .relay-node[data-node="live"] {
+    @apply bg-mineral;
+  }
+  .relay-node[data-node="waiting"] {
+    @apply border-2 border-mineral-700 dark:border-mineral-300;
+  }
+  .relay-node[data-node="ai"] {
+    @apply bg-cobalt;
+  }
+  .relay-node[data-node="closed"] {
+    @apply border-2 border-line-strong;
+  }
+  .relay-row[aria-current="page"] {
+    @apply bg-offwhite dark:bg-slate-800;
+  }
+  .relay-menu {
+    @apply absolute right-0 z-40 mt-1 border border-line bg-white text-midnight dark:border-slate-700
+      dark:bg-slate-900 dark:text-slate-100;
+  }
+  .relay-menu-item {
+    @apply block w-full cursor-pointer px-4 py-2.5 text-left text-sm hover:bg-offwhite dark:hover:bg-slate-800;
+  }
+  .relay-markdown {
+    @apply text-sm leading-6;
+  }
+  .relay-markdown :where(h2, h3, h4) {
+    @apply mt-4 mb-2 font-display font-bold;
+  }
+  .relay-markdown :where(p, ul, ol, pre, blockquote) {
+    @apply mb-3;
+  }
+  .relay-markdown :where(ul) {
+    @apply list-disc pl-5;
+  }
+  .relay-markdown :where(ol) {
+    @apply list-decimal pl-5;
+  }
+  .relay-markdown :where(code) {
+    @apply font-mono text-[13px];
+  }
+  .relay-markdown :where(pre) {
+    @apply overflow-x-auto bg-offwhite p-3 dark:bg-slate-800;
+  }
+  .relay-markdown :where(blockquote) {
+    @apply border-l-2 border-line-strong pl-3 text-slate-600 dark:text-slate-300;
+  }
+  .relay-markdown :where(a) {
+    @apply text-cobalt-600 underline dark:text-cobalt-300;
+  }
+  /* Toast (every admin page): midnight in both themes. */
+  .relay-toast {
+    @apply flex gap-3 bg-midnight p-4 text-offwhite;
+  }
+  .relay-toast-open {
+    @apply flex h-9 items-center rounded-[2px] bg-cobalt-300 px-3.5 text-sm font-semibold text-midnight hover:bg-white;
+  }
+  .relay-toast-dismiss {
+    @apply h-9 cursor-pointer rounded-[2px] border border-stroke-dark bg-transparent px-3 text-sm text-offwhite
+      hover:border-slate-300;
   }
 }

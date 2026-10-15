@@ -1,0 +1,70 @@
+{% extends "relay/_shell.html" %}
+{% block relay_title %}Relay insights{% endblock %}
+{% block relay_content %}
+  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-4 py-7 sm:px-6">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="min-w-0 flex-1">
+        <h2 class="font-display text-[28px] leading-tight font-bold tracking-[-0.01em]">Insights<span class="text-cobalt-600 dark:text-cobalt-300">.</span></h2>
+        <p class="relay-muted mt-1.5 text-[15px] leading-[22px]">How Relay did over the last {{ days }} days.</p>
+      </div>
+      <nav aria-label="Period" class="flex gap-1">
+        {% for period in periods %}
+          <a href="{% url 'relay:insights' %}?days={{ period }}" class="relay-segment inline-flex items-center" {% if period == days %}aria-current="true"{% endif %}>{{ period }} days</a>
+        {% endfor %}
+      </nav>
+    </div>
+
+    {% if relay_error %}
+      <p class="relay-panel p-4 text-sm" role="alert">{{ relay_error }}</p>
+    {% else %}
+      <dl class="grid grid-cols-1 border-t border-midnight bg-white sm:grid-cols-2 lg:grid-cols-3 dark:border-slate-100 dark:bg-slate-900" data-testid="relay-tiles">
+        {% for label, value in tiles %}
+          <div class="border-b border-line p-4 sm:border-r dark:border-slate-800">
+            <dt class="relay-mono relay-muted">{{ label }}</dt>
+            <dd class="mt-1.5 font-display text-[22px] font-bold tabular">{{ value }}</dd>
+          </div>
+        {% endfor %}
+      </dl>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="ins-questions" class="relay-panel">
+          <h3 id="ins-questions" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Top questions</h3>
+          <table class="w-full border-collapse text-sm">
+            <thead class="sr-only"><tr><th scope="col">Question</th><th scope="col">Times asked</th></tr></thead>
+            <tbody>
+              {% for row in top_questions %}
+                <tr class="border-b border-line last:border-b-0 dark:border-slate-800"><td class="px-4 py-2.5">{{ row.question }}</td><td class="tabular px-4 py-2.5 text-right">{{ row.count }}</td></tr>
+              {% empty %}
+                <tr><td class="relay-muted px-4 py-4" colspan="2">No questions in this period.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+        <section aria-labelledby="ins-gaps" class="relay-panel">
+          <h3 id="ins-gaps" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Top gaps</h3>
+          <table class="w-full border-collapse text-sm">
+            <thead class="sr-only"><tr><th scope="col">Question</th><th scope="col">Times asked</th></tr></thead>
+            <tbody>
+              {% for row in top_gaps %}
+                <tr class="border-b border-line last:border-b-0 dark:border-slate-800"><td class="px-4 py-2.5">{{ row.question }}</td><td class="tabular px-4 py-2.5 text-right">{{ row.count }}</td></tr>
+              {% empty %}
+                <tr><td class="relay-muted px-4 py-4" colspan="2">No gaps in this period.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <section aria-labelledby="ins-usage" class="relay-panel">
+        <h3 id="ins-usage" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Tokens and estimated cost</h3>
+        <table class="w-full border-collapse text-sm">
+          <tbody>
+            {% for label, value in usage %}
+              <tr class="border-b border-line last:border-b-0 dark:border-slate-800"><th scope="row" class="px-4 py-2.5 text-left font-normal">{{ label }}</th><td class="tabular px-4 py-2.5 text-right">{{ value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}
