@@ -13,6 +13,8 @@ export interface RelayConfig {
   model: string;
   summaryModel: string;
   simFloor: number;
+  /** Test runs only (1 in production): multiplies the visitor rate limits. */
+  rateLimitMultiplier?: number;
   /** Env cap (RELAY_DAILY_TOKEN_CAP); the lower of this and the Settings cap applies. */
   dailyTokenCap: number;
   tokenPepper: string;

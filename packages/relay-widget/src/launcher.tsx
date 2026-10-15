@@ -65,7 +65,8 @@ export function RelayLauncher(props: RelayLauncherProps) {
   const close = useCallback((returnFocus: boolean) => {
     setOpen(false);
     rememberOpen(false);
-    if (returnFocus) buttonRef.current?.focus();
+    // The launcher is hidden while the panel is open on small screens: focus it once it is back.
+    if (returnFocus) requestAnimationFrame(() => buttonRef.current?.focus());
   }, []);
 
   const label =

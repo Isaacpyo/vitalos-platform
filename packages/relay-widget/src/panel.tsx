@@ -400,6 +400,28 @@ export function Panel(props: PanelProps) {
 
   useEffect(() => () => channelRef.current?.close(), []);
 
+  // --- Turnstile: start when the panel opens so a token is ready before the first message ------
+  const turnstileRef2 = useRef<{ token: Promise<string | undefined>; at: number } | null>(null);
+  const prefetchTurnstile = useCallback(() => {
+    if (!props.turnstileSiteKey || !turnstileRef.current) return;
+    turnstileRef2.current = {
+      token: getTurnstileToken(props.turnstileSiteKey, turnstileRef.current),
+      at: Date.now(),
+    };
+  }, [props.turnstileSiteKey]);
+  /** A token is single use and lasts five minutes: take the prefetched one if it is fresh. */
+  const takeTurnstileToken = useCallback(async (): Promise<string | undefined> => {
+    if (!props.turnstileSiteKey) return undefined;
+    const ready = turnstileRef2.current;
+    turnstileRef2.current = null;
+    if (ready && Date.now() - ready.at < 240_000) return ready.token;
+    if (!turnstileRef.current) return undefined;
+    return getTurnstileToken(props.turnstileSiteKey, turnstileRef.current);
+  }, [props.turnstileSiteKey]);
+  useEffect(() => {
+    if (props.open && !stateRef.current.conv && !turnstileRef2.current) prefetchTurnstile();
+  }, [props.open, prefetchTurnstile]);
+
   // --- Open/close behaviour: focus, Esc, scroll lock, keyboard, unread ------------------------
   useEffect(() => {
     if (!props.open) return;
@@ -477,10 +499,7 @@ export function Panel(props: PanelProps) {
   const ensureConversation = useCallback(async (): Promise<StoredConversation> => {
     const existing = stateRef.current.conv;
     if (existing) return existing;
-    const turnstileToken =
-      props.turnstileSiteKey && turnstileRef.current
-        ? await getTurnstileToken(props.turnstileSiteKey, turnstileRef.current)
-        : undefined;
+    const turnstileToken = await takeTurnstileToken();
     const params = new URLSearchParams(window.location.search);
     const utm: Record<string, string> = {};
     for (const [k, v] of params) if (/^utm_[a-z]{1,20}$/.test(k)) utm[k] = v.slice(0, 200);
@@ -509,7 +528,7 @@ export function Panel(props: PanelProps) {
       },
     });
     return conv;
-  }, [persist, props.turnstileSiteKey]);
+  }, [persist, takeTurnstileToken]);
 
   const showNotice = (error: unknown, retryText: string) => {
     const code = error instanceof RelayApiError ? error.code : "network";
@@ -658,10 +677,17 @@ export function Panel(props: PanelProps) {
   const openHandoff = useCallback((trigger: HandoffTrigger) => {
     dispatch({ type: "handoff", patch: { open: true, trigger, errors: {} } });
     stickRef.current = true;
-    requestAnimationFrame(() =>
-      panelRef.current?.querySelector<HTMLInputElement>("#relay-handoff-name")?.focus(),
-    );
   }, []);
+
+  // Move focus to the first field once the card is on screen (after the commit, not before).
+  useEffect(() => {
+    if (!state.handoff.open) return;
+    const t = setTimeout(
+      () => panelRef.current?.querySelector<HTMLInputElement>("#relay-handoff-name")?.focus(),
+      0,
+    );
+    return () => clearTimeout(t);
+  }, [state.handoff.open]);
 
   const submitHandoff = async (e: FormEvent) => {
     e.preventDefault();

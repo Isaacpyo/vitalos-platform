@@ -120,6 +120,7 @@ export function createRelay(env: Env, defer: Defer): Relay {
       model: r.model,
       summaryModel: r.summaryModel,
       simFloor: r.simFloor,
+      rateLimitMultiplier: r.rateLimitMultiplier,
       dailyTokenCap: r.dailyTokenCap,
       tokenPepper: r.tokenPepper ?? "",
       ipSalt: r.ipSalt ?? "",

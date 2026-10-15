@@ -47,7 +47,7 @@ export type ChatResult =
   | { kind: "accepted"; visitorMessageId: string };
 
 export const LIMITS = {
-  conversationsPerIpPerHour: 10,
+  conversationsPerIpPerHour: 30,
   messagesPerIpPer10Min: 20,
   messagesPerConversationPerDay: 60,
   aiTurnsPerConversation: 30,
@@ -67,6 +67,10 @@ export class VisitorService {
 
   private get store() {
     return this.ctx.deps.store;
+  }
+
+  private get limitScale() {
+    return this.ctx.config.rateLimitMultiplier ?? 1;
   }
 
   async settings(): Promise<RelaySettings> {
@@ -107,7 +111,11 @@ export class VisitorService {
     const ipHash = this.ipHash(meta.ip);
     if (
       ipHash &&
-      !(await this.store.hitRateLimit(`conv:ip:${ipHash}`, 3600, LIMITS.conversationsPerIpPerHour))
+      !(await this.store.hitRateLimit(
+        `conv:ip:${ipHash}`,
+        3600,
+        LIMITS.conversationsPerIpPerHour * this.limitScale,
+      ))
     ) {
       throw new RelayError("rate_limited", COPY.rateLimited);
     }
@@ -175,12 +183,16 @@ export class VisitorService {
 
     const ipHash = this.ipHash(meta.ip);
     const allowedIp = ipHash
-      ? await this.store.hitRateLimit(`msg:ip:${ipHash}`, 600, LIMITS.messagesPerIpPer10Min)
+      ? await this.store.hitRateLimit(
+          `msg:ip:${ipHash}`,
+          600,
+          LIMITS.messagesPerIpPer10Min * this.limitScale,
+        )
       : true;
     const allowedConv = await this.store.hitRateLimit(
       `msg:conv:${conversation.id}`,
       86_400,
-      LIMITS.messagesPerConversationPerDay,
+      LIMITS.messagesPerConversationPerDay * this.limitScale,
     );
     if (!allowedIp || !allowedConv) throw new RelayError("rate_limited", COPY.rateLimited);
 

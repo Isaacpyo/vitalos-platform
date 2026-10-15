@@ -43,7 +43,13 @@ export default defineConfig({
       threshold: 0.2,
     },
   },
-  webServer: webServer && { ...webServer, cwd: "../.." },
+  // Relay is off for the visual baselines (they predate it; the launcher is covered by the
+  // Relay specs and their own screenshots).
+  webServer: webServer && {
+    ...webServer,
+    cwd: "../..",
+    env: { ...webServer.env, RELAY_ENABLED: "false" },
+  },
   use: {
     baseURL: `http://127.0.0.1:${Number(process.env.E2E_PORT ?? 3210)}`,
     reducedMotion: "reduce",

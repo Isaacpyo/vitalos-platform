@@ -105,6 +105,8 @@ const rawSchema = z.object({
   RELAY_AI_ENABLED: booleanFlag,
   RELAY_DAILY_TOKEN_CAP: z.coerce.number().int().min(10_000).max(100_000_000).optional(),
   RELAY_SIM_FLOOR: z.coerce.number().min(0).max(0.99).optional(),
+  /** Test runs only: multiplies the visitor rate limits (many browsers share one IP). */
+  RELAY_RATE_LIMIT_MULTIPLIER: z.coerce.number().int().min(1).max(1000).optional(),
   RELAY_REALTIME_PUBLIC_KEY: z.string().min(20).optional(),
   RELAY_EMBED_FUNCTION_URL: z.url({ protocol: /^https?$/ }).optional(),
   RELAY_EMBED_SECRET: z.string().min(32).optional(),
@@ -174,6 +176,7 @@ export interface RelayEnv {
   aiEnabled: boolean;
   dailyTokenCap: number;
   simFloor: number;
+  rateLimitMultiplier: number;
   realtimePublicKey: string | undefined;
   embedFunctionUrl: string | undefined;
   embedSecret: string | undefined;
@@ -330,6 +333,7 @@ function resolveRelay(
     aiEnabled: flag(raw.RELAY_AI_ENABLED, true),
     dailyTokenCap: raw.RELAY_DAILY_TOKEN_CAP ?? 2_000_000,
     simFloor: raw.RELAY_SIM_FLOOR ?? 0.7,
+    rateLimitMultiplier: raw.RELAY_RATE_LIMIT_MULTIPLIER ?? 1,
     realtimePublicKey: raw.RELAY_REALTIME_PUBLIC_KEY,
     embedFunctionUrl: raw.RELAY_EMBED_FUNCTION_URL,
     embedSecret: raw.RELAY_EMBED_SECRET,
@@ -514,6 +518,9 @@ function relayIssues(env: Env): EnvIssue[] {
   const production = env.deployEnv === "production";
   if (!r.enabled) return issues;
   if (production && r.store === "memory") add("RELAY_STORE", "memory is forbidden in production");
+  if (production && r.rateLimitMultiplier !== 1) {
+    add("RELAY_RATE_LIMIT_MULTIPLIER", "must be 1 (unset) in production");
+  }
   if (production && r.provider === "mock") {
     add("RELAY_LLM_PROVIDER", "mock is forbidden in production");
   }

@@ -47,6 +47,8 @@ const baseURL = `http://127.0.0.1:${port}`;
 
 export const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
 export const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
+/** Signs admin API calls in the Relay specs (stands in for the Super Admin). Test-only. */
+export const RELAY_TEST_ADMIN_SECRET = "e2e-only-relay-admin-api-secret-not-a-secret";
 
 const web = "corepack pnpm --filter @vitalos/web exec next";
 const command = [
@@ -102,6 +104,17 @@ export default defineConfig({
       ENQUIRY_IP_HASH_SALT: "e2e-only-ip-hash-salt-not-a-secret",
       OUTBOX_DISPATCH_SECRET: "e2e-only-outbox-dispatch-secret-not-a-secret",
       EMAIL_PROVIDER: "none",
+      // Vitalos Relay on, fully offline: in-memory store, deterministic mock model, no realtime,
+      // no Super Admin webhook (events are recorded in memory). Test-only secrets.
+      RELAY_ENABLED: process.env.E2E_RELAY ?? "true",
+      RELAY_STORE: "memory",
+      RELAY_LLM_PROVIDER: "mock",
+      // Every browser in the run shares one IP; production keeps the multiplier at 1.
+      RELAY_RATE_LIMIT_MULTIPLIER: "100",
+      RELAY_TOKEN_PEPPER: "e2e-only-relay-token-pepper-not-a-secret",
+      RELAY_IP_SALT: "e2e-only-relay-ip-salt",
+      RELAY_ADMIN_API_SECRET: RELAY_TEST_ADMIN_SECRET,
+      CRON_SECRET: "e2e-only-cron-secret-not-a-secret-000",
     },
   },
   use: { baseURL, trace: "retain-on-failure" },
