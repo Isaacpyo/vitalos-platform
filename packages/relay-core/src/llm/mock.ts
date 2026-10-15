@@ -24,27 +24,46 @@ interface ParsedSource {
   text: string;
 }
 
+/** "[n] title (type) link" → { n, title }, or null. String handling, no backtracking regex. */
+function sourceHeader(line: string): { n: number; title: string } | null {
+  const close = line.indexOf("] ");
+  if (!line.startsWith("[") || close < 2) return null;
+  const n = Number(line.slice(1, close));
+  if (!Number.isInteger(n)) return null;
+  const rest = line.slice(close + 2);
+  const open = rest.lastIndexOf(" (");
+  if (open < 0 || !/^ \([A-Za-z]+\)/.test(rest.slice(open))) return null;
+  return { n, title: rest.slice(0, open).trim() };
+}
+
 export function parseUserMessage(message: string): {
   confident: boolean;
   sources: ParsedSource[];
   question: string;
 } {
-  const confident = /^Retrieval: confident$/m.test(message);
-  const sourcesBlock = /\nSOURCES\n([\s\S]*?)\n\nQUESTION\n/.exec(message)?.[1] ?? "";
-  const question = /\nQUESTION\n([\s\S]*)$/.exec(message)?.[1]?.trim() ?? "";
+  const SOURCES = "\nSOURCES\n";
+  const QUESTION = "\nQUESTION\n";
+  const confident = message.split("\n").includes("Retrieval: confident");
+  const start = message.indexOf(SOURCES);
+  const end = start >= 0 ? message.indexOf(`\n${QUESTION}`, start) : -1;
+  const sourcesBlock = start >= 0 && end > start ? message.slice(start + SOURCES.length, end) : "";
+  const q = message.indexOf(QUESTION);
+  const question = q >= 0 ? message.slice(q + QUESTION.length).trim() : "";
+  // One source: a header line "[n] title (type) link", then its text up to the next header.
   const sources: ParsedSource[] = [];
-  // One source: a header line "[n] title (type) link", then its text up to the next header or
-  // the end of the block. No `m` flag: `$` must mean the end of the whole block, otherwise a
-  // source that spans lines would be cut at its first line.
-  const re =
-    /(?:^|\n)\[(\d+)\] (.+?) \([A-Za-z]+\)[^\n]*\n([\s\S]*?)(?=\n\[\d+\] [^\n]*\([A-Za-z]+\)[^\n]*\n|$)/g;
-  for (const m of sourcesBlock.matchAll(re)) {
-    sources.push({
-      n: Number(m[1]),
-      title: (m[2] as string).trim(),
-      text: (m[3] as string).trim(),
-    });
+  let current: { n: number; title: string; lines: string[] } | null = null;
+  const flush = () => {
+    if (current)
+      sources.push({ n: current.n, title: current.title, text: current.lines.join("\n").trim() });
+  };
+  for (const line of sourcesBlock.split("\n")) {
+    const header = sourceHeader(line);
+    if (header) {
+      flush();
+      current = { ...header, lines: [] };
+    } else if (current) current.lines.push(line);
   }
+  flush();
   return { confident, sources, question };
 }
 

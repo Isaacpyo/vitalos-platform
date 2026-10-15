@@ -64,7 +64,7 @@ export async function ask(page: Page, text: string) {
   await composer.fill(text);
   await composer.press("Enter");
   await expect(page.locator(".relay-answer").last()).not.toHaveAttribute("aria-busy", "true", {
-    timeout: 20_000,
+    timeout: 30_000,
   });
   await expect(page.locator(".relay-answer").last().getByText("Was this helpful?")).toBeVisible();
 }

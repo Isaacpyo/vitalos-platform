@@ -15,7 +15,7 @@ test.describe("Relay launcher and panel", () => {
     await launcher.click();
     await expect(page.getByText("Ask Vitalos.")).toBeVisible();
     await expect(page.getByLabel("Message Relay")).toBeFocused();
-    await expect(page.getByText("START WITH")).toBeVisible();
+    await expect(page.locator("#relay-panel").getByText("START WITH")).toBeVisible();
     await expect(page.getByRole("button", { name: "Talk to a person" }).first()).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator("#relay-panel")).toBeHidden();

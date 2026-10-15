@@ -26,13 +26,20 @@ export interface Frontmatter {
 }
 
 /** Minimal frontmatter parser for `key: value` lines between `---` fences. */
+/** Strips one pair of surrounding quotes. */
+const unquote = (v: string) =>
+  v.length >= 2 && (v[0] === '"' || v[0] === "'") && v.at(-1) === v[0] ? v.slice(1, -1) : v;
+
 export function parseFrontmatter(text: string, file: string): { data: Frontmatter; body: string } {
   const m = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
   if (!m) throw new Error(`${file}: missing frontmatter`);
   const fields: Record<string, string> = {};
   for (const line of (m[1] as string).split("\n")) {
-    const kv = /^([a-z_]+):\s*(.*)$/.exec(line.trim());
-    if (kv) fields[kv[1] as string] = (kv[2] as string).replace(/^["']|["']$/g, "");
+    // indexOf rather than a key/value regex: no backtracking on long or odd lines (CodeQL ReDoS).
+    const trimmed = line.trim();
+    const colon = trimmed.indexOf(":");
+    const key = colon > 0 ? trimmed.slice(0, colon) : "";
+    if (/^[a-z_]+$/.test(key)) fields[key] = unquote(trimmed.slice(colon + 1).trim());
   }
   const type = fields.type as EntryType;
   if (!fields.id || !/^[a-z0-9-]+$/.test(fields.id)) throw new Error(`${file}: invalid id`);

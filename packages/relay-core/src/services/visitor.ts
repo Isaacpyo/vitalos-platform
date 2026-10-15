@@ -788,7 +788,7 @@ export class VisitorService {
   /** START WITH: up to four Verified FAQ questions placed on this page, else the Settings defaults. */
   async suggestions(pagePath: string): Promise<string[]> {
     const settings = await this.settings();
-    const path = pagePath.split("?")[0]?.replace(/\/+$/, "") || "/";
+    const path = trimTrailing(pagePath.split("?")[0] ?? "", "/") || "/";
     const rows = await this.store.faqQuestionsForPage(path, 4);
     const ranked = rows
       .map((r) => ({ ...r, specificity: r.placements.indexOf(path) === 0 ? 0 : 1 }))
@@ -901,4 +901,11 @@ async function* replay(visitor: MessageRecord, ai: MessageRecord): AsyncGenerato
       confidence: ai.confidence ?? 0,
     },
   };
+}
+
+/** Removes trailing `char`s without a regex (avoids polynomial backtracking on long input). */
+export function trimTrailing(value: string, char: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === char) end -= 1;
+  return value.slice(0, end);
 }

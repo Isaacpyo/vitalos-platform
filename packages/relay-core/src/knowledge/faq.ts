@@ -138,8 +138,9 @@ const slugify = (value: string) =>
   value
     .toLowerCase()
     .replace(/&/g, " ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join("-");
 
 /**
  * "NEXT STEP" for a Linked offer / CTA value (follow-up section 9). Null when there is no row:
