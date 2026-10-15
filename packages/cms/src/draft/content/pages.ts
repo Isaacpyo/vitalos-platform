@@ -373,11 +373,11 @@ const trust: RoutePageDraft = {
     key: "trust",
     heading: "Trust should be verifiable.",
     intro:
-      "Vitalos publishes how it approaches security, privacy, Responsible AI, accessibility and delivery assurance, and provides controlled evidence for procurement where appropriate.",
+      "How Vitalos approaches security, privacy, Responsible AI, accessibility and delivery assurance, with controlled evidence for procurement where appropriate.",
     body: richText(
       "route-trust",
       p(
-        "Each topic shows its public summary. Only verified certifications will ever be listed. Procurement and security questions go through the procurement route; controlled documents are shared where they exist.",
+        "Each topic shows its public summary, and only verified certifications will ever be listed. Procurement and security questions go through the procurement route; controlled documents are shared where they exist.",
       ),
     ),
     cta: cta("Ask a procurement question", "procurement"),
@@ -412,7 +412,7 @@ const contact: RoutePageDraft = {
     key: "contact",
     heading: headingFor("finalConversion"),
     intro:
-      "Come to us for consulting, direct engineering, AI and data work or managed services. Tell us what you are trying to achieve and we will help identify the right starting point.",
+      "Come to us for consulting, direct engineering, AI and data work or managed services. Tell us your goal and we will help find the right starting point.",
     expectations: richText(
       "route-contact-expectations",
       p(

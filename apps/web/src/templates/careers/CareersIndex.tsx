@@ -7,6 +7,8 @@ import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { JobRow } from "./JobRow";
 import type { CareersIndexData } from "./load";
+import { MediaSlot } from "../../components/media-slot";
+import { ClosingBand } from "../commercial/bands";
 
 /** Careers (gated on open roles): the CMS introduction, then the open roles. */
 export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
@@ -14,8 +16,9 @@ export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
   const placeholder = hasPlaceholder(jobs);
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
+        full
+        media={<MediaSlot id="careers.hero" priority />}
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -25,6 +28,7 @@ export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
         title={page?.heading ?? navLabels.careers}
         lead={page?.intro}
       />
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />
@@ -37,6 +41,7 @@ export function CareersIndex({ data }: Readonly<{ data: CareersIndexData }>) {
           </ul>
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }
