@@ -233,7 +233,7 @@ const industries: RoutePageDraft = {
     // Composed from Stage 2 §5 and Stage 8 §13; no spec quotes an Industries index heading.
     heading: "Three launch sectors, and selective work with technology companies.",
     intro:
-      "Vitalos begins with Health & Care; Retail, Commerce & Consumer; and Operations, Industry & Logistics, where we are building repeatable domain knowledge, and works selectively with growth and technology companies.",
+      "We start with three sectors where we are building repeatable domain knowledge, and work selectively with growth and technology companies.",
     cta: cta(ctas.primary, "project"),
     seo: seo(
       "Industries",

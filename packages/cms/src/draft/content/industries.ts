@@ -38,10 +38,10 @@ export const industryDrafts: readonly IndustryDraft[] = [
       "Modernising care operations, digital services, data and AI while managing privacy, accessibility, safety and trust.",
     ),
     realities: [
-      "Care operations run on workflows, scheduling, and records and data flows that shape how staff spend their time.",
+      "Workflows, scheduling, records and data flows shape how care staff spend their time.",
       "Patient and service-user experience depends on digital services that are accessible and easy to use.",
-      "Privacy, security, accessibility, safety and trust have to be managed alongside any change to technology or process.",
-      "Reporting and digital service delivery depend on data that is often spread across several systems.",
+      "Privacy, security, accessibility, safety and trust must be managed alongside any technology or process change.",
+      "Reporting and digital services depend on data often spread across several systems.",
     ],
     problems: [
       "Modernising operational workflows and scheduling.",
@@ -52,12 +52,12 @@ export const industryDrafts: readonly IndustryDraft[] = [
     ],
     aiOpportunities: [
       "Compliance-aware AI in administrative and operational workflows, with human oversight wherever decisions affect people.",
-      "Automation that reduces manual effort for staff, using deterministic workflows first and AI where it adds measurable value.",
+      "Automation that cuts staff effort: deterministic workflows first, AI where it adds measurable value.",
       "Reporting and operational intelligence built on data with clear ownership and quality checks.",
     ],
     considerations: [
-      "Work that touches clinical decisions or regulated compliance needs specialist clinical, legal or accredited assurance alongside technology delivery.",
-      "Organisations with access to NHS patient data and systems use the NHS Data Security and Protection Toolkit to demonstrate their data security.",
+      "Clinical or regulated work needs specialist clinical, legal or accredited assurance alongside technology delivery.",
+      "Organisations accessing NHS patient data and systems use the NHS Data Security and Protection Toolkit.",
       "UK procurement guidance requires Cyber Essentials, Cyber Essentials Plus or demonstrably equivalent controls for certain higher-risk NHS and central government contracts.",
       "Personal and sensitive data needs deliberate decisions about purpose, access, retention and deletion.",
       "Digital services must be accessible to patients, service users and staff.",
@@ -101,7 +101,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     ),
     realities: [
       "Customer experience, merchandising and fulfilment have to work together across online and operational systems.",
-      "Inventory, orders and customer data often live in separate platforms that need to stay in step.",
+      "Inventory, orders and customer data often sit in separate platforms that must stay in step.",
       "Growth depends on commerce platforms that can scale and change without disrupting trading.",
       "Forecasting and decisions depend on analytics that people trust.",
     ],
@@ -160,7 +160,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     ),
     realities: [
       "Operationally intensive businesses often still run critical processes on manual steps and disconnected tools.",
-      "Field, warehouse and fleet data is only useful when it reaches the people planning and running operations.",
+      "Field, warehouse and fleet data helps only when it reaches those planning and running operations.",
       "Ageing operational systems can make processes hard to change.",
       "Reliability matters: operational systems have to keep working while they are improved.",
     ],
