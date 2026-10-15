@@ -97,7 +97,9 @@ def default_paths(
     """Public paths an event affects: warmed on publish, revalidated on removal."""
     if entity == "post":
         paths = [f"/insights/{slug}" if slug else "", f"/insights/{old_slug}" if old_slug else ""]
-        paths += ["/insights", "/", "/insights/feed.xml"]
+        # The sitemap is listed so a publish warms it too (stale-while-revalidate otherwise serves
+        # the old sitemap to the first request after a publish).
+        paths += ["/insights", "/", "/insights/feed.xml", "/sitemap.xml"]
         paths += [f"/insights/authors/{value}" for value in author_slugs]
         paths += [f"/insights/topics/{value}" for value in topic_slugs]
     elif entity == "author":
@@ -114,7 +116,7 @@ def default_paths(
         paths += ["/insights"]
     elif entity == "role":
         paths = [f"/careers/{slug}" if slug else "", f"/careers/{old_slug}" if old_slug else ""]
-        paths += ["/careers", "/"]
+        paths += ["/careers", "/", "/sitemap.xml"]
     elif entity == "careers_settings":
         paths = ["/careers", "/"]
     elif entity == "home_section":

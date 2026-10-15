@@ -16,7 +16,9 @@ from django.contrib.auth.models import Group
 from apps.accounts.roles import SUPERADMIN
 from apps.insights import services
 from apps.insights.models import CheckKey, Post, Topic
-from tests.content_helpers import make_author, make_post, open_site
+from apps.careers import config as careers_config
+from apps.careers.models import CareersSettings, Role
+from tests.content_helpers import make_author, make_post, make_role, open_site
 
 engine = settings.DATABASES["default"]["ENGINE"]
 if "sqlite" not in engine and settings.APP_ENVIRONMENT != "development":
@@ -56,4 +58,20 @@ for index in range(1, COUNT + 1):
         services.tick_check(post, key, user)
     posts.append({"id": str(post.pk), "slug": post.slug, "title": post.title})
 
-print("SEED_JSON " + json.dumps({"posts": posts, "author": author.slug, "topic": topic.slug}))
+# Careers: a test-only privacy notice (the form is offered only when one is set) and one draft
+# role the careers suite opens through the admin.
+settings_row, _ = CareersSettings.objects.get_or_create(pk=1)
+config = careers_config.load()
+config.update(privacy_notice_url="/legal/privacy", privacy_notice_version="e2e-fixture")
+config.pop("candidate_emails_enabled", None)
+settings_row.config = config
+settings_row.save()
+role = Role.objects.filter(title="Example role (fixture)").first() or make_role(
+    "Example role (fixture)", status="draft", actor=user
+)
+role_seed = {"id": str(role.pk), "slug": role.slug, "title": role.title}
+
+print(
+    "SEED_JSON "
+    + json.dumps({"posts": posts, "author": author.slug, "topic": topic.slug, "role": role_seed})
+)

@@ -93,8 +93,9 @@ test("20 publishes each reach the article, index, homepage, feed, author and top
 test("publish changes: the new title appears everywhere; unpublished edits never do", async ({
   page,
 }) => {
-  const { id, slug, title } = post(1);
-  const renamed = "Example sync post 1 renamed (fixture)";
+  // The newest post: it is on the homepage, page 1 of the index and page 1 of its topic.
+  const { id, slug, title } = post(20);
+  const renamed = "Example sync post 20 renamed (fixture)";
   await admin.editorPage(page, id);
   await page.getByLabel("Title", { exact: true }).fill(renamed);
   await page.getByLabel("Title", { exact: true }).blur();
@@ -139,7 +140,15 @@ test("slug change: the old URL answers 308 to the new one", async ({ page }) => 
 });
 
 test("unpublish: 404, and gone from the homepage, feed and sitemap", async () => {
-  const { id, slug, title } = post(3);
+  // Among the newest three, so it is on the homepage before it is unpublished.
+  const { id, slug, title } = post(19);
+  expect((await site("/")).text).toContain(title);
+  // Publish events warm the sitemap (stale-while-revalidate would otherwise serve the old one).
+  await until(
+    async () => (await site("/sitemap.xml")).text.includes(`/insights/${slug}<`),
+    Date.now(),
+    10_000,
+  );
   const at = await admin.action(id, "unpublish");
   const elapsed = await until(
     async () => {

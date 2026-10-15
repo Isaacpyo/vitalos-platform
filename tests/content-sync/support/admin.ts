@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { request, type APIRequestContext, type Page } from "@playwright/test";
 import {
@@ -11,6 +12,7 @@ import {
   READ_KEY,
   REVALIDATE,
   WEB_URL,
+  adminEnv,
 } from "./env.mjs";
 
 export interface SeedPost {
@@ -22,6 +24,7 @@ export interface Seed {
   posts: SeedPost[];
   author: string;
   topic: string;
+  role: SeedPost;
 }
 
 export function readSeed(): Seed {
@@ -76,6 +79,17 @@ export class Admin {
     const at = Date.now();
     if (response.status() !== 302) throw new Error(`${action}: HTTP ${response.status()}`);
     const page = await (await this.api.get(`/insights/posts/${postId}/`)).text();
+    const error = /role="status" class="[^"]*rose[^"]*">([^<]+)</.exec(page);
+    if (error) throw new Error(`${action} refused: ${error[1]}`);
+    return at;
+  }
+
+  /** Careers role actions (open, publish, pause, close, reopen, archive); same rules as posts. */
+  async roleAction(roleId: string, action: string): Promise<number> {
+    const response = await this.post(`/careers/roles/${roleId}/actions/${action}/`);
+    const at = Date.now();
+    if (response.status() !== 302) throw new Error(`${action}: HTTP ${response.status()}`);
+    const page = await (await this.api.get(`/careers/roles/${roleId}/`)).text();
     const error = /role="status" class="[^"]*rose[^"]*">([^<]+)</.exec(page);
     if (error) throw new Error(`${action} refused: ${error[1]}`);
     return at;
@@ -190,4 +204,26 @@ export async function until(
 export async function site(path: string) {
   const response = await fetch(`${WEB_URL}${path}`, { redirect: "manual", cache: "no-store" });
   return { status: response.status, text: await response.text(), headers: response.headers };
+}
+
+/** Evaluates a Python expression in the admin's E2E database (counts and flags only). */
+export function adminQuery(expression: string): string {
+  const root = process.cwd();
+  const superadmin = join(root, "superadmin");
+  const python = [
+    join(superadmin, ".venv", "Scripts", "python.exe"),
+    join(superadmin, ".venv", "bin", "python"),
+  ].find((candidate) => existsSync(candidate));
+  if (!python) throw new Error("No superadmin/.venv");
+  const database = join(root, "test-results", "content-sync", "admin.sqlite3").replaceAll(
+    "\\",
+    "/",
+  );
+  const result = spawnSync(python, ["manage.py", "shell", "-c", `print(${expression})`], {
+    cwd: superadmin,
+    env: { ...process.env, ...adminEnv, DATABASE_URL: `sqlite:///${database}` },
+    encoding: "utf8",
+  });
+  if (result.status !== 0) throw new Error(`admin query failed: ${result.stderr}`);
+  return result.stdout.trim().split("\n").at(-1) ?? "";
 }
