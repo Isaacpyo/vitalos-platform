@@ -1,5 +1,18 @@
 /* Vitalos Relay launcher (section 4.2). Tokens: @vitalos/design-tokens/relay.css (--relay-*). */
 
+/* The fixed launcher must never cover focused page content (WCAG 2.4.11 Focus Not Obscured):
+   browsers keep a focused element clear of this bottom scroll padding, and the site footer gets
+   matching room at its end so its last row can scroll above the launcher. 86px is the tallest
+   launcher (70px) plus its 16px inset. */
+html:has(.relay-launcher-wrap) {
+  scroll-padding-bottom: calc(86px + var(--space-4, 16px) + env(safe-area-inset-bottom, 0px));
+}
+body:has(.relay-launcher-wrap) footer[data-tone]::after {
+  content: "";
+  display: block;
+  height: calc(86px + env(safe-area-inset-bottom, 0px));
+}
+
 .relay-launcher-wrap {
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));
