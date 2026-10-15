@@ -1,0 +1,26 @@
+<div class="flex items-center justify-between border-b border-line px-4 py-3 dark:border-slate-700">
+  <h2 class="font-display text-base font-bold">Notifications</h2>
+  <form method="post" action="{% url 'relay:notifications_read_all' %}" hx-post="{% url 'relay:notifications_read_all' %}" hx-target="#relay-bell-menu" hx-swap="innerHTML">
+    {% csrf_token %}
+    <button type="submit" class="cursor-pointer py-2 text-[13px] font-semibold text-cobalt-600 dark:text-cobalt-300">Mark all read</button>
+  </form>
+</div>
+<ul class="max-h-[60vh] overflow-y-auto">
+  {% for row in rows %}
+    <li class="border-b border-line dark:border-slate-700">
+      <form method="post" action="{% url 'relay:notification_open' row.n.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="flex w-full cursor-pointer gap-3 px-4 py-3 text-left hover:bg-offwhite dark:hover:bg-slate-800">
+          {% if row.n.read_at %}<span class="mt-1.5 block h-2 w-2 shrink-0" aria-hidden="true"></span>{% else %}<span class="mt-1.5 block h-2 w-2 shrink-0 rounded-full bg-cobalt-600 dark:bg-cobalt-300" aria-hidden="true"></span><span class="sr-only">Unread:</span>{% endif %}
+          <span class="flex min-w-0 flex-col gap-0.5 text-sm leading-5">
+            <span class="{% if row.n.read_at %}relay-muted{% else %}font-semibold{% endif %}">{{ row.n.title }}</span>
+            <span class="relay-muted text-[13px]">{% if row.n.body %}{{ row.n.body }} · {% endif %}{{ row.age }}</span>
+          </span>
+        </button>
+      </form>
+    </li>
+  {% empty %}
+    <li class="relay-muted px-4 py-6 text-sm">No Relay notifications yet.</li>
+  {% endfor %}
+</ul>
+<a href="{% url 'relay:prefs' %}" class="relay-link block px-4 py-3 text-[13px]">Notification settings</a>

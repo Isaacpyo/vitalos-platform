@@ -4,7 +4,7 @@ Pure functions over the database: views call them, and tests call them directly.
 
 - Snapshots are built from the working copy at publish time (``build_detail`` / ``build_summary``).
 - Reads serve only published snapshots, with the query-time filter applied on every request: ``scheduled``
-  with ``publish_at <= now`` counts as published (ADR-036).
+  with ``publish_at <= now`` counts as published (ADR-040).
 - At read time author and topic refs are refreshed from the live rows (author edits emit ``insights``)
   and related posts are re-resolved against what is published now, so a related list can never carry
   a post that has since been unpublished.

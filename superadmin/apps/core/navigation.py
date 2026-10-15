@@ -87,6 +87,15 @@ NAV_ITEMS = (
         ("/careers",),
         permission="apps.careers.access.can_view_roles",
     ),
+    NavItem(
+        "relay",
+        "Relay",
+        "relay:inbox",
+        "chat",
+        "Operate",
+        ("/relay",),
+        permission="apps.relay.selectors.nav_visible",
+    ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem(
         "service_lines",

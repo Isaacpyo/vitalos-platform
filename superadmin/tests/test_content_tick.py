@@ -1,4 +1,4 @@
-"""The content tick (ADR-038): scheduled posts go live and expired roles close exactly once, pending
+"""The content tick (ADR-042): scheduled posts go live and expired roles close exactly once, pending
 events are delivered, and the opportunistic tick runs at most once a minute."""
 
 import io

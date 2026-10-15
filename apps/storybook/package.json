@@ -13,6 +13,8 @@
     "@storybook/addon-a11y": "10.6.1",
     "@storybook/react-vite": "10.6.1",
     "@vitalos/design-tokens": "workspace:*",
+    "@vitalos/relay-core": "workspace:*",
+    "@vitalos/relay-widget": "workspace:*",
     "@vitalos/ui": "workspace:*",
     "geist": "1.7.2",
     "react": "19.3.0",

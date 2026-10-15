@@ -4,7 +4,7 @@ import type { InlineNode, ListNode, RichTextNode } from "../../../lib/cms/rich-t
 
 /**
  * Exports the Insights and roles the `repo` content source serves (ADR-028) for
- * `manage.py import_repo_content` (ADR-035 5, brief A7): `{ posts: [...], roles: [...] }`, matched
+ * `manage.py import_repo_content` (ADR-039 5, brief A7): `{ posts: [...], roles: [...] }`, matched
  * by `sourcePath` so a second import changes nothing. Placeholders are never exported. Rich text
  * becomes Markdown the site's renderer reads. Pure apart from the source it is given.
  */

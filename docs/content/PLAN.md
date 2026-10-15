@@ -1,6 +1,6 @@
 # Plan: Insights and Careers
 
-Brief: `BRIEF.md`. Architecture: ADR-035 to ADR-038. Contract: `contracts/content-api/v1/`. Choices: `DECISIONS.md`.
+Brief: `BRIEF.md`. Architecture: ADR-039 to ADR-042. Contract: `contracts/content-api/v1/`. Choices: `DECISIONS.md`.
 
 ## Workstreams
 
@@ -19,7 +19,7 @@ The admin and website workstreams run in parallel against the contract.
 
 ## Phase status
 
-- [x] Phase 0: discovery, decisions, ADR-035 to ADR-038, contract and fixtures
+- [x] Phase 0: discovery, decisions, ADR-039 to ADR-042, contract and fixtures
 - [ ] Phase 1: contract and plumbing (admin and website)
 - [ ] Phase 2: Insights admin
 - [ ] Phase 3: Insights website and homepage section (open the PR)

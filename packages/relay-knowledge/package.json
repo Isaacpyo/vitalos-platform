@@ -1,0 +1,34 @@
+{
+  "name": "@vitalos/relay-knowledge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vitalos Relay knowledge: repo seed content, the Master FAQ snapshot, CMS mapping and the ingest, FAQ sync and eval CLIs.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src scripts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build-content": "node --conditions=react-server --import tsx scripts/build-content.ts",
+    "faq-snapshot": "node --conditions=react-server --import tsx scripts/build-faq-snapshot.ts",
+    "ingest": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/ingest.ts",
+    "faq-sync": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/faq-sync.ts",
+    "eval": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/eval.ts",
+    "load": "node --conditions=react-server --import tsx src/cli/load.ts"
+  },
+  "dependencies": {
+    "@vitalos/cms": "workspace:*",
+    "@vitalos/relay-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@vitalos/typescript-config": "workspace:*",
+    "eslint": "10.12.0",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  }
+}

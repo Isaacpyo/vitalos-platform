@@ -16,6 +16,10 @@ ROUTES = {
     "/settings/users/": "settings",
     "/mail/templates/": "email_templates",
     "/enquiries/": "enquiries",
+    "/relay/inbox/": "relay",
+    "/relay/knowledge/": "relay",
+    "/relay/insights/": "relay",
+    "/relay/settings/": "relay",
 }
 
 
@@ -24,17 +28,17 @@ def _active(body: str) -> list[str]:
 
 
 @pytest.mark.parametrize(("path", "key"), ROUTES.items())
-def test_every_route_marks_exactly_one_nav_item_active(client_for, superadmin, seeded, path, key):
+def test_every_route_marks_exactly_one_nav_item_active(client_for, superadmin, seeded, relay, path, key):
     response = client_for(superadmin).get(path)
     assert response.status_code == 200
     assert _active(response.content.decode()) == [key]
 
 
-def test_sidebar_lists_every_section_in_its_group(client_for, superadmin, seeded):
+def test_sidebar_lists_every_section_in_its_group(client_for, superadmin, seeded, relay):
     body = client_for(superadmin).get("/").content.decode()
     for label in ("Operate", "Organisation", "System"):
         assert f">{label}</p>" in body
-    for key in ("overview", "activity", "service_lines", "team", "architecture", "settings"):
+    for key in ("overview", "relay", "activity", "service_lines", "team", "architecture", "settings"):
         assert f'data-nav="{key}"' in body
     assert 'alt="Vitalos"' in body and "brand/vitalos-wordmark-reversed" in body
     assert "brand/apple-touch-icon" in body and 'name="theme-color" content="#0B1320"' in body

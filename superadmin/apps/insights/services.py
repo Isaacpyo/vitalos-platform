@@ -1,7 +1,7 @@
 """Insights write rules: working copy, editorial workflow, checks, publishing and revisions.
 
 Every state change runs in one transaction that changes the data, writes the revision (when
-publishing), writes the audit row and emits the sync event (ADR-036). Authorisation is checked by the
+publishing), writes the audit row and emits the sync event (ADR-040). Authorisation is checked by the
 views (``access.py``); these functions enforce the workflow.
 
 Workflow (brief 4.5): draft -> in_review -> approved -> scheduled or published -> archived, and
@@ -653,7 +653,7 @@ def schedule(post: Post, actor, publish_at, *, request=None) -> Post:
             summary=f"{current.title} for {formatting.date_long(publish_at)} {formatting.clock(publish_at)}",
             publish_at=formatting.iso(publish_at),
         )
-        # Refresh the website's site state so its tick learns the new nextDueAt (ADR-038).
+        # Refresh the website's site state so its tick learns the new nextDueAt (ADR-042).
         sync.emit("post", current.pk, "post.scheduled", current.title, paths=[])
     return current
 

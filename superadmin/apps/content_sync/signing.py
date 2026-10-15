@@ -41,7 +41,7 @@ HEADER_SIGNATURE = "X-Vitalos-Signature"
 PREVIEW_ENTITIES = ("post", "role")
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 
-# Which setting holds the keys for each scope. ``tick`` is signed with a read key (ADR-038).
+# Which setting holds the keys for each scope. ``tick`` is signed with a read key (ADR-042).
 SCOPE_SETTINGS = {
     "read": "CONTENT_READ_CLIENT_KEYS",
     "tick": "CONTENT_READ_CLIENT_KEYS",

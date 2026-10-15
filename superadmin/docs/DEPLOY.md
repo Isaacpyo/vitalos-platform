@@ -405,7 +405,7 @@ pytest                                     # SQLite; DATABASE_URL=postgres://…
 
 ## 9. Content (Insights and Careers)
 
-Insights and Careers live in this app (ADR-035 to ADR-038). Both sections stay closed on the website until a super admin opens them in **Settings → Website content**; opening either in production is an owner decision. Every value below is optional: without them the admin works, the read API answers 503 (fail closed) and nothing is pushed to the website.
+Insights and Careers live in this app (ADR-039 to ADR-042). Both sections stay closed on the website until a super admin opens them in **Settings → Website content**; opening either in production is an owner decision. Every value below is optional: without them the admin works, the read API answers 503 (fail closed) and nothing is pushed to the website.
 
 ### Variables and secrets
 
@@ -451,7 +451,7 @@ Add preview origins only for the bucket a preview deployment uses. The access ke
 
 ### Content tick job (prepared; do not create without owner approval)
 
-The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention (a dry run until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-038). A per-minute Container Apps job would be:
+The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention (a dry run until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-042). A per-minute Container Apps job would be:
 
 ```sh
 RG=rg-vitalos-superadmin

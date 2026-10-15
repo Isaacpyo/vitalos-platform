@@ -4,7 +4,7 @@ type ImagesConfig = NonNullable<NextConfig["images"]>;
 type RemotePattern = Exclude<NonNullable<ImagesConfig["remotePatterns"]>[number], URL>;
 
 /**
- * `next/image` configuration (ADR-036, brief A8). Remote images are allowed only from the
+ * `next/image` configuration (ADR-040, brief A8). Remote images are allowed only from the
  * content media host, and only when it is configured; otherwise the defaults stand (no remote
  * images at all).
  */

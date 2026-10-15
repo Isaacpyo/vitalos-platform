@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: |
     The only interface between the Super Admin (Django, admin.vitalos.co.uk) and the website
-    (Next.js, apps/web) for Insights and Careers (ADR-035, ADR-036). Neither app reads the other's
+    (Next.js, apps/web) for Insights and Careers (ADR-039, ADR-040). Neither app reads the other's
     database. This file is the source of truth: Django serializers are tested against it and the
     website's zod schemas mirror it; shared fixtures in `fixtures/` are validated by both sides.
 
@@ -585,7 +585,7 @@ components:
         insightsOpen: { type: boolean }
         careersOpen: { type: boolean }
         nextDueAt:
-          description: Earliest pending scheduled publish, role closing or sync retry, including overdue ones; the website's tick calls the admin only once it has passed (ADR-038).
+          description: Earliest pending scheduled publish, role closing or sync retry, including overdue ones; the website's tick calls the admin only once it has passed (ADR-042).
           type: [string, "null"]
           format: date-time
         insights: { $ref: "#/components/schemas/InsightsCopy" }
@@ -1012,7 +1012,7 @@ paths:
   /api/content/v1/tick:
     post:
       operationId: tick
-      summary: Runs the due work of content_tick now (ADR-038). Signed with a read key and scope `tick`; empty JSON body `{}`.
+      summary: Runs the due work of content_tick now (ADR-042). Signed with a read key and scope `tick`; empty JSON body `{}`.
       security: [{ vitalosSignature: [] }]
       responses:
         "200":

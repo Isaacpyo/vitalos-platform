@@ -1,4 +1,4 @@
-"""Recruitment data retention (brief section 9, ADR-037), run nightly by the content tick.
+"""Recruitment data retention (brief section 9, ADR-041), run nightly by the content tick.
 
 - Applications and their CVs are deleted ``retention_months`` (default 6) after the later of the
   decision (``decided_at``) and the role's ``closed_at``. While the role is still open (no closing

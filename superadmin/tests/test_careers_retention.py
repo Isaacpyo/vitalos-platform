@@ -1,4 +1,4 @@
-"""Recruitment data retention and the upload purge (brief section 9, ADR-037)."""
+"""Recruitment data retention and the upload purge (brief section 9, ADR-041)."""
 
 import io
 import json

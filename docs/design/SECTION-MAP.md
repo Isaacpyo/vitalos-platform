@@ -17,7 +17,7 @@ Baseline screenshots: `screenshots/baseline/home-{1440,768,390}.jpg`.
 | H7  | Closing                     | `TerminalCTA variant="feature"`                                                                                                            | light band, blue-to-midnight card           | rings, glow                                                 | Reveal                                    | title, one line, primary and secondary CTA                         |
 | —   | Shared                      | `SectionHeading` (eyebrow, title, intro, link), `Reveal` staggers, `MobileReveal` fade on compact screens, tone alternation light/muted    |                                             | `Icon` (24 grid, 1.5 stroke, square caps), `IconTile`       |                                           |                                                                    |
 
-Not rendered today (no approved content): credibility strip, selected work. The Insights and Careers bands (after Labs, before the closing band) come from the Super Admin and are hidden until those sections are opened (ADR-035).
+Not rendered today (no approved content): credibility strip, selected work. The Insights and Careers bands (after Labs, before the closing band) come from the Super Admin and are hidden until those sections are opened (ADR-039).
 
 ## New shared patterns (Phase 1)
 
@@ -70,14 +70,14 @@ Sections in order. "→ Hn" names the homepage pattern each one carries.
 
 | Route                                                         | Sections                                                                                                                                                       |
 | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/insights` (closed until opened in the Super Admin, ADR-035) | Hero full → H1 · Format tabs, topic links, featured card and `FeatureGrid`-style cards, pagination · Closing → H7                                              |
+| `/insights` (closed until opened in the Super Admin, ADR-039) | Hero full → H1 · Format tabs, topic links, featured card and `FeatureGrid`-style cards, pagination · Closing → H7                                              |
 | `/insights/[slug]`                                            | Hero compact with the admin cover when there is one (no placeholder) → H1 · Article body (exempt) · Sources, editorial note · Authors · Related · Closing → H7 |
 | `/labs`                                                       | Hero full → H1 · Maturity labels (body) as rows · Categories → `FeatureGrid` icon cards · Assets → the filterable list (unchanged behaviour) · Closing → H7    |
 | `/labs/[type]`                                                | Hero compact → H1 · Assets → H6 `LabShowcase` · Closing → H7                                                                                                   |
 | `/labs/[type]/[slug]`                                         | Hero compact with maturity and `MediaSlot` `labs.asset.{slug}` → H1 · Is / is not, body, limitations, resources (layout only) · Closing → H7                   |
 | `/people/[slug]`                                              | Hero compact (person heading) → H1 · Credentials, insights · Closing → H7                                                                                      |
 
-### Careers (closed until opened in the Super Admin, ADR-035)
+### Careers (closed until opened in the Super Admin, ADR-039)
 
 | Route             | Sections                                                                                                                                             |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |

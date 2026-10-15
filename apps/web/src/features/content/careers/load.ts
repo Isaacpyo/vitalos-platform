@@ -12,7 +12,7 @@ import { roleSections, rolePathOf } from "./model";
 import type { ClosedRole, RoleDetail } from "./model";
 
 /**
- * Loaders for the Careers pages (ADR-036), the same way as Insights: cached, tagged reads; closed
+ * Loaders for the Careers pages (ADR-040), the same way as Insights: cached, tagged reads; closed
  * or unconfigured is `notFound()`; a failed read throws at runtime and reads as 404 during
  * `next build`; Draft Mode reads the working copy. Markdown is rendered while the page is
  * generated (ISR keeps the HTML).

@@ -7,7 +7,7 @@ import { loadSitemap } from "../src/features/seo/sitemap";
 
 /**
  * Gate-aware sitemap (ADR-022, ADR-028) plus the Super Admin's Insights and Careers URLs
- * (ADR-035), read through the cached `sitemap` reader (tag `sitemap`). A failed admin read keeps
+ * (ADR-039), read through the cached `sitemap` reader (tag `sitemap`). A failed admin read keeps
  * the CMS entries (fail-soft). Non-production environments are kept out of search engines by
  * robots.txt and `X-Robots-Tag`, not by hiding the sitemap.
  */

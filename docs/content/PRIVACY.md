@@ -1,6 +1,6 @@
 # Candidate privacy notice (draft) and recruitment DPIA note
 
-Status: **draft for owner approval. Not published.** Careers stays closed in production until the owner approves this notice, its retention period and the processors listed (ADR-037). Items in square brackets are decisions for the owner and must be resolved before publication. They are never shown on the site.
+Status: **draft for owner approval. Not published.** Careers stays closed in production until the owner approves this notice, its retention period and the processors listed (ADR-041). Items in square brackets are decisions for the owner and must be resolved before publication. They are never shown on the site.
 
 ---
 
@@ -37,7 +37,7 @@ We do not use your data for marketing, we do not sell it, and we do not use auto
 
 - **[Microsoft Azure (UK South)]**, which hosts our internal administration system, where applications are stored.
 - **[Supabase or Neon (London)]**, the database for that system [owner to confirm which is live].
-- **[Cloudflare R2]**, private object storage for CV files [only once the bucket is created; see ADR-037].
+- **[Cloudflare R2]**, private object storage for CV files [only once the bucket is created; see ADR-041].
 - **Vercel**, which hosts our website and passes your application to our administration system.
 - **Cloudflare Turnstile**, which checks that the form is used by a person.
 - **[Resend]**, the email service we use for internal alerts about new applications, and for emails to you only if we switch them on [owner decision: candidate emails are off].
@@ -73,7 +73,7 @@ This notice has a version number shown on the application form. We record which 
 | Abuse or spam              | Turnstile, honeypot, per-IP and per-email rate limits                                                                                                                      |
 | Over-retention             | Nightly retention job; `hired` applications flagged for manual handling                                                                                                    |
 | Leakage through logs       | Ids, timings and error codes only; no candidate data in logs; nothing sent to AI providers                                                                                 |
-| Data in transit            | HTTPS everywhere; signed server-to-server requests (ADR-036)                                                                                                               |
+| Data in transit            | HTTPS everywhere; signed server-to-server requests (ADR-040)                                                                                                               |
 
 - **Residual risk:** low, once the owner approves the processors, retention and notice.
 - **Review:** before Careers opens in production, and yearly after that.

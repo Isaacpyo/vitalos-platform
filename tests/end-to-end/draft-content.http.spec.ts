@@ -14,8 +14,8 @@ test("placeholder sections are served but never listed in the sitemap", async ({
   baseURL,
 }) => {
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
-  // Insights comes from the Super Admin (ADR-035) and is closed with no content API configured.
-  // Careers too (ADR-035).
+  // Insights comes from the Super Admin (ADR-039) and is closed with no content API configured.
+  // Careers too (ADR-039).
   expect((await request.get("/insights")).status()).toBe(404);
   expect((await request.get("/careers")).status()).toBe(404);
   for (const section of ["/work"]) {

@@ -1,0 +1,36 @@
+{
+  "name": "@vitalos/relay-widget",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vitalos Relay website chat: a tiny launcher and a lazily loaded panel. Browser code; talks to the visitor API only.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vitalos/design-tokens": "workspace:*",
+    "@vitalos/relay-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitalos/typescript-config": "workspace:*",
+    "eslint": "10.12.0",
+    "jsdom": "30.1.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  }
+}

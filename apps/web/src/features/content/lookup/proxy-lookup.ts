@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Verdict } from "./verdict";
 
 /**
- * The proxy's per-instance memory of lookup verdicts (ADR-036, as ADR-027 does for repo content).
+ * The proxy's per-instance memory of lookup verdicts (ADR-040, as ADR-027 does for repo content).
  *
  * - A verdict is kept for 30 s per path; "unavailable" only for 5 s, so recovery is quick.
  * - A cached "missing" older than 3 s is confirmed with a fresh lookup before it becomes a 404,

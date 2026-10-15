@@ -189,7 +189,7 @@ test("schedule for about a minute ahead: live within 2 minutes, through the Work
     .replace(" ", "T");
   await admin.action(id, "schedule", { publish_at: local });
   // The Cloudflare Worker calls the website's tick route once a minute; the website calls the
-  // admin only when its cached nextDueAt has passed (ADR-038). Simulate that cadence honestly.
+  // admin only when its cached nextDueAt has passed (ADR-042). Simulate that cadence honestly.
   const worker = setInterval(() => void websiteTick().catch(() => undefined), 60_000);
   try {
     void websiteTick().catch(() => undefined);

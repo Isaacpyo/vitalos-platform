@@ -5,7 +5,7 @@ import { handleRevalidateRequest } from "@/src/features/content/http/handle-reva
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Signed sync event from the Super Admin (ADR-036). All behaviour lives in the feature. */
+/** Signed sync event from the Super Admin (ADR-040). All behaviour lives in the feature. */
 export async function POST(request: Request): Promise<Response> {
   try {
     return await handleRevalidateRequest(request, revalidateDeps());

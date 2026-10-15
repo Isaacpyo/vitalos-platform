@@ -1,7 +1,7 @@
 import tagsJson from "../../../../../contracts/content-api/v1/tags.json";
 
 /**
- * Cache tags and path patterns from the contract (`contracts/content-api/v1/tags.json`, ADR-036).
+ * Cache tags and path patterns from the contract (`contracts/content-api/v1/tags.json`, ADR-040).
  * The JSON is imported, not copied, so the readers' tags and the revalidate route's validation
  * cannot drift from what the admin emits. Pure: no framework imports.
  */

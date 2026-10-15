@@ -33,7 +33,7 @@ import { tagsForRead } from "./tags";
 import type { ReadName } from "./tags";
 
 /**
- * Cached readers, one per read endpoint in `tags.json` `reads` (ADR-036).
+ * Cached readers, one per read endpoint in `tags.json` `reads` (ADR-040).
  *
  * - Each read is wrapped in `unstable_cache(fn, keyParts, { tags, revalidate })` with the exact
  *   tags from `tags.json` and `CONTENT_CACHE_TTL_SECONDS`. Cache Components stay off.

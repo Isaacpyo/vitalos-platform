@@ -1,4 +1,4 @@
-"""The outbox (brief 3.4, ADR-036): atomic with the change, delivered after commit, signed, retried with
+"""The outbox (brief 3.4, ADR-040): atomic with the change, delivered after commit, signed, retried with
 backoff, alerting after three failures, and never raising into the request."""
 
 import json

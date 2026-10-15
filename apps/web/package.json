@@ -17,6 +17,9 @@
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/email-layout": "workspace:*",
     "@vitalos/observability": "workspace:*",
+    "@vitalos/relay-core": "workspace:*",
+    "@vitalos/relay-knowledge": "workspace:*",
+    "@vitalos/relay-widget": "workspace:*",
     "@vitalos/security": "workspace:*",
     "@vitalos/ui": "workspace:*",
     "@vitalos/validation": "workspace:*",
@@ -39,7 +42,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
-    "@types/hast": "3.0.4",
+    "@types/hast": "3.0.5",
     "@types/mdast": "4.0.4",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",

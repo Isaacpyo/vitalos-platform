@@ -163,7 +163,7 @@ test.describe("gated sections are reachable while their gates are open", () => {
     }
   });
 
-  // Insights articles come from the Super Admin (ADR-035): tests/content covers them.
+  // Insights articles come from the Super Admin (ADR-039): tests/content covers them.
   test("a case study is reachable from its index", async ({ page }) => {
     await page.goto("/work");
     await page.locator('main a[href="/work/example-case-study"]').first().click();

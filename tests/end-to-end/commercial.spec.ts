@@ -124,7 +124,7 @@ test.describe("homepage", () => {
       selectedWork: "Selected work (fixture)",
       industries: "Industries (fixture)",
       labs: "Labs (fixture)",
-      // insights: from the Super Admin (ADR-035), absent with no content API configured.
+      // insights: from the Super Admin (ADR-039), absent with no content API configured.
       finalConversion: "Final conversion (fixture)",
     };
     for (const [key, heading] of Object.entries(headings)) {
@@ -189,7 +189,7 @@ test.describe("site shell", () => {
       await expect(nav.getByRole("link", { name: label, exact: true }).first()).toBeVisible();
     }
     await expect(nav.getByRole("link", { name: "Example Industry (fixture)" })).toBeVisible();
-    // Insights is opened in the Super Admin (ADR-035); with no content API configured it is closed.
+    // Insights is opened in the Super Admin (ADR-039); with no content API configured it is closed.
     await expect(nav.getByRole("link", { name: "Insights", exact: true })).toHaveCount(0);
     await page.keyboard.press("Escape");
     await nav.getByRole("button", { name: /Support/ }).click();
@@ -281,7 +281,7 @@ test.describe("site shell", () => {
     for (const label of ["Industries", "Work", "Labs", "FAQ"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
-    // Insights and Careers are opened in the Super Admin (ADR-035); closed with no content API.
+    // Insights and Careers are opened in the Super Admin (ADR-039); closed with no content API.
     await expect(footer.getByRole("link", { name: "Insights", exact: true })).toHaveCount(0);
     await expect(footer.getByRole("link", { name: "Careers", exact: true })).toHaveCount(0);
     await expect(footer.getByRole("link", { name: "Leadership" })).toHaveCount(0);

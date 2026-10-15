@@ -1,5 +1,5 @@
 // Writes the Insights and roles the `repo` content source serves as JSON for the Super Admin's
-// `manage.py import_repo_content` (ADR-035 5, brief A7). Placeholders are never exported; today
+// `manage.py import_repo_content` (ADR-039 5, brief A7). Placeholders are never exported; today
 // the repo source serves none, so the file holds empty lists.
 //
 //   pnpm content:export-repo [output.json]   (default: repo-content-export.json in the repo root)

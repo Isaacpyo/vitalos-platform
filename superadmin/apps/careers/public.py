@@ -1,6 +1,6 @@
 """Builders for the Careers read API (contract: contracts/content-api/v1/openapi.yaml).
 
-Query-time filters on every request (ADR-036): an open role whose published closing date has passed
+Query-time filters on every request (ADR-040): an open role whose published closing date has passed
 counts as closed; paused, draft and archived roles are 404. The role's own hiring process falls back
 to the careers default, and the equal-opportunities statement and privacy notice come from the live
 careers settings (a settings change emits ``careers``).

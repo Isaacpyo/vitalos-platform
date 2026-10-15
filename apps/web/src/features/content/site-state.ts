@@ -6,7 +6,7 @@ import type { SiteStateData } from "./schemas";
 import { getContentReaders } from "./server";
 
 /**
- * Open and closed (brief A6, ADR-035 4). Insights and Careers are closed unless the admin's
+ * Open and closed (brief A6, ADR-039 4). Insights and Careers are closed unless the admin's
  * `site-state` says otherwise; with no `CONTENT_API_BASE_URL` they are closed and nothing calls
  * out. A closed section's pages are 404 (the proxy answers that first, server-rendered; these
  * guards are the pages' own backstop). Previews still work while a section is closed.

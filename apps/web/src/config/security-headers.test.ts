@@ -12,6 +12,8 @@ const baseEnv: BuildEnv = {
   contentMediaOrigin: undefined,
   careersUploadOrigin: undefined,
   contentApiOrigin: undefined,
+  relayEnabled: false,
+  relayRealtimeOrigin: undefined,
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
@@ -22,6 +24,16 @@ const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
 };
 
 describe("getSecurityHeaders", () => {
+  it("adds the Relay realtime origin to connect-src only when configured", () => {
+    const off = headersFor({}).get("Content-Security-Policy") ?? "";
+    expect(off).toContain("connect-src 'self';");
+    const on =
+      headersFor({ relayEnabled: true, relayRealtimeOrigin: "wss://project.supabase.co" }).get(
+        "Content-Security-Policy",
+      ) ?? "";
+    expect(on).toContain("connect-src 'self' wss://project.supabase.co;");
+  });
+
   it.each(["local", "preview", "staging"] as const)("noindexes %s", (deployEnv) => {
     expect(headersFor({ deployEnv, indexable: false }).get("X-Robots-Tag")).toBe(
       "noindex, nofollow",

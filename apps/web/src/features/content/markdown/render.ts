@@ -13,7 +13,7 @@ import { grammarFor, highlightToPre } from "./highlight";
 import { sanitizeSchema } from "./sanitize-schema";
 
 /**
- * The site's one Markdown renderer (brief 4.4, ADR-035): the admin previews through
+ * The site's one Markdown renderer (brief 4.4, ADR-039): the admin previews through
  * `POST /api/content/render` and the pages render with the same function, so preview and
  * production cannot differ. Server-only by use (it is imported by route handlers and server
  * components only, and pulls Shiki).

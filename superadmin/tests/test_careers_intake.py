@@ -1,4 +1,4 @@
-"""Application intake (amendment A9, ADR-037): upload tickets, the fallback upload target and applications,
+"""Application intake (amendment A9, ADR-041): upload tickets, the fallback upload target and applications,
 plus the hiring-team alerts and candidate emails they trigger. Every candidate here is fictional."""
 
 import json

@@ -73,7 +73,7 @@ describe("proxy", () => {
   });
 });
 
-describe("proxy: Insights and Careers (ADR-036)", () => {
+describe("proxy: Insights and Careers (ADR-040)", () => {
   const request = (path: string, init: ConstructorParameters<typeof NextRequest>[1] = {}) =>
     new NextRequest(`http://localhost:3000${path}`, {
       headers: { "x-request-id": "edge-abc-123456" },

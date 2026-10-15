@@ -3,7 +3,7 @@ import { isKnownPath } from "../content/tags";
 import type { SitemapData } from "../content/schemas";
 
 /**
- * Merges the Super Admin's `sitemap` read (Insights and Careers, ADR-035) into the gate-aware
+ * Merges the Super Admin's `sitemap` read (Insights and Careers, ADR-039) into the gate-aware
  * CMS sitemap (ADR-022). Pure.
  *
  * - CMS Insights and Careers entries are always dropped: both are served only from the admin.

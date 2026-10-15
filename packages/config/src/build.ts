@@ -18,6 +18,10 @@ export interface BuildEnv {
   careersUploadOrigin: string | undefined;
   /** The Super Admin's origin (not secret): the CV upload fallback when no upload host is set. */
   contentApiOrigin: string | undefined;
+  /** Relay is on: the launcher renders and its API routes answer. */
+  relayEnabled: boolean;
+  /** Realtime WebSocket origin (ws/wss) for CSP connect-src, when Relay realtime is configured. */
+  relayRealtimeOrigin: string | undefined;
 }
 
 export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
@@ -33,6 +37,11 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     contentMediaOrigin: env.content.mediaOrigin,
     careersUploadOrigin: env.content.uploadOrigin,
     contentApiOrigin: env.content.apiBaseUrl,
+    relayEnabled: features.relay,
+    relayRealtimeOrigin:
+      features.relay && env.relay.realtimePublicKey && env.supabase.url
+        ? new URL(env.supabase.url).origin.replace(/^http/, "ws")
+        : undefined,
   };
 }
 

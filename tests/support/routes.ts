@@ -1,7 +1,7 @@
 /**
  * Route manifest for the quality suites (ADR-021). One entry per page TEMPLATE, using the
  * artificial fixture slugs from packages/cms/src/fixtures. Insights and Careers pages come from the
- * Super Admin (ADR-035) and are swept by tests/content against a fake admin. `pattern` is the route family as it
+ * Super Admin (ADR-039) and are swept by tests/content against a fake admin. `pattern` is the route family as it
  * appears in sitemap.xml, so a suite can prove that the manifest has not drifted from the site: a
  * new template appears in the sitemap, matches no pattern and fails `sitemap.http.spec.ts` until it
  * is added here (and therefore to the axe, reflow, focus and JavaScript-budget sweeps).

@@ -141,7 +141,7 @@ test.describe("work", () => {
   });
 });
 
-// Insights pages come from the Super Admin (ADR-035) and are covered by tests/content; with no
+// Insights pages come from the Super Admin (ADR-039) and are covered by tests/content; with no
 // content API configured they answer the server-rendered 404 (not-found.nojs.spec.ts).
 
 test.describe("people", () => {

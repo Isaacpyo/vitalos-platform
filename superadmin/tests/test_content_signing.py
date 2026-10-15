@@ -1,4 +1,4 @@
-"""Signing scheme v1 and preview tokens (openapi.yaml description; ADR-036)."""
+"""Signing scheme v1 and preview tokens (openapi.yaml description; ADR-040)."""
 
 import time
 import uuid

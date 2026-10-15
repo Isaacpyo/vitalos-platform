@@ -345,7 +345,7 @@ export const labsSection: SectionRender = (context, tone) => {
 };
 
 /**
- * 11. Insights, from the Super Admin's `home` read (brief 5.6, ADR-035): wired into the band the
+ * 11. Insights, from the Super Admin's `home` read (brief 5.6, ADR-039): wired into the band the
  * homepage already had. Absent when the admin returns no section (closed, disabled, nothing
  * published) and when the read failed (the homepage never fails because of it). It takes the
  * redesign's alternating band surface, so it never merges with the Labs band above it.

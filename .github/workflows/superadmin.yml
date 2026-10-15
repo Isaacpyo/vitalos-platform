@@ -1,6 +1,6 @@
 name: Super Admin
 # Cost rules: AGENTS.md "CI cost". Super Admin docs alone do not start it; the content API contract
-# does (the admin vendors it and a test checks the copy, ADR-036); the container job skips
+# does (the admin vendors it and a test checks the copy, ADR-040); the container job skips
 # draft pull requests.
 on:
   pull_request:

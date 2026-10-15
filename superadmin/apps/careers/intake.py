@@ -1,4 +1,4 @@
-"""Application intake (amendment A9, ADR-037): upload tickets, the fallback upload target and
+"""Application intake (amendment A9, ADR-041): upload tickets, the fallback upload target and
 applications. The website verifies Turnstile and its own rate limits first; this module trusts nothing
 it is sent. Candidate data and CV contents are never logged.
 

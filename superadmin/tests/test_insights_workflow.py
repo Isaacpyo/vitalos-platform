@@ -343,7 +343,7 @@ def test_reserved_post_slugs_are_refused_and_skipped(superadmin, reserved):
 
 
 def test_scheduling_and_unscheduling_refresh_the_site_state_for_the_website_tick(superadmin):
-    """ADR-038: the website's tick reads nextDueAt from its cached site state, so scheduling must
+    """ADR-042: the website's tick reads nextDueAt from its cached site state, so scheduling must
     revalidate the `site` tag; otherwise a scheduled post would wait for the cache TTL."""
     from apps.content_sync.models import SyncEvent
 

@@ -4,7 +4,7 @@ import { ADMIN_URL, CONTROL_URL, WEB_PORT, WEB_URL, adminEnv, webEnv } from "./s
 /**
  * Two-app content suites (brief section 13): the REAL Super Admin (Django on SQLite, seeded with
  * obviously fictional fixtures) and a production build of the website, talking over signed HTTP
- * exactly as in production (ADR-035, ADR-036). Not in CI: it needs the Super Admin's Python
+ * exactly as in production (ADR-039, ADR-040). Not in CI: it needs the Super Admin's Python
  * virtualenv. Run from the repo root:
  *
  *   corepack pnpm exec playwright test -c tests/content-sync/playwright.config.ts

@@ -1,7 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Content API request signing, scheme `v1` (contracts/content-api/v1/openapi.yaml, ADR-036).
+ * Content API request signing, scheme `v1` (contracts/content-api/v1/openapi.yaml, ADR-040).
  *
  * Canonical string (joined with `\n`, no trailing newline):
  *

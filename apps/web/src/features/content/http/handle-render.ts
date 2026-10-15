@@ -22,7 +22,7 @@ export interface RenderDeps {
 }
 
 /**
- * `POST /api/content/render` (ADR-035 3, brief A7): the admin's preview renders with the site's
+ * `POST /api/content/render` (ADR-039 3, brief A7): the admin's preview renders with the site's
  * one renderer. Signed (scope `render`), at most 200 KB (413), rate-limited, `no-store`. Returns
  * `{ html, toc, footnotes, warnings }`. Logs carry sizes and counts only, never the Markdown.
  */

@@ -98,6 +98,23 @@ ACTIONS = {
     "content.sync_retried": "Retried a website sync",
     "content.insights_copy_updated": "Edited the Insights page copy",
     "content.home_section_updated": "Edited a homepage section",
+    # Relay: summaries never hold message text or visitor email addresses.
+    "relay.joined": "Joined a Relay conversation",
+    "relay.assigned": "Assigned a Relay conversation",
+    "relay.handed_back": "Handed a Relay conversation back to Relay AI",
+    "relay.closed": "Closed a Relay conversation",
+    "relay.replied": "Replied in a Relay conversation",
+    "relay.noted": "Added an internal note to a Relay conversation",
+    "relay.deleted": "Deleted a Relay conversation",
+    "relay.transcript_copied": "Copied a Relay transcript",
+    "relay.knowledge_saved": "Saved a Relay knowledge entry",
+    "relay.knowledge_published": "Published a Relay knowledge entry",
+    "relay.knowledge_archived": "Archived a Relay knowledge entry",
+    "relay.reindexed": "Re-indexed Relay knowledge",
+    "relay.faq_synced": "Synced the Master FAQ into Relay",
+    "relay.settings_changed": "Changed Relay settings",
+    "relay.availability_changed": "Changed Relay availability",
+    "relay.preferences_changed": "Changed Relay notification preferences",
 }
 
 

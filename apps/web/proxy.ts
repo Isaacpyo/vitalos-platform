@@ -23,7 +23,7 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
  * page, which would leave visitors without JavaScript with a blank 404.
  *
- * Insights and Careers (ADR-036): the proxy asks the internal content lookup about every GET to
+ * Insights and Careers (ADR-040): the proxy asks the internal content lookup about every GET to
  * their pages (Draft Mode requests excepted) and answers what a page cannot: 308 for an old slug,
  * the server-rendered 404 for a missing item or a closed section, and 503 with `Retry-After` when
  * the admin is unreachable and nothing is cached. Any lookup failure passes the request through.

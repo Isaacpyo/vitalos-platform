@@ -27,7 +27,7 @@ export interface RevalidateDeps {
 }
 
 /**
- * `POST /api/content/revalidate` (ADR-036): one sync event from the admin.
+ * `POST /api/content/revalidate` (ADR-040): one sync event from the admin.
  *
  * Signature (scope `revalidate`) over the raw body; the body is validated with the contract's
  * zod schema, and every tag against `tags.json` and every path against its `pathPatterns` (400 on

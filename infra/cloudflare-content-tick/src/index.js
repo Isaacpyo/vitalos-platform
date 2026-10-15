@@ -1,4 +1,4 @@
-// Vitalos content tick (ADR-038). A Cloudflare Worker cron trigger that calls the website's
+// Vitalos content tick (ADR-042). A Cloudflare Worker cron trigger that calls the website's
 // `GET /api/content/cron/tick` every minute with the website's CRON_SECRET. The website decides
 // whether anything is due and only then wakes the Super Admin, so idle minutes cost nothing.
 //

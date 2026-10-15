@@ -1,0 +1,28 @@
+<div class="flex flex-col px-5 py-4 text-[13px] leading-[19px]">
+  <h3 class="relay-mono relay-muted pb-2">Contact</h3>
+  <div class="flex flex-col gap-0.5 border-b border-line pb-3.5 dark:border-slate-800">
+    {% if context.contact %}
+      <p class="text-sm font-semibold">{{ context.contact.name|default:"Name not given" }}</p>
+      {% if context.contact.email %}<a href="mailto:{{ context.contact.email }}" class="break-all text-cobalt-600 underline dark:text-cobalt-300">{{ context.contact.email }}</a>{% endif %}
+      {% if context.contact.company %}<p class="relay-muted">{{ context.contact.company }}</p>{% endif %}
+      {% if context.consent %}<p class="relay-mineral font-medium">{{ context.consent }}</p>{% endif %}
+    {% else %}
+      <p class="relay-muted">No contact details shared.</p>
+    {% endif %}
+  </div>
+  <h3 class="relay-mono relay-muted pt-3.5 pb-2">Summary · AI</h3>
+  <p class="border-b border-line pb-3.5 dark:border-slate-800">{{ context.summary|default:"No summary yet." }}</p>
+  <h3 class="relay-mono relay-muted pt-3.5 pb-2">Session</h3>
+  <dl class="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-2 gap-y-1.5 border-b border-line pb-3.5 dark:border-slate-800">
+    {% for label, value, mono in context.session %}
+      <dt class="relay-muted">{{ label }}</dt>
+      <dd class="{% if mono %}font-mono text-xs break-all{% endif %}">{{ value|default:"–" }}</dd>
+    {% endfor %}
+  </dl>
+  <h3 class="relay-mono relay-muted pt-3.5 pb-2">Alerts</h3>
+  <p class="relay-muted border-b border-line pb-3.5 dark:border-slate-800" data-testid="relay-alerts">{{ context.alerts }}</p>
+  <div class="flex flex-col gap-2 pt-3.5">
+    <button type="button" class="relay-btn relay-btn-secondary w-full text-[13px]" data-relay-transcript="{% url 'relay:transcript' thread.id %}">Copy transcript</button>
+    <button type="button" disabled class="relay-btn w-full border border-dashed border-line-strong bg-offwhite text-[13px] font-normal text-slate-600 dark:bg-slate-800 dark:text-slate-300">Send to HubSpot · phase 2</button>
+  </div>
+</div>

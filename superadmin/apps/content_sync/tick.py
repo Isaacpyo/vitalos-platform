@@ -1,4 +1,4 @@
-"""The content tick (ADR-038): promote due scheduled posts, close expired roles, deliver pending sync
+"""The content tick (ADR-042): promote due scheduled posts, close expired roles, deliver pending sync
 events and held-back application alerts, and once a day run retention and purge orphaned uploads.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed

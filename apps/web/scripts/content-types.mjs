@@ -1,4 +1,4 @@
-// Generates the content API types from the contract (ADR-036) with openapi-typescript, formatted
+// Generates the content API types from the contract (ADR-040) with openapi-typescript, formatted
 // with the repository's Prettier config, into src/features/content/generated/openapi.ts.
 //
 //   node scripts/content-types.mjs          write the file

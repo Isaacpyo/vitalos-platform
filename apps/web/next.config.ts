@@ -9,7 +9,7 @@ import { nextRedirects } from "./src/features/redirects/next-redirects";
 // Validated once at build/start. Invalid production configuration (for example fixtures or the
 // memory enquiry backend in production) fails here, before anything is served.
 const buildEnv = readBuildEnv();
-// Remote images only from the Insights and Careers media host, when configured (ADR-036).
+// Remote images only from the Insights and Careers media host, when configured (ADR-040).
 const images = imagesConfig(buildEnv.contentMediaOrigin);
 
 const config: NextConfig = {

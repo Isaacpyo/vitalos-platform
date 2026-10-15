@@ -17,10 +17,11 @@ export interface SecurityHeaderOptions {
  *
  * Per-environment decisions live here; `@vitalos/security` only builds strings:
  * - Turnstile origins only when both Turnstile keys are configured.
+ * - The Relay realtime WebSocket origin only when Relay and its realtime key are configured.
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
  * - The content media host (`CONTENT_MEDIA_HOST`) in `img-src` and the CV upload host
- *   (`CAREERS_UPLOAD_HOST`) in `connect-src`, only when set (ADR-036, brief section 9).
+ *   (`CAREERS_UPLOAD_HOST`) in `connect-src`, only when set (ADR-040, brief section 9).
  */
 export function getSecurityHeaders(
   env: BuildEnv,
@@ -38,6 +39,8 @@ export function getSecurityHeaders(
     connectOrigins: [env.careersUploadOrigin ?? env.contentApiOrigin].filter(
       (origin): origin is string => Boolean(origin),
     ),
+    // Relay realtime pings (ADR-038): only when Relay is on and realtime is configured.
+    connect: env.relayRealtimeOrigin ? [env.relayRealtimeOrigin] : [],
   };
 
   const headers = buildSecurityHeaders({

@@ -1,4 +1,4 @@
-"""Opportunistic content tick (ADR-038): when the admin serves the content API, or a signed-in page in
+"""Opportunistic content tick (ADR-042): when the admin serves the content API, or a signed-in page in
 Insights, Careers or Content, it runs the tick in the background at most once a minute."""
 
 from . import tick

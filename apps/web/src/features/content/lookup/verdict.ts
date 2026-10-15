@@ -4,7 +4,7 @@ import { CAREERS_BASE, INSIGHTS_BASE } from "../routes";
 
 /**
  * What a public Insights or Careers path is, decided with the SAME cached readers the pages use
- * (ADR-036), so a page that is cached implies "ok" and the proxy can set the statuses a page
+ * (ADR-040), so a page that is cached implies "ok" and the proxy can set the statuses a page
  * cannot: 308 for an old slug, a server-rendered 404, or 503 with `Retry-After`.
  *
  * - Content not configured, or the section closed: `missing`.

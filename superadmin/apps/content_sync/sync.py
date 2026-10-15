@@ -1,4 +1,4 @@
-"""The outbox: emit sync events inside the caller's transaction, deliver them after commit (ADR-036).
+"""The outbox: emit sync events inside the caller's transaction, deliver them after commit (ADR-040).
 
 Every content mutation does, inside ``transaction.atomic()``: change the data, write the revision (when
 publishing), write the audit row, and call ``emit(...)``. The event is delivered with

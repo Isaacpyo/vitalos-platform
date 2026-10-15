@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /**
- * Authenticates the proxy's calls to the internal lookup route (ADR-036).
+ * Authenticates the proxy's calls to the internal lookup route (ADR-040).
  *
  * The proxy and the route handlers are separate functions on Vercel (and may be separate
  * instances anywhere), so a per-process random secret would not be shared between them. The key

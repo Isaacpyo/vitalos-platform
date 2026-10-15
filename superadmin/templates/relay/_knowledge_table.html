@@ -1,0 +1,33 @@
+<section aria-label="Entries" class="relay-panel">
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[640px] border-collapse text-sm leading-5" data-testid="relay-knowledge-table">
+      <thead>
+        <tr class="text-left">
+          <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Title</th>
+          <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">Source</th>
+          <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 text-right font-medium dark:border-slate-800">Chunks</th>
+          <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">Updated</th>
+          <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+          <tr class="border-b border-line last:border-b-0 dark:border-slate-800">
+            <td class="px-4 py-[11px]">
+              <a href="{% url 'relay:knowledge_edit' item.id %}" class="text-cobalt-600 underline hover:text-midnight dark:text-cobalt-300 dark:hover:text-white">{{ item.title }}</a>
+              {% if item.source == "faq" %}
+                <span class="relay-muted mt-0.5 block font-mono text-[11px]">{{ item.externalId|default:"" }}{% if item.section %} · {{ item.section }}{% endif %}{% if item.notionUrl %} · <a href="{{ item.notionUrl }}" target="_blank" rel="noopener noreferrer" class="underline">Open in Notion<span class="sr-only"> (new tab)</span></a>{% endif %}</span>
+              {% endif %}
+            </td>
+            <td class="relay-muted px-2 py-[11px]">{{ item.source_label }}</td>
+            <td class="tabular px-2 py-[11px] text-right">{{ item.chunks|default:0 }}</td>
+            <td class="relay-muted px-2 py-[11px] whitespace-nowrap">{% if item.updated %}{{ item.updated|date:"j M" }}{% else %}–{% endif %}</td>
+            <td class="px-4 py-[11px] font-medium {% if item.status_tone == 'mineral' %}relay-mineral{% else %}relay-muted{% endif %}">{{ item.status_label }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="relay-muted px-4 py-6 text-sm">{% if filters.q or filters.source or filters.section or filters.status %}No entries match these filters.{% else %}No knowledge entries yet.{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>

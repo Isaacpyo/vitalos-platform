@@ -1,6 +1,6 @@
 # Insights and Careers: runbook
 
-Insights (the blog) and Careers are authored in the Super Admin (admin.vitalos.co.uk) and shown on the website (www.vitalos.co.uk). The two apps share no database and talk only through signed HTTP (ADR-035, ADR-036).
+Insights (the blog) and Careers are authored in the Super Admin (admin.vitalos.co.uk) and shown on the website (www.vitalos.co.uk). The two apps share no database and talk only through signed HTTP (ADR-039, ADR-040).
 
 - Brief: [`BRIEF.md`](BRIEF.md)
 - Decisions: [`DECISIONS.md`](DECISIONS.md)
@@ -94,7 +94,7 @@ For the website-signed scopes (`read`, `submit`), step 1 is on the admin. For th
    - `remove` events: it expires the tags immediately.
 3. **Failed deliveries** retry on each tick, with backoff of 1, 2, 4 … minutes and up to 10 attempts. After 3 failures the admin raises an in-app alert, and the item shows **SYNC FAILED · RETRY**.
 4. **The read API applies query-time filters,** so a due scheduled post or an expired role is correct even before the tick runs. The website's cache TTL (600 s) is the last safety net.
-5. **The website stays up when the admin is down** (ADR-036):
+5. **The website stays up when the admin is down** (ADR-040):
    - cached pages are served;
    - homepage sections are left out;
    - a page with nothing cached returns 503 with `Retry-After: 120`.
@@ -106,7 +106,7 @@ For the website-signed scopes (`read`, `submit`), step 1 is on the admin. For th
 - **Resync everything:** Website sync › Resync everything (SuperAdmin; audited). It emits `site.resync`, which revalidates `site`, `insights`, `careers`, `home`, `feed` and `sitemap`.
 - **Run the tick by hand:** `python manage.py content_tick` (add `--loop` locally).
 
-## The scheduler (ADR-038)
+## The scheduler (ADR-042)
 
 The Cloudflare Worker in `infra/cloudflare-content-tick` calls `https://www.vitalos.co.uk/api/content/cron/tick` every minute with the website's `CRON_SECRET`. The website calls the admin only when its cached `nextDueAt` has passed, so idle minutes cost nothing on Azure.
 
@@ -137,7 +137,7 @@ npx wrangler deploy
 | Preview says "Preview unavailable"           | Render endpoint unreachable                                                                    | Editing continues; fix the target or key                                                         |
 | CV upload refused in production              | No `CAREERS_CV_BUCKET`                                                                         | Create the R2 bucket (approval item)                                                             |
 
-## Retention (ADR-037)
+## Retention (ADR-041)
 
 - **When:** every night the tick deletes each application and its CV `retention_months` (6) after the later of the decision date and the role's closing date.
 - **Exceptions:** hired applications are flagged for manual handling instead of deleted. Pending uploads older than 24 hours are purged.

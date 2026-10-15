@@ -18,7 +18,7 @@ type Families = Record<string, { kind: DocKind; fields: readonly string[] }[]>;
 /**
  * First path segment to the document kind and the `listParams` keys of the remaining segments.
  * Insights and Careers are not here: they come from the Super Admin and the proxy asks the
- * content lookup about them (ADR-035, ADR-036).
+ * content lookup about them (ADR-039, ADR-040).
  */
 export const families: Families = {
   "what-we-do": [{ kind: "practice", fields: ["slug"] }],

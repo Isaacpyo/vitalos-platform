@@ -43,7 +43,7 @@ This records what the repository looked like before this work, on branch `feat/i
 - **The website's contact form does not use it yet.** It stores enquiries in the website's Supabase (`apps/web/src/features/enquiries`, ADR-019) and has its own outbox, the Turnstile verifier, an IP-hashed Postgres or memory rate limiter, and the daily Vercel crons. ADR-029 left the switch to the admin as a separate change.
 - **This job therefore:**
   - reuses the admin's `sign` and `verify_hmac` idea and the `read_body` helper;
-  - extends the scheme (ADR-036) with scopes, key ids, method, path and body hash;
+  - extends the scheme (ADR-040) with scopes, key ids, method, path and body hash;
   - reuses the website's Turnstile verifier and rate limiter for applications.
 
 ## ADR-026, ADR-028 and ADR-029: how Insights and Careers are closed today
@@ -80,4 +80,4 @@ This records what the repository looked like before this work, on branch `feat/i
 
 ## Related work in flight
 
-`feat/relay` (worktree `.claude/worktrees/relay`, unmerged) adds a Relay tab to the Super Admin and ADR-031 to ADR-034. This job uses ADR-035 to ADR-038 and does not depend on Relay (Relay hook behind `CONTENT_RELAY_SYNC_ENABLED=false`).
+`feat/relay` (unmerged at discovery; merged as #39 on 15 Oct 2026) adds a Relay tab to the Super Admin and ADR-035 to ADR-038. This job uses ADR-039 to ADR-042 and does not depend on Relay (Relay hook behind `CONTENT_RELAY_SYNC_ENABLED=false`).

@@ -5,7 +5,7 @@ import { PREVIEW_TOKEN_HEADER, signRequest } from "./signing";
 import type { SigningKey, SigningScope } from "./signing";
 
 /**
- * Signed HTTP client for the Super Admin's content API (ADR-036). Framework-free and injectable
+ * Signed HTTP client for the Super Admin's content API (ADR-040). Framework-free and injectable
  * (`fetch`, clock, logger) so it is unit-tested with a mocked fetch; `server.ts` wires it to the
  * validated environment and is the only server-only entry.
  *

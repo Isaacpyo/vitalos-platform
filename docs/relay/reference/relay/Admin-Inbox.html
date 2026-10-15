@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Super admin — Relay inbox</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2458E6}a:hover{color:#0B1320}
+</style>
+</head>
+<body>
+
+<div style="width: 100%; min-height: 960px; display: flex; flex-wrap: wrap; background: #F5F7FA; font-family: Inter, system-ui, sans-serif; color: #0B1320">
+
+<nav aria-label="Super admin" style="flex: 1 1 232px; max-width: 100%; background: #0B1320; color: #F5F7FA; display: flex; flex-direction: column; padding: 20px 12px; box-sizing: border-box; gap: 4px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 8px 20px">
+<span style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex: none"><img src="assets/vitalos-symbol.png" alt="" style="width: 46px; height: 46px; flex: none"></span>
+<span style="display: flex; flex-direction: column"><b style="font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 15px">Vitalos</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #A7B2C4">SUPER ADMIN</span></span>
+</div>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px; color: #A7B2C4; text-decoration: none; font-size: 14px; border-radius: 2px">Overview</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px; color: #A7B2C4; text-decoration: none; font-size: 14px; border-radius: 2px">[Existing tab]</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px; color: #A7B2C4; text-decoration: none; font-size: 14px; border-radius: 2px">[Existing tab]</a>
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px; color: #A7B2C4; text-decoration: none; font-size: 14px; border-radius: 2px">[Existing tab]</a>
+<a href="#" aria-current="page" style="display: flex; align-items: center; gap: 10px; padding: 10px; color: #F5F7FA; background: #111B2E; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 2px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M4 4h16v12H10l-6 4z"></path></svg><span style="flex: 1 1 auto">Relay</span><span aria-label="2 conversations need a person" style="min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #18B7A0; color: #0B1320; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">2</span></a>
+<div style="flex: 1 1 auto"></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid #26344D; margin-top: 16px">
+<span aria-hidden="true" style="width: 32px; height: 32px; background: #18B7A0; color: #0B1320; display: flex; align-items: center; justify-content: center; font-family: Manrope, Inter, sans-serif; font-weight: 800; font-size: 12px; flex: none">TA</span>
+<span style="display: flex; flex-direction: column; font-size: 13px"><b style="font-weight: 600">Temitope Agbola</b><span style="color: #A7B2C4; font-size: 12px">Super admin</span></span>
+</div>
+</nav>
+
+<main style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; gap: 24px; padding: 16px 24px; background: #FFFFFF; border-bottom: 1px solid #D5DCE6; flex-wrap: wrap">
+<h1 style="margin: 0; font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.01em">Relay<span style="color: #2458E6">.</span></h1>
+<nav aria-label="Relay sections" style="display: flex; gap: 4px; flex: 1 1 auto; flex-wrap: wrap">
+<a href="#" aria-current="page" style="padding: 8px 12px; font-size: 14px; font-weight: 600; color: #0B1320; text-decoration: none; box-shadow: inset 0 -2px 0 #2458E6">Inbox</a>
+<a href="#" style="padding: 8px 12px; font-size: 14px; color: #4A5568; text-decoration: none">Knowledge</a>
+<a href="#" style="padding: 8px 12px; font-size: 14px; color: #4A5568; text-decoration: none">Insights</a>
+<a href="#" style="padding: 8px 12px; font-size: 14px; color: #4A5568; text-decoration: none">Settings</a>
+</nav>
+<button type="button" role="switch" aria-checked="true" style="display: flex; align-items: center; gap: 10px; border: 1px solid #D5DCE6; background: #FFFFFF; border-radius: 2px; padding: 6px 12px 6px 8px; font: inherit; font-size: 13px; font-weight: 600; color: #0B1320; cursor: pointer"><span aria-hidden="true" style="width: 34px; height: 20px; border-radius: 999px; background: #0E7C6B; position: relative; display: block"><span style="position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 999px; background: #FFFFFF"></span></span>Available</button>
+<button type="button" aria-label="Notifications, 3 unread" style="position: relative; width: 44px; height: 44px; border: 1px solid #D5DCE6; background: #FFFFFF; border-radius: 2px; display: flex; align-items: center; justify-content: center; color: #0B1320; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span aria-hidden="true" style="position: absolute; right: -6px; top: -6px; min-width: 20px; height: 20px; border-radius: 999px; background: #2458E6; color: #FFFFFF; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #FFFFFF; box-sizing: border-box">3</span></button>
+</div>
+
+<div style="flex: 1 1 auto; display: flex; flex-wrap: wrap; min-height: 0">
+
+<section aria-label="Conversations" style="flex: 1 1 320px; max-width: 100%; background: #FFFFFF; border-right: 1px solid #D5DCE6; display: flex; flex-direction: column; box-sizing: border-box">
+<div style="display: flex; gap: 0; border-bottom: 1px solid #D5DCE6; padding: 0 12px; flex-wrap: wrap">
+<a href="#" aria-current="true" style="padding: 12px 8px; font-size: 13px; font-weight: 600; color: #0B1320; text-decoration: none; box-shadow: inset 0 -2px 0 #0E7C6B">Needs a person <span style="color: #0E7C6B">2</span></a>
+<a href="#" style="padding: 12px 8px; font-size: 13px; color: #4A5568; text-decoration: none">Live 1</a>
+<a href="#" style="padding: 12px 8px; font-size: 13px; color: #4A5568; text-decoration: none">AI 14</a>
+<a href="#" style="padding: 12px 8px; font-size: 13px; color: #4A5568; text-decoration: none">Closed</a>
+</div>
+<div style="padding: 12px">
+<label for="inbox-search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search conversations</label>
+<input id="inbox-search" type="search" placeholder="Search name, email or message" style="width: 100%; height: 40px; box-sizing: border-box; border: 1px solid #7A879B; border-radius: 2px; padding: 0 12px; font: inherit; font-size: 14px">
+</div>
+<div style="display: flex; flex-direction: column">
+<a href="#" aria-current="true" style="display: flex; gap: 12px; padding: 14px 16px; text-decoration: none; color: #0B1320; background: #F5F7FA; border-top: 1px solid #D5DCE6">
+<span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; border: 2px solid #0E7C6B; margin-top: 5px; flex: none"></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 auto">
+<span style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px; font-weight: 600">Alex Morgan</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #0E7C6B; font-weight: 500">WAITING 4M</span></span>
+<span style="font-size: 13px; line-height: 18px; color: #4A5568">Roughly how long would that take?</span>
+<span style="display: flex; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="border: 1px solid #7A879B; padding: 0 4px; border-radius: 4px">NOT HELPFUL</span>/application-modernisation</span>
+</span>
+</a>
+<a href="#" style="display: flex; gap: 12px; padding: 14px 16px; text-decoration: none; color: #0B1320; border-top: 1px solid #D5DCE6">
+<span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; border: 2px solid #0E7C6B; margin-top: 5px; flex: none"></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 auto">
+<span style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px; font-weight: 600">Visitor 8C1D</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #0E7C6B; font-weight: 500">WAITING 12M</span></span>
+<span style="font-size: 13px; line-height: 18px; color: #4A5568">Do you hold ISO 27001 certification?</span>
+<span style="display: flex; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="border: 1px solid #7A879B; padding: 0 4px; border-radius: 4px">NOT IN KNOWLEDGE</span>/trust</span>
+</span>
+</a>
+<a href="#" style="display: flex; gap: 12px; padding: 14px 16px; text-decoration: none; color: #0B1320; border-top: 1px solid #D5DCE6">
+<span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #18B7A0; margin-top: 5px; flex: none"></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 auto">
+<span style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px; font-weight: 600">Jordan Ellis</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">LIVE · TA</span></span>
+<span style="font-size: 13px; line-height: 18px; color: #4A5568">Thanks, that's useful. Can we book a call?</span>
+</span>
+</a>
+<a href="#" style="display: flex; gap: 12px; padding: 14px 16px; text-decoration: none; color: #0B1320; border-top: 1px solid #D5DCE6">
+<span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #2F6BFF; margin-top: 5px; flex: none"></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 auto">
+<span style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px; font-weight: 500">Visitor 21AF</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">AI · 18M</span></span>
+<span style="font-size: 13px; line-height: 18px; color: #4A5568">Which sectors do you work in?</span>
+</span>
+</a>
+<a href="#" style="display: flex; gap: 12px; padding: 14px 16px; text-decoration: none; color: #0B1320; border-top: 1px solid #D5DCE6; border-bottom: 1px solid #D5DCE6">
+<span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #2F6BFF; margin-top: 5px; flex: none"></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 auto">
+<span style="display: flex; justify-content: space-between; gap: 8px"><b style="font-size: 14px; font-weight: 500">Visitor 7B90</b><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">AI · 41M</span></span>
+<span style="font-size: 13px; line-height: 18px; color: #4A5568">What happens in an AI Prototype Sprint?</span>
+</span>
+</a>
+</div>
+</section>
+
+<section aria-label="Conversation with Alex Morgan" style="flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; background: #FFFFFF; border-right: 1px solid #D5DCE6">
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #D5DCE6; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; flex: 1 1 160px; min-width: 0">
+<h2 style="margin: 0; font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 18px">Alex Morgan</h2>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #0E7C6B; font-weight: 500">NEEDS A PERSON · WAITING 4 MIN</span>
+</div>
+<button type="button" style="height: 40px; padding: 0 16px; border: 0; border-radius: 2px; background: #2458E6; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Join conversation</button>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; color: #0B1320; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Assign</button>
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; color: #0B1320; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Close</button>
+<button type="button" aria-label="More actions" style="width: 40px; height: 40px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; color: #0B1320; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+</div>
+<div role="log" aria-label="Messages" style="flex: 1 1 auto; overflow: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 18px; max-width: 760px">
+<div style="align-self: flex-end; max-width: 70%; display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+<div style="background: #F5F7FA; border: 1px solid #D5DCE6; padding: 10px 12px; font-size: 14px; line-height: 21px">We're a care provider with a ten-year-old scheduling system. Could you modernise it rather than replace it?</div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">VISITOR · 14:21</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; background: #2F6BFF"></span><span style="color: #0B1320; font-weight: 500">RELAY · AI</span>14:21 · 3 SOURCES · 1.4S</div>
+<p style="margin: 0; font-size: 14px; line-height: 21px">Yes. Application Modernisation is one of our core offers. We start by assessing the current system, its data and its integrations, then agree which parts to keep, re-platform or rebuild…</p>
+</div>
+<div style="align-self: flex-end; max-width: 70%; display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+<div style="background: #F5F7FA; border: 1px solid #D5DCE6; padding: 10px 12px; font-size: 14px; line-height: 21px">Roughly how long would that take?</div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">VISITOR · 14:23</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 999px; background: #2F6BFF"></span><span style="color: #0B1320; font-weight: 500">RELAY · AI</span>14:23 · 1 SOURCE<span style="border: 1px solid #0B1320; color: #0B1320; padding: 0 4px; border-radius: 4px">MARKED NOT HELPFUL</span></div>
+<p style="margin: 0; font-size: 14px; line-height: 21px">That depends on the size of the system and what the assessment finds, so I can't give you a reliable timeline here…</p>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="flex: 1 1 auto; height: 1px; background: #D5DCE6"></span>HANDOFF REQUESTED · 14:24 · CONSENT GIVEN<span style="flex: 1 1 auto; height: 1px; background: #D5DCE6"></span></div>
+</div>
+<form style="border-top: 1px solid #D5DCE6; padding: 12px 20px 16px; display: flex; flex-direction: column; gap: 10px">
+<div role="tablist" aria-label="Message type" style="display: flex; gap: 4px">
+<button type="button" role="tab" aria-selected="true" style="height: 32px; padding: 0 12px; border: 1px solid #0B1320; background: #0B1320; color: #F5F7FA; border-radius: 2px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Reply</button>
+<button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0 12px; border: 1px solid #D5DCE6; background: #FFFFFF; color: #0B1320; border-radius: 2px; font: inherit; font-size: 13px; cursor: pointer">Internal note</button>
+</div>
+<label for="admin-reply" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Reply to Alex Morgan</label>
+<textarea id="admin-reply" rows="3" placeholder="Reply as Temitope. Joining pauses Relay AI for this conversation." style="width: 100%; box-sizing: border-box; resize: vertical; border: 1px solid #7A879B; border-radius: 2px; padding: 12px; font: inherit; font-size: 14px; line-height: 20px"></textarea>
+<div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4A5568"><input id="email-copy" type="checkbox" checked style="width: 18px; height: 18px; accent-color: #2458E6"><label for="email-copy">Email this reply if Alex has left</label></span>
+<a href="#" style="font-size: 13px; font-weight: 600">Save reply to knowledge</a>
+<span style="flex: 1 1 auto"></span>
+<button type="submit" style="height: 40px; padding: 0 18px; border: 0; border-radius: 2px; background: #2458E6; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Join and send</button>
+</div>
+</form>
+</section>
+
+<aside aria-label="Visitor details" style="flex: 1 1 280px; max-width: 100%; background: #FFFFFF; padding: 16px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 0; font-size: 13px; line-height: 19px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; padding-bottom: 8px">CONTACT</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 14px; border-bottom: 1px solid #D5DCE6"><b style="font-weight: 600; font-size: 14px">Alex Morgan</b><a href="#">alex.morgan@example-care.co.uk</a><span style="color: #4A5568">Example Care Group</span><span style="color: #0E7C6B; font-weight: 500">Consent to contact · 14:24 · notice v1.0</span></div>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; padding: 14px 0 8px">SUMMARY · AI</div>
+<p style="margin: 0; padding-bottom: 14px; border-bottom: 1px solid #D5DCE6; color: #0B1320">Care provider with a ten-year-old scheduling system. Wants modernisation rather than replacement; asked for a timeline, which Relay could not give.</p>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; padding: 14px 0 8px">SESSION</div>
+<dl style="margin: 0; display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 6px 8px; padding-bottom: 14px; border-bottom: 1px solid #D5DCE6">
+<dt style="color: #4A5568">Page</dt><dd style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px">/application-modernisation</dd>
+<dt style="color: #4A5568">Referrer</dt><dd style="margin: 0">Google search</dd>
+<dt style="color: #4A5568">Device</dt><dd style="margin: 0">Desktop · Chrome</dd>
+<dt style="color: #4A5568">Country</dt><dd style="margin: 0">United Kingdom</dd>
+<dt style="color: #4A5568">Started</dt><dd style="margin: 0">14:21 · 4 messages</dd>
+</dl>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; padding: 14px 0 8px">ALERTS</div>
+<p style="margin: 0; padding-bottom: 14px; border-bottom: 1px solid #D5DCE6; color: #4A5568">In-app sent to 2 admins at 14:24. Email sent at 14:24. Next reminder at 14:39 if no one joins.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; padding-top: 14px">
+<button type="button" style="height: 40px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; color: #0B1320; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Copy transcript</button>
+<button type="button" disabled style="height: 40px; border: 1px dashed #7A879B; border-radius: 2px; background: #F5F7FA; color: #4A5568; font: inherit; font-size: 13px; cursor: not-allowed">Send to HubSpot · phase 2</button>
+</div>
+</aside>
+</div>
+</main>
+</div>
+
+</body>
+</html>

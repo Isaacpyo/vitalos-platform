@@ -110,7 +110,7 @@ test.describe("draft content source", () => {
   }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation").first();
-    // Insights follows the Super Admin's site state (ADR-035): closed here.
+    // Insights follows the Super Admin's site state (ADR-039): closed here.
     for (const open of ["Industries", "Labs", "Work"]) {
       await expect(
         nav.getByRole("link", { name: open, exact: true, includeHidden: true }).first(),

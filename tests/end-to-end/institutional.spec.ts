@@ -6,7 +6,7 @@ import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
  * Institutional templates (workstream G2b): About, FAQ, Trust Centre, Legal. Careers comes from
- * the Super Admin (ADR-035) and is covered by tests/content against a fake admin.
+ * the Super Admin (ADR-039) and is covered by tests/content against a fake admin.
  *
  * Runs against the production build with the `full` fixture set. Below-gate behaviour is covered
  * by institutional.sparse.spec.ts. Runs on the desktop and 390px mobile projects, and every
@@ -75,7 +75,7 @@ test.describe("about and the removed leadership page", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("About (fixture)");
     await expect(page.locator("main #leadership")).toHaveCount(0);
     await expect(page.locator("main").getByRole("link", { name: "Trust Centre" })).toBeVisible();
-    // Careers follows the Super Admin's `careers_open` (ADR-035): closed with no content API.
+    // Careers follows the Super Admin's `careers_open` (ADR-039): closed with no content API.
     await expect(page.locator("main").getByRole("link", { name: "Careers" })).toHaveCount(0);
   });
 
@@ -146,7 +146,7 @@ test.describe("trust centre", () => {
 });
 
 test.describe("careers", () => {
-  // Careers comes from the Super Admin (ADR-035); with no content API configured it is closed.
+  // Careers comes from the Super Admin (ADR-039); with no content API configured it is closed.
   test("the careers pages answer the server-rendered 404", async ({ page }) => {
     for (const path of ["/careers", "/careers/example-role", "/careers/does-not-exist"]) {
       expect((await page.goto(path))?.status(), path).toBe(404);

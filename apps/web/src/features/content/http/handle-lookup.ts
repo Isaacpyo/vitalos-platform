@@ -18,7 +18,7 @@ export interface LookupDeps {
 
 /**
  * `GET /api/content/lookup?path=…`: the proxy's internal question "what is this Insights or
- * Careers path?" (ADR-036), answered with the pages' own cached readers. Only the proxy can call
+ * Careers path?" (ADR-040), answered with the pages' own cached readers. Only the proxy can call
  * it: the `x-vitalos-lookup` header is an HMAC of the path under a key derived from the read
  * secret (see `lookup/auth.ts`). Anything else is 404, so the route reveals nothing. The limiter
  * keys on the visitor's address the proxy signed into the request, never on the proxy's own.

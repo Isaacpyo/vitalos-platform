@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.architecture",
     "apps.enquiries",
     "apps.email_templates",
+    "apps.relay",
     "apps.api",
     "apps.content_sync",
     "apps.insights",
@@ -172,6 +173,16 @@ SLACK_WEBHOOK_URL = env("SLACK_WEBHOOK_URL", default="")
 RETENTION_ENFORCE = env.bool("RETENTION_ENFORCE", default=False)
 # Resend free tier: 100 emails a day. Notification emails roll into the digest before the limit.
 RESEND_DAILY_LIMIT = env.int("RESEND_DAILY_LIMIT", default=100)
+# Vitalos Relay (website chat with hand-off to staff, ADR-035). The website owns conversations and knowledge;
+# this app presents them through the website's signed admin API and receives alerts on a signed webhook.
+# An empty RELAY_API_BASE_URL hides the Relay tab and makes /api/inbound/relay answer 404.
+RELAY_API_BASE_URL = env("RELAY_API_BASE_URL", default="").strip().rstrip("/")
+RELAY_ADMIN_API_SECRET = env("RELAY_ADMIN_API_SECRET", default="")
+RELAY_WEBHOOK_SECRET = env("RELAY_WEBHOOK_SECRET", default="")
+RELAY_REALTIME_ENABLED = env.bool("RELAY_REALTIME_ENABLED", default=True)
+# "http" (default) talks to the website; "fake" is in-memory sample data for local UI work and tests only.
+RELAY_CLIENT = env("RELAY_CLIENT", default="http").strip().lower()
+RELAY_EMAIL_FROM = env("RELAY_EMAIL_FROM", default="Vitalos Relay <relay@notify.vitalos.co.uk>")
 # Forgot-password emails only make sense when mail can actually be delivered (or locally).
 PASSWORD_RESET_ENABLED = env.bool(
     "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"
@@ -220,7 +231,7 @@ else:
 STORAGES["attachments"] = ATTACHMENTS_STORAGE
 ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET) or APP_ENVIRONMENT == "development"
 
-# Insights and Careers (ADR-035 to ADR-038). Signing keys are "keyId:secret[,keyId:secret...]" lists:
+# Insights and Careers (ADR-039 to ADR-042). Signing keys are "keyId:secret[,keyId:secret...]" lists:
 # the signer uses the first entry, the verifier accepts any entry (rotation with no downtime). A scope
 # with no keys fails closed (503). Values are secrets; set them only in the platform's secret store.
 CONTENT_WEB_TARGETS = [url.rstrip("/") for url in env.list("CONTENT_WEB_TARGETS", default=[]) if url.strip()]
@@ -239,7 +250,7 @@ CONTENT_RELAY_SYNC_ENABLED = env.bool("CONTENT_RELAY_SYNC_ENABLED", default=Fals
 CONTENT_IP_SALT = env("CONTENT_IP_SALT", default="")
 # Requests per minute per read key id (simple per-process counter).
 CONTENT_READ_RATE_LIMIT = env.int("CONTENT_READ_RATE_LIMIT", default=600)
-# The admin runs the content tick itself at most once a minute when it serves content requests (ADR-038).
+# The admin runs the content tick itself at most once a minute when it serves content requests (ADR-042).
 CONTENT_OPPORTUNISTIC_TICK = env.bool("CONTENT_OPPORTUNISTIC_TICK", default=True)
 
 
@@ -270,7 +281,7 @@ else:
         "BACKEND": "django.core.files.storage.FileSystemStorage",
         "OPTIONS": {"location": BASE_DIR / "media" / "public", "base_url": "/media/"},
     }
-# CVs: a private bucket with 60-second signed URLs (ADR-037), local disk otherwise.
+# CVs: a private bucket with 60-second signed URLs (ADR-041), local disk otherwise.
 if CAREERS_CV_BUCKET:
     CAREERS_CV_STORAGE = {
         "BACKEND": "storages.backends.s3.S3Storage",

@@ -214,7 +214,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Runs the due work of content_tick now (ADR-038). Signed with a read key and scope `tick`; empty JSON body `{}`. */
+    /** Runs the due work of content_tick now (ADR-042). Signed with a read key and scope `tick`; empty JSON body `{}`. */
     post: operations["tick"];
     delete?: never;
     options?: never;
@@ -591,7 +591,7 @@ export interface components {
       careersOpen: boolean;
       /**
        * Format: date-time
-       * @description Earliest pending scheduled publish, role closing or sync retry, including overdue ones; the website's tick calls the admin only once it has passed (ADR-038).
+       * @description Earliest pending scheduled publish, role closing or sync retry, including overdue ones; the website's tick calls the admin only once it has passed (ADR-042).
        */
       nextDueAt: string | null;
       insights: components["schemas"]["InsightsCopy"];

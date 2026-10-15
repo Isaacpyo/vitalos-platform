@@ -109,7 +109,7 @@ def media_enabled() -> bool:
 
 
 def cv_storage_enabled() -> bool:
-    """Production refuses CV upload tickets without a private CV bucket (ADR-037)."""
+    """Production refuses CV upload tickets without a private CV bucket (ADR-041)."""
     return bool(settings.CAREERS_CV_STORAGE_ENABLED)
 
 

@@ -1,4 +1,4 @@
-"""Outbox, site state, homepage sections, slug redirects and uploaded media (ADR-035, ADR-036).
+"""Outbox, site state, homepage sections, slug redirects and uploaded media (ADR-039, ADR-040).
 
 ``SyncEvent`` is the transactional outbox: every content mutation inserts one in the same transaction as
 the change, its revision and its audit row, and it is delivered to the website after commit.

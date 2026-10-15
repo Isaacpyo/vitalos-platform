@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Insights (and later Careers) suites against a fake Super Admin (ADR-035, ADR-036). NOT wired
+ * Insights (and later Careers) suites against a fake Super Admin (ADR-039, ADR-040). NOT wired
  * into CI yet: run by hand with
  *
  *   corepack pnpm exec playwright test -c tests/content/playwright.config.ts

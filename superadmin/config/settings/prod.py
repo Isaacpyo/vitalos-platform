@@ -13,6 +13,10 @@ from .base import (
     CONTENT_MEDIA_STORAGE,
     EMAIL_TRANSPORT,
     OBJECT_STORAGE_BUCKET,
+    RELAY_ADMIN_API_SECRET,
+    RELAY_API_BASE_URL,
+    RELAY_CLIENT,
+    RELAY_WEBHOOK_SECRET,
     RESEND_API_KEY,
     SENTRY_DSN,
     env,
@@ -35,6 +39,18 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT", default="production")
 APP_BASE_URL = env("APP_BASE_URL", default="https://admin.vitalos.co.uk").rstrip("/")
 if EMAIL_TRANSPORT == "resend" and not RESEND_API_KEY:
     raise ImproperlyConfigured("EMAIL_TRANSPORT=resend needs RESEND_API_KEY.")
+if RELAY_CLIENT != "http":
+    raise ImproperlyConfigured(
+        "RELAY_CLIENT must be http in production (fake is sample data for local work)."
+    )
+# Relay carries transcripts and contact details: https only, and both shared secrets present.
+if RELAY_API_BASE_URL:
+    if not RELAY_API_BASE_URL.startswith("https://"):
+        raise ImproperlyConfigured("RELAY_API_BASE_URL must be https in production.")
+    if len(RELAY_ADMIN_API_SECRET or "") < 32 or len(RELAY_WEBHOOK_SECRET or "") < 32:
+        raise ImproperlyConfigured(
+            "RELAY_ADMIN_API_SECRET and RELAY_WEBHOOK_SECRET (32+ characters) are required with RELAY_API_BASE_URL."
+        )
 # In production the reset email is offered only when it can actually be delivered.
 PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 
@@ -61,7 +77,7 @@ STORAGES = {
 }
 # Production keeps attachment bytes only in object storage; the container disk is not durable.
 ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET)
-# Same rule for post images and CVs: no bucket, no uploads (ADR-037: no CV upload tickets).
+# Same rule for post images and CVs: no bucket, no uploads (ADR-041: no CV upload tickets).
 CONTENT_MEDIA_STORAGE_ENABLED = bool(CONTENT_MEDIA_BUCKET)
 CAREERS_CV_STORAGE_ENABLED = bool(CAREERS_CV_BUCKET)
 

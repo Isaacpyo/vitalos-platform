@@ -48,7 +48,7 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
 });
 
 /**
- * Insights and Careers are opened in the Super Admin (`insights_open`, `careers_open`, ADR-035),
+ * Insights and Careers are opened in the Super Admin (`insights_open`, `careers_open`, ADR-039),
  * not by the CMS gates: the navigation, footer, About and homepage follow the admin's site state,
  * failing closed.
  */

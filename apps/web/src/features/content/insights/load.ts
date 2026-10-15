@@ -18,7 +18,7 @@ import { mediaOrigin, siteHosts } from "../site-hosts";
 import { authorHref, postHref } from "./model";
 
 /**
- * Loaders for the Insights pages (ADR-036). Every read goes through the cached, tagged readers,
+ * Loaders for the Insights pages (ADR-040). Every read goes through the cached, tagged readers,
  * so a page's ISR entry carries the same tags and is refreshed by the same sync events. A closed
  * or unconfigured section is `notFound()`. A failed read throws at runtime (ISR keeps the last
  * good page; the proxy answers 503 when nothing is cached) and reads as "not found" during

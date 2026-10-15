@@ -22,7 +22,7 @@ export interface TickDeps {
 }
 
 /**
- * `GET /api/content/cron/tick` (ADR-038): the per-minute trigger (a Cloudflare Worker, plus a
+ * `GET /api/content/cron/tick` (ADR-042): the per-minute trigger (a Cloudflare Worker, plus a
  * daily Vercel cron as a backstop). It reads the cached site state and wakes the admin only when
  * `nextDueAt` has passed, so idle minutes cost the scaled-to-zero admin nothing. Then the `site`
  * tag is expired so the next read sees the admin's new `nextDueAt`.

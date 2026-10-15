@@ -7,7 +7,7 @@ import { VerdictSchema, createProxyLookup, sharedProxyLookup } from "./lookup/pr
 import { isContentLookupPath } from "./lookup/verdict";
 
 /**
- * The proxy's view of Insights and Careers paths (ADR-036). `proxy.ts` calls
+ * The proxy's view of Insights and Careers paths (ADR-040). `proxy.ts` calls
  * `contentProxyDecision` for every GET and acts on the answer:
  *
  * - `not-applicable`: not an Insights or Careers page; the proxy carries on as before;
@@ -84,7 +84,7 @@ export async function contentProxyDecision(request: ProxyRequestLike): Promise<C
   const { pathname } = request.nextUrl;
   if (request.method !== "GET" || !isContentLookupPath(pathname)) return "not-applicable";
   const config = contentConfig();
-  // Not configured: both sections are closed (server-rendered 404, ADR-035 4).
+  // Not configured: both sections are closed (server-rendered 404, ADR-039 4).
   if (!config) return "missing";
   if (request.cookies.has(DRAFT_MODE_COOKIE)) return "pass";
   const origin = lookupOrigin(request.nextUrl.origin, config.siteUrl, config.deployEnv);

@@ -1,5 +1,5 @@
 {
-  "$comment": "Cache tags shared by the Super Admin (emits them in sync events) and the website (tags its cached reads with them). Source of truth: docs/adr/ADR-036-content-api-contract-and-sync.md. Detail tags are keyed by slug, not id, because the website must know a read's tags before the read (unstable_cache).",
+  "$comment": "Cache tags shared by the Super Admin (emits them in sync events) and the website (tags its cached reads with them). Source of truth: docs/adr/ADR-040-content-api-contract-and-sync.md. Detail tags are keyed by slug, not id, because the website must know a read's tags before the read (unstable_cache).",
   "version": 1,
   "tagPattern": "^[a-z]+(:[a-z0-9-]{1,80})*$",
   "tags": {

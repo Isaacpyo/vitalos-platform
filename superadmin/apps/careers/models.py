@@ -1,7 +1,7 @@
 """Careers (brief 4.2): roles (working copy, published snapshot, immutable revisions), applications,
 notes, events and the careers settings row. The roles and applications admin comes in Phase 4.
 
-Applications hold personal data and CVs can hold special-category data (ADR-037): CVs live only in the
+Applications hold personal data and CVs can hold special-category data (ADR-041): CVs live only in the
 private ``careers_cvs`` storage, original filenames are never storage keys, and nothing here is logged.
 """
 
@@ -291,7 +291,7 @@ class CareersSettings(models.Model):
 
 
 class UploadTicket(models.Model):
-    """A single-use permission to upload one CV to ``pending/{id}.{ext}`` (amendment A9, ADR-037).
+    """A single-use permission to upload one CV to ``pending/{id}.{ext}`` (amendment A9, ADR-041).
 
     ``id`` is the contract's ``uploadId``. With a CV bucket the browser PUTs to a pre-signed URL; without
     one (development) it PUTs to the admin's fallback endpoint with a token whose hash is kept here.
