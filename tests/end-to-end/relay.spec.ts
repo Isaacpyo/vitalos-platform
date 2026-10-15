@@ -146,6 +146,7 @@ test.describe("Relay hand-off with a person (two parties)", () => {
     page,
     request,
   }) => {
+    test.slow(); // a dozen steps across two parties, each waiting on polling
     await page.goto("/");
     await openRelay(page);
     await ask(page, "Roughly how long would a modernisation take?");

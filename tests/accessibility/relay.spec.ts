@@ -18,6 +18,7 @@ test("welcome state has no axe violations", async ({ page }) => {
 });
 
 test("answer with sources and feedback has no axe violations", async ({ page }) => {
+  test.slow(); // streams an answer, then a full-panel axe scan
   await page.goto("/");
   await openRelay(page);
   await ask(page, "Can you rescue a failing software project?");
