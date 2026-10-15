@@ -1,5 +1,4 @@
 import { Container, Section } from "@vitalos/ui";
-import { MediaSlot } from "../../components/media-slot";
 import { JsonLd } from "../../components/json-ld";
 import type { ArticlePageData } from "../../features/content/insights/load";
 import {
@@ -82,9 +81,8 @@ function Byline({ post }: Readonly<{ post: PostDetail }>) {
 }
 
 /**
- * The hero media: the admin's cover (with its caption) when it is on the media host; otherwise
- * the `insights.article.{slug}` image slot, as the redesign places it (a branded placeholder
- * until an image is added).
+ * The hero media: the admin's cover (with its caption) when it is on the media host. The cover
+ * is optional (brief 5.2), so an article without one has no hero media rather than a placeholder.
  */
 function ArticleCover({ post }: Readonly<{ post: PostDetail }>) {
   if (post.cover && isAllowedImage(post.cover.url, mediaOrigin())) {
@@ -104,8 +102,12 @@ function ArticleCover({ post }: Readonly<{ post: PostDetail }>) {
       </figure>
     );
   }
-  return <MediaSlot id="insights.article" item={post.slug} priority />;
+  return null;
 }
+
+/** The cover is optional (brief 5.2): without an approved admin cover the hero has no media. */
+const hasCover = (post: PostDetail): boolean =>
+  post.cover !== null && isAllowedImage(post.cover.url, mediaOrigin());
 
 export interface ArticleTemplateProps {
   data: ArticlePageData;
@@ -132,7 +134,7 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
           eyebrow={post.format.label}
           title={post.title}
           intro={post.excerpt}
-          media={<ArticleCover post={post} />}
+          media={hasCover(post) ? <ArticleCover post={post} /> : undefined}
         >
           <div className="flex flex-col gap-(--space-4)">
             <Byline post={post} />

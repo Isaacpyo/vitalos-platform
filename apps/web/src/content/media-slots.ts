@@ -81,7 +81,7 @@ export const mediaSlots = [
     ratio: "16:9",
     size: [1600, 900],
     brief:
-      "A cover that illustrates the article: a diagram, a screenshot or a real photograph. No stock or AI-generated imagery.",
+      "A cover that illustrates the article: a diagram, a screenshot or a real photograph. No stock or AI-generated imagery. Covers are uploaded in the Super Admin (Insights › Posts › Cover, ADR-035); an article without one shows no hero image.",
     alt: "Cover image for the article.",
     perItem: true,
   },
