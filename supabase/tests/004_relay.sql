@@ -1,5 +1,5 @@
 begin;
-select plan(29);
+select plan(30);
 
 -- Schema, RLS deny-all, privileges
 select has_schema('relay', 'relay schema exists');
@@ -92,6 +92,9 @@ select is((select example_question from relay.kb_gaps where question_norm = 'ask
   'a shared gap keeps only its normalised question');
 select is((select example_conversation_id from relay.kb_gaps where question_norm = 'asked by several'), null::uuid,
   'a shared gap no longer points at the deleted conversation');
+
+select is((select schedule from cron.job where jobname = 'relay-retention'), '40 3 * * *',
+  'retention runs daily at 03:40 UTC');
 
 select * from finish();
 rollback;
