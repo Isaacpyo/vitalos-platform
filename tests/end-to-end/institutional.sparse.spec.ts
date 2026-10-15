@@ -76,7 +76,13 @@ test.describe("sparse content", () => {
     await page.goto("/trust/security");
     await expect(page.getByRole("heading", { name: "Certifications" })).toHaveCount(0);
     await expect(page.getByRole("table")).toHaveCount(0);
-    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
+    // The closing card ends every page (pages redesign); no content section may be empty.
+    await expect(
+      page
+        .locator("main")
+        .getByRole("heading", { level: 2 })
+        .filter({ hasNotText: "Have a problem worth solving?" }),
+    ).toHaveCount(0);
   });
 
   test("the trust overview still offers the controlled evidence request", async ({ page }) => {

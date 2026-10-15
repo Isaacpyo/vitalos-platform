@@ -66,6 +66,8 @@ test.describe("every commercial route in the sparse set", () => {
       page,
       request,
     }) => {
+      // A crawl of every link on the page: allow it more time than one page.
+      test.slow();
       const response = await page.goto(route);
       expect(response?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
