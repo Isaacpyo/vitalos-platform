@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { navLabels, routes } from "@vitalos/cms";
+import { homeSections, navLabels, routes } from "@vitalos/cms";
 import {
   AuroraBackdrop,
   Button,
@@ -34,12 +34,15 @@ export function LifecycleBand({
   stages,
   eyebrow = navLabels.howWeWork,
   action,
+  label = navLabels.howWeWork,
 }: Readonly<{
   title: string;
   intro?: string | undefined;
   stages: readonly ProcessCycleStage[];
   eyebrow?: string | undefined;
   action?: PatternLink | null | undefined;
+  /** The ring's accessible name; on How We Work it must differ from the stage list's. */
+  label?: string | undefined;
 }>) {
   const headingId = useId();
   const link =
@@ -67,11 +70,16 @@ export function LifecycleBand({
             </CTAGroup>
           ) : null}
         </Reveal>
-        <ProcessCycle stages={stages} label={navLabels.howWeWork} className="pb-(--space-6)" />
+        <ProcessCycle stages={stages} label={label} className="pb-(--space-6)" />
       </Container>
     </Section>
   );
 }
+
+/** The homepage's lifecycle heading (locked copy), for every page that carries the band. */
+export const lifecycleHeading = homeSections.find(
+  (section) => section.key === "strategyToProduction",
+)?.visibleHeading;
 
 /**
  * Industries: the expanding glass panels (IndustryShowcase) over the drifting aurora, with its own

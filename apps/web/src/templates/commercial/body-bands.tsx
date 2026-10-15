@@ -100,18 +100,48 @@ export function bodyBands(
     ));
   }
   const leadUsed = split.lead.rich || split.lead.items.length > 0;
-  split.sections.forEach((section, index) => {
-    const intro = index === 0 && !leadUsed ? leadText : undefined;
+  // Runs of two or more short headed paragraphs read as one band of cards (their headings are the
+  // card titles, at h2); any other section is a band of its own.
+  const isPlain = (section: BodySection) => !section.rich && section.items.length === 0;
+  let index = 0;
+  while (index < split.sections.length) {
+    const start = index;
+    while (index < split.sections.length && isPlain(split.sections[index]!)) index += 1;
+    const run = split.sections.slice(start, index);
+    const intro = start === 0 && !leadUsed ? leadText : undefined;
+    if (run.length >= 2) {
+      bands.push((tone) => (
+        <Band tone={tone} eyebrow={eyebrow}>
+          {intro ? (
+            <p className="m-0 mb-(--space-7) max-w-(--container-prose) text-body-l text-pretty">
+              {intro}
+            </p>
+          ) : null}
+          <FeatureGrid
+            headingLevel={2}
+            columns={columnsFor(run.length)}
+            items={run.map((section) => ({
+              title: section.title,
+              text: section.paragraphs.join(" "),
+            }))}
+          />
+        </Band>
+      ));
+      continue;
+    }
+    const section = split.sections[index]!;
+    const first = run.length === 1 ? run[0]! : section;
+    if (run.length === 0) index += 1;
     bands.push((tone) =>
       sectionBand(
-        intro ? { ...section, paragraphs: [intro, ...section.paragraphs] } : section,
+        intro ? { ...first, paragraphs: [intro, ...first.paragraphs] } : first,
         tone,
-        section.title,
+        first.title,
         eyebrow,
         listIcons,
       ),
     );
-  });
+  }
   return bands;
 }
 

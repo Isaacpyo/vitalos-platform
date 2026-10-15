@@ -81,23 +81,23 @@ export interface RoutePageDraft {
 
 const howWeWorkStageText: Readonly<Record<(typeof howWeWorkStages)[number], string>> = {
   Qualify:
-    "Should Vitalos pursue this work? We look at the business problem and the cost of doing nothing, the sponsor and decision-makers, urgency, budget, technical complexity and risk, and decide to pursue, clarify or decline.",
+    "Should Vitalos pursue this work? We weigh the problem, sponsor, urgency, budget, complexity and risk, then pursue, clarify or decline.",
   Discover:
-    "What is actually happening and why? We gather evidence on the problem, users and processes, systems and data, risks and success measures, so the problem is understood before large commitments are made.",
+    "What is actually happening and why? We gather evidence on users, processes, systems, data, risks and success measures before large commitments.",
   Define:
-    "What exactly should be done? Scope, target outcomes, architecture direction, roadmap, backlog and how acceptance will work, specific enough that both sides know what is included and excluded.",
+    "What exactly should be done? Scope, outcomes, architecture, roadmap, backlog and acceptance, clear on what is included and excluded.",
   Design:
-    "How will the solution work? Service and interface design alongside technical, integration, data and security design, with material choices recorded as decision records.",
+    "How will the solution work? Service, interface, technical, integration, data and security design, with material choices in decision records.",
   Engineer:
-    "Can we build it safely and incrementally? Working increments through version control, peer review, automated checks and controlled environments. Contractors and partners work to the same Vitalos standards.",
+    "Can we build it safely and incrementally? Working increments with version control, peer review, automated checks and controlled environments, to Vitalos standards.",
   Validate:
-    "Is it fit for release and use? Functional, security, performance, accessibility, data, integration and operational-readiness checks, AI evaluation where relevant, and acceptance by a named client owner.",
+    "Is it fit for release and use? Functional, security, performance, accessibility, data and readiness checks, AI evaluation where relevant, and named client acceptance.",
   Release:
-    "Can we move to production safely? Deployment, migration, runbooks, monitoring, a rollback plan and training. A deadline is never approval to skip review, validation or rollback planning.",
+    "Can we move to production safely? Deployment, migration, runbooks, monitoring, rollback and training. A deadline is never approval to skip review, validation or rollback planning.",
   Operate:
-    "Can the live service meet its commitments? Monitoring, incident response, support, maintenance and service reporting, with ownership made explicit through a service transition.",
+    "Can the live service meet its commitments? Monitoring, incident response, support, maintenance and reporting, with ownership made explicit at service transition.",
   Improve:
-    "What should change next? We compare the live system with its intended outcomes, incidents, cost, user friction and technical debt, and agree the next roadmap.",
+    "What should change next? We review outcomes, incidents, cost, user friction and technical debt, and agree the next roadmap.",
 };
 
 const howWeWork: RoutePageDraft = {
@@ -110,23 +110,23 @@ const howWeWork: RoutePageDraft = {
       "route-how-we-work",
       h2("Two ways to start"),
       p(
-        "Consulting-led: when you know there is a problem but not yet the right solution, discovery and assessment create the evidence and the roadmap. Engineering-led: when the objective, requirements and constraints are clear, we confirm the technical approach and build.",
+        "Consulting-led: when the problem is known but the solution is not, discovery and assessment create the evidence and roadmap. Engineering-led: when the objective, requirements and constraints are clear, we confirm the approach and build.",
       ),
       h2("One accountable Engagement Lead"),
       p(
-        "Every engagement has one named Vitalos Engagement Lead, accountable for the relationship, the outcome, delivery and commercial health, risk, quality and truthful reporting. You never have to coordinate separate Vitalos practices.",
+        "Every engagement has one named Engagement Lead, accountable for the relationship, outcome, delivery, commercial health, risk, quality and truthful reporting. You never coordinate separate Vitalos practices yourself.",
       ),
       h2("Quality gates"),
       p(
-        "Before production or acceptance, work passes gates for architecture, security, privacy and data, functional quality, performance, accessibility, resilience and recovery, operational readiness, documentation and client acceptance, plus AI evaluation where AI is involved. A gate that does not apply is recorded as not applicable, with the reason.",
+        "Before production or acceptance, work passes gates for architecture, security, privacy, data, quality, performance, accessibility, resilience, readiness, documentation and client acceptance, plus AI evaluation where relevant. A gate that does not apply is recorded as not applicable, with the reason.",
       ),
       h2("Contractors under Vitalos standards"),
       p(
-        "Contractors and specialist partners may extend capacity and capability, but you contract with Vitalos and Vitalos stays accountable. They follow Vitalos security, delivery, documentation and quality standards, get least-privilege access that is removed promptly, and critical knowledge never stays with one contractor. Where we partner for a capability, you know the responsibility model.",
+        "Contractors and partners may add capacity, but you contract with Vitalos, which stays accountable, and you know the responsibility model. They follow Vitalos standards with least-privilege access, removed promptly, and critical knowledge never stays with one contractor.",
       ),
       h2("What clients can expect"),
       p(
-        "Organised without bureaucracy, technically serious without being inaccessible, commercially disciplined without being adversarial, and fast without being reckless. Status reports say what is true: health with a reason, outcomes since the last report, decisions needed, top risks and owners, and the scope position. Changes to scope are handled openly, never absorbed silently.",
+        "Organised without bureaucracy, technically serious but accessible, commercially disciplined but not adversarial, fast but not reckless. Status reports say what is true, and scope changes are handled openly, never absorbed silently.",
       ),
       ...howWeWorkStages.flatMap((stage) => [h2(stage), p(howWeWorkStageText[stage])]),
     ),
@@ -320,15 +320,15 @@ const about: RoutePageDraft = {
       "route-about",
       h2("Why Vitalos exists"),
       p(
-        "Technology has become inseparable from how organisations operate, serve customers and compete. AI accelerates that shift, but the hard part is not choosing a model or buying another tool. It is redesigning work, modernising systems, connecting data, making good engineering decisions and carrying change safely into production. Vitalos exists for that gap between ambition and execution.",
+        "Technology now shapes how organisations operate, serve customers and compete, and AI accelerates the shift. Vitalos exists for the hard part: redesigning work, modernising systems, connecting data and carrying change safely into production.",
       ),
       h2("From strategy to production"),
       p(
-        "We work with organisations to understand what needs to change, decide where technology and AI create real value, engineer the products and platforms required, and keep improving them once they are live. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
+        "We help organisations decide what to change and where technology and AI create real value, then build it and keep improving it. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
       ),
       h2("Five practices, one firm"),
       p(
-        "Consulting, Engineering, AI & Data, Experience and Managed Services share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like five departments.",
+        "Our five practices share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like five departments.",
       ),
       h2("Two ways to start"),
       p(
@@ -336,15 +336,15 @@ const about: RoutePageDraft = {
       ),
       h2("Operating principles"),
       ul(
-        "Senior involvement: you have access to people who can understand the problem and make decisions about it.",
-        "Evidence before claims: we prefer a verifiable fact to an adjective.",
-        "Production quality: security, reliability, maintainability and operational readiness are part of delivery.",
-        "Responsible AI: AI is used where it creates measurable value and can be governed.",
-        "Commercially sensible: scope, assumptions, responsibilities, risks and expected outcomes are explicit.",
+        "Senior involvement: people who understand the problem and can decide.",
+        "Evidence before claims: facts over adjectives.",
+        "Production quality: security, reliability, maintainability and readiness built in.",
+        "Responsible AI: used where value is measurable and governable.",
+        "Commercially sensible: scope, assumptions, responsibilities, risks and outcomes made explicit.",
       ),
       h2("UK first, international by design"),
       p(
-        "The United Kingdom is Vitalos's launch market and commercial base. The company's services, delivery standards and operating practices are designed to support international work as it grows, without pretending that geographic scale already exists.",
+        "The United Kingdom is our launch market and commercial base. Our services and standards are designed for international work as it grows, without pretending geographic scale already exists.",
       ),
     ),
     cta: cta(ctas.primary, "general"),

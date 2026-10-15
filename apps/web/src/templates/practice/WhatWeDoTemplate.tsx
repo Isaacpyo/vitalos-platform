@@ -1,6 +1,5 @@
 import {
   ctas,
-  homeSections,
   megaMenuColumns,
   navLabels,
   offerNames,
@@ -23,7 +22,7 @@ import {
 } from "../../lib/view-mapping/showcase";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
-import { LifecycleBand } from "../commercial/dark-bands";
+import { LifecycleBand, lifecycleHeading } from "../commercial/dark-bands";
 
 export interface WhatWeDoTemplateProps {
   page: RoutePageView | null;
@@ -36,11 +35,6 @@ export interface WhatWeDoTemplateProps {
 }
 
 export const whatWeDoTrail = () => trail({ label: navLabels.whatWeDo, path: routes.whatWeDo() });
-
-/** The homepage's lifecycle heading (locked copy). */
-const lifecycleHeading = homeSections.find(
-  (section) => section.key === "strategyToProduction",
-)?.visibleHeading;
 
 /** The three layers, in the order the body lists them: practices, solutions, offers. */
 const layerIcons = ["layers", "workflow", "document"] as const;
