@@ -1204,7 +1204,7 @@ function MessageView(props: {
               <p className="relay-mono relay-mineral">REQUEST SENT · {time(m.createdAt)}</p>
               <p>
                 {m.meta?.outOfHours
-                  ? props.outOfHoursText
+                  ? `${props.outOfHoursText}${(m.meta?.email ?? props.contactEmail) ? ` We'll write to ${m.meta?.email ?? props.contactEmail}.` : ""}`
                   : `We've let the team know. We'll reply here, or by email to ${m.meta?.email ?? props.contactEmail ?? "you"} if you leave.`}
               </p>
             </div>
