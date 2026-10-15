@@ -12,6 +12,10 @@ export interface BuildEnv {
   indexable: boolean;
   enableHsts: boolean;
   turnstileEnabled: boolean;
+  /** Relay is on: the launcher renders and its API routes answer. */
+  relayEnabled: boolean;
+  /** Realtime WebSocket origin (ws/wss) for CSP connect-src, when Relay realtime is configured. */
+  relayRealtimeOrigin: string | undefined;
 }
 
 export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
@@ -24,6 +28,11 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     indexable: features.indexable,
     enableHsts: env.enableHsts,
     turnstileEnabled: features.turnstile,
+    relayEnabled: features.relay,
+    relayRealtimeOrigin:
+      features.relay && env.relay.realtimePublicKey && env.supabase.url
+        ? new URL(env.supabase.url).origin.replace(/^http/, "ws")
+        : undefined,
   };
 }
 

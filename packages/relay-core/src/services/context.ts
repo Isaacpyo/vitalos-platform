@@ -74,6 +74,7 @@ export interface RelayContext {
 const STATUS: Record<ErrorCode, number> = {
   invalid: 400,
   unauthorised: 401,
+  forbidden: 403,
   forbidden_origin: 403,
   not_found: 404,
   rate_limited: 429,

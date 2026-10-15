@@ -132,6 +132,7 @@ export interface SuggestionsResponse {
 export type ErrorCode =
   | "invalid"
   | "unauthorised"
+  | "forbidden"
   | "forbidden_origin"
   | "not_found"
   | "rate_limited"

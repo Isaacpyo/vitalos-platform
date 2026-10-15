@@ -220,6 +220,12 @@ importers:
       '@vitalos/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@vitalos/relay-core':
+        specifier: workspace:*
+        version: link:../../packages/relay-core
+      '@vitalos/relay-knowledge':
+        specifier: workspace:*
+        version: link:../../packages/relay-knowledge
       '@vitalos/security':
         specifier: workspace:*
         version: link:../../packages/security

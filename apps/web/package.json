@@ -17,6 +17,8 @@
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/email-layout": "workspace:*",
     "@vitalos/observability": "workspace:*",
+    "@vitalos/relay-core": "workspace:*",
+    "@vitalos/relay-knowledge": "workspace:*",
     "@vitalos/security": "workspace:*",
     "@vitalos/ui": "workspace:*",
     "@vitalos/validation": "workspace:*",
