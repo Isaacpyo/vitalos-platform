@@ -49,7 +49,9 @@ def verify(
         return "bad_signature"
     expected = sign(secret, canonical(timestamp, method, path_with_query, admin_header, body))
     # Compare before the clock check so a forged request learns nothing from the error code.
-    if not hmac.compare_digest(expected, signature.strip().lower()):
+    # Compare bytes: compare_digest raises TypeError on non-ASCII str, which would turn a junk
+    # header into a 500 instead of a rejection.
+    if not hmac.compare_digest(expected.encode(), signature.strip().lower().encode("utf-8", "replace")):
         return "bad_signature"
     if abs((now if now is not None else time.time()) - sent_at) > TOLERANCE_SECONDS:
         return "stale"

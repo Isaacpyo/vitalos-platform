@@ -7,7 +7,10 @@ from .base import (
     ATTACHMENTS_STORAGE,
     EMAIL_TRANSPORT,
     OBJECT_STORAGE_BUCKET,
+    RELAY_ADMIN_API_SECRET,
+    RELAY_API_BASE_URL,
     RELAY_CLIENT,
+    RELAY_WEBHOOK_SECRET,
     RESEND_API_KEY,
     SENTRY_DSN,
     env,
@@ -34,6 +37,14 @@ if RELAY_CLIENT != "http":
     raise ImproperlyConfigured(
         "RELAY_CLIENT must be http in production (fake is sample data for local work)."
     )
+# Relay carries transcripts and contact details: https only, and both shared secrets present.
+if RELAY_API_BASE_URL:
+    if not RELAY_API_BASE_URL.startswith("https://"):
+        raise ImproperlyConfigured("RELAY_API_BASE_URL must be https in production.")
+    if len(RELAY_ADMIN_API_SECRET or "") < 32 or len(RELAY_WEBHOOK_SECRET or "") < 32:
+        raise ImproperlyConfigured(
+            "RELAY_ADMIN_API_SECRET and RELAY_WEBHOOK_SECRET (32+ characters) are required with RELAY_API_BASE_URL."
+        )
 # In production the reset email is offered only when it can actually be delivered.
 PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 

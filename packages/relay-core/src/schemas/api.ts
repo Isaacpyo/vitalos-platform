@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LIMITS } from "../contract";
+import { LIMITS, isSafeSiteLink } from "../contract";
 
 /** Strips control and bidi-override characters and trims; keeps newlines and tabs. */
 export function cleanText(value: string): string {
@@ -129,12 +129,9 @@ export const knowledgeDraftBody = z.object({
   url: z
     .string()
     .max(500)
-    .refine(
-      (v) => v === "" || v.startsWith("/") || /^https:\/\/(www\.)?vitalos\.co\.uk\//.test(v),
-      {
-        message: "use a site path such as /offers/engineering-rescue",
-      },
-    )
+    .refine((v) => v === "" || isSafeSiteLink(v), {
+      message: "use a site path such as /offers/engineering-rescue",
+    })
     .optional(),
   type: z.enum(knowledgeTypes).default("guide"),
   owner: optionalClean(120),

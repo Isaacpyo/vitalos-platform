@@ -66,6 +66,9 @@ def test_verify_accepts_good_and_rejects_bad_or_stale():
     assert signing.verify("other", timestamp=str(TS), signature=good, now=TS, **common) == "bad_signature"
     assert signing.verify(SECRET, timestamp="soon", signature=good, now=TS, **common) == "bad_signature"
     assert signing.verify("", timestamp=str(TS), signature=good, now=TS, **common) == "bad_signature"
+    # A non-ASCII header is a rejection, not a TypeError (500).
+    junk = "v1=" + "é" * 64
+    assert signing.verify(SECRET, timestamp=str(TS), signature=junk, now=TS, **common) == "bad_signature"
 
 
 def test_admin_identity_header(superadmin, lead):

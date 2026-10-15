@@ -49,7 +49,7 @@ export { retrieve } from "./retrieval/search";
 export { redact } from "./redact/redact";
 export { isExplicitHandoffRequest, normaliseQuestion } from "./handoff/intent";
 
-export { SupabaseBroadcaster, MemoryBroadcaster } from "./realtime/broadcast";
+export { SupabaseBroadcaster, MemoryBroadcaster, adminTopic } from "./realtime/broadcast";
 export type { Broadcaster } from "./realtime/broadcast";
 export { WebhookAdminNotifier, MemoryAdminNotifier } from "./notify/webhook";
 export type { AdminEvent, AdminNotifier } from "./notify/webhook";

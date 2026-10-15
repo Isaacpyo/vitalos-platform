@@ -4,6 +4,15 @@ import type { VisitorMailer } from "../services/context";
 type MailInput = Parameters<VisitorMailer["send"]>[0];
 
 /**
+ * The outbox is an audit trail, not a second way in: the single-use resume token in the link
+ * (`?relay=resume&t=...`) is replaced before the email is stored.
+ */
+export function scrubForLog<T extends { html: string; text: string }>(email: T): T {
+  const scrub = (v: string) => v.replace(/([?&](?:amp;)?t=)[^&"'<>\s]+/g, "$1[removed]");
+  return { ...email, html: scrub(email.html), text: scrub(email.text) };
+}
+
+/**
  * Visitor email delivery. `LogVisitorMailer` stores the email in relay.email_outbox and sends
  * nothing (the default until a sending domain is verified). `ResendVisitorMailer` sends through
  * Resend and records the send in the same outbox as an audit trail.
@@ -15,7 +24,7 @@ export class LogVisitorMailer implements VisitorMailer {
     const { inlineImages: _images, ...email } = input;
     void _images;
     await this.store.insertEmail({
-      ...email,
+      ...scrubForLog(email),
       provider: "log",
       status: "logged",
       providerMessageId: null,
@@ -40,7 +49,7 @@ export class ResendVisitorMailer implements VisitorMailer {
     const { inlineImages = [], ...email } = input;
     if (this.options.allowedRecipient && !this.options.allowedRecipient(input.to)) {
       await this.options.store.insertEmail({
-        ...email,
+        ...scrubForLog(email),
         provider: "log",
         status: "logged",
         providerMessageId: null,
@@ -79,7 +88,7 @@ export class ResendVisitorMailer implements VisitorMailer {
       status = "failed";
     }
     await this.options.store.insertEmail({
-      ...email,
+      ...scrubForLog(email),
       provider: "resend",
       status,
       providerMessageId,

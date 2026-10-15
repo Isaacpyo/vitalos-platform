@@ -10,7 +10,7 @@ A visitor waiting for a person, and staff watching the inbox, both need updates 
 
 1. **Ping, then fetch.** The server sends content-free pings (`{type, conversationId?, at}`) through the Supabase Realtime Broadcast HTTP API. Clients then fetch the real data from authorised endpoints.
    - Visitor channel: `relay:v:{channelKey}`, where the key is 32 random bytes.
-   - Admin channel: `relay:admins`.
+   - Admin channel: `relay:a:<40 hex>`, an HMAC of `RELAY_ADMIN_API_SECRET`. Broadcast channels are public, so the topic must be unguessable: a fixed name would let any visitor (who is given the publishable key) watch conversation ids and activity timing, or send spoof pings. The Super Admin receives the topic in the signed inbox response, and it changes when the secret rotates (security review, 15 Oct 2026).
 
    A spoofed ping is harmless, and no personal data travels on the socket.
 

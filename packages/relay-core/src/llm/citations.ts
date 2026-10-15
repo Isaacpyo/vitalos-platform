@@ -1,3 +1,4 @@
+import { isSafeSiteLink } from "../contract";
 import type { Citation, NextStep, SourceType } from "../contract";
 import type { MatchedChunk, StoredCitation } from "../db/types";
 
@@ -22,7 +23,7 @@ export function sourceTypeOf(chunk: Pick<MatchedChunk, "source" | "type">): Sour
 /** Citation link: FAQ entries use their canonical path; others their page URL. */
 export function linkOf(chunk: MatchedChunk): string | null {
   const link = chunk.source === "faq" ? (chunk.meta.canonical_path ?? null) : chunk.url;
-  return link && link.startsWith("/") ? link : null;
+  return isSafeSiteLink(link) ? link : null;
 }
 
 /**

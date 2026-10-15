@@ -16,7 +16,8 @@
     "faq-snapshot": "node --conditions=react-server --import tsx scripts/build-faq-snapshot.ts",
     "ingest": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/ingest.ts",
     "faq-sync": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/faq-sync.ts",
-    "eval": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/eval.ts"
+    "eval": "node --env-file-if-exists=../../.env.local --conditions=react-server --import tsx src/cli/eval.ts",
+    "load": "node --conditions=react-server --import tsx src/cli/load.ts"
   },
   "dependencies": {
     "@vitalos/cms": "workspace:*",

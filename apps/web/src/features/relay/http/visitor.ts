@@ -126,6 +126,7 @@ export async function handleVisitorRequest(
       case "GET suggestions": {
         const page = new URL(request.url).searchParams.get("page") ?? "/";
         const safe = /^\/[a-z0-9/_-]{0,200}$/i.test(page) ? page : "/";
+        await relay.visitor.limitByIp("suggestions", meta(request), 60, 60);
         // The welcome screen before any conversation exists: START WITH, greeting, team status.
         const settings = await relay.visitor.settings();
         const team = await relay.visitor.teamStatus(settings);
@@ -140,6 +141,7 @@ export async function handleVisitorRequest(
           request,
           z.object({ token: z.string().min(20).max(100) }),
         );
+        await relay.visitor.limitByIp("resume", meta(request), 600, 10);
         return json(await relay.visitor.resume(token));
       }
 

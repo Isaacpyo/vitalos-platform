@@ -175,7 +175,7 @@ export class AdminService {
       items: page.rows.map(conversationRow),
       nextCursor: page.nextCursor,
       realtime: realtime
-        ? { url: realtime.url, key: realtime.publicKey, channel: "relay:admins" }
+        ? { url: realtime.url, key: realtime.publicKey, channel: realtime.adminTopic }
         : null,
     };
   }
@@ -437,7 +437,8 @@ export class AdminService {
       conversationId: c.id,
       inlineImages: email.inlineImages,
     });
-    return status === "sent" || status === "logged";
+    // Only a provider-accepted send counts: "logged" means nothing left this server.
+    return status === "sent";
   }
 
   async note(id: string, admin: AdminIdentity, text: string) {
@@ -693,8 +694,12 @@ export class AdminService {
     if (!d) throw new RelayError("not_found");
     if (this.readOnly(d))
       throw new RelayError("invalid", "This entry comes from its source and is read-only here.");
+    // Publishing needs a SuperAdmin, so a ServiceLead's edit to a live answer takes it out of
+    // retrieval as a draft until a SuperAdmin publishes it again.
+    const demote = d.status === "published" && admin.role !== "SuperAdmin";
     const { document } = await this.store.upsertDocument({
       ...d,
+      ...(demote ? { status: "draft" as const } : {}),
       title: input.title,
       url: input.url || null,
       type: input.type,
@@ -710,7 +715,8 @@ export class AdminService {
       }),
       meta: input.url ? { ...d.meta, page_placements: [input.url] } : d.meta,
     });
-    if (document.status === "published") await this.reindexDocument(document);
+    if (demote) await this.store.replaceChunks(id, []);
+    else if (document.status === "published") await this.reindexDocument(document);
     return {
       document: this.documentView(document, (await this.store.listChunksForDocument(id)).length),
     };

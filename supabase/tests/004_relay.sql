@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(29);
 
 -- Schema, RLS deny-all, privileges
 select has_schema('relay', 'relay schema exists');
@@ -77,6 +77,21 @@ select is((select count(*)::int from relay.conversations where id::text like '00
 select lives_ok($$select relay.purge_expired(false)$$, 'purge runs');
 select is((select count(*)::int from relay.conversations where id::text like '00000000-0000-0000-0000-0000000000a%'), 1,
   'purge keeps conversations with contact details inside their period');
+
+-- Deleting a conversation forgets its gap examples (security review M4)
+insert into relay.conversations (id, visitor_token_hash, channel_key)
+values ('00000000-0000-0000-0000-0000000000b1', repeat('c', 64), repeat('n', 43)),
+       ('00000000-0000-0000-0000-0000000000b2', repeat('d', 64), repeat('p', 43));
+insert into relay.kb_gaps (question_norm, example_question, count, example_conversation_id)
+values ('only asked once', 'Only asked once by this visitor', 1, '00000000-0000-0000-0000-0000000000b1'),
+       ('asked by several', 'Asked by several, example from b2', 3, '00000000-0000-0000-0000-0000000000b2');
+delete from relay.conversations where id in ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000b2');
+select is((select count(*)::int from relay.kb_gaps where question_norm = 'only asked once'), 0,
+  'a gap asked only in the deleted conversation is removed');
+select is((select example_question from relay.kb_gaps where question_norm = 'asked by several'), 'asked by several',
+  'a shared gap keeps only its normalised question');
+select is((select example_conversation_id from relay.kb_gaps where question_norm = 'asked by several'), null::uuid,
+  'a shared gap no longer points at the deleted conversation');
 
 select * from finish();
 rollback;

@@ -556,12 +556,12 @@ def test_settings_validation(client_for, superadmin, relay):
 
 def test_realtime_widens_connect_src_on_relay_pages_only(client_for, superadmin, relay, seeded):
     services.remember_realtime(
-        {"url": "https://abc.supabase.co", "key": "sb_publishable_x", "channel": "relay:admins"}
+        {"url": "https://abc.supabase.co", "key": "sb_publishable_x", "channel": "relay:a:" + "0" * 40}
     )
     client = client_for(superadmin)
     relay_page = client.get("/relay/inbox/")
     assert "wss://abc.supabase.co" in relay_page["Content-Security-Policy"]
-    assert "realtime:relay:admins" in relay_page.content.decode()
+    assert "realtime:relay:a:" + "0" * 40 in relay_page.content.decode()
     assert "wss://abc.supabase.co" not in client.get("/").get("Content-Security-Policy", "")
 
 

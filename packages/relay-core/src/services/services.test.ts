@@ -412,3 +412,98 @@ describe("message ids", () => {
     ).resolves.toEqual({ showHandoff: false });
   });
 });
+
+describe("security review fixes", () => {
+  const handoffBody = (conversationId: string) => ({
+    conversationId,
+    trigger: "explicit_request" as const,
+    name: "Alex Morgan",
+    email: "alex@example-care.co.uk",
+    consent: true as const,
+    noticeVersion: "2026-10",
+  });
+
+  it("a ServiceLead's edit takes a published answer out of retrieval until a SuperAdmin republishes", async () => {
+    const { admin, store } = await setup();
+    const draft = await admin.knowledgeCreate(
+      { title: "Do you work with councils?", type: "faq", bodyMd: "Yes, with councils.", url: "" },
+      ADMIN,
+    );
+    await admin.knowledgePublish(draft.document.id, ADMIN);
+    expect((await store.listChunksForDocument(draft.document.id)).length).toBeGreaterThan(0);
+
+    const lead = { ...ADMIN, id: "sa:13", role: "ServiceLead" as const };
+    const edited = await admin.knowledgeUpdate(
+      draft.document.id,
+      {
+        title: "Do you work with councils?",
+        type: "faq",
+        bodyMd: "Yes, at a fixed price.",
+        url: "",
+      },
+      lead,
+    );
+    expect(edited.document.status).toBe("draft");
+    expect(await store.listChunksForDocument(draft.document.id)).toEqual([]);
+
+    // A SuperAdmin's edit stays live and is re-indexed.
+    await admin.knowledgePublish(draft.document.id, ADMIN);
+    const again = await admin.knowledgeUpdate(
+      draft.document.id,
+      { title: "Do you work with councils?", type: "faq", bodyMd: "Yes, with councils.", url: "" },
+      ADMIN,
+    );
+    expect(again.document.status).toBe("published");
+    expect((await store.listChunksForDocument(draft.document.id)).length).toBeGreaterThan(0);
+  });
+
+  it("a repeated hand-off sends one alert and one summary, counts summary tokens, and is rate-limited", async () => {
+    const { visitor, created, settle, notifier, store, ctx } = await setup();
+    const day = ctx.deps.now().toISOString().slice(0, 10);
+    const first = await ask(visitor, created, "Can you rescue a failing software project?");
+    if (first.kind === "stream") await collect(first.events);
+    await settle();
+    const beforeHandoff = (await store.getUsage(day))?.tokensIn ?? 0;
+    await visitor.handoff(handoffBody(created.conversationId), created.visitorToken);
+    await settle();
+    const afterFirst = await store.getUsage(day);
+    expect(afterFirst?.tokensIn ?? 0).toBeGreaterThan(beforeHandoff);
+
+    await visitor.handoff(handoffBody(created.conversationId), created.visitorToken);
+    await settle();
+    expect(notifier.events.filter((e) => e.type === "handoff.requested")).toHaveLength(1);
+    expect((await store.getUsage(day))?.tokensIn).toBe(afterFirst?.tokensIn);
+
+    for (let i = 0; i < 3; i += 1)
+      await visitor.handoff(handoffBody(created.conversationId), created.visitorToken);
+    await expect(
+      visitor.handoff(handoffBody(created.conversationId), created.visitorToken),
+    ).rejects.toMatchObject({ code: "rate_limited" });
+  });
+
+  it("counts an aborted answer against the daily token cap", async () => {
+    const { visitor, created, store, ctx, settle } = await setup();
+    const abort = new AbortController();
+    const result = await visitor.chat(
+      {
+        conversationId: created.conversationId,
+        clientMessageId: crypto.randomUUID(),
+        text: "Can you rescue a failing software project?",
+        pageUrl: "http://localhost:3000/offers/engineering-rescue",
+      },
+      created.visitorToken,
+      META,
+      abort.signal,
+    );
+    if (result.kind !== "stream") throw new Error("expected stream");
+    for await (const e of result.events) {
+      if (e.event === "delta") {
+        abort.abort();
+        break;
+      }
+    }
+    await settle();
+    const usage = await store.getUsage(ctx.deps.now().toISOString().slice(0, 10));
+    expect(usage?.tokensIn ?? 0).toBeGreaterThan(0);
+  });
+});

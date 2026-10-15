@@ -16,6 +16,7 @@ import {
   NotionFaqReader,
   ResendVisitorMailer,
   SupabaseBroadcaster,
+  adminTopic,
   SupabaseRelayStore,
   VisitorService,
   WebhookAdminNotifier,
@@ -92,9 +93,15 @@ export function createRelay(env: Env, defer: Defer): Relay {
     r.embedFunctionUrl && r.embedSecret
       ? new HttpEmbedder({ url: r.embedFunctionUrl, secret: r.embedSecret })
       : nullEmbedder;
+  // Admins learn the topic from the signed inbox response; it changes when the secret rotates.
+  const topic = adminTopic(r.adminApiSecrets[0] ?? r.tokenPepper ?? "relay-local");
   const broadcaster =
     r.realtimePublicKey && env.supabase.url && env.supabase.secretKey
-      ? new SupabaseBroadcaster({ url: env.supabase.url, secretKey: env.supabase.secretKey })
+      ? new SupabaseBroadcaster({
+          url: env.supabase.url,
+          secretKey: env.supabase.secretKey,
+          adminTopic: topic,
+        })
       : new MemoryBroadcaster();
   const notifier =
     r.superadminWebhookUrl && r.webhookSecret
@@ -129,7 +136,11 @@ export function createRelay(env: Env, defer: Defer): Relay {
       privacyUrl: "/legal/privacy",
       realtime:
         r.realtimePublicKey && env.supabase.url
-          ? { url: new URL(env.supabase.url).origin, publicKey: r.realtimePublicKey }
+          ? {
+              url: new URL(env.supabase.url).origin,
+              publicKey: r.realtimePublicKey,
+              adminTopic: topic,
+            }
           : null,
       publicSiteUrl: env.siteUrl,
       adminBaseUrl: r.adminBaseUrl ?? null,

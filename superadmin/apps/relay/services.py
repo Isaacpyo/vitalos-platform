@@ -7,6 +7,7 @@ Audit summaries never contain message text or a visitor's email address.
 
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import timedelta
 from urllib.parse import urlencode, urlsplit
@@ -310,9 +311,12 @@ def realtime_from(realtime) -> dict | None:
         return None
     url = str(realtime.get("url") or "").rstrip("/")
     key = str(realtime.get("key") or "")
-    channel = str(realtime.get("channel") or "relay:admins")
+    channel = str(realtime.get("channel") or "")
     parts = urlsplit(url)
     if parts.scheme != "https" or not parts.netloc or parts.path not in ("", "/") or not key:
+        return None
+    # The website derives the admin topic from the shared secret; never fall back to a fixed name.
+    if not re.fullmatch(r"relay:a:[0-9a-f]{40}", channel):
         return None
     origin = f"wss://{parts.netloc}"
     socket = f"{origin}/realtime/v1/websocket?" + urlencode({"apikey": key, "vsn": "1.0.0"})

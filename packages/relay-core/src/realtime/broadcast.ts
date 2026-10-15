@@ -1,6 +1,11 @@
+import { createHmac } from "node:crypto";
+
 /**
  * Content-free realtime pings (ADR-034): `{ type, conversationId?, at }` only. Clients fetch the
- * real data from authorised endpoints, so a spoofed or leaked ping reveals nothing.
+ * real data from authorised endpoints. Broadcast channels are public, so each topic is
+ * unguessable: visitors get their own random key, and the admin topic is derived from the admin
+ * API secret, which visitors never see (otherwise any visitor could watch conversation ids and
+ * activity timing, or spoof refetch pings).
  */
 export type VisitorPing = "changed" | "typing";
 export type AdminPing = "inbox_changed" | "notification" | "typing";
@@ -11,11 +16,19 @@ export interface Broadcaster {
 }
 
 export const visitorTopic = (channelKey: string) => `relay:v:${channelKey}`;
-export const ADMIN_TOPIC = "relay:admins";
+export const adminTopic = (adminSecret: string) =>
+  `relay:a:${createHmac("sha256", adminSecret).update("relay-admin-topic").digest("hex").slice(0, 40)}`;
 
 /** Supabase Realtime Broadcast over HTTP (server side, secret key; never blocks the request). */
 export class SupabaseBroadcaster implements Broadcaster {
-  constructor(private readonly options: { url: string; secretKey: string; fetch?: typeof fetch }) {}
+  constructor(
+    private readonly options: {
+      url: string;
+      secretKey: string;
+      adminTopic: string;
+      fetch?: typeof fetch;
+    },
+  ) {}
 
   private async send(
     topic: string,
@@ -49,19 +62,20 @@ export class SupabaseBroadcaster implements Broadcaster {
   }
 
   admins(event: AdminPing, extra: { conversationId?: string; by?: "visitor" } = {}): Promise<void> {
-    return this.send(ADMIN_TOPIC, event, { type: event, at: Date.now(), ...extra });
+    return this.send(this.options.adminTopic, event, { type: event, at: Date.now(), ...extra });
   }
 }
 
 /** Records pings in memory (tests, browser suites without Realtime). */
 export class MemoryBroadcaster implements Broadcaster {
   readonly sent: { topic: string; event: string; payload: Record<string, unknown> }[] = [];
+  constructor(private readonly topic = "relay:a:memory") {}
   visitor(channelKey: string, event: VisitorPing, extra: { name?: string } = {}): Promise<void> {
     this.sent.push({ topic: visitorTopic(channelKey), event, payload: { ...extra } });
     return Promise.resolve();
   }
   admins(event: AdminPing, extra: { conversationId?: string; by?: "visitor" } = {}): Promise<void> {
-    this.sent.push({ topic: ADMIN_TOPIC, event, payload: { ...extra } });
+    this.sent.push({ topic: this.topic, event, payload: { ...extra } });
     return Promise.resolve();
   }
 }

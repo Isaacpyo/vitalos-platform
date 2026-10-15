@@ -31,3 +31,19 @@ Each entry: what was missing or conflicting, what was chosen, and why. Owner dec
     - FAQ chunks are embedded on the question and short answer only. The full answer stays in the chunk for full-text search and for the model. gte-small reads 512 tokens, so long answers diluted the match with short visitor questions. `FAQ_EMBEDDING_VERSION` is part of the checksum, so the next ingest re-embeds every entry.
     - Retrieval over-fetches and returns each document's best chunk first (`diversify`), so one long page cannot fill the top slots and the three citations.
     - The default answer threshold is 0.40, down from 0.55. Off-topic questions top out at 0.27 and paraphrased real questions have p10 0.46. The threshold stays editable in Settings.
+27. **Security review (Phase 6, 15 Oct).** The static review of every route found no flaw an anonymous visitor could exploit in authentication, signing, RLS or rendering. Fixed on this branch:
+    - **M1.** A ServiceLead's edit to a published team answer now returns it to draft and removes it from retrieval. Only a SuperAdmin can publish.
+    - **M2.** The admin realtime topic is derived from the admin secret, not the fixed `relay:admins` (ADR-034).
+    - **M3.** Hand-off is rate-limited per conversation and sends one alert and one summary per open hand-off. Summary tokens and aborted streams (estimated) count against the daily cap. Feedback, end, resume and suggestions are rate-limited.
+    - **M4 (code).** Deleting or purging a conversation removes its words from `kb_gaps` (migration `20261015090200`). Scheduling retention is still an owner decision (item 20).
+    - **Hardening:**
+      - One `isSafeSiteLink` check (rejects `//host` and backslashes) for citations, knowledge URLs and every widget link.
+      - Only a provider-accepted email counts as "emailed", and stored emails have the resume token removed.
+      - The Super Admin rejects non-ASCII signatures cleanly and requires https plus both secrets in production.
+      - The visitor-supplied page title is redacted before the model sees it.
+
+    **Accepted, not changed:**
+    - Signed admin requests have no nonce. The 5-minute window applies, and the actions are idempotent.
+    - Redaction is pattern-based. It cannot catch every name or address, so PRIVACY.md lists this as a residual risk, and the composer asks visitors not to share sensitive details.
+    - The cron secret is shared with the enquiry crons.
+    - The visitor token lives in `localStorage`, protected by the site CSP.

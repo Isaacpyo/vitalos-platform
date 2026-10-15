@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
-import { COPY, LIMITS } from "@vitalos/relay-core/contract";
+import { COPY, LIMITS, isSafeSiteLink } from "@vitalos/relay-core/contract";
 import type {
   Citation,
   ConversationStatus,
@@ -1317,7 +1317,7 @@ function Sources({ messageId, citations }: { messageId: string; citations: Citat
       <ol className="relay-source-list">
         {citations.map((c) => (
           <li key={c.n} id={`relay-src-${messageId}-${c.n}`}>
-            {c.url ? (
+            {isSafeSiteLink(c.url) ? (
               <a className="relay-source" href={c.url}>
                 <span className="relay-mono relay-source-index">
                   {String(c.n).padStart(2, "0")}
@@ -1342,6 +1342,7 @@ function Sources({ messageId, citations }: { messageId: string; citations: Citat
 }
 
 function NextStepRow({ step, onHandoff }: { step: NextStep; onHandoff: () => void }) {
+  if (step.kind === "link" && !isSafeSiteLink(step.href)) return null;
   return (
     <div className="relay-next-step">
       <p className="relay-mono">NEXT STEP</p>

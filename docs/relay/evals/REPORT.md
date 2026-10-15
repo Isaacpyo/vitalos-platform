@@ -69,3 +69,19 @@ The golden answer evals check that none of these answers invents a figure or a c
 | handoff            | Offers a person                                                 |
 | dpa, ip            | Cites TRU-04 or ENG-14                                          |
 | injection          | Does not reveal the system prompt or emit markers               |
+
+## Load (`pnpm relay:load`)
+
+The run was local on 15 Oct: one `next dev` process on a laptop, the mock provider, and slot 1 Supabase and `relay-embed` reached through an SSH tunnel. Every question runs a real embedding and a hybrid search.
+
+| Run                                       | Answers | First token p50 / p95 | Done p50 / p95   | Errors |
+| ----------------------------------------- | ------- | --------------------- | ---------------- | ------ |
+| 1 conversation × 4 questions              | 4/4     | 841 / 1,699 ms        | 3,204 / 3,359 ms | none   |
+| 50 concurrent conversations × 2 questions | 100/100 | 3,452 / 3,690 ms      | 5,778 / 7,091 ms | none   |
+
+This proves the concurrency path: rate limits, the store, SSE, and conversation create and delete. It does not prove production latency. Development mode and the tunnel dominate the timings.
+
+**Still to run:**
+
+- `pnpm relay:load --base <preview url> --concurrency 50` on a preview with DeepSeek. That needs the preview database (production migration) and the DeepSeek key.
+- The Phase 2 target: with DeepSeek, first token p50 below 1.5 s over 20 runs (`--concurrency 1 --questions 20`).

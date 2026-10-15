@@ -22,7 +22,8 @@ export interface RelayConfig {
   allowedOrigins: readonly string[];
   privacyNoticeVersion: string;
   privacyUrl: string;
-  realtime: { url: string; publicKey: string } | null;
+  /** `adminTopic` comes from `adminTopic(RELAY_ADMIN_API_SECRET)` and is shown to admins only. */
+  realtime: { url: string; publicKey: string; adminTopic: string } | null;
   publicSiteUrl: string;
   adminBaseUrl: string | null;
   turnstileRequired: boolean;

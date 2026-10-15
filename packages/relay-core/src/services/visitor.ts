@@ -98,6 +98,18 @@ export class VisitorService {
     return ip ? hmacHex(this.ctx.config.ipSalt, ip).slice(0, 64) : null;
   }
 
+  /** Throws `rate_limited` once `key` has been used `max` times in the window (test-scalable). */
+  private async limit(key: string, windowSeconds: number, max: number): Promise<void> {
+    if (!(await this.store.hitRateLimit(key, windowSeconds, max * this.limitScale)))
+      throw new RelayError("rate_limited", COPY.rateLimited);
+  }
+
+  /** Per-IP limit for unauthenticated reads and token exchanges (suggestions, resume). */
+  async limitByIp(scope: string, meta: RequestMeta, windowSeconds: number, max: number) {
+    const ipHash = this.ipHash(meta.ip);
+    if (ipHash) await this.limit(`${scope}:ip:${ipHash}`, windowSeconds, max);
+  }
+
   // -------------------------------------------------------------------------------------------
   async createConversation(
     body: z.infer<typeof createConversationBody>,
@@ -321,7 +333,8 @@ export class VisitorService {
         role: "user",
         content: buildUserMessage({
           pagePath,
-          pageTitle: conversation.pageTitle,
+          // Visitor-supplied (document.title), so it is redacted like the question.
+          pageTitle: conversation.pageTitle ? redact(conversation.pageTitle) : null,
           teamOnline: team === "online",
           now: deps.now(),
           confident: !lowConfidence,
@@ -359,6 +372,21 @@ export class VisitorService {
       }
     } finally {
       if (!completed) {
+        // The provider bills a stream that started even when it never finishes, so count an
+        // estimate (about 4 characters a token) against the daily cap; aborting can't dodge it.
+        if (firstTokenMs !== null) {
+          const estimate: Usage = {
+            inputTokens: Math.ceil(
+              (SYSTEM_PROMPT.length + messages.reduce((n, m) => n + m.content.length, 0)) / 4,
+            ),
+            outputTokens: Math.ceil(guard.partial().length / 4),
+            cacheHitTokens: 0,
+          };
+          const cost = estimateCostUsd(estimate, settings.model, deps.now());
+          deps.defer(() =>
+            deps.store.addUsage(day, estimate.inputTokens, estimate.outputTokens, 0, cost),
+          );
+        }
         // Stopped by the visitor or failed: keep what was written, marked truncated.
         const partial = stripMarkers(guard.partial());
         if (partial && (abortSignal.aborted || failed === "aborted")) {
@@ -492,6 +520,7 @@ export class VisitorService {
     bearer: string | null,
   ): Promise<{ showHandoff: boolean }> {
     const conversation = await this.authenticate(body.conversationId, bearer);
+    await this.limit(`feedback:${conversation.id}`, 600, 30);
     const message = await this.store.getMessage(body.messageId);
     if (!message || message.conversationId !== conversation.id || message.senderType !== "ai")
       throw new RelayError("not_found");
@@ -518,6 +547,7 @@ export class VisitorService {
   ): Promise<{ status: "awaiting_human" | "human"; teamStatus: TeamStatus; outOfHours: boolean }> {
     const conversation = await this.authenticate(body.conversationId, bearer);
     if (conversation.status === "closed") throw new RelayError("conversation_closed", COPY.closed);
+    await this.limit(`handoff:${conversation.id}`, 600, 5);
     if (body.noticeVersion !== this.ctx.config.privacyNoticeVersion)
       throw new RelayError(
         "invalid",
@@ -541,23 +571,24 @@ export class VisitorService {
     if (!updated) throw new RelayError("not_found");
     if (conversation.status === "human") return { status: "human", teamStatus: team, outOfHours };
 
+    // A repeat request (new details, double submit) updates the contact fields only: one alert
+    // and one summary per open hand-off.
     const existing = await this.store.openHandoff(conversation.id);
-    if (!existing) {
-      const lastAi = [...(await this.store.listMessages(conversation.id))]
-        .reverse()
-        .find((m) => m.senderType === "ai");
-      await this.store.createHandoff({
-        conversationId: conversation.id,
-        trigger: body.trigger,
-        messageId: lastAi?.id ?? null,
-      });
-      await this.store.insertMessage({
-        conversationId: conversation.id,
-        senderType: "system",
-        body: "handoff_requested",
-        meta: { trigger: body.trigger, consent: true, outOfHours, email: body.email.toLowerCase() },
-      });
-    }
+    if (existing) return { status: "awaiting_human", teamStatus: team, outOfHours };
+    const lastAi = [...(await this.store.listMessages(conversation.id))]
+      .reverse()
+      .find((m) => m.senderType === "ai");
+    await this.store.createHandoff({
+      conversationId: conversation.id,
+      trigger: body.trigger,
+      messageId: lastAi?.id ?? null,
+    });
+    await this.store.insertMessage({
+      conversationId: conversation.id,
+      senderType: "system",
+      body: "handoff_requested",
+      meta: { trigger: body.trigger, consent: true, outOfHours, email: body.email.toLowerCase() },
+    });
     const tags =
       body.trigger === "explicit_request"
         ? ["ASKED_FOR_A_PERSON"]
@@ -610,6 +641,14 @@ export class VisitorService {
         abortSignal: AbortSignal.timeout(20_000),
       });
       if (!result) return;
+      const now = this.ctx.deps.now();
+      await this.store.addUsage(
+        now.toISOString().slice(0, 10),
+        result.usage.inputTokens,
+        result.usage.outputTokens,
+        result.usage.cacheHitTokens,
+        estimateCostUsd(result.usage, this.ctx.config.summaryModel, now),
+      );
       await this.store.updateConversation(conversationId, {
         summary: redact(result.output.summary).slice(0, 600),
         summaryMeta: {
@@ -676,6 +715,7 @@ export class VisitorService {
   async end(conversationId: string, bearer: string | null): Promise<void> {
     const conversation = await this.authenticate(conversationId, bearer);
     if (conversation.status === "closed") return;
+    await this.limit(`end:${conversation.id}`, 600, 10);
     const now = this.ctx.deps.now().toISOString();
     await this.store.updateConversation(conversation.id, {
       status: "closed",

@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import { SAFE_SITE_LINK } from "@vitalos/relay-core/contract";
 
 /**
  * Safe markdown subset for AI and team messages (section 4.6): paragraphs, **bold**, short lists
  * and links to vitalos.co.uk or same-site paths. Never renders raw HTML: everything is React text.
  * `[n]` citation markers become small superscript links to the source rows.
  */
-const SAFE_LINK = /^(\/(?!\/)[^\s]*|https:\/\/(www\.)?vitalos\.co\.uk(\/[^\s]*)?)$/;
+const SAFE_LINK = SAFE_SITE_LINK;
 
 function inline(
   text: string,

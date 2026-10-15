@@ -168,6 +168,15 @@ export const LIMITS = {
   companyMaxChars: 160,
 } as const;
 
+/**
+ * Links Relay may render: same-site paths (not protocol-relative "//host" or "/\host") and
+ * https://vitalos.co.uk. Shared by the server (citations, knowledge URLs) and the widget.
+ */
+export const SAFE_SITE_LINK =
+  /^(\/(?![/\\])[^\s\\]*|https:\/\/(www\.)?vitalos\.co\.uk(\/[^\s\\]*)?)$/;
+export const isSafeSiteLink = (href: string | null | undefined): href is string =>
+  typeof href === "string" && href.length <= 500 && SAFE_SITE_LINK.test(href);
+
 /** Storage keys (localStorage), versioned. */
 export const STORAGE = {
   state: "vitalos.relay.v1",
