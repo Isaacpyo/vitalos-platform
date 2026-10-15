@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-15T11:19:42.635Z",
+  "generatedAt": "2026-10-15T17:10:35.188Z",
   "from": "export-verified-against-notion",
   "dataSourceId": "3fae4b34-11f9-80b0-9910-000b57eabfa1",
-  "hubStatus": "Draft",
+  "hubStatus": "Active",
   "counts": {
     "total": 236,
     "verified": 190,
     "needsConfirmation": 46,
     "held": 3,
-    "live": 180
+    "live": 187
   },
   "entries": [
     {
@@ -19,8 +19,8 @@
       "id": "ABT-01",
       "question": "What does Vitalos do?",
       "section": "1. About Vitalos",
-      "shortAnswer": "Vitalos is a UK-first technology consulting, engineering and digital transformation firm. Its headline is \"Modernise. Build. Adopt AI.\", and its supporting line explains it: \"We help ambitious organisations modernise operations, build digital products and adopt AI.\" One team carries the work from strategy to production and keeps improving it.",
-      "fullAnswer": "Vitalos works through five practices: Consulting, Engineering, AI & Data, Experience and Managed Services, with Vitalos Labs as a separate research and technical proof capability. You can start with advice, such as an assessment or a discovery, or go straight to engineering when the need is already clear. Whichever route you take, the same standards apply: one accountable Engagement Lead, controlled delivery, quality and security gates before release, and a documented handover. AI sits at the centre of how we advise, build and operate, but we use it only where it creates measurable value. Our brand line, \"From strategy to production.\", describes the job: a recommendation only matters if it can be engineered, released and run safely. If you are not sure which service you need, describe the problem rather than the technology and Talk to Vitalos.",
+      "shortAnswer": "Vitalos is a UK-first technology consulting, engineering and digital transformation firm. Its headline is “Modernise. Build. Adopt AI.”, and its supporting line explains it: “We help ambitious organisations modernise operations, build digital products and adopt AI.” One team carries the work from strategy to production and keeps improving it.",
+      "fullAnswer": "Vitalos works through five practices: Consulting, Engineering, AI & Data, Experience and Managed Services, with Vitalos Labs as a separate research and technical proof capability. You can start with advice, such as an assessment or a discovery, or go straight to engineering when the need is already clear. Whichever route you take, the same standards apply: one accountable Engagement Lead, controlled delivery, quality and security gates before release, and a documented handover. AI sits at the centre of how we advise, build and operate, but we use it only where it creates measurable value. Our brand line, “From strategy to production.”, describes the job: a recommendation only matters if it can be engineered, released and run safely. If you are not sure which service you need, describe the problem rather than the technology and Talk to Vitalos.",
       "status": "Verified",
       "pagePlacement": ["/", "/about", "/what-we-do"],
       "linkedOfferCta": "Talk to Vitalos",
@@ -485,7 +485,7 @@
       "question": "What is it like to build a career at Vitalos?",
       "section": "14. Careers & partners",
       "shortAnswer": "Vitalos offers consequential technology work, close to the problem, where you build what you advise. People get senior responsibility and direct client exposure, consulting and engineering in one environment, AI used as a real delivery capability, and high standards without unnecessary bureaucracy.",
-      "fullAnswer": "The culture Vitalos is building rewards ownership, candour, craft, commercial sense, clarity, learning, collaboration, respect, pragmatism and client stewardship. It deliberately avoids hero culture, long-hours signalling, blame-driven incident handling, status games between consulting and engineering, and knowledge hoarding. Work is remote-capable by design, with written context and documented decisions, and in-person time is used where it adds value. Vitalos describes only benefits and working practices that are real, and it avoids startup clichés such as rockstars or unlimited hustle.",
+      "fullAnswer": "The culture Vitalos is building rewards ownership, candour, craft, commercial sense, clarity, learning, collaboration, respect, pragmatism and client stewardship. It deliberately avoids hero culture, long-hours signalling, blame-driven incident handling, status games between consulting and engineering, and knowledge hoarding. Work is remote-capable by design, with written context and documented decisions, and in-person time is used where it adds value. Technical people can progress without having to become people managers. Vitalos describes only benefits and working practices that are real, and it avoids startup clichés such as rockstars or unlimited hustle.",
       "status": "Verified",
       "pagePlacement": ["/careers"],
       "linkedOfferCta": "Talk to Vitalos",
@@ -1653,6 +1653,27 @@
       "confirmNote": null
     },
     {
+      "notionPageId": "3fae4b34-11f9-80a0-bce1-fa58c9b0fa5d",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f980a0bce1fa58c9b0fa5d",
+      "lastEditedAt": null,
+      "id": "LAB-01",
+      "question": "What is Vitalos Labs?",
+      "section": "11. Labs",
+      "shortAnswer": "Vitalos Labs is the research and technical proof capability of Vitalos, separate from its five practices. It builds reference architectures, prototypes, evaluation methods, reusable engineering accelerators and, occasionally, product candidates. Labs shows how Vitalos thinks and builds before many client case studies exist, and every asset is labelled with its maturity.",
+      "fullAnswer": "Labs exists to develop reusable capability, explore relevant technology before it becomes mainstream, demonstrate engineering judgement and test product ideas that emerge from repeated client problems. It does not chase every new model or framework, build products without customers, or rebrand unfinished internal tools as software products. Labs work is deliberately kept small and evidence-led, with an owner, a budget and stop criteria for each initiative, so it strengthens the consulting business rather than distracting from it. Most Labs ideas are paused or stopped before they become products, and that is deliberate.",
+      "status": "Verified",
+      "pagePlacement": ["/labs"],
+      "linkedOfferCta": "Explore Labs / Talk to Vitalos",
+      "audienceTags": [
+        "CTO / Head of Engineering",
+        "Data / AI lead",
+        "Potential partners",
+        "Prospective hires & associates"
+      ],
+      "source": null,
+      "confirmNote": null
+    },
+    {
       "notionPageId": "3fae4b34-11f9-800a-b4a9-f773e4146871",
       "notionUrl": "https://app.notion.com/p/3fae4b3411f9800ab4a9f773e4146871",
       "lastEditedAt": null,
@@ -2027,6 +2048,27 @@
       "confirmNote": null
     },
     {
+      "notionPageId": "3fae4b34-11f9-80a5-ac71-c96c7214e622",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f980a5ac71c96c7214e622",
+      "lastEditedAt": null,
+      "id": "OFF-13",
+      "question": "What is a Custom Digital Product engagement, and who is it for?",
+      "section": "4. Offers",
+      "shortAnswer": "Custom Digital Product is for organisations that need a new product, portal, workflow platform or application designed around measurable user and business outcomes. Vitalos Engineering and Experience design and build it for production. It suits teams with a clear objective and a product owner who can make decisions.",
+      "fullAnswer": "Typical examples are customer or supplier portals, operational web applications, workflow systems and digital services that must integrate with existing systems. If the problem, users or scope are not yet validated, Vitalos will recommend a Product Discovery first; if they are, engineering can start directly. The product is built in working, tested increments through controlled environments, then validated for function, security, performance and accessibility before release. After launch, you can run the product yourselves with a documented handover, or continue with Vitalos for continuous improvement or Managed Engineering & Application Care.",
+      "status": "Verified",
+      "pagePlacement": [
+        "/offers/custom-digital-product",
+        "/solutions/digital-product-transformation",
+        "/what-we-do/engineering",
+        "/offers"
+      ],
+      "linkedOfferCta": "Custom Digital Product / Talk to Vitalos",
+      "audienceTags": ["Product / Digital lead", "CTO / Head of Engineering"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
       "notionPageId": "3fae4b34-11f9-80c4-b940-f6a9cc2afbec",
       "notionUrl": "https://app.notion.com/p/3fae4b3411f980c4b940f6a9cc2afbec",
       "lastEditedAt": null,
@@ -2337,6 +2379,22 @@
       "confirmNote": null
     },
     {
+      "notionPageId": "3fae4b34-11f9-8074-ab7b-da1c97b1b444",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f98074ab7bda1c97b1b444",
+      "lastEditedAt": null,
+      "id": "SOL-01",
+      "question": "Which Vitalos solution fits our problem?",
+      "section": "3. Solutions",
+      "shortAnswer": "Start from the problem. Unclear AI value points to AI Transformation. Manual, fragmented operations point to Business Process Modernisation. A new or underperforming product points to Digital Product Transformation. Ageing systems point to Application Modernisation. Untrusted data points to Data & Intelligence Transformation. An unstable critical platform points to Technology Recovery & Reliability.",
+      "fullAnswer": "Solutions are how Vitalos organises several practices around one substantial business problem. Each solution page explains the signals that the problem is present, its business impact, the Vitalos approach, typical phases and the offers that work as starting points. Your situation may span more than one solution, which is common: operational modernisation often leads to integration, data and AI work, and the same accountable team can carry it forward. If none fits, or you are unsure, describe the problem in your own words and Talk to Vitalos. We will point you to the most sensible starting point, including telling you if Vitalos is not the right firm.",
+      "status": "Verified",
+      "pagePlacement": ["/solutions", "/what-we-do"],
+      "linkedOfferCta": "Talk to Vitalos",
+      "audienceTags": ["Exec sponsor"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
       "notionPageId": "3fae4b34-11f9-80e2-8f11-d81acf0434e7",
       "notionUrl": "https://app.notion.com/p/3fae4b3411f980e28f11d81acf0434e7",
       "lastEditedAt": null,
@@ -2400,6 +2458,22 @@
       ],
       "linkedOfferCta": "Business Process Automation / Talk to Vitalos",
       "audienceTags": ["Exec sponsor", "Product / Digital lead"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
+      "notionPageId": "3fae4b34-11f9-809a-b141-f852ccb82223",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f9809ab141f852ccb82223",
+      "lastEditedAt": null,
+      "id": "SOL-06",
+      "question": "What is Digital Product Transformation?",
+      "section": "3. Solutions",
+      "shortAnswer": "Digital Product Transformation is for organisations that need a new or substantially better digital product, such as a platform, portal, application, commerce experience or digital service. Vitalos combines Experience, Engineering and Consulting to discover, design, engineer, launch and keep improving a product that creates measurable value.",
+      "fullAnswer": "Common signals are a new proposition whose users and scope are not yet validated, an existing product with weak adoption, journeys fragmented across tools, a product that cannot change fast enough, or earlier build attempts that stalled. Building before the problem and users are understood wastes engineering investment, and products that cannot evolve after launch stagnate. Vitalos runs discovery, design and engineering as one engagement rather than as separate handoffs between suppliers. Typical offers are Product Discovery, Custom Digital Product and Customer Experience Transformation.",
+      "status": "Verified",
+      "pagePlacement": ["/solutions/digital-product-transformation"],
+      "linkedOfferCta": "Custom Digital Product / Talk to Vitalos",
+      "audienceTags": ["Product / Digital lead", "Exec sponsor"],
       "source": null,
       "confirmNote": null
     },
@@ -2669,6 +2743,22 @@
       "confirmNote": null
     },
     {
+      "notionPageId": "3fae4b34-11f9-8034-95e8-fbda34fe6056",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f9803495e8fbda34fe6056",
+      "lastEditedAt": null,
+      "id": "TRU-14",
+      "question": "How do we report a security vulnerability or concern?",
+      "section": "10. Trust Centre",
+      "shortAnswer": "Report security vulnerabilities or concerns to Vitalos at support@vitalos.co.uk, marking the message as a security report. That address is the Vitalos security contact. Include enough detail to understand the issue, the systems affected and how to reach you, and Vitalos will route the report to the person responsible.",
+      "fullAnswer": "Vitalos handles security reports through its security incident procedure, which records the issue, the systems and people affected, containment actions, decisions and follow-up, and ends with a review of lessons learned. Reports that concern client systems Vitalos operates are shared with the affected client under the incident process in that client's contract. A security.txt file will be published once someone is accountable for monitoring the disclosure route, so that researchers can find the right contact automatically. Until then, support@vitalos.co.uk is the single route for security reports, so please send them there rather than to individuals.",
+      "status": "Verified",
+      "pagePlacement": ["/trust/security", "/contact"],
+      "linkedOfferCta": "Talk to Vitalos",
+      "audienceTags": ["Security / IT reviewer"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
       "notionPageId": "3fae4b34-11f9-8046-8a84-fd1e775727f4",
       "notionUrl": "https://app.notion.com/p/3fae4b3411f980468a84fd1e775727f4",
       "lastEditedAt": null,
@@ -2809,6 +2899,22 @@
       "pagePlacement": ["/work", "/trust/procurement"],
       "linkedOfferCta": "Talk to Vitalos",
       "audienceTags": ["Procurement & Legal", "Exec sponsor"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
+      "notionPageId": "3fae4b34-11f9-80bc-ad2d-e3838f33032f",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f980bcad2de3838f33032f",
+      "lastEditedAt": null,
+      "id": "WWD-01",
+      "question": "How are Vitalos services organised?",
+      "section": "2. What We Do",
+      "shortAnswer": "Vitalos organises its services in three layers. Practices are the capabilities: Consulting, Engineering, AI & Data, Experience and Managed Services. Solutions are the business problems Vitalos solves across practices. Offers are bounded engagements you can buy, such as an AI Opportunity Assessment. Vitalos Labs sits alongside them as a separate capability.",
+      "fullAnswer": "The layers let you start from whichever direction makes sense to you. If you know your problem, start with a Solution: AI Transformation, Business Process Modernisation, Digital Product Transformation, Application Modernisation, Data & Intelligence Transformation or Technology Recovery & Reliability. If you know what you want to buy, go to the Offers, which explain who each one suits, what you receive, what we need from you and what comes next. If you are assessing capability, the practice pages explain each discipline, and Vitalos Labs shows research and technical proof, clearly labelled so it is never mistaken for client work. Behind all of this sits one delivery model and one accountable Engagement Lead, so you never have to coordinate separate Vitalos departments yourself.",
+      "status": "Verified",
+      "pagePlacement": ["/what-we-do", "/solutions", "/offers"],
+      "linkedOfferCta": "Talk to Vitalos",
+      "audienceTags": ["Exec sponsor", "CTO / Head of Engineering", "Product / Digital lead"],
       "source": null,
       "confirmNote": null
     },
@@ -2969,6 +3075,22 @@
       "pagePlacement": ["/what-we-do/managed-services"],
       "linkedOfferCta": "Managed Engineering & Application Care / Talk to Vitalos",
       "audienceTags": ["CTO / Head of Engineering", "Exec sponsor"],
+      "source": null,
+      "confirmNote": null
+    },
+    {
+      "notionPageId": "3fae4b34-11f9-8046-a2f4-c6dad493c17d",
+      "notionUrl": "https://app.notion.com/p/3fae4b3411f98046a2f4c6dad493c17d",
+      "lastEditedAt": null,
+      "id": "WWD-12",
+      "question": "How does Vitalos Labs relate to the five practices?",
+      "section": "2. What We Do",
+      "shortAnswer": "Vitalos Labs is separate from the five practices. It is the research and technical proof capability of Vitalos: it builds reference architectures, prototypes, evaluation methods and reusable engineering accelerators that the practices can use. Every Labs asset carries a maturity label, so a prototype is never presented as a supported product or as client work.",
+      "fullAnswer": "The five practices own Vitalos's client-facing capability, and Labs supports them. Labs exists to build reusable capability, demonstrate engineering judgement and explore technology before demand becomes mainstream. Its accelerators, such as assessment frameworks, code templates or reusable AI evaluation tooling, can make client delivery faster and more consistent. Labs is kept separate from client proof: the Work section is reserved for real client outcomes, while Labs shows research and experiments with clear status labels such as Research, Concept, Prototype or Accelerator. Labs is deliberately small and evidence-led. Most ideas stop before becoming products, and product investment only follows proven, repeated demand.",
+      "status": "Verified",
+      "pagePlacement": ["/labs", "/what-we-do"],
+      "linkedOfferCta": "Explore Labs / Talk to Vitalos",
+      "audienceTags": ["CTO / Head of Engineering", "Data / AI lead", "Potential partners"],
       "source": null,
       "confirmNote": null
     },
@@ -3326,34 +3448,5 @@
       "reasons": ["mentions \"day rate\""]
     }
   ],
-  "drifted": [
-    {
-      "id": "LAB-01",
-      "reason": "text differs between the export and Notion"
-    },
-    {
-      "id": "OFF-13",
-      "reason": "text differs between the export and Notion"
-    },
-    {
-      "id": "SOL-01",
-      "reason": "text differs between the export and Notion"
-    },
-    {
-      "id": "SOL-06",
-      "reason": "text differs between the export and Notion"
-    },
-    {
-      "id": "TRU-14",
-      "reason": "status: export Verified, Notion Needs confirmation"
-    },
-    {
-      "id": "WWD-01",
-      "reason": "text differs between the export and Notion"
-    },
-    {
-      "id": "WWD-12",
-      "reason": "text differs between the export and Notion"
-    }
-  ]
+  "drifted": []
 }

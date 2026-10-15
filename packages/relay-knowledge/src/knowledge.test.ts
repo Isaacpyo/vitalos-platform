@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { renderGenerated } from "../scripts/build-content";
-import { allBundledEntries, faqSnapshot, listPublicPaths, parseFrontmatter } from "./index";
+import {
+  allBundledEntries,
+  faqEntriesFromSnapshot,
+  faqSnapshot,
+  listPublicPaths,
+  parseFrontmatter,
+} from "./index";
 import { repoContentFiles } from "./generated/repo-content";
 
 const LEAKS = /\bCONFIRM\b|\bTODO\b|\bTBC\b|[£$€]\s?\d|[Dd]ay[\s-]rates?|\bS(0[1-9]|1\d|20)\b|§/;
@@ -14,12 +20,12 @@ describe("repo seed content", () => {
     expect(actual).toBe(expected);
   });
 
-  it("every entry has valid frontmatter and states six practices", () => {
+  it("every entry has valid frontmatter and states five practices with Labs separate", () => {
     for (const { file, text } of repoContentFiles)
       expect(() => parseFrontmatter(text, file)).not.toThrow();
     const practices = repoContentFiles.find((f) => f.file === "practices.md")?.text ?? "";
     expect(practices).toContain(
-      "six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs",
+      "five practices: Consulting, Engineering, AI & Data, Experience and Managed Services",
     );
   });
 
@@ -79,11 +85,22 @@ describe("bundled entries", () => {
     }
   });
 
-  it("keeps FAQ entries as drafts while the production hub gate is closed", async () => {
+  it("keeps FAQ entries as drafts while the production hub gate is closed", () => {
+    const { entries } = faqEntriesFromSnapshot({
+      routeExists: () => true,
+      requireHubActive: true,
+      hubActive: false,
+    });
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.every((e) => e.status === "draft")).toBe(true);
+  });
+
+  it("publishes FAQ entries once the hub page is Active (snapshot of 15 Oct 2026)", async () => {
+    expect(faqSnapshot.hubStatus).toBe("Active");
     const { entries } = await allBundledEntries({ requireHubActive: true });
     const faq = entries.filter((e) => e.source === "faq");
     expect(faq.length).toBeGreaterThan(0);
-    expect(faq.every((e) => e.status === "draft")).toBe(true);
+    expect(faq.some((e) => e.status === "published")).toBe(true);
   });
 
   it("lists the public paths the sitemap would list", async () => {

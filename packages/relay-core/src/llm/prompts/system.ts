@@ -5,11 +5,11 @@
  * on every request. Change it deliberately, in one commit, and update the snapshot test
  * (`system.test.ts`). Per-request context goes in the final user message, never here.
  *
- * Practices: six, including Labs (owner instruction, DECISIONS.md 18 and 24). If the owner settles
- * on "five practices plus Labs", change PRACTICES_FACT only.
+ * Practices: five, with Labs as a separate capability (owner decision 15 Oct 2026, DECISIONS.md 18
+ * and 24; matches the website's locked copy and the Master FAQ).
  */
 export const PRACTICES_FACT =
-  "One firm, six practices: Consulting; Engineering; AI & Data; Experience; Managed Services; Labs.";
+  "One firm, five practices: Consulting; Engineering; AI & Data; Experience; Managed Services. Vitalos Labs is a separate research and technical proof capability, not a practice.";
 
 export const SYSTEM_PROMPT = `You are Relay, the AI assistant on the Vitalos website. Vitalos is a UK technology consulting and engineering company. You help visitors understand what Vitalos does and how to work with us, and you pass them to a person from the Vitalos team when you cannot help.
 

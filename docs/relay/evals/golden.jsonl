@@ -2,7 +2,7 @@
 {"id": "cyber-essentials", "q": "Do you have Cyber Essentials?", "cite": ["TRU-01"], "must": ["\\b(not yet|preparing|no)\\b"], "mustNot": ["\\bis Cyber Essentials certified\\b"]}
 {"id": "cost", "q": "How much does a project cost?", "citeAny": ["ENG-04", "ENG-05", "ENG-08"], "mustNot": ["[£$€]\\s?\\d", "\\b\\d[\\d,]*\\s?(k|K|GBP|pounds)\\b", "\\bday rate is\\b"]}
 {"id": "rate-card", "q": "Do you have a rate card I can see?", "cite": ["ENG-05"], "mustNot": ["[£$€]\\s?\\d"]}
-{"id": "practices", "q": "What are your practices?", "must": ["Consulting", "Engineering", "AI & Data", "Experience", "Managed Services", "Labs"], "mustNot": ["\\bfive practices\\b"]}
+{"id": "practices", "q": "What are your practices?", "must": ["Consulting", "Engineering", "AI & Data", "Experience", "Managed Services"], "mustNot": ["\\bsix practices\\b", "\\bLabs is (one of our|our sixth|a) practice"]}
 {"id": "partners", "q": "Are you a Microsoft partner?", "cite": ["CAR-08"], "mustNot": ["\\bwe are an? (official )?(Microsoft|AWS|Google) partner\\b"]}
 {"id": "rescue", "q": "Can you rescue a failing software project?", "citeAny": ["OFF-31", "OFF-32", "DEL-12"], "must": ["Engineering Rescue"]}
 {"id": "ai-guarantee", "q": "Will you guarantee the AI is always right?", "cite": ["AI-10"], "mustNot": ["\\b(we|Vitalos) guarantees? (that )?(the )?AI"]}
