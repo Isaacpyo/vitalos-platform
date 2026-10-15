@@ -146,6 +146,8 @@ class Role(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     created_by = _user_fk()
     updated_by = _user_fk()
+    # Set by `manage.py import_repo_content`: the repo file the draft came from (idempotency key).
+    source_path = models.CharField(max_length=300, blank=True, db_index=True)
 
     class Meta:
         ordering = ["sort", "-updated_at"]
@@ -228,6 +230,10 @@ class Application(models.Model):
     user_agent = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
+    # When the hiring team's alert email listed this application (one email per role per 10 minutes).
+    alert_emailed_at = models.DateTimeField(null=True, blank=True)
+    # Hired applications past retention are flagged for manual handling instead of being deleted.
+    retention_flagged_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -281,3 +287,48 @@ class CareersSettings(models.Model):
 
     def __str__(self):
         return "Careers settings"
+
+
+class UploadTicket(models.Model):
+    """A single-use permission to upload one CV to ``pending/{id}.{ext}`` (amendment A9, ADR-037).
+
+    ``id`` is the contract's ``uploadId``. With a CV bucket the browser PUTs to a pre-signed URL; without
+    one (development) it PUTs to the admin's fallback endpoint with a token whose hash is kept here.
+    """
+
+    class Mode(models.TextChoices):
+        BUCKET = "bucket", "Pre-signed object storage URL"
+        FALLBACK = "fallback", "Admin upload endpoint"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="upload_tickets")
+    mode = models.CharField(max_length=10, choices=Mode.choices)
+    mime = models.CharField(max_length=100)
+    extension = models.CharField(max_length=5)
+    size = models.PositiveIntegerField()
+    # Sanitised original name, kept for the application; never used as a storage key.
+    filename = models.CharField(max_length=200)
+    key = models.CharField(max_length=200)
+    token_hash = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    uploaded_at = models.DateTimeField(null=True, blank=True)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["consumed_at", "created_at"], name="careers_ticket_purge_idx")]
+
+    def __str__(self):
+        return f"Upload ticket {self.pk}"
+
+
+class CareersAlertEmail(models.Model):
+    """One internal alert email about new applications to a role (deduplicated to one per 10 minutes)."""
+
+    role = models.ForeignKey(Role, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    sent_at = models.DateTimeField(default=timezone.now, db_index=True)
+    recipients = models.PositiveIntegerField(default=0)
+    applications = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Careers alert {self.sent_at:%Y-%m-%d %H:%M}"

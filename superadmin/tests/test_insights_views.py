@@ -343,7 +343,7 @@ def test_media_upload_requires_alt_text_and_a_real_image(world, superadmin, clie
     payload = response.json()
     assert payload["width"] == 1600 and payload["height"] == 900
     assert re.match(r"^https://media\.example\.test/content/[0-9a-f-]{36}\.png$", payload["url"])
-    assert payload["markdown"] == f"![Example (chart) (fixture)]({payload['url']})"
+    assert payload["markdown"] == f"![Example (chart) (fixture)]({payload['url']}#w=1600&h=900)"
     svg = SimpleUploadedFile(
         "x.svg", b"<svg xmlns='http://www.w3.org/2000/svg'><script/></svg>", content_type="image/svg+xml"
     )
@@ -429,6 +429,7 @@ def test_settings_page_saves_the_section_and_copy(world, superadmin, client_for)
         {"action": "copy", "heading": "Example H.", "intro": "Example I.", "editorial_note": "Example N."},
     )
     assert SiteSettings.load().insights_heading == "Example H."
+    assert SyncEvent.objects.filter(action="site.updated", kind="publish").exists()
     preview = client.post(
         reverse("insights:settings_preview"),
         {"enabled": "on", "heading": "Live heading", "intro": "i", "count": "2", "mode": "latest"},

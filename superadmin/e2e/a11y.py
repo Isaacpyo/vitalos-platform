@@ -42,6 +42,15 @@ PAGES = [
     "/system/health/",
     "/notifications/",
     "/notifications/attention/",
+    "/insights/posts/",
+    "/insights/authors/",
+    "/insights/topics/",
+    "/insights/settings/",
+    "/careers/roles/",
+    "/careers/applications/",
+    "/careers/settings/",
+    "/content/sync/",
+    "/settings/content/",
 ]
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "eml"

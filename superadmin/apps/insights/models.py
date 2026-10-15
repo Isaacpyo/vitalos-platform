@@ -170,6 +170,8 @@ class Post(models.Model):
     updated_at = models.DateTimeField(default=timezone.now)
     created_by = _user_fk()
     updated_by = _user_fk()
+    # Set by `manage.py import_repo_content`: the repo file the draft came from (idempotency key).
+    source_path = models.CharField(max_length=300, blank=True, db_index=True)
 
     class Meta:
         ordering = ["-updated_at"]

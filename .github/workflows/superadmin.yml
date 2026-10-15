@@ -1,5 +1,6 @@
 name: Super Admin
-# Cost rules: AGENTS.md "CI cost". Super Admin docs alone do not start it; the container job skips
+# Cost rules: AGENTS.md "CI cost". Super Admin docs alone do not start it; the content API contract
+# does (the admin vendors it and a test checks the copy, ADR-036); the container job skips
 # draft pull requests.
 on:
   pull_request:
@@ -8,6 +9,7 @@ on:
       - "superadmin/**"
       - "!superadmin/**.md"
       - "!superadmin/docs/**"
+      - "contracts/content-api/**"
       - ".github/workflows/superadmin.yml"
       - ".github/workflows/superadmin-deploy.yml"
   push:
@@ -16,6 +18,7 @@ on:
       - "superadmin/**"
       - "!superadmin/**.md"
       - "!superadmin/docs/**"
+      - "contracts/content-api/**"
       - ".github/workflows/superadmin.yml"
       - ".github/workflows/superadmin-deploy.yml"
 permissions:

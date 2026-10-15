@@ -93,7 +93,7 @@ def update_insights_copy(
             summary="Insights page copy",
         )
         # The copy is served by site-state (tag "site"); every Insights read carries "insights".
-        sync.emit("site", "", "site.resync", "Insights page copy")
+        sync.emit("site", "", "site.updated", "Insights page copy")
     return site
 
 

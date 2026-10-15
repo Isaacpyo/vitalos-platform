@@ -78,6 +78,15 @@ NAV_ITEMS = (
         ("/insights",),
         permission="apps.insights.access.can_view",
     ),
+    NavItem(
+        "careers",
+        "Careers",
+        "careers:roles",
+        "briefcase",
+        "Operate",
+        ("/careers",),
+        permission="apps.careers.access.can_view_roles",
+    ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem(
         "service_lines",

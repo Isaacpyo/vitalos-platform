@@ -86,6 +86,7 @@ def results(user, query: str) -> list[dict]:
     groups: dict[str, list[PaletteResult]] = {}
     for entry in found:
         bucket = groups.setdefault(entry.group, [])
-        if len(bucket) < MAX_PER_GROUP:
+        # An empty query lists every page (the sidebar grew past six with Insights and Careers).
+        if len(bucket) < MAX_PER_GROUP or (not query and entry.group == "Pages"):
             bucket.append(entry)
     return [{"label": label, "results": items} for label, items in groups.items()]

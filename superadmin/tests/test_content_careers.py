@@ -9,9 +9,16 @@ from apps.careers import config as careers_config
 from apps.careers.models import Role, RoleRevision, RoleStatus
 from apps.content_sync.models import SlugRedirect, SyncEvent
 
-from .content_helpers import make_role
+from .content_helpers import make_role, ok_render
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def _render(monkeypatch):
+    from apps.content_sync import render
+
+    monkeypatch.setattr(render, "render", ok_render)
 
 
 def test_open_role_validates_like_the_brief(superadmin):

@@ -96,3 +96,33 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
 49. **The preview iframe** is a dedicated view with its own CSP (no scripts, inline styles allowed), not `srcdoc`. A `srcdoc` iframe would inherit the admin's nonce-based CSP and block inline styles.
 50. **Topic slugs** turn "&" into "and" (for example `health-and-care`).
 51. **Test settings** blank every content key, so a developer's `.env` cannot leak into tests.
+
+## Phases 4 and 5: Super Admin
+
+52. **The role editor** uses a normal form save with `updated_at` conflict detection; there is no autosave (the brief asks for autosave on posts only). Open, Publish changes and Reopen render every filled section (context `role`), and they are blocked by blocking warnings or an unreachable renderer.
+53. **Opening and reopening roles.** Opening needs any closing date to be in the future. `opens_at` is not in the editor, because no scheduled-opening behaviour is defined. Reopen takes a fresh snapshot and emits `role.opened`.
+54. **Role lifecycle.** Pause, Close and Archive keep the snapshot, and Archive sets `closed_at` so retention has an anchor. Roles are never hard-deleted, because applications reference them; Archive is used instead.
+55. **Role and application permissions:**
+    - `careers.change_role`: edit and duplicate roles.
+    - `careers.publish_role`: open, publish changes, pause, close, reopen and archive.
+    - `careers.view_application`: work on applications.
+    - `careers.view_cv`: download CVs.
+    - `careers.delete_application`: delete applications.
+56. **Applications are refused (409)** when Careers is closed, the role is not open, the published closing date has passed, or the role applies externally. A repeated `submissionId` returns the first response (200), even after the role has closed.
+57. **Upload tickets and the fallback PUT:**
+    - The extension must match the declared type, and only the SHA-256 of the fallback token is stored.
+    - The fallback PUT allows requests with no `Origin` header (the token is the capability) and answers 403 for an origin that is not allowed.
+    - Magic bytes are checked at upload and again at submit.
+    - A ticket is consumed by a conditional update, so one upload gives one application.
+    - The CV is copied to its final key and the pending object is then deleted.
+58. **Email limit and duplicates.** Each email address may submit at most 3 applications in a rolling 24 hours, across all roles. `duplicate_of` points at the earliest application with the same email and role within 30 days.
+59. **IP hashing.** `ip_hash` is HMAC-SHA256 with `CONTENT_IP_SALT`, falling back to Django's `salted_hmac` when the salt is unset. The raw IP is never stored.
+60. **Hiring-team alerts.** In-app notifications use kind `careers_application`, not added to the choices, because that would need an `AlterField`. The internal email is plain text with names and admin links only, at most one per role per 10 minutes, and it counts towards `RESEND_DAILY_LIMIT`.
+61. **Candidate email templates** are seeded with neutral wording (`{name}`, `{role}`). They need owner approval together with `CAREERS_CANDIDATE_EMAILS_ENABLED`.
+62. **Retention:**
+    - Admin Delete and retention share one deletion function, which audits a salted hash of the id.
+    - Nothing is due while a role has no `closed_at`.
+    - With `RETENTION_ENFORCE` off, retention changes nothing and only logs counts.
+63. **`import_repo_content` treats an item as a placeholder** when `placeholder` or `isPlaceholder` is true, or when `status` is `"placeholder"`, and refuses it. Unknown authors are created unconfirmed, and imported roles always hide the salary.
+64. **The R2 CORS rule for the CV bucket** allows only the production website origins, PUT only, headers Content-Type and Content-Length, and a max age of 600 s (`superadmin/docs/DEPLOY.md` section 9).
+65. **Deploy variables.** `superadmin-deploy.yml` maps the new `CONTENT_*` and `CAREERS_*` GitHub variables and secrets to `deploy.sh`, which masks them and stores the secrets as Container Apps secrets.

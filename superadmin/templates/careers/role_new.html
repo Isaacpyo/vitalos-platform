@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}New role · Careers · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Careers</p>
+  <h1 class="mt-1 text-2xl font-semibold">New role</h1>
+  {% include "careers/_nav.html" %}
+  <form method="post" class="card mt-6 max-w-2xl p-5">
+    {% csrf_token %}
+    {% include "partials/form_fields.html" %}
+    <p class="field-help mt-3">The role starts as a draft. Nothing is public until it is opened, and roles are opened only when they are real.</p>
+    <div class="mt-4 flex gap-2">
+      <button type="submit" class="btn btn-primary">Create draft</button>
+      <a href="{% url 'careers:roles' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

@@ -449,7 +449,13 @@ def media_upload(request):
     url = media.public_url(asset.key)
     safe_alt = alt.replace("[", "(").replace("]", ")")
     return JsonResponse(
-        {"url": url, "width": asset.width, "height": asset.height, "markdown": f"![{safe_alt}]({url})"},
+        {
+            "url": url,
+            "width": asset.width,
+            "height": asset.height,
+            # The renderer reads the dimensions from the fragment and strips it (contract).
+            "markdown": f"![{safe_alt}]({url}#w={asset.width}&h={asset.height})",
+        },
         status=201,
     )
 
@@ -787,7 +793,9 @@ def settings_page(request):
     site = SiteSettings.load()
     config = sections.load(sections.HOME_INSIGHTS)
     action = request.POST.get("action") if request.method == "POST" else None
-    section_form = HomeSectionForm(request.POST if action == "section" else None, initial=config)
+    section_form = HomeSectionForm(
+        request.POST if action == "section" else None, initial=config, auto_id="section_%s"
+    )
     copy_form = InsightsCopyForm(
         request.POST if action == "copy" else None,
         initial={

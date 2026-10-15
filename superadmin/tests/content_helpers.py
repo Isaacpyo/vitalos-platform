@@ -290,3 +290,29 @@ def avif_bytes(width=64, height=48) -> bytes:
     ftyp = struct.pack(">I", 20) + b"ftypavif" + b"\x00\x00\x00\x00" + b"mif1"
     ispe = struct.pack(">I", 20) + b"ispe" + b"\x00\x00\x00\x00" + struct.pack(">II", width, height)
     return ftyp + ispe
+
+
+# --- CVs -----------------------------------------------------------------------------------------
+
+PDF_MIME = "application/pdf"
+DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+
+def pdf_bytes(size: int = 2048) -> bytes:
+    head = b"%PDF-1.7\n% Example CV (fixture)\n"
+    return head + b"0" * max(0, size - len(head))
+
+
+def zip_bytes(names: list[str]) -> bytes:
+    import io
+    import zipfile
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for name in names:
+            archive.writestr(name, "<w:document>Example (fixture)</w:document>")
+    return buffer.getvalue()
+
+
+def docx_bytes() -> bytes:
+    return zip_bytes(["[Content_Types].xml", "word/document.xml"])

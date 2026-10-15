@@ -31,7 +31,21 @@ DEFAULTS = {
     # The candidate privacy notice is on the approval list; empty until the owner approves it.
     "privacy_notice_url": "",
     "privacy_notice_version": "",
+    # Candidate emails (brief 7.5). Sent only when CAREERS_CANDIDATE_EMAILS_ENABLED=true, which needs
+    # owner approval. {name} and {role} are filled in. Neutral wording, no promises.
+    "email_receipt_subject": "Your application for {role}",
+    "email_receipt_body": "Hello {name},\n\nWe have received your application for {role}.",
+    "email_rejection_subject": "Your application for {role}",
+    "email_rejection_body": (
+        "Hello {name},\n\nThank you for applying for {role}. We will not be taking your application further."
+    ),
+    "email_invitation_subject": "Your application for {role}",
+    "email_invitation_body": (
+        "Hello {name},\n\nThank you for applying for {role}. We would like to talk with you. "
+        "Reply to this email to arrange a time."
+    ),
 }
+EMAIL_KINDS = ("receipt", "rejection", "invitation")
 TEXT_LIMITS = {
     "heading": 200,
     "intro": 1000,
@@ -43,8 +57,24 @@ TEXT_LIMITS = {
     "equal_opportunities": 20000,
     "privacy_notice_url": 300,
     "privacy_notice_version": 40,
+    "email_receipt_subject": 200,
+    "email_receipt_body": 5000,
+    "email_rejection_subject": 200,
+    "email_rejection_body": 5000,
+    "email_invitation_subject": 200,
+    "email_invitation_body": 5000,
 }
-REQUIRED_TEXT = ("heading", "intro", "empty_state")
+REQUIRED_TEXT = (
+    "heading",
+    "intro",
+    "empty_state",
+    "email_receipt_subject",
+    "email_receipt_body",
+    "email_rejection_subject",
+    "email_rejection_body",
+    "email_invitation_subject",
+    "email_invitation_body",
+)
 BOOLEANS = ("associates_line_enabled", "speculative_applications_enabled")
 
 

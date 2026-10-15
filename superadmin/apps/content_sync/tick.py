@@ -1,5 +1,5 @@
 """The content tick (ADR-038): promote due scheduled posts, close expired roles, deliver pending sync
-events, and once a day run retention and purge orphaned uploads.
+events and held-back application alerts, and once a day run retention and purge orphaned uploads.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed
 ``POST /api/content/v1/tick`` and opportunistically, at most once a minute, in a background thread.
@@ -60,6 +60,12 @@ def run(now=None) -> dict:
     promoted = insights_services.promote_due(now)
     closed = careers_services.close_due(now)
     delivered = sync.deliver_due(timezone.now())
+    try:
+        from apps.careers import alerts
+
+        alerts.flush(now)  # application alert emails held back by the 10-minute window
+    except Exception:  # noqa: BLE001 - mail must never stop the tick
+        logger.exception("Careers alert flush failed")
     state = TickState.load()
     daily = {}
     if _daily_due(state, now):
