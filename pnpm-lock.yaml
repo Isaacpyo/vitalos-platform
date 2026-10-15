@@ -159,6 +159,12 @@ importers:
       '@vitalos/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      '@vitalos/relay-core':
+        specifier: workspace:*
+        version: link:../../packages/relay-core
+      '@vitalos/relay-widget':
+        specifier: workspace:*
+        version: link:../../packages/relay-widget
       '@vitalos/ui':
         specifier: workspace:*
         version: link:../../packages/ui
