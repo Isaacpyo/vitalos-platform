@@ -25,7 +25,13 @@ export {
 export { SiteHeader, type SiteHeaderProps } from "./site/SiteHeader";
 export { MegaMenu, type MegaMenuProps } from "./site/MegaMenu";
 export { MobileNav, type MobileNavProps } from "./site/MobileNav";
-export { SiteFooter, type FooterColumn, type SiteFooterProps } from "./site/SiteFooter";
+export {
+  SiteFooter,
+  type FooterColumn,
+  type FooterPodcast,
+  type FooterPodcastLink,
+  type SiteFooterProps,
+} from "./site/SiteFooter";
 export { SocialLinks, type SocialLink, type SocialLinksProps } from "./site/SocialLinks";
 export { TerminalCTA, type TerminalCTAProps } from "./site/TerminalCTA";
 export type {

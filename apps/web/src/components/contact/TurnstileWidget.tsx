@@ -107,6 +107,19 @@ export function TurnstileWidget({ siteKey, resetKey, contactEmail }: TurnstileWi
     }
   }, [resetKey]);
 
+  // Keyboard focus moving into Cloudflare's cross-origin frame sends no focus event to this page,
+  // and browsers ignore scroll-padding-top for it, so the widget can stop under the sticky header
+  // (WCAG 2.4.11). The window does blur at that moment: bring the widget clear of the header then.
+  useEffect(() => {
+    const onBlur = () => {
+      const el = container.current;
+      if (el?.contains(document.activeElement))
+        el.scrollIntoView({ block: "nearest", behavior: "instant" });
+    };
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  }, []);
+
   const alternative = contactEmail ? (
     <>
       {" "}

@@ -272,18 +272,71 @@ describe("footer model", () => {
     expect(JSON.stringify(model)).not.toContain("hello@example.invalid");
   });
 
-  it("builds trust and legal columns from published summaries", () => {
+  it("builds the trust column from published summaries", () => {
     const { columns } = buildFooterModel({
       ...base,
       trustTopics: [{ id: "t", topic: "security", title: "Security" }],
-      legalPages: [{ id: "l", slug: "privacy", title: "Privacy" }],
     });
     expect(columns.find((c) => c.key === "trust")?.links.map((l) => l.href)).toEqual([
       "/trust",
       "/trust/security",
     ]);
-    expect(columns.find((c) => c.key === "legal")?.links).toEqual([
-      { label: "Privacy", href: "/legal/privacy" },
+    expect(columns.find((c) => c.key === "legal")).toBeUndefined();
+  });
+
+  it("puts legal pages that exist, then the sitemap, in the bottom-row legal links", () => {
+    expect(buildFooterModel(base).legalLinks).toEqual([{ label: "Sitemap", href: "/sitemap.xml" }]);
+    const { legalLinks } = buildFooterModel({
+      ...base,
+      legalPages: [{ id: "l", slug: "privacy", title: "Privacy notice" }],
+    });
+    expect(legalLinks).toEqual([
+      { label: "Privacy notice", href: "/legal/privacy" },
+      { label: "Sitemap", href: "/sitemap.xml" },
+    ]);
+  });
+
+  it("has no podcast block without valid URLs, and drops invalid ones", () => {
+    expect(buildFooterModel(base).podcast).toBeUndefined();
+    const invalid = buildFooterModel({
+      ...base,
+      settings: {
+        podcast: {
+          spotifyUrl: "https://example.invalid/show",
+          appleUrl: "http://podcasts.apple.com/x",
+        },
+      },
+    });
+    expect(invalid.podcast).toBeUndefined();
+  });
+
+  it("renders each podcast link only when its URL is set", () => {
+    const spotifyOnly = buildFooterModel({
+      ...base,
+      settings: { podcast: { spotifyUrl: "https://open.spotify.com/show/example-fixture" } },
+    }).podcast;
+    expect(spotifyOnly?.heading).toBe("Podcast");
+    expect(spotifyOnly?.intro).toBe("Listen to our podcast");
+    expect(spotifyOnly?.links).toEqual([
+      {
+        platform: "spotify",
+        label: "Spotify",
+        accessibleName: "Listen on Spotify",
+        href: "https://open.spotify.com/show/example-fixture",
+      },
+    ]);
+    const both = buildFooterModel({
+      ...base,
+      settings: {
+        podcast: {
+          spotifyUrl: "https://open.spotify.com/show/example-fixture",
+          appleUrl: "https://podcasts.apple.com/gb/podcast/example-fixture",
+        },
+      },
+    }).podcast;
+    expect(both?.links.map((l) => l.accessibleName)).toEqual([
+      "Listen on Spotify",
+      "Listen on Apple Podcasts",
     ]);
   });
 });

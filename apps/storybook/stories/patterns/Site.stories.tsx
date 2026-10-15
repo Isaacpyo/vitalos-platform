@@ -185,6 +185,41 @@ export const Footer: Story = {
   ),
 };
 
+const podcast = {
+  heading: "Podcast",
+  intro: "Listen to our podcast",
+  links: [
+    {
+      platform: "spotify" as const,
+      label: "Spotify",
+      accessibleName: "Listen on Spotify",
+      href: "https://open.spotify.com/show/example-fixture",
+    },
+    {
+      platform: "apple" as const,
+      label: "Apple Podcasts",
+      accessibleName: "Listen on Apple Podcasts",
+      href: "https://podcasts.apple.com/gb/podcast/example-fixture",
+    },
+  ],
+};
+
+export const FooterPodcastAndLegalRow: Story = {
+  name: "Footer (podcast column, identity left and legal links right)",
+  render: () => (
+    <SiteFooter
+      brand={{ wordmarkText: "EXAMPLE (fixture)", homeHref: url("") }}
+      columns={columns.slice(0, 3)}
+      podcast={podcast}
+      legalIdentity={{ lines: ["Example company name (fixture)", "Company number 00000000"] }}
+      legalLinks={[
+        { label: "Example privacy notice (fixture)", href: url("privacy") },
+        { label: "Sitemap", href: url("sitemap.xml") },
+      ]}
+    />
+  ),
+};
+
 export const FooterSparse: Story = {
   name: "Footer (sparse: empty columns omitted)",
   render: () => (
