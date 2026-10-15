@@ -17,8 +17,8 @@ import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
 import { DRAFTED_ON, draftId } from "../slugs";
 
-/** The accessibility topic's body; /legal/accessibility shows the same text (one source). */
-export const trustAccessibilityBody = richText(
+/** The accessibility topic's body. The full statement is /legal/accessibility (repo/legal.ts). */
+const trustAccessibilityBody = richText(
   "trust-accessibility",
   h2("This website"),
   p(

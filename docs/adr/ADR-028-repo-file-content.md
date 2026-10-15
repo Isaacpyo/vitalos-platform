@@ -36,10 +36,14 @@ Sanity has been removed from the repository. Removed: `apps/studio`; from `@vita
 
 Consequences: content is static per deploy (pages and the sitemap are built at build time; nothing waits on a webhook); images are same-origin only (`apps/web/public`); `VITALOS_CONTENT_SOURCE` is `repo`, `draft`, `fixtures` or `empty`; redirects beyond the seed live in `apps/web/src/features/redirects/additional-redirects.ts`; the editing guide is `docs/cms/editing-site-content.md`. ADR-005, ADR-017 and ADR-018 are superseded by this ADR.
 
-## Status note (2026-10-15): cookies and accessibility pages
+## Status note (2026-10-15): cookies, terms and accessibility pages
 
-The owner asked for cookies, terms and accessibility pages under `/legal`.
+The owner asked for cookies, terms and accessibility pages under `/legal`, then approved drafts of the terms and the accessibility statement ("both approve, no blocker"). All three are now in `approvedLegalPages`.
 
-- **Cookies** (`/legal/cookies`) is published from `approvedLegalPages`. Every sentence is taken from the approved privacy notice. The site sets no cookies of its own.
-- **Accessibility** (`/legal/accessibility`, a new legal slug) is published with the Trust Centre's accessibility text, from one source (`trustAccessibilityBody`). It is not titled a statement: the site has not been evaluated yet (Stage 8 §24). A draft skeleton of the full statement is in the draft source, for completion after the evaluation.
-- **Terms** stay a draft skeleton: there is no approved text, and none was written. The route answers 404 in production until the owner supplies approved terms.
+- **Cookies** (`/legal/cookies`): every sentence is taken from the approved privacy notice. The site sets no cookies of its own.
+- **Terms of use** (`/legal/terms`): the owner's approved draft. The placeholders are filled with facts the site already publishes (the legal identity from the privacy notice). support@vitalos.co.uk stands in for the proposed legal@ and security@ mailboxes.
+- **Accessibility statement** (`/legal/accessibility`, a new legal slug): the owner's approved draft, published as its own note directs:
+  - Section 2 keeps only the claims the tests back up. Light and dark mode, screen readers and speech recognition were removed.
+  - Compliance stays "not yet evaluated".
+  - support@ stands in for the proposed accessibility@ mailbox, and Relay is not offered as a contact until it is live.
+- **Still to do.** When Careers applications or Relay go live, the privacy notice must cover application data and chat conversations, because the terms refer to it for both.

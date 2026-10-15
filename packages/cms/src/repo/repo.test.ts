@@ -8,7 +8,7 @@ const source = () => createRepoContentSource({ now: NOW });
 describeContentSourceContract("Repo content", source);
 
 /** Legal pages approved for the repo source. Adding one is a deliberate change to this list. */
-const approvedLegalSlugs = ["privacy", "cookies", "accessibility"];
+const approvedLegalSlugs = ["privacy", "cookies", "terms", "accessibility"];
 
 /** Text that must never be published: placeholders, draft marks, invented-content markers. */
 const FORBIDDEN =
@@ -47,13 +47,13 @@ describe("repo content hygiene", () => {
     const s = source();
     const slugs = (await s.listSummaries("legalPage")).map((page) => page.slug);
     expect(slugs).toEqual(approvedLegalSlugs);
-    for (const slug of ["terms", "acceptable-use"] as const) {
+    for (const slug of ["acceptable-use"] as const) {
       expect(await s.getDocument("legalPage", slug), slug).toBeNull();
     }
   });
 
-  it("publishes cookies and accessibility from approved text, never the draft skeletons", async () => {
-    for (const slug of ["cookies", "accessibility"] as const) {
+  it("publishes cookies, terms and accessibility from approved text, never the draft skeletons", async () => {
+    for (const slug of ["cookies", "terms", "accessibility"] as const) {
       const page = await source().getDocument("legalPage", slug);
       expect(page?.title, slug).not.toContain("DRAFT");
       // No bracketed placeholder in any text span.
