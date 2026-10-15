@@ -51,3 +51,14 @@ be the homepage hero background under a solid black overlay. It is served as Web
 wide from `apps/web/public/images/hero/`, under a 60% black overlay, with the hero copy on the dark
 tone. This record covers that one placement only. Other imagery still needs the separate
 rights-cleared handoff described above.
+
+## Practice illustrations (owner direction, 15 Oct 2026)
+
+The owner supplied five illustrations (`ChatGPT Image Oct 15, 2026, …-1.png` to `-5.png`, each
+1672x941) for the homepage "Five practices, one firm" section. They are served as WebP at 1672
+and 960 px wide from `apps/web/public/images/practices/` and chosen by the locked practice names
+(`apps/web/src/lib/view-mapping/practice-images.ts`). The files were not labelled, so each was
+matched to the practice it depicts: 1 Consulting (analytics, architecture layers, a roadmap to a
+target), 5 Engineering (code, platform layers, servers, database), 4 AI & Data (data sources into
+a model, then charts), 2 Experience (mobile and web screens, accessibility, commerce) and 3 Managed
+Services (dashboards, security, support, cloud). This record covers that section only.

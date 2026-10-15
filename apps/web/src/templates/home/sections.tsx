@@ -27,7 +27,7 @@ import {
   ArticleRow,
   MotionPause,
   Lead,
-  PracticeRow,
+  PracticeShowcase,
   ProcessJourney,
   ProofStrip,
   Reveal,
@@ -45,6 +45,7 @@ import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { carouselLabels, heroMotionPauseLabel } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
+import { practiceImageFor } from "../../lib/view-mapping/practice-images";
 import {
   caseStudyMeta,
   labAssetPresentation,
@@ -298,7 +299,10 @@ function StrategyBand({
   );
 }
 
-/** 5. Practices: the five, in the order the specs fix, as editorial rows with icon tiles. */
+/**
+ * 5. Practices: the five, in the order the specs fix, as a showcase: a numbered list beside a
+ * stage that shows the pointed or focused practice's illustration (owner direction, 15 Oct 2026).
+ */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
   const rows = toRows("practice", orderByLockedNames(context.home.practices, practiceNames), {
@@ -312,11 +316,19 @@ export const practicesSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.practices}
       link={{ label: navLabels.whatWeDo, href: routes.whatWeDo() }}
     >
-      <RowList>
-        {rows.map((row) => (
-          <PracticeRow key={row.href} {...row} icon={iconFor("practice", row.title)} />
-        ))}
-      </RowList>
+      <PracticeShowcase
+        headingLevel={itemLevel(title)}
+        items={rows.map((row) => {
+          const image = practiceImageFor(row.title);
+          return {
+            title: row.title,
+            href: row.href,
+            ...(row.summary ? { summary: row.summary } : {}),
+            icon: iconFor("practice", row.title),
+            ...(image ? { image } : {}),
+          };
+        })}
+      />
     </Band>
   );
 };

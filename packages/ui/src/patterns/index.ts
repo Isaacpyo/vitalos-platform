@@ -53,6 +53,12 @@ export {
   type SolutionCardProps,
 } from "./commercial/cards";
 export { RelatedContentRail, type RelatedContentRailProps } from "./commercial/RelatedContentRail";
+export {
+  PracticeShowcase,
+  type PracticeShowcaseImage,
+  type PracticeShowcaseItem,
+  type PracticeShowcaseProps,
+} from "./commercial/PracticeShowcase";
 
 // Proof
 export { OutcomeStats, type OutcomeStatItem, type OutcomeStatsProps } from "./proof/OutcomeStats";
