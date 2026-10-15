@@ -33,7 +33,7 @@ describe("tags contract", () => {
     const events = (raw as unknown as { events: Record<string, { tags: string[] }> }).events;
     for (const [name, event] of Object.entries(events)) {
       for (const template of event.tags) {
-        const tag = template.replace("*", "").replace(/\{[a-zA-Z]+\}/g, "example-slug");
+        const tag = template.replaceAll("*", "").replace(/\{[a-zA-Z]+\}/g, "example-slug");
         expect(isKnownTag(tag), `${name}: ${tag}`).toBe(true);
       }
     }

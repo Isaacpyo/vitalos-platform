@@ -23,6 +23,7 @@ const TARGET_MS = 5_000;
 let admin: Admin;
 let seed: Seed;
 const timings: Record<string, number[]> = { publish: [], changes: [], unpublish: [] };
+const bySurface: Record<string, number[]> = {};
 
 const post = (n: number) => {
   const value = seed.posts[n - 1];
@@ -85,8 +86,37 @@ test("20 publishes each reach the article, index, homepage, feed, author and top
     const { id, slug, title } = post(n);
     expect((await site(`/insights/${slug}`)).status).toBe(404);
     const at = await admin.action(id, "publish");
-    timings.publish!.push(await until(() => visibleEverywhere(title, slug), at, 30_000));
+    // Each surface on its own (the slowest is the publish's time), so a slow run shows which lags.
+    const surfaces: Record<string, string> = {
+      article: `/insights/${slug}`,
+      index: "/insights",
+      home: "/",
+      feed: "/insights/feed.xml",
+      author: `/insights/authors/${seed.author}`,
+      topic: `/insights/topics/${seed.topic}`,
+    };
+    const each = await Promise.all(
+      Object.entries(surfaces).map(async ([name, path]) => {
+        const ms = await until(
+          async () => {
+            const page = await site(path);
+            return page.status === 200 && page.text.includes(title);
+          },
+          at,
+          30_000,
+        );
+        (bySurface[name] ??= []).push(ms);
+        return ms;
+      }),
+    );
+    timings.publish!.push(Math.max(...each));
   }
+  console.log(
+    "publish by surface p95 (ms):",
+    JSON.stringify(
+      Object.fromEntries(Object.entries(bySurface).map(([name, v]) => [name, percentile(v, 95)])),
+    ),
+  );
   expect(percentile(timings.publish!, 95)).toBeLessThanOrEqual(TARGET_MS);
 });
 
