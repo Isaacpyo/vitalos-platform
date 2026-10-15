@@ -13,21 +13,26 @@ import type { ChromeContent, FooterModel, HeaderModel } from "./nav-model";
  */
 export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
   const source = await getContentSource();
-  const [chrome, practices, solutions, offers, trustTopics, legalPages, state] = await Promise.all([
-    source.getSiteChrome(),
-    source.listSummaries("practice"),
-    source.listSummaries("solution"),
-    source.listSummaries("offer"),
-    source.listSummaries("trustItem"),
-    source.listSummaries("legalPage"),
-    getSiteStateOrClosed(),
-  ]);
+  const [chrome, practices, solutions, offers, industries, labAssets, trustTopics, legalPages, state] =
+    await Promise.all([
+      source.getSiteChrome(),
+      source.listSummaries("practice"),
+      source.listSummaries("solution"),
+      source.listSummaries("offer"),
+      source.listSummaries("industry"),
+      source.listSummaries("labAsset"),
+      source.listSummaries("trustItem"),
+      source.listSummaries("legalPage"),
+      getSiteStateOrClosed(),
+    ]);
   return {
     gates: withContentSections(chrome.gates, state),
     settings: chrome.settings,
     practices,
     solutions,
     offers,
+    industries,
+    labAssets,
     trustTopics,
     legalPages,
   };

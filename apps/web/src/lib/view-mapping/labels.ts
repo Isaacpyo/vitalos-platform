@@ -23,7 +23,14 @@ export const structuralLabels = {
   trustCentre: navLabels.trustCentre,
   howWeWork: navLabels.howWeWork,
   whatWeDo: navLabels.whatWeDo,
-  leadership: navLabels.leadership,
+  /** The FAQ page title (Support menu, owner direction 15 Oct 2026). */
+  faq: "Frequently asked questions",
+  /** Closing links of the What We Do and Who We Are menu columns. */
+  allSolutions: "All solutions",
+  allLabs: "All Labs",
+  allIndustries: "All industries",
+  /** The Support menu's column of enquiry topics. */
+  enquiries: "Enquiries",
 
   /** Stage 9 section 21 (Practice page template). */
   problems: "Problems",
@@ -90,6 +97,9 @@ export function engagementBasisLabel(basis: EngagementBasis): string {
 }
 
 /** Accessible names of a carousel's paging buttons, from the carousel's own name. Structural. */
+/** Accessible name of the pause switch for looping background motion (hero, Industries; WCAG 2.2.2). */
+export const heroMotionPauseLabel = "Pause background motion";
+
 export function carouselLabels(label: string): { previousLabel: string; nextLabel: string } {
   return { previousLabel: `Previous: ${label}`, nextLabel: `Next: ${label}` };
 }

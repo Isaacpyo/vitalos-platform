@@ -3,8 +3,8 @@ import { Icon, type IconName } from "./Icon";
 
 export interface IconTileProps {
   name: IconName;
-  /** md: cards and rows; lg: feature items. */
-  size?: "md" | "lg";
+  /** sm: menu links; md: cards and rows; lg: feature items. */
+  size?: "sm" | "md" | "lg";
   className?: string | undefined;
 }
 
@@ -22,11 +22,11 @@ export function IconTile({ name, size = "md", className }: IconTileProps) {
         "inline-flex shrink-0 items-center justify-center self-start rounded-lg bg-tone-tile-bg text-tone-tile-fg",
         "transition-colors duration-(--duration-feedback) ease-(--ease-standard)",
         "group-hover:bg-tone-action group-hover:text-tone-action-text",
-        size === "md" ? "size-12" : "size-14",
+        size === "sm" ? "size-9 rounded-md" : size === "md" ? "size-12" : "size-14",
         className,
       )}
     >
-      <Icon name={name} size={24} />
+      <Icon name={name} size={size === "sm" ? 20 : 24} />
     </span>
   );
 }

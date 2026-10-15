@@ -48,7 +48,8 @@ describe("route pages and contact", () => {
     for (const key of routePageKeys) {
       expect(hrefForRoutePage(key)).toMatch(/^\/[a-z-/]*$/);
     }
-    expect(hrefForRoutePage("leadership")).toBe("/about/leadership");
+    expect(hrefForRoutePage("about")).toBe("/about");
+    expect(routes.faq()).toBe("/faq");
   });
 
   it("adds a contact intent", () => {

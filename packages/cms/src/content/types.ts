@@ -380,8 +380,6 @@ export interface HomePageView {
   industries: readonly IndustrySummary[];
   labs: readonly LabAssetSummary[];
   insights: readonly InsightSummary[];
-  leadership: readonly PersonSummary[];
-  trustHighlights: readonly TrustTopicSummary[];
   finalCta?: CtaView;
 }
 

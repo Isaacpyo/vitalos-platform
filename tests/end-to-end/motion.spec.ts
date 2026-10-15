@@ -14,7 +14,7 @@ import { waitForSettledLayout } from "../support/overflow";
  * - the compact menu sheet is modal while open: focus is trapped, the page behind it is inert and
  *   does not scroll, Escape closes it and focus returns to the trigger;
  * - the tablet sheet is the two-column state, and the primary action stays in the bar at every
- *   compact width; the Trust Centre has a home in the desktop bar from 1024px;
+ *   compact width; the Trust Centre is not in the bar (footer only, 15 Oct 2026);
  * - the header condenses on scroll without moving the content below it.
  */
 
@@ -65,7 +65,7 @@ test.describe("reduced motion", () => {
     await page.goto("/");
     const compact = (page.viewportSize()?.width ?? 0) < 1024;
     if (compact) {
-      await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+      await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
     } else {
       await page.getByRole("button", { name: "What We Do menu" }).click();
     }
@@ -234,7 +234,7 @@ test.describe("compact menu sheet", () => {
   test("closes itself when the viewport grows into the desktop navigation", async ({ page }) => {
     await page.setViewportSize({ width: 834, height: 1112 });
     await page.goto("/");
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(page.getByRole("banner").locator("details").first()).not.toHaveJSProperty(
       "open",
@@ -257,7 +257,7 @@ test.describe("compact menu sheet", () => {
     await page.setViewportSize({ width: 834, height: 1112 });
     await page.goto("/");
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
     // No nested disclosure to open: How We Work is visible straight away, beside the rows.
     const row = nav.getByRole("link", { name: "What We Do", exact: true });
     const group = nav.getByRole("link", { name: "How We Work", exact: true });
@@ -266,7 +266,7 @@ test.describe("compact menu sheet", () => {
     const rowBox = await row.boundingBox();
     const groupBox = await group.boundingBox();
     expect((groupBox?.x ?? 0) > (rowBox?.x ?? 0) + (rowBox?.width ?? 0)).toBe(true);
-    await expect(nav.getByRole("link", { name: "Trust Centre" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Trust Centre" })).toHaveCount(0);
   });
 });
 
@@ -284,16 +284,18 @@ test.describe("header", () => {
       const box = await action.boundingBox();
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(40);
-      await expect(page.getByRole("banner").getByText("Menu", { exact: true })).toBeVisible();
+      await expect(page.getByRole("banner").locator("summary", { hasText: "Menu" })).toBeVisible();
     });
   }
 
-  test("from 1024px the Trust Centre has its own link in the bar", async ({ page }) => {
+  test("at 1024px the bar has the three menus and no Trust Centre", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("/");
-    await expect(
-      page.getByRole("banner").getByRole("link", { name: "Trust Centre", exact: true }),
-    ).toBeVisible();
+    const banner = page.getByRole("banner");
+    for (const label of ["What We Do", "Who We Are", "Support"]) {
+      await expect(banner.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await expect(banner.getByRole("link", { name: "Trust Centre", exact: true })).toHaveCount(0);
   });
 
   test("condenses once the page scrolls, without moving the content below it", async ({ page }) => {
@@ -320,5 +322,39 @@ test.describe("header", () => {
     expect(await anchorTop()).toBe(before);
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(header).not.toHaveAttribute("data-condensed", "");
+  });
+});
+
+test.describe("mobile fade-in (MobileReveal)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test.describe("motion allowed", () => {
+    test.use({ reducedMotion: "no-preference" });
+
+    test("holds only what starts below the fold, and shows every band once scrolled", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await expect(page.locator('[data-m-reveal="armed"]').first()).toBeAttached();
+      const heldOnScreen = await page.evaluate(
+        () =>
+          Array.from(document.querySelectorAll<HTMLElement>('[data-m-reveal="armed"]')).filter(
+            (element) => element.getBoundingClientRect().top < window.innerHeight * 0.9,
+          ).length,
+      );
+      expect(heldOnScreen).toBe(0);
+      await scrollThrough(page);
+      await expect(page.locator('[data-m-reveal="armed"]')).toHaveCount(0);
+    });
+  });
+
+  test.describe("reduced motion", () => {
+    test.use({ reducedMotion: "reduce" });
+
+    test("holds nothing back", async ({ page }) => {
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("[data-m-reveal]")).toHaveCount(0);
+    });
   });
 });

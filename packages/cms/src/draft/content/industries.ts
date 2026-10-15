@@ -32,16 +32,16 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "health-care",
     title: healthTitle,
     summary:
-      "Technology that improves care, operations and access, for healthcare providers, care organisations, health and care technology and related operational services.",
+      "Technology that improves care, operations and access for providers and care organisations.",
     seo: seo(
       "Health & Care",
       "Modernising care operations, digital services, data and AI while managing privacy, accessibility, safety and trust.",
     ),
     realities: [
-      "Care operations run on workflows, scheduling, and records and data flows that shape how staff spend their time.",
+      "Workflows, scheduling, records and data flows shape how care staff spend their time.",
       "Patient and service-user experience depends on digital services that are accessible and easy to use.",
-      "Privacy, security, accessibility, safety and trust have to be managed alongside any change to technology or process.",
-      "Reporting and digital service delivery depend on data that is often spread across several systems.",
+      "Privacy, security, accessibility, safety and trust must be managed alongside any technology or process change.",
+      "Reporting and digital services depend on data often spread across several systems.",
     ],
     problems: [
       "Modernising operational workflows and scheduling.",
@@ -52,12 +52,12 @@ export const industryDrafts: readonly IndustryDraft[] = [
     ],
     aiOpportunities: [
       "Compliance-aware AI in administrative and operational workflows, with human oversight wherever decisions affect people.",
-      "Automation that reduces manual effort for staff, using deterministic workflows first and AI where it adds measurable value.",
+      "Automation that cuts staff effort: deterministic workflows first, AI where it adds measurable value.",
       "Reporting and operational intelligence built on data with clear ownership and quality checks.",
     ],
     considerations: [
-      "Work that touches clinical decisions or regulated compliance needs specialist clinical, legal or accredited assurance alongside technology delivery.",
-      "Organisations with access to NHS patient data and systems use the NHS Data Security and Protection Toolkit to demonstrate their data security.",
+      "Clinical or regulated work needs specialist clinical, legal or accredited assurance alongside technology delivery.",
+      "Organisations accessing NHS patient data and systems use the NHS Data Security and Protection Toolkit.",
       "UK procurement guidance requires Cyber Essentials, Cyber Essentials Plus or demonstrably equivalent controls for certain higher-risk NHS and central government contracts.",
       "Personal and sensitive data needs deliberate decisions about purpose, access, retention and deletion.",
       "Digital services must be accessible to patients, service users and staff.",
@@ -94,14 +94,14 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "retail-commerce-consumer",
     title: retailTitle,
     summary:
-      "Commerce platforms, order and inventory integration, customer experience, data and AI-enabled operations for retailers, e-commerce businesses, consumer brands, wholesalers and distributors.",
+      "Commerce platforms, integration and AI-enabled operations for retailers and consumer brands.",
     seo: seo(
       "Retail, Commerce & Consumer",
       "Commerce platforms, inventory and order integration, customer experience, data and AI-enabled operations.",
     ),
     realities: [
       "Customer experience, merchandising and fulfilment have to work together across online and operational systems.",
-      "Inventory, orders and customer data often live in separate platforms that need to stay in step.",
+      "Inventory, orders and customer data often sit in separate platforms that must stay in step.",
       "Growth depends on commerce platforms that can scale and change without disrupting trading.",
       "Forecasting and decisions depend on analytics that people trust.",
     ],
@@ -153,14 +153,14 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "operations-industry-logistics",
     title: operationsTitle,
     summary:
-      "Workflow modernisation, integration, operational intelligence and AI-assisted operations for manufacturing, logistics, supply chain, field operations and engineering-intensive businesses.",
+      "Workflow modernisation and operational intelligence for manufacturing, logistics and field operations.",
     seo: seo(
       "Operations, Industry & Logistics",
       "Process digitisation, integration, field and warehouse tools, operational intelligence and AI-assisted operations.",
     ),
     realities: [
       "Operationally intensive businesses often still run critical processes on manual steps and disconnected tools.",
-      "Field, warehouse and fleet data is only useful when it reaches the people planning and running operations.",
+      "Field, warehouse and fleet data helps only when it reaches those planning and running operations.",
       "Ageing operational systems can make processes hard to change.",
       "Reliability matters: operational systems have to keep working while they are improved.",
     ],
@@ -209,7 +209,7 @@ export const industryDrafts: readonly IndustryDraft[] = [
     slug: "growth-technology",
     title: growthTitle,
     summary:
-      "Selective work with startups, scale-ups and technology businesses: architecture, product engineering, platform modernisation, AI implementation and engineering rescue.",
+      "Selective work with startups and scale-ups: architecture, product engineering and AI.",
     seo: seo(
       "Growth & Technology",
       "Architecture, product engineering, platform modernisation, AI implementation and engineering rescue for technology companies.",

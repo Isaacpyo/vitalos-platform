@@ -87,3 +87,12 @@ The owner asked for an internal notification that can be triaged from the inbox,
 ## Status note (2026-10-12, later): shared layout
 
 The notification's markup, theme and inline images moved into `@vitalos/email-layout` (ADR-030), which every Vitalos email now shares. The notification builds a block document from the enquiry; its subject, fields, order, privacy rules and sending are unchanged. The footer also shows the website and support address.
+
+## Status note (2026-10-15): thank-you page
+
+The owner asked for thank-you pages. An accepted enquiry now lands on `/contact/thank-you?ref={reference}` instead of confirming in place.
+
+- **The redirect.** `submitEnquiryAction` calls `redirect()` after the service accepts the enquiry. The call sits outside the action's `try`, so the catch never swallows it. With JavaScript the client navigates; without it the native POST answers with a 303. Validation, rate limiting, the human check, storage and the best-effort dispatch (`after`) are unchanged.
+- **The page.** It shows the receipt title, the reference, the contact page's CMS success message and its "What happens next" copy. The page is `noindex` and is not in the sitemap.
+- **The reference.** It is an opaque id (`VIT-` and twelve hex digits), not personal data. The page shows it only when it matches that format, and renders it as text. No other value travels in the link.
+- **Other outcomes are unchanged.** Every other outcome (invalid, rejected, rate-limited, unavailable) still renders in place on the contact page, with the values kept. `EnquiryForm` keeps its in-place receipt as a fallback for any caller that does not redirect.

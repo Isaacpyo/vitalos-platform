@@ -36,9 +36,9 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(practiceDisplayName("AI & Data")).toBe("Vitalos AI & Data");
   });
 
-  it("has the five solutions, twelve offers (six priority) and four industries", () => {
-    expect(solutionNames).toHaveLength(5);
-    expect(offerNames).toHaveLength(12);
+  it("has the six solutions, thirteen offers (six priority) and four industries", () => {
+    expect(solutionNames).toHaveLength(6);
+    expect(offerNames).toHaveLength(13);
     expect(priorityOfferNames).toHaveLength(6);
     for (const name of priorityOfferNames) expect(offerNames as readonly string[]).toContain(name);
     expect(industryNames).toHaveLength(4);
@@ -54,7 +54,9 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(howWeWorkStages).toHaveLength(9);
     expect(howWeWorkStages[0]).toBe("Qualify");
     expect(howWeWorkStages[8]).toBe("Improve");
-    expect(homeSections).toHaveLength(13);
+    // Stage 8 §8 listed 13; the Trust, Leadership and AI at the centre bands were removed
+    // (owner, 15 Oct 2026).
+    expect(homeSections).toHaveLength(10);
     expect(homeSections[0]?.key).toBe("hero");
   });
 
@@ -64,7 +66,6 @@ describe("locked copy (verbatim from the specs)", () => {
       "problems",
       "strategyToProduction",
       "practices",
-      "aiAtTheCentre",
       "selectedWork",
       "finalConversion",
     ]);

@@ -25,7 +25,6 @@ test("placeholder sections are served but never listed in the sitemap", async ({
   for (const path of [
     "/work/connecting-field-and-warehouse-systems",
     "/people/alex-morgan",
-    "/about/leadership",
   ]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);

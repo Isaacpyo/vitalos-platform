@@ -161,7 +161,13 @@ test.describe("people", () => {
 
   test("a bare profile shows no empty sections and no unverified links", async ({ page }) => {
     await page.goto(PERSON_BARE);
-    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
+    // The closing card ends every page (pages redesign); no content section may be empty.
+    await expect(
+      page
+        .locator("main")
+        .getByRole("heading", { level: 2 })
+        .filter({ hasNotText: "Have a problem worth solving?" }),
+    ).toHaveCount(0);
     await expect(page.locator('main a[href^="https://"]')).toHaveCount(0);
   });
 
@@ -208,7 +214,8 @@ test.describe("labs", () => {
 
   test("an asset with maintained links shows the repository and demo links", async ({ page }) => {
     await page.goto(LAB_MAINTAINED);
-    await expect(page.getByText("Prototype", { exact: true })).toBeVisible();
+    // Scoped to main: "Prototype" is also an AI journey step in the What We Do menu card.
+    await expect(page.locator("main").getByText("Prototype", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Resources" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Repository" })).toHaveAttribute(
       "href",

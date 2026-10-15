@@ -15,19 +15,40 @@ const TARGET_MS = 5_000;
 const ACTIONS = 50;
 const WINDOW_MS = 5 * 60_000;
 
+/** Brings a draft or approved post back to approved with every check ticked for its revision. */
+async function republishable(admin: Admin, postId: string) {
+  for (const step of ["submit", "approve"]) {
+    try {
+      await admin.action(postId, step);
+    } catch {
+      // Refused in this state (for example already approved): nothing to do for this step.
+    }
+  }
+  await admin.tickChecks(postId);
+}
+
 test("50 publishes and unpublishes in 5 minutes, all within the target", async () => {
   test.setTimeout(8 * 60_000);
   const seed = readSeed();
   const admin = await Admin.signIn();
   const cycle = seed.posts.slice(3, 13);
-  const published = new Set(cycle.map((post) => post.id));
+  // Self-contained: publish any cycle post that is not live yet (setup, not measured).
+  const published = new Set<string>();
+  for (const post of cycle) {
+    if ((await site(`/insights/${post.slug}`)).status !== 200) {
+      await republishable(admin, post.id);
+      await admin.action(post.id, "publish");
+    }
+    published.add(post.id);
+  }
   const timings: number[] = [];
   const started = Date.now();
   try {
     for (let i = 0; i < ACTIONS; i += 1) {
       const post = cycle[i % cycle.length]!;
       const live = published.has(post.id);
-      if (!live) await admin.tickChecks(post.id);
+      // An unpublished post is a draft again: it goes back through review before publishing.
+      if (!live) await republishable(admin, post.id);
       const at = await admin.action(post.id, live ? "unpublish" : "publish");
       timings.push(
         await until(

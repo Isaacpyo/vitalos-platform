@@ -1,14 +1,13 @@
-import { useId } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   aiJourneyStages,
-  brandLine,
   ctas,
-  howWeWorkStages,
+  labTypeLabels,
   megaMenuColumns,
   navLabels,
   practiceNames,
   proposition,
+  propositionLong,
   routes,
   solutionNames,
 } from "@vitalos/cms";
@@ -16,45 +15,42 @@ import type { HomePageView, HomeSectionKey, PublicationGates } from "@vitalos/cm
 import {
   Button,
   CTAGroup,
-  Carousel,
   CaseStudyFeature,
   CaseStudyRow,
   Container,
   Display,
   HeroVisual,
-  LabAssetRow,
-  LinkCard,
+  LabShowcase,
+  MotionPause,
   Lead,
-  PersonCard,
-  PracticeRow,
-  ProcessJourney,
+  PracticeShowcase,
   ProofStrip,
-  Reveal,
   Section,
-  RevealItem,
-  SectionHeading,
   SettleText,
-  SolutionCard,
+  SolutionShowcase,
   TerminalCTA,
-  TrustTopicRow,
-  isNonEmpty,
 } from "@vitalos/ui";
-import type { MediaPlaceholderVariant } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
-import { iconFor } from "../../lib/view-mapping/icons";
-import { carouselLabels } from "../../lib/view-mapping/labels";
+import {
+  industryShowcaseItems,
+  lifecycleStages,
+  practiceShowcaseItems,
+  solutionShowcaseItems,
+} from "../../lib/view-mapping/showcase";
+import { IndustryBand, LifecycleBand } from "../commercial/dark-bands";
+import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import { heroMotionPauseLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
+import { typesWithAssets } from "../labs/map";
+import type { DerivedStage } from "../../lib/view-mapping/stages";
 import {
   caseStudyMeta,
   labAssetPresentation,
-  toPersonCard,
   toProofStripItems,
   toRow,
-  toRows,
-  toSolutionCard,
 } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid, RowList, itemLevel } from "../commercial/bands";
+import { Band, RowList, itemLevel } from "../commercial/bands";
 import type { HomeData } from "../../features/content/schemas";
 import { HomeCareers } from "../careers/HomeCareers";
 import { HomeInsights } from "../insights/HomeInsights";
@@ -71,6 +67,8 @@ export interface HomeContext {
   gates: PublicationGates;
   /** Intro of the How We Work route page, borrowed for "From strategy to production". */
   howWeWorkIntro?: string | undefined;
+  /** The How We Work stages with their descriptions (`deriveStages`), for the lifecycle ring. */
+  howWeWorkStages?: readonly DerivedStage[] | undefined;
   /** The admin's homepage sections (Insights, Careers); null when unconfigured or unreadable. */
   content?: HomeData | null | undefined;
 }
@@ -95,13 +93,75 @@ function PropositionTitle() {
 }
 
 /**
- * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, brand
- * line and two actions on the left; the decorative hero visual on the right (below the copy on
+ * The hero backdrop: the owner-supplied photograph (15 Oct 2026; docs/brand/asset-approval.md)
+ * under a solid black overlay, so the copy reads as on a dark band. It drifts slowly and a few
+ * points of light glint over the data centre (token CSS, "Ambient hero motion"). Decorative:
+ * hidden from assistive technology. Served from apps/web/public as pre-sized WebP, so it skips
+ * the image optimiser.
+ */
+const heroBackdrop = heroPhotograph;
+
+/** Black is not in the locked palette (--color-*: initial); the owner asked for it here. */
+const blackOverlay = "bg-[#000]/72"; // raw-colour-ok: owner-directed black overlay (15 Oct 2026)
+
+function HeroBackdrop() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP with its own srcset */}
+      <img
+        src={heroBackdrop.src}
+        srcSet={heroBackdrop.srcSet}
+        sizes="100vw"
+        width={heroBackdrop.width}
+        height={heroBackdrop.height}
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        className="hv-drift size-full object-cover object-[70%_center]"
+      />
+      <div className={`absolute inset-0 ${blackOverlay}`} />
+      {heroGlints.map((glint, index) => (
+        <span
+          key={index}
+          className="hv-glint absolute size-1.5 rounded-full bg-white opacity-0 shadow-[0_0_14px_4px_var(--color-blue-600)] motion-reduce:hidden"
+          style={{ top: glint.top, left: glint.left, "--d": glint.delay } as CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Where the glints light up, over the right of the photograph, and when (staggered). */
+const heroGlints = [
+  { top: "24%", left: "64%", delay: "0s" },
+  { top: "41%", left: "81%", delay: "1.1s" },
+  { top: "63%", left: "72%", delay: "2.3s" },
+  { top: "31%", left: "91%", delay: "3.2s" },
+  { top: "74%", left: "88%", delay: "0.6s" },
+  { top: "52%", left: "57%", delay: "4s" },
+] as const;
+
+/**
+ * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, proposition
+ * sentence and one action on the left; the decorative hero visual on the right (below the copy on
  * compact screens), carrying the locked AI journey stage names and no figures.
  */
 export function HeroSection(): ReactNode {
   return (
-    <Section as="div" tone="light" spacing="default" className="relative isolate overflow-hidden">
+    <Section
+      as="div"
+      tone="dark"
+      spacing="default"
+      data-motion-scope=""
+      // Starts under the clear header (SiteHeader `overlay`), so the photograph runs to the top.
+      // Rounded bottom corners (owner direction, 15 Oct 2026) show against the band below.
+      className="relative isolate -mt-(--size-header) overflow-hidden rounded-b-[1.75rem] pt-[calc(var(--section-default)+var(--size-header))] lg:rounded-b-[3rem]"
+    >
+      <HeroBackdrop />
+      <MotionPause
+        label={heroMotionPauseLabel}
+        className="absolute right-(--space-4) bottom-(--space-4) z-10"
+      />
       <Container
         size="wide"
         className="grid items-center gap-x-(--space-7) gap-y-(--space-8) lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]"
@@ -110,11 +170,8 @@ export function HeroSection(): ReactNode {
           <Display size="xl" as="h1" className="break-words">
             <PropositionTitle />
           </Display>
-          <Lead className="mt-(--space-5)">{brandLine}</Lead>
+          <Lead className="mt-(--space-5)">{propositionLong}</Lead>
           <CTAGroup className="mt-(--space-7)">
-            <Button href={contactHref()} size="lg" arrow>
-              {ctas.primary}
-            </Button>
             <Button href={routes.whatWeDo()} variant="secondary" size="lg" arrow>
               {ctas.secondary}
             </Button>
@@ -122,7 +179,8 @@ export function HeroSection(): ReactNode {
         </div>
         <HeroVisual
           steps={aiJourneyStages}
-          className="aspect-[4/3] w-full sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[4/5] lg:max-h-[36rem]"
+          variant="glass"
+          className="w-full lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>
     </Section>
@@ -140,21 +198,16 @@ export const credibilitySection: SectionRender = (context, tone) => {
   );
 };
 
-/** Grid width for a set of solution cards: the comp's row of five when all five exist. */
-const solutionColumns = (count: number): 2 | 3 | 5 => (count >= 5 ? 5 : count >= 3 ? 3 : 2);
-
 /**
- * 3. Problems we solve: the Solutions, in the order the specs fix, as the comp's row of icon
- * cards under a split section header.
+ * 3. Problems we solve: the Solutions, in the order the specs fix, as a showcase: numbered titles
+ * on the left and a panel presenting the pointed or focused one (owner direction, 15 Oct 2026).
  */
 export const problemsSection: SectionRender = (context, tone) => {
   const title = heading(context, "problems");
-  const cards = orderByLockedNames(context.home.solutions, solutionNames).flatMap((solution) => {
-    const card = toSolutionCard(solution, { headingLevel: itemLevel(title) });
-    return card ? [card] : [];
+  const items = solutionShowcaseItems(orderByLockedNames(context.home.solutions, solutionNames), {
+    headingLevel: itemLevel(title),
   });
-  if (cards.length === 0) return null;
-  const columns = solutionColumns(cards.length);
+  if (items.length === 0) return null;
   return (
     <Band
       tone={tone}
@@ -162,91 +215,35 @@ export const problemsSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.solutions}
       link={{ label: navLabels.allWhatWeDo, href: routes.whatWeDo() }}
     >
-      <CardGrid columns={columns}>
-        {cards.map((card) => (
-          <li key={card.href} className="min-w-0">
-            <SolutionCard
-              {...card}
-              icon={iconFor("solution", card.title)}
-              titleSize={columns === 5 ? "h4" : "h3"}
-            />
-          </li>
-        ))}
-      </CardGrid>
+      <SolutionShowcase headingLevel={itemLevel(title)} items={items} />
     </Band>
   );
 };
 
 /**
- * 4. From strategy to production (the comp's process band): the How We Work introduction (CMS)
- * and its action on the left; the locked delivery stages, numbered, on the right.
+ * 4. From strategy to production: the How We Work introduction beside the delivery lifecycle as
+ * a ring of the nine locked stages, on the dark band (owner direction, 15 Oct 2026). Pointing
+ * at, focusing or clicking a stage presents its summary, borrowed from the How We Work page. The section appears when the CMS supplies its heading and the route page an intro.
  */
-export const strategyToProductionSection: SectionRender = (context, tone) => {
+export const strategyToProductionSection: SectionRender = (context) => {
   const title = heading(context, "strategyToProduction");
   const intro = context.howWeWorkIntro?.trim();
   if (!title || !intro) return null;
-  return <StrategyBand tone={tone} title={title} intro={intro} />;
+  return (
+    <LifecycleBand title={title} intro={intro} stages={lifecycleStages(context.howWeWorkStages)} />
+  );
 };
 
-function StrategyBand({
-  tone,
-  title,
-  intro,
-}: Readonly<{ tone: SectionTone; title: string; intro: string }>) {
-  const headingId = useId();
-  return (
-    <Section tone={tone} aria-labelledby={headingId}>
-      <Container
-        size="wide"
-        className="grid gap-x-(--space-8) gap-y-(--space-7) xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:items-center"
-      >
-        <Reveal>
-          <SectionHeading id={headingId} eyebrow={navLabels.howWeWork} title={title} />
-          <Lead className="mt-(--space-5)">{intro}</Lead>
-          <CTAGroup className="mt-(--space-6)">
-            <Button href={routes.howWeWork()} arrow>
-              {navLabels.howWeWork}
-            </Button>
-          </CTAGroup>
-        </Reveal>
-        {/* The delivery stages in order: their numbers pop in one after another (diagram
-            sequence, Stage 9 section 11); the stage names never move. */}
-        <Reveal
-          as="ol"
-          stagger={0.07}
-          delay={1}
-          aria-label={navLabels.howWeWork}
-          className="m-0 grid list-none grid-cols-2 gap-x-(--space-5) gap-y-(--space-4) p-0 sm:grid-cols-3"
-        >
-          {howWeWorkStages.map((stage, index) => (
-            <li
-              key={stage}
-              className="flex min-w-0 items-center gap-(--space-3) border-t border-tone-border pt-(--space-4)"
-            >
-              <RevealItem
-                as="span"
-                effect="pop"
-                aria-hidden="true"
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg"
-              >
-                {String(index + 1).padStart(2, "0")}
-              </RevealItem>
-              <span className="min-w-0 text-body font-semibold text-tone-heading">{stage}</span>
-            </li>
-          ))}
-        </Reveal>
-      </Container>
-    </Section>
-  );
-}
-
-/** 5. Practices: the five, in the order the specs fix, as editorial rows with icon tiles. */
+/**
+ * 5. Practices: the five, in the order the specs fix, as a showcase: a numbered list beside a
+ * stage that shows the pointed or focused practice's illustration (owner direction, 15 Oct 2026).
+ */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
-  const rows = toRows("practice", orderByLockedNames(context.home.practices, practiceNames), {
+  const items = practiceShowcaseItems(orderByLockedNames(context.home.practices, practiceNames), {
     headingLevel: itemLevel(title),
   });
-  if (rows.length === 0) return null;
+  if (items.length === 0) return null;
   return (
     <Band
       tone={tone}
@@ -254,27 +251,7 @@ export const practicesSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.practices}
       link={{ label: navLabels.whatWeDo, href: routes.whatWeDo() }}
     >
-      <RowList>
-        {rows.map((row) => (
-          <PracticeRow key={row.href} {...row} icon={iconFor("practice", row.title)} />
-        ))}
-      </RowList>
-    </Band>
-  );
-};
-
-/**
- * 6. AI at the centre: the signature AI journey. The stage names are locked copy (Stage 9
- * section 19); the section appears when the CMS supplies its heading. Dark emphasis surface,
- * with the comp's connected steps.
- */
-export const aiAtTheCentreSection: SectionRender = (context) => {
-  const title = heading(context, "aiAtTheCentre");
-  const stages = aiJourneyStages.map((stage) => ({ title: stage as string }));
-  if (!title || !isNonEmpty(stages)) return null;
-  return (
-    <Band tone="dark" heading={title}>
-      <ProcessJourney stages={stages} headingLevel={3} aria-label={title} />
+      <PracticeShowcase headingLevel={itemLevel(title)} items={items} />
     </Band>
   );
 };
@@ -322,66 +299,22 @@ export const selectedWorkSection: SectionRender = (context, tone) => {
   );
 };
 
-const placeholderCycle: readonly MediaPlaceholderVariant[] = [0, 1, 2, 3];
-
 /**
- * 8. Industries: only when the Industries gate is open. The comp's browsable row of cards (a
- * vertical list on phones), each with a token placeholder where the comp shows a photograph.
+ * 9. Industries: only when the Industries gate is open. A dark band with a drifting aurora (its own
+ * pause switch, WCAG 2.2.2) and the industries as expanding glass panels (owner direction, 15 Oct
+ * 2026).
  */
-export const industriesSection: SectionRender = (context, tone) => {
+export const industriesSection: SectionRender = (context) => {
   if (!context.gates.open.industries) return null;
   const title = heading(context, "industries");
-  const rows = toRows("industry", context.home.industries, { headingLevel: itemLevel(title) });
-  if (rows.length === 0) return null;
-  const label = title ?? navLabels.industries;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.industries}
-      link={{ label: navLabels.industries, href: routes.industries() }}
-    >
-      <Carousel label={label} {...carouselLabels(label)}>
-        {rows.map((row, index) => (
-          <li key={row.href}>
-            <LinkCard
-              kind="industry"
-              {...row}
-              icon={iconFor("industry", row.title)}
-              placeholder={placeholderCycle[index % placeholderCycle.length]}
-              titleSize="h4"
-            />
-          </li>
-        ))}
-      </Carousel>
-    </Band>
-  );
+  const items = industryShowcaseItems(context.home.industries, { headingLevel: itemLevel(title) });
+  if (items.length === 0) return null;
+  return <IndustryBand title={title} items={items} />;
 };
-
-/** 9. Trust: highlighted topics and a link to the Trust Centre. */
-export const trustSection: SectionRender = (context, tone) => {
-  const title = heading(context, "trust");
-  const rows = toRows("trustItem", context.home.trustHighlights, {
-    headingLevel: itemLevel(title),
-  });
-  if (rows.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.trustCentre}
-      link={{ label: navLabels.trustCentre, href: routes.trust() }}
-    >
-      <RowList>
-        {rows.map((row) => (
-          <TrustTopicRow key={row.href} {...row} />
-        ))}
-      </RowList>
-    </Band>
-  );
-};
-
-/** 10. Labs: only when the Labs gate is open. Maturity is stated in words on every asset. */
+/**
+ * 10. Labs: only when the Labs gate is open. A bench of specimen cards (owner direction, 15 Oct
+ * 2026); maturity is stated in words on every asset.
+ */
 export const labsSection: SectionRender = (context, tone) => {
   if (!context.gates.open.labs) return null;
   const title = heading(context, "labs");
@@ -398,11 +331,15 @@ export const labsSection: SectionRender = (context, tone) => {
       eyebrow={navLabels.labs}
       link={{ label: navLabels.labs, href: routes.labs() }}
     >
-      <RowList>
-        {rows.map((row) => (
-          <LabAssetRow key={row.href} {...row} />
-        ))}
-      </RowList>
+      <LabShowcase
+        headingLevel={itemLevel(title)}
+        items={rows}
+        more={{
+          label: structuralLabels.allLabs,
+          href: routes.labs(),
+          types: typesWithAssets(context.home.labs).map((type) => labTypeLabels[type]),
+        }}
+      />
     </Band>
   );
 };
@@ -428,41 +365,29 @@ export const careersSection: SectionRender = (context) => {
   return section ? <HomeCareers section={section} /> : null;
 };
 
-/** 12. Leadership: named, accountable people with an approved portrait when there is one. */
-export const leadershipSection: SectionRender = (context, tone) => {
-  const title = heading(context, "leadership");
-  const cards = context.home.leadership.flatMap((person) => {
-    const card = toPersonCard(person, { headingLevel: itemLevel(title) });
-    return card ? [card] : [];
-  });
-  if (cards.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.leadership}
-      link={{ label: navLabels.leadership, href: routes.leadership() }}
-    >
-      <ul className="m-0 grid list-none grid-cols-1 gap-(--space-6) p-0 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <li key={card.href} className="min-w-0">
-            <PersonCard {...card} />
-          </li>
-        ))}
-      </ul>
-    </Band>
-  );
-};
-
 /**
  * 13. Final conversion: needs its heading from the CMS. The action is the CMS call to action, or
  * the locked "Talk to Vitalos" to the contact page. The comp's single-row closing band.
  */
+/** The closing card's supporting line: the first sentence of the How We Work introduction. */
+const closingLine = (intro: string): string => {
+  const end = intro.indexOf(". ");
+  return end === -1 ? intro.trim() : intro.slice(0, end + 1).trim();
+};
+
 export const finalConversionSection: SectionRender = (context) => {
   const title = heading(context, "finalConversion");
   if (!title) return null;
   const primary = ctaToLink(context.home.finalCta) ?? { label: ctas.primary, href: contactHref() };
-  return <TerminalCTA heading={title} primary={primary} />;
+  return (
+    <TerminalCTA
+      variant="feature"
+      heading={title}
+      {...(context.howWeWorkIntro ? { body: closingLine(context.howWeWorkIntro) } : {})}
+      primary={primary}
+      secondary={{ label: ctas.secondary, href: routes.whatWeDo() }}
+    />
+  );
 };
 
 /** Sections 2 to 12 in order; the hero and the final conversion frame them. */
@@ -471,12 +396,9 @@ export const homeBands: readonly SectionRender[] = [
   problemsSection,
   strategyToProductionSection,
   practicesSection,
-  aiAtTheCentreSection,
   selectedWorkSection,
   industriesSection,
-  trustSection,
   labsSection,
   insightsSection,
   careersSection,
-  leadershipSection,
 ];

@@ -188,7 +188,6 @@ describe("buildSitemap", () => {
     "insights",
     "labs",
     "about",
-    "leadership",
     "how-we-work",
     "trust",
     "careers",
@@ -214,12 +213,14 @@ describe("buildSitemap", () => {
       gates: openGates,
       hasHome: true,
       routePages: all,
+      hasFaq: true,
       entries,
     });
     expect(urls(sitemap)).toContain("https://www.example.invalid/");
     expect(urls(sitemap)).toContain("https://www.example.invalid/work");
     expect(urls(sitemap)).toContain("https://www.example.invalid/work/example");
-    expect(urls(sitemap)).toContain("https://www.example.invalid/about/leadership");
+    expect(urls(sitemap)).toContain("https://www.example.invalid/faq");
+    expect(urls(sitemap)).not.toContain("https://www.example.invalid/about/leadership");
     expect(urls(sitemap)).toContain("https://www.example.invalid/legal/privacy");
     expect(urls(sitemap)).toContain("https://www.example.invalid/labs/research");
     expect(sitemap.find((e) => e.url.endsWith("/labs/research"))?.lastModified).toEqual(

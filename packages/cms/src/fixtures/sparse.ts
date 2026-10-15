@@ -157,8 +157,6 @@ export const sparseFixtureSet: FixtureSet = {
     industries: [],
     labs: [],
     insights: [],
-    leadership: [],
-    trustHighlights: [],
   },
   routePages: { contact },
   documents: {

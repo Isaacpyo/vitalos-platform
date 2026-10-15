@@ -1,7 +1,7 @@
 /**
  * The Stage 4 offer catalogue (Stage 4 "Initial Offer Pricing Architecture"; Stage 3 §10; Stage 8
- * §12). Twelve names are locked copy (`offerNames`); Product Discovery is in the Stage 3 and
- * Stage 4 catalogues but not in the locked Stage 8 set, so its title needs owner confirmation.
+ * §12). All thirteen names are locked copy (`offerNames`): the Stage 8 set of twelve, and
+ * Product Discovery (Stage 3 and Stage 4 catalogues), locked by owner direction on 15 Oct 2026.
  *
  * No prices: offer pages are proposal-led (Stage 8 §12 "Offer-page rule"). The Stage 4 indicative
  * ranges are internal and are deliberately not used. Duration categories are coarse and
@@ -43,11 +43,11 @@ const offers: readonly OfferDraft[] = [
       "A bounded discovery that turns a broad need to modernise into a current-state view, a future state and a prioritised roadmap.",
     ),
     audience:
-      "Leaders who know parts of the business need modernising, where several departments, processes or systems are affected and the right answer is not yet clear.",
+      "Leaders modernising parts of the business where several departments or systems are affected and the right answer is unclear.",
     trigger:
-      "“We know parts of the business need modernising, but need a coherent plan.” Transformation uncertainty is high, requirements are contested or incomplete, or the investment is large enough that evidence is needed before committing.",
+      "“We know parts of the business need modernising, but need a coherent plan.” Uncertainty is high, requirements are contested or incomplete, or the investment needs evidence first.",
     scope:
-      "Vitalos maps how the business operates today: processes, systems, data and pain points. We then define a future-state vision with you and prioritise the initiatives that move towards it, with their dependencies and sequence.",
+      "Vitalos maps how the business runs today: processes, systems, data and pain points. We then define the future state with you, and prioritise and sequence the initiatives to reach it.",
     outputs: [
       "Current-state analysis",
       "Process and system map",
@@ -84,11 +84,11 @@ const offers: readonly OfferDraft[] = [
       "A review of architecture, technical debt, security, reliability and performance risk, with a prioritised remediation plan.",
     ),
     audience:
-      "Technology and business leaders responsible for a platform whose risk, debt or reliability is uncertain, before deciding whether to modernise, rescue or hand it to a managed service.",
+      "Leaders unsure of a platform's risk, debt or reliability, before deciding to modernise, rescue or hand it to a managed service.",
     trigger:
       "“We need to know what is wrong, risky or holding the platform back.” Releases are risky, incidents are rising or a major investment decision depends on the platform.",
     scope:
-      "Vitalos reviews the platform's architecture, code and technical debt, security and reliability posture and performance risks, then turns the findings into a prioritised remediation plan.",
+      "Vitalos reviews architecture, code and technical debt, security, reliability and performance risk, then turns the findings into a prioritised remediation plan.",
     outputs: [
       "Architecture review",
       "Technical debt assessment",
@@ -129,11 +129,11 @@ const offers: readonly OfferDraft[] = [
       "A focused engagement that ranks viable AI use cases by value, feasibility, data readiness and risk, with a roadmap to prototype.",
     ),
     audience:
-      "Leadership teams who know AI matters but do not yet know where it creates value safely, or who have several AI ideas and need to choose between them.",
+      "Leaders who know AI matters but not where it creates value safely, or who must choose between several AI ideas.",
     trigger:
       "“We know AI matters but do not know where to start.” AI opportunities are unclear, pilots are scattered, or readiness in data, governance and skills is unknown.",
     scope:
-      "Vitalos evaluates business processes, opportunity value, data readiness, systems and integration, security and privacy, Responsible AI and operating readiness. The engagement runs Discover, Evaluate, Prioritise, Recommend, and ends with use cases ranked by value, feasibility, data readiness and risk.",
+      "Vitalos evaluates processes, value, data readiness, systems, security, privacy, Responsible AI and operating readiness. The work runs Discover, Evaluate, Prioritise, Recommend, ending with use cases ranked by value, feasibility, data readiness and risk.",
     outputs: [
       "Opportunity map",
       "Prioritised use cases",
@@ -177,11 +177,11 @@ const offers: readonly OfferDraft[] = [
       "A bounded sprint that tests the strongest AI use case with a working prototype and evaluation findings.",
     ),
     audience:
-      "Organisations with a prioritised AI use case that need to prove value and feasibility before committing to production investment.",
+      "Organisations with a prioritised AI use case that must prove value and feasibility before production investment.",
     trigger:
       "A use case looks valuable but its feasibility, data quality or business benefit has not been proven.",
     scope:
-      "Vitalos agrees evaluation criteria with you before testing, then builds a bounded prototype against real workflows and data where appropriate, and measures it against those criteria. The sprint answers one question: did the evidence justify production investment?",
+      "Vitalos agrees evaluation criteria with you first, then builds and measures a bounded prototype on real workflows and data where appropriate. The sprint answers one question: did the evidence justify production investment?",
     outputs: [
       "Working prototype",
       "Evaluation findings against the agreed criteria",
@@ -224,9 +224,9 @@ const offers: readonly OfferDraft[] = [
     audience:
       "Organisations that need a defined new product or platform, with product ownership and decision-makers available.",
     trigger:
-      "A new platform, portal, operational web application or digital service is needed and its objective is clear enough to build.",
+      "A new platform, portal, application or digital service is needed, and its objective is clear enough to build.",
     scope:
-      "Experience and Engineering design and build the product in working, tested increments, through controlled environments with peer review and automated checks, and validate it for function, security, performance and accessibility before release.",
+      "Experience and Engineering design and build the product in tested increments, with peer review and automated checks. It is validated for function, security, performance and accessibility before release.",
     outputs: [
       "Production digital product",
       "Architecture and decision records",
@@ -311,7 +311,7 @@ const offers: readonly OfferDraft[] = [
       "Operations and technology leaders whose teams re-key data between systems or depend on fragile manual handoffs.",
     trigger: "Fragmented systems and manual handoffs slow work and introduce errors.",
     scope:
-      "Vitalos maps ownership, interfaces and failure modes across the systems involved, then builds integrations validated for failure handling, retries, idempotency and external dependency behaviour.",
+      "Vitalos maps ownership, interfaces and failure modes, then builds integrations validated for failure handling, retries, idempotency and external dependencies.",
     outputs: [
       "Integrated, automated workflows",
       "Interface and data-flow documentation",
@@ -349,7 +349,7 @@ const offers: readonly OfferDraft[] = [
       "Operations leaders running manual, repetitive processes that limit growth or service.",
     trigger: "Manual repetitive operations consume time, add errors and do not scale.",
     scope:
-      "Vitalos redesigns the process first, then combines deterministic workflow automation, software integration and AI where each helps, and measures the result against the starting point.",
+      "Vitalos redesigns the process first, then combines deterministic automation, integration and AI where each helps, and measures the result against the baseline.",
     outputs: [
       "Redesigned workflow",
       "Automation and integrations in production",
@@ -383,7 +383,7 @@ const offers: readonly OfferDraft[] = [
       "Leaders who cannot trust their reporting, or whose data is too fragmented to support decisions or AI.",
     trigger: "Fragmented or unusable data and poor reporting or decision visibility.",
     scope:
-      "Vitalos connects, cleans, models and governs the data required for analytics and AI, then improves operational reporting, metrics and decision systems on that foundation.",
+      "Vitalos connects, cleans, models and governs the data, then improves reporting, metrics and decision systems on that foundation.",
     outputs: [
       "Connected, governed data foundation",
       "Documented definitions for key metrics",
@@ -425,7 +425,7 @@ const offers: readonly OfferDraft[] = [
       "Digital, product and customer leaders whose customer journeys are fragmented, hard to use or disconnected from operations.",
     trigger: "A poor customer digital journey is costing adoption, conversion or service quality.",
     scope:
-      "Vitalos reviews the journey for usability, accessibility and service friction, redesigns it together with the operational workflow behind it, and sets out how to implement it.",
+      "Vitalos reviews the journey for usability, accessibility and service friction, redesigns it with the workflow behind it, and plans implementation.",
     outputs: [
       "Evidence-based experience review",
       "Redesigned customer journey",
@@ -463,7 +463,7 @@ const offers: readonly OfferDraft[] = [
       "Organisations whose product is unstable, stalled or poorly engineered, including systems built by another supplier.",
     trigger: "Unstable or unfinished software that the business depends on.",
     scope:
-      "The work begins with a rescue assessment that establishes a known technical baseline and a prioritised recovery plan. Vitalos then stabilises the system and carries out controlled remediation.",
+      "A rescue assessment first sets a known technical baseline and a prioritised recovery plan. Vitalos then stabilises the system and carries out controlled remediation.",
     outputs: [
       "Known technical baseline",
       "Prioritised recovery plan",
@@ -502,10 +502,10 @@ const offers: readonly OfferDraft[] = [
       "Application care and retained engineering capacity that keep live systems supported and improving.",
     ),
     audience:
-      "Organisations that need continuity for live systems without a full internal product engineering function, or extra capacity alongside their own team.",
+      "Organisations needing continuity for live systems without a full internal product engineering function, or extra capacity for their team.",
     trigger: "A live system needs ongoing ownership, capacity or continuous improvement.",
     scope:
-      "Within an agreed service boundary, Vitalos maintains the application, fixes defects, applies updates, supports incidents and delivers planned improvements. Retained engineering capacity works with your own technology or product team against an improvement roadmap.",
+      "Within an agreed service boundary, Vitalos maintains the application, fixes defects, applies updates, supports incidents and delivers planned improvements. Retained capacity works with your team against an improvement roadmap.",
     outputs: [
       "Maintenance, defect fixes and updates within the service boundary",
       "Incident support and monitoring coordination",
@@ -536,7 +536,7 @@ const offers: readonly OfferDraft[] = [
   },
   {
     slug: "product-discovery",
-    title: "Product Discovery",
+    title: name("Product Discovery"),
     summary:
       "Define a new product before major engineering investment: validated problem, users, journeys, scope and backlog.",
     seo: seo(
@@ -544,10 +544,10 @@ const offers: readonly OfferDraft[] = [
       "Validate the problem, users, journeys and scope of a new product before major engineering investment.",
     ),
     audience:
-      "Product and digital leaders planning a new product or substantial redesign whose problem, users or scope are not yet validated.",
+      "Leaders planning a new product or major redesign whose problem, users or scope are not yet validated.",
     trigger: "New product uncertainty: the idea is promising but unproven.",
     scope:
-      "Experience and Consulting research the problem and users, map journeys, shape scope and set the prototype direction, so engineering starts from evidence rather than assumptions.",
+      "Experience and Consulting research the problem and users, map journeys, shape scope and set prototype direction, so engineering starts from evidence.",
     outputs: [
       "Validated problem and users",
       "Key journeys",
@@ -568,7 +568,7 @@ const offers: readonly OfferDraft[] = [
         pricingCitation,
         cite(3, "13.2 Example account expansion paths"),
       ],
-      "Title not in locked copy: Product Discovery is in the Stage 3 and Stage 4 catalogues but not in the Stage 8 §12 initial offer set. The owner decides whether it is published.",
+      "Product Discovery is in the Stage 3 and Stage 4 catalogues but not the Stage 8 §12 initial offer set; the owner locked it on 15 Oct 2026.",
     ),
   },
 ];

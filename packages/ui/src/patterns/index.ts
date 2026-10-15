@@ -13,7 +13,7 @@ export {
 
 // Section layout (ADR-023, from the owner comp)
 export { SectionHeading, type SectionHeadingProps } from "./layout/SectionHeading";
-export { PageHero, type PageHeroProps } from "./layout/PageHero";
+export { PageHero, type PageHeroBackdrop, type PageHeroProps } from "./layout/PageHero";
 export { HeroVisual, type HeroVisualProps } from "./media/HeroVisual";
 export {
   MediaPlaceholder,
@@ -26,8 +26,15 @@ export { SiteHeader, type SiteHeaderProps } from "./site/SiteHeader";
 export { MegaMenu, type MegaMenuProps } from "./site/MegaMenu";
 export { MobileNav, type MobileNavProps } from "./site/MobileNav";
 export { SiteFooter, type FooterColumn, type SiteFooterProps } from "./site/SiteFooter";
+export { SocialLinks, type SocialLink, type SocialLinksProps } from "./site/SocialLinks";
 export { TerminalCTA, type TerminalCTAProps } from "./site/TerminalCTA";
-export type { MegaMenuColumn, SiteNavItem, SiteNavLink, SiteNavMenu } from "./site/types";
+export type {
+  MegaMenuColumn,
+  MegaMenuFeature,
+  SiteNavItem,
+  SiteNavLink,
+  SiteNavMenu,
+} from "./site/types";
 
 // Commercial
 export {
@@ -46,6 +53,26 @@ export {
   type SolutionCardProps,
 } from "./commercial/cards";
 export { RelatedContentRail, type RelatedContentRailProps } from "./commercial/RelatedContentRail";
+export {
+  PracticeShowcase,
+  type PracticeShowcaseImage,
+  type PracticeShowcaseItem,
+  type PracticeShowcaseProps,
+} from "./commercial/PracticeShowcase";
+export {
+  IndustryShowcase,
+  type IndustryShowcaseImage,
+  type IndustryShowcaseItem,
+  type IndustryShowcaseProps,
+} from "./commercial/IndustryShowcase";
+export { AuroraBackdrop, type AuroraBackdropProps } from "./media/AuroraBackdrop";
+export {
+  SolutionShowcase,
+  type SolutionShowcaseImage,
+  type SolutionShowcaseItem,
+  type SolutionShowcaseProps,
+} from "./commercial/SolutionShowcase";
+export { FeatureGrid, type FeatureGridItem, type FeatureGridProps } from "./commercial/FeatureGrid";
 
 // Proof
 export { OutcomeStats, type OutcomeStatItem, type OutcomeStatsProps } from "./proof/OutcomeStats";
@@ -61,6 +88,7 @@ export {
 // Labs
 export { MaturityBadge, type MaturityBadgeProps, type MaturityKey } from "./labs/MaturityBadge";
 export { LabAssetRow, type LabAssetRowProps } from "./labs/LabAssetRow";
+export { LabShowcase, type LabShowcaseItem, type LabShowcaseProps } from "./labs/LabShowcase";
 export { TechnicalFigure, type TechnicalFigureProps } from "./labs/TechnicalFigure";
 export {
   EvaluationTable,
@@ -106,6 +134,11 @@ export {
   type JourneyStage,
   type ProcessJourneyProps,
 } from "./journey/ProcessJourney";
+export {
+  ProcessCycle,
+  type ProcessCycleProps,
+  type ProcessCycleStage,
+} from "./journey/ProcessCycle";
 
 // People
 export {

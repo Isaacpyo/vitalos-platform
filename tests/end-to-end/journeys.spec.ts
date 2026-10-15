@@ -29,16 +29,23 @@ function documentationIp(testInfo: TestInfo): string {
 /** Opens the compact-viewport menu when the navigation is behind it. */
 async function openMenuIfCompact(page: Page) {
   if (isCompact(page)) {
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
   }
 }
 
-/** Clicks a header navigation link, through the Menu disclosure on the compact viewport. */
-async function clickHeaderLink(page: Page, name: string) {
-  await openMenuIfCompact(page);
-  const root = page.getByRole("banner");
-  // The desktop header also shows the utility links (Trust Centre) next to the navigation.
-  await root.getByRole("link", { name, exact: true }).first().click();
+/**
+ * Clicks a link inside one of the header menus (What We Do, Who We Are, Support): through the
+ * menu's own button on the desktop, through the Menu sheet and the menu's disclosure below it.
+ */
+async function clickMenuLink(page: Page, menu: string, name: string) {
+  const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });
+  if (isCompact(page)) {
+    await openMenuIfCompact(page);
+    await nav.locator("details summary", { hasText: menu }).first().click();
+  } else {
+    await nav.getByRole("button", { name: new RegExp(menu) }).click();
+  }
+  await nav.getByRole("link", { name, exact: true }).first().click();
 }
 
 test.describe("enquiry journey", () => {
@@ -49,7 +56,7 @@ test.describe("enquiry journey", () => {
     await page.context().setExtraHTTPHeaders({ "x-forwarded-for": documentationIp(testInfo) });
 
     await page.goto("/");
-    await page.getByRole("link", { name: "Explore what we do" }).click();
+    await page.getByRole("link", { name: "Explore what we do" }).first().click();
     await expect(page).toHaveURL(/\/what-we-do$/);
 
     await page.locator("main").getByRole("link", { name: "Example Practice (fixture)" }).click();
@@ -83,11 +90,14 @@ test.describe("enquiry journey", () => {
     });
     await page.getByRole("button", { name: "Send enquiry" }).click();
 
-    const receipt = page.getByRole("status");
-    // Cloudflare's dummy secret is answered locally (no siteverify call), so no network is involved.
-    await expect(receipt).toContainText("Your enquiry has been received", { timeout: 20_000 });
-    await expect(receipt).toContainText(/VIT-[0-9A-F]{12}/i);
-    await expect(page.locator("#enquiry-outcome")).toBeFocused();
+    // An accepted enquiry lands on the thank-you page with its reference.
+    await expect(page).toHaveURL(/\/contact\/thank-you\?ref=VIT-[0-9A-F]{12}$/i, {
+      timeout: 20_000,
+    });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Your enquiry has been received",
+    );
+    await expect(page.getByRole("status")).toContainText(/VIT-[0-9A-F]{12}/i);
     await expectNoA11yViolations(page, {
       exclude: ['iframe[src*="challenges.cloudflare.com"]'],
     });
@@ -97,7 +107,12 @@ test.describe("enquiry journey", () => {
     page,
   }) => {
     await page.goto("/");
-    await clickHeaderLink(page, "Trust Centre");
+    // The Trust Centre is linked from the footer only (owner direction, 15 Oct 2026).
+    const footer = page.getByRole("contentinfo");
+    if ((page.viewportSize()?.width ?? 1440) < 768) {
+      await footer.locator("summary", { hasText: "Trust" }).click();
+    }
+    await footer.getByRole("link", { name: "Trust Centre", exact: true }).click();
     await expect(page).toHaveURL(/\/trust$/);
 
     await page.locator('main a[href="/trust/procurement"]').first().click();
@@ -133,13 +148,13 @@ test.describe("gated sections are reachable while their gates are open", () => {
   test("the header leads to Work, Labs and Industries, each with its own heading", async ({
     page,
   }) => {
-    for (const [label, path] of [
-      ["Work", /\/work$/],
-      ["Labs", /\/labs$/],
-      ["Industries", /\/industries$/],
+    for (const [menu, label, path] of [
+      ["Who We Are", "Work", /\/work$/],
+      ["What We Do", "Labs", /\/labs$/],
+      ["Who We Are", "Industries", /\/industries$/],
     ] as const) {
       await page.goto("/");
-      await clickHeaderLink(page, label);
+      await clickMenuLink(page, menu, label);
       await expect(page, label).toHaveURL(path);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     }
@@ -196,12 +211,7 @@ test.describe("compact navigation", () => {
   test("following a menu link lands on that page with the menu closed", async ({ page }) => {
     test.skip(!isCompact(page), "the desktop header shows the navigation directly");
     await page.goto("/");
-    await openMenuIfCompact(page);
-    await page
-      .getByRole("banner")
-      .getByRole("navigation", { name: "Primary" })
-      .getByRole("link", { name: "About", exact: true })
-      .click();
+    await clickMenuLink(page, "Who We Are", "About");
     await expect(page).toHaveURL(/\/about$/);
     await expect(page.getByRole("banner").locator("details").first()).not.toHaveJSProperty(
       "open",
@@ -246,7 +256,7 @@ test.describe("desktop mega-menu", () => {
     // Space opens too, and tabbing out of the menu closes it again.
     await page.keyboard.press("Space");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await nav.getByRole("link", { name: "Industries", exact: true }).focus();
+    await nav.getByRole("link", { name: "Who We Are", exact: true }).focus();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -258,10 +268,10 @@ test.describe("desktop mega-menu", () => {
     await page.keyboard.press("Enter");
     await page
       .getByRole("navigation", { name: "Primary" })
-      .getByRole("link", { name: "How We Work" })
+      .getByRole("link", { name: "All solutions" })
       .focus();
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/\/how-we-work$/);
+    await expect(page).toHaveURL(/\/solutions$/);
   });
 
   test("hover opens it for a fine pointer and Escape dismisses it (WCAG 1.4.13)", async ({

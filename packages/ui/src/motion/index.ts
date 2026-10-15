@@ -13,5 +13,8 @@ export {
   type RevealProps,
 } from "./Reveal";
 export { Carousel, type CarouselProps } from "./Carousel";
+export { MobileReveal, type MobileRevealProps } from "./MobileReveal";
+export { MotionPause, type MotionPauseProps } from "./MotionPause";
 export { Parallax, type ParallaxProps } from "./Parallax";
+export { ReplayOnHover, type ReplayOnHoverProps } from "./ReplayOnHover";
 export { SettleText, type SettlePart, type SettleTextProps } from "./SettleText";

@@ -17,6 +17,22 @@ import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
 import { DRAFTED_ON, draftId } from "../slugs";
 
+/** The accessibility topic's body. The full statement is /legal/accessibility (repo/legal.ts). */
+const trustAccessibilityBody = richText(
+  "trust-accessibility",
+  h2("This website"),
+  p(
+    "The target for this website is WCAG 2.2 Level AA, treated as a build requirement rather than an after-launch audit: semantic structure, keyboard operation, visible focus, sufficient contrast, accessible forms, reduced-motion support and reflow without loss of function.",
+  ),
+  p(
+    "A full accessibility statement will be published after the site has been evaluated. We do not display conformance badges without a supporting assessment.",
+  ),
+  h2("Services we deliver"),
+  p(
+    "Our delivery standard makes accessibility one of the quality gates before release: applicable interfaces are checked against the accessibility standard agreed for the engagement.",
+  ),
+);
+
 export interface TrustDraft {
   view: TrustTopicView;
   provenance: DraftProvenance;
@@ -83,7 +99,8 @@ export const trustDrafts: readonly TrustDraft[] = [
         "contractors and partners working to Vitalos security standards, with access removed promptly when no longer needed.",
       ),
       h2("Reporting a security concern"),
-      p("Security contact: [Monitored security contact, to be confirmed by the owner]."),
+      // Owner direction, 15 Oct 2026: support@ is the security contact (no security@ mailbox).
+      p("Security contact: support@vitalos.co.uk."),
     ),
     [
       cite(6, "8. Security & privacy readiness"),
@@ -163,20 +180,7 @@ export const trustDrafts: readonly TrustDraft[] = [
     "accessibility",
     "This website is being built to WCAG 2.2 Level AA, and the services we deliver are checked against an agreed accessibility target.",
     "Vitalos's accessibility commitment for this website and for the digital services it delivers.",
-    richText(
-      "trust-accessibility",
-      h2("This website"),
-      p(
-        "The target for this website is WCAG 2.2 Level AA, treated as a build requirement rather than an after-launch audit: semantic structure, keyboard operation, visible focus, sufficient contrast, accessible forms, reduced-motion support and reflow without loss of function.",
-      ),
-      p(
-        "A full accessibility statement will be published after the site has been evaluated. We do not display conformance badges without a supporting assessment.",
-      ),
-      h2("Services we deliver"),
-      p(
-        "Our delivery standard makes accessibility one of the quality gates before release: applicable interfaces are checked against the accessibility standard agreed for the engagement.",
-      ),
-    ),
+    trustAccessibilityBody,
     [
       cite(8, "24. Accessibility architecture"),
       cite(5, "11. Mandatory quality gates"),

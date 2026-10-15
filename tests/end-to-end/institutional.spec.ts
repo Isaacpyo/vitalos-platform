@@ -5,8 +5,8 @@ import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
- * Institutional templates (workstream G2b): About, Leadership, Trust Centre, Legal. Careers comes
- * from the Super Admin (ADR-035) and is covered by tests/content against a fake admin.
+ * Institutional templates (workstream G2b): About, FAQ, Trust Centre, Legal. Careers comes from
+ * the Super Admin (ADR-035) and is covered by tests/content against a fake admin.
  *
  * Runs against the production build with the `full` fixture set. Below-gate behaviour is covered
  * by institutional.sparse.spec.ts. Runs on the desktop and 390px mobile projects, and every
@@ -23,7 +23,7 @@ async function jsonLdNodes(page: Page): Promise<Record<string, unknown>[]> {
 
 const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
   { name: "about", path: "/about", ld: ["BreadcrumbList"] },
-  { name: "leadership", path: "/about/leadership", ld: ["BreadcrumbList"] },
+  { name: "faq", path: "/faq", ld: ["BreadcrumbList"] },
   { name: "trust overview", path: "/trust", ld: ["BreadcrumbList"] },
   { name: "trust topic (security)", path: "/trust/security", ld: ["BreadcrumbList"] },
   { name: "trust topic (certifications)", path: "/trust/certifications", ld: ["BreadcrumbList"] },
@@ -35,11 +35,11 @@ const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
 
 /**
  * Under the draft source (ADR-025) the Certifications and Subprocessors topics are not published:
- * no such pages. Leadership, Careers and the role render invented placeholder content (ADR-025
- * status note, 11 October 2026), so they emit no structured data at all.
+ * no such pages. Careers and the role render invented placeholder content (ADR-025 status note,
+ * 11 October 2026), so they emit no structured data at all.
  */
 const notDrafted = /^\/(trust\/(certifications|subprocessors)$|careers\/example-)/;
-const placeholderPages = /^\/(about\/leadership|careers$)/;
+const placeholderPages = /^\/careers$/;
 const templates = (
   isDraftRun
     ? fixtureTemplates.filter((template) => !notDrafted.test(template.path))
@@ -66,25 +66,37 @@ test.describe("every institutional template", () => {
   }
 });
 
-test.describe("about and leadership", () => {
-  // Asserts fixture documents; draft-content.spec.ts covers the draft equivalents.
-  test.skip(isDraftRun, FIXTURE_SPECIFIC);
-
-  test("about shows the CMS heading, the leadership profile and onward links", async ({ page }) => {
+test.describe("about and the removed leadership page", () => {
+  test("about shows the CMS heading and onward links, and no leadership section", async ({
+    page,
+  }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
     await page.goto("/about");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("About (fixture)");
-    await expect(
-      page.locator("main").getByRole("link", { name: "Example Person (fixture)" }),
-    ).toBeVisible();
+    await expect(page.locator("main #leadership")).toHaveCount(0);
     await expect(page.locator("main").getByRole("link", { name: "Trust Centre" })).toBeVisible();
     // Careers follows the Super Admin's `careers_open` (ADR-035): closed with no content API.
     await expect(page.locator("main").getByRole("link", { name: "Careers" })).toHaveCount(0);
   });
 
-  test("leadership lists leadership profiles only", async ({ page }) => {
+  test("the old leadership address goes to About", async ({ page }) => {
     await page.goto("/about/leadership");
-    await expect(page.getByRole("link", { name: "Example Person (fixture)" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Example Person Two (fixture)" })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/about$/);
+  });
+});
+
+test.describe("faq", () => {
+  test("groups each solution's questions under its name, with a link to the solution", async ({
+    page,
+  }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
+    await page.goto("/faq");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Frequently asked questions");
+    const main = page.locator("main");
+    await expect(main.getByRole("heading", { level: 2 }).first()).toBeVisible();
+    await main.getByText("Example question (fixture)?").first().click();
+    await expect(main.getByText("Example answer (fixture).").first()).toBeVisible();
+    await expect(main.locator('a[href^="/solutions/"]').first()).toBeVisible();
   });
 });
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { filterNavByGates, primaryNav, ctaNav, utilityNav } from "../navigation";
+import {
+  filterNavByGates,
+  primaryNav,
+  sectionNav,
+  ctaNav,
+  trustNav,
+  whoWeAreNav,
+} from "../navigation";
 import {
   GATE_THRESHOLDS,
   closedGates,
@@ -77,14 +84,26 @@ describe("gate decisions", () => {
 describe("navigation", () => {
   const labels = (keys: readonly { label: string }[]) => keys.map((item) => item.label);
 
-  it("shows only ungated primary items when every gate is closed", () => {
-    expect(labels(filterNavByGates(primaryNav, closedGates))).toEqual(["What We Do", "About"]);
+  it("keeps the three primary menus whatever the gates", () => {
+    const open = evaluateGates({ work: 2, insights: 6, labs: 1, industries: 1, careers: 1 });
+    for (const gates of [closedGates, open]) {
+      expect(labels(filterNavByGates(primaryNav, gates))).toEqual([
+        "What We Do",
+        "Who We Are",
+        "Support",
+      ]);
+    }
   });
 
-  it("shows every primary item in spec order when every gate is open", () => {
+  it("shows only ungated sections when every gate is closed, and all of them in order when open", () => {
+    expect(labels(filterNavByGates(sectionNav, closedGates))).toEqual(["About"]);
+    expect(labels(filterNavByGates(whoWeAreNav, closedGates))).toEqual([
+      "About",
+      "How We Work",
+      "All What We Do",
+    ]);
     const open = evaluateGates({ work: 2, insights: 6, labs: 1, industries: 1, careers: 1 });
-    expect(labels(filterNavByGates(primaryNav, open))).toEqual([
-      "What We Do",
+    expect(labels(filterNavByGates(sectionNav, open))).toEqual([
       "Industries",
       "Work",
       "Insights",
@@ -93,8 +112,8 @@ describe("navigation", () => {
     ]);
   });
 
-  it("carries the utility link and primary CTA from locked copy", () => {
-    expect(labels(utilityNav)).toEqual(["Trust Centre"]);
+  it("carries the Trust Centre link and primary CTA from locked copy", () => {
+    expect(trustNav.label).toBe("Trust Centre");
     expect(ctaNav.label).toBe("Talk to Vitalos");
     expect(ctaNav.href).toBe("/contact");
   });

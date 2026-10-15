@@ -64,7 +64,6 @@ describe("publication gates in the draft source", () => {
     // The home page stays free of placeholder content.
     expect(set.home?.selectedWork).toEqual([]);
     expect(set.home?.insights).toEqual([]);
-    expect(set.home?.leadership).toEqual([]);
     expect(set.home?.proof).toEqual([]);
   });
 
@@ -255,7 +254,7 @@ describe("content hygiene", () => {
     expect(set.documents.practice.map((p) => p.title)).toEqual(
       practiceNames.map(practiceDisplayName),
     );
-    expect(set.documents.solution.map((s) => s.title).slice(0, 5)).toEqual([...solutionNames]);
+    expect(set.documents.solution.map((s) => s.title)).toEqual([...solutionNames]);
     expect(set.documents.industry.map((i) => i.title)).toEqual([...industryNames]);
     const offerTitles = set.documents.offer.map((o) => o.title);
     for (const name of offerNames) expect(offerTitles).toContain(name);
@@ -345,7 +344,7 @@ describe("document shapes", () => {
   });
 
   it("legal pages are marked not in force, unindexed and full of placeholders", () => {
-    expect(set.documents.legalPage).toHaveLength(4);
+    expect(set.documents.legalPage).toHaveLength(5);
     for (const legal of set.documents.legalPage) {
       expect(legal.title).toContain(DRAFT_LEGAL_MARK);
       expect(legal.seo.noindex).toBe(true);
@@ -354,10 +353,8 @@ describe("document shapes", () => {
     }
   });
 
-  it("route pages for every key except leadership, and How We Work describes all nine stages", () => {
-    expect(Object.keys(set.routePages).sort()).toEqual(
-      routePageKeys.filter((key) => key !== "leadership").sort(),
-    );
+  it("route pages for every key, and How We Work describes all nine stages", () => {
+    expect(Object.keys(set.routePages).sort()).toEqual([...routePageKeys].sort());
     const body = JSON.stringify(set.routePages["how-we-work"]?.body);
     for (const stage of [
       "Qualify",

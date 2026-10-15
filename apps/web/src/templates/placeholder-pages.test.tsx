@@ -5,8 +5,6 @@ import { fullFixtureSet } from "@vitalos/cms/fixtures";
 import type { CaseStudyView, PersonView } from "@vitalos/cms";
 import { evaluateGates } from "@vitalos/cms";
 import { placeholderNoticeText } from "../components/placeholder-notice";
-import { AboutPage } from "./about/AboutPage";
-import { LeadershipPage } from "./about/LeadershipPage";
 import { ProfilePage } from "./people/ProfilePage";
 import { CaseStudyPage } from "./work/CaseStudyPage";
 import { WorkIndex } from "./work/WorkIndex";
@@ -40,9 +38,7 @@ describe("pages that render placeholder content", () => {
     expect(markup).not.toMatch(/Contracted by Vitalos|<blockquote/);
   });
 
-  it("shows the notice on the indexes, Leadership and About", () => {
-    const people = documents.person as readonly PersonView[];
-    const leaders = people.filter((person) => person.isLeadership);
+  it("shows the notice on the indexes", () => {
     expect(
       html(
         <WorkIndex
@@ -53,8 +49,6 @@ describe("pages that render placeholder content", () => {
         />,
       ),
     ).toContain(notice);
-    expect(html(<LeadershipPage data={{ page: null, leaders }} />)).toContain(notice);
-    expect(html(<AboutPage data={{ page: null, leaders, gates }} />)).toContain(notice);
   });
 
   it("emits no breadcrumb structured data on placeholder pages", () => {

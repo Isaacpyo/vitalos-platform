@@ -70,7 +70,13 @@ test.describe("detail pages stay reachable but are not indexed", () => {
     const response = await page.goto("/people/example-person");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
+    // The closing card ends every page (pages redesign); no content section may be empty.
+    await expect(
+      page
+        .locator("main")
+        .getByRole("heading", { level: 2 })
+        .filter({ hasNotText: "Have a problem worth solving?" }),
+    ).toHaveCount(0);
     await expectNoA11yViolations(page);
     await expectNoHorizontalOverflowAt320(page);
     await expectNoDeadLinks(page);

@@ -26,23 +26,21 @@ test("opening a role puts it on /careers and the homepage within 5 s", async () 
   const { id, slug, title } = role();
   expect((await site(`/careers/${slug}`)).status).toBe(404);
   const at = await admin.roleAction(id, "open");
-  const elapsed = await until(
-    async () => {
-      const [careers, home, page] = await Promise.all([
-        site("/careers"),
-        site("/"),
-        site(`/careers/${slug}`),
-      ]);
-      return (
-        careers.text.includes(title) &&
-        home.text.includes(title) &&
-        page.status === 200 &&
-        page.text.includes('"@type":"JobPosting"')
-      );
-    },
-    at,
-    30_000,
-  );
+  // Each surface is timed on its own, so a slow run shows which one lagged.
+  const [careersMs, homeMs, pageMs] = await Promise.all([
+    until(async () => (await site("/careers")).text.includes(title), at, 30_000),
+    until(async () => (await site("/")).text.includes(title), at, 30_000),
+    until(
+      async () => {
+        const page = await site(`/careers/${slug}`);
+        return page.status === 200 && page.text.includes('"@type":"JobPosting"');
+      },
+      at,
+      30_000,
+    ),
+  ]);
+  console.log("role open (ms):", JSON.stringify({ careersMs, homeMs, pageMs }));
+  const elapsed = Math.max(careersMs, homeMs, pageMs);
   expect(elapsed).toBeLessThanOrEqual(TARGET_MS);
   expect((await site("/sitemap.xml")).text).toContain(`/careers/${slug}<`);
 });
@@ -95,25 +93,26 @@ test("applying with a PDF: the admin shows the application, the CV download and 
 test("closing the role: off the list and homepage, closed page, no JSON-LD or sitemap entry", async () => {
   const { id, slug, title } = role();
   const at = await admin.roleAction(id, "close");
-  const elapsed = await until(
-    async () => {
-      const [careers, home, page, sitemap] = await Promise.all([
-        site("/careers"),
-        site("/"),
-        site(`/careers/${slug}`),
-        site("/sitemap.xml"),
-      ]);
-      return (
-        !careers.text.includes(title) &&
-        !home.text.includes(title) &&
-        page.status === 200 &&
-        page.text.includes("This role closed on") &&
-        !page.text.includes("JobPosting") &&
-        !sitemap.text.includes(`/careers/${slug}<`)
-      );
+  const checks: Record<string, () => Promise<boolean>> = {
+    careersList: async () => !(await site("/careers")).text.includes(title),
+    homepage: async () => !(await site("/")).text.includes(title),
+    closedPage: async () => {
+      const page = await site(`/careers/${slug}`);
+      return page.status === 200 && page.text.includes("This role closed on");
     },
-    at,
-    30_000,
+    noJsonLd: async () => !(await site(`/careers/${slug}`)).text.includes('"@type":"JobPosting"'),
+    sitemap: async () => !(await site("/sitemap.xml")).text.includes(`/careers/${slug}<`),
+  };
+  const results = await Promise.all(
+    Object.entries(checks).map(async ([name, check]) => {
+      try {
+        return [name, await until(check, at, 30_000)] as const;
+      } catch {
+        return [name, Number.POSITIVE_INFINITY] as const;
+      }
+    }),
   );
+  console.log("role close (ms):", JSON.stringify(Object.fromEntries(results)));
+  const elapsed = Math.max(...results.map(([, ms]) => ms));
   expect(elapsed).toBeLessThanOrEqual(TARGET_MS);
 });

@@ -26,10 +26,74 @@ No production photography or image library is present in the reviewed Figma
 file. Imagery is therefore not approved by this record. It requires a separate
 rights-cleared asset handoff and approval before publication.
 
-## Interim footer logo (owner direction, 12 Oct 2026)
+## Interim raster logos (owner direction, 12 and 15 Oct 2026)
 
-The owner directed that the supplied raster logo (`vitalos-logo (8).png`, 2172x724) be used in
-the site footer, recoloured white. `apps/web/public/brand/vitalos-logo-white.png` (937x160) is that
-file with every visible pixel set to white, its alpha kept and the transparent margin trimmed. It
-replaces the text wordmark in the footer only; the header still uses the text wordmark. It is
-interim until the Figma vector exports above are produced, when an SVG should replace it.
+The owner directed that the supplied raster logo (`vitalos-logo (8).png`, 2172x724) be used on
+the site in place of the text wordmark. Both files are interim until the Figma vector exports
+above are produced, when SVGs should replace them.
+
+- **Footer (12 Oct 2026).** `apps/web/public/brand/vitalos-logo-white.png` (937x160) is that file
+  with every visible pixel set to white, its alpha kept and the transparent margin trimmed.
+- **Header (15 Oct 2026).** `apps/web/public/brand/vitalos-logo.png` (940x160) is that file in full
+  colour, with the transparent margin trimmed and the colours reduced to a 256-colour palette. A
+  logo supplied in site settings takes precedence over it.
+- **Site icon (15 Oct 2026).** The owner directed that the supplied symbol (`vitalos-logo (7).png`,
+  1254x1254, the V mark alone) be the site icon. `apps/web/app/favicon.ico` (16, 32 and 48 px),
+  `apps/web/app/icon.png` (512 px, transparent) and `apps/web/app/apple-icon.png` (180 px, on white)
+  are that mark trimmed and centred on a square canvas. The same mark, trimmed and 128px high
+  (`apps/web/public/brand/vitalos-mark.png`), replaces the header lockup below 400px wide, where
+  the lockup would push the menu and action off screen.
+
+## Homepage hero photograph (owner direction, 15 Oct 2026)
+
+The owner supplied `Futuristic Cloud Infrastructure at Sunrise.png` (1672x941) and directed that it
+be the homepage hero background under a solid black overlay. It is served as WebP at 1672 and 960 px
+wide from `apps/web/public/images/hero/`, under a 72% black overlay (darkened from 60% on the same day), with the hero copy on the dark
+tone. This record covers that one placement only. Other imagery still needs the separate
+rights-cleared handoff described above.
+
+## Practice illustrations (owner direction, 15 Oct 2026)
+
+The owner supplied five illustrations (`ChatGPT Image Oct 15, 2026, …-1.png` to `-5.png`, each
+1672x941) for the homepage "Five practices, one firm" section. They are served as WebP at 1672
+and 960 px wide from `apps/web/public/images/practices/` and chosen by the locked practice names
+(`apps/web/src/lib/view-mapping/practice-images.ts`). The files were not labelled, so each was
+matched to the practice it depicts: 1 Consulting (analytics, architecture layers, a roadmap to a
+target), 5 Engineering (code, platform layers, servers, database), 4 AI & Data (data sources into
+a model, then charts), 2 Experience (mobile and web screens, accessibility, commerce) and 3 Managed
+Services (dashboards, security, support, cloud). This record covers that section only.
+
+## Solution illustrations (owner direction, 15 Oct 2026)
+
+The owner supplied six square illustrations on transparent backgrounds (`ChatGPT Image Oct 15,
+2026, 11_51_…-1.png` to `-5.png` and `Reliable Uptime Recovery Icon.png`, each 1254x1254) for the
+homepage "Problems we solve" panel. They are served as WebP at 800 and 480 px from
+`apps/web/public/images/solutions/` and chosen by the locked solution names
+(`apps/web/src/lib/view-mapping/solution-images.ts`). Matched by what each depicts: 1 AI
+Transformation (an AI chip between data and charts), 4 Business Process Modernisation (checked
+process steps around a gear), 3 Digital Product Transformation (web and mobile screens, a rocket),
+5 Application Modernisation (an application moving to servers and cloud), 2 Data & Intelligence
+Transformation (a database feeding dashboards), and the uptime icon Technology Recovery &
+Reliability (a server, a health monitor, a shield and recovery arrows).
+
+## Delivery lifecycle discs (owner direction, 15 Oct 2026)
+
+The owner supplied `Blue Circular Workflow Cycle.png` (1254x1254) for the homepage "From strategy
+to production" band and asked for its white background to be removed. Its nine discs already run
+clockwise from the top in the locked stage order (Qualify, Discover, Define, Design, Engineer,
+Validate, Release, Operate, Improve), so each disc was cut out with a circular mask (no
+background survives) and saved as a 192 px transparent WebP in
+`apps/web/public/images/how-we-work/`. The ring, arrows and labels are drawn by the page
+(`ProcessCycle`), so each stage can be interactive.
+
+## Industry photographs (owner direction, 15 Oct 2026)
+
+The owner supplied four photographs (`ChatGPT Image Oct 15, 2026, 01_28_16 PM-1.png` to
+`01_28_18 PM-4.png`, each 1448x1086, AI-generated scenes of people at work) for the homepage
+Industries panels. In order they show a clinical team (Health & Care), a store checkout (Retail,
+Commerce & Consumer), a warehouse (Operations, Industry & Logistics) and a team at a data
+dashboard (Growth & Technology). They are served as WebP at 1200 and 640 px wide from
+`apps/web/public/images/industries/`, chosen by the locked industry names
+(`apps/web/src/lib/view-mapping/industry-images.ts`), as decorative backgrounds under a midnight
+gradient. They illustrate the sectors only; they are not clients or case studies and must not be
+captioned or used as if they were.

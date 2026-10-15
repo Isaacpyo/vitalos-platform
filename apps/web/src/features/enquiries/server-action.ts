@@ -2,7 +2,9 @@
 
 import { clientIpFromHeaders } from "@vitalos/security/rate-limit";
 import { enquiryInputFromForm } from "@vitalos/validation/enquiry";
+import { routes } from "@vitalos/cms";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { scheduleDispatch } from "./http/handle-enquiry-request";
 import { correlationIdFrom } from "./http/request-guards";
@@ -25,6 +27,7 @@ export async function submitEnquiryAction(
   formData: FormData,
 ): Promise<EnquiryFormState> {
   const values = echoValues(formData);
+  let state: EnquiryFormState;
   try {
     const requestHeaders = await headers();
     const service = getEnquiryService();
@@ -36,8 +39,13 @@ export async function submitEnquiryAction(
     if (result.kind === "accepted") {
       scheduleDispatch({ service, after });
     }
-    return toFormState(result, values);
+    state = toFormState(result, values);
   } catch {
     return toFormState({ kind: "unavailable" }, values);
   }
+  // An accepted enquiry lands on the thank-you page with its reference (owner direction, 15 Oct
+  // 2026). `redirect` throws, so it runs outside the try: the catch above must not swallow it.
+  // With JavaScript the client navigates; without it the POST answers with a 303.
+  if (state.status === "accepted") redirect(routes.contactThankYou(state.reference));
+  return state;
 }

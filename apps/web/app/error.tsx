@@ -14,8 +14,15 @@ export default function ErrorPage({
 }: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
   return (
     <main id="main" tabIndex={-1}>
-      <Section as="div" spacing="large">
-        <Container>
+      {/* The dark hero band of every page (pages redesign, 15 Oct 2026). This boundary renders
+          without the site header, so the band is not pulled under one. */}
+      <Section
+        as="div"
+        tone="dark"
+        spacing="large"
+        className="rounded-b-[1.75rem] lg:rounded-b-[3rem]"
+      >
+        <Container size="wide">
           <Heading level={1}>Something went wrong</Heading>
           <Lead className="mt-(--space-4)">
             We could not load this page. You can try again, or contact us if the problem continues.
@@ -26,7 +33,9 @@ export default function ErrorPage({
             </Small>
           ) : null}
           <div className="mt-(--space-6) flex flex-wrap items-center gap-(--space-5)">
-            <Button onClick={() => reset()}>Try again</Button>
+            <Button onClick={() => reset()} variant="secondary">
+              Try again
+            </Button>
             <Button variant="text" href={routes.contact()}>
               {ctas.primary}
             </Button>

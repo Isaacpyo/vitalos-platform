@@ -1,5 +1,5 @@
 import { getEnv } from "@vitalos/config";
-import { SiteFooter } from "@vitalos/ui";
+import { MobileReveal, SiteFooter } from "@vitalos/ui";
 import { ActiveSectionHeader } from "../active-section";
 import { DraftContentRibbon } from "../draft-content-ribbon";
 import { loadSiteChrome } from "./load";
@@ -9,7 +9,7 @@ import { loadSiteChrome } from "./load";
  * gated section appears only once its gate is open) and the mega-menu and footer columns by the
  * content source. Pages render their own `<main id="main">` (see PageMain), so the shell never
  * wraps content in a second landmark. Section entrances need no controller here: each Reveal
- * island manages itself (ADR-024).
+ * island manages itself (ADR-024); MobileReveal adds a fade-in on compact screens on top.
  *
  * Used by the `(site)` layout and by the root `not-found.tsx` (the 404 for unmatched URLs, which
  * Next.js renders outside the `(site)` layout).
@@ -23,6 +23,8 @@ export async function SiteShell({ children }: Readonly<{ children: React.ReactNo
       <ActiveSectionHeader {...header} />
       {children}
       <SiteFooter {...footer} />
+      {/* Compact screens: bands and items fade in as they scroll into view (owner direction). */}
+      <MobileReveal />
     </>
   );
 }

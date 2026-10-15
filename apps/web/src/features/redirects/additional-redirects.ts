@@ -1,3 +1,4 @@
+import { routes } from "@vitalos/cms";
 import type { RedirectRule } from "./types";
 
 /**
@@ -10,5 +11,7 @@ import type { RedirectRule } from "./types";
  *   below `/blog` move with it through `sectionMoves` in `next-redirects.ts`.
  */
 export const additionalRedirects: readonly RedirectRule[] = [
+  // The Leadership page was removed (owner direction, 15 Oct 2026); its links go to About.
+  { source: "/about/leadership", destination: routes.about(), status: 301 },
   { source: "/blog", destination: "/insights", status: 308 },
 ];

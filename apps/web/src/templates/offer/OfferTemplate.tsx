@@ -1,13 +1,14 @@
-import { ctas, routes } from "@vitalos/cms";
+import { ctas, megaMenuColumns, routes } from "@vitalos/cms";
 import type { OfferView } from "@vitalos/cms";
-import { Button, DefinitionList, RelatedContentRail } from "@vitalos/ui";
-import type { DefinitionItem } from "@vitalos/ui";
+import { Button, DefinitionList, FeatureGrid, Icon } from "@vitalos/ui";
+import type { DefinitionItem, IconName } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
-import { toRailItems } from "../../lib/view-mapping/patterns";
-import { Band, ClosingAction, PageIntro, StatementList, renderBands } from "../commercial/bands";
+import { iconFor } from "../../lib/view-mapping/icons";
+import { toRows } from "../../lib/view-mapping/patterns";
+import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 
 export interface OfferTemplateProps {
   offer: OfferView;
@@ -38,8 +39,10 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
 }
 
 /**
- * Offer page (Stage 9 section 22): the engagement summary as a definition list, what the client
- * receives, what is required from them, what is not included, and where the offer leads. The call
+ * Offer page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
+ * compact dark hero with the offer's mark, the engagement summary as a definition list, what the
+ * client receives, what is required from them, what is not included (rows), and where the offer
+ * leads (icon cards), then the closing card. The call
  * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
  */
 export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
@@ -48,66 +51,121 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
     href: contactHref("offer", offer.slug),
   };
   const summary = engagementSummary(offer);
-  const solutionCards = toRailItems("solution", offer.solutions);
-  const practiceCards = toRailItems("practice", offer.practices);
+  const duration = durationLabel(offer.durationCategory);
+  const related = (kind: "solution" | "practice", items: OfferView["solutions"]) =>
+    toRows(kind, items).map((row) => ({
+      title: row.title,
+      href: row.href,
+      ...(row.summary ? { text: row.summary } : {}),
+      icon: iconFor(kind, row.title),
+    }));
+  const solutionItems = related("solution", offer.solutions);
+  const practiceItems = related("practice", offer.practices);
+  const statements = (items: readonly string[], icon?: IconName) =>
+    items.map((text) => ({ text, ...(icon ? { icon } : {}) }));
 
   return (
     <PageMain>
       <PageIntro
         crumbs={offerTrail(offer)}
+        compact
         eyebrow={structuralLabels.offers}
         title={offer.title}
         {...(offer.summary ? { lead: offer.summary } : {})}
-        actions={<Button href={cta.href}>{cta.label}</Button>}
+        actions={
+          <Button href={cta.href} variant="secondary" size="lg" arrow>
+            {cta.label}
+          </Button>
+        }
+        media={
+          <OfferMark
+            icon={iconFor("offer", offer.title)}
+            {...(duration ? { fact: { label: structuralLabels.duration, value: duration } } : {})}
+          />
+        }
       />
-      {renderBands([
-        (tone) =>
-          summary.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.engagement}>
-              <DefinitionList
-                items={summary}
-                className="max-w-(--container-content) border-b border-tone-border"
-              />
-            </Band>
-          ) : null,
-        (tone) =>
-          offer.outputs.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.outputs}>
-              <StatementList items={offer.outputs} />
-            </Band>
-          ) : null,
-        (tone) =>
-          offer.requirements.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.requirements}>
-              <StatementList items={offer.requirements} />
-            </Band>
-          ) : null,
-        (tone) =>
-          offer.exclusions.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.exclusions}>
-              <StatementList items={offer.exclusions} />
-            </Band>
-          ) : null,
-        (tone) =>
-          solutionCards ? (
-            <Band tone={tone}>
-              <RelatedContentRail
+      {renderBands(
+        [
+          (tone) =>
+            summary.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.engagement} eyebrow={offer.title}>
+                <DefinitionList
+                  items={summary}
+                  className="max-w-(--container-content) border-b border-tone-border"
+                />
+              </Band>
+            ) : null,
+          (tone) =>
+            offer.outputs.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.outputs} eyebrow={offer.title}>
+                <FeatureGrid variant="rows" items={statements(offer.outputs)} />
+              </Band>
+            ) : null,
+          (tone) =>
+            offer.requirements.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.requirements} eyebrow={offer.title}>
+                <FeatureGrid variant="rows" items={statements(offer.requirements, "users")} />
+              </Band>
+            ) : null,
+          (tone) =>
+            offer.exclusions.length > 0 ? (
+              <Band tone={tone} heading={structuralLabels.exclusions} eyebrow={offer.title}>
+                <FeatureGrid variant="rows" items={statements(offer.exclusions, "minus")} />
+              </Band>
+            ) : null,
+          (tone) =>
+            solutionItems.length > 0 ? (
+              <Band
+                tone={tone}
                 heading={structuralLabels.relatedSolutions}
-                items={solutionCards}
-              />
-            </Band>
-          ) : null,
-        (tone) =>
-          practiceCards ? (
-            <Band tone={tone}>
-              <RelatedContentRail
+                eyebrow={megaMenuColumns.solutions}
+              >
+                <FeatureGrid items={solutionItems} />
+              </Band>
+            ) : null,
+          (tone) =>
+            practiceItems.length > 0 ? (
+              <Band
+                tone={tone}
                 heading={structuralLabels.relatedPractices}
-                items={practiceCards}
-              />
-            </Band>
-          ) : null,
-      ])}
-      <ClosingAction link={cta} />
+                eyebrow={megaMenuColumns.practices}
+              >
+                <FeatureGrid items={practiceItems} />
+              </Band>
+            ) : null,
+        ],
+        "light",
+      )}
+      <ClosingBand primary={cta} />
     </PageMain>
+  );
+}
+
+/**
+ * The offer's mark beside the hero copy: its icon on a frosted panel with the typical duration,
+ * in the hero panel's style. Decorative apart from the fact, which is also in the summary below.
+ */
+function OfferMark({
+  icon,
+  fact,
+}: Readonly<{ icon: IconName; fact?: { label: string; value: string } }>) {
+  return (
+    <div className="relative mx-auto grid aspect-square w-full max-w-sm place-items-center overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-xl">
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,color-mix(in_srgb,var(--color-blue-600)_45%,transparent),transparent_65%)]"
+      />
+      <span
+        aria-hidden="true"
+        className="relative inline-flex size-28 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-floating"
+      >
+        <Icon name={icon} size={32} className="scale-150" />
+      </span>
+      {fact ? (
+        <p className="absolute inset-x-(--space-5) bottom-(--space-5) m-0 rounded-xl bg-white/90 px-(--space-4) py-(--space-3) text-center text-small text-midnight-950">
+          <span className="font-semibold">{fact.label}:</span> {fact.value}
+        </p>
+      ) : null}
+    </div>
   );
 }
