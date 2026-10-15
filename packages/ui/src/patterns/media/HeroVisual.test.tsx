@@ -25,4 +25,15 @@ describe("HeroVisual process card", () => {
     expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
     expect(container.querySelector(".hv-card")).toBeNull();
   });
+
+  it("glass: every step on the panel, no tint planes, idle loops on the panel only", () => {
+    const steps = ["Assess", "Build", "Run"];
+    const { container } = render(<HeroVisual steps={steps} variant="glass" />);
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    expect(container.querySelectorAll('[class*="skew-x-12"]')).toHaveLength(0);
+    expect(Array.from(container.querySelectorAll("li"), (li) => li.textContent)).toEqual(steps);
+    expect(container.querySelectorAll(".hv-pulse")).toHaveLength(1);
+    expect(container.querySelectorAll(".hv-bar-idle")).toHaveLength(5);
+    expect(container.querySelector(".hv-float .hv-card")).not.toBeNull();
+  });
 });

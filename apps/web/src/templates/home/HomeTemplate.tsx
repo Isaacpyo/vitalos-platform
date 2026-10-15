@@ -1,4 +1,5 @@
 import type { HomePageView, PublicationGates } from "@vitalos/cms";
+import type { DerivedStage } from "../../lib/view-mapping/stages";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { renderBands } from "../commercial/bands";
 import { HeroSection, finalConversionSection, homeBands } from "./sections";
@@ -8,6 +9,8 @@ export interface HomeTemplateProps {
   home: HomePageView | null;
   gates: PublicationGates;
   howWeWorkIntro?: string | undefined;
+  /** The How We Work stages with their descriptions, for the lifecycle ring. */
+  howWeWorkStages?: readonly DerivedStage[] | undefined;
 }
 
 /**
@@ -15,8 +18,13 @@ export interface HomeTemplateProps {
  * call to action. The hero never depends on the CMS, so the page always has its h1 and its two
  * actions; every other section is omitted when it has no data.
  */
-export function HomeTemplate({ home, gates, howWeWorkIntro }: Readonly<HomeTemplateProps>) {
-  const context = home ? { home, gates, howWeWorkIntro } : null;
+export function HomeTemplate({
+  home,
+  gates,
+  howWeWorkIntro,
+  howWeWorkStages,
+}: Readonly<HomeTemplateProps>) {
+  const context = home ? { home, gates, howWeWorkIntro, howWeWorkStages } : null;
   return (
     <PageMain>
       <HeroSection />

@@ -515,7 +515,7 @@ describe("insights, journey and footer", () => {
     expect(screen.getByText(/Example gate \(fixture\)/)).toBeTruthy();
   });
 
-  it("SiteFooter omits empty columns and empty contact or identity blocks", () => {
+  it("SiteFooter omits empty columns and an empty identity block", () => {
     const { container } = render(
       <SiteFooter
         columns={[
@@ -526,12 +526,10 @@ describe("insights, journey and footer", () => {
           },
           { key: "b", heading: "Example empty column (fixture)", links: [] },
         ]}
-        contact={{ heading: "Example contact (fixture)" }}
         legalIdentity={{ lines: ["", "  "] }}
       />,
     );
     expect(screen.queryByText("Example empty column (fixture)")).toBeNull();
-    expect(screen.queryByText("Example contact (fixture)")).toBeNull();
     expect(container.querySelectorAll("footer h2")).toHaveLength(1);
   });
 
@@ -553,20 +551,19 @@ describe("insights, journey and footer", () => {
     expect(screen.getByRole("list", { name: "Example column (fixture)" })).toBeTruthy();
   });
 
-  it("SiteFooter renders brand, contact and legal identity from props only", () => {
-    render(
+  it("SiteFooter renders brand, social marks and a centred legal identity from props only", () => {
+    const { container } = render(
       <SiteFooter
         brand={{
           descriptor: "Example descriptor (fixture)",
           proposition: "Example proposition (fixture)",
           wordmarkText: "Example brand (fixture)",
+          social: [
+            { label: "LinkedIn", href: "https://www.linkedin.com/company/example" },
+            { label: "Example network (fixture)", href: url("s") },
+          ],
         }}
         columns={[]}
-        contact={{
-          heading: "Example contact (fixture)",
-          email: "hello@example.invalid",
-          social: [{ label: "Example social (fixture)", href: url("s") }],
-        }}
         legalIdentity={{
           heading: "Example identity (fixture)",
           lines: ["Example company (fixture)"],
@@ -574,10 +571,15 @@ describe("insights, journey and footer", () => {
       />,
     );
     expect(screen.getByText("Example descriptor (fixture)")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "hello@example.invalid" }).getAttribute("href")).toBe(
-      "mailto:hello@example.invalid",
-    );
-    expect(screen.getByText("Example company (fixture)")).toBeTruthy();
+    const linkedin = screen.getByRole("link", { name: "Vitalos on LinkedIn" });
+    expect(linkedin.querySelector("svg")).not.toBeNull();
+    // A network without a mark falls back to its name.
+    expect(
+      screen.getByRole("link", { name: "Vitalos on Example network (fixture)" }).textContent,
+    ).toBe("Example network (fixture)");
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull();
+    const identity = screen.getByText("Example company (fixture)").closest("div.text-center");
+    expect(identity).not.toBeNull();
   });
 
   it("TerminalCTA renders its action and optional secondary link", () => {

@@ -14,11 +14,11 @@ export const descriptor = "Technology Consulting, Engineering & Digital Transfor
 /** Homepage H1. Owner-approved 2026-10-12; replaces the Stage 0 / Stage 8 §8 / Stage 11 §9 sentence (see propositionLong). */
 export const proposition = "Modernise. Build. Adopt AI.";
 
-/** The earlier long proposition sentence (Stage 0 §0; Stage 8 §8; Stage 11 §9). Not shown on the page; non-visible SEO text only (default meta description). */
+/** The long proposition sentence (Stage 0 §0; Stage 8 §8; Stage 11 §9): the hero's supporting line under the H1 since 15 Oct 2026 (owner direction, replacing the brand line there), the Who We Are menu card, and the default meta description. */
 export const propositionLong =
   "We help ambitious organisations modernise operations, build digital products and adopt AI.";
 
-/** Brand line; supporting line beneath the H1, never the H1. Stage 0 §0; Stage 8 §8 (Homepage hero). */
+/** Brand line. Stage 0 §0; Stage 8 §8 (Homepage hero). No longer shown on the site: the hero's supporting line is `propositionLong` since 15 Oct 2026 (owner direction). */
 export const brandLine = "From strategy to production.";
 
 /** Masterbrand name. Stage 0 §0. */
@@ -46,12 +46,15 @@ export const navLabels = {
   /** Stage 8 §6 (Utility/footer navigation). */
   contact: "Contact",
   careers: "Careers",
-  leadership: "Leadership",
   legal: "Legal",
   accessibility: "Accessibility",
   /** Stage 8 §6 (What We Do mega-menu, Explore column). */
   howWeWork: "How We Work",
   allWhatWeDo: "All What We Do",
+  /** Primary menus and FAQ (owner direction, 15 Oct 2026). */
+  whoWeAre: "Who We Are",
+  support: "Support",
+  faq: "FAQ",
 } as const;
 
 /** What We Do mega-menu column titles. Stage 8 §6 (What We Do mega-menu); Stage 9 §12 (Mega-menu). */
@@ -84,16 +87,23 @@ export const practiceNames = [
 export const practiceDisplayName = (name: (typeof practiceNames)[number]): string =>
   `${brandName} ${name}`;
 
-/** Solutions (names). Stage 8 §6 (mega-menu), §11 (Initial five); Stage 10 §12. */
+/**
+ * Solutions (names). Stage 8 §6 (mega-menu), §11 (Initial five); Stage 10 §12. The sixth,
+ * Technology Recovery & Reliability (Stage 3 §9), was locked by owner direction on 15 Oct 2026.
+ */
 export const solutionNames = [
   "AI Transformation",
   "Business Process Modernisation",
   "Digital Product Transformation",
   "Application Modernisation",
   "Data & Intelligence Transformation",
+  "Technology Recovery & Reliability",
 ] as const;
 
-/** Offers (names). Stage 8 §12 (Initial offer set). */
+/**
+ * Offers (names). Stage 8 §12 (Initial offer set). The thirteenth, Product Discovery (Stage 3 and
+ * Stage 4 catalogues), was locked by owner direction on 15 Oct 2026.
+ */
 export const offerNames = [
   "Digital Transformation Discovery",
   "Technology Health Assessment",
@@ -107,6 +117,7 @@ export const offerNames = [
   "Customer Experience Transformation",
   "Engineering Rescue",
   "Managed Engineering & Application Care",
+  "Product Discovery",
 ] as const;
 
 /** Priority offers (names). Stage 10 §12 (Launch-critical pages, "Offers - priority"). */
@@ -213,27 +224,22 @@ export const homeSections = [
     visibleHeading: "Five practices, one firm",
   },
   {
-    key: "aiAtTheCentre",
-    structuralLabel: "AI at the centre",
-    /** Stage 11 §9 mockup brief, item 5. */
-    visibleHeading: "AI at the centre",
-  },
-  {
     key: "selectedWork",
     structuralLabel: "Selected Work",
     /** Stage 11 §9 mockup brief, item 6. */
     visibleHeading: "Selected Work",
   },
   { key: "industries", structuralLabel: "Industries" },
-  { key: "trust", structuralLabel: "Trust" },
   { key: "labs", structuralLabel: "Labs" },
   { key: "insights", structuralLabel: "Insights" },
-  { key: "leadership", structuralLabel: "Leadership" },
   {
     key: "finalConversion",
     structuralLabel: "Final conversion",
-    /** Stage 11 §9 mockup brief, item 12; Stage 11 §30. */
-    visibleHeading: "Bring us the problem.",
+    /**
+     * Stage 11 §9 mockup brief, item 12; Stage 11 §30 ("Bring us the problem."), changed by owner
+     * direction on 15 Oct 2026. The contact page keeps "Bring us the problem." as its heading.
+     */
+    visibleHeading: "Have a problem worth solving?",
   },
 ] as const satisfies readonly {
   key: string;

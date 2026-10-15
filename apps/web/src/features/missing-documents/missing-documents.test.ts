@@ -29,7 +29,7 @@ describe("matchDetailRoute", () => {
       "/what-we-do",
       "/solutions",
       "/labs",
-      "/about/leadership",
+      "/faq",
       "/contact",
       "/api/health",
       "/_next/static/x.js",

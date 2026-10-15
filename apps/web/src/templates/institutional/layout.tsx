@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Container, Eyebrow, Heading, Lead, PageHero, Section, Stack } from "@vitalos/ui";
 import type { HeadingLevel, ContainerSize, SectionTone } from "@vitalos/ui";
+import { heroPhotograph } from "../../lib/view-mapping/hero-images";
 
 /** A page band: Section plus Container. The page's own `<main>` is `PageMain`. */
 export function PageBand({
@@ -29,8 +30,10 @@ export function PageBand({
 }
 
 /**
- * The page's first band (the owner comp's page hero, ADR-023): eyebrow, the single
- * H1, an optional lead, then anything beneath them, on a light field with a decorative plane.
+ * The page's first band: the homepage hero's language (pages redesign, 15 Oct 2026), a dark band
+ * under the clear header with the hero photograph and rounded bottom corners. The eyebrow, the
+ * single H1, an optional lead, then anything beneath them; optional media on the right. `full`
+ * is the larger hero of a top-level page (About, Trust Centre, Careers, Insights, Labs).
  */
 export function PageHeroBand({
   crumbs,
@@ -38,10 +41,12 @@ export function PageHeroBand({
   eyebrow,
   lead,
   afterTitle,
-  size = "content",
+  actions,
+  media,
+  full = false,
   children,
 }: Readonly<{
-  /** Content width; match the PageBand that follows. */
+  /** Retained for callers: every hero now uses the wide container, like the homepage. */
   size?: ContainerSize;
   /** Invisible BreadcrumbList JSON-LD element (Breadcrumbs); no visible trail. */
   crumbs?: ReactNode;
@@ -50,18 +55,28 @@ export function PageHeroBand({
   lead?: string | undefined;
   /** Rendered directly under the H1, before the lead (for example the maturity badge). */
   afterTitle?: ReactNode;
+  /** Actions under the lead. */
+  actions?: ReactNode;
+  /** Media beside the copy from lg (a MediaSlot). */
+  media?: ReactNode;
+  /** The larger hero of a top-level page. */
+  full?: boolean;
   children?: ReactNode;
 }>) {
   return (
     <>
       {crumbs}
       <PageHero
-        size="title"
-        containerSize={size}
+        tone="dark"
+        backdrop={heroPhotograph}
+        size={full ? "display" : "title"}
+        containerSize="wide"
         title={title}
         eyebrow={eyebrow}
         lead={lead}
         afterTitle={afterTitle}
+        actions={actions}
+        media={media}
       >
         {children ? <Stack gap={4}>{children}</Stack> : null}
       </PageHero>

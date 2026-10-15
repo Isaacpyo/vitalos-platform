@@ -72,6 +72,7 @@ test.describe("draft content source", () => {
 
     // After a client-side navigation from the menu, the ribbon is still shown.
     await menu.click();
+    await nav.locator("details summary", { hasText: "Who We Are" }).first().click();
     await nav.getByRole("link", { name: "About", exact: true }).click();
     await expect(page).toHaveURL(/\/about$/);
     await expect(ribbon(page)).toBeVisible();
@@ -85,16 +86,21 @@ test.describe("draft content source", () => {
       "Problems we solve",
       "From strategy to production",
       "Five practices, one firm",
-      "AI at the centre",
       "Industries",
-      "Trust",
       "Vitalos Labs",
-      "Bring us the problem.",
+      "Have a problem worth solving?",
     ]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     }
-    // The home page stays free of placeholder content: no Selected Work, Insights or Leadership.
-    for (const heading of ["Selected Work", "Insights", "Leadership"]) {
+    // The home page stays free of placeholder content (no Selected Work or Insights), and the
+    // Trust, Leadership and AI at the centre bands were removed (owner direction, 15 Oct 2026).
+    for (const heading of [
+      "Selected Work",
+      "Insights",
+      "Trust",
+      "Leadership",
+      "AI at the centre",
+    ]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toHaveCount(0);
     }
   });
@@ -117,7 +123,6 @@ test.describe("draft content source", () => {
     "/insights",
     "/insights/why-ai-pilots-stall-before-production",
     "/people/alex-morgan",
-    "/about/leadership",
     "/careers",
     "/careers/senior-engineer-technical-lead",
   ]) {

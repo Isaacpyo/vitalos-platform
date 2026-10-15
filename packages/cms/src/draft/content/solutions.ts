@@ -1,7 +1,7 @@
 /**
- * Cross-practice solutions (Stage 3 §9; Stage 8 §11). The first five names are locked copy
- * (`solutionNames`, Stage 8 §11 "Initial five"); Technology Recovery & Reliability is the sixth
- * Stage 3 §9 solution play and is not in the locked list, so its title needs owner confirmation.
+ * Cross-practice solutions (Stage 3 §9; Stage 8 §11). All six names are locked copy
+ * (`solutionNames`): Stage 8 §11's initial five, and Technology Recovery & Reliability, the sixth
+ * Stage 3 §9 solution play, locked by owner direction on 15 Oct 2026.
  */
 import { solutionNames } from "../../locked-copy";
 import type { SolutionView } from "../../content/types";
@@ -21,19 +21,18 @@ export interface SolutionDraft extends Omit<
   provenance: DraftProvenance;
 }
 
-const [aiTitle, bpmTitle, dptTitle, appModTitle, dataTitle] = solutionNames;
+const [aiTitle, bpmTitle, dptTitle, appModTitle, dataTitle, recoveryTitle] = solutionNames;
 
 const aiTransformation: SolutionDraft = {
   slug: "ai-transformation",
   title: aiTitle,
-  summary:
-    "AI pressure exists, but value, governance, data and the path to production are unclear. Turn AI ambition into operational value.",
+  summary: "Turn AI ambition into operational value.",
   seo: seo(
     "AI Transformation",
     "Move from scattered AI pilots to governed, production AI that creates measurable value.",
   ),
   problemStatement:
-    "Organisations face pressure to adopt AI, but value depends on choosing the right use cases, having data that is ready, governing the risk, integrating with real workflows and running reliably in production. Leadership wants measurable results without a safe, prioritised route from experimentation to production.",
+    "AI value depends on the right use cases, ready data, governed risk, real workflow integration and reliable production. Leadership wants measurable results but lacks a safe, prioritised route to production.",
   signals: [
     "AI pilots are scattered across teams and few have reached production.",
     "The return on AI investment is unclear.",
@@ -43,15 +42,15 @@ const aiTransformation: SolutionDraft = {
     "Prototypes that impressed in a demonstration stall before production.",
   ],
   impact:
-    "Without a prioritised route, AI effort spreads across disconnected experiments that never reach live use. Data, security and governance gaps surface late, and operational cost, reliability and dependence on a single vendor are discovered only after commitments have been made.",
+    "Without a prioritised route, AI effort spreads across experiments that never go live. Gaps in data, security and governance surface late, as do cost, reliability and single-vendor dependence.",
   approach: richText(
     "solution-ai-approach",
     p(
-      "Successful AI transformation needs more than a model. It needs a value strategy, data readiness, product and engineering work, Responsible AI, change and adoption, and managed operation once the capability is live.",
+      "AI transformation needs more than a model. It needs a value strategy, ready data, product and engineering work, Responsible AI, adoption and managed operation once live.",
     ),
     h2("One team across practices"),
     p(
-      "Consulting identifies and prioritises opportunities and builds the business case. AI & Data designs, evaluates and governs the capability. Engineering integrates and secures it in production. Managed Services operates, evaluates and improves it. Experience joins where the interface matters. You work with one accountable engagement lead throughout.",
+      "Consulting prioritises and builds the case, AI & Data designs and governs, Engineering integrates and secures, and Managed Services runs it. Experience joins where the interface matters, all under one accountable engagement lead.",
     ),
     h2("Principles we hold to"),
     ul(
@@ -65,12 +64,12 @@ const aiTransformation: SolutionDraft = {
     {
       title: "Assess",
       description:
-        "Identify where AI could create value, and the readiness gaps in data, process, controls and skills.",
+        "Find where AI could create value and the gaps in data, process, controls and skills.",
     },
     {
       title: "Prioritise",
       description:
-        "Rank opportunities by value, feasibility, data readiness and risk, and choose the use case worth testing.",
+        "Rank opportunities by value, feasibility, data readiness and risk; choose one worth testing.",
     },
     {
       title: "Prototype",
@@ -144,14 +143,13 @@ const aiTransformation: SolutionDraft = {
 const businessProcess: SolutionDraft = {
   slug: "business-process-modernisation",
   title: bpmTitle,
-  summary:
-    "Manual, fragmented or inefficient operations constrain growth and service. Redesign the work, then automate and integrate it.",
+  summary: "Redesign the work, then automate and integrate it.",
   seo: seo(
     "Business Process Modernisation",
     "Redesign manual, fragmented operations, then automate and integrate them so the business can grow.",
   ),
   problemStatement:
-    "Manual, slow or fragmented workflows create cost, delay and risk. When critical processes depend on spreadsheets, re-keying, email chains and disconnected tools, operations limit growth and service quality instead of supporting them.",
+    "Manual, slow or fragmented workflows create cost, delay and risk. When critical processes run on spreadsheets, re-keying and email, operations hold back growth and service quality.",
   signals: [
     "Critical processes depend on spreadsheets, manual re-keying or email chains.",
     "The same information is entered into several systems by hand.",
@@ -160,26 +158,26 @@ const businessProcess: SolutionDraft = {
     "Growing volume means adding people to the same manual steps.",
   ],
   impact:
-    "Fragmented operations add cost and delay to every transaction, introduce errors at each manual handoff and make service quality depend on individual effort. They also hide the operational data leaders need to improve the business.",
+    "Fragmented operations add cost, delay and errors at every manual handoff, and make service depend on individual effort. They also hide the data leaders need to improve the business.",
   approach: richText(
     "solution-bpm-approach",
     p(
-      "We start from the process, not the technology: map how the work happens today, redesign it, then use software, integration, automation and AI where each helps. Analytics show whether the change worked.",
+      "We start from the process, not the technology: map it, redesign it, then apply software, integration, automation and AI where each helps. Analytics show whether it worked.",
     ),
     h2("One team across practices"),
     p(
-      "Consulting leads process discovery and redesign. Engineering builds and integrates the systems. AI & Data adds intelligent automation and operational intelligence. Experience makes the new workflow usable for the people who run it.",
+      "Consulting leads discovery and redesign, Engineering builds and integrates, and AI & Data adds automation and operational intelligence. Experience makes the new workflow usable for the people who run it.",
     ),
     h2("Automation that stays reliable"),
     p(
-      "Deterministic workflow automation, systems integration and AI are combined deliberately. Integrations are validated for failure modes, retries and dependence on external systems before they carry live work.",
+      "We combine deterministic automation, integration and AI deliberately. Integrations are validated for failures, retries and external dependencies before they carry live work.",
     ),
   ),
   phases: [
     {
       title: "Discover",
       description:
-        "Map the current process, the people and systems involved, the pain points and the measures that matter.",
+        "Map the current process, people, systems, pain points and the measures that matter.",
     },
     {
       title: "Redesign the process",
@@ -189,7 +187,7 @@ const businessProcess: SolutionDraft = {
     {
       title: "Automate and integrate",
       description:
-        "Build the software, integrations and automation the redesigned workflow needs, with AI where it adds value.",
+        "Build the software, integrations and automation needed, with AI where it adds value.",
     },
     {
       title: "Measure",
@@ -247,16 +245,15 @@ const businessProcess: SolutionDraft = {
 const digitalProduct: SolutionDraft = {
   slug: "digital-product-transformation",
   title: dptTitle,
-  summary:
-    "A new or existing digital product must create measurable value for customers or employees. Discover, design, engineer, launch and improve it.",
+  summary: "Discover, design, engineer, launch and improve a digital product.",
   seo: seo(
     "Digital Product Transformation",
     "Discover, design, engineer and keep improving a digital product that creates measurable customer or employee value.",
   ),
   problemStatement:
-    "The organisation needs a new platform, portal, application, commerce experience or digital service, or an existing one that works much better. The product has to create measurable value for customers or employees, not just ship features.",
+    "The organisation needs a new or much better platform, portal, application, commerce experience or digital service. It must create measurable value for customers or employees, not just ship features.",
   signals: [
-    "A new digital proposition is planned but its users, journeys and scope are not yet validated.",
+    "A new digital proposition is planned but its users, journeys and scope are unvalidated.",
     "An existing product has weak adoption or a poor experience.",
     "Customer or employee journeys are fragmented across tools.",
     "The product cannot change quickly enough to keep up with the business.",
@@ -267,18 +264,18 @@ const digitalProduct: SolutionDraft = {
   approach: richText(
     "solution-dpt-approach",
     p(
-      "Experience leads discovery and design, Engineering builds for production, and Consulting keeps the product tied to the business outcome. Discovery, design and engineering run as one engagement rather than separate handoffs.",
+      "Experience leads discovery and design, Engineering builds for production and Consulting ties it to the business outcome. Discovery, design and engineering run as one engagement, not separate handoffs.",
     ),
     h2("From discovery to continuous improvement"),
     p(
-      "Product discovery validates the problem, users, journeys and scope before major build. Engineering then delivers working increments with testing, security and accessibility checks, and the product keeps improving after launch.",
+      "Discovery validates the problem, users, journeys and scope before major build. Engineering then delivers increments with testing, security and accessibility checks, and keeps improving after launch.",
     ),
   ),
   phases: [
     {
       title: "Discover",
       description:
-        "Validate the problem, users, journeys and scope, and set the direction for a prototype and delivery backlog.",
+        "Validate the problem, users, journeys and scope, and set prototype and backlog direction.",
     },
     {
       title: "Design",
@@ -293,7 +290,7 @@ const digitalProduct: SolutionDraft = {
     {
       title: "Launch",
       description:
-        "Validate the release for function, security, performance and accessibility, then move to production with rollback planned.",
+        "Validate function, security, performance and accessibility, then release to production with rollback planned.",
     },
     {
       title: "Improve",
@@ -341,8 +338,7 @@ const digitalProduct: SolutionDraft = {
 const applicationModernisation: SolutionDraft = {
   slug: "application-modernisation",
   title: appModTitle,
-  summary:
-    "Legacy applications create cost, risk, slowness or integration limits. Modernise in controlled stages towards a platform you can keep changing.",
+  summary: "Modernise in controlled stages towards a platform you can keep changing.",
   seo: seo(
     "Application Modernisation",
     "Assess, re-architect and progressively modernise legacy applications, then operate them reliably.",
@@ -361,11 +357,11 @@ const applicationModernisation: SolutionDraft = {
   approach: richText(
     "solution-appmod-approach",
     p(
-      "Modernisation starts with an honest assessment of architecture, dependencies and migration constraints. From there we agree a target architecture and modernise, replace or progressively refactor in controlled stages, so the business keeps running while the system changes.",
+      "Modernisation starts with an honest assessment of architecture, dependencies and migration constraints. We then agree a target and modernise, replace or refactor in controlled stages while the business keeps running.",
     ),
     h2("One team across practices"),
     p(
-      "Consulting leads assessment and target architecture. Engineering migrates and refactors. Managed Services takes over operation through a formal transition, so the modernised system does not stagnate.",
+      "Consulting leads assessment and target architecture, and Engineering migrates and refactors. Managed Services then takes over through a formal transition, so the system does not stagnate.",
     ),
   ),
   phases: [
@@ -439,8 +435,7 @@ const applicationModernisation: SolutionDraft = {
 const dataIntelligence: SolutionDraft = {
   slug: "data-intelligence-transformation",
   title: dataTitle,
-  summary:
-    "Data is fragmented, unreliable or not turning into decisions and AI capability. Build the foundation, then the intelligence on top of it.",
+  summary: "Build the foundation, then the intelligence on top of it.",
   seo: seo(
     "Data & Intelligence Transformation",
     "Connect, clean, model and govern your data, then build the reporting and AI capability decisions depend on.",
@@ -463,14 +458,14 @@ const dataIntelligence: SolutionDraft = {
     h2("Controls that keep data trustworthy"),
     ul(
       "Source ownership and lineage.",
-      "Data quality expectations and monitoring for pipeline failure and freshness.",
+      "Quality expectations, with pipeline failure and freshness monitoring.",
       "Schema and contract management.",
       "Access control, minimisation, and retention and deletion rules.",
       "Documented business definitions for the metrics that matter.",
     ),
     h2("One team across practices"),
     p(
-      "AI & Data leads the data and intelligence work, Consulting ties it to the decisions the business needs to make, and Engineering integrates the source systems.",
+      "AI & Data leads, Consulting ties the work to business decisions and Engineering integrates the source systems.",
     ),
   ),
   phases: [
@@ -492,7 +487,7 @@ const dataIntelligence: SolutionDraft = {
     {
       title: "Intelligence",
       description:
-        "Deliver trusted reporting, metrics and decision systems, and advanced analytics or AI where the foundation supports them.",
+        "Deliver trusted reporting, metrics and decision systems, plus analytics or AI where the foundation allows.",
     },
     {
       title: "Managed data",
@@ -539,9 +534,9 @@ const dataIntelligence: SolutionDraft = {
 
 const technologyRecovery: SolutionDraft = {
   slug: "technology-recovery-reliability",
-  title: "Technology Recovery & Reliability",
+  title: recoveryTitle,
   summary:
-    "A critical platform is unstable, slow or unfinished. Triage it, establish a known baseline, stabilise and remediate, then operate it.",
+    "Triage a critical platform, establish a known baseline, stabilise and remediate, then operate it.",
   seo: seo(
     "Technology Recovery & Reliability",
     "Stabilise and recover a critical platform that is unstable, slow or unfinished, then keep it reliable.",
@@ -564,7 +559,7 @@ const technologyRecovery: SolutionDraft = {
     ),
     h2("Honest about outcomes"),
     p(
-      "Before accepting a service commitment for an inherited system, we assess ownership and access, architecture, code, security, data, operations and documentation. If the risk, access or legality make responsible support impossible, we say so.",
+      "Before committing to support an inherited system, we assess ownership, access, architecture, code, security, data, operations and documentation. If the risk, access or legality make responsible support impossible, we say so.",
     ),
   ),
   phases: [
@@ -632,7 +627,7 @@ const technologyRecovery: SolutionDraft = {
       cite(3, "13.3 Commercial behaviour"),
       cite(4, "Transition choices"),
     ],
-    "Title not in locked copy: Stage 3 §9 lists six solution plays, Stage 8 §11 locks the initial five. The owner decides whether this sixth solution is published.",
+    "Stage 3 §9 lists six solution plays and Stage 8 §11 locked the initial five; the owner locked this sixth one on 15 Oct 2026.",
   ),
 };
 

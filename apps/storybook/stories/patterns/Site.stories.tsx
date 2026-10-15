@@ -174,13 +174,9 @@ export const Footer: Story = {
         descriptor: "Example descriptor (fixture)",
         proposition: "Example proposition (fixture). Placeholder text, not product copy.",
         homeHref: url(""),
-      }}
-      columns={columns}
-      contact={{
-        heading: "Example contact (fixture)",
-        email: "hello@example.invalid",
         social: [{ label: "Example social (fixture)", href: url("social") }],
       }}
+      columns={columns}
       legalIdentity={{
         heading: "Example identity (fixture)",
         lines: ["Example company name (fixture)", "Example registration details (fixture)"],

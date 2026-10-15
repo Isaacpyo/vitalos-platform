@@ -218,6 +218,148 @@ html {
   }
 }
 
+/* Ambient hero motion (owner decision 2026-10-15): small, slow, looping movement on the homepage
+   hero photograph and its glass panel, and the Industries band's aurora. It is the one exception to the finite rule above, so it
+   comes with a pause switch (WCAG 2.2.2): while a [data-motion-pause] checkbox inside a
+   [data-motion-scope] is checked, every animation in that scope is held. Under reduced motion none
+   of it runs and the switch is hidden. Transform, opacity and stroke-dashoffset only. */
+@keyframes hv-drift {
+  from {
+    scale: 1.04;
+    translate: 0 0;
+  }
+  to {
+    scale: 1.12;
+    translate: -2% -1%;
+  }
+}
+
+@keyframes hv-float {
+  50% {
+    translate: 0 -0.375rem;
+  }
+}
+
+@keyframes hv-glint {
+  0%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes hv-pulse {
+  from {
+    opacity: 0.6;
+    scale: 1;
+  }
+  70%,
+  to {
+    opacity: 0;
+    scale: 2.4;
+  }
+}
+
+@keyframes hv-rail {
+  from {
+    scale: 1 0;
+  }
+}
+
+@keyframes hv-stream {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+/* The Industries band's aurora (AuroraBackdrop): three light fields drifting out of step. */
+@keyframes hv-aurora-a {
+  50% {
+    translate: 14% 10%;
+    scale: 1.15;
+  }
+}
+
+@keyframes hv-aurora-b {
+  50% {
+    translate: -12% -8%;
+    scale: 1.2;
+  }
+}
+
+@keyframes hv-aurora-c {
+  50% {
+    translate: 10% -12%;
+    scale: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hv-drift {
+    animation: hv-drift 40s ease-in-out infinite alternate both;
+  }
+  .hv-float {
+    animation: hv-float 7s ease-in-out 1.2s infinite;
+  }
+  .hv-glint {
+    animation: hv-glint 4.8s ease-in-out var(--d, 0s) infinite both;
+  }
+  .hv-pulse {
+    animation: hv-pulse 2.8s ease-out var(--d, 0s) infinite both;
+  }
+  .hv-rail {
+    transform-origin: top;
+    animation: hv-rail 1400ms var(--ease-standard) 600ms both;
+  }
+  .hv-stream {
+    animation: hv-stream 3s linear infinite;
+  }
+  .hv-aurora-a {
+    animation: hv-aurora-a 22s ease-in-out infinite;
+  }
+  .hv-aurora-b {
+    animation: hv-aurora-b 26s ease-in-out infinite;
+  }
+  .hv-aurora-c {
+    animation: hv-aurora-c 30s ease-in-out infinite;
+  }
+  .hv-bar-idle {
+    transform-origin: bottom;
+    animation:
+      hv-bar var(--duration-entrance) var(--ease-emphasis) var(--d) both,
+      hv-wave 2600ms ease-in-out calc(var(--d) + 600ms + var(--w)) infinite;
+  }
+}
+
+/* Fade-in on compact screens (MobileReveal, owner direction 2026-10-15): bands and items that start
+   below the fold fade and rise into place once. Set only by script after hydration, below lg,
+   with motion allowed; screen only, so print never inherits a held state. Opacity and translate
+   only (the rest of an element's own motion is untouched). */
+@media screen and (max-width: 63.99rem) and (prefers-reduced-motion: no-preference) {
+  [data-m-reveal] {
+    transition:
+      opacity 700ms var(--ease-standard) var(--m-delay, 0ms),
+      translate 700ms var(--ease-emphasis) var(--m-delay, 0ms);
+  }
+  [data-m-reveal="armed"] {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
+[data-motion-scope]:has([data-motion-pause]:checked) * {
+  animation-play-state: paused !important;
+}
+
+label:has(> [data-motion-pause]:focus-visible) {
+  outline: var(--focus-width) solid var(--tone-focus);
+  outline-offset: var(--focus-offset);
+}
+
 /* Print and reduced motion (ADR-024): an entrance that has not run yet (content never scrolled
    to) or is mid-way must never clip or shift content on paper, nor once the visitor switches on
    reduced motion while the page is open. Overrides the inline styles the Reveal islands set. */

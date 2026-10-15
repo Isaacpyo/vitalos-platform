@@ -73,7 +73,10 @@ describe("repo content hygiene", () => {
       contactEmail: "support@vitalos.co.uk",
     });
     expect(settings.logo).toBeUndefined();
-    expect(settings.social ?? []).toEqual([]);
+    expect(settings.social).toEqual([
+      { label: "LinkedIn", href: "https://www.linkedin.com/company/vitalos" },
+      { label: "X", href: "https://x.com/vitalos" },
+    ]);
     expect(settings.securityEmail).toBeUndefined();
   });
 

@@ -11,7 +11,6 @@ describe("route gates", () => {
     expect(gateForRoutePage("industries")).toBe("industries");
     expect(gateForRoutePage("careers")).toBe("careers");
     expect(gateForRoutePage("about")).toBeUndefined();
-    expect(gateForRoutePage("leadership")).toBeUndefined();
     expect(gateForRoutePage("how-we-work")).toBeUndefined();
     expect(gateForRoutePage("contact")).toBeUndefined();
   });

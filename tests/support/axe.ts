@@ -14,7 +14,22 @@ export interface A11yOptions {
   disableRules?: readonly string[];
 }
 
+/**
+ * Compact screens fade bands and items in as they scroll into view (MobileReveal). Axe scrolls
+ * elements into view while it measures contrast, which starts those fades (they can also arm
+ * after this runs, once the page hydrates) and catches text part-way through. Pin every held
+ * item to its final state for the scan, so it checks the page readers see once each band has
+ * arrived. The fade itself is covered by the motion specs.
+ */
+async function settleMobileReveal(page: Page) {
+  await page.addStyleTag({
+    content:
+      "[data-m-reveal] { opacity: 1 !important; translate: none !important; transition: none !important; }",
+  });
+}
+
 export async function scanA11y(page: Page, options: A11yOptions = {}) {
+  await settleMobileReveal(page);
   let builder = new AxeBuilder({ page }).withTags([...WCAG_TAGS]);
   for (const selector of options.include ?? []) builder = builder.include(selector);
   for (const selector of options.exclude ?? []) builder = builder.exclude(selector);

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { ctas, navLabels, routes } from "@vitalos/cms";
 import { getEnv, getFeatures } from "@vitalos/config";
-import { Container, Display, Icon, IconTile, Lead, Section } from "@vitalos/ui";
+import { Container, IconTile, PageHero, Section } from "@vitalos/ui";
 import { RichText } from "../../../src/components/rich-text";
+import { heroPhotograph } from "../../../src/lib/view-mapping/hero-images";
 import { buildMetadata } from "../../../src/features/seo/metadata";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
 import { submitEnquiryAction } from "../../../src/features/enquiries/server-action";
@@ -49,23 +50,24 @@ export default async function ContactPage({
 
   return (
     <main id="main" tabIndex={-1}>
+      {/* The compact dark hero of every page (pages redesign, 15 Oct 2026). Heading and intro come
+          from the CMS; locked copy is the only fallback. */}
+      <PageHero
+        tone="dark"
+        size="title"
+        backdrop={heroPhotograph}
+        eyebrow={navLabels.contact}
+        title={page?.heading ?? ctas.primary}
+        lead={page?.intro}
+      />
       <Section tone="light" spacing="default">
         <Container
           size="wide"
           className="grid gap-x-(--space-8) gap-y-(--space-7) lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
         >
-          {/* Heading, intro and the ways to reach us first (reading and focus order), then the
-              form. Heading and intro come from the CMS; locked copy is the only fallback. */}
+          {/* The ways to reach us first (reading and focus order), then the form. */}
           <div className="min-w-0 lg:pt-(--space-5)">
-            <span className="inline-flex items-center gap-(--space-2) rounded-md border border-tone-border px-(--space-3) py-(--space-1) text-small font-medium text-tone-heading">
-              <Icon name="mail" size={16} />
-              {navLabels.contact}
-            </span>
-            <Display className="mt-(--space-5)">{page?.heading ?? ctas.primary}</Display>
-            {page?.intro ? (
-              <Lead className="mt-(--space-5) text-tone-muted">{page.intro}</Lead>
-            ) : null}
-            <ul className="m-0 mt-(--space-7) flex list-none flex-col gap-(--space-6) p-0">
+            <ul className="m-0 flex list-none flex-col gap-(--space-6) p-0">
               {settings.contactEmail ? (
                 <li className="flex items-center gap-(--space-4)">
                   <IconTile name="mail" />
@@ -92,10 +94,11 @@ export default async function ContactPage({
             </ul>
           </div>
           {/* The form card starts at md: below it the Turnstile widget (300px fixed) needs the
-              full width to fit a 320px viewport (WCAG 1.4.10). The topic is a select in the form. */}
+              full width to fit a 320px viewport (WCAG 1.4.10). The topic is a select in the form.
+              Raised like the homepage cards, and pulled up into the hero from lg. */}
           <div
             data-tone="muted"
-            className="min-w-0 text-tone-text md:rounded-xl md:border md:border-tone-border md:bg-tone-bg md:p-(--space-7)"
+            className="relative z-10 min-w-0 text-tone-text md:rounded-2xl md:border md:border-tone-border md:bg-tone-bg md:p-(--space-7) md:shadow-floating lg:-mt-(--space-10)"
           >
             {form.available ? (
               <EnquiryForm

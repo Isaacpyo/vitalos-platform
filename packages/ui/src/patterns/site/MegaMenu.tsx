@@ -13,10 +13,11 @@ import type { Variants } from "motion/react";
 import * as m from "motion/react-m";
 import { EASE_EMPHASIS, MotionIsland, useMotionAllowed } from "../../motion/_internal/island";
 import { cx } from "../../primitives/_internal/cx";
-import { Container } from "../../primitives/Container";
+import { Button } from "../../primitives/Button";
 import { Icon } from "../../primitives/Icon";
+import { IconTile } from "../../primitives/IconTile";
 import { topLevelLinkClasses, quietLinkClasses } from "./nav-styles";
-import type { MegaMenuColumn } from "./types";
+import type { MegaMenuColumn, MegaMenuFeature } from "./types";
 
 /** Pointer must dwell this long before the menu opens (hover intent). */
 const HOVER_OPEN_DELAY_MS = 120;
@@ -47,6 +48,10 @@ export interface MegaMenuProps {
   /** Section index. Clicking the label always reaches it (no hover-only links). */
   href: string;
   columns: readonly MegaMenuColumn[];
+  /** `columns` (default) or `list`: a compact dropdown under the label (see SiteNavMenu). */
+  layout?: "columns" | "list" | undefined;
+  /** A highlighted card beside the columns, from lg (`columns` layout only). */
+  feature?: MegaMenuFeature | undefined;
   /** The current section: `aria-current`, bold and underlined (never colour alone). */
   active?: boolean | undefined;
   /** Accessible name of the disclosure button. Defaults to "<label> menu". */
@@ -77,12 +82,16 @@ function hasFinePointer(): boolean {
  * - The panel is in DOM order straight after the button: Tab moves label, button, panel links.
  * - Opening reveals the panel with a short fade and drop and the columns in a 25ms stagger, all
  *   within 240ms (Stage 9 section 11); instant under reduced motion. Closing is instant.
+ * - The `columns` panel is a contained card centred under the bar and sized to its columns (never
+ *   wider than the viewport less the gutters); `list` is a dropdown under the label.
  * - Without JavaScript the panel stays closed and the label link still works.
  */
 export function MegaMenu({
   label,
   href,
   columns,
+  layout = "columns",
+  feature,
   active = false,
   toggleLabel,
   id,
@@ -143,6 +152,7 @@ export function MegaMenu({
   }, [open, close]);
 
   const visibleColumns = columns.filter((column) => column.links.length > 0);
+  const list = layout === "list";
 
   if (visibleColumns.length === 0) {
     return (
@@ -200,7 +210,7 @@ export function MegaMenu({
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
       onBlur={onBlur}
-      className={cx("flex items-center self-stretch", className)}
+      className={cx("flex items-center self-stretch", list && "relative", className)}
     >
       <a
         href={href}
@@ -224,39 +234,89 @@ export function MegaMenu({
           className="transition-transform duration-(--duration-feedback) ease-(--ease-standard) group-aria-expanded:rotate-180"
         />
       </button>
-      <div
-        id={panelId}
-        hidden={!open}
-        role="group"
-        aria-label={label}
-        className="absolute inset-x-0 top-full max-h-[calc(100dvh-var(--header-h,var(--size-header)))] overflow-y-auto border-b border-tone-border bg-tone-bg shadow-floating"
-      >
-        <Container size="wide">
+      {list ? (
+        <div
+          id={panelId}
+          hidden={!open}
+          role="group"
+          aria-label={label}
+          className="absolute top-full left-0 w-max max-w-xs min-w-60 border border-tone-border bg-tone-bg shadow-floating"
+        >
+          <MotionIsland>
+            <m.ul
+              key={openings}
+              initial={motionAllowed && openings > 0 ? "closed" : false}
+              animate="open"
+              variants={panelVariants}
+              className="m-0 list-none p-(--space-2)"
+            >
+              {visibleColumns
+                .flatMap((column) => column.links)
+                .map((link) => (
+                  <m.li key={`${link.href}-${link.label}`} variants={columnVariants}>
+                    <a
+                      href={link.href}
+                      className={cx(
+                        quietLinkClasses,
+                        "flex min-h-11 items-center px-(--space-3) text-small font-medium",
+                      )}
+                    >
+                      {link.label}
+                    </a>
+                  </m.li>
+                ))}
+            </m.ul>
+          </MotionIsland>
+        </div>
+      ) : (
+        <div
+          id={panelId}
+          hidden={!open}
+          role="group"
+          aria-label={label}
+          className="absolute top-[calc(100%+var(--space-2))] left-1/2 max-h-[calc(100dvh-var(--header-h,var(--size-header))-var(--space-4))] w-max max-w-[calc(100vw-2*var(--gutter))] -translate-x-1/2 overflow-y-auto rounded-2xl border border-tone-border bg-tone-bg shadow-floating"
+        >
           <MotionIsland>
             <m.div
               key={openings}
               initial={motionAllowed && openings > 0 ? "closed" : false}
               animate="open"
               variants={panelVariants}
-              className="grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-(--space-6) gap-y-(--space-5) py-(--space-6)"
+              className={cx(
+                "grid gap-x-(--space-7) gap-y-(--space-5) p-(--space-6)",
+                feature && "lg:grid-cols-[auto_minmax(15rem,18rem)]",
+              )}
             >
-              {visibleColumns.map((column) => (
-                <m.div key={column.key} variants={columnVariants} className="min-w-0">
-                  <MenuColumn column={column} panelId={panelId} />
+              <div
+                className="grid gap-x-(--space-6) gap-y-(--space-5)"
+                style={{
+                  gridTemplateColumns: `repeat(${visibleColumns.length}, minmax(10rem, 14rem))`,
+                }}
+              >
+                {visibleColumns.map((column) => (
+                  <m.div key={column.key} variants={columnVariants} className="min-w-0">
+                    <MenuColumn column={column} panelId={panelId} />
+                  </m.div>
+                ))}
+              </div>
+              {feature ? (
+                <m.div variants={columnVariants} className="hidden min-w-0 lg:block">
+                  <MenuFeature feature={feature} />
                 </m.div>
-              ))}
+              ) : null}
             </m.div>
           </MotionIsland>
-        </Container>
-      </div>
+        </div>
+      )}
     </li>
   );
 }
 
 function MenuColumn({ column, panelId }: { column: MegaMenuColumn; panelId: string }) {
   const headingId = `${panelId}-${column.key}`;
+  const rich = column.links.some((link) => link.icon || link.description);
   return (
-    <div className="min-w-0">
+    <div className="flex h-full min-w-0 flex-col">
       <p id={headingId} className="text-eyebrow text-tone-muted uppercase">
         {column.href ? (
           <a href={column.href} className="underline underline-offset-4 hover:text-tone-heading">
@@ -266,23 +326,128 @@ function MenuColumn({ column, panelId }: { column: MegaMenuColumn; panelId: stri
           column.heading
         )}
       </p>
-      <ul aria-labelledby={headingId} className="m-0 mt-(--space-3) list-none p-0">
+      <ul
+        aria-labelledby={headingId}
+        className={cx("m-0 mt-(--space-3) list-none p-0", rich && "-mx-(--space-2)")}
+      >
         {column.links.map((link) => (
           <li key={`${link.href}-${link.label}`}>
-            <a
-              href={link.href}
-              className={cx(quietLinkClasses, "block py-(--space-2) text-body font-medium")}
-            >
-              {link.label}
-              {link.description ? (
-                <span className="mt-(--space-1) block text-small font-normal text-tone-muted">
-                  {link.description}
+            {rich ? (
+              <a
+                href={link.href}
+                className="group flex items-start gap-(--space-3) rounded-lg p-(--space-2) no-underline transition-colors duration-(--duration-feedback) ease-(--ease-standard) hover:bg-tone-tile-bg/50"
+              >
+                {link.icon ? <IconTile name={link.icon} size="sm" /> : null}
+                <span className="min-w-0">
+                  <span className="block text-small font-medium text-tone-heading group-hover:text-tone-link">
+                    {link.label}
+                  </span>
+                  {link.description ? (
+                    <span className="mt-(--space-1) line-clamp-2 block text-small text-tone-muted">
+                      {link.description}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-            </a>
+              </a>
+            ) : (
+              <a
+                href={link.href}
+                className={cx(quietLinkClasses, "block py-(--space-2) text-small font-medium")}
+              >
+                {link.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>
+      {column.more ? (
+        <a
+          href={column.more.href}
+          className="group mt-auto inline-flex items-center gap-(--space-2) pt-(--space-3) text-small font-semibold text-tone-link no-underline hover:underline"
+        >
+          {column.more.label}
+          <Icon
+            name="arrow-right"
+            size={16}
+            className="transition-transform duration-(--duration-feedback) ease-(--ease-standard) group-hover:translate-x-0.5"
+          />
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * The panel's highlighted card on the dark tone: an eyebrow, a title, optional text, optional
+ * ticked steps and its actions. Presentation only; every string comes from props.
+ */
+function MenuFeature({ feature }: { feature: MegaMenuFeature }) {
+  const [primary, ...others] = feature.links;
+  const steps = feature.steps ?? [];
+  return (
+    <div
+      data-tone="dark"
+      className="relative isolate flex h-full flex-col overflow-hidden rounded-xl bg-tone-bg p-(--space-6) text-tone-text"
+    >
+      <span
+        aria-hidden="true"
+        className="absolute -top-16 -right-16 -z-10 size-48 rounded-full bg-blue-600/30 blur-3xl"
+      />
+      {feature.eyebrow ? (
+        <p className="m-0 text-eyebrow text-tone-eyebrow uppercase">{feature.eyebrow}</p>
+      ) : null}
+      <p className="m-0 mt-(--space-3) text-body font-semibold text-balance text-tone-heading">
+        {feature.title}
+      </p>
+      {feature.text ? (
+        <p className="m-0 mt-(--space-3) text-small text-tone-muted">{feature.text}</p>
+      ) : null}
+      {steps.length > 0 ? (
+        <ol className="relative m-0 mt-(--space-5) flex list-none flex-col gap-(--space-3) p-0">
+          <span
+            aria-hidden="true"
+            className="absolute top-2 bottom-2 left-[0.5625rem] w-px bg-linear-to-b from-aqua-600 to-blue-600"
+          />
+          {steps.map((step, index) => {
+            const last = index === steps.length - 1;
+            return (
+              <li
+                key={`${step}-${index}`}
+                className="relative flex items-center gap-(--space-3) text-small text-tone-heading"
+              >
+                <span
+                  aria-hidden="true"
+                  className={cx(
+                    "inline-flex size-[1.125rem] shrink-0 items-center justify-center rounded-full text-white",
+                    last ? "bg-blue-600 ring-2 ring-white/70" : "bg-aqua-600",
+                  )}
+                >
+                  <Icon name="check" size={16} className="size-3" />
+                </span>
+                <span className={last ? "font-semibold" : undefined}>{step}</span>
+              </li>
+            );
+          })}
+        </ol>
+      ) : null}
+      {primary || others.length > 0 ? (
+        <div className="mt-auto flex flex-wrap items-center gap-x-(--space-5) gap-y-(--space-3) pt-(--space-6)">
+          {primary ? (
+            <Button href={primary.href} size="sm" arrow>
+              {primary.label}
+            </Button>
+          ) : null}
+          {others.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-small font-semibold text-tone-heading underline underline-offset-4 hover:text-tone-link"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

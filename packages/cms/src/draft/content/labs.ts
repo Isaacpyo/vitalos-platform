@@ -37,7 +37,7 @@ export const labDrafts: readonly LabDraft[] = [
       slug: "ai-opportunity-readiness-framework",
       title: "AI opportunity and readiness assessment framework",
       summary:
-        "A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk, so assessments reach consistent recommendations.",
+        "A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk.",
       seo: seo(
         "AI opportunity and readiness framework (concept)",
         "A concept for ranking AI use cases by value, feasibility, data readiness and risk. Concept maturity: no implementation is claimed.",
@@ -89,7 +89,7 @@ export const labDrafts: readonly LabDraft[] = [
       slug: "production-ai-evaluation-harness",
       title: "Production AI evaluation harness",
       summary:
-        "A concept for repeatable testing of AI models and agents against agreed quality and risk criteria, before release and whenever a model, prompt or data source changes.",
+        "A concept for repeatable testing of AI models and agents against agreed quality and risk criteria, before release and after changes.",
       seo: seo(
         "Production AI evaluation harness (concept)",
         "A concept for repeatable evaluation of AI models and agents before and after release. Concept maturity: no implementation is claimed.",

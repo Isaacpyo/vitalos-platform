@@ -12,11 +12,19 @@ export interface WordmarkLogo {
 
 export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   /**
-   * Approved logo export (SVG from the Figma source). INTERIM: the production exports are not yet
-   * available (docs/brand/asset-approval.md), so callers normally omit this and the text fallback
-   * renders. Do not substitute raster files or hand-drawn marks.
+   * Approved logo export. The Figma SVG exports are not yet available, so the site header and
+   * footer pass the owner-directed interim raster lockups (docs/brand/asset-approval.md). Do not
+   * substitute any other raster file or a hand-drawn mark.
    */
   logo?: WordmarkLogo;
+  /** Shown instead of `logo` inside a dark tone scope (`data-tone="dark"`), for example white. */
+  darkLogo?: WordmarkLogo | undefined;
+  /**
+   * The symbol alone, for a crowded bar: below 25rem it replaces the logo (which is then drawn
+   * 24px high up to 28rem), so the header's action and menu still fit at 320px. It must read on
+   * light and dark surfaces alike.
+   */
+  compactLogo?: WordmarkLogo | undefined;
   /** Fallback text. Defaults to "VITALOS". */
   text?: string;
   /** Wrap in a plain anchor, for example the header home link. */
@@ -29,18 +37,49 @@ export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "c
  * slot (the header and footer lockup height), width from the aspect ratio, never wider than 12rem
  * or the container.
  */
-export const LOGO_IMAGE_CLASSES = "block h-8 w-auto max-w-48 object-contain object-left";
+const LOGO_SIZE_CLASSES = "h-8 w-auto max-w-48 object-contain object-left";
+export const LOGO_IMAGE_CLASSES = `block ${LOGO_SIZE_CLASSES}`;
 
 /** The VITALOS wordmark: a typed logo slot with a text fallback. */
-export function Wordmark({ logo, text = "VITALOS", href, className, ...props }: WordmarkProps) {
-  const mark = logo ? (
+export function Wordmark({
+  logo,
+  darkLogo,
+  compactLogo,
+  text = "VITALOS",
+  href,
+  className,
+  ...props
+}: WordmarkProps) {
+  const image = (asset: WordmarkLogo, classes: string) => (
     <img
-      src={logo.src}
-      width={logo.width}
-      height={logo.height}
-      alt={logo.alt ?? text}
-      className={LOGO_IMAGE_CLASSES}
+      src={asset.src}
+      width={asset.width}
+      height={asset.height}
+      alt={asset.alt ?? text}
+      className={classes}
     />
+  );
+  // With a compact mark the lockup steps down to 24px below 28rem and gives way to the mark
+  // below 25rem (`!` so it also beats the dark-scope rule below).
+  const size = compactLogo
+    ? cx(LOGO_SIZE_CLASSES, "max-[27.99rem]:h-6 max-[24.99rem]:hidden!")
+    : LOGO_SIZE_CLASSES;
+  // With a dark-surface logo, a dark tone scope around the wordmark decides which of the two is
+  // drawn. Every image not drawn is display:none, so only one is ever in the accessibility tree.
+  const mark = logo ? (
+    <>
+      {darkLogo ? (
+        <>
+          {image(logo, cx(size, "block [[data-tone=dark]_&]:hidden"))}
+          {image(darkLogo, cx(size, "hidden [[data-tone=dark]_&]:block"))}
+        </>
+      ) : (
+        image(logo, cx(size, "block"))
+      )}
+      {compactLogo
+        ? image(compactLogo, "hidden h-8 w-auto object-contain max-[24.99rem]:block")
+        : null}
+    </>
   ) : (
     <span className="text-body-l font-semibold tracking-widest text-tone-heading">{text}</span>
   );
