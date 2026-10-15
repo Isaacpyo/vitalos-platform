@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Relay — in-app alerts and preferences</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2458E6}a:hover{color:#0B1320}
+</style>
+</head>
+<body>
+
+<div style="width: 480px; height: 960px; box-sizing: border-box; padding: 32px 40px; background: #F5F7FA; font-family: Inter, system-ui, sans-serif; color: #0B1320; display: flex; flex-direction: column; gap: 14px">
+
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">FIG. 01 · TOAST · TOP RIGHT OF ANY ADMIN PAGE</div>
+<div role="status" style="background: #0B1320; color: #F5F7FA; padding: 16px; display: flex; gap: 12px">
+<span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; border: 2px solid #3FD0BA; margin-top: 5px; flex: none"></span>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-width: 0">
+<b style="font-size: 15px; font-weight: 600">Alex Morgan needs a person</b>
+<span style="font-size: 14px; line-height: 20px; color: #A7B2C4">“Roughly how long would that take?”</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #A7B2C4">NOT HELPFUL · /APPLICATION-MODERNISATION · NOW</span>
+<div style="display: flex; gap: 8px; margin-top: 6px">
+<a href="#" style="height: 36px; padding: 0 14px; display: flex; align-items: center; background: #7FA3FF; color: #0B1320; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 2px">Open conversation</a>
+<button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #5F6E86; background: transparent; color: #F5F7FA; font: inherit; font-size: 14px; border-radius: 2px; cursor: pointer">Dismiss</button>
+</div>
+</div>
+</div>
+
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; margin-top: 14px">FIG. 02 · BELL MENU</div>
+<div style="background: #FFFFFF; border: 1px solid #D5DCE6; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #D5DCE6"><b style="font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 16px">Notifications</b><button type="button" style="border: 0; background: transparent; font: inherit; font-size: 13px; font-weight: 600; color: #2458E6; cursor: pointer; padding: 8px 0">Mark all read</button></div>
+<a href="#" style="display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #D5DCE6; text-decoration: none; color: #0B1320"><span aria-label="Unread" style="width: 8px; height: 8px; border-radius: 999px; background: #2458E6; margin-top: 6px; flex: none"></span><span style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 20px"><b style="font-weight: 600">Alex Morgan needs a person</b><span style="color: #4A5568; font-size: 13px">Marked an answer not helpful · 1 min</span></span></a>
+<a href="#" style="display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #D5DCE6; text-decoration: none; color: #0B1320"><span aria-label="Unread" style="width: 8px; height: 8px; border-radius: 999px; background: #2458E6; margin-top: 6px; flex: none"></span><span style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 20px"><b style="font-weight: 600">Visitor 8C1D needs a person</b><span style="color: #4A5568; font-size: 13px">Relay had no answer in knowledge · 12 min</span></span></a>
+<a href="#" style="display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #D5DCE6; text-decoration: none; color: #0B1320"><span aria-label="Unread" style="width: 8px; height: 8px; border-radius: 999px; background: #2458E6; margin-top: 6px; flex: none"></span><span style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 20px"><b style="font-weight: 600">No one has joined Visitor 8C1D</b><span style="color: #4A5568; font-size: 13px">Reminder after 10 minutes · 2 min</span></span></a>
+<a href="#" style="display: flex; gap: 12px; padding: 12px 16px; text-decoration: none; color: #4A5568"><span aria-hidden="true" style="width: 8px; height: 8px; margin-top: 6px; flex: none"></span><span style="display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 20px"><span>Jordan Ellis replied</span><span style="font-size: 13px">Live with Temitope · 20 min</span></span></a>
+<a href="#" style="padding: 12px 16px; border-top: 1px solid #D5DCE6; font-size: 13px; font-weight: 600">Notification settings</a>
+</div>
+
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568; margin-top: 14px">FIG. 03 · RELAY › SETTINGS › MY NOTIFICATIONS</div>
+<div style="background: #FFFFFF; border: 1px solid #D5DCE6; padding: 16px">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; align-items: center; row-gap: 0; font-size: 14px; line-height: 20px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568; padding-bottom: 8px">EVENT</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568; padding-bottom: 8px; text-align: center">IN-APP</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568; padding-bottom: 8px; text-align: center">EMAIL</span>
+<span style="padding: 10px 0; border-top: 1px solid #D5DCE6">A visitor asks for a person</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="In-app: a visitor asks for a person" style="width: 18px; height: 18px; accent-color: #2458E6"></span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="Email: a visitor asks for a person" style="width: 18px; height: 18px; accent-color: #2458E6"></span>
+<span style="padding: 10px 0; border-top: 1px solid #D5DCE6">Visitor replies in my conversation</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="In-app: visitor replies in my conversation" style="width: 18px; height: 18px; accent-color: #2458E6"></span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="Email: visitor replies in my conversation" style="width: 18px; height: 18px; accent-color: #2458E6"></span>
+<span style="padding: 10px 0; border-top: 1px solid #D5DCE6">No one has joined after 10 minutes</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="In-app: no one has joined" style="width: 18px; height: 18px; accent-color: #2458E6"></span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="Email: no one has joined" style="width: 18px; height: 18px; accent-color: #2458E6"></span>
+<span style="padding: 10px 0; border-top: 1px solid #D5DCE6">Relay could not answer (no handoff)</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="In-app: Relay could not answer" style="width: 18px; height: 18px; accent-color: #2458E6"></span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" aria-label="Email: Relay could not answer" style="width: 18px; height: 18px; accent-color: #2458E6"></span>
+<span style="padding: 10px 0; border-top: 1px solid #D5DCE6">Daily digest at 08:45</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center; color: #4A5568">—</span><span style="padding: 10px 0; border-top: 1px solid #D5DCE6; text-align: center"><input type="checkbox" checked aria-label="Email: daily digest" style="width: 18px; height: 18px; accent-color: #2458E6"></span>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap">
+<button type="button" style="height: 40px; padding: 0 14px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; color: #0B1320; cursor: pointer">Allow browser notifications</button>
+<button type="button" role="switch" aria-checked="true" style="height: 40px; padding: 0 14px; border: 1px solid #7A879B; border-radius: 2px; background: #FFFFFF; font: inherit; font-size: 13px; font-weight: 600; color: #0B1320; cursor: pointer">Sound: on</button>
+</div>
+</div>
+</div>
+
+</body>
+</html>

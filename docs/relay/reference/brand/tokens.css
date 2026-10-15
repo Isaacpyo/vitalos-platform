@@ -1,0 +1,105 @@
+/* Vitalos — generated from tokens.json (Vitalos design system v2). Components reference the semantic tokens (surface-*, ink*, action, on-action, accent-text, mineral-text, line, line-strong, focus-ring); foundation names only for fixed brand grounds. */
+:root {
+  --midnight: #0B1320;
+  --midnight-800: #111B2E;
+  --midnight-700: #1A2740;
+  --cobalt: #2F6BFF;
+  --cobalt-600: #2458E6;
+  --cobalt-300: #7FA3FF;
+  --mineral: #18B7A0;
+  --mineral-700: #0E7C6B;
+  --mineral-300: #3FD0BA;
+  --off-white: #F5F7FA;
+  --white: #FFFFFF;
+  --slate-600: #4A5568;
+  --slate-300: #A7B2C4;
+  --line-light: #D5DCE6;
+  --line-dark: #26344D;
+  --stroke-light: #7A879B;
+  --stroke-dark: #5F6E86;
+  --surface-100: #F5F7FA;
+  --surface-200: #FFFFFF;
+  --surface-inverse: #0B1320;
+  --ink: #0B1320;
+  --ink-muted: #4A5568;
+  --ink-inverse: #F5F7FA;
+  --action: #2458E6;
+  --on-action: #FFFFFF;
+  --accent-text: #2458E6;
+  --mineral-text: #0E7C6B;
+  --line: #D5DCE6;
+  --line-strong: #7A879B;
+  --focus-ring: #2458E6;
+  --on-cobalt: #FFFFFF;
+  --on-mineral: #0B1320;
+  --font-display: "Manrope", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --type-display-hero-size: 160px; --type-display-hero-line: 144px; --type-display-hero-weight: 800; --type-display-hero-tracking: -0.045em;
+  --type-display-xl-size: 96px; --type-display-xl-line: 92px; --type-display-xl-weight: 800; --type-display-xl-tracking: -0.03em;
+  --type-display-lg-size: 64px; --type-display-lg-line: 64px; --type-display-lg-weight: 800; --type-display-lg-tracking: -0.025em;
+  --type-headline-size: 40px; --type-headline-line: 44px; --type-headline-weight: 700; --type-headline-tracking: -0.02em;
+  --type-title-size: 24px; --type-title-line: 32px; --type-title-weight: 700; --type-title-tracking: -0.01em;
+  --type-body-lg-size: 18px; --type-body-lg-line: 28px; --type-body-lg-weight: 400;
+  --type-body-size: 16px; --type-body-line: 24px; --type-body-weight: 400;
+  --type-small-size: 14px; --type-small-line: 20px; --type-small-weight: 400;
+  --type-caption-size: 12px; --type-caption-line: 16px; --type-caption-weight: 500;
+  --type-eyebrow-size: 11px; --type-eyebrow-line: 16px; --type-eyebrow-weight: 600; --type-eyebrow-tracking: 0.14em;
+  --type-mono-label-size: 11px; --type-mono-label-line: 16px; --type-mono-label-weight: 500; --type-mono-label-tracking: 0.04em;
+  --type-mono-data-size: 13px; --type-mono-data-line: 20px; --type-mono-data-weight: 400;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-icon: 22%;
+  --radius-pill: 999px;
+  --stroke-hairline: 1px;
+  --stroke-path: 2px;
+  --stroke-node: 2px;
+  --layout-columns: 12;
+  --layout-container: 1280px;
+  --layout-gutter: 24px;
+  --path-angle: 60deg;
+  --band-angle: 30deg;
+  --band-gap: 0.06;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-100: #0B1320;
+    --surface-200: #111B2E;
+    --surface-inverse: #F5F7FA;
+    --ink: #F5F7FA;
+    --ink-muted: #A7B2C4;
+    --ink-inverse: #0B1320;
+    --action: #7FA3FF;
+    --on-action: #0B1320;
+    --accent-text: #7FA3FF;
+    --mineral-text: #3FD0BA;
+    --line: #26344D;
+    --line-strong: #5F6E86;
+    --focus-ring: #7FA3FF;
+  }
+}
+:root[data-theme="dark"] {
+  --surface-100: #0B1320;
+  --surface-200: #111B2E;
+  --surface-inverse: #F5F7FA;
+  --ink: #F5F7FA;
+  --ink-muted: #A7B2C4;
+  --ink-inverse: #0B1320;
+  --action: #7FA3FF;
+  --on-action: #0B1320;
+  --accent-text: #7FA3FF;
+  --mineral-text: #3FD0BA;
+  --line: #26344D;
+  --line-strong: #5F6E86;
+  --focus-ring: #7FA3FF;
+}
