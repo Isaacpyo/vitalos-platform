@@ -43,7 +43,7 @@ Times are ISO-8601 UTC. Ids are uuids. `displayName` = contact name, or `Visitor
 
 `Conversation` = `{id, status, displayName, contact:{name,email,company,consentAt,noticeVersion}|null, session:{pageUrl,pageTitle,referrer,device,country,startedAt,messageCount}, summary|null, summaryMeta:{intent,sector,urgency}|null, assigned|null, handoff:{trigger,requestedAt}|null, firstAdminJoinedAt|null, visitorLastSeenAt|null, closedAt|null, tags}`.
 
-`Message` = `{id, senderType:'visitor'|'ai'|'admin'|'system'|'note', body, adminName|null, adminInitials|null, citations:[{n,title,url,type}], confidence|null, feedback:-1|1|null, latencyMs|null, handoffSuggested, createdAt}`. System messages carry a machine `body` key: `handoff_requested`, `admin_joined`, `ai_paused`, `ai_back`, `closed`, with `meta` `{trigger?, consent?, name?}`.
+`Message` = `{id, senderType:'visitor'|'ai'|'admin'|'system'|'note', body, adminName|null, adminInitials|null, citations:[{n,title,url,type}], confidence|null, feedback:-1|1|null, latencyMs|null, handoffSuggested, truncated, meta, createdAt}`. `meta` is `{}` except on system messages, which carry a machine `body` key (`handoff_requested`, `admin_joined`, `ai_paused`, `ai_back`, `closed`) and `meta` `{trigger?, consent?, name?, by?, outOfHours?}`. `messages?after=<createdAt>` returns messages strictly after that time, oldest first.
 
 ### Presence
 
