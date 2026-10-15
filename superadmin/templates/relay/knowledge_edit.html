@@ -1,0 +1,67 @@
+{% extends "relay/_shell.html" %}
+{% block relay_title %}{% if is_new %}New entry{% else %}{{ document.title }}{% endif %} · Relay knowledge{% endblock %}
+{% block relay_content %}
+  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-4 py-7 sm:px-6">
+    <div>
+      <a href="{% url 'relay:knowledge' %}" class="relay-link text-[13px]">Back to Knowledge</a>
+      <h2 class="mt-2 font-display text-[28px] leading-tight font-bold tracking-[-0.01em]">{% if is_new %}New entry{% else %}{{ document.title }}{% endif %}<span class="text-cobalt-600 dark:text-cobalt-300">.</span></h2>
+      {% if is_new %}
+        <p class="relay-muted mt-1.5 text-[15px] leading-[22px]">A team answer starts as a draft. Relay uses it only after a super admin publishes it.</p>
+      {% else %}
+        <p class="relay-mono relay-muted mt-2">{{ source_label }} · {{ document.chunks|default:0 }} chunk{{ document.chunks|pluralize }}{% if updated %} · updated {{ updated|date:"j M Y, H:i" }}{% endif %} · <span class="{% if status_tone == 'mineral' %}relay-mineral{% endif %}">{{ status_label }}</span></p>
+      {% endif %}
+    </div>
+
+    {% if read_only %}
+      <p class="relay-panel p-4 text-sm">This entry comes from {{ source_label }} and is read-only here.{% if source_link %} <a href="{{ source_link }}" target="_blank" rel="noopener noreferrer" class="relay-link">Open the source<span class="sr-only"> (new tab)</span></a>{% endif %}</p>
+    {% endif %}
+
+    <div class="flex flex-wrap items-start gap-6">
+      <form method="post" class="relay-panel flex min-w-0 flex-[999_1_32rem] flex-col gap-4 p-5" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="text-sm text-rose-700 dark:text-rose-300" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+        {% for field in form.visible_fields %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="mb-1 block text-[13px] font-medium">{{ field.label }}{% if field.field.required and not read_only %} <span class="text-rose-700" aria-hidden="true">*</span>{% endif %}</label>
+            {% if field.name == "body_md" and not read_only %}
+              <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" rows="14" maxlength="60000" required class="relay-input font-mono leading-5"
+                        hx-post="{% url 'relay:knowledge_preview' %}" hx-trigger="keyup changed delay:500ms" hx-target="#kb-preview" hx-swap="innerHTML" hx-params="body_md">{{ field.value|default:"" }}</textarea>
+            {% else %}
+              {{ field }}
+            {% endif %}
+            {% for error in field.errors %}<p class="mt-1 text-xs font-medium text-rose-700 dark:text-rose-300">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        {% if not read_only %}
+          <div class="flex flex-wrap gap-2">
+            <button type="submit" class="relay-btn relay-btn-primary">{% if is_new %}Save draft{% else %}Save{% endif %}</button>
+          </div>
+        {% endif %}
+      </form>
+
+      <div class="flex max-w-full flex-[1_1_22rem] flex-col gap-6">
+        <section aria-labelledby="kb-preview-title" class="relay-panel p-5">
+          <h3 id="kb-preview-title" class="relay-mono relay-muted mb-3">Preview</h3>
+          <div id="kb-preview" aria-live="polite"><div class="relay-markdown">{{ preview }}</div></div>
+        </section>
+        {% if not is_new and relay_can_manage %}
+          <section aria-labelledby="kb-manage-title" class="relay-panel flex flex-col gap-3 p-5">
+            <h3 id="kb-manage-title" class="relay-mono relay-muted">Status</h3>
+            <p class="text-sm">{{ status_label }}</p>
+            <div class="flex flex-wrap gap-2">
+              {% if document.source == "team_answer" and document.status != "published" %}
+                <form method="post" action="{% url 'relay:knowledge_publish' document_id %}">{% csrf_token %}<button type="submit" class="relay-btn relay-btn-primary">Publish</button></form>
+              {% endif %}
+              {% if document.source == "team_answer" and document.status != "archived" %}
+                <form method="post" action="{% url 'relay:knowledge_archive' document_id %}">{% csrf_token %}<button type="submit" class="relay-btn relay-btn-secondary">Archive</button></form>
+              {% endif %}
+              <form method="post" action="{% url 'relay:knowledge_reindex' document_id %}">{% csrf_token %}<button type="submit" class="relay-btn relay-btn-secondary">Re-index</button></form>
+            </div>
+          </section>
+        {% elif not is_new %}
+          <p class="relay-muted text-[13px]">A super admin publishes, archives or re-indexes entries.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -40,6 +40,9 @@
               <a href="{{ entry.url }}" class="nav-item" {% if entry.active %}aria-current="page"{% endif %} data-nav="{{ entry.item.key }}">
                 {% icon entry.item.icon "h-[18px] w-[18px] shrink-0" %}
                 <span class="nav-label">{{ entry.item.label }}</span>
+                {% if entry.item.key == "relay" %}
+                  <span hx-get="{% url 'relay:badge' %}" hx-trigger="load, every 30s, relay-badge-refresh from:body" hx-swap="innerHTML" class="contents" data-testid="relay-badge-slot"></span>
+                {% endif %}
                 <span class="nav-tip" aria-hidden="true">{{ entry.item.label }}</span>
               </a>
             {% endif %}

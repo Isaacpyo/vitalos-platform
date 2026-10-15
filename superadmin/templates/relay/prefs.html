@@ -1,0 +1,56 @@
+{% extends "relay/_shell.html" %}
+{% block relay_title %}My Relay notifications{% endblock %}
+{% block relay_content %}
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-7 sm:px-6">
+    <div>
+      <h2 class="font-display text-[28px] leading-tight font-bold tracking-[-0.01em]">My notifications<span class="text-cobalt-600 dark:text-cobalt-300">.</span></h2>
+      <p class="relay-muted mt-1.5 text-[15px] leading-[22px]">Choose which Relay alerts reach you in the dashboard and by email. Email is limited to one per conversation every 10 minutes.</p>
+    </div>
+
+    <form method="post" class="relay-panel p-4" data-testid="relay-prefs">
+      {% csrf_token %}
+      <table class="w-full border-collapse text-sm leading-5">
+        <thead>
+          <tr>
+            <th scope="col" class="relay-mono relay-muted pb-2 text-left font-normal">Event</th>
+            <th scope="col" class="relay-mono relay-muted w-16 pb-2 text-center font-normal">In-app</th>
+            <th scope="col" class="relay-mono relay-muted w-16 pb-2 text-center font-normal">Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in rows %}
+            <tr class="border-t border-line dark:border-slate-800">
+              <th scope="row" class="py-2.5 pr-2 text-left font-normal">{{ item.label }}</th>
+              <td class="py-2.5 text-center">
+                {% if item.row.in_app_available %}
+                  <input type="checkbox" name="{{ item.row.key }}-in_app" {% if item.in_app %}checked{% endif %} aria-label="In-app: {{ item.label }}" class="h-[18px] w-[18px] accent-cobalt-600">
+                {% else %}
+                  <span class="relay-muted" aria-label="Not available in-app">—</span>
+                {% endif %}
+              </td>
+              <td class="py-2.5 text-center">
+                <input type="checkbox" name="{{ item.row.key }}-email" {% if item.email %}checked{% endif %} aria-label="Email: {{ item.label }}" class="h-[18px] w-[18px] accent-cobalt-600">
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="mt-4"><button type="submit" class="relay-btn relay-btn-primary">Save notifications</button></div>
+    </form>
+
+    <div class="relay-panel flex flex-wrap items-center gap-2 p-4">
+      <form method="post" data-relay-browser-form>
+        {% csrf_token %}
+        <input type="hidden" name="toggle" value="browser">
+        <input type="hidden" name="browser_value" value="{% if pref.browser %}0{% else %}1{% endif %}">
+        <button type="submit" class="relay-btn relay-btn-secondary text-[13px]" data-relay-browser-permission="{% if pref.browser %}off{% else %}on{% endif %}">{% if pref.browser %}Turn off browser notifications{% else %}Allow browser notifications{% endif %}</button>
+      </form>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="toggle" value="sound">
+        <button type="submit" role="switch" aria-checked="{% if pref.sound %}true{% else %}false{% endif %}" class="relay-btn relay-btn-secondary text-[13px]">Sound: {% if pref.sound %}on{% else %}off{% endif %}</button>
+      </form>
+      <p class="relay-muted w-full text-xs" id="relay-browser-status">{% if pref.browser %}Browser notifications appear when this tab is in the background.{% else %}Browser notifications are off.{% endif %}</p>
+    </div>
+  </div>
+{% endblock %}

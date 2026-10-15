@@ -1,0 +1,115 @@
+{% extends "relay/_shell.html" %}
+{% block relay_title %}Relay knowledge{% endblock %}
+{% block relay_content %}
+  <div class="mx-auto flex w-full max-w-[1280px] flex-col gap-6 px-4 py-7 sm:px-6">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="min-w-0 flex-[1_1_22rem]">
+        <h2 class="font-display text-[28px] leading-tight font-bold tracking-[-0.01em]">Knowledge<span class="text-cobalt-600 dark:text-cobalt-300">.</span></h2>
+        <p class="relay-muted mt-1.5 text-[15px] leading-[22px]">What Relay may answer from. Only published entries are searched; anything else gets “I don't know” and an offer of a person.</p>
+      </div>
+      {% if relay_can_manage %}
+        <form method="post" action="{% url 'relay:reindex_all' %}" hx-post="{% url 'relay:reindex_all' %}" hx-swap="none" hx-disabled-elt="find button">
+          {% csrf_token %}<button type="submit" class="relay-btn relay-btn-secondary">Re-index all</button>
+        </form>
+      {% endif %}
+      <a href="{% url 'relay:knowledge_new' %}" class="relay-btn relay-btn-primary">Add entry</a>
+    </div>
+
+    {% if relay_error %}
+      <p class="relay-panel p-4 text-sm" role="alert">{{ relay_error }}</p>
+    {% else %}
+      <div class="grid grid-cols-1 border-t border-midnight bg-white sm:grid-cols-2 xl:grid-cols-4 dark:border-slate-100 dark:bg-slate-900" data-testid="relay-sources">
+        {% for source in strip %}
+          <div class="border-line p-4 sm:border-r dark:border-slate-800 {% if forloop.last %}xl:border-r-0{% endif %}">
+            <p class="relay-mono relay-muted">{{ source.label }}</p>
+            <p class="mt-1.5 font-display text-[22px] font-bold">{{ source.value }}</p>
+            <p class="relay-muted text-[13px]">{{ source.detail }}</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <nav aria-label="Knowledge views" class="flex flex-wrap gap-1 border-b border-line dark:border-slate-800">
+        <a href="{% url 'relay:knowledge' %}" class="relay-tab" {% if view == "entries" %}aria-current="true"{% endif %}>Entries</a>
+        <a href="{% url 'relay:knowledge' %}?view=confirm" class="relay-tab" {% if view == "confirm" %}aria-current="true"{% endif %}>Needs confirmation</a>
+        <a href="{% url 'relay:knowledge' %}?view=held" class="relay-tab" {% if view == "held" %}aria-current="true"{% endif %}>Held</a>
+      </nav>
+
+      <div class="flex flex-wrap items-start gap-6">
+        <div class="min-w-0 flex-[999_1_35rem]">
+          {% if view == "entries" %}
+            <form method="get" action="{% url 'relay:knowledge' %}" role="search" class="mb-3 flex flex-wrap items-end gap-3"
+                  hx-get="{% url 'relay:knowledge' %}" hx-target="#relay-knowledge-table" hx-swap="innerHTML" hx-push-url="true" hx-trigger="change, input changed delay:300ms from:find input[name=q], submit">
+              <div>
+                <label for="kb-source" class="mb-1 block text-[13px] font-medium">Source</label>
+                <select id="kb-source" name="source" class="relay-input h-10 w-44">
+                  <option value="">All sources</option>
+                  {% for key, label in sources %}<option value="{{ key }}" {% if filters.source == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+              </div>
+              <div>
+                <label for="kb-section" class="mb-1 block text-[13px] font-medium">Section</label>
+                <select id="kb-section" name="section" class="relay-input h-10 w-44">
+                  <option value="">All sections</option>
+                  {% for section in sections %}<option value="{{ section }}" {% if filters.section == section %}selected{% endif %}>{{ section }}</option>{% endfor %}
+                </select>
+              </div>
+              <div>
+                <label for="kb-status" class="mb-1 block text-[13px] font-medium">Status</label>
+                <select id="kb-status" name="status" class="relay-input h-10 w-40">
+                  <option value="">Any status</option>
+                  {% for key, label in statuses %}<option value="{{ key }}" {% if filters.status == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="min-w-48 flex-1">
+                <label for="kb-search" class="mb-1 block text-[13px] font-medium">Search</label>
+                <input id="kb-search" type="search" name="q" value="{{ filters.q }}" placeholder="Search titles" class="relay-input h-10">
+              </div>
+            </form>
+            <div id="relay-knowledge-table">{% include "relay/_knowledge_table.html" %}</div>
+          {% else %}
+            {% include "relay/_faq.html" %}
+          {% endif %}
+        </div>
+
+        <div class="flex max-w-full flex-[1_1_20rem] flex-col gap-6">
+          <section aria-labelledby="kb-gaps-title" class="relay-panel">
+            <div class="border-b border-line px-4 py-3.5 dark:border-slate-800">
+              <p class="relay-mono relay-muted">Gaps · last 30 days</p>
+              <h3 id="kb-gaps-title" class="font-display text-base font-bold">Questions Relay couldn't answer</h3>
+            </div>
+            <ul>
+              {% for gap in gaps %}
+                <li class="flex gap-3 border-b border-line px-4 py-3 text-sm leading-5 last:border-b-0 dark:border-slate-800">
+                  <span class="relay-muted w-5 shrink-0 pt-px font-mono text-xs tabular"><span class="sr-only">Asked </span>{{ gap.count }}<span class="sr-only"> times:</span></span>
+                  <span class="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <span class="break-words">{{ gap.question }}</span>
+                    <span class="flex flex-wrap gap-x-4 gap-y-1">
+                      <a href="{% url 'relay:knowledge_new' %}?question={{ gap.question|urlencode }}" class="relay-link text-[13px]">Answer</a>
+                      <a href="{{ notion_faq_url }}" target="_blank" rel="noopener noreferrer" class="relay-link text-[13px]">Add to Master FAQ<span class="sr-only"> (opens Notion in a new tab)</span></a>
+                    </span>
+                  </span>
+                </li>
+              {% empty %}
+                <li class="relay-muted px-4 py-4 text-sm">No unanswered questions in the last 30 days.</li>
+              {% endfor %}
+            </ul>
+          </section>
+
+          <section aria-labelledby="kb-test-title" class="relay-panel flex flex-col gap-2.5 p-4">
+            <h3 id="kb-test-title" class="relay-mono relay-muted">Test what Relay would read</h3>
+            <form method="post" action="{% url 'relay:knowledge_test' %}" hx-post="{% url 'relay:knowledge_test' %}" hx-target="#kb-test-results" hx-swap="innerHTML" class="flex flex-col gap-2">
+              {% csrf_token %}
+              <label for="kb-test" class="sr-only">Test question</label>
+              <input id="kb-test" type="text" name="question" maxlength="300" required placeholder="For example: rescue a failing project" class="relay-input h-10">
+              <label for="kb-test-page" class="sr-only">Page (optional)</label>
+              <input id="kb-test-page" type="text" name="page_path" maxlength="300" placeholder="Page path (optional), e.g. /trust" class="relay-input h-10">
+              <button type="submit" class="relay-btn relay-btn-secondary">Test</button>
+            </form>
+            <div id="kb-test-results" aria-live="polite"></div>
+            {% if threshold is not None %}<p class="relay-mono relay-muted">Answer threshold {{ threshold }} · below it Relay offers a person</p>{% endif %}
+          </section>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

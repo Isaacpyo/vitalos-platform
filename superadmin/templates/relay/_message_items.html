@@ -1,0 +1,33 @@
+{% for m in messages %}
+  {% if m.kind == "visitor" %}
+    <div class="flex max-w-[85%] flex-col items-end gap-1.5 self-end sm:max-w-[70%]" data-created="{{ m.created_at }}" data-message="{{ m.id }}">
+      <div class="border border-line bg-offwhite px-3 py-2.5 text-sm leading-[21px] break-words whitespace-pre-wrap dark:border-slate-700 dark:bg-slate-800">{{ m.body }}</div>
+      <span class="relay-mono relay-muted">{{ m.label }}</span>
+    </div>
+  {% elif m.kind == "ai" or m.kind == "admin" %}
+    <div class="flex max-w-[760px] flex-col gap-1.5" data-created="{{ m.created_at }}" data-message="{{ m.id }}">
+      <div class="relay-mono relay-muted flex flex-wrap items-center gap-2">
+        <span class="block h-2 w-2 rounded-full {% if m.kind == 'ai' %}bg-cobalt{% else %}bg-mineral{% endif %}" aria-hidden="true"></span>
+        <span class="font-medium text-midnight dark:text-slate-100">{{ m.head }}</span>{% if m.tail %}<span>{{ m.tail }}</span>{% endif %}
+        {% if m.flag %}<span class="relay-tag border-midnight text-midnight dark:border-slate-100 dark:text-slate-100">{{ m.flag }}</span>{% endif %}
+      </div>
+      <p class="text-sm leading-[21px] break-words whitespace-pre-wrap">{{ m.body }}</p>
+      {% if m.citations %}
+        <ol class="relay-muted flex flex-wrap gap-x-3 gap-y-1 text-xs" aria-label="Sources">
+          {% for c in m.citations %}<li>{% if c.url|slice:":8" == "https://" %}<a href="{{ c.url }}" class="underline" target="_blank" rel="noopener noreferrer">[{{ c.n }}] {{ c.title }}</a>{% else %}[{{ c.n }}] {{ c.title }}{% endif %}</li>{% endfor %}
+        </ol>
+      {% endif %}
+    </div>
+  {% elif m.kind == "note" %}
+    <div class="max-w-[760px] border border-line bg-offwhite px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800" data-created="{{ m.created_at }}" data-message="{{ m.id }}">
+      <p class="relay-mono relay-muted"><span class="font-medium text-midnight dark:text-slate-100">{{ m.head }}</span>{% if m.tail %} · {{ m.tail }}{% endif %}</p>
+      <p class="mt-1 text-sm leading-[21px] break-words whitespace-pre-wrap">{{ m.body }}</p>
+    </div>
+  {% else %}
+    <div class="relay-mono relay-muted flex items-center gap-3" data-created="{{ m.created_at }}" data-message="{{ m.id }}">
+      <span class="h-px flex-1 bg-line dark:bg-slate-700" aria-hidden="true"></span>
+      <span class="text-center">{{ m.label }}</span>
+      <span class="h-px flex-1 bg-line dark:bg-slate-700" aria-hidden="true"></span>
+    </div>
+  {% endif %}
+{% endfor %}

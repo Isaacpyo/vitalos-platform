@@ -44,6 +44,24 @@ export const originUrl = z
   )
   .transform((value) => (URL.canParse(value) ? new URL(value).origin : value));
 
+export const relayStores = ["supabase", "memory"] as const;
+export const relayProviders = ["deepseek", "mock"] as const;
+
+const booleanFlag = z.enum(["true", "false", "1", "0"]).optional();
+const uuidLike = z
+  .string()
+  .regex(
+    /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i,
+    "must be a Notion id",
+  );
+const relayModel = z
+  .string()
+  .min(1)
+  .max(80)
+  .refine((m) => m !== "deepseek-chat" && m !== "deepseek-reasoner", {
+    message: "deepseek-chat and deepseek-reasoner were retired on 24 July 2026; use deepseek-flash",
+  });
+
 /** NEXT_PUBLIC_* variables: safe for browser bundles. Shared by `public.ts` and the full schema. */
 export const publicEnvShape = {
   NEXT_PUBLIC_SITE_URL: originUrl.optional(),
@@ -76,6 +94,47 @@ const rawSchema = z.object({
   // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
   CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
+  // ---- Vitalos Relay (ADR-035 to ADR-038). Off unless RELAY_ENABLED=true. ----
+  RELAY_ENABLED: booleanFlag,
+  RELAY_STORE: z.enum(relayStores).optional(),
+  RELAY_LLM_PROVIDER: z.enum(relayProviders).optional(),
+  DEEPSEEK_API_KEY: z.string().min(20).optional(),
+  DEEPSEEK_BASE_URL: z.url({ protocol: /^https$/ }).optional(),
+  RELAY_MODEL: relayModel.optional(),
+  RELAY_SUMMARY_MODEL: relayModel.optional(),
+  RELAY_AI_ENABLED: booleanFlag,
+  RELAY_DAILY_TOKEN_CAP: z.coerce.number().int().min(10_000).max(100_000_000).optional(),
+  RELAY_SIM_FLOOR: z.coerce.number().min(0).max(0.99).optional(),
+  /** Test runs only: multiplies the visitor rate limits (many browsers share one IP). */
+  RELAY_RATE_LIMIT_MULTIPLIER: z.coerce.number().int().min(1).max(1000).optional(),
+  RELAY_REALTIME_PUBLIC_KEY: z.string().min(20).optional(),
+  RELAY_EMBED_FUNCTION_URL: z.url({ protocol: /^https?$/ }).optional(),
+  RELAY_EMBED_SECRET: z.string().min(32).optional(),
+  RELAY_TOKEN_PEPPER: z.string().min(32).optional(),
+  RELAY_IP_SALT: z.string().min(16).optional(),
+  RELAY_ALLOWED_ORIGINS: z.string().max(1000).optional(),
+  RELAY_ADMIN_API_SECRET: z.string().min(32).optional(),
+  RELAY_ADMIN_API_SECRET_PREVIOUS: z.string().min(32).optional(),
+  RELAY_WEBHOOK_SECRET: z.string().min(32).optional(),
+  RELAY_SUPERADMIN_WEBHOOK_URL: z.url({ protocol: /^https?$/ }).optional(),
+  RELAY_ADMIN_BASE_URL: originUrl.optional(),
+  RELAY_VISITOR_EMAILS_ENABLED: booleanFlag,
+  RELAY_EMAIL_FROM: z.string().min(3).max(200).optional(),
+  RELAY_PRIVACY_NOTICE_VERSION: z
+    .string()
+    .regex(/^[A-Za-z0-9._-]{1,40}$/, "must be 1-40 letters, numbers, dots, dashes or underscores")
+    .optional(),
+  NOTION_FAQ_TOKEN: z.string().min(20).optional(),
+  NOTION_FAQ_DATA_SOURCE_ID: uuidLike.optional(),
+  NOTION_FAQ_DATABASE_ID: uuidLike.optional(),
+  NOTION_FAQ_HUB_PAGE_ID: uuidLike.optional(),
+  NOTION_API_VERSION: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "must be a date such as 2025-09-03")
+    .optional(),
+  RELAY_FAQ_SYNC_ENABLED: booleanFlag,
+  RELAY_FAQ_REQUIRE_HUB_ACTIVE: booleanFlag,
+  RELAY_FAQ_WRITEBACK_ENABLED: booleanFlag,
 });
 
 export const envKeys: readonly string[] = Object.keys(rawSchema.shape);
@@ -103,6 +162,44 @@ export interface Env {
     from: string | undefined;
   };
   enableHsts: boolean;
+  relay: RelayEnv;
+}
+
+export interface RelayEnv {
+  enabled: boolean;
+  store: (typeof relayStores)[number];
+  provider: (typeof relayProviders)[number];
+  deepseekApiKey: string | undefined;
+  deepseekBaseUrl: string;
+  model: string;
+  summaryModel: string;
+  aiEnabled: boolean;
+  dailyTokenCap: number;
+  simFloor: number;
+  rateLimitMultiplier: number;
+  realtimePublicKey: string | undefined;
+  embedFunctionUrl: string | undefined;
+  embedSecret: string | undefined;
+  tokenPepper: string | undefined;
+  ipSalt: string | undefined;
+  allowedOrigins: string[];
+  adminApiSecrets: string[];
+  webhookSecret: string | undefined;
+  superadminWebhookUrl: string | undefined;
+  adminBaseUrl: string | undefined;
+  visitorEmailsEnabled: boolean;
+  emailFrom: string;
+  privacyNoticeVersion: string;
+  notion: {
+    token: string | undefined;
+    dataSourceId: string;
+    databaseId: string;
+    hubPageId: string;
+    apiVersion: string | undefined;
+  };
+  faqSyncEnabled: boolean;
+  faqRequireHubActive: boolean;
+  faqWritebackEnabled: boolean;
 }
 
 export interface Features {
@@ -114,6 +211,8 @@ export interface Features {
   emailNotifications: boolean;
   /** Search engines may index this deployment (production only). */
   indexable: boolean;
+  /** Vitalos Relay is switched on for this deployment. */
+  relay: boolean;
 }
 
 export interface EnvIssue {
@@ -201,7 +300,66 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         from: raw.EMAIL_FROM,
       },
       enableHsts: raw.ENABLE_HSTS === "true" || raw.ENABLE_HSTS === "1",
+      relay: resolveRelay(raw, deployEnv, siteUrl ?? LOCAL_SITE_URL, supabaseConfigured),
     },
+  };
+}
+
+const flag = (value: string | undefined, fallback: boolean) =>
+  value === undefined ? fallback : value === "true" || value === "1";
+
+function resolveRelay(
+  raw: Raw,
+  deployEnv: DeployEnv,
+  siteUrl: string,
+  supabaseConfigured: boolean,
+): RelayEnv {
+  const siteOrigins = [siteUrl];
+  if (deployEnv === "production") {
+    siteOrigins.push("https://vitalos.co.uk", "https://www.vitalos.co.uk");
+  }
+  const allowed = (raw.RELAY_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  return {
+    enabled: flag(raw.RELAY_ENABLED, false),
+    store: raw.RELAY_STORE ?? (supabaseConfigured ? "supabase" : "memory"),
+    provider: raw.RELAY_LLM_PROVIDER ?? (raw.DEEPSEEK_API_KEY ? "deepseek" : "mock"),
+    deepseekApiKey: raw.DEEPSEEK_API_KEY,
+    deepseekBaseUrl: raw.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
+    model: raw.RELAY_MODEL ?? "deepseek-flash",
+    summaryModel: raw.RELAY_SUMMARY_MODEL ?? raw.RELAY_MODEL ?? "deepseek-flash",
+    aiEnabled: flag(raw.RELAY_AI_ENABLED, true),
+    dailyTokenCap: raw.RELAY_DAILY_TOKEN_CAP ?? 2_000_000,
+    simFloor: raw.RELAY_SIM_FLOOR ?? 0.7,
+    rateLimitMultiplier: raw.RELAY_RATE_LIMIT_MULTIPLIER ?? 1,
+    realtimePublicKey: raw.RELAY_REALTIME_PUBLIC_KEY,
+    embedFunctionUrl: raw.RELAY_EMBED_FUNCTION_URL,
+    embedSecret: raw.RELAY_EMBED_SECRET,
+    tokenPepper: raw.RELAY_TOKEN_PEPPER,
+    ipSalt: raw.RELAY_IP_SALT,
+    allowedOrigins: [...new Set([...siteOrigins, ...allowed])],
+    adminApiSecrets: [raw.RELAY_ADMIN_API_SECRET, raw.RELAY_ADMIN_API_SECRET_PREVIOUS].filter(
+      (v): v is string => Boolean(v),
+    ),
+    webhookSecret: raw.RELAY_WEBHOOK_SECRET,
+    superadminWebhookUrl: raw.RELAY_SUPERADMIN_WEBHOOK_URL,
+    adminBaseUrl: raw.RELAY_ADMIN_BASE_URL,
+    visitorEmailsEnabled: flag(raw.RELAY_VISITOR_EMAILS_ENABLED, false),
+    emailFrom: raw.RELAY_EMAIL_FROM ?? "Vitalos Relay <relay@notify.vitalos.co.uk>",
+    privacyNoticeVersion:
+      raw.RELAY_PRIVACY_NOTICE_VERSION ?? raw.ENQUIRY_PRIVACY_NOTICE_VERSION ?? "2026-10-relay",
+    notion: {
+      token: raw.NOTION_FAQ_TOKEN,
+      dataSourceId: raw.NOTION_FAQ_DATA_SOURCE_ID ?? "3fae4b34-11f9-80b0-9910-000b57eabfa1",
+      databaseId: raw.NOTION_FAQ_DATABASE_ID ?? "3fae4b34-11f9-808c-b450-c69d43e8f22c",
+      hubPageId: raw.NOTION_FAQ_HUB_PAGE_ID ?? "3fae4b34-11f9-8053-9467-e390b032064a",
+      apiVersion: raw.NOTION_API_VERSION,
+    },
+    faqSyncEnabled: flag(raw.RELAY_FAQ_SYNC_ENABLED, true),
+    faqRequireHubActive: flag(raw.RELAY_FAQ_REQUIRE_HUB_ACTIVE, deployEnv === "production"),
+    faqWritebackEnabled: flag(raw.RELAY_FAQ_WRITEBACK_ENABLED, false),
   };
 }
 
@@ -348,6 +506,51 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
   if (env.turnstile.secretKey && !env.turnstile.siteKey) {
     add("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "is required when TURNSTILE_SECRET_KEY is set");
   }
+  issues.push(...relayIssues(env));
+  return issues;
+}
+
+/** Relay rules: fail closed when Relay is on. Messages never include values. */
+function relayIssues(env: Env): EnvIssue[] {
+  const r = env.relay;
+  const issues: EnvIssue[] = [];
+  const add = (path: string, message: string) => issues.push({ path, message });
+  const production = env.deployEnv === "production";
+  if (!r.enabled) return issues;
+  if (production && r.store === "memory") add("RELAY_STORE", "memory is forbidden in production");
+  if (production && r.rateLimitMultiplier !== 1) {
+    add("RELAY_RATE_LIMIT_MULTIPLIER", "must be 1 (unset) in production");
+  }
+  if (production && r.provider === "mock") {
+    add("RELAY_LLM_PROVIDER", "mock is forbidden in production");
+  }
+  if (!r.tokenPepper) add("RELAY_TOKEN_PEPPER", "is required when RELAY_ENABLED is true");
+  if (!r.ipSalt) add("RELAY_IP_SALT", "is required when RELAY_ENABLED is true");
+  if (r.store === "supabase" && (!env.supabase.url || !env.supabase.secretKey)) {
+    add("SUPABASE_URL", "and SUPABASE_SECRET_KEY are required when RELAY_STORE is supabase");
+  }
+  if (r.provider === "deepseek" && !r.deepseekApiKey) {
+    add("DEEPSEEK_API_KEY", "is required when RELAY_LLM_PROVIDER is deepseek");
+  }
+  if ((r.embedFunctionUrl === undefined) !== (r.embedSecret === undefined)) {
+    add("RELAY_EMBED_SECRET", "and RELAY_EMBED_FUNCTION_URL must be set together");
+  }
+  if (r.superadminWebhookUrl && !r.webhookSecret) {
+    add("RELAY_WEBHOOK_SECRET", "is required when RELAY_SUPERADMIN_WEBHOOK_URL is set");
+  }
+  if (production) {
+    if (!env.turnstile.siteKey || !env.turnstile.secretKey) {
+      add("TURNSTILE_SECRET_KEY", "Turnstile keys are required in production when Relay is on");
+    }
+    if (r.adminApiSecrets.length === 0) {
+      add("RELAY_ADMIN_API_SECRET", "is required in production when Relay is on");
+    }
+    if (!r.superadminWebhookUrl) {
+      add("RELAY_SUPERADMIN_WEBHOOK_URL", "is required in production when Relay is on");
+    } else if (!r.superadminWebhookUrl.startsWith("https://")) {
+      add("RELAY_SUPERADMIN_WEBHOOK_URL", "must be https in production");
+    }
+  }
   return issues;
 }
 
@@ -382,5 +585,6 @@ export function deriveFeatures(env: Env): Features {
     enquiryPersistence: env.enquiry.backend !== "disabled",
     emailNotifications: env.email.provider !== "none" && Boolean(env.enquiry.notificationTo),
     indexable: env.deployEnv === "production",
+    relay: env.relay.enabled,
   };
 }

@@ -1,0 +1,6 @@
+<nav id="relay-tabs" aria-label="Conversation status" class="flex flex-wrap border-b border-line px-3 dark:border-slate-800" {% if oob %}hx-swap-oob="true"{% endif %}>
+  {% for key, label, count in tabs %}
+    <a href="{% url 'relay:inbox' %}?tab={{ key }}" class="relay-tab" {% if key == tab %}aria-current="true"{% endif %}
+       hx-get="{% url 'relay:inbox' %}?tab={{ key }}" hx-target="#relay-list" hx-swap="innerHTML" hx-push-url="true" data-relay-tab="{{ key }}">{{ label }}{% if count is not None and key != "closed" %} <span class="{% if key == 'needs' %}relay-mineral{% endif %}">{{ count }}</span>{% endif %}</a>
+  {% endfor %}
+</nav>

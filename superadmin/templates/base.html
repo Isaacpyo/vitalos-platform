@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     {% htmx_script %}
     <script src="{% static 'js/app.js' %}" nonce="{{ csp_nonce }}" defer></script>
+    {% if show_chrome and can_relay %}<script src="{% static 'js/relay-alerts.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endif %}
     {% block scripts %}{% endblock %}
   </head>
   <body class="min-h-full bg-offwhite text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-inherit="hx-headers">
@@ -78,5 +79,10 @@
     {% endif %}
     <div id="modal"></div>
     <div id="toasts" class="fixed bottom-4 right-4 z-[60] flex max-w-sm flex-col gap-2" aria-live="polite"></div>
+    {% if show_chrome and can_relay %}
+      {# Relay alerts: toasts at the top right of every page (relay-alerts.js polls /relay/pulse/ every 20 s). #}
+      <div id="relay-toasts" class="fixed top-4 right-4 z-[65] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite"
+           data-pulse-url="{% url 'relay:pulse' %}" data-cursor="{{ relay_cursor }}" data-testid="relay-toasts"></div>
+    {% endif %}
   </body>
 </html>

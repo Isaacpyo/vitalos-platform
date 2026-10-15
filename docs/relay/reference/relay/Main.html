@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Relay — identity and rules</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Manrope:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2458E6}a:hover{color:#0B1320}
+</style>
+</head>
+<body>
+
+<div style="width: 1440px; height: 1040px; position: relative; overflow: hidden; background: #F5F7FA; font-family: Inter, system-ui, sans-serif; color: #0B1320">
+
+<div style="position: absolute; left: 0; top: 0; width: 1440px; height: 580px; background: #0B1320; overflow: hidden">
+<svg aria-hidden="true" width="1440" height="580" viewBox="0 0 1440 580" style="position: absolute; left: 0; top: 0">
+<polygon points="760,44 1100,240 1440,240 1440,288 1100,288 760,92" fill="#2F6BFF"></polygon>
+<polygon points="760,488 1100,292 1440,292 1440,340 1100,340 760,536" fill="#18B7A0"></polygon>
+<line x1="760" y1="24" x2="760" y2="556" stroke="#26344D" stroke-width="1"></line>
+<line x1="1100" y1="24" x2="1100" y2="556" stroke="#26344D" stroke-width="1"></line>
+</svg>
+<div style="position: absolute; left: 1290px; top: 256px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 16px; letter-spacing: 0.04em; color: #FFFFFF">RELAY AI</div>
+<div style="position: absolute; left: 1250px; top: 308px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 16px; letter-spacing: 0.04em; color: #0B1320">VITALOS PEOPLE</div>
+<div style="position: absolute; left: 800px; top: 150px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 16px; letter-spacing: 0.04em; color: #A7B2C4">θ 30°</div>
+<div style="position: absolute; left: 1112px; top: 520px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 16px; letter-spacing: 0.04em; color: #A7B2C4">FIG. 01 · TWO PATHS, ONE ANSWER</div>
+
+<div style="position: absolute; left: 64px; top: 56px; display: flex; align-items: center; gap: 12px">
+<span style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; overflow: hidden"><img src="assets/vitalos-symbol.png" alt="" style="width: 64px; height: 64px; flex: none"></span>
+<span style="font-family: Manrope, Inter, sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.02em; color: #F5F7FA">Relay</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #A7B2C4; margin-left: 12px">VITALOS RELAY · WEBSITE CONVERSATIONS · V1</span>
+</div>
+
+<h1 style="position: absolute; left: 64px; top: 168px; width: 660px; margin: 0; font-family: Manrope, Inter, sans-serif; font-weight: 800; font-size: 72px; line-height: 72px; letter-spacing: -0.03em; color: #F5F7FA">Answers now. People when it matters<span style="color: #2F6BFF">.</span></h1>
+<p style="position: absolute; left: 64px; top: 412px; width: 600px; margin: 0; font-size: 18px; line-height: 28px; color: #A7B2C4">Relay is the Vitalos website assistant. It answers from our own published knowledge, shows where each answer came from, and passes the conversation to a named person the moment an answer falls short.</p>
+</div>
+
+<div style="position: absolute; left: 64px; top: 628px; width: 1312px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 24px">
+
+<div style="border-top: 1px solid #0B1320; padding-top: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">01 · NAME</div>
+<div style="font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 24px; line-height: 32px; letter-spacing: -0.01em">Relay<span style="color: #2458E6">.</span></div>
+<p style="margin: 0; font-size: 15px; line-height: 24px; color: #4A5568">A relay passes the work on without dropping it. The AI takes the first answer; a person takes it from there, in the same thread, with full context.</p>
+<p style="margin: 0; font-size: 15px; line-height: 24px; color: #4A5568">Write <b style="color: #0B1320; font-weight: 600">Vitalos Relay</b> in formal copy and <b style="color: #0B1320; font-weight: 600">Relay</b> in the interface. Never give it a human name. Never call it a bot.</p>
+</div>
+
+<div style="border-top: 1px solid #0B1320; padding-top: 16px; display: flex; flex-direction: column; gap: 16px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">02 · LAUNCHER</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button type="button" aria-label="Open chat with Relay, the Vitalos assistant" style="align-self: flex-start; height: 70px; border: 0; padding: 0; background: #0B1320; clip-path: polygon(0 0, 100% 0, 100% 70px, calc(100% - 24px) 56px, 0 56px); display: flex; align-items: flex-start; cursor: pointer">
+<span style="height: 56px; display: flex; align-items: center; padding: 0 4px 0 20px; font-family: Inter, sans-serif; font-weight: 600; font-size: 15px; color: #F5F7FA">Ask Vitalos</span>
+<span style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; overflow: hidden"><img src="assets/vitalos-symbol.png" alt="" style="width: 44px; height: 44px; flex: none"></span>
+</button>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">DEFAULT · DESKTOP ≥1024PX</div>
+</div>
+<div style="display: flex; gap: 20px; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative; width: 66px; height: 70px">
+<button type="button" aria-label="Open chat with Relay. 1 new reply from the Vitalos team" style="position: absolute; left: 0; top: 0; width: 56px; height: 70px; border: 0; padding: 0; background: #0B1320; clip-path: polygon(0 0, 56px 0, 56px 70px, 32px 56px, 0 56px); display: flex; align-items: flex-start; justify-content: center; cursor: pointer">
+<span style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; overflow: hidden"><img src="assets/vitalos-symbol.png" alt="" style="width: 44px; height: 44px; flex: none"></span>
+</button>
+<span aria-hidden="true" style="position: absolute; left: 44px; top: -8px; width: 22px; height: 22px; border-radius: 999px; background: #18B7A0; color: #0B1320; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; border: 2px solid #F5F7FA">1</span>
+</div>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">UNREAD · PERSON REPLIED</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button type="button" aria-label="Open chat with Relay, the Vitalos assistant" style="width: 48px; height: 60px; border: 0; padding: 0; background: #0B1320; clip-path: polygon(0 0, 48px 0, 48px 60px, 28px 48px, 0 48px); display: flex; align-items: flex-start; justify-content: center; cursor: pointer">
+<span style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden"><img src="assets/vitalos-symbol.png" alt="" style="width: 38px; height: 38px; flex: none"></span>
+</button>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">COMPACT · MOBILE</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="width: 76px; height: 76px; background: #0B1320; display: flex; align-items: center; justify-content: center">
+<div style="filter: drop-shadow(2px 0 0 #F5F7FA) drop-shadow(-2px 0 0 #F5F7FA) drop-shadow(0 2px 0 #F5F7FA) drop-shadow(0 -2px 0 #F5F7FA)">
+<button type="button" aria-label="Open chat with Relay, the Vitalos assistant" style="display: flex; width: 48px; height: 60px; border: 0; padding: 0; background: #0B1320; clip-path: polygon(0 0, 48px 0, 48px 60px, 28px 48px, 0 48px); align-items: flex-start; justify-content: center; cursor: pointer">
+<span style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden"><img src="assets/vitalos-symbol.png" alt="" style="width: 38px; height: 38px; flex: none"></span>
+</button>
+</div>
+</div>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">ON MIDNIGHT · KEYLINE</div>
+</div>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: #4A5568">A square speech tile with a 30° tail and the Vitalos symbol. A 2px off-white keyline keeps it visible on midnight sections. No bounce, no auto-open, no pop-up greeting.</p>
+</div>
+
+<div style="border-top: 1px solid #0B1320; padding-top: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">03 · TWO PATHS</div>
+<div style="font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 24px; line-height: 32px; letter-spacing: -0.01em">Who is speaking<span style="color: #2458E6">.</span></div>
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #D5DCE6"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #2F6BFF; margin-top: 3px; flex: none"></span><span style="font-size: 14px; line-height: 20px"><b style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; font-weight: 500">RELAY · AI</b><br>Answer drafted from Vitalos knowledge.</span></div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #D5DCE6"><span aria-hidden="true" style="width: 10px; height: 10px; border-radius: 999px; background: #18B7A0; margin-top: 3px; flex: none"></span><span style="font-size: 14px; line-height: 20px"><b style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; font-weight: 500">NAME · VITALOS</b><br>A named person from the team.</span></div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #D5DCE6"><span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; border: 2px solid #0E7C6B; margin-top: 3px; flex: none"></span><span style="font-size: 14px; line-height: 20px"><b style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; font-weight: 500">WAITING</b><br>A person has been asked to join.</span></div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 10px 0"><span aria-hidden="true" style="width: 10px; height: 10px; box-sizing: border-box; border-radius: 999px; border: 2px solid #7A879B; margin-top: 3px; flex: none"></span><span style="font-size: 14px; line-height: 20px"><b style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; font-weight: 500">SYSTEM</b><br>Status changes, set between hairlines.</span></div>
+</div>
+</div>
+
+<div style="border-top: 1px solid #0B1320; padding-top: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: #4A5568">04 · VOICE</div>
+<div style="font-family: Manrope, Inter, sans-serif; font-weight: 700; font-size: 24px; line-height: 32px; letter-spacing: -0.01em">How Relay talks<span style="color: #2458E6">.</span></div>
+<div style="display: flex; flex-direction: column; font-size: 14px; line-height: 20px">
+<div style="padding: 9px 0; border-bottom: 1px solid #D5DCE6">Short, plain British English. No emoji, no exclamation marks.</div>
+<div style="padding: 9px 0; border-bottom: 1px solid #D5DCE6">Says it is AI when it introduces itself.</div>
+<div style="padding: 9px 0; border-bottom: 1px solid #D5DCE6">Answers only from Vitalos knowledge and says plainly when it does not know.</div>
+<div style="padding: 9px 0; border-bottom: 1px solid #D5DCE6">Never invents prices, clients, certifications, timelines or outcomes.</div>
+<div style="padding: 9px 0">Offers a person instead of guessing.</div>
+</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 64px; top: 944px; width: 1312px; display: flex; align-items: center; gap: 24px; border-top: 1px solid #D5DCE6; padding-top: 16px; flex-wrap: wrap">
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="width: 16px; height: 16px; background: #0B1320"></span>MIDNIGHT #0B1320</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="width: 16px; height: 16px; background: #2F6BFF"></span>COBALT #2F6BFF · AI</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="width: 16px; height: 16px; background: #2458E6"></span>COBALT-600 #2458E6 · ACTIONS</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="width: 16px; height: 16px; background: #18B7A0"></span>MINERAL #18B7A0 · PEOPLE</span>
+<span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568"><span style="width: 16px; height: 16px; background: #FFFFFF; box-sizing: border-box; border: 1px solid #D5DCE6"></span>WHITE · MESSAGES</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">MANROPE 700 · HEADINGS</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">INTER 15/24 · MESSAGES</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">JETBRAINS MONO · LABELS</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4A5568">PANEL 240MS EASE-OUT · REDUCED MOTION: 120MS FADE</span>
+</div>
+</div>
+
+</body>
+</html>

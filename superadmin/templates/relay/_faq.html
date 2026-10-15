@@ -1,0 +1,65 @@
+<section aria-labelledby="kb-faq-title" class="relay-panel">
+  <div class="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3.5 dark:border-slate-800">
+    <div class="min-w-0 flex-1">
+      <p class="relay-mono relay-muted">Master FAQ · {% if faq.mode == "snapshot" %}using snapshot{% else %}Notion{% endif %}</p>
+      <h3 id="kb-faq-title" class="font-display text-base font-bold">{% if view == "confirm" %}Needs confirmation{% else %}Held{% endif %}</h3>
+      {% if faq.lastRun %}
+        <p class="relay-muted mt-1 text-[13px]" data-testid="relay-faq-last-run">Last sync{% if faq_run_at %} {{ faq_run_at|date:"j M, H:i" }}{% endif %} · {{ faq.lastRun.added }} added · {{ faq.lastRun.updated }} updated · {{ faq.lastRun.archived }} archived · {{ faq.lastRun.held }} held · {{ faq.lastRun.skippedUnverified }} not verified · {{ faq.lastRun.errors }} errors</p>
+      {% else %}
+        <p class="relay-muted mt-1 text-[13px]">No sync has run yet.</p>
+      {% endif %}
+      {% if faq.hubActive is False %}<p class="relay-muted mt-1 text-[13px]">The FAQ hub page is still a draft, so new FAQ entries stay unpublished.</p>{% endif %}
+    </div>
+    {% if relay_can_manage %}
+      <form method="post" action="{% url 'relay:faq_sync' %}" hx-post="{% url 'relay:faq_sync' %}" hx-swap="none" hx-disabled-elt="find button">
+        {% csrf_token %}<input type="hidden" name="view" value="{{ view }}">
+        <button type="submit" class="relay-btn relay-btn-secondary">Sync now</button>
+      </form>
+    {% endif %}
+  </div>
+  <div class="overflow-x-auto">
+    {% if view == "confirm" %}
+      <table class="w-full min-w-[560px] border-collapse text-sm leading-5">
+        <thead>
+          <tr class="text-left">
+            <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Question</th>
+            <th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">Section</th>
+            {% if relay_can_manage %}<th scope="col" class="relay-mono relay-muted border-b border-line px-2 py-2.5 font-medium dark:border-slate-800">Confirm note</th>{% endif %}
+            <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in faq.needsConfirmation %}
+            <tr class="border-b border-line last:border-b-0 dark:border-slate-800">
+              <td class="px-4 py-[11px]"><span class="relay-muted block font-mono text-[11px]">{{ entry.externalId }}</span>{{ entry.question }}{% if entry.notionUrl %} <a href="{{ entry.notionUrl }}" target="_blank" rel="noopener noreferrer" class="relay-link ml-1 text-[13px]">Open in Notion<span class="sr-only"> (new tab)</span></a>{% endif %}</td>
+              <td class="relay-muted px-2 py-[11px]">{{ entry.section }}</td>
+              {% if relay_can_manage %}<td class="px-2 py-[11px]">{{ entry.confirmNote }}</td>{% endif %}
+              <td class="relay-muted px-4 py-[11px] whitespace-nowrap">Not used by Relay</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="relay-muted px-4 py-6">Nothing is waiting for confirmation.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <table class="w-full min-w-[560px] border-collapse text-sm leading-5">
+        <thead>
+          <tr class="text-left">
+            <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Question</th>
+            <th scope="col" class="relay-mono relay-muted border-b border-line px-4 py-2.5 font-medium dark:border-slate-800">Why it is held</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in faq.held %}
+            <tr class="border-b border-line last:border-b-0 dark:border-slate-800">
+              <td class="px-4 py-[11px]"><span class="relay-muted block font-mono text-[11px]">{{ entry.externalId }}</span>{{ entry.question }}</td>
+              <td class="px-4 py-[11px]">{{ entry.reasons|join:"; " }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="2" class="relay-muted px-4 py-6">No entries are held.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</section>

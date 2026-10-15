@@ -4,6 +4,8 @@ from apps.accounts.otp import confirmed_devices, otp_required
 from apps.accounts.roles import has_any_role, is_superadmin, primary_role, role_label
 from apps.audit.services import previous_sign_in
 from apps.enquiries.selectors import can_access as enquiry_access
+from apps.relay.selectors import latest_notification_id
+from apps.relay.selectors import nav_visible as relay_visible
 
 from . import navigation
 
@@ -50,5 +52,7 @@ def app_context(request):
         "role_label": (lambda: role_label(user)) if authenticated else "",
         "mfa_enabled": (lambda: confirmed_devices(user).exists()) if authenticated else False,
         "can_enquiries": (lambda: enquiry_access(user)) if authenticated else False,
+        "can_relay": (lambda: relay_visible(user)) if authenticated else False,
+        "relay_cursor": (lambda: latest_notification_id(user)) if authenticated else 0,
         "previous_sign_in": (lambda: previous_sign_in(user)) if authenticated else None,
     }

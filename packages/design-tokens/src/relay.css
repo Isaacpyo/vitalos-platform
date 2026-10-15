@@ -1,0 +1,52 @@
+/* Generated from src/relay.ts. Do not edit by hand. Brand v2 scope for Vitalos Relay. */
+
+.relay-root {
+  --relay-midnight: #0b1320;
+  --relay-midnight-800: #111b2e;
+  --relay-midnight-700: #1a2740;
+  --relay-cobalt: #2f6bff;
+  --relay-cobalt-600: #2458e6;
+  --relay-cobalt-300: #7fa3ff;
+  --relay-mineral: #18b7a0;
+  --relay-mineral-700: #0e7c6b;
+  --relay-mineral-300: #3fd0ba;
+  --relay-off-white: #f5f7fa;
+  --relay-white: #ffffff;
+  --relay-slate-600: #4a5568;
+  --relay-slate-300: #a7b2c4;
+  --relay-line-light: #d5dce6;
+  --relay-line-dark: #26344d;
+  --relay-stroke-light: #7a879b;
+  --relay-stroke-dark: #5f6e86;
+  --relay-scrim: rgba(11, 19, 32, 0.4);
+  --relay-surface-100: var(--relay-off-white);
+  --relay-surface-200: var(--relay-white);
+  --relay-surface-inverse: var(--relay-midnight);
+  --relay-ink: var(--relay-midnight);
+  --relay-ink-muted: var(--relay-slate-600);
+  --relay-ink-inverse: var(--relay-off-white);
+  --relay-action: var(--relay-cobalt-600);
+  --relay-on-action: var(--relay-white);
+  --relay-accent-text: var(--relay-cobalt-600);
+  --relay-mineral-text: var(--relay-mineral-700);
+  --relay-line: var(--relay-line-light);
+  --relay-line-strong: var(--relay-stroke-light);
+  --relay-focus-ring: var(--relay-cobalt-600);
+}
+
+/* The site has no dark theme today; these apply if one is added under [data-theme="dark"]. */
+[data-theme="dark"] .relay-root {
+  --relay-surface-100: var(--relay-midnight);
+  --relay-surface-200: var(--relay-midnight-800);
+  --relay-surface-inverse: var(--relay-off-white);
+  --relay-ink: var(--relay-off-white);
+  --relay-ink-muted: var(--relay-slate-300);
+  --relay-ink-inverse: var(--relay-midnight);
+  --relay-action: var(--relay-cobalt-300);
+  --relay-on-action: var(--relay-midnight);
+  --relay-accent-text: var(--relay-cobalt-300);
+  --relay-mineral-text: var(--relay-mineral-300);
+  --relay-line: var(--relay-line-dark);
+  --relay-line-strong: var(--relay-stroke-dark);
+  --relay-focus-ring: var(--relay-cobalt-300);
+}
