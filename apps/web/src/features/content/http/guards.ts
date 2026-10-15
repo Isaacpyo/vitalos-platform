@@ -63,7 +63,12 @@ export const rateLimits = {
   revalidate: { windowSeconds: 60, max: 120 },
   render: { windowSeconds: 60, max: 60 },
   preview: { windowSeconds: 60, max: 30 },
-  lookup: { windowSeconds: 60, max: 1200 },
+  // Per visitor (the proxy forwards the visitor's address, signed): a visitor browsing quickly
+  // stays far below it; slugs the sitemap does not list are capped separately (slug-guard.ts).
+  lookup: { windowSeconds: 60, max: 300 },
+  // Lookups whose visitor address the proxy could not tell (local runs without a forwarding
+  // proxy): one shared bucket, as before the per-visitor limit.
+  "lookup-anonymous": { windowSeconds: 60, max: 1200 },
   tick: { windowSeconds: 60, max: 30 },
   // Brief section 9: per IP, 5 CV uploads and 3 applications an hour.
   "careers-upload": { windowSeconds: 3600, max: 5 },
@@ -83,10 +88,12 @@ export async function rateLimited(
   scope: RateLimitScope,
   correlationId: string,
   body: unknown = { error: "rate_limited" },
+  /** The caller's address when it does not come from these headers (the proxy's lookup). */
+  ip?: string,
 ): Promise<Response | null> {
   const key = await rateLimitKey(
     `content:${scope}`,
-    clientIpFromHeaders(headers) ?? "unknown",
+    ip || clientIpFromHeaders(headers) || "unknown",
     processSalt,
   );
   const decision = await limiter.consume(key, rateLimits[scope]);

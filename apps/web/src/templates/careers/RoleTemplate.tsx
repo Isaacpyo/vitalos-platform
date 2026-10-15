@@ -115,7 +115,8 @@ export function RoleTemplate({
         </Section>
 
         <Section as="div" tone="light" spacing="default">
-          <Container size="wide">
+          {/* The band's own padding is the gap above the first section (no extra margin). */}
+          <Container size="wide" className="[&>section:first-child]:mt-0">
             {sections.map((section) => (
               <HtmlSection
                 key={section.key}

@@ -1,4 +1,5 @@
 import type { ContentReaders, ReadResult } from "../readers";
+import type { SlugGuard } from "./slug-guard";
 import { CAREERS_BASE, INSIGHTS_BASE } from "../routes";
 
 /**
@@ -81,7 +82,43 @@ const redirectOf = (base: string) => (data: unknown) =>
     ? `${base}/${data.redirect}`
     : undefined;
 
-export async function lookupVerdict(path: string, readers: ContentReaders): Promise<Verdict> {
+/** The page a slug route belongs to, as the sitemap lists it; null for routes without a slug. */
+function slugPath(route: Route): string | null {
+  switch (route.kind) {
+    case "insights-post":
+      return `${INSIGHTS_BASE}/${route.slug}`;
+    case "insights-author":
+      return `${INSIGHTS_BASE}/authors/${route.slug}`;
+    case "insights-topic":
+    case "insights-topic-page":
+      return `${INSIGHTS_BASE}/topics/${route.slug}`;
+    case "careers-role":
+      return `${CAREERS_BASE}/${route.slug}`;
+    default:
+      return null;
+  }
+}
+
+/** The paths the cached sitemap lists, or null when it cannot be read (no pre-filter then). */
+async function listedPaths(readers: ContentReaders): Promise<Set<string> | null> {
+  try {
+    const result = await readers.sitemap();
+    return result.kind === "ok" ? new Set(result.data.entries.map((entry) => entry.path)) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The verdict for a path. With a `guard`, a slug the cached sitemap does not list is confirmed
+ * with an admin read only within the guard's per-minute budget, and is "missing" beyond it, so
+ * random slugs cannot drive the admin to its rate limit (see `slug-guard.ts`).
+ */
+export async function lookupVerdict(
+  path: string,
+  readers: ContentReaders,
+  guard?: SlugGuard,
+): Promise<Verdict> {
   const route = matchContentRoute(path);
   if (!route || !readers.configured) return missing;
   try {
@@ -90,39 +127,53 @@ export async function lookupVerdict(path: string, readers: ContentReaders): Prom
     if (section === "insights" && !state.insightsOpen) return missing;
     if (section === "careers" && !state.careersOpen) return missing;
 
-    switch (route.kind) {
-      case "insights-index":
-        return fromResult(await readers.listPosts({ page: 1 }));
-      case "insights-page": {
-        // Page 1 lives at /insights.
-        if (route.page === 1) return { verdict: "redirect", location: INSIGHTS_BASE };
-        const result = await readers.listPosts({ page: route.page });
-        if (result.kind === "missing" || route.page > result.data.totalPages) return missing;
-        return ok;
+    const page = slugPath(route);
+    if (guard && page && !guard.isRemembered(page)) {
+      const listed = await listedPaths(readers);
+      if (listed && !listed.has(page)) {
+        if (!guard.allowConfirm()) return missing;
+        const confirmed = await routeVerdict(route, readers);
+        if (confirmed.verdict === "ok" || confirmed.verdict === "redirect") guard.remember(page);
+        return confirmed;
       }
-      case "insights-feed":
-        return fromResult(await readers.feed());
-      case "insights-post":
-        return fromResult(await readers.post(route.slug), redirectOf(INSIGHTS_BASE));
-      case "insights-author":
-        return fromResult(await readers.author(route.slug), redirectOf(`${INSIGHTS_BASE}/authors`));
-      case "insights-topic":
-        return fromResult(await readers.topic(route.slug, 1));
-      case "insights-topic-page": {
-        // Page 1 lives at the topic's own path.
-        if (route.page === 1) {
-          return { verdict: "redirect", location: `${INSIGHTS_BASE}/topics/${route.slug}` };
-        }
-        const result = await readers.topic(route.slug, route.page);
-        if (result.kind === "missing" || route.page > result.data.posts.totalPages) return missing;
-        return ok;
-      }
-      case "careers-index":
-        return fromResult(await readers.careersPage());
-      case "careers-role":
-        return fromResult(await readers.role(route.slug), redirectOf(CAREERS_BASE));
     }
+    return await routeVerdict(route, readers);
   } catch {
     return { verdict: "unavailable" };
+  }
+}
+
+async function routeVerdict(route: Route, readers: ContentReaders): Promise<Verdict> {
+  switch (route.kind) {
+    case "insights-index":
+      return fromResult(await readers.listPosts({ page: 1 }));
+    case "insights-page": {
+      // Page 1 lives at /insights.
+      if (route.page === 1) return { verdict: "redirect", location: INSIGHTS_BASE };
+      const result = await readers.listPosts({ page: route.page });
+      if (result.kind === "missing" || route.page > result.data.totalPages) return missing;
+      return ok;
+    }
+    case "insights-feed":
+      return fromResult(await readers.feed());
+    case "insights-post":
+      return fromResult(await readers.post(route.slug), redirectOf(INSIGHTS_BASE));
+    case "insights-author":
+      return fromResult(await readers.author(route.slug), redirectOf(`${INSIGHTS_BASE}/authors`));
+    case "insights-topic":
+      return fromResult(await readers.topic(route.slug, 1));
+    case "insights-topic-page": {
+      // Page 1 lives at the topic's own path.
+      if (route.page === 1) {
+        return { verdict: "redirect", location: `${INSIGHTS_BASE}/topics/${route.slug}` };
+      }
+      const result = await readers.topic(route.slug, route.page);
+      if (result.kind === "missing" || route.page > result.data.posts.totalPages) return missing;
+      return ok;
+    }
+    case "careers-index":
+      return fromResult(await readers.careersPage());
+    case "careers-role":
+      return fromResult(await readers.role(route.slug), redirectOf(CAREERS_BASE));
   }
 }

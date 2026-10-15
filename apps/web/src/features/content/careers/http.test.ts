@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ContentRejectedError, ContentUnavailableError } from "../client";
 import { MemoryRateLimiter } from "../http/guards";
 import { RoleResponse } from "../schemas";
+import { mapErrorCodes } from "./form";
 import { handleApplicationRequest, handleUploadRequest } from "./http";
 import type { CareersDeps, HumanCheck } from "./http";
 
@@ -115,7 +116,11 @@ describe("POST /api/careers/uploads", () => {
       "/api/careers/v1/upload-tickets",
       { roleSlug: "example-role-fixture", filename: "cv.pdf", size: 1000, mime: "application/pdf" },
       expect.anything(),
-      expect.objectContaining({ scope: "submit" }),
+      expect.objectContaining({
+        scope: "submit",
+        // The admin's per-address cap: the visitor's address travels with the signed request.
+        headers: { "x-vitalos-client-ip": "198.51.100.20" },
+      }),
     );
   });
 
@@ -167,6 +172,27 @@ describe("POST /api/careers/uploads", () => {
     const response = await handleUploadRequest(request("/api/careers/uploads", uploadBody), deps);
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ errors: { roleSlug: "role_closed" } });
+  });
+
+  it("prefers the platform's address header and maps the admin's per-address cap", async () => {
+    const { deps, post } = harness({
+      post: () =>
+        Promise.reject(new ContentRejectedError(429, { errors: { uploadId: "rate_limited" } })),
+    });
+    const response = await handleUploadRequest(
+      request("/api/careers/uploads", uploadBody, { "x-vercel-forwarded-for": "203.0.113.5" }),
+      deps,
+    );
+    expect(response.status).toBe(429);
+    const body = (await response.json()) as { errors: Record<string, string> };
+    expect(body).toEqual({ errors: { uploadId: "rate_limited" } });
+    expect(mapErrorCodes(body.errors).form).toBe(
+      "You're sending applications quickly. Try again in a few minutes.",
+    );
+    const options = (post.mock.calls[0] as unknown as unknown[])[3] as {
+      headers: Record<string, string>;
+    };
+    expect(options.headers).toEqual({ "x-vitalos-client-ip": "203.0.113.5" });
   });
 
   it("allows 5 uploads an hour per IP", async () => {

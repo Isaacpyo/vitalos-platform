@@ -30,7 +30,7 @@ export const VerdictSchema: z.ZodType<Verdict> = z.discriminatedUnion("verdict",
 
 export interface ProxyLookupDeps {
   /** Calls the lookup route; throws on any failure. */
-  fetchVerdict(path: string, signal: AbortSignal): Promise<Verdict>;
+  fetchVerdict(path: string, signal: AbortSignal, clientIp: string): Promise<Verdict>;
   now?: () => number;
   ttlMs?: number;
   confirmMs?: number;
@@ -68,14 +68,14 @@ export function createProxyLookup(deps: ProxyLookupDeps) {
     }
   };
 
-  function refresh(path: string): Promise<Verdict | null> {
+  function refresh(path: string, clientIp: string): Promise<Verdict | null> {
     const pending = inFlight.get(path);
     if (pending) return pending;
     const started = (async (): Promise<Verdict | null> => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const verdict = await deps.fetchVerdict(path, controller.signal);
+        const verdict = await deps.fetchVerdict(path, controller.signal, clientIp);
         remember(path, verdict);
         failedUntil.delete(path);
         return verdict;
@@ -94,7 +94,7 @@ export function createProxyLookup(deps: ProxyLookupDeps) {
 
   return {
     /** The verdict for a path, or null to pass the request through (failure or timeout). */
-    async verdict(path: string): Promise<Verdict | null> {
+    async verdict(path: string, clientIp = ""): Promise<Verdict | null> {
       const cached = cache.get(path);
       const age = cached ? now() - cached.at : Infinity;
       const fresh =
@@ -105,7 +105,7 @@ export function createProxyLookup(deps: ProxyLookupDeps) {
       } else if ((failedUntil.get(path) ?? 0) > now()) {
         return null;
       }
-      return refresh(path);
+      return refresh(path, clientIp);
     },
     /** Forget every verdict (after a revalidation on this instance, and in tests). */
     clear(): void {

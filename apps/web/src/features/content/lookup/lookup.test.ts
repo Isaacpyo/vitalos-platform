@@ -16,27 +16,36 @@ const fixture = (name: string): unknown =>
     ),
   );
 
+const subject = (path: string, clientIp = "198.51.100.1") => ({ path, clientIp });
+
 describe("lookup auth", () => {
   const secret = "r".repeat(40);
   const now = 1_800_000_000;
 
+  it("covers the visitor's address: a swapped address is refused", () => {
+    const header = signLookup(secret, subject("/insights/a"), now);
+    expect(verifyLookup(secret, header, subject("/insights/a"), now)).toBe(true);
+    expect(verifyLookup(secret, header, subject("/insights/a", "203.0.113.9"), now)).toBe(false);
+    expect(verifyLookup(secret, header, subject("/insights/a", ""), now)).toBe(false);
+  });
+
   it("accepts its own header for the same path within 60 s", () => {
-    const header = signLookup(secret, "/insights/a", now);
-    expect(verifyLookup(secret, header, "/insights/a", now + 60)).toBe(true);
-    expect(verifyLookup(secret, header, "/insights/a", now + 61)).toBe(false);
+    const header = signLookup(secret, subject("/insights/a"), now);
+    expect(verifyLookup(secret, header, subject("/insights/a"), now + 60)).toBe(true);
+    expect(verifyLookup(secret, header, subject("/insights/a"), now + 61)).toBe(false);
   });
 
   it("refuses another path, another secret, junk and a missing secret", () => {
-    const header = signLookup(secret, "/insights/a", now);
-    expect(verifyLookup(secret, header, "/insights/b", now)).toBe(false);
-    expect(verifyLookup("s".repeat(40), header, "/insights/a", now)).toBe(false);
-    expect(verifyLookup(secret, null, "/insights/a", now)).toBe(false);
-    expect(verifyLookup(secret, "123.abc", "/insights/a", now)).toBe(false);
-    expect(verifyLookup(undefined, header, "/insights/a", now)).toBe(false);
+    const header = signLookup(secret, subject("/insights/a"), now);
+    expect(verifyLookup(secret, header, subject("/insights/b"), now)).toBe(false);
+    expect(verifyLookup("s".repeat(40), header, subject("/insights/a"), now)).toBe(false);
+    expect(verifyLookup(secret, null, subject("/insights/a"), now)).toBe(false);
+    expect(verifyLookup(secret, "123.abc", subject("/insights/a"), now)).toBe(false);
+    expect(verifyLookup(undefined, header, subject("/insights/a"), now)).toBe(false);
   });
 
   it("is not a request signature: the derived key differs from the read secret", () => {
-    const header = signLookup(secret, "/insights/a", now);
+    const header = signLookup(secret, subject("/insights/a"), now);
     expect(header).not.toContain(secret);
   });
 });

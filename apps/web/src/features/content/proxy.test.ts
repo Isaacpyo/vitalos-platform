@@ -9,6 +9,7 @@ const env = {
 vi.mock("@vitalos/config", () => ({
   getEnv: () => ({
     siteUrl: "https://www.example.test",
+    deployEnv: "local",
     content: env.configured
       ? { apiBaseUrl: "https://admin.example.test", readKey: { id: "read", secret: readSecret } }
       : { apiBaseUrl: undefined, readKey: undefined },
@@ -70,13 +71,22 @@ describe("contentProxyDecision", () => {
       verdictResponse({ verdict: "redirect", location: "/insights/b" }),
     );
     const decision = await contentProxyDecision(
-      new NextRequest("https://www.example.test/insights/a"),
+      new NextRequest("https://www.example.test/insights/a", {
+        headers: { "x-vercel-forwarded-for": "198.51.100.30", "x-forwarded-for": "10.0.0.1" },
+      }),
     );
     expect(decision).toEqual({ redirect: "/insights/b" });
     const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
     expect(String(url)).toBe("https://www.example.test/api/content/lookup?path=%2Finsights%2Fa");
-    const header = new Headers(init.headers).get("x-vitalos-lookup");
-    expect(verifyLookup(readSecret, header, "/insights/a")).toBe(true);
+    const headers = new Headers(init.headers);
+    // The visitor's address (the platform's header first) travels signed with the path.
+    expect(headers.get("x-vitalos-lookup-ip")).toBe("198.51.100.30");
+    expect(
+      verifyLookup(readSecret, headers.get("x-vitalos-lookup"), {
+        path: "/insights/a",
+        clientIp: "198.51.100.30",
+      }),
+    ).toBe(true);
 
     fetchMock.mockReturnValueOnce(verdictResponse({ verdict: "missing" }));
     expect(await contentProxyDecision(new NextRequest("https://www.example.test/careers/x"))).toBe(
@@ -111,12 +121,20 @@ describe("contentProxyDecision", () => {
 });
 
 describe("lookupOrigin", () => {
-  it("uses the request origin only for the site, the deployment or a local host", () => {
+  it("uses the request origin only for the site, the deployment or (locally) a local host", () => {
     const site = "https://www.example.test";
-    expect(lookupOrigin("https://www.example.test", site)).toBe(site);
-    expect(lookupOrigin("http://127.0.0.1:3210", site)).toBe("http://127.0.0.1:3210");
-    expect(lookupOrigin("http://localhost:3000", site)).toBe("http://localhost:3000");
-    expect(lookupOrigin("https://evil.example", site)).toBe(site);
+    expect(lookupOrigin("https://www.example.test", site, "production")).toBe(site);
+    expect(lookupOrigin("http://127.0.0.1:3210", site, "local")).toBe("http://127.0.0.1:3210");
+    expect(lookupOrigin("http://localhost:3000", site, "local")).toBe("http://localhost:3000");
+    expect(lookupOrigin("https://evil.example", site, "local")).toBe(site);
+  });
+
+  it("never follows a local host outside local runs", () => {
+    const site = "https://www.example.test";
+    for (const env of ["preview", "staging", "production"] as const) {
+      expect(lookupOrigin("http://127.0.0.1:3210", site, env), env).toBe(site);
+      expect(lookupOrigin("http://localhost:9999", site, env), env).toBe(site);
+    }
   });
 });
 

@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { getEnv } from "@vitalos/config";
 import { createLogger } from "@vitalos/observability";
 import { clearProxyLookupVerdicts } from "../lookup/proxy-lookup";
+import { createSlugGuard } from "../lookup/slug-guard";
 import { renderMarkdown } from "../markdown/render";
 import { getContentClient, getContentReaders } from "../server";
 import { siteHosts } from "../site-hosts";
@@ -24,6 +25,8 @@ import type { CareersDeps, HumanCheck } from "../careers/http";
  */
 
 const limiter = new MemoryRateLimiter();
+/** Per instance: at most 30 admin reads a minute for slugs the sitemap does not list. */
+const slugGuard = createSlugGuard({ perMinute: 30 });
 let logger: ReturnType<typeof createLogger> | undefined;
 const getLogger = () =>
   (logger ??= createLogger({ service: "vitalos-web", env: getEnv().deployEnv }));
@@ -86,6 +89,7 @@ export function lookupDeps(): LookupDeps {
     readSecret: getEnv().content.readKey?.secret,
     limiter,
     readers: getContentReaders(),
+    guard: slugGuard,
   };
 }
 

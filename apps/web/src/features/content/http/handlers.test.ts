@@ -403,23 +403,50 @@ describe("GET /api/content/lookup", () => {
     cache: (fn) => fn,
     ttlSeconds: 600,
   });
-  const lookup = (path: string, header?: string | null) =>
+  const lookup = (
+    path: string,
+    header?: string | null,
+    ip = "198.51.100.1",
+    limiter = new MemoryRateLimiter(),
+  ) =>
     handleLookupRequest(
       new Request(`${origin}/api/content/lookup?path=${encodeURIComponent(path)}`, {
-        headers: header ? { "x-vitalos-lookup": header } : {},
+        headers: header ? { "x-vitalos-lookup": header, "x-vitalos-lookup-ip": ip } : {},
       }),
-      { readSecret: secret, limiter: new MemoryRateLimiter(), readers },
+      { readSecret: secret, limiter, readers },
     );
+
+  it("rate-limits per visitor address (signed by the proxy), not per proxy", async () => {
+    const limiter = new MemoryRateLimiter();
+    const path = "/insights/example-post-1";
+    const ask = (ip: string) =>
+      lookup(path, signLookup(secret, { path, clientIp: ip }), ip, limiter);
+    let last: Response | undefined;
+    for (let i = 0; i < 301; i += 1) last = await ask("198.51.100.7");
+    expect(last?.status).toBe(429);
+    expect((await ask("198.51.100.8")).status).toBe(200);
+    // A visitor address the proxy did not sign is refused outright.
+    const forged = await lookup(
+      path,
+      signLookup(secret, { path, clientIp: "198.51.100.7" }),
+      "198.51.100.9",
+      limiter,
+    );
+    expect(forged.status).toBe(404);
+  }, 30_000);
 
   it("answers the proxy's signed question with the pages' readers", async () => {
     const ok = await lookup(
       "/insights/example-post-1",
-      signLookup(secret, "/insights/example-post-1"),
+      signLookup(secret, { path: "/insights/example-post-1", clientIp: "198.51.100.1" }),
     );
     expect(ok.status).toBe(200);
     expect(ok.headers.get("cache-control")).toBe("no-store");
     expect(await ok.json()).toEqual({ verdict: "ok" });
-    const missing = await lookup("/insights/nope", signLookup(secret, "/insights/nope"));
+    const missing = await lookup(
+      "/insights/nope",
+      signLookup(secret, { path: "/insights/nope", clientIp: "198.51.100.1" }),
+    );
     expect(await missing.json()).toEqual({ verdict: "missing" });
   });
 
@@ -429,14 +456,25 @@ describe("GET /api/content/lookup", () => {
       (
         await lookup(
           "/insights/example-post-1",
-          signLookup("s".repeat(40), "/insights/example-post-1"),
+          signLookup("s".repeat(40), {
+            path: "/insights/example-post-1",
+            clientIp: "198.51.100.1",
+          }),
         )
       ).status,
     ).toBe(404);
     expect(
-      (await lookup("/insights/example-post-1", signLookup(secret, "/insights/other"))).status,
+      (
+        await lookup(
+          "/insights/example-post-1",
+          signLookup(secret, { path: "/insights/other", clientIp: "198.51.100.1" }),
+        )
+      ).status,
     ).toBe(404);
-    expect((await lookup("/about", signLookup(secret, "/about"))).status).toBe(400);
+    expect(
+      (await lookup("/about", signLookup(secret, { path: "/about", clientIp: "198.51.100.1" })))
+        .status,
+    ).toBe(400);
   });
 });
 

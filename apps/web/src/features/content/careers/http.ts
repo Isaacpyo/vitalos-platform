@@ -40,6 +40,9 @@ export interface CareersDeps {
 }
 
 const MAX_UPLOAD_BODY = 4 * 1024;
+
+/** The visitor's address for the admin's per-address limits (the request is signed). */
+export const CLIENT_IP_HEADER = "x-vitalos-client-ip";
 const MAX_APPLICATION_BODY = 24 * 1024;
 
 const errorsBody = (errors: Record<string, string>) => ({ errors });
@@ -137,7 +140,9 @@ export async function handleUploadRequest(request: Request, deps: CareersDeps): 
     return json(errorsBody(errors), 400, correlationId);
   }
 
-  const human = await deps.verifyHuman(turnstileToken, clientIpFromHeaders(request.headers));
+  // The platform's own header first (Vercel), as the enquiry code does; never logged.
+  const clientIp = clientIpFromHeaders(request.headers);
+  const human = await deps.verifyHuman(turnstileToken, clientIp);
   if (human === "unavailable") return json({ error: "unavailable" }, 503, correlationId);
   if (human === "failed") return json(errorsBody({ turnstile: "invalid" }), 403, correlationId);
 
@@ -149,6 +154,8 @@ export async function handleUploadRequest(request: Request, deps: CareersDeps): 
       {
         scope: "submit",
         errorSchema: ApplicationErrors,
+        // The admin caps tickets per hashed address across every website instance.
+        ...(clientIp ? { headers: { [CLIENT_IP_HEADER]: clientIp } } : {}),
       },
     );
     deps.logger?.info("careers.upload_ticket", { correlationId, uploadId: ticket.uploadId });
