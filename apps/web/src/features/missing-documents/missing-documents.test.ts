@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMissingDocumentChecker } from "./checker";
-import { matchDetailRoute } from "./detail-routes";
+import { legacyContentFamilies, matchDetailRoute } from "./detail-routes";
 
 describe("matchDetailRoute", () => {
   it("recognises every dynamic detail family", () => {
@@ -10,9 +10,7 @@ describe("matchDetailRoute", () => {
       ["/offers/o", "offer", ["o"]],
       ["/industries/i", "industry", ["i"]],
       ["/work/c", "caseStudy", ["c"]],
-      ["/insights/a", "insight", ["a"]],
       ["/people/p", "person", ["p"]],
-      ["/careers/r", "job", ["r"]],
       ["/legal/privacy", "legalPage", ["privacy"]],
       ["/trust/security", "trustItem", ["security"]],
       ["/labs/open-source", "labAsset", ["open-source"]],
@@ -21,6 +19,18 @@ describe("matchDetailRoute", () => {
     for (const [path, kind, values] of cases) {
       expect(matchDetailRoute(path), path).toMatchObject({ kind, values });
     }
+  });
+
+  it("leaves Insights and Careers to the content lookup, except in the legacy table", () => {
+    expect(matchDetailRoute("/insights/a")).toBeNull();
+    expect(matchDetailRoute("/careers/r")).toBeNull();
+    expect(matchDetailRoute("/insights/a", legacyContentFamilies)).toBeNull();
+    expect(matchDetailRoute("/careers/r", legacyContentFamilies)).toMatchObject({
+      kind: "job",
+      values: ["r"],
+    });
+    expect(matchDetailRoute("/solutions/s", legacyContentFamilies)).toBeNull();
+    expect(matchDetailRoute("/constructor/x")).toBeNull();
   });
 
   it("ignores index pages, static pages, API routes, assets and deeper paths", () => {

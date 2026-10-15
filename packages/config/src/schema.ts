@@ -44,6 +44,49 @@ export const originUrl = z
   )
   .transform((value) => (URL.canParse(value) ? new URL(value).origin : value));
 
+/** A bare host (`media.example.com`) or an origin; bare hosts are read as https. */
+const hostOrOrigin = z.preprocess(
+  (value) => (typeof value === "string" && !value.includes("://") ? `https://${value}` : value),
+  originUrl,
+);
+
+/** Signing key ids (contract scheme v1): `[a-z0-9-]{1,32}`. */
+const keyIdPattern = /^[a-z0-9-]{1,32}$/;
+const MIN_SECRET_LENGTH = 32;
+
+/** One signing key: the id sent in `X-Vitalos-Key-Id` and the shared secret. */
+export interface SigningKey {
+  id: string;
+  secret: string;
+}
+
+/**
+ * `keyId:secret[,keyId:secret]` (contract scheme v1, ADR-036). The first entry signs; a verifier
+ * accepts any listed entry, so keys rotate with no downtime. Messages never echo the value.
+ */
+const keyList = z.string().transform((value, ctx): SigningKey[] => {
+  const entries = value.split(",").map((entry) => entry.trim());
+  const keys: SigningKey[] = [];
+  for (const entry of entries) {
+    const colon = entry.indexOf(":");
+    const id = colon === -1 ? "" : entry.slice(0, colon);
+    const secret = colon === -1 ? "" : entry.slice(colon + 1);
+    if (!keyIdPattern.test(id) || secret.length < MIN_SECRET_LENGTH) {
+      ctx.addIssue({
+        code: "custom",
+        message: `must be keyId:secret entries separated by commas (key id [a-z0-9-]{1,32}, secret ${MIN_SECRET_LENGTH}+ characters)`,
+      });
+      return z.NEVER;
+    }
+    keys.push({ id, secret });
+  }
+  if (keys.length > 5 || new Set(keys.map((key) => key.id)).size !== keys.length) {
+    ctx.addIssue({ code: "custom", message: "must list at most 5 keys with distinct key ids" });
+    return z.NEVER;
+  }
+  return keys;
+});
+
 /** NEXT_PUBLIC_* variables: safe for browser bundles. Shared by `public.ts` and the full schema. */
 export const publicEnvShape = {
   NEXT_PUBLIC_SITE_URL: originUrl.optional(),
@@ -76,6 +119,19 @@ const rawSchema = z.object({
   // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
   CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
+  // Insights and Careers content API on the Super Admin (ADR-035, ADR-036). Unset: not configured,
+  // both sections behave as closed and nothing calls out.
+  CONTENT_API_BASE_URL: originUrl.optional(),
+  CONTENT_READ_KEY_ID: z.string().regex(keyIdPattern, "must match [a-z0-9-]{1,32}").optional(),
+  CONTENT_READ_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
+  CAREERS_SUBMIT_KEY_ID: z.string().regex(keyIdPattern, "must match [a-z0-9-]{1,32}").optional(),
+  CAREERS_SUBMIT_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
+  CONTENT_REVALIDATE_SECRET: keyList.optional(),
+  CONTENT_RENDER_SECRET: keyList.optional(),
+  CONTENT_PREVIEW_SECRET: keyList.optional(),
+  CONTENT_CACHE_TTL_SECONDS: z.coerce.number().int().min(30).max(86_400).optional(),
+  CONTENT_MEDIA_HOST: hostOrOrigin.optional(),
+  CAREERS_UPLOAD_HOST: hostOrOrigin.optional(),
 });
 
 export const envKeys: readonly string[] = Object.keys(rawSchema.shape);
@@ -103,7 +159,30 @@ export interface Env {
     from: string | undefined;
   };
   enableHsts: boolean;
+  content: ContentEnv;
 }
+
+/** Insights and Careers content API settings (ADR-036). Server-only: holds secrets. */
+export interface ContentEnv {
+  /** Admin origin. Undefined means "not configured": both sections are closed. */
+  apiBaseUrl: string | undefined;
+  /** Signs read-API (and tick) calls to the admin. */
+  readKey: SigningKey | undefined;
+  /** Signs upload-ticket and application calls to the admin. */
+  submitKey: SigningKey | undefined;
+  /** Verify the admin's revalidate, render and preview calls (any listed key is accepted). */
+  revalidateKeys: readonly SigningKey[];
+  renderKeys: readonly SigningKey[];
+  previewKeys: readonly SigningKey[];
+  /** `revalidate` of every cached content read (default 600). */
+  cacheTtlSeconds: number;
+  /** Public media origin (next/image remotePatterns, CSP img-src, renderer image allowlist). */
+  mediaOrigin: string | undefined;
+  /** CV upload origin (CSP connect-src). */
+  uploadOrigin: string | undefined;
+}
+
+export const DEFAULT_CONTENT_CACHE_TTL_SECONDS = 600;
 
 export interface Features {
   /** Both Turnstile keys are configured. */
@@ -114,6 +193,8 @@ export interface Features {
   emailNotifications: boolean;
   /** Search engines may index this deployment (production only). */
   indexable: boolean;
+  /** The content API (Insights and Careers) is configured: base URL and read key. */
+  content: boolean;
 }
 
 export interface EnvIssue {
@@ -201,6 +282,23 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         from: raw.EMAIL_FROM,
       },
       enableHsts: raw.ENABLE_HSTS === "true" || raw.ENABLE_HSTS === "1",
+      content: {
+        apiBaseUrl: raw.CONTENT_API_BASE_URL,
+        readKey:
+          raw.CONTENT_READ_KEY_ID && raw.CONTENT_READ_SECRET
+            ? { id: raw.CONTENT_READ_KEY_ID, secret: raw.CONTENT_READ_SECRET }
+            : undefined,
+        submitKey:
+          raw.CAREERS_SUBMIT_KEY_ID && raw.CAREERS_SUBMIT_SECRET
+            ? { id: raw.CAREERS_SUBMIT_KEY_ID, secret: raw.CAREERS_SUBMIT_SECRET }
+            : undefined,
+        revalidateKeys: raw.CONTENT_REVALIDATE_SECRET ?? [],
+        renderKeys: raw.CONTENT_RENDER_SECRET ?? [],
+        previewKeys: raw.CONTENT_PREVIEW_SECRET ?? [],
+        cacheTtlSeconds: raw.CONTENT_CACHE_TTL_SECONDS ?? DEFAULT_CONTENT_CACHE_TTL_SECONDS,
+        mediaOrigin: raw.CONTENT_MEDIA_HOST,
+        uploadOrigin: raw.CAREERS_UPLOAD_HOST,
+      },
     },
   };
 }
@@ -342,6 +440,30 @@ function crossFieldIssues(env: Env, raw: Raw, siteUrlMissing: boolean): EnvIssue
   if (production && env.turnstile.siteKey && isCloudflareTestKey(env.turnstile.siteKey)) {
     add("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "is a Cloudflare test site key");
   }
+  for (const [idName, secretName] of [
+    ["CONTENT_READ_KEY_ID", "CONTENT_READ_SECRET"],
+    ["CAREERS_SUBMIT_KEY_ID", "CAREERS_SUBMIT_SECRET"],
+  ] as const) {
+    if (raw[idName] && !raw[secretName]) add(secretName, `is required when ${idName} is set`);
+    if (raw[secretName] && !raw[idName]) add(idName, `is required when ${secretName} is set`);
+  }
+  if (env.content.apiBaseUrl) {
+    if (!raw.CONTENT_READ_KEY_ID && !raw.CONTENT_READ_SECRET) {
+      add("CONTENT_READ_SECRET", "is required when CONTENT_API_BASE_URL is set");
+      add("CONTENT_READ_KEY_ID", "is required when CONTENT_API_BASE_URL is set");
+    }
+    if (production && !env.content.apiBaseUrl.startsWith("https://")) {
+      add("CONTENT_API_BASE_URL", "must be an https origin in production");
+    }
+  }
+  for (const [name, value] of [
+    ["CONTENT_MEDIA_HOST", env.content.mediaOrigin],
+    ["CAREERS_UPLOAD_HOST", env.content.uploadOrigin],
+  ] as const) {
+    if (production && value && !value.startsWith("https://")) {
+      add(name, "must be https in production");
+    }
+  }
   if (env.turnstile.siteKey && !env.turnstile.secretKey) {
     add("TURNSTILE_SECRET_KEY", "is required when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set");
   }
@@ -382,5 +504,6 @@ export function deriveFeatures(env: Env): Features {
     enquiryPersistence: env.enquiry.backend !== "disabled",
     emailNotifications: env.email.provider !== "none" && Boolean(env.enquiry.notificationTo),
     indexable: env.deployEnv === "production",
+    content: Boolean(env.content.apiBaseUrl && env.content.readKey),
   };
 }

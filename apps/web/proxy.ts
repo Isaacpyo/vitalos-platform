@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { REQUEST_ID_HEADER, correlationId } from "@vitalos/observability";
-import { UNMATCHED_PATH, isMissingDetailPath } from "./src/features/missing-documents";
+import { contentProxyDecision, unavailableResponse } from "./src/features/content/proxy";
+import {
+  UNMATCHED_PATH,
+  isMissingDetailPath,
+  isMissingLegacyContentPath,
+} from "./src/features/missing-documents";
 import { goneResponse, isGone } from "./src/features/redirects/gone";
 
 /**
@@ -21,6 +26,11 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  * A detail URL with no document behind it is rewritten onto an unmatched path (ADR-027). Next.js
  * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
  * page, which would leave visitors without JavaScript with a blank 404.
+ *
+ * Insights and Careers (ADR-036): the proxy asks the internal content lookup about every GET to
+ * their pages (Draft Mode requests excepted) and answers what a page cannot: 308 for an old slug,
+ * the server-rendered 404 for a missing item or a closed section, and 503 with `Retry-After` when
+ * the admin is unreachable and nothing is cached. Any lookup failure passes the request through.
  */
 export async function proxy(request: NextRequest) {
   const requestId = correlationId(request.headers);
@@ -34,7 +44,22 @@ export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
 
-  const missing = request.method === "GET" && (await isMissingDetailPath(request.nextUrl.pathname));
+  const { pathname } = request.nextUrl;
+  const content = await contentProxyDecision(request);
+  if (typeof content === "object") {
+    const redirect = NextResponse.redirect(new URL(content.redirect, request.url), 308);
+    redirect.headers.set(REQUEST_ID_HEADER, requestId);
+    redirect.headers.set("cache-control", "no-store");
+    return redirect;
+  }
+  if (content === "unavailable") return unavailableResponse(requestId);
+
+  const missing =
+    content === "missing" ||
+    (content === "legacy" && (await isMissingLegacyContentPath(pathname))) ||
+    (content === "not-applicable" &&
+      request.method === "GET" &&
+      (await isMissingDetailPath(pathname)));
   const response = missing
     ? NextResponse.rewrite(new URL(UNMATCHED_PATH, request.url), {
         request: { headers: requestHeaders },

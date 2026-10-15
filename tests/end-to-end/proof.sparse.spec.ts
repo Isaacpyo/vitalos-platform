@@ -64,22 +64,6 @@ test.describe("detail pages stay reachable but are not indexed", () => {
     await expectNoDeadLinks(page);
   });
 
-  test("an insight renders with Article data and no link to the missing index", async ({
-    page,
-  }) => {
-    const response = await page.goto("/insights/example-insight-1");
-    expect(response?.status()).toBe(200);
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-    const types = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((nodes) => nodes.map((n) => JSON.parse(n.textContent ?? "{}")["@type"]));
-    expect(types).toContain("Article");
-    await expect(page.locator('nav[aria-label="Breadcrumb"] a[href="/insights"]')).toHaveCount(0);
-    await expectNoA11yViolations(page);
-    await expectNoHorizontalOverflowAt320(page);
-    await expectNoDeadLinks(page);
-  });
-
   test("a profile with almost no data renders and links only to existing pages", async ({
     page,
   }) => {

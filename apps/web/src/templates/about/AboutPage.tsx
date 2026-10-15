@@ -4,8 +4,8 @@ import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
-import { ArticleBody } from "../insights/ArticleBody";
-import { buildArticleBody, tocForDisplay } from "../insights/body-model";
+import { ArticleBody } from "../institutional/ArticleBody";
+import { buildArticleBody, tocForDisplay } from "../institutional/body-model";
 import { hasRichText } from "../institutional/rich";
 import type { AboutData } from "./load";
 import { aboutLinks, exploreHeading, leaderCardProps } from "./map";

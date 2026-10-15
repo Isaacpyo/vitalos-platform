@@ -22,7 +22,6 @@ import {
 const FIXTURE_OTHER_ROUTES = [
   "/work",
   "/work/example-case-study",
-  "/insights",
   "/people/example-person",
   "/labs",
   "/about",
@@ -117,7 +116,7 @@ test.describe("homepage", () => {
       industries: "Industries (fixture)",
       trust: "Trust (fixture)",
       labs: "Labs (fixture)",
-      insights: "Insights (fixture)",
+      // insights: from the Super Admin (ADR-035), absent with no content API configured.
       leadership: "Leadership (fixture)",
       finalConversion: "Final conversion (fixture)",
     };
@@ -156,9 +155,11 @@ test.describe("site shell", () => {
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
-    for (const label of ["What We Do", "Industries", "Work", "Insights", "Labs", "About"]) {
+    for (const label of ["What We Do", "Industries", "Work", "Labs", "About"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    // Insights is opened in the Super Admin (ADR-035); with no content API configured it is closed.
+    await expect(nav.getByRole("link", { name: "Insights", exact: true })).toHaveCount(0);
     const banner = page.getByRole("banner");
     await expect(banner.getByRole("link", { name: "Trust Centre" })).toHaveAttribute(
       "href",
@@ -211,7 +212,7 @@ test.describe("site shell", () => {
     await page.goto("/");
     await page.getByRole("banner").getByText("Menu", { exact: true }).click();
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });
-    for (const label of ["Industries", "Work", "Insights", "Labs", "About"]) {
+    for (const label of ["Industries", "Work", "Labs", "About"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
     await expect(nav.getByRole("link", { name: "Trust Centre" })).toBeVisible();
@@ -235,9 +236,11 @@ test.describe("site shell", () => {
       await expect(footer.locator("details[open]")).toHaveCount(0);
       for (const heading of await footer.locator("summary").all()) await heading.click();
     }
-    for (const label of ["Industries", "Work", "Insights", "Labs", "Careers", "Leadership"]) {
+    for (const label of ["Industries", "Work", "Labs", "Careers", "Leadership"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    // Insights is opened in the Super Admin (ADR-035); with no content API configured it is closed.
+    await expect(footer.getByRole("link", { name: "Insights", exact: true })).toHaveCount(0);
     await expect(footer.getByText("Example Practice Ltd (fixture)")).toBeVisible();
     await expect(footer.getByText("Company number 00000000 (fixture)")).toBeVisible();
   });

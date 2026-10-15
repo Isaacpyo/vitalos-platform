@@ -2,6 +2,7 @@
 // Use `@vitalos/config/public` in browser code and `@vitalos/config/build` in next.config.
 export { features, getEnv, getFeatures, readServerEnv } from "./server";
 export {
+  DEFAULT_CONTENT_CACHE_TTL_SECONDS,
   contentSources,
   deployEnvs,
   deriveFeatures,
@@ -13,6 +14,7 @@ export {
   safeParseEnv,
 } from "./schema";
 export type {
+  ContentEnv,
   ContentSourceKind,
   DeployEnv,
   EmailProvider,
@@ -23,4 +25,5 @@ export type {
   Features,
   FixtureSet,
   ParseEnvResult,
+  SigningKey,
 } from "./schema";

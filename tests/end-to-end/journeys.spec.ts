@@ -111,10 +111,10 @@ test.describe("enquiry journey", () => {
   });
 
   test("the header call to action reaches the contact page from any template", async ({ page }) => {
-    // The draft source (ADR-025) has no insights, so its run starts from Labs instead.
+    // The draft source (ADR-025) has no case studies, so its run starts from Labs instead.
     const starts = isDraftRun
       ? ["/what-we-do/engineering", "/labs", "/legal/privacy"]
-      : ["/what-we-do/example-practice", "/insights", "/legal/privacy"];
+      : ["/what-we-do/example-practice", "/work", "/legal/privacy"];
     for (const start of starts) {
       await page.goto(start);
       await openMenuIfCompact(page);
@@ -126,16 +126,15 @@ test.describe("enquiry journey", () => {
 });
 
 test.describe("gated sections are reachable while their gates are open", () => {
-  // Needs the full set's open Work and Insights gates; under draft they stay closed and
+  // Needs the full set's open Work gate; under draft it stays closed and
   // draft-content.http.spec.ts asserts the 404s.
   test.skip(isDraftRun, FIXTURE_SPECIFIC);
 
-  test("the header leads to Work, Insights and Labs, each with its own heading", async ({
+  test("the header leads to Work, Labs and Industries, each with its own heading", async ({
     page,
   }) => {
     for (const [label, path] of [
       ["Work", /\/work$/],
-      ["Insights", /\/insights$/],
       ["Labs", /\/labs$/],
       ["Industries", /\/industries$/],
     ] as const) {
@@ -146,13 +145,11 @@ test.describe("gated sections are reachable while their gates are open", () => {
     }
   });
 
-  test("a case study and an article are reachable from their indexes", async ({ page }) => {
+  // Insights articles come from the Super Admin (ADR-035): tests/content covers them.
+  test("a case study is reachable from its index", async ({ page }) => {
     await page.goto("/work");
     await page.locator('main a[href="/work/example-case-study"]').first().click();
     await expect(page).toHaveURL(/\/work\/example-case-study$/);
-    await page.goto("/insights");
-    await page.locator('main a[href="/insights/example-insight-1"]').first().click();
-    await expect(page).toHaveURL(/\/insights\/example-insight-1$/);
   });
 });
 

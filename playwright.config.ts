@@ -77,7 +77,8 @@ const sparseProject = {
 export default defineConfig({
   testDir: "./tests",
   // Storybook and unit suites have their own runners; Playwright owns the browser suites only.
-  testIgnore: ["**/storybook/**", "**/integration/**", "**/visual/**"],
+  // tests/content runs against a fake Super Admin with its own config (not in CI yet).
+  testIgnore: ["**/storybook/**", "**/integration/**", "**/visual/**", "**/content/**"],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

@@ -24,7 +24,6 @@ import {
   HeroVisual,
   LabAssetRow,
   LinkCard,
-  ArticleRow,
   Lead,
   PersonCard,
   PracticeRow,
@@ -49,7 +48,6 @@ import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import {
   caseStudyMeta,
   labAssetPresentation,
-  toArticleRow,
   toPersonCard,
   toProofStripItems,
   toRow,
@@ -57,6 +55,8 @@ import {
   toSolutionCard,
 } from "../../lib/view-mapping/patterns";
 import { Band, CardGrid, RowList, itemLevel } from "../commercial/bands";
+import type { HomeData } from "../../features/content/schemas";
+import { HomeInsights } from "../insights/HomeInsights";
 
 /**
  * The thirteen homepage sections of Stage 8 section 8, in order. Each is a function of the home
@@ -70,6 +70,8 @@ export interface HomeContext {
   gates: PublicationGates;
   /** Intro of the How We Work route page, borrowed for "From strategy to production". */
   howWeWorkIntro?: string | undefined;
+  /** The admin's homepage sections (Insights, Careers); null when unconfigured or unreadable. */
+  content?: HomeData | null | undefined;
 }
 
 type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | null;
@@ -404,30 +406,22 @@ export const labsSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 11. Insights: only when the Insights gate is open; curated by the editors, not a feed. */
-export const insightsSection: SectionRender = (context, tone) => {
-  if (!context.gates.open.insights) return null;
-  const title = heading(context, "insights");
-  const rows = context.home.insights.flatMap((insight) => {
-    const row = toArticleRow(insight, { headingLevel: itemLevel(title) });
-    return row ? [row] : [];
-  });
-  if (rows.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.insights}
-      link={{ label: navLabels.insights, href: routes.insights() }}
-    >
-      <RowList>
-        {rows.map((row) => (
-          <ArticleRow key={row.href} {...row} />
-        ))}
-      </RowList>
-    </Band>
-  );
+/**
+ * 11. Insights, from the Super Admin's `home` read (brief 5.6, ADR-035): wired into the band the
+ * homepage already had. Absent when the admin returns no section (closed, disabled, nothing
+ * published) and when the read failed (the homepage never fails because of it).
+ */
+// The brief sets this section on a white ground whatever the band rhythm around it (5.6).
+export const insightsSection: SectionRender = (context) => {
+  const section = context.content?.insights;
+  return section && section.items.length > 0 ? <HomeInsights section={section} /> : null;
 };
+
+/**
+ * 11b. Careers (brief 6.5), directly after Insights. SLOT: Phase 4 renders
+ * `context.content?.careers` here; until then it renders nothing.
+ */
+export const careersSection: SectionRender = () => null;
 
 /** 12. Leadership: named, accountable people with an approved portrait when there is one. */
 export const leadershipSection: SectionRender = (context, tone) => {
@@ -478,5 +472,6 @@ export const homeBands: readonly SectionRender[] = [
   trustSection,
   labsSection,
   insightsSection,
+  careersSection,
   leadershipSection,
 ];

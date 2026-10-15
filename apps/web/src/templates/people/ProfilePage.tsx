@@ -1,5 +1,5 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { ArticleRow, PersonHero, Stack } from "@vitalos/ui";
+import { PersonHero, Stack } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
@@ -7,7 +7,6 @@ import { getSeoContext } from "../../features/seo/context";
 import { profilePageJsonLd } from "../../features/seo/json-ld";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import type { Crumb } from "../institutional/breadcrumbs";
-import { insightCardProps } from "../insights/map";
 import { ContentSection, PageBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
@@ -19,10 +18,9 @@ import { personHeroProps, personLabels, verifiedCredentials } from "./map";
  * biography: sections without data are not rendered.
  */
 export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
-  const { person, gates } = data;
+  const { person } = data;
   const credentials = verifiedCredentials(person);
-  // Insights are linked only while their section is public (a closed section is noindex).
-  const insights = gates.open.insights ? person.insights : [];
+  // Insights now come from the Super Admin (ADR-035); the CMS person's insights are not linked.
   const trail: Crumb[] = person.isLeadership
     ? [
         homeCrumb,
@@ -32,7 +30,7 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
       ]
     : [homeCrumb, { name: person.name, path: routes.person(person.slug) }];
 
-  const placeholder = hasPlaceholder(person, insights);
+  const placeholder = hasPlaceholder(person);
 
   return (
     <PageMain>
@@ -51,18 +49,6 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
                 {credentials.map((label) => (
                   <li key={label} className="my-(--space-2)">
                     {label}
-                  </li>
-                ))}
-              </ul>
-            </ContentSection>
-          ) : null}
-
-          {insights.length > 0 ? (
-            <ContentSection id="insights" heading={navLabels.insights}>
-              <ul className="m-0 list-none p-0">
-                {insights.map((insight) => (
-                  <li key={insight.id}>
-                    <ArticleRow {...insightCardProps(insight)} headingLevel={3} />
                   </li>
                 ))}
               </ul>

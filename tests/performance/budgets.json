@@ -40,12 +40,6 @@
     "/work/example-case-study": {
       "maxJsGzipBytes": 205000
     },
-    "/insights": {
-      "maxJsGzipBytes": 206000
-    },
-    "/insights/example-insight-1": {
-      "maxJsGzipBytes": 205000
-    },
     "/people/example-person": {
       "maxJsGzipBytes": 205000
     },

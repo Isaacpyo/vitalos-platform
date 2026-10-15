@@ -9,6 +9,8 @@ const baseEnv: BuildEnv = {
   indexable: true,
   enableHsts: false,
   turnstileEnabled: false,
+  contentMediaOrigin: undefined,
+  careersUploadOrigin: undefined,
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
@@ -70,5 +72,15 @@ describe("getSecurityHeaders", () => {
   it("allows unsafe-eval only under next dev", () => {
     expect(headersFor({}, true).get("Content-Security-Policy")).toContain("'unsafe-eval'");
     expect(headersFor({}).get("Content-Security-Policy")).not.toContain("unsafe-eval");
+  });
+
+  it("adds the content media host to img-src and the upload host to connect-src when set", () => {
+    const csp = headersFor({
+      contentMediaOrigin: "https://media.example.invalid",
+      careersUploadOrigin: "https://uploads.example.invalid",
+    }).get("Content-Security-Policy")!;
+    expect(csp).toContain("img-src 'self' data: https://media.example.invalid;");
+    expect(csp).toContain("connect-src 'self' https://uploads.example.invalid;");
+    expect(headersFor({}).get("Content-Security-Policy")).toContain("img-src 'self' data:;");
   });
 });

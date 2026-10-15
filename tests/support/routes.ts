@@ -1,6 +1,7 @@
 /**
  * Route manifest for the quality suites (ADR-021). One entry per page TEMPLATE, using the
- * artificial fixture slugs from packages/cms/src/fixtures. `pattern` is the route family as it
+ * artificial fixture slugs from packages/cms/src/fixtures. Insights pages come from the Super Admin
+ * (ADR-035) and are swept by tests/content against a fake admin. `pattern` is the route family as it
  * appears in sitemap.xml, so a suite can prove that the manifest has not drifted from the site: a
  * new template appears in the sitemap, matches no pattern and fails `sitemap.http.spec.ts` until it
  * is added here (and therefore to the axe, reflow, focus and JavaScript-budget sweeps).
@@ -35,8 +36,6 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "how we work", path: "/how-we-work", pattern: "/how-we-work" },
   { name: "work index", path: "/work", pattern: "/work" },
   { name: "case study", path: "/work/example-case-study", pattern: "/work/:slug" },
-  { name: "insights index", path: "/insights", pattern: "/insights" },
-  { name: "article", path: "/insights/example-insight-1", pattern: "/insights/:slug" },
   { name: "person", path: "/people/example-person", pattern: "/people/:slug" },
   { name: "labs index", path: "/labs", pattern: "/labs" },
   { name: "labs category", path: "/labs/open-source", pattern: "/labs/:slug" },
@@ -77,13 +76,6 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
     name: "case study",
     path: "/work/connecting-field-and-warehouse-systems",
     pattern: "/work/:slug",
-    inSitemap: false,
-  },
-  { name: "insights index", path: "/insights", pattern: "/insights", inSitemap: false },
-  {
-    name: "article",
-    path: "/insights/why-ai-pilots-stall-before-production",
-    pattern: "/insights/:slug",
     inSitemap: false,
   },
   { name: "person", path: "/people/alex-morgan", pattern: "/people/:slug", inSitemap: false },

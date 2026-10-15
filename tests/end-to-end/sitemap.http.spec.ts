@@ -23,7 +23,10 @@ test("sitemap.xml is valid, lists only live pages and covers every template", as
   // Gated sections are listed exactly when their gates are open: all of them in the full fixture
   // set; only Industries and Labs under the draft source (ADR-025), which has no case studies,
   // insights or roles.
-  const open: readonly string[] = isDraftRun ? ["/industries", "/labs"] : GATED_PREFIXES;
+  // Insights is opened in the Super Admin (ADR-035) and is closed with no content API configured.
+  const open: readonly string[] = isDraftRun
+    ? ["/industries", "/labs"]
+    : GATED_PREFIXES.filter((prefix) => prefix !== "/insights");
   for (const prefix of GATED_PREFIXES) {
     expect(
       paths.some((path) => path === prefix || path.startsWith(`${prefix}/`)),

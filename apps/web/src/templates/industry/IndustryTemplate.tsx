@@ -1,17 +1,11 @@
 import { ctas, routes } from "@vitalos/cms";
 import type { IndustryView, PublicationGates } from "@vitalos/cms";
-import { ArticleRow, Button, CaseStudyRow, OfferRow, RelatedContentRail } from "@vitalos/ui";
+import { Button, CaseStudyRow, OfferRow, RelatedContentRail } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
-import {
-  caseStudyMeta,
-  toArticleRow,
-  toOfferRows,
-  toRailItems,
-  toRows,
-} from "../../lib/view-mapping/patterns";
+import { caseStudyMeta, toOfferRows, toRailItems, toRows } from "../../lib/view-mapping/patterns";
 import {
   Band,
   ClosingAction,
@@ -43,10 +37,6 @@ export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateP
   const offerRows = toOfferRows(industry.offers);
   const workRows = industry.work.flatMap((work) => {
     const [row] = toRows("caseStudy", [work], { meta: caseStudyMeta(work) });
-    return row ? [row] : [];
-  });
-  const insightRows = industry.insights.flatMap((insight) => {
-    const row = toArticleRow(insight);
     return row ? [row] : [];
   });
 
@@ -109,16 +99,6 @@ export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateP
               <RowList>
                 {workRows.map((row) => (
                   <CaseStudyRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-        (tone) =>
-          gates.open.insights && insightRows.length > 0 ? (
-            <Band tone={tone} heading={structuralLabels.relatedInsights}>
-              <RowList>
-                {insightRows.map((row) => (
-                  <ArticleRow key={row.href} {...row} />
                 ))}
               </RowList>
             </Band>

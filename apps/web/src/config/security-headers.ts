@@ -19,6 +19,8 @@ export interface SecurityHeaderOptions {
  * - Turnstile origins only when both Turnstile keys are configured.
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
+ * - The content media host (`CONTENT_MEDIA_HOST`) in `img-src` and the CV upload host
+ *   (`CAREERS_UPLOAD_HOST`) in `connect-src`, only when set (ADR-036, brief section 9).
  */
 export function getSecurityHeaders(
   env: BuildEnv,
@@ -30,6 +32,8 @@ export function getSecurityHeaders(
     isDev,
     turnstile: env.turnstileEnabled,
     upgradeInsecureRequests: env.deployEnv !== "local",
+    imgOrigins: env.contentMediaOrigin ? [env.contentMediaOrigin] : [],
+    connectOrigins: env.careersUploadOrigin ? [env.careersUploadOrigin] : [],
   };
 
   const headers = buildSecurityHeaders({

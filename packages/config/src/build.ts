@@ -12,6 +12,10 @@ export interface BuildEnv {
   indexable: boolean;
   enableHsts: boolean;
   turnstileEnabled: boolean;
+  /** Public media origin for Insights and Careers images (CSP img-src, next/image), or undefined. */
+  contentMediaOrigin: string | undefined;
+  /** CV upload origin (CSP connect-src), or undefined. */
+  careersUploadOrigin: string | undefined;
 }
 
 export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
@@ -24,6 +28,8 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     indexable: features.indexable,
     enableHsts: env.enableHsts,
     turnstileEnabled: features.turnstile,
+    contentMediaOrigin: env.content.mediaOrigin,
+    careersUploadOrigin: env.content.uploadOrigin,
   };
 }
 

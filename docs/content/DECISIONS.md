@@ -28,6 +28,7 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
     - lookup timeout 6 s, at most 2,000 entries.
 
     The cache is held on `globalThis`, so a revalidate call clears it on the same instance. 308 and rewritten-404 responses are `no-store`, because slugs can be reused.
+
 18. **`/insights/page/1` returns 308 to `/insights`.** Pages beyond `totalPages` are missing.
 19. **Rate limits** are in memory per instance, keyed by a salted IP hash, because the website's database is not touched:
     - revalidate 120 a minute;
@@ -37,6 +38,7 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
     - tick 30 a minute.
 
     The revalidate body cap is 64 KB, and routes with no keys configured return 503.
+
 20. **Warming after publish:** publish events warm the affected paths after the response (`after()`), with concurrency 4 and an 8 s timeout each.
 21. **Renderer (post context):**
     - **Headings:** h1 is demoted to h2 with a blocking warning, h5 and h6 are clamped to h4, and a skipped level gets a non-blocking warning.
@@ -47,6 +49,7 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
     - **Order:** sanitising runs before the trusted structure transforms (ids, callouts, table regions, figures, Shiki with the Night Owl theme on a midnight background), so no attribute that comes from input is ever allow-listed.
 
     Contexts `role`, `author` and `settings` allow no images and no highlighting.
+
 22. **Configuration:**
     - A bare host in `CONTENT_MEDIA_HOST` or `CAREERS_UPLOAD_HOST` is read as `https://`.
     - Production requires https for those two and for the admin URL.
@@ -126,3 +129,24 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
 63. **`import_repo_content` treats an item as a placeholder** when `placeholder` or `isPlaceholder` is true, or when `status` is `"placeholder"`, and refuses it. Unknown authors are created unconfirmed, and imported roles always hide the salary.
 64. **The R2 CORS rule for the CV bucket** allows only the production website origins, PUT only, headers Content-Type and Content-Length, and a max age of 600 s (`superadmin/docs/DEPLOY.md` section 9).
 65. **Deploy variables.** `superadmin-deploy.yml` maps the new `CONTENT_*` and `CAREERS_*` GitHub variables and secrets to `deploy.sh`, which masks them and stores the secrets as Container Apps secrets.
+
+## Phase 3: website
+
+66. **Rendering.** Pages are static or ISR. Detail routes are generated on first request and share the readers' tags and TTL. The feed is static, and the OG image is ISR with the post's tags. The body is rendered while the page is generated; the ISR HTML is the cache.
+67. **Build-time behaviour.** If the content API is not configured at build time, Insights is built as closed, so turning the API on needs a redeploy (as any Vercel env change does). If the admin is unreachable during `next build`, reads count as closed so a deploy cannot fail on it; ISR regenerates within the TTL. At runtime a failed read throws and is never cached.
+68. **Format filters** keep `/insights?format=…` as the public URL. A `beforeFiles` rewrite serves them from `/insights/format/[format]`, so no page reads `searchParams`. Filtered views are `noindex, follow` with the canonical on `/insights`.
+69. **Topic pagination** is `/insights/topics/{slug}/page/{n}` (added to `pathPatterns`). Author pages are not paginated; the contract returns at most 100 posts.
+70. **Featured post:** the admin's choice, else the newest post. It is never repeated in the grid, and filtered views and later pages have no featured row.
+71. **Typography and colour.** The brief's typography is mapped onto the existing site tokens (DECISIONS 3): Geist and the display, h1 and body sizes. The cobalt full stop is `text-tone-link`. The initials square uses the tile tokens, because there is no "mineral" token. The site has no dark theme yet, so the dark captures match the light ones.
+72. **Breadcrumb.** The article shows the brief's visible mono breadcrumb and emits BreadcrumbList JSON-LD.
+73. **Homepage band.** The homepage already had an Insights band (between Labs and Leadership), so brief 5.6 says to wire that band rather than add one. It now reads the admin's `home` data on a white ground, fails soft, and is followed by the Careers slot.
+74. **Navigation, footer and homepage follow `insights_open`** and fail closed. With the API configured, every page carries the `site` tag through the site chrome and is ISR on the TTL.
+75. **The Industry and People pages** no longer link CMS insights.
+76. **Author bios on articles** come from cached author reads, one per author, which fail soft. `AuthorRef` in `PostDetail` carries no bio, and the contract is left as it is.
+77. **Preview.** Draft Mode shows the working copy when the preview session matches the slug. Previews emit no JSON-LD and work while the section is closed.
+78. **OG image.** It uses next/og's default font (Manrope is not loaded on the site), the text wordmark and the token colours. The Article publisher is the site's Organization node, with a logo only when one is configured.
+79. **RSS** uses `dc:creator` for author names, because RSS `<author>` must be an email address. The channel description is the Insights intro.
+80. **`/blog` redirects.** `/blog` and `/blog/:path+` return 308 to `/insights` (an exact rule plus a `sectionMoves` pattern list, tested to stay in step).
+81. **Sitemap.** CMS `/insights` entries are always dropped, and CMS `/careers` entries are dropped once the API is configured. Admin entries are validated against `pathPatterns`. If the admin read fails, the static entries are kept.
+82. **The CTA arrow** is a text "→", because the repo has no square-capped arrow asset.
+83. **`tests/content/`** runs the website against a fake admin that serves the contract fixtures and verifies scheme v1 independently. It covers function, axe on every Insights page and the homepage, and screenshots at 1440, 768 and 390. It is not in CI.

@@ -8,6 +8,7 @@ import { buildMetadata } from "../../src/features/seo/metadata";
 import { getContentSource } from "../../src/lib/cms/get-content-source";
 import { loadRoutePage } from "../../src/templates/commercial/load";
 import { HomeTemplate } from "../../src/templates/home/HomeTemplate";
+import { loadHomeSections } from "../../src/features/content/home";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [source, { settings }] = await Promise.all([getContentSource(), loadChromeContent()]);
@@ -23,16 +24,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const source = await getContentSource();
-  const [home, { gates, settings }, howWeWork] = await Promise.all([
+  const [home, { gates, settings }, howWeWork, content] = await Promise.all([
     source.getHomePage(),
     loadChromeContent(),
     loadRoutePage("how-we-work"),
+    loadHomeSections(),
   ]);
   const ctx = { siteUrl: getSeoContext().siteUrl };
   return (
     <>
       <JsonLd data={[organizationJsonLd(settings, ctx), webSiteJsonLd(ctx)]} />
-      <HomeTemplate home={home} gates={gates} howWeWorkIntro={howWeWork?.intro} />
+      <HomeTemplate home={home} gates={gates} howWeWorkIntro={howWeWork?.intro} content={content} />
     </>
   );
 }

@@ -12,8 +12,6 @@ const fixtureRoutes = [
   "/offers/example-offer",
   "/industries/example-industry",
   "/how-we-work",
-  "/insights",
-  "/insights/example-insight-1",
   "/work",
   "/labs",
   "/labs/open-source/example-open-source-tool",

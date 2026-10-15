@@ -32,7 +32,9 @@
     "check:bundle-secrets": "node tooling/scripts/check-client-bundle-secrets.mjs",
     "check:turbo-env": "node tooling/scripts/check-turbo-env.mjs",
     "check:security": "node tooling/scripts/check-secrets.mjs && corepack pnpm audit --audit-level high",
-    "check": "corepack pnpm format:check && corepack pnpm check:raw-colours && corepack pnpm check:turbo-env && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm check:boundaries"
+    "content:types": "corepack pnpm --filter @vitalos/web exec node scripts/content-types.mjs",
+    "content:types:check": "corepack pnpm --filter @vitalos/web exec node scripts/content-types.mjs --check",
+    "check": "corepack pnpm format:check && corepack pnpm check:raw-colours && corepack pnpm check:turbo-env && corepack pnpm content:types:check && corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm check:boundaries"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

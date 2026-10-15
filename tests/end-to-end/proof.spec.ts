@@ -5,7 +5,7 @@ import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 
 /**
- * Proof and authority templates (workstream G2b): Work, Insights, People, Labs.
+ * Proof and authority templates (workstream G2b): Work, People, Labs (Insights: tests/content).
  *
  * Runs against the production build with the `full` fixture set (every publication gate open,
  * every field populated; see packages/cms/src/fixtures/full.ts). Below-gate behaviour is covered by
@@ -23,7 +23,6 @@ test.skip(isDraftRun, FIXTURE_SPECIFIC);
 const CASE_STUDY_NAMED = "/work/example-case-study";
 const CASE_STUDY_ANON = "/work/example-case-study-two";
 const CASE_STUDY_PENDING = "/work/example-case-study-pending";
-const INSIGHT = "/insights/example-insight-1";
 const PERSON = "/people/example-person";
 const PERSON_BARE = "/people/example-person-two";
 const LAB_CONCEPT = "/labs/reference-architectures/example-reference-architecture";
@@ -54,8 +53,6 @@ const templates: { name: string; path: string; ld: string[] }[] = [
   { name: "work index", path: "/work", ld: ["BreadcrumbList"] },
   { name: "case study (named)", path: CASE_STUDY_NAMED, ld: ["BreadcrumbList"] },
   { name: "case study (anonymised)", path: CASE_STUDY_ANON, ld: ["BreadcrumbList"] },
-  { name: "insights index", path: "/insights", ld: ["BreadcrumbList"] },
-  { name: "article", path: INSIGHT, ld: ["Article", "BreadcrumbList"] },
   { name: "person (full)", path: PERSON, ld: ["ProfilePage", "BreadcrumbList"] },
   {
     name: "person (no portrait, no bio)",
@@ -144,33 +141,8 @@ test.describe("work", () => {
   });
 });
 
-test.describe("insights", () => {
-  test("features the newest insight and lists the rest as crawlable rows", async ({ page }) => {
-    await page.goto("/insights");
-    const hrefs = await page
-      .locator('main a[href^="/insights/"]')
-      .evaluateAll((a) => a.map((el) => el.getAttribute("href")));
-    expect(new Set(hrefs).size).toBe(7);
-    // Newest first: the featured piece is the latest published fixture.
-    expect(hrefs[0]).toBe("/insights/example-insight-7");
-  });
-
-  test("an article shows its author and dates, with Article structured data", async ({ page }) => {
-    await page.goto(INSIGHT);
-    await expect(page.getByText("Insight article").first()).toBeVisible();
-    await expect(page.locator("main dl a[href='/people/example-person']")).toBeVisible();
-    await expect(page.locator("main time")).not.toHaveCount(0);
-    const article = await jsonLd(page, "Article");
-    expect(article["datePublished"]).toBeTruthy();
-    expect(JSON.stringify(article["author"])).toContain("Example Person");
-    // The article page links to related insights after the content.
-    await expect(page.getByRole("heading", { level: 2, name: "Related insights" })).toBeVisible();
-  });
-
-  test("an unknown insight is a 404", async ({ page }) => {
-    expect((await page.goto("/insights/does-not-exist"))?.status()).toBe(404);
-  });
-});
+// Insights pages come from the Super Admin (ADR-035) and are covered by tests/content; with no
+// content API configured they answer the server-rendered 404 (not-found.nojs.spec.ts).
 
 test.describe("people", () => {
   test("a profile works without a portrait: monogram, role, bio and verified link", async ({

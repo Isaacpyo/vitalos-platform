@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 import { readBuildEnv } from "@vitalos/config/build";
+import { imagesConfig } from "./src/config/images";
 import { getSecurityHeaders } from "./src/config/security-headers";
+import { insightsRewrites } from "./src/features/content/insights/rewrites";
 import { nextRedirects } from "./src/features/redirects/next-redirects";
 
 // Validated once at build/start. Invalid production configuration (for example fixtures or the
 // memory enquiry backend in production) fails here, before anything is served.
 const buildEnv = readBuildEnv();
+// Remote images only from the Insights and Careers media host, when configured (ADR-036).
+const images = imagesConfig(buildEnv.contentMediaOrigin);
 
 const config: NextConfig = {
   poweredByHeader: false,
@@ -17,8 +21,11 @@ const config: NextConfig = {
   // goal (up to ~20 KB as UTF-8) plus short fields, so cap action bodies well below the 1 MB
   // default (workstream D, ADR-019).
   experimental: { serverActions: { bodySizeLimit: "64kb" } },
+  ...(images ? { images } : {}),
   headers: () => getSecurityHeaders(buildEnv),
   redirects: () => nextRedirects(),
+  // Insights format filters keep `?format=` in the URL and stay static (ISR).
+  rewrites: () => Promise.resolve({ beforeFiles: insightsRewrites, afterFiles: [], fallback: [] }),
 };
 
 export default config;
