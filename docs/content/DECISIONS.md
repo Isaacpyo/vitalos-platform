@@ -150,3 +150,10 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
 81. **Sitemap.** CMS `/insights` entries are always dropped, and CMS `/careers` entries are dropped once the API is configured. Admin entries are validated against `pathPatterns`. If the admin read fails, the static entries are kept.
 82. **The CTA arrow** is a text "→", because the repo has no square-capped arrow asset.
 83. **`tests/content/`** runs the website against a fake admin that serves the contract fixtures and verifies scheme v1 independently. It covers function, axe on every Insights page and the homepage, and screenshots at 1440, 768 and 390. It is not in CI.
+
+## Integration fixes
+
+84. **Scheduling refreshes the website's site state.**
+    - **Finding:** the browser checks and the two-app suite showed that scheduling a post emitted no event, so the website's cached `nextDueAt` stayed stale until the TTL. The Worker tick would then miss the 2-minute target.
+    - **Fix:** new events `post.scheduled` and `post.unscheduled` (kind publish, tag `site`, no paths), and `site` added to `role.opened` and `role.changes_published`, whose closing dates also feed `nextDueAt`.
+85. **Admin sub-navigation scrollbar.** Insights and Careers sub-navigation hide vertical overflow; the tab underline's `-mb-px` made a stray scrollbar.

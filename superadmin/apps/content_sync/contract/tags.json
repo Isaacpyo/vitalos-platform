@@ -145,6 +145,14 @@
         "sitemap"
       ]
     },
+    "post.scheduled": {
+      "kind": "publish",
+      "tags": ["site"]
+    },
+    "post.unscheduled": {
+      "kind": "publish",
+      "tags": ["site"]
+    },
     "author.updated": {
       "kind": "remove",
       "tags": ["insights"]
@@ -155,11 +163,11 @@
     },
     "role.opened": {
       "kind": "publish",
-      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+      "tags": ["site", "careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
     },
     "role.changes_published": {
       "kind": "publish",
-      "tags": ["careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
+      "tags": ["site", "careers", "careers:list", "careers:role:{slug}", "home", "sitemap"]
     },
     "role.paused": {
       "kind": "remove",

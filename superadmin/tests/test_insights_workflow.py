@@ -340,3 +340,20 @@ def test_reserved_post_slugs_are_refused_and_skipped(superadmin, reserved):
     assert post.slug == f"{reserved}-2"
     with pytest.raises(ValidationError, match="reserved"):
         edit(post, superadmin, slug=reserved)
+
+
+def test_scheduling_and_unscheduling_refresh_the_site_state_for_the_website_tick(superadmin):
+    """ADR-038: the website's tick reads nextDueAt from its cached site state, so scheduling must
+    revalidate the `site` tag; otherwise a scheduled post would wait for the cache TTL."""
+    from apps.content_sync.models import SyncEvent
+
+    author = make_author(actor=superadmin)
+    post = make_post("Example scheduled event (fixture)", superadmin, authors=[author])
+    services.submit_for_review(post, superadmin)
+    services.approve(post, superadmin)
+    tick_all(post, superadmin)
+    services.schedule(post, superadmin, timezone.now() + timedelta(hours=1))
+    scheduled = SyncEvent.objects.get(action="post.scheduled")
+    assert scheduled.tags == ["site"] and scheduled.paths == [] and scheduled.kind == "publish"
+    services.unschedule(Post.objects.get(pk=post.pk), superadmin)
+    assert SyncEvent.objects.get(action="post.unscheduled").tags == ["site"]

@@ -653,6 +653,8 @@ def schedule(post: Post, actor, publish_at, *, request=None) -> Post:
             summary=f"{current.title} for {formatting.date_long(publish_at)} {formatting.clock(publish_at)}",
             publish_at=formatting.iso(publish_at),
         )
+        # Refresh the website's site state so its tick learns the new nextDueAt (ADR-038).
+        sync.emit("post", current.pk, "post.scheduled", current.title, paths=[])
     return current
 
 
@@ -673,6 +675,7 @@ def unschedule(post: Post, actor, *, request=None) -> Post:
         record(
             "insights.post_unscheduled", request=request, actor=actor, entity=current, summary=current.title
         )
+        sync.emit("post", current.pk, "post.unscheduled", current.title, paths=[])
     return current
 
 

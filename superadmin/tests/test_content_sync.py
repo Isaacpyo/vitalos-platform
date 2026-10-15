@@ -83,7 +83,7 @@ def test_emit_expands_tags_and_paths_from_tags_json():
     assert event.paths[:2] == ["/insights/example-new", "/insights/example-old"]
     assert "/insights/authors/example-old-author" in event.paths and "/insights/topics/data" in event.paths
     role = sync.emit("role", "x", "role.opened", "Example role (fixture)", slug="example-role", deliver=False)
-    assert role.tags == ["careers", "careers:list", "careers:role:example-role", "home", "sitemap"]
+    assert role.tags == ["site", "careers", "careers:list", "careers:role:example-role", "home", "sitemap"]
     assert role.paths == ["/careers/example-role", "/careers", "/"]
 
 
