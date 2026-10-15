@@ -235,8 +235,11 @@ export const homeSections = [
   {
     key: "finalConversion",
     structuralLabel: "Final conversion",
-    /** Stage 11 §9 mockup brief, item 12; Stage 11 §30. */
-    visibleHeading: "Bring us the problem.",
+    /**
+     * Stage 11 §9 mockup brief, item 12; Stage 11 §30 ("Bring us the problem."), changed by owner
+     * direction on 15 Oct 2026. The contact page keeps "Bring us the problem." as its heading.
+     */
+    visibleHeading: "Have a problem worth solving?",
   },
 ] as const satisfies readonly {
   key: string;

@@ -69,10 +69,24 @@ export function SiteFooter({
     <footer
       data-tone="dark"
       className={cx(
-        "border-t border-tone-border bg-tone-bg pt-(--section-default) pb-(--section-default) text-tone-text lg:pt-(--section-compact) lg:pb-(--space-7)",
+        // Rounded top corners (owner direction, 15 Oct 2026). The footer overlaps the band above
+        // by the radius, so the corners show that band's own surface on every page.
+        "relative isolate z-10 -mt-8 overflow-hidden rounded-t-[2rem] bg-tone-bg pt-(--section-default) pb-(--space-7) text-tone-text lg:-mt-12 lg:rounded-t-[3rem]",
         className,
       )}
     >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 -left-40 -z-10 size-[36rem] rounded-full bg-blue-600/20 blur-3xl"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-40 bottom-0 -z-10 size-[30rem] rounded-full bg-aqua-600/15 blur-3xl"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/30 to-transparent"
+      />
       <Container size="wide">
         <Reveal
           stagger={0.05}
@@ -120,7 +134,7 @@ export function SiteFooter({
                             "marker:hidden md:min-h-0 md:cursor-default md:py-0 [&::-webkit-details-marker]:hidden",
                           )}
                         >
-                          <h2 id={headingId} className="text-eyebrow text-tone-heading uppercase">
+                          <h2 id={headingId} className="text-eyebrow text-tone-eyebrow uppercase">
                             {column.heading}
                           </h2>
                           <Icon
@@ -172,6 +186,19 @@ export function SiteFooter({
               ))}
             </div>
           </div>
+        ) : null}
+        {brand?.logo ? (
+          // A large, faint lockup closes the footer: decorative (the wordmark above is the link).
+          <img
+            src={brand.logo.src}
+            width={brand.logo.width}
+            height={brand.logo.height}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            className="pointer-events-none mx-auto mt-(--space-8) block h-auto w-full max-w-5xl opacity-[0.05] select-none"
+          />
         ) : null}
       </Container>
     </footer>

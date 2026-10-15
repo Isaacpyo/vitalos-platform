@@ -68,9 +68,11 @@ test.describe("every commercial route", () => {
       await page.goto(route);
       const hrefs = await internalLinks(page);
       expect(hrefs.length).toBeGreaterThan(0);
-      for (const href of hrefs) {
-        const response = await request.get(href);
-        expect(response.status(), `${route} links to ${href}`).toBeLessThan(400);
+      const statuses = await Promise.all(
+        hrefs.map(async (href) => [href, (await request.get(href)).status()] as const),
+      );
+      for (const [href, status] of statuses) {
+        expect(status, `${route} links to ${href}`).toBeLessThan(400);
       }
     });
   }
@@ -107,7 +109,7 @@ test.describe("homepage", () => {
           { exact: true },
         ),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Explore what we do" })).toHaveAttribute(
+    await expect(page.getByRole("link", { name: "Explore what we do" }).first()).toHaveAttribute(
       "href",
       "/what-we-do",
     );
@@ -243,7 +245,7 @@ test.describe("site shell", () => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(isDesktop(page), "the desktop header shows the navigation directly");
     await page.goto("/");
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });
     await expect(nav.getByRole("link", { name: "Trust Centre" })).toHaveCount(0);
     await expect(

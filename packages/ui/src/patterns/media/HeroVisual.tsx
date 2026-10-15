@@ -153,8 +153,10 @@ const REPLAYED = ["hv-dot", "hv-tick", "hv-label", "hv-rail", "hv-bar"];
 const REPLAY_FROM_MS = STEPS_AT - 150;
 
 /**
- * The `glass` variant: the same stages on a translucent midnight panel, for the hero photograph
- * under its black overlay (owner decision 2026-10-15). A rail joins the steps and fills from the
+ * The `glass` variant: the same stages on a translucent frosted panel (a white wash over a
+ * brightened blur, so it stands out from the dark hero without outweighing the headline while the
+ * photograph glows through), for the hero photograph under its black overlay (owner decision
+ * 2026-10-15). A rail joins the steps and fills from the
  * top as they tick in; the last step lands in Vitalos Blue. A dashed data stream runs into the
  * panel. After the entrance it idles with small loops: the panel floats a few pixels, the last
  * step pulses, the bars breathe and the stream flows. Hovering the panel replays the steps from
@@ -177,7 +179,7 @@ function HeroGlass({
       className={cx("pointer-events-none relative isolate select-none", className)}
     >
       <svg
-        className="absolute inset-0 h-full w-full text-white"
+        className="absolute inset-0 hidden h-full w-full text-white lg:block"
         viewBox="0 0 400 300"
         preserveAspectRatio="none"
         fill="none"
@@ -194,17 +196,19 @@ function HeroGlass({
         />
       </svg>
       {steps.length > 0 ? (
-        <div className="absolute top-1/2 right-0 w-[min(19rem,100%)] -translate-y-1/2 lg:right-[4%]">
+        // Compact screens: in the flow, full width, aligned with the copy above. From lg: floated
+        // on the right, centred vertically.
+        <div className="relative w-full lg:absolute lg:top-1/2 lg:right-[2%] lg:w-[min(25rem,100%)] lg:-translate-y-1/2">
           <ReplayOnHover
             names={REPLAYED}
             fromMs={REPLAY_FROM_MS}
             className="hv-float pointer-events-auto"
           >
-            <div className="hv-card relative overflow-hidden rounded-2xl border border-white/10 bg-midnight-800/90 p-(--space-5) text-white shadow-(--shadow-floating) backdrop-blur-md">
-              <span className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/60 to-transparent" />
-              <ol className="relative m-0 flex list-none flex-col gap-(--space-4) p-0">
-                <span className="absolute top-3 bottom-3 left-[0.6875rem] w-px bg-white/15">
-                  <span className="hv-rail block size-full bg-linear-to-b from-aqua-50 to-blue-100" />
+            <div className="hv-card relative overflow-hidden rounded-3xl border border-white/50 bg-linear-to-br from-white/70 to-white/45 p-(--space-5) text-midnight-950 shadow-[0_24px_64px_rgb(0_0_0/0.35)] backdrop-blur-xl backdrop-brightness-125 backdrop-saturate-150 lg:p-(--space-7)">
+              <span className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-aqua-600 via-blue-600 to-blue-700" />
+              <ol className="relative m-0 flex list-none flex-col gap-(--space-4) p-0 lg:gap-(--space-5)">
+                <span className="absolute top-3 bottom-3 left-[0.6875rem] w-px bg-midnight-950/10 lg:top-4 lg:bottom-4 lg:left-[0.9375rem]">
+                  <span className="hv-rail block size-full bg-linear-to-b from-aqua-600 to-blue-600" />
                 </span>
                 {steps.map((step, index) => {
                   const last = index === steps.length - 1;
@@ -213,17 +217,17 @@ function HeroGlass({
                     <li
                       key={`${step}-${index}`}
                       className={cx(
-                        "relative flex items-center gap-(--space-3) text-small",
-                        last ? "font-semibold" : "font-medium text-white/90",
+                        "relative flex items-center gap-(--space-3) text-small lg:gap-(--space-4) lg:text-body",
+                        last ? "font-semibold text-midnight-950" : "font-medium text-midnight-950",
                       )}
                     >
                       <span
                         style={{ "--d": d } as CSSProperties}
                         className={cx(
-                          "hv-dot relative inline-flex size-6 shrink-0 items-center justify-center rounded-full",
+                          "hv-dot relative inline-flex size-6 shrink-0 items-center justify-center rounded-full text-white lg:size-8",
                           last
-                            ? "bg-blue-600 text-white ring-2 ring-white/80 shadow-[0_0_18px_var(--color-blue-600)]"
-                            : "border border-aqua-50/70 bg-aqua-600 text-white",
+                            ? "bg-blue-600 shadow-[0_0_18px_rgb(36_87_255/0.55)] ring-4 ring-blue-600/20"
+                            : "bg-aqua-600",
                         )}
                       >
                         {last ? (
@@ -236,7 +240,7 @@ function HeroGlass({
                         ) : null}
                         <svg
                           viewBox="0 0 24 24"
-                          className="size-3.5"
+                          className="size-3.5 lg:size-4"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth={2.5}
@@ -260,11 +264,11 @@ function HeroGlass({
                   );
                 })}
               </ol>
-              <div className="mt-(--space-5) flex items-end gap-(--space-1) border-t border-white/10 pt-(--space-4)">
+              <div className="mt-(--space-5) flex items-end gap-(--space-1) border-t border-midnight-950/10 pt-(--space-4) lg:mt-(--space-6) lg:pt-(--space-5)">
                 {GLASS_BARS.map((height, index) => (
                   <span
                     key={height}
-                    className="hv-bar-idle w-2 rounded-sm bg-linear-to-t from-blue-100 to-white"
+                    className="hv-bar-idle w-2 rounded-sm bg-linear-to-t from-blue-600 to-aqua-600 lg:w-2.5"
                     style={
                       {
                         height: `${height}px`,

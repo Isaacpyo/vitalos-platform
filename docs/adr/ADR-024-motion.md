@@ -109,4 +109,13 @@ homepage hero only:
 
 The same day the Industries band gained a looping aurora (`AuroraBackdrop`) under the same rules: its band is a `[data-motion-scope]` with its own MotionPause switch, and nothing moves under reduced motion.
 
+Also on 15 Oct 2026 the owner asked for every section and block to fade in on mobile, on top of their existing effects. `MobileReveal` (mounted once in the site shell) does this, and it is a deliberate exception to decision 4 (no opacity on text), with these limits:
+
+- it runs only below lg, only after hydration, only when motion is allowed, and only for bands and list items that start below the fold;
+- it sets `data-m-reveal` (token CSS: opacity and a 1.5rem rise over 700 ms, list items a step apart), never a transform, and is scoped to `screen`;
+- focus moving into a held item shows it at once, and the lifecycle ring keeps its own entrance;
+- the server HTML, the page without JavaScript, print and reduced motion show everything at once.
+
+Held text is fully transparent (axe treats it as not visible) until it is in view. Axe scrolls elements into view while it measures contrast, which starts their fades, so the end-to-end accessibility scan (`tests/support/axe.ts`) first shows every held item and waits for the fades to finish: it checks the page as readers see it once each band has arrived.
+
 The finite rule still applies everywhere else, including the `planes` variant of `HeroVisual`.

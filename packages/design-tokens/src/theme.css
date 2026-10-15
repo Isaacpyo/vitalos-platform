@@ -395,6 +395,22 @@ html {
   }
 }
 
+/* Fade-in on compact screens (MobileReveal, owner direction 2026-10-15): bands and items that start
+   below the fold fade and rise into place once. Set only by script after hydration, below lg,
+   with motion allowed; screen only, so print never inherits a held state. Opacity and translate
+   only (the rest of an element's own motion is untouched). */
+@media screen and (max-width: 63.99rem) and (prefers-reduced-motion: no-preference) {
+  [data-m-reveal] {
+    transition:
+      opacity 700ms var(--ease-standard) var(--m-delay, 0ms),
+      translate 700ms var(--ease-emphasis) var(--m-delay, 0ms);
+  }
+  [data-m-reveal="armed"] {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+
 [data-motion-scope]:has([data-motion-pause]:checked) * {
   animation-play-state: paused !important;
 }

@@ -29,7 +29,7 @@ function documentationIp(testInfo: TestInfo): string {
 /** Opens the compact-viewport menu when the navigation is behind it. */
 async function openMenuIfCompact(page: Page) {
   if (isCompact(page)) {
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
   }
 }
 
@@ -56,7 +56,7 @@ test.describe("enquiry journey", () => {
     await page.context().setExtraHTTPHeaders({ "x-forwarded-for": documentationIp(testInfo) });
 
     await page.goto("/");
-    await page.getByRole("link", { name: "Explore what we do" }).click();
+    await page.getByRole("link", { name: "Explore what we do" }).first().click();
     await expect(page).toHaveURL(/\/what-we-do$/);
 
     await page.locator("main").getByRole("link", { name: "Example Practice (fixture)" }).click();

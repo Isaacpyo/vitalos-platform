@@ -48,7 +48,7 @@ above are produced, when SVGs should replace them.
 
 The owner supplied `Futuristic Cloud Infrastructure at Sunrise.png` (1672x941) and directed that it
 be the homepage hero background under a solid black overlay. It is served as WebP at 1672 and 960 px
-wide from `apps/web/public/images/hero/`, under a 60% black overlay, with the hero copy on the dark
+wide from `apps/web/public/images/hero/`, under a 72% black overlay (darkened from 60% on the same day), with the hero copy on the dark
 tone. This record covers that one placement only. Other imagery still needs the separate
 rights-cleared handoff described above.
 
@@ -85,3 +85,15 @@ Validate, Release, Operate, Improve), so each disc was cut out with a circular m
 background survives) and saved as a 192 px transparent WebP in
 `apps/web/public/images/how-we-work/`. The ring, arrows and labels are drawn by the page
 (`ProcessCycle`), so each stage can be interactive.
+
+## Industry photographs (owner direction, 15 Oct 2026)
+
+The owner supplied four photographs (`ChatGPT Image Oct 15, 2026, 01_28_16 PM-1.png` to
+`01_28_18 PM-4.png`, each 1448x1086, AI-generated scenes of people at work) for the homepage
+Industries panels. In order they show a clinical team (Health & Care), a store checkout (Retail,
+Commerce & Consumer), a warehouse (Operations, Industry & Logistics) and a team at a data
+dashboard (Growth & Technology). They are served as WebP at 1200 and 640 px wide from
+`apps/web/public/images/industries/`, chosen by the locked industry names
+(`apps/web/src/lib/view-mapping/industry-images.ts`), as decorative backgrounds under a midnight
+gradient. They illustrate the sectors only; they are not clients or case studies and must not be
+captioned or used as if they were.

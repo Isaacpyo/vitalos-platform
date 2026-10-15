@@ -4,6 +4,7 @@ import {
   aiJourneyStages,
   ctas,
   howWeWorkStages,
+  labTypeLabels,
   megaMenuColumns,
   navLabels,
   practiceNames,
@@ -22,7 +23,7 @@ import {
   Display,
   HeroVisual,
   IndustryShowcase,
-  LabAssetRow,
+  LabShowcase,
   ArticleRow,
   AuroraBackdrop,
   MotionPause,
@@ -40,9 +41,11 @@ import {
 import type { ProcessCycleStage, SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
-import { heroMotionPauseLabel } from "../../lib/view-mapping/labels";
+import { heroMotionPauseLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
+import { industryImageFor } from "../../lib/view-mapping/industry-images";
 import { practiceImageFor } from "../../lib/view-mapping/practice-images";
+import { typesWithAssets } from "../labs/map";
 import { solutionImageFor } from "../../lib/view-mapping/solution-images";
 import { stageImageFor } from "../../lib/view-mapping/stage-images";
 import type { DerivedStage } from "../../lib/view-mapping/stages";
@@ -123,7 +126,7 @@ function HeroBackdrop() {
         className="hv-drift size-full object-cover object-[70%_center]"
       />
       {/* Black is not in the locked palette (--color-*: initial); the owner asked for it here. */}
-      <div className="absolute inset-0 bg-[#000]/60" />
+      <div className="absolute inset-0 bg-[#000]/72" />
       {heroGlints.map((glint, index) => (
         <span
           key={index}
@@ -184,7 +187,7 @@ export function HeroSection(): ReactNode {
         <HeroVisual
           steps={aiJourneyStages}
           variant="glass"
-          className="aspect-[4/3] w-full sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[4/5] lg:max-h-[36rem]"
+          className="w-full lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>
     </Section>
@@ -413,18 +416,25 @@ function IndustriesBand({
         <IndustryShowcase
           className={title ? "mt-(--space-7)" : undefined}
           headingLevel={itemLevel(title)}
-          items={rows.map((row) => ({
-            title: row.title,
-            href: row.href,
-            ...(row.summary ? { summary: row.summary } : {}),
-            icon: iconFor("industry", row.title),
-          }))}
+          items={rows.map((row) => {
+            const image = industryImageFor(row.title);
+            return {
+              title: row.title,
+              href: row.href,
+              ...(row.summary ? { summary: row.summary } : {}),
+              icon: iconFor("industry", row.title),
+              ...(image ? { image } : {}),
+            };
+          })}
         />
       </Container>
     </Section>
   );
 }
-/** 10. Labs: only when the Labs gate is open. Maturity is stated in words on every asset. */
+/**
+ * 10. Labs: only when the Labs gate is open. A bench of specimen cards (owner direction, 15 Oct
+ * 2026); maturity is stated in words on every asset.
+ */
 export const labsSection: SectionRender = (context, tone) => {
   if (!context.gates.open.labs) return null;
   const title = heading(context, "labs");
@@ -441,11 +451,15 @@ export const labsSection: SectionRender = (context, tone) => {
       eyebrow={navLabels.labs}
       link={{ label: navLabels.labs, href: routes.labs() }}
     >
-      <RowList>
-        {rows.map((row) => (
-          <LabAssetRow key={row.href} {...row} />
-        ))}
-      </RowList>
+      <LabShowcase
+        headingLevel={itemLevel(title)}
+        items={rows}
+        more={{
+          label: structuralLabels.allLabs,
+          href: routes.labs(),
+          types: typesWithAssets(context.home.labs).map((type) => labTypeLabels[type]),
+        }}
+      />
     </Band>
   );
 };
@@ -479,11 +493,25 @@ export const insightsSection: SectionRender = (context, tone) => {
  * 13. Final conversion: needs its heading from the CMS. The action is the CMS call to action, or
  * the locked "Talk to Vitalos" to the contact page. The comp's single-row closing band.
  */
+/** The closing card's supporting line: the first sentence of the How We Work introduction. */
+const closingLine = (intro: string): string => {
+  const end = intro.indexOf(". ");
+  return end === -1 ? intro.trim() : intro.slice(0, end + 1).trim();
+};
+
 export const finalConversionSection: SectionRender = (context) => {
   const title = heading(context, "finalConversion");
   if (!title) return null;
   const primary = ctaToLink(context.home.finalCta) ?? { label: ctas.primary, href: contactHref() };
-  return <TerminalCTA heading={title} primary={primary} />;
+  return (
+    <TerminalCTA
+      variant="feature"
+      heading={title}
+      {...(context.howWeWorkIntro ? { body: closingLine(context.howWeWorkIntro) } : {})}
+      primary={primary}
+      secondary={{ label: ctas.secondary, href: routes.whatWeDo() }}
+    />
+  );
 };
 
 /** Sections 2 to 12 in order; the hero and the final conversion frame them. */

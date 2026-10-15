@@ -88,7 +88,7 @@ test.describe("draft content source", () => {
       "Five practices, one firm",
       "Industries",
       "Vitalos Labs",
-      "Bring us the problem.",
+      "Have a problem worth solving?",
     ]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     }

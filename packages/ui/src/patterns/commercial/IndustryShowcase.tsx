@@ -6,11 +6,21 @@ import { Icon, type IconName } from "../../primitives/Icon";
 import { IconTile } from "../../primitives/IconTile";
 import type { ItemHeadingLevel } from "../_internal/types";
 
+/** A photograph for a panel's background; `srcSet` with width descriptors. */
+export interface IndustryShowcaseImage {
+  src: string;
+  srcSet?: string | undefined;
+  width: number;
+  height: number;
+}
+
 export interface IndustryShowcaseItem {
   title: string;
   href: string;
   summary?: string | undefined;
   icon?: IconName | undefined;
+  /** Decorative background photograph (the title is the visible label). */
+  image?: IndustryShowcaseImage | undefined;
 }
 
 export interface IndustryShowcaseProps {
@@ -24,7 +34,9 @@ export interface IndustryShowcaseProps {
  * The industries as expanding glass panels for a dark band (owner direction, 15 Oct 2026). From
  * lg the panels sit side by side; pointing at or focusing one widens it and opens its summary
  * while the others narrow to their icon and title, and a soft light follows the pointer across
- * the panel. Below lg they stack, every summary open.
+ * the panel. A panel with a photograph shows it behind a midnight gradient that keeps the text
+ * legible: brighter and settling from a slight zoom when open, dimmer when narrow. Below lg they
+ * stack, every summary open.
  *
  * Plain CSS transitions on classes (flex-grow, grid rows): no inline transforms, instant under
  * reduced motion, and the server HTML (and the page without JavaScript) shows the first panel
@@ -66,11 +78,41 @@ export function IndustryShowcase({ items, headingLevel = 3, className }: Industr
               onFocus={() => setActive(index)}
               data-active={on ? "" : undefined}
               className={cx(
-                "group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border p-(--space-6) no-underline backdrop-blur-sm",
+                "group relative isolate flex h-full min-h-[22rem] flex-col overflow-hidden rounded-2xl border p-(--space-6) no-underline backdrop-blur-sm lg:min-h-0",
                 "transition-[border-color,background-color] duration-(--duration-reveal) ease-(--ease-standard)",
                 on ? "border-white/25 bg-white/[0.08]" : "border-white/10 bg-white/[0.03]",
               )}
             >
+              {item.image ? (
+                <>
+                  <img
+                    src={item.image.src}
+                    {...(item.image.srcSet ? { srcSet: item.image.srcSet } : {})}
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    width={item.image.width}
+                    height={item.image.height}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className={cx(
+                      "absolute inset-0 -z-20 size-full object-cover",
+                      "transition-[scale] duration-[1200ms] ease-(--ease-emphasis)",
+                      on ? "scale-100" : "scale-110 group-hover:scale-105",
+                    )}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgb(8_26_42/0.55),rgb(8_26_42/0.2)_35%,rgb(8_26_42/0.85)_72%,rgb(8_26_42/0.96))]"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      "absolute inset-0 -z-10 bg-midnight-950 transition-opacity duration-(--duration-diagram) ease-(--ease-standard)",
+                      on ? "opacity-0" : "opacity-55 group-hover:opacity-30",
+                    )}
+                  />
+                </>
+              ) : null}
               <span
                 aria-hidden="true"
                 className={cx(

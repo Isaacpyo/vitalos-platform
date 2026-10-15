@@ -220,18 +220,39 @@ function MobileNavInner({
           ref={summaryRef}
           onClick={onSummaryClick}
           className={cx(
-            "flex min-h-11 cursor-pointer list-none items-center gap-(--space-1) rounded-sm whitespace-nowrap sm:min-h-(--size-button-md) sm:gap-(--space-2)",
-            "border border-tone-heading px-(--space-2) text-small font-semibold text-tone-heading sm:px-(--space-3) sm:text-body",
+            "relative flex size-11 cursor-pointer list-none items-center justify-center rounded-full border border-tone-border text-tone-heading",
+            "transition-[border-color,background-color] duration-(--duration-feedback) ease-(--ease-standard)",
+            "hover:border-tone-heading group-open:border-tone-heading group-open:bg-tone-tile-bg/40",
             "marker:hidden [&::-webkit-details-marker]:hidden",
           )}
         >
-          <span>{menuLabel}</span>
-          <Icon name="menu" size={20} className="group-open:hidden max-[22.49rem]:hidden" />
-          <Icon
-            name="close"
-            size={20}
-            className="hidden group-open:block max-[22.49rem]:group-open:hidden"
-          />
+          {/* The label is for assistive technology; the icon carries it visually (owner
+              direction, 15 Oct 2026). Three bars of falling length even out on hover and fold
+              into a cross while the sheet is open (CSS only; instant under reduced motion). */}
+          <span className="sr-only">{menuLabel}</span>
+          <span aria-hidden="true" className="relative block h-3.5 w-5">
+            <span
+              className={cx(
+                "absolute top-0 right-0 h-0.5 w-5 rounded-full bg-current",
+                "transition-[top,rotate] duration-(--duration-reveal) ease-(--ease-emphasis)",
+                "group-open:top-1.5 group-open:rotate-45",
+              )}
+            />
+            <span
+              className={cx(
+                "absolute top-1.5 right-0 h-0.5 w-3.5 rounded-full bg-current",
+                "transition-[width,opacity,scale] duration-(--duration-reveal) ease-(--ease-emphasis)",
+                "group-hover:w-5 group-open:scale-x-0 group-open:opacity-0",
+              )}
+            />
+            <span
+              className={cx(
+                "absolute top-3 right-0 h-0.5 w-2.5 rounded-full bg-current",
+                "transition-[top,rotate,width] duration-(--duration-reveal) ease-(--ease-emphasis)",
+                "group-hover:w-5 group-open:top-1.5 group-open:w-5 group-open:-rotate-45",
+              )}
+            />
+          </span>
         </summary>
         <m.nav
           key={openings}

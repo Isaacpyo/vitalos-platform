@@ -61,6 +61,7 @@ export {
 } from "./commercial/PracticeShowcase";
 export {
   IndustryShowcase,
+  type IndustryShowcaseImage,
   type IndustryShowcaseItem,
   type IndustryShowcaseProps,
 } from "./commercial/IndustryShowcase";
@@ -86,6 +87,7 @@ export {
 // Labs
 export { MaturityBadge, type MaturityBadgeProps, type MaturityKey } from "./labs/MaturityBadge";
 export { LabAssetRow, type LabAssetRowProps } from "./labs/LabAssetRow";
+export { LabShowcase, type LabShowcaseItem, type LabShowcaseProps } from "./labs/LabShowcase";
 export { TechnicalFigure, type TechnicalFigureProps } from "./labs/TechnicalFigure";
 export {
   EvaluationTable,
