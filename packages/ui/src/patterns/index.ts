@@ -13,7 +13,7 @@ export {
 
 // Section layout (ADR-023, from the owner comp)
 export { SectionHeading, type SectionHeadingProps } from "./layout/SectionHeading";
-export { PageHero, type PageHeroProps } from "./layout/PageHero";
+export { PageHero, type PageHeroBackdrop, type PageHeroProps } from "./layout/PageHero";
 export { HeroVisual, type HeroVisualProps } from "./media/HeroVisual";
 export {
   MediaPlaceholder,
@@ -72,6 +72,7 @@ export {
   type SolutionShowcaseItem,
   type SolutionShowcaseProps,
 } from "./commercial/SolutionShowcase";
+export { FeatureGrid, type FeatureGridItem, type FeatureGridProps } from "./commercial/FeatureGrid";
 
 // Proof
 export { OutcomeStats, type OutcomeStatItem, type OutcomeStatsProps } from "./proof/OutcomeStats";

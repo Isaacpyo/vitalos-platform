@@ -7,7 +7,7 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { deriveStages, stageAnchor } from "../../lib/view-mapping/stages";
-import { Band, ClosingAction, PageIntro, renderBands } from "../commercial/bands";
+import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 
 export interface HowWeWorkTemplateProps {
   page: RoutePageView | null;
@@ -53,7 +53,7 @@ export function HowWeWorkTemplate({ page }: Readonly<HowWeWorkTemplateProps>) {
             </Band>
           ) : null,
       ])}
-      <ClosingAction link={cta} />
+      <ClosingBand primary={cta} />
     </PageMain>
   );
 }

@@ -1,8 +1,6 @@
 import { Children, Fragment, isValidElement, useId } from "react";
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode } from "react";
 import {
-  Button,
-  CTAGroup,
   Container,
   Icon,
   PageHero,
@@ -10,9 +8,17 @@ import {
   RevealItem,
   Section,
   SectionHeading,
+  TerminalCTA,
 } from "@vitalos/ui";
 import type { PatternLink, RevealItemProps, SectionSpacing, SectionTone } from "@vitalos/ui";
+import { ctas, homeSections, routes } from "@vitalos/cms";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
+import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import { contactHref } from "../../lib/view-mapping/hrefs";
+
+/** The homepage's closing heading (locked copy), closing every page. */
+const closingHeading =
+  homeSections.find((section) => section.key === "finalConversion")?.visibleHeading ?? ctas.primary;
 
 /**
  * Building blocks shared by the commercial templates (home, practices, solutions, offers,
@@ -32,15 +38,37 @@ export interface PageIntroProps {
   actions?: ReactNode;
   /** Extra content under the lead (for example a definition list). */
   children?: ReactNode;
+  /** The compact hero of a detail page (smaller title, shorter band); top-level pages omit it. */
+  compact?: boolean | undefined;
+  /** Media beside the copy from lg: the page's illustration, photograph or MediaSlot. */
+  media?: ReactNode;
 }
 
 /**
- * First band of a page (the owner comp's page hero): eyebrow, h1, lead and actions
- * on a light field with a decorative angled plane. The page has no other h1.
+ * First band of a page: the homepage hero's language (pages redesign, 15 Oct 2026). A dark band
+ * under the clear header with the hero photograph, rounded bottom corners, the eyebrow, h1, lead
+ * and actions, and optional media on the right. The page has no other h1.
  */
-export function PageIntro({ eyebrow, title, lead, actions, children }: PageIntroProps) {
+export function PageIntro({
+  eyebrow,
+  title,
+  lead,
+  actions,
+  children,
+  compact,
+  media,
+}: PageIntroProps) {
   return (
-    <PageHero title={title} eyebrow={eyebrow} lead={lead} actions={actions}>
+    <PageHero
+      tone="dark"
+      backdrop={heroPhotograph}
+      size={compact ? "title" : "display"}
+      title={title}
+      eyebrow={eyebrow}
+      lead={lead}
+      actions={actions}
+      media={media}
+    >
       {children}
     </PageHero>
   );
@@ -185,20 +213,30 @@ export function CardGrid({
 }
 
 /**
- * Closing action of a detail page: one primary link on a quiet band (the midnight footer follows
- * directly, so a dark band here would merge with it).
+ * The end of every page: the homepage's closing card (TerminalCTA `feature`, owner direction 15 Oct
+ * 2026) with the locked closing heading, the page's own action and an onward link. The card sits
+ * on a light band, so it never merges with the midnight footer that follows.
  */
-export function ClosingAction({ link }: Readonly<{ link: PatternLink }>) {
+export function ClosingBand({
+  primary,
+  secondary,
+}: Readonly<{
+  /** The page's own action; defaults to Talk to Vitalos. */
+  primary?: PatternLink | undefined;
+  /** Defaults to Explore what we do; `null` leaves it out (for example on What We Do itself). */
+  secondary?: PatternLink | null | undefined;
+}>) {
+  const onward =
+    secondary === null
+      ? undefined
+      : (secondary ?? { label: ctas.secondary, href: routes.whatWeDo() });
   return (
-    <Section as="div" tone="muted" spacing="compact">
-      <Container size="wide">
-        <CTAGroup>
-          <Button href={link.href} size="lg">
-            {link.label}
-          </Button>
-        </CTAGroup>
-      </Container>
-    </Section>
+    <TerminalCTA
+      variant="feature"
+      heading={closingHeading}
+      primary={primary ?? { label: ctas.primary, href: contactHref() }}
+      {...(onward ? { secondary: onward } : {})}
+    />
   );
 }
 

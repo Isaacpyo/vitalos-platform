@@ -92,6 +92,38 @@ const paths = {
   building: <path d="M4 21V5l8-2v18m0-13h8v13M3 21h18M7.5 8h1m-1 4h1m-1 4h1m7-4h1m-1 4h1" />,
   document: <path d="M6 3h8l4 4v14H6V3Zm8 0v4h4M9 12h6m-6 4h6" />,
   mail: <path d="M3 5h18v14H3V5Zm0 0 9 7.5L21 5" />,
+  // Added for the pages redesign (15 Oct 2026), drawn on the same grid, stroke and caps.
+  image: <path d="M3 4h18v16H3V4Zm0 12 5-5 4 4 3-3 6 6M15.5 9.5h.01" />,
+  target: (
+    <>
+      <circle cx="12" cy="12" r="8.25" />
+      <circle cx="12" cy="12" r="4.25" />
+      <path d="M12 12h.01" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.25" />
+      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3a4.5 4.5 0 0 1 4.5 4.5V20M16 4.75a3.25 3.25 0 0 1 0 6.5M18 14a4.5 4.5 0 0 1 3 4.25V20" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.25" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  lock: <path d="M5 11h14v10H5V11Zm3 0V7.5a4 4 0 0 1 8 0V11m-4 4v2" />,
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  gauge: <path d="M4.5 18a8.25 8.25 0 1 1 15 0M12 13.5l4-4.5M12 13.5h.01" />,
+  link: (
+    <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66L11.5 6.8M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.46" />
+  ),
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

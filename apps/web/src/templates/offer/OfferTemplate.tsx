@@ -7,7 +7,7 @@ import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { toRailItems } from "../../lib/view-mapping/patterns";
-import { Band, ClosingAction, PageIntro, StatementList, renderBands } from "../commercial/bands";
+import { Band, ClosingBand, PageIntro, StatementList, renderBands } from "../commercial/bands";
 
 export interface OfferTemplateProps {
   offer: OfferView;
@@ -107,7 +107,7 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
             </Band>
           ) : null,
       ])}
-      <ClosingAction link={cta} />
+      <ClosingBand primary={cta} />
     </PageMain>
   );
 }

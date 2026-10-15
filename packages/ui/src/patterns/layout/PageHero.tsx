@@ -26,7 +26,24 @@ export interface PageHeroProps {
   size?: "display" | "title";
   /** Width of the content, matching the bands that follow (wide by default). */
   containerSize?: ContainerSize | undefined;
+  /**
+   * `light` (default): the light field with an angled plane. `dark`: the homepage hero's language
+   * on an inner page: a dark band that starts under the clear header (SiteHeader `overlay`), with
+   * rounded bottom corners and an optional photograph under a heavy black overlay.
+   */
+  tone?: "light" | "dark" | undefined;
+  /** Dark tone only: a decorative photograph behind the band (pre-sized, same origin). */
+  backdrop?: PageHeroBackdrop | undefined;
+  /** Dark tone only: media beside the copy from lg (an illustration, a photograph, a MediaSlot). */
+  media?: ReactNode;
   className?: string | undefined;
+}
+
+export interface PageHeroBackdrop {
+  src: string;
+  srcSet?: string | undefined;
+  width: number;
+  height: number;
 }
 
 /**
@@ -45,8 +62,22 @@ export function PageHero({
   children,
   size = "display",
   containerSize = "wide",
+  tone = "light",
+  backdrop,
+  media,
   className,
 }: PageHeroProps) {
+  if (tone === "dark") {
+    return (
+      <DarkPageHero
+        {...{ title, eyebrow, lead, before, afterTitle, actions, size, containerSize, backdrop }}
+        media={media}
+        className={className}
+      >
+        {children}
+      </DarkPageHero>
+    );
+  }
   return (
     <Section
       as="div"
@@ -77,6 +108,96 @@ export function PageHero({
         {hasText(lead) ? <Lead className="mt-(--space-5)">{lead}</Lead> : null}
         {actions ? <CTAGroup className="mt-(--space-6)">{actions}</CTAGroup> : null}
         {children ? <div className="mt-(--space-7)">{children}</div> : null}
+      </Container>
+    </Section>
+  );
+}
+
+/**
+ * The dark page hero (owner direction, 15 Oct 2026: every page takes the homepage's design). The
+ * band starts under the clear header and runs to the top; its bottom corners are rounded like the
+ * homepage hero. Behind the copy: the photograph (when given) under an 80% black overlay, a blue
+ * glow and a faint grid, all decorative and static, so no pause switch is needed (WCAG 2.2.2).
+ * `display` is the full hero of a top-level page; `title` is the compact hero of a detail page.
+ * Media sits beside the copy from lg and under it on compact screens.
+ */
+function DarkPageHero({
+  title,
+  eyebrow,
+  lead,
+  before,
+  afterTitle,
+  actions,
+  children,
+  size,
+  containerSize,
+  backdrop,
+  media,
+  className,
+}: Omit<PageHeroProps, "tone">) {
+  const full = size === "display";
+  return (
+    <Section
+      as="div"
+      tone="dark"
+      spacing="default"
+      className={cx(
+        "relative isolate -mt-(--size-header) overflow-hidden rounded-b-[1.75rem] lg:rounded-b-[3rem]",
+        full
+          ? "pt-[calc(var(--section-default)+var(--size-header))]"
+          : "pt-[calc(var(--section-compact)+var(--size-header))] pb-(--section-compact)",
+        className,
+      )}
+    >
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+        {backdrop ? (
+          <>
+            <img
+              src={backdrop.src}
+              srcSet={backdrop.srcSet}
+              sizes="100vw"
+              width={backdrop.width}
+              height={backdrop.height}
+              alt=""
+              fetchPriority="high"
+              decoding="async"
+              className="size-full object-cover object-[70%_center]"
+            />
+            {/* Black is not in the locked palette; the owner asked for it on the homepage hero. */}
+            <div className="absolute inset-0 bg-[#000]/80" />
+          </>
+        ) : null}
+        <div className="absolute -bottom-40 -left-32 size-[34rem] rounded-full bg-blue-600/25 blur-3xl" />
+        <div className="absolute -top-32 right-[-8rem] size-[28rem] rounded-full bg-aqua-600/15 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.04)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_75%)]" />
+      </div>
+      <Container
+        size={containerSize ?? "wide"}
+        className={cx(
+          "grid items-center gap-x-(--space-8) gap-y-(--space-8)",
+          media ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" : undefined,
+        )}
+      >
+        <div className="min-w-0">
+          {before ? <div className="mb-(--space-6)">{before}</div> : null}
+          {hasText(eyebrow) ? <Eyebrow className="mb-(--space-3)">{eyebrow}</Eyebrow> : null}
+          {full ? (
+            <Display size="l" as="h1" className="max-w-(--container-content) break-words">
+              {title}
+            </Display>
+          ) : (
+            <Heading level={1} className="max-w-(--container-content) break-words">
+              {title}
+            </Heading>
+          )}
+          {afterTitle ? <div className="mt-(--space-4)">{afterTitle}</div> : null}
+          {hasText(lead) ? (
+            <Lead className="mt-(--space-5) max-w-(--container-prose)">{lead}</Lead>
+          ) : null}
+          {actions ? <CTAGroup className="mt-(--space-7)">{actions}</CTAGroup> : null}
+          {children ? <div className="mt-(--space-7)">{children}</div> : null}
+        </div>
+        {media ? <div className="min-w-0">{media}</div> : null}
       </Container>
     </Section>
   );

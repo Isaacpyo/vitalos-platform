@@ -9,7 +9,7 @@ import { caseStudyMeta, toOfferRows, toRailItems, toRows } from "../../lib/view-
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import {
   Band,
-  ClosingAction,
+  ClosingBand,
   PageIntro,
   RowList,
   StatementList,
@@ -118,7 +118,7 @@ export function PracticeTemplate({ practice, gates }: Readonly<PracticeTemplateP
             </Band>
           ) : null,
       ])}
-      <ClosingAction link={cta} />
+      <ClosingBand primary={cta} />
     </PageMain>
   );
 }

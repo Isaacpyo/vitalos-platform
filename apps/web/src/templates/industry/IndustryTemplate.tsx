@@ -14,7 +14,7 @@ import {
 } from "../../lib/view-mapping/patterns";
 import {
   Band,
-  ClosingAction,
+  ClosingBand,
   PageIntro,
   RowList,
   StatementList,
@@ -124,7 +124,7 @@ export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateP
             </Band>
           ) : null,
       ])}
-      <ClosingAction link={cta} />
+      <ClosingBand primary={cta} />
     </PageMain>
   );
 }

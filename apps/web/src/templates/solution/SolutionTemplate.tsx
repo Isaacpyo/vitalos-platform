@@ -18,7 +18,7 @@ import { structuralLabels } from "../../lib/view-mapping/labels";
 import { caseStudyMeta, toOfferRows, toRows } from "../../lib/view-mapping/patterns";
 import {
   Band,
-  ClosingAction,
+  ClosingBand,
   PageIntro,
   RowList,
   StatementList,
@@ -149,7 +149,7 @@ export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateP
             </Band>
           ) : null,
       ])}
-      <ClosingAction link={cta} />
+      <ClosingBand primary={cta} />
     </PageMain>
   );
 }

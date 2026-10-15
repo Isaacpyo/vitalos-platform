@@ -40,6 +40,7 @@ import {
 } from "@vitalos/ui";
 import type { ProcessCycleStage, SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
+import { heroPhotograph } from "../../lib/view-mapping/hero-images";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { heroMotionPauseLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
@@ -102,13 +103,7 @@ function PropositionTitle() {
  * hidden from assistive technology. Served from apps/web/public as pre-sized WebP, so it skips
  * the image optimiser.
  */
-const heroBackdrop = {
-  src: "/images/hero/cloud-infrastructure-1672.webp",
-  srcSet:
-    "/images/hero/cloud-infrastructure-960.webp 960w, /images/hero/cloud-infrastructure-1672.webp 1672w",
-  width: 1672,
-  height: 941,
-} as const;
+const heroBackdrop = heroPhotograph;
 
 function HeroBackdrop() {
   return (
