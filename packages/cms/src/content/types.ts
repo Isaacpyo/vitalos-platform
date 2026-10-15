@@ -99,12 +99,20 @@ export interface SocialLinkView {
   href: string;
 }
 
+/** Owner-supplied podcast listing URLs (https, open.spotify.com / podcasts.apple.com only). */
+export interface PodcastLinksView {
+  spotifyUrl?: string;
+  appleUrl?: string;
+}
+
 export interface SiteSettingsView {
   legalName?: string;
   companyNumber?: string;
   registeredAddress?: string;
   contactEmail?: string;
   securityEmail?: string;
+  /** Rendered in the footer only when at least one valid URL is set. */
+  podcast?: PodcastLinksView;
   /** Only verified channels. */
   social?: readonly SocialLinkView[];
   defaultSeo?: SeoView;
