@@ -47,3 +47,5 @@ Each entry: what was missing or conflicting, what was chosen, and why. Owner dec
     - Redaction is pattern-based. It cannot catch every name or address, so PRIVACY.md lists this as a residual risk, and the composer asks visitors not to share sensitive details.
     - The cron secret is shared with the enquiry crons.
     - The visitor token lives in `localStorage`, protected by the site CSP.
+
+28. **Privacy notice published with Relay (15 Oct).** The owner approved the Relay section and the retention periods (90 days without contact details, 12 months with). Notice version `2026-10-relay`, effective 15 Oct 2026. For the DeepSeek transfer the owner chose honest wording: the notice says DeepSeek processes redacted messages in China, which has no UK adequacy decision. It does not claim an IDTA or other safeguard, because none is in place. The general transfers paragraph now names DeepSeek as the exception. `ENQUIRY_PRIVACY_NOTICE_VERSION` in Vercel production must equal the new version when this ships.

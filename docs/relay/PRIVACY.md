@@ -1,6 +1,6 @@
 # Relay: privacy notice section and DPIA note (DRAFT, not published)
 
-Status: **draft for owner approval.** None of this text is on the website. Relay stays off in production (`RELAY_ENABLED=false`) until the owner approves a privacy notice version that covers it (decision 19). Points marked **OWNER** need a decision, and points marked **LEGAL** need checking against the provider's current terms. Nothing here has been checked by a lawyer.
+Status: **approved 15 Oct 2026** (decision 28). Section 2 is published in the privacy notice, version `2026-10-relay`, with the DeepSeek transfer stated plainly (no safeguard claimed). The DPIA note below remains an internal record. Relay stays off in production (`RELAY_ENABLED=false`) until the owner approves a privacy notice version that covers it (decision 19). Points marked **OWNER** need a decision, and points marked **LEGAL** need checking against the provider's current terms. Nothing here has been checked by a lawyer.
 
 ## 1. What Relay does with personal data (facts from the code)
 

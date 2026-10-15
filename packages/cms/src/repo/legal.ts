@@ -9,14 +9,14 @@ import type { LegalPageView } from "../content/types";
 import { h2, p, richText, seo } from "../draft/build";
 
 /** Version the contact form records consent against. Must equal ENQUIRY_PRIVACY_NOTICE_VERSION. */
-export const PRIVACY_NOTICE_VERSION = "2026-10";
+export const PRIVACY_NOTICE_VERSION = "2026-10-relay";
 
 const privacy: LegalPageView = {
   id: "legalPage-privacy",
   slug: "privacy",
   title: "Privacy notice",
   version: PRIVACY_NOTICE_VERSION,
-  effectiveDate: "2026-10-11",
+  effectiveDate: "2026-10-15",
   body: richText(
     "legal-privacy",
     h2("Who we are"),
@@ -31,6 +31,22 @@ const privacy: LegalPageView = {
       "To protect the form from abuse we store a one-way hash of your IP address, and we use Cloudflare Turnstile to check that the enquiry is not from an automated bot.",
     ),
     p("We do not use analytics or advertising cookies on this website."),
+    h2("Relay, our website assistant"),
+    p(
+      "Our website has an optional chat assistant, Relay. Relay answers questions about Vitalos using an AI model and the information published on this website. If you ask, it passes the conversation to a member of our team.",
+    ),
+    p(
+      "When you use Relay we collect what you type, the page you are on, the page that referred you, any campaign tags in the link you followed, your browser type and approximate country, and a one-way hash of your IP address that we use to prevent abuse. If you ask to talk to a person, we also collect your name, email address and, optionally, your organisation, with your consent. Relay stores a conversation reference in your browser only after you send your first message, so the conversation can continue as you move between pages.",
+    ),
+    p(
+      "Relay sends your messages to DeepSeek, our AI model provider, to generate answers. Before anything is sent, we remove email addresses, phone numbers, postcodes, account and card numbers and similar identifiers, and we never send your name, email address or organisation. DeepSeek processes these redacted messages in the People's Republic of China, which has no UK adequacy decision. Please do not type sensitive personal information into Relay.",
+    ),
+    p(
+      "We use Relay conversations to answer your question, to let our team reply if you ask for a person, and to keep the service secure. Our lawful basis is our legitimate interest in answering enquiries about our services and, when you ask for a person, your consent to us contacting you about that enquiry.",
+    ),
+    p(
+      "We delete Relay conversations 90 days after the last message if you did not leave contact details, and 12 months after the last message if you did. You can delete a conversation at any time from the Relay menu.",
+    ),
     h2("Why we use it"),
     p(
       "We use your details to reply to your enquiry and to discuss working together. Our lawful basis is our legitimate interest in responding to business enquiries and keeping our website secure.",
@@ -42,11 +58,11 @@ const privacy: LegalPageView = {
     ),
     h2("Who we share it with"),
     p(
-      "We use service providers who process your data on our behalf: Vercel (website hosting), Supabase (database), Resend (email delivery) and Cloudflare (bot protection). We do not sell your personal data.",
+      "We use service providers who process your data on our behalf: Vercel (website hosting), Supabase (database), Resend (email delivery), Cloudflare (bot protection), DeepSeek (AI answers in Relay) and Microsoft Azure (our internal team console). We do not sell your personal data.",
     ),
     h2("International transfers"),
     p(
-      "Some of these providers process personal data outside the UK, including in the United States. Where they do, the transfer is protected by UK adequacy regulations or the UK International Data Transfer Addendum with that provider.",
+      "Some of these providers process personal data outside the UK, including in the United States. Where they do, the transfer is protected by UK adequacy regulations or the UK International Data Transfer Addendum with that provider. The exception is DeepSeek, which processes the redacted Relay messages described above in the People's Republic of China, which has no UK adequacy decision.",
     ),
     h2("Your rights"),
     p(
@@ -59,7 +75,7 @@ const privacy: LegalPageView = {
   ),
   seo: seo(
     "Privacy notice",
-    "How Vitalos Technologies Limited collects and uses personal data when you send an enquiry through this website.",
+    "How Vitalos Technologies Limited collects and uses personal data when you send an enquiry or use the Relay assistant on this website.",
   ),
 };
 

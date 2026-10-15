@@ -349,7 +349,7 @@ function resolveRelay(
     visitorEmailsEnabled: flag(raw.RELAY_VISITOR_EMAILS_ENABLED, false),
     emailFrom: raw.RELAY_EMAIL_FROM ?? "Vitalos Relay <relay@notify.vitalos.co.uk>",
     privacyNoticeVersion:
-      raw.RELAY_PRIVACY_NOTICE_VERSION ?? raw.ENQUIRY_PRIVACY_NOTICE_VERSION ?? "2026-10",
+      raw.RELAY_PRIVACY_NOTICE_VERSION ?? raw.ENQUIRY_PRIVACY_NOTICE_VERSION ?? "2026-10-relay",
     notion: {
       token: raw.NOTION_FAQ_TOKEN,
       dataSourceId: raw.NOTION_FAQ_DATA_SOURCE_ID ?? "3fae4b34-11f9-80b0-9910-000b57eabfa1",
