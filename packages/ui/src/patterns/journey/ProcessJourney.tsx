@@ -13,6 +13,8 @@ export interface JourneyStage {
   evidence?: string | undefined;
   /** The decision made before the next stage. */
   decisionGate?: string | undefined;
+  /** Anchor id for the stage, so other pages can link to it (for example `stage-design`). */
+  id?: string | undefined;
 }
 
 export interface ProcessJourneyProps {
@@ -84,8 +86,9 @@ export function ProcessJourney({
         return (
           <li
             key={`${stage.title}-${index}`}
+            {...(stage.id ? { id: stage.id } : {})}
             className={cx(
-              "relative flex min-w-0 gap-(--space-4)",
+              "relative flex min-w-0 scroll-mt-[calc(var(--size-header)+var(--space-6))] gap-(--space-4)",
               steps ? "lg:block" : "md:block",
               // Compact timeline: a rule joins each node to the next.
               index < last &&

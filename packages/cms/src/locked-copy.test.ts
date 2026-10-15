@@ -54,8 +54,9 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(howWeWorkStages).toHaveLength(9);
     expect(howWeWorkStages[0]).toBe("Qualify");
     expect(howWeWorkStages[8]).toBe("Improve");
-    // Stage 8 §8 listed 13; the Trust and Leadership bands were removed (owner, 15 Oct 2026).
-    expect(homeSections).toHaveLength(11);
+    // Stage 8 §8 listed 13; the Trust, Leadership and AI at the centre bands were removed
+    // (owner, 15 Oct 2026).
+    expect(homeSections).toHaveLength(10);
     expect(homeSections[0]?.key).toBe("hero");
   });
 
@@ -65,7 +66,6 @@ describe("locked copy (verbatim from the specs)", () => {
       "problems",
       "strategyToProduction",
       "practices",
-      "aiAtTheCentre",
       "selectedWork",
       "finalConversion",
     ]);

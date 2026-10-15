@@ -75,3 +75,13 @@ process steps around a gear), 3 Digital Product Transformation (web and mobile s
 5 Application Modernisation (an application moving to servers and cloud), 2 Data & Intelligence
 Transformation (a database feeding dashboards), and the uptime icon Technology Recovery &
 Reliability (a server, a health monitor, a shield and recovery arrows).
+
+## Delivery lifecycle discs (owner direction, 15 Oct 2026)
+
+The owner supplied `Blue Circular Workflow Cycle.png` (1254x1254) for the homepage "From strategy
+to production" band and asked for its white background to be removed. Its nine discs already run
+clockwise from the top in the locked stage order (Qualify, Discover, Define, Design, Engineer,
+Validate, Release, Operate, Improve), so each disc was cut out with a circular mask (no
+background survives) and saved as a 192 px transparent WebP in
+`apps/web/public/images/how-we-work/`. The ring, arrows and labels are drawn by the page
+(`ProcessCycle`), so each stage can be interactive.

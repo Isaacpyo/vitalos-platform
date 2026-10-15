@@ -119,7 +119,6 @@ test.describe("homepage", () => {
       problems: "Problems (fixture)",
       strategyToProduction: "Strategy to production (fixture)",
       practices: "Practices (fixture)",
-      aiAtTheCentre: "AI at the centre (fixture)",
       selectedWork: "Selected work (fixture)",
       industries: "Industries (fixture)",
       labs: "Labs (fixture)",

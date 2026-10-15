@@ -86,7 +86,6 @@ test.describe("draft content source", () => {
       "Problems we solve",
       "From strategy to production",
       "Five practices, one firm",
-      "AI at the centre",
       "Industries",
       "Vitalos Labs",
       "Bring us the problem.",
@@ -94,8 +93,14 @@ test.describe("draft content source", () => {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toBeVisible();
     }
     // The home page stays free of placeholder content (no Selected Work or Insights), and the
-    // Trust and Leadership bands were removed (owner direction, 15 Oct 2026).
-    for (const heading of ["Selected Work", "Insights", "Trust", "Leadership"]) {
+    // Trust, Leadership and AI at the centre bands were removed (owner direction, 15 Oct 2026).
+    for (const heading of [
+      "Selected Work",
+      "Insights",
+      "Trust",
+      "Leadership",
+      "AI at the centre",
+    ]) {
       await expect(main.getByRole("heading", { name: heading, exact: true })).toHaveCount(0);
     }
   });

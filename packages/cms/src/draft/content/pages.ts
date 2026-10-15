@@ -56,7 +56,6 @@ export const homeHeadings: Partial<Record<HomeSectionKey, string>> = {
   problems: headingFor("problems"),
   strategyToProduction: headingFor("strategyToProduction"),
   practices: headingFor("practices"),
-  aiAtTheCentre: headingFor("aiAtTheCentre"),
   selectedWork: headingFor("selectedWork"),
   industries: "Industries",
   labs: "Vitalos Labs",
@@ -106,7 +105,7 @@ const howWeWork: RoutePageDraft = {
     key: "how-we-work",
     heading: "Disciplined delivery without unnecessary bureaucracy.",
     intro:
-      "You can start with consulting or come directly for engineering. Discovery is required when risk or uncertainty makes it necessary, and every engagement follows one delivery lifecycle with quality gates that are not waived to protect a date.",
+      "Start with consulting or come straight to engineering. Every engagement follows one delivery lifecycle, with quality gates never waived to protect a date.",
     body: richText(
       "route-how-we-work",
       h2("Two ways to start"),

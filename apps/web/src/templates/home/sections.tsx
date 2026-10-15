@@ -28,25 +28,25 @@ import {
   MotionPause,
   Lead,
   PracticeShowcase,
-  ProcessJourney,
+  ProcessCycle,
   ProofStrip,
   Reveal,
   Section,
-  RevealItem,
   SectionHeading,
   SettleText,
   SolutionShowcase,
   TerminalCTA,
-  isNonEmpty,
 } from "@vitalos/ui";
 import type { MediaPlaceholderVariant } from "@vitalos/ui";
-import type { SectionTone } from "@vitalos/ui";
+import type { ProcessCycleStage, SectionTone } from "@vitalos/ui";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { carouselLabels, heroMotionPauseLabel } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { practiceImageFor } from "../../lib/view-mapping/practice-images";
 import { solutionImageFor } from "../../lib/view-mapping/solution-images";
+import { stageImageFor } from "../../lib/view-mapping/stage-images";
+import type { DerivedStage } from "../../lib/view-mapping/stages";
 import {
   caseStudyMeta,
   labAssetPresentation,
@@ -70,6 +70,8 @@ export interface HomeContext {
   gates: PublicationGates;
   /** Intro of the How We Work route page, borrowed for "From strategy to production". */
   howWeWorkIntro?: string | undefined;
+  /** The How We Work stages with their descriptions (`deriveStages`), for the lifecycle ring. */
+  howWeWorkStages?: readonly DerivedStage[] | undefined;
 }
 
 type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | null;
@@ -237,27 +239,44 @@ export const problemsSection: SectionRender = (context, tone) => {
 };
 
 /**
- * 4. From strategy to production (the comp's process band): the How We Work introduction (CMS)
- * and its action on the left; the locked delivery stages, numbered, on the right.
+ * 4. From strategy to production: the How We Work introduction beside the delivery lifecycle as
+ * a ring of the nine locked stages, on the dark band (owner direction, 15 Oct 2026). Pointing
+ * at, focusing or clicking a stage presents its summary, borrowed from the How We Work page. The section appears when the CMS supplies its heading and the route page an intro.
  */
-export const strategyToProductionSection: SectionRender = (context, tone) => {
+export const strategyToProductionSection: SectionRender = (context) => {
   const title = heading(context, "strategyToProduction");
   const intro = context.howWeWorkIntro?.trim();
   if (!title || !intro) return null;
-  return <StrategyBand tone={tone} title={title} intro={intro} />;
+  const summaries = new Map(
+    (context.howWeWorkStages ?? []).map((stage) => [stage.title, stage.summary]),
+  );
+  const stages = howWeWorkStages.map((stage) => {
+    const image = stageImageFor(stage);
+    const summary = summaries.get(stage);
+    return {
+      title: stage as string,
+      ...(summary ? { summary } : {}),
+      ...(image ? { image } : {}),
+    };
+  });
+  return <StrategyBand title={title} intro={intro} stages={stages} />;
 };
 
 function StrategyBand({
-  tone,
   title,
   intro,
-}: Readonly<{ tone: SectionTone; title: string; intro: string }>) {
+  stages,
+}: Readonly<{ title: string; intro: string; stages: ProcessCycleStage[] }>) {
   const headingId = useId();
   return (
-    <Section tone={tone} aria-labelledby={headingId}>
+    <Section tone="dark" aria-labelledby={headingId} className="relative isolate overflow-hidden">
+      <span
+        aria-hidden="true"
+        className="absolute top-1/2 right-[-10%] -z-10 size-[46rem] -translate-y-1/2 rounded-full bg-blue-600/20 blur-3xl"
+      />
       <Container
         size="wide"
-        className="grid gap-x-(--space-8) gap-y-(--space-7) xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:items-center"
+        className="grid gap-x-(--space-8) gap-y-(--space-8) xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:items-center"
       >
         <Reveal>
           <SectionHeading id={headingId} eyebrow={navLabels.howWeWork} title={title} />
@@ -268,32 +287,7 @@ function StrategyBand({
             </Button>
           </CTAGroup>
         </Reveal>
-        {/* The delivery stages in order: their numbers pop in one after another (diagram
-            sequence, Stage 9 section 11); the stage names never move. */}
-        <Reveal
-          as="ol"
-          stagger={0.07}
-          delay={1}
-          aria-label={navLabels.howWeWork}
-          className="m-0 grid list-none grid-cols-2 gap-x-(--space-5) gap-y-(--space-4) p-0 sm:grid-cols-3"
-        >
-          {howWeWorkStages.map((stage, index) => (
-            <li
-              key={stage}
-              className="flex min-w-0 items-center gap-(--space-3) border-t border-tone-border pt-(--space-4)"
-            >
-              <RevealItem
-                as="span"
-                effect="pop"
-                aria-hidden="true"
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg text-small font-semibold text-tone-tile-fg"
-              >
-                {String(index + 1).padStart(2, "0")}
-              </RevealItem>
-              <span className="min-w-0 text-body font-semibold text-tone-heading">{stage}</span>
-            </li>
-          ))}
-        </Reveal>
+        <ProcessCycle stages={stages} label={navLabels.howWeWork} className="pb-(--space-6)" />
       </Container>
     </Section>
   );
@@ -329,22 +323,6 @@ export const practicesSection: SectionRender = (context, tone) => {
           };
         })}
       />
-    </Band>
-  );
-};
-
-/**
- * 6. AI at the centre: the signature AI journey. The stage names are locked copy (Stage 9
- * section 19); the section appears when the CMS supplies its heading. Dark emphasis surface,
- * with the comp's connected steps.
- */
-export const aiAtTheCentreSection: SectionRender = (context) => {
-  const title = heading(context, "aiAtTheCentre");
-  const stages = aiJourneyStages.map((stage) => ({ title: stage as string }));
-  if (!title || !isNonEmpty(stages)) return null;
-  return (
-    <Band tone="dark" heading={title}>
-      <ProcessJourney stages={stages} headingLevel={3} aria-label={title} />
     </Band>
   );
 };
@@ -496,7 +474,6 @@ export const homeBands: readonly SectionRender[] = [
   problemsSection,
   strategyToProductionSection,
   practicesSection,
-  aiAtTheCentreSection,
   selectedWorkSection,
   industriesSection,
   labsSection,

@@ -38,7 +38,7 @@ The draft source shows the owner a populated site built from their own strategy,
 - Two copies of editorial text will exist once the owner imports and edits in Sanity; the repo copy becomes stale and should then be deleted (see revisit triggers).
 - The draft set is a fourth configuration to keep green in CI (one more build per pipeline).
 - Some draft wording makes commitments (for example the contact page's "what happens next" and the trust summaries). They are drafts; the owner must confirm each before approval.
-- Product Discovery (offer) and Technology Recovery & Reliability (solution) come from Stage 3 and Stage 4 but are not in the locked Stage 8 sets; they are drafted and flagged for an owner decision.
+- Product Discovery (offer) and Technology Recovery & Reliability (solution) come from Stage 3 and Stage 4 but were not in the locked Stage 8 sets; they were drafted and flagged for an owner decision, and the owner locked both on 15 Oct 2026 (ADR-031).
 
 ## Consequences
 

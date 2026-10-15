@@ -6,7 +6,7 @@ import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
-import { deriveStages } from "../../lib/view-mapping/stages";
+import { deriveStages, stageAnchor } from "../../lib/view-mapping/stages";
 import { Band, ClosingAction, PageIntro, renderBands } from "../commercial/bands";
 
 export interface HowWeWorkTemplateProps {
@@ -27,7 +27,9 @@ export const howWeWorkTrail = () =>
  */
 export function HowWeWorkTemplate({ page }: Readonly<HowWeWorkTemplateProps>) {
   const cta = ctaToLink(page?.cta) ?? { label: ctas.primary, href: contactHref() };
-  const { stages, lead } = deriveStages(page?.body, howWeWorkStages);
+  const { stages: derived, lead } = deriveStages(page?.body, howWeWorkStages);
+  // Each stage carries its anchor, so the homepage lifecycle ring can link to it.
+  const stages = derived.map((stage) => ({ ...stage, id: stageAnchor(stage.title) }));
 
   return (
     <PageMain>

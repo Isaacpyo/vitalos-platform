@@ -125,6 +125,11 @@ export {
   type JourneyStage,
   type ProcessJourneyProps,
 } from "./journey/ProcessJourney";
+export {
+  ProcessCycle,
+  type ProcessCycleProps,
+  type ProcessCycleStage,
+} from "./journey/ProcessCycle";
 
 // People
 export {

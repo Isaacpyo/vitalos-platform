@@ -224,12 +224,6 @@ export const homeSections = [
     visibleHeading: "Five practices, one firm",
   },
   {
-    key: "aiAtTheCentre",
-    structuralLabel: "AI at the centre",
-    /** Stage 11 §9 mockup brief, item 5. */
-    visibleHeading: "AI at the centre",
-  },
-  {
     key: "selectedWork",
     structuralLabel: "Selected Work",
     /** Stage 11 §9 mockup brief, item 6. */
