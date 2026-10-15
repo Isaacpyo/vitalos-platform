@@ -1,7 +1,7 @@
 /**
  * The Stage 4 offer catalogue (Stage 4 "Initial Offer Pricing Architecture"; Stage 3 §10; Stage 8
- * §12). Twelve names are locked copy (`offerNames`); Product Discovery is in the Stage 3 and
- * Stage 4 catalogues but not in the locked Stage 8 set, so its title needs owner confirmation.
+ * §12). All thirteen names are locked copy (`offerNames`): the Stage 8 set of twelve, and
+ * Product Discovery (Stage 3 and Stage 4 catalogues), locked by owner direction on 15 Oct 2026.
  *
  * No prices: offer pages are proposal-led (Stage 8 §12 "Offer-page rule"). The Stage 4 indicative
  * ranges are internal and are deliberately not used. Duration categories are coarse and
@@ -536,7 +536,7 @@ const offers: readonly OfferDraft[] = [
   },
   {
     slug: "product-discovery",
-    title: "Product Discovery",
+    title: name("Product Discovery"),
     summary:
       "Define a new product before major engineering investment: validated problem, users, journeys, scope and backlog.",
     seo: seo(
@@ -568,7 +568,7 @@ const offers: readonly OfferDraft[] = [
         pricingCitation,
         cite(3, "13.2 Example account expansion paths"),
       ],
-      "Title not in locked copy: Product Discovery is in the Stage 3 and Stage 4 catalogues but not in the Stage 8 §12 initial offer set. The owner decides whether it is published.",
+      "Product Discovery is in the Stage 3 and Stage 4 catalogues but not the Stage 8 §12 initial offer set; the owner locked it on 15 Oct 2026.",
     ),
   },
 ];

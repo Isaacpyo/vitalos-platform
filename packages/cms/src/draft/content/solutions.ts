@@ -1,7 +1,7 @@
 /**
- * Cross-practice solutions (Stage 3 §9; Stage 8 §11). The first five names are locked copy
- * (`solutionNames`, Stage 8 §11 "Initial five"); Technology Recovery & Reliability is the sixth
- * Stage 3 §9 solution play and is not in the locked list, so its title needs owner confirmation.
+ * Cross-practice solutions (Stage 3 §9; Stage 8 §11). All six names are locked copy
+ * (`solutionNames`): Stage 8 §11's initial five, and Technology Recovery & Reliability, the sixth
+ * Stage 3 §9 solution play, locked by owner direction on 15 Oct 2026.
  */
 import { solutionNames } from "../../locked-copy";
 import type { SolutionView } from "../../content/types";
@@ -21,7 +21,7 @@ export interface SolutionDraft extends Omit<
   provenance: DraftProvenance;
 }
 
-const [aiTitle, bpmTitle, dptTitle, appModTitle, dataTitle] = solutionNames;
+const [aiTitle, bpmTitle, dptTitle, appModTitle, dataTitle, recoveryTitle] = solutionNames;
 
 const aiTransformation: SolutionDraft = {
   slug: "ai-transformation",
@@ -534,7 +534,7 @@ const dataIntelligence: SolutionDraft = {
 
 const technologyRecovery: SolutionDraft = {
   slug: "technology-recovery-reliability",
-  title: "Technology Recovery & Reliability",
+  title: recoveryTitle,
   summary:
     "Triage a critical platform, establish a known baseline, stabilise and remediate, then operate it.",
   seo: seo(
@@ -627,7 +627,7 @@ const technologyRecovery: SolutionDraft = {
       cite(3, "13.3 Commercial behaviour"),
       cite(4, "Transition choices"),
     ],
-    "Title not in locked copy: Stage 3 §9 lists six solution plays, Stage 8 §11 locks the initial five. The owner decides whether this sixth solution is published.",
+    "Stage 3 §9 lists six solution plays and Stage 8 §11 locked the initial five; the owner locked this sixth one on 15 Oct 2026.",
   ),
 };
 

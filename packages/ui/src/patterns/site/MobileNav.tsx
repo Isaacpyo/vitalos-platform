@@ -38,6 +38,17 @@ export interface MobileNavProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), summary, input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
+/**
+ * True for anything inside a closed `<details>` other than that disclosure's own summary. Chrome
+ * hides closed disclosure content with `content-visibility`, so those links still have layout
+ * boxes and would otherwise count as the trap's last stop, letting Tab escape the sheet.
+ */
+function insideClosedDisclosure(element: HTMLElement): boolean {
+  const closed = element.closest("details:not([open])");
+  if (!closed) return false;
+  return !(element.tagName === "SUMMARY" && element.parentElement === closed);
+}
+
 /** Settles in about 220ms (Stage 9 section 11, panel reveal 160 to 240ms). */
 const sheetSpring: Transition = { type: "spring", stiffness: 520, damping: 44, mass: 0.9 };
 
@@ -129,6 +140,7 @@ function MobileNavInner({
     const focusables = () =>
       Array.from(root.querySelectorAll(FOCUSABLE))
         .filter((element): element is HTMLElement => element instanceof HTMLElement)
+        .filter((element) => !insideClosedDisclosure(element))
         .filter((element) => element.getClientRects().length > 0);
 
     const onKeyDown = (event: KeyboardEvent) => {

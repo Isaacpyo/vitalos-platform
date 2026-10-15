@@ -23,6 +23,8 @@ On 15 October 2026 the owner asked for a shorter header and for several things t
 6. **Social profiles** (LinkedIn, X) are site settings facts (`repoSettingsFacts.social`), the same URLs the enquiry email links to. They appear as marks under the footer logo and at the foot of the mobile menu sheet (`SocialLinks`). The marks are the Font Awesome Free brand icons the email layout already uses (CC BY 4.0, attributed in source).
 7. **The footer no longer repeats the contact email.** Contact is in the Support menu and the footer's Company column. The company name and number are centred under the columns.
 
+8. **Homepage showcases.** "Problems we solve" and "Five practices, one firm" are showcases: numbered titles on the left, and a panel on the right that presents the pointed or focused item. Solutions use a dark panel with the icon, number, title and summary; practices use the owner-supplied illustrations (`PracticeShowcase`, `SolutionShowcase` in `@vitalos/ui`). Nothing moves on its own. The server HTML shows the first item, and below `lg` every item is a card with its summary.
+
 ## Consequences
 
 - Header and footer unit tests, CMS gate and fixture tests, the e2e specs (commercial, institutional, journeys, motion, draft content) and the route lists for the a11y and performance suites are updated. The performance budget entry for `/about/leadership` now covers `/faq`.

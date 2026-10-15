@@ -59,6 +59,12 @@ export {
   type PracticeShowcaseItem,
   type PracticeShowcaseProps,
 } from "./commercial/PracticeShowcase";
+export {
+  SolutionShowcase,
+  type SolutionShowcaseImage,
+  type SolutionShowcaseItem,
+  type SolutionShowcaseProps,
+} from "./commercial/SolutionShowcase";
 
 // Proof
 export { OutcomeStats, type OutcomeStatItem, type OutcomeStatsProps } from "./proof/OutcomeStats";

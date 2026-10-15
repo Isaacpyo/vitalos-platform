@@ -35,7 +35,7 @@ import {
   RevealItem,
   SectionHeading,
   SettleText,
-  SolutionCard,
+  SolutionShowcase,
   TerminalCTA,
   isNonEmpty,
 } from "@vitalos/ui";
@@ -46,6 +46,7 @@ import { iconFor } from "../../lib/view-mapping/icons";
 import { carouselLabels, heroMotionPauseLabel } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { practiceImageFor } from "../../lib/view-mapping/practice-images";
+import { solutionImageFor } from "../../lib/view-mapping/solution-images";
 import {
   caseStudyMeta,
   labAssetPresentation,
@@ -55,7 +56,7 @@ import {
   toRows,
   toSolutionCard,
 } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid, RowList, itemLevel } from "../commercial/bands";
+import { Band, RowList, itemLevel } from "../commercial/bands";
 
 /**
  * The thirteen homepage sections of Stage 8 section 8, in order. Each is a function of the home
@@ -156,7 +157,8 @@ export function HeroSection(): ReactNode {
       spacing="default"
       data-motion-scope=""
       // Starts under the clear header (SiteHeader `overlay`), so the photograph runs to the top.
-      className="relative isolate -mt-(--size-header) overflow-hidden pt-[calc(var(--section-default)+var(--size-header))]"
+      // Rounded bottom corners (owner direction, 15 Oct 2026) show against the band below.
+      className="relative isolate -mt-(--size-header) overflow-hidden rounded-b-[1.75rem] pt-[calc(var(--section-default)+var(--size-header))] lg:rounded-b-[3rem]"
     >
       <HeroBackdrop />
       <MotionPause
@@ -199,12 +201,9 @@ export const credibilitySection: SectionRender = (context, tone) => {
   );
 };
 
-/** Grid width for a set of solution cards: the comp's row of five when all five exist. */
-const solutionColumns = (count: number): 2 | 3 | 5 => (count >= 5 ? 5 : count >= 3 ? 3 : 2);
-
 /**
- * 3. Problems we solve: the Solutions, in the order the specs fix, as the comp's row of icon
- * cards under a split section header.
+ * 3. Problems we solve: the Solutions, in the order the specs fix, as a showcase: numbered titles
+ * on the left and a panel presenting the pointed or focused one (owner direction, 15 Oct 2026).
  */
 export const problemsSection: SectionRender = (context, tone) => {
   const title = heading(context, "problems");
@@ -213,7 +212,6 @@ export const problemsSection: SectionRender = (context, tone) => {
     return card ? [card] : [];
   });
   if (cards.length === 0) return null;
-  const columns = solutionColumns(cards.length);
   return (
     <Band
       tone={tone}
@@ -221,17 +219,19 @@ export const problemsSection: SectionRender = (context, tone) => {
       eyebrow={megaMenuColumns.solutions}
       link={{ label: navLabels.allWhatWeDo, href: routes.whatWeDo() }}
     >
-      <CardGrid columns={columns}>
-        {cards.map((card) => (
-          <li key={card.href} className="min-w-0">
-            <SolutionCard
-              {...card}
-              icon={iconFor("solution", card.title)}
-              titleSize={columns === 5 ? "h4" : "h3"}
-            />
-          </li>
-        ))}
-      </CardGrid>
+      <SolutionShowcase
+        headingLevel={itemLevel(title)}
+        items={cards.map((card) => {
+          const image = solutionImageFor(card.title);
+          return {
+            title: card.title,
+            href: card.href,
+            ...(card.summary ? { summary: card.summary } : {}),
+            icon: iconFor("solution", card.title),
+            ...(image ? { image } : {}),
+          };
+        })}
+      />
     </Band>
   );
 };

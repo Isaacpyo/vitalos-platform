@@ -83,7 +83,8 @@ export const trustDrafts: readonly TrustDraft[] = [
         "contractors and partners working to Vitalos security standards, with access removed promptly when no longer needed.",
       ),
       h2("Reporting a security concern"),
-      p("Security contact: [Monitored security contact, to be confirmed by the owner]."),
+      // Owner direction, 15 Oct 2026: support@ is the security contact (no security@ mailbox).
+      p("Security contact: support@vitalos.co.uk."),
     ),
     [
       cite(6, "8. Security & privacy readiness"),

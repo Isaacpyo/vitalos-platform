@@ -87,16 +87,23 @@ export const practiceNames = [
 export const practiceDisplayName = (name: (typeof practiceNames)[number]): string =>
   `${brandName} ${name}`;
 
-/** Solutions (names). Stage 8 §6 (mega-menu), §11 (Initial five); Stage 10 §12. */
+/**
+ * Solutions (names). Stage 8 §6 (mega-menu), §11 (Initial five); Stage 10 §12. The sixth,
+ * Technology Recovery & Reliability (Stage 3 §9), was locked by owner direction on 15 Oct 2026.
+ */
 export const solutionNames = [
   "AI Transformation",
   "Business Process Modernisation",
   "Digital Product Transformation",
   "Application Modernisation",
   "Data & Intelligence Transformation",
+  "Technology Recovery & Reliability",
 ] as const;
 
-/** Offers (names). Stage 8 §12 (Initial offer set). */
+/**
+ * Offers (names). Stage 8 §12 (Initial offer set). The thirteenth, Product Discovery (Stage 3 and
+ * Stage 4 catalogues), was locked by owner direction on 15 Oct 2026.
+ */
 export const offerNames = [
   "Digital Transformation Discovery",
   "Technology Health Assessment",
@@ -110,6 +117,7 @@ export const offerNames = [
   "Customer Experience Transformation",
   "Engineering Rescue",
   "Managed Engineering & Application Care",
+  "Product Discovery",
 ] as const;
 
 /** Priority offers (names). Stage 10 §12 (Launch-critical pages, "Offers - priority"). */

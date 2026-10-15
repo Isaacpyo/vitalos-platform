@@ -240,8 +240,9 @@ export function buildDraftContentSet(): DraftContentSet {
     seo: { description: settingsDraft.view.defaultSeo?.description ?? "" },
     headings: homeHeadings,
     proof: [],
-    // Stage 8 §8: the five client-problem-led solutions (the locked initial five).
-    solutions: pick(solutionSummary, solutionOrder.slice(0, 5)),
+    // Stage 8 §8: the client-problem-led solutions; all six since the owner locked the sixth
+    // (15 Oct 2026).
+    solutions: pick(solutionSummary, solutionOrder),
     practices: pick(practiceSummary, practiceOrder),
     selectedWork: [],
     industries: pick(industrySummary, industryOrder),

@@ -62,3 +62,16 @@ matched to the practice it depicts: 1 Consulting (analytics, architecture layers
 target), 5 Engineering (code, platform layers, servers, database), 4 AI & Data (data sources into
 a model, then charts), 2 Experience (mobile and web screens, accessibility, commerce) and 3 Managed
 Services (dashboards, security, support, cloud). This record covers that section only.
+
+## Solution illustrations (owner direction, 15 Oct 2026)
+
+The owner supplied six square illustrations on transparent backgrounds (`ChatGPT Image Oct 15,
+2026, 11_51_…-1.png` to `-5.png` and `Reliable Uptime Recovery Icon.png`, each 1254x1254) for the
+homepage "Problems we solve" panel. They are served as WebP at 800 and 480 px from
+`apps/web/public/images/solutions/` and chosen by the locked solution names
+(`apps/web/src/lib/view-mapping/solution-images.ts`). Matched by what each depicts: 1 AI
+Transformation (an AI chip between data and charts), 4 Business Process Modernisation (checked
+process steps around a gear), 3 Digital Product Transformation (web and mobile screens, a rocket),
+5 Application Modernisation (an application moving to servers and cloud), 2 Data & Intelligence
+Transformation (a database feeding dashboards), and the uptime icon Technology Recovery &
+Reliability (a server, a health monitor, a shield and recovery arrows).

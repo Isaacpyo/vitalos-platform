@@ -22,6 +22,7 @@ const byName: Readonly<Record<string, IconName>> = {
   [solutionNames[2]]: "layers",
   [solutionNames[3]]: "code",
   [solutionNames[4]]: "chart",
+  [solutionNames[5]]: "shield",
   // Industries (Stage 8 section 13).
   [industryNames[0]]: "shield",
   [industryNames[1]]: "window",

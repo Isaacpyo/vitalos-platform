@@ -36,9 +36,9 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(practiceDisplayName("AI & Data")).toBe("Vitalos AI & Data");
   });
 
-  it("has the five solutions, twelve offers (six priority) and four industries", () => {
-    expect(solutionNames).toHaveLength(5);
-    expect(offerNames).toHaveLength(12);
+  it("has the six solutions, thirteen offers (six priority) and four industries", () => {
+    expect(solutionNames).toHaveLength(6);
+    expect(offerNames).toHaveLength(13);
     expect(priorityOfferNames).toHaveLength(6);
     for (const name of priorityOfferNames) expect(offerNames as readonly string[]).toContain(name);
     expect(industryNames).toHaveLength(4);

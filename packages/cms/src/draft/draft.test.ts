@@ -254,7 +254,7 @@ describe("content hygiene", () => {
     expect(set.documents.practice.map((p) => p.title)).toEqual(
       practiceNames.map(practiceDisplayName),
     );
-    expect(set.documents.solution.map((s) => s.title).slice(0, 5)).toEqual([...solutionNames]);
+    expect(set.documents.solution.map((s) => s.title)).toEqual([...solutionNames]);
     expect(set.documents.industry.map((i) => i.title)).toEqual([...industryNames]);
     const offerTitles = set.documents.offer.map((o) => o.title);
     for (const name of offerNames) expect(offerTitles).toContain(name);
