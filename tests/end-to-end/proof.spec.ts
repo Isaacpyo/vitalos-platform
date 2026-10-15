@@ -236,7 +236,8 @@ test.describe("labs", () => {
 
   test("an asset with maintained links shows the repository and demo links", async ({ page }) => {
     await page.goto(LAB_MAINTAINED);
-    await expect(page.getByText("Prototype", { exact: true })).toBeVisible();
+    // Scoped to main: "Prototype" is also an AI journey step in the What We Do menu card.
+    await expect(page.locator("main").getByText("Prototype", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Resources" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Repository" })).toHaveAttribute(
       "href",

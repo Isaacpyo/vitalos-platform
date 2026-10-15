@@ -40,7 +40,9 @@ above are produced, when SVGs should replace them.
 - **Site icon (15 Oct 2026).** The owner directed that the supplied symbol (`vitalos-logo (7).png`,
   1254x1254, the V mark alone) be the site icon. `apps/web/app/favicon.ico` (16, 32 and 48 px),
   `apps/web/app/icon.png` (512 px, transparent) and `apps/web/app/apple-icon.png` (180 px, on white)
-  are that mark trimmed and centred on a square canvas.
+  are that mark trimmed and centred on a square canvas. The same mark, trimmed and 128px high
+  (`apps/web/public/brand/vitalos-mark.png`), replaces the header lockup below 400px wide, where
+  the lockup would push the menu and action off screen.
 
 ## Homepage hero photograph (owner direction, 15 Oct 2026)
 

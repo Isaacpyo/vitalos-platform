@@ -11,14 +11,17 @@ import {
 import { cx } from "../../primitives/_internal/cx";
 import { Button } from "../../primitives/Button";
 import { Icon } from "../../primitives/Icon";
+import { SocialLinks, type SocialLink } from "./SocialLinks";
 import { quietLinkClasses } from "./nav-styles";
 import type { MegaMenuColumn, SiteNavItem, SiteNavLink } from "./types";
 import type { PatternLink } from "../_internal/types";
 
 export interface MobileNavProps {
   items: readonly SiteNavItem[];
-  /** Lower-emphasis utility links (for example the Trust Centre), in their own row of the sheet. */
+  /** Lower-emphasis utility links, in their own row of the sheet. */
   utility?: readonly SiteNavLink[] | undefined;
+  /** Social profiles, as a row of marks at the foot of the sheet. */
+  social?: readonly SocialLink[] | undefined;
   /** The persistent primary action, passed in (never hard-coded). Always beside the trigger. */
   cta?: PatternLink | undefined;
   /** Visible label of the menu trigger. */
@@ -65,6 +68,7 @@ export function MobileNav(props: MobileNavProps) {
 function MobileNavInner({
   items,
   utility,
+  social,
   cta,
   menuLabel = "Menu",
   "aria-label": ariaLabel = "Primary",
@@ -266,6 +270,12 @@ function MobileNavInner({
               ))}
             </ul>
           ) : null}
+          {social && social.length > 0 ? (
+            <SocialLinks
+              links={social}
+              className="mt-(--space-5) md:border-t md:border-tone-border md:pt-(--space-4)"
+            />
+          ) : null}
         </m.nav>
       </details>
     </div>
@@ -330,7 +340,11 @@ function MobileItem({ item, active }: { item: SiteNavItem; active: boolean }) {
             <Icon name="arrow-right" size={16} />
           </a>
           {columns.map((column) => (
-            <GroupColumn key={column.key} column={column} />
+            <GroupColumn
+              key={column.key}
+              column={column}
+              showHeading={item.menu?.layout !== "list"}
+            />
           ))}
         </div>
       </details>
@@ -338,10 +352,17 @@ function MobileItem({ item, active }: { item: SiteNavItem; active: boolean }) {
   );
 }
 
-function GroupColumn({ column }: { column: MegaMenuColumn }) {
+function GroupColumn({
+  column,
+  showHeading = true,
+}: {
+  column: MegaMenuColumn;
+  /** Off for a `list` menu on phones: the row above already names the section. */
+  showHeading?: boolean;
+}) {
   return (
     <div className="mt-(--space-3) min-w-0">
-      <p className="m-0 text-eyebrow text-tone-muted uppercase">
+      <p className={cx("m-0 text-eyebrow text-tone-muted uppercase", !showHeading && "sr-only")}>
         {column.href ? (
           <a
             href={column.href}
@@ -367,6 +388,20 @@ function GroupColumn({ column }: { column: MegaMenuColumn }) {
             </a>
           </li>
         ))}
+        {column.more ? (
+          <li>
+            <a
+              href={column.more.href}
+              className={cx(
+                quietLinkClasses,
+                "flex min-h-11 items-center gap-(--space-2) text-small font-semibold text-tone-link",
+              )}
+            >
+              {column.more.label}
+              <Icon name="arrow-right" size={16} />
+            </a>
+          </li>
+        ) : null}
       </ul>
     </div>
   );

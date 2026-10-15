@@ -28,8 +28,6 @@ const emptyHome: HomePageView = {
   industries: [],
   labs: [],
   insights: [],
-  leadership: [],
-  trustHighlights: [],
 };
 
 const context = (home: HomePageView, gates: PublicationGates, howWeWorkIntro?: string) => ({
@@ -89,10 +87,14 @@ describe("homepage sections", () => {
     );
     expect(accented).toEqual(["Adopt", "AI."]);
     expect(h1).not.toMatch(/opacity/);
-    expect(markup).toContain("From strategy to production.");
+    expect(markup).toContain(
+      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
+    );
+    expect(markup).not.toContain("From strategy to production.");
     expect(markup).not.toContain("Technology Consulting, Engineering");
     expect(markup).not.toMatch(/aria-label="Breadcrumb"/);
-    expect(markup).toContain('href="/contact"');
+    // One hero action (owner direction, 15 Oct 2026): Talk to Vitalos stays in the header.
+    expect(markup).not.toContain('href="/contact"');
     expect(markup).toContain('href="/what-we-do"');
   });
 

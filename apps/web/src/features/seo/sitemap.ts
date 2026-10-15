@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { faqGroups } from "../faq/faq-groups";
 import {
   absoluteUrl,
   gateForKind,
@@ -33,6 +34,8 @@ export interface SitemapInput {
   hasHome: boolean;
   /** Route-page keys whose singleton document exists. */
   routePages: ReadonlySet<RoutePageKey>;
+  /** The FAQ page has questions (features/faq). */
+  hasFaq?: boolean | undefined;
   /** Document and route entries from `ContentSource.getSitemapEntries()`. */
   entries: readonly SitemapEntry[];
 }
@@ -60,6 +63,8 @@ export function buildSitemap(input: SitemapInput): MetadataRoute.Sitemap {
     add(hrefForRoutePage(key));
   }
 
+  if (input.hasFaq) add(routes.faq());
+
   for (const entry of input.entries) {
     if (!cleanPath(entry.path) || manifestEntryForPath(entry.path) === undefined) continue;
     const gate = gateForKind(entry.kind) ?? gateForPath(entry.path);
@@ -78,16 +83,18 @@ export async function loadSitemap(
   source: ContentSource,
   siteUrl: string,
 ): Promise<MetadataRoute.Sitemap> {
-  const [gates, home, pages, entries] = await Promise.all([
+  const [gates, home, pages, entries, faq] = await Promise.all([
     source.getPublicationGates(),
     source.getHomePage(),
     Promise.all(routePageKeys.map(async (key) => [key, await source.getRoutePage(key)] as const)),
     source.getSitemapEntries(),
+    faqGroups(source),
   ]);
   return buildSitemap({
     siteUrl,
     gates,
     hasHome: home !== null,
+    hasFaq: faq.length > 0,
     // A route page marked noindex (for example a section index whose only content is placeholder
     // content, ADR-025) is not listed.
     routePages: new Set(

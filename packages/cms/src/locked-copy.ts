@@ -14,11 +14,11 @@ export const descriptor = "Technology Consulting, Engineering & Digital Transfor
 /** Homepage H1. Owner-approved 2026-10-12; replaces the Stage 0 / Stage 8 §8 / Stage 11 §9 sentence (see propositionLong). */
 export const proposition = "Modernise. Build. Adopt AI.";
 
-/** The earlier long proposition sentence (Stage 0 §0; Stage 8 §8; Stage 11 §9). Not shown on the page; non-visible SEO text only (default meta description). */
+/** The long proposition sentence (Stage 0 §0; Stage 8 §8; Stage 11 §9): the hero's supporting line under the H1 since 15 Oct 2026 (owner direction, replacing the brand line there), the Who We Are menu card, and the default meta description. */
 export const propositionLong =
   "We help ambitious organisations modernise operations, build digital products and adopt AI.";
 
-/** Brand line; supporting line beneath the H1, never the H1. Stage 0 §0; Stage 8 §8 (Homepage hero). */
+/** Brand line. Stage 0 §0; Stage 8 §8 (Homepage hero). No longer shown on the site: the hero's supporting line is `propositionLong` since 15 Oct 2026 (owner direction). */
 export const brandLine = "From strategy to production.";
 
 /** Masterbrand name. Stage 0 §0. */
@@ -46,12 +46,15 @@ export const navLabels = {
   /** Stage 8 §6 (Utility/footer navigation). */
   contact: "Contact",
   careers: "Careers",
-  leadership: "Leadership",
   legal: "Legal",
   accessibility: "Accessibility",
   /** Stage 8 §6 (What We Do mega-menu, Explore column). */
   howWeWork: "How We Work",
   allWhatWeDo: "All What We Do",
+  /** Primary menus and FAQ (owner direction, 15 Oct 2026). */
+  whoWeAre: "Who We Are",
+  support: "Support",
+  faq: "FAQ",
 } as const;
 
 /** What We Do mega-menu column titles. Stage 8 §6 (What We Do mega-menu); Stage 9 §12 (Mega-menu). */
@@ -225,10 +228,8 @@ export const homeSections = [
     visibleHeading: "Selected Work",
   },
   { key: "industries", structuralLabel: "Industries" },
-  { key: "trust", structuralLabel: "Trust" },
   { key: "labs", structuralLabel: "Labs" },
   { key: "insights", structuralLabel: "Insights" },
-  { key: "leadership", structuralLabel: "Leadership" },
   {
     key: "finalConversion",
     structuralLabel: "Final conversion",

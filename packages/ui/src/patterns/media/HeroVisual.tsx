@@ -1,5 +1,6 @@
 import { cx } from "../../primitives/_internal/cx";
 import { Parallax } from "../../motion/Parallax";
+import { ReplayOnHover } from "../../motion/ReplayOnHover";
 import type { CSSProperties } from "react";
 import { hasText } from "../_internal/types";
 
@@ -146,12 +147,18 @@ export function HeroVisual({ steps, variant = "planes", className }: HeroVisualP
 /** The glass rail's bar heights (px at full size): a rising signal, no figure. */
 const GLASS_BARS = [10, 14, 19, 25, 32];
 
+/** The entrance steps a hover replays (not the card fade-in, not the idle loops). */
+const REPLAYED = ["hv-dot", "hv-tick", "hv-label", "hv-rail", "hv-bar"];
+/** Replay from just before the first step: it starts 150ms after the pointer arrives. */
+const REPLAY_FROM_MS = STEPS_AT - 150;
+
 /**
  * The `glass` variant: the same stages on a translucent midnight panel, for the hero photograph
  * under its black overlay (owner decision 2026-10-15). A rail joins the steps and fills from the
  * top as they tick in; the last step lands in Vitalos Blue. A dashed data stream runs into the
  * panel. After the entrance it idles with small loops: the panel floats a few pixels, the last
- * step pulses, the bars breathe and the stream flows. Those loops sit inside the caller's
+ * step pulses, the bars breathe and the stream flows. Hovering the panel replays the steps from
+ * the first tick (ReplayOnHover; the panel alone takes pointer events). Those loops sit inside the caller's
  * `[data-motion-scope]`, whose MotionPause switch holds them (WCAG 2.2.2); under reduced motion
  * none of it runs and the panel renders in its final state. Text is never drawn faint: the panel
  * fades in under 1s (motion.nojs.spec.ts) and the labels only slide.
@@ -188,12 +195,16 @@ function HeroGlass({
       </svg>
       {steps.length > 0 ? (
         <div className="absolute top-1/2 right-0 w-[min(19rem,100%)] -translate-y-1/2 lg:right-[4%]">
-          <div className="hv-float">
-            <div className="hv-card relative overflow-hidden rounded-2xl border border-white/15 bg-midnight-950/60 p-(--space-5) text-white shadow-(--shadow-floating) backdrop-blur-md">
+          <ReplayOnHover
+            names={REPLAYED}
+            fromMs={REPLAY_FROM_MS}
+            className="hv-float pointer-events-auto"
+          >
+            <div className="hv-card relative overflow-hidden rounded-2xl border border-white/10 bg-midnight-800/90 p-(--space-5) text-white shadow-(--shadow-floating) backdrop-blur-md">
               <span className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/60 to-transparent" />
               <ol className="relative m-0 flex list-none flex-col gap-(--space-4) p-0">
                 <span className="absolute top-3 bottom-3 left-[0.6875rem] w-px bg-white/15">
-                  <span className="hv-rail block size-full bg-linear-to-b from-aqua-600 to-blue-600" />
+                  <span className="hv-rail block size-full bg-linear-to-b from-aqua-50 to-blue-100" />
                 </span>
                 {steps.map((step, index) => {
                   const last = index === steps.length - 1;
@@ -211,8 +222,8 @@ function HeroGlass({
                         className={cx(
                           "hv-dot relative inline-flex size-6 shrink-0 items-center justify-center rounded-full",
                           last
-                            ? "bg-blue-600 text-white shadow-[0_0_18px_var(--color-blue-600)]"
-                            : "border border-aqua-600 bg-midnight-950 text-aqua-50",
+                            ? "bg-blue-600 text-white ring-2 ring-white/80 shadow-[0_0_18px_var(--color-blue-600)]"
+                            : "border border-aqua-50/70 bg-aqua-600 text-white",
                         )}
                       >
                         {last ? (
@@ -253,7 +264,7 @@ function HeroGlass({
                 {GLASS_BARS.map((height, index) => (
                   <span
                     key={height}
-                    className="hv-bar-idle w-2 rounded-sm bg-linear-to-t from-blue-600 to-aqua-600"
+                    className="hv-bar-idle w-2 rounded-sm bg-linear-to-t from-blue-100 to-white"
                     style={
                       {
                         height: `${height}px`,
@@ -265,7 +276,7 @@ function HeroGlass({
                 ))}
               </div>
             </div>
-          </div>
+          </ReplayOnHover>
         </div>
       ) : null}
     </div>

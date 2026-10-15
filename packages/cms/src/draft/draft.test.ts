@@ -64,7 +64,6 @@ describe("publication gates in the draft source", () => {
     // The home page stays free of placeholder content.
     expect(set.home?.selectedWork).toEqual([]);
     expect(set.home?.insights).toEqual([]);
-    expect(set.home?.leadership).toEqual([]);
     expect(set.home?.proof).toEqual([]);
   });
 
@@ -354,10 +353,8 @@ describe("document shapes", () => {
     }
   });
 
-  it("route pages for every key except leadership, and How We Work describes all nine stages", () => {
-    expect(Object.keys(set.routePages).sort()).toEqual(
-      routePageKeys.filter((key) => key !== "leadership").sort(),
-    );
+  it("route pages for every key, and How We Work describes all nine stages", () => {
+    expect(Object.keys(set.routePages).sort()).toEqual([...routePageKeys].sort());
     const body = JSON.stringify(set.routePages["how-we-work"]?.body);
     for (const stage of [
       "Qualify",

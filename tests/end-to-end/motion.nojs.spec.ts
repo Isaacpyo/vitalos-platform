@@ -90,6 +90,8 @@ test("the compact menu still opens and closes as a native disclosure", async ({ 
   await expect(nav).toBeHidden();
   await header.getByText("Menu", { exact: true }).click();
   await expect(nav).toBeVisible();
+  // About sits in the Who We Are disclosure, itself a native <details>.
+  await nav.locator("summary", { hasText: "Who We Are" }).first().click();
   await expect(nav.getByRole("link", { name: "About", exact: true })).toBeVisible();
   await header.getByText("Menu", { exact: true }).click();
   await expect(nav).toBeHidden();

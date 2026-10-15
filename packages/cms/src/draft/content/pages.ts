@@ -47,9 +47,10 @@ function headingFor(key: HomeSectionKey): string {
 
 /**
  * Section headings. Five are the spec-quoted titles in locked copy. The others are the section
- * names Stage 11 §9 uses for items 7 to 11 ("Industries", "Trust", "Vitalos Labs", "Insights",
- * "Leadership"). The hero is locked copy and has no heading entry; the credibility strip has no
- * quoted title and no verified proof, so it has none either.
+ * names Stage 11 §9 uses for items 7, 9 and 10 ("Industries", "Vitalos Labs", "Insights"); its
+ * Trust and Leadership bands were removed from the homepage (owner direction, 15 Oct 2026). The
+ * hero is locked copy and has no heading entry; the credibility strip has no quoted title and no
+ * verified proof, so it has none either.
  */
 export const homeHeadings: Partial<Record<HomeSectionKey, string>> = {
   problems: headingFor("problems"),
@@ -58,10 +59,8 @@ export const homeHeadings: Partial<Record<HomeSectionKey, string>> = {
   aiAtTheCentre: headingFor("aiAtTheCentre"),
   selectedWork: headingFor("selectedWork"),
   industries: "Industries",
-  trust: "Trust",
   labs: "Vitalos Labs",
   insights: "Insights",
-  leadership: "Leadership",
   finalConversion: headingFor("finalConversion"),
 };
 
@@ -71,7 +70,7 @@ export const homeProvenance = drafted(
     cite(11, "9. Homepage — desktop high-fidelity mockup"),
     cite(10, "14. Homepage production plan"),
   ],
-  "Credibility strip, Selected Work, Insights and Leadership are empty: no verified proof, case studies, named authors or leadership profiles exist (Stage 8 §8; Stage 10 §14). The invented placeholder personas, articles, scenarios and role (ADR-025 status note, 11 October 2026) are deliberately not featured on the home page.",
+  "Credibility strip, Selected Work and Insights are empty: no verified proof, case studies or named authors exist (Stage 8 §8; Stage 10 §14). The invented placeholder personas, articles, scenarios and role (ADR-025 status note, 11 October 2026) are deliberately not featured on the home page.",
 );
 
 /* ---------- Route pages ---------- */
@@ -480,10 +479,7 @@ const contact: RoutePageDraft = {
   ),
 };
 
-/**
- * Route pages. `leadership` is deliberately absent: with no leadership profile the page would be
- * a placeholder (Stage 8 §17, Stage 6 §5), and without a route page it stays noindex.
- */
+/** Route pages. */
 export const routePageDrafts: Partial<Record<RoutePageKey, RoutePageDraft>> = {
   "what-we-do": whatWeDo,
   solutions,

@@ -258,3 +258,55 @@ describe("MegaMenu hover intent", () => {
     expect(toggle().getAttribute("aria-expanded")).toBe("false");
   });
 });
+
+describe("MegaMenu panel content", () => {
+  afterEach(cleanup);
+
+  it("renders rich links, a closing link per column and the feature card", () => {
+    renderMenu({
+      defaultOpen: true,
+      columns: [
+        {
+          key: "rich",
+          heading: "Example rich column (fixture)",
+          links: [
+            {
+              label: "Example rich link (fixture)",
+              href: "https://example.invalid/r",
+              icon: "compass",
+              description: "Example description (fixture).",
+            },
+          ],
+          more: { label: "Example all (fixture)", href: "https://example.invalid/all" },
+        },
+      ],
+      feature: {
+        eyebrow: "Example eyebrow (fixture)",
+        title: "Example feature (fixture)",
+        steps: ["Example step one (fixture)", "Example step two (fixture)"],
+        links: [
+          { label: "Example action (fixture)", href: "https://example.invalid/a" },
+          { label: "Example quiet link (fixture)", href: "https://example.invalid/q" },
+        ],
+      },
+    });
+    const rich = screen.getByRole("link", { name: /Example rich link \(fixture\)/ });
+    expect(rich.textContent).toContain("Example description (fixture).");
+    expect(rich.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Example all (fixture)" }).getAttribute("href")).toBe(
+      "https://example.invalid/all",
+    );
+    const card = screen.getByText("Example feature (fixture)").closest('[data-tone="dark"]');
+    expect(card).not.toBeNull();
+    expect(card?.querySelectorAll("li")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Example action (fixture)" })).toBeTruthy();
+  });
+
+  it("list layout: one compact dropdown of every column's links, without headings", () => {
+    const { container } = renderMenu({ defaultOpen: true, layout: "list" });
+    const panel = container.querySelector("#menu-panel");
+    expect(panel?.querySelectorAll("a")).toHaveLength(3);
+    expect(panel?.textContent).not.toContain("Example practices (fixture)");
+    expect(panel?.className).toContain("left-0");
+  });
+});

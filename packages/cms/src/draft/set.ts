@@ -236,7 +236,6 @@ export function buildDraftContentSet(): DraftContentSet {
   const labAssets = labDrafts.map((d) => d.view);
   const legalPages = legalDrafts.map((d) => d.view);
 
-  const trustHighlightTopics = ["security", "privacy", "responsible-ai", "accessibility"];
   const home: HomePageView = {
     seo: { description: settingsDraft.view.defaultSeo?.description ?? "" },
     headings: homeHeadings,
@@ -249,10 +248,6 @@ export function buildDraftContentSet(): DraftContentSet {
     // Stage 9 §20: one or two technical proof assets.
     labs: labAssets.slice(0, 2).map((lab) => summaryOf("labAsset", lab)),
     insights: [],
-    leadership: [],
-    trustHighlights: trustItems
-      .filter((item) => trustHighlightTopics.includes(item.topic))
-      .map((item) => summaryOf("trustItem", item)),
     finalCta: cta(ctas.primary, "general"),
   };
 

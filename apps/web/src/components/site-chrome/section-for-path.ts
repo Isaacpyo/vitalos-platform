@@ -1,21 +1,27 @@
 import { routes } from "@vitalos/cms";
 
 /**
- * Which primary-navigation section a path belongs to. Keys are the `key`s of `primaryNav` in
- * `@vitalos/cms`. What We Do owns the commercial layers it introduces (practices, solutions,
- * offers, how we work); About owns Leadership. Pages outside the primary navigation (home,
- * contact, trust, legal, careers) have no active section.
+ * Which primary-navigation menu a path belongs to. Keys are the `key`s of `primaryNav` in
+ * `@vitalos/cms`: What We Do owns the commercial layers and Labs; Who We Are owns About, How We
+ * Work, Industries, Work and Insights; Support owns Contact and the FAQ. Pages outside the menus
+ * (home, trust, legal, careers) have no active section.
  */
 const sections: readonly { key: string; roots: readonly string[] }[] = [
   {
     key: "what-we-do",
-    roots: [routes.whatWeDo(), routes.solutions(), routes.offers(), routes.howWeWork()],
+    roots: [routes.whatWeDo(), routes.solutions(), routes.offers(), routes.labs()],
   },
-  { key: "industries", roots: [routes.industries()] },
-  { key: "work", roots: [routes.work()] },
-  { key: "insights", roots: [routes.insights()] },
-  { key: "labs", roots: [routes.labs()] },
-  { key: "about", roots: [routes.about()] },
+  {
+    key: "who-we-are",
+    roots: [
+      routes.about(),
+      routes.howWeWork(),
+      routes.industries(),
+      routes.work(),
+      routes.insights(),
+    ],
+  },
+  { key: "support", roots: [routes.contact(), routes.faq()] },
 ];
 
 const under = (pathname: string, root: string) =>

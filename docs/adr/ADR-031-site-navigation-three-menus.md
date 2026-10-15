@@ -1,0 +1,34 @@
+# ADR 031 Site navigation: three menus, Trust Centre in the footer, no Leadership page
+
+Status: Accepted (owner direction, 15 Oct 2026). Replaces the Stage 8 §6 desktop primary navigation and utility link as implemented under ADR-023. Builds on ADR-022 (publication gates), ADR-024 (motion, amended the same day for the homepage hero) and ADR-028 (repo-file content).
+
+## Context
+
+The header followed Stage 8 §6: What We Do (mega-menu with Practices, Solutions, Popular offers and Explore), the gated sections (Industries, Work, Insights, Labs) and About as top-level links, the Trust Centre as a utility link, and Talk to Vitalos as the action. The homepage had Trust and Leadership bands, the footer repeated the contact email beside the company identity, and `/about/leadership` listed leadership profiles. No leadership profile is approved, so that page and the homepage band only ever showed placeholders or nothing.
+
+On 15 October 2026 the owner asked for a shorter header and for several things to go.
+
+## Decision
+
+1. **Three primary menus** (`primaryNav`, `packages/cms/src/navigation.ts`). Each label is still a real link to an index, and a separate button opens its panel (MegaMenu). Every panel is a contained card centred under the bar and sized to its columns, never the full window. Each column ends with a link to its index.
+   - **What We Do** (`/what-we-do`): Practices (each with its subject icon), Solutions and **Labs**; Popular offers was removed (the offers stay linked from the What We Do page and the footer). Labs lists the lab types that have assets and appears only while the Labs gate is open. A dark card shows the locked headline, the AI journey stages, Talk to Vitalos and How We Work. The Explore column is gone.
+   - **Who We Are** (`/about`): a Company column (About, How We Work, then Work, Insights and Careers once their gates open, and All What We Do), the four industries while the Industries gate is open, and a dark card with the long proposition sentence and links to About and How We Work.
+   - **Support** (`/contact`): Contact and FAQ, and an Enquiries column that opens the contact form on a topic (`/contact?intent=…`: a new project, engineering support, AI, managed services, procurement, a partnership). The labels are the form's own topic labels, so the preselected topic always matches the link.
+   - The cards use locked copy only. Below `lg` the three menus are disclosures in the menu sheet, as before; the cards are not shown there.
+   - Below 400px the header shows the V symbol instead of the lockup, and the lockup is 24px high up to 448px, so the action and menu fit at 320px (Wordmark `compactLogo`).
+2. **Talk to Vitalos stays in the bar.** The hero no longer repeats it; its one action is Explore what we do. The hero's supporting line is the long proposition sentence instead of "From strategy to production." (owner direction, same day).
+3. **The Trust Centre leaves the header and the homepage.** There is no utility link and no homepage Trust band. The Trust Centre, its topics and the evidence request are unchanged and linked from the footer's Trust column (`trustNav`) and from About.
+4. **The Leadership page is removed.** This removes the route, its route-page key, the homepage Leadership band, the About leadership section and the Leadership breadcrumb on profiles. `/about/leadership` redirects 301 to `/about` (`additional-redirects.ts`). Person profiles under `/people/` remain.
+5. **FAQ page** (`/faq`). It groups the questions each published solution already answers on its own page, by solution in the locked order, with a link to the solution. The page writes no copy of its own beyond its structural title. It is `noindex` and left out of the sitemap while no solution has a question. A fuller FAQ is being drafted separately and needs owner approval before it replaces this.
+6. **Social profiles** (LinkedIn, X) are site settings facts (`repoSettingsFacts.social`), the same URLs the enquiry email links to. They appear as marks under the footer logo and at the foot of the mobile menu sheet (`SocialLinks`). The marks are the Font Awesome Free brand icons the email layout already uses (CC BY 4.0, attributed in source).
+7. **The footer no longer repeats the contact email.** Contact is in the Support menu and the footer's Company column. The company name and number are centred under the columns.
+
+## Consequences
+
+- Header and footer unit tests, CMS gate and fixture tests, the e2e specs (commercial, institutional, journeys, motion, draft content) and the route lists for the a11y and performance suites are updated. The performance budget entry for `/about/leadership` now covers `/faq`.
+- `HomePageView` loses `leadership` and `trustHighlights`, and the home section keys lose `trust` and `leadership`. The Stage 8 §8 homepage now has 11 sections.
+- The Stage 8 §6 IA in the strategy documents no longer matches the site's header. This ADR is the record of the change.
+
+## Revisit triggers
+
+Approved leadership profiles exist (a Leadership page or section may return through a new decision). The owner approves the full FAQ. Work or Insights open and need top-level visibility.

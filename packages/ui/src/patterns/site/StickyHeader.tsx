@@ -90,7 +90,7 @@ export function StickyHeader({
       {...(clear ? { "data-tone": "dark", "data-clear": "" } : {})}
       className={cx(
         "sticky top-0 z-40 border-b text-tone-text",
-        clear ? "border-transparent bg-transparent" : "border-tone-border bg-tone-bg",
+        clear ? "border-white/15 bg-transparent" : "border-tone-border bg-tone-bg",
         "[--header-h:var(--size-header)] data-condensed:[--header-h:var(--size-header-condensed)]",
         "data-condensed:mb-[calc(var(--size-header)-var(--size-header-condensed))]",
         "data-condensed:bg-tone-bg/92 data-condensed:backdrop-blur-md",

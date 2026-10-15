@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { closedGates, evaluateGates } from "@vitalos/cms";
-import type { OfferSummary, PracticeSummary, SolutionSummary } from "@vitalos/cms";
+import type { LabAssetSummary, OfferSummary, PracticeSummary, SolutionSummary } from "@vitalos/cms";
 import {
   buildFooterModel,
   buildHeaderModel,
   buildWhatWeDoColumns,
+  buildWhoWeAreColumns,
   colourLogo,
+  markLogo,
   whiteLogo,
 } from "./nav-model";
 import type { ChromeContent } from "./nav-model";
@@ -13,6 +15,8 @@ import { activeSectionForPath } from "./section-for-path";
 
 const summary = (slug: string, title: string): SolutionSummary => ({ id: slug, slug, title });
 const offer = (slug: string, title: string): OfferSummary => ({ id: slug, slug, title });
+const lab = (slug: string, labType: LabAssetSummary["labType"]) =>
+  ({ id: slug, slug, title: slug, labType, maturity: "concept" }) as LabAssetSummary;
 
 const base: ChromeContent = {
   gates: closedGates,
@@ -20,44 +24,118 @@ const base: ChromeContent = {
   practices: [],
   solutions: [],
   offers: [],
+  industries: [],
+  labAssets: [],
   trustTopics: [],
   legalPages: [],
 };
 
+const social = [
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/example" },
+  { label: "X", href: "https://x.com/example" },
+];
+
 describe("header model", () => {
-  it("shows only ungated sections while every gate is closed", () => {
+  it("has the three menus whatever the gates", () => {
+    const open = evaluateGates({ industries: 1, work: 2, insights: 6, labs: 1, careers: 1 });
+    for (const gates of [closedGates, open]) {
+      const { items } = buildHeaderModel({ ...base, gates });
+      expect(items.map((item) => item.key)).toEqual(["what-we-do", "who-we-are", "support"]);
+    }
+  });
+
+  it("links each menu label to its index", () => {
     const { items } = buildHeaderModel(base);
-    expect(items.map((item) => item.key)).toEqual(["what-we-do", "about"]);
+    expect(items.map((item) => item.href)).toEqual(["/what-we-do", "/about", "/contact"]);
   });
 
-  it("adds each gated section when its gate opens, in navigation order", () => {
-    const gates = evaluateGates({ industries: 1, work: 2, insights: 6, labs: 1, careers: 1 });
-    const { items } = buildHeaderModel({ ...base, gates });
-    expect(items.map((item) => item.key)).toEqual([
-      "what-we-do",
-      "industries",
-      "work",
-      "insights",
-      "labs",
-      "about",
+  it("lists the company pages under Who We Are, and the industries once their gate opens", () => {
+    const industries = [summary("i", "Health & Care"), summary("j", "Growth & Technology")];
+    const closed = buildWhoWeAreColumns({ ...base, industries });
+    expect(closed.map((c) => c.key)).toEqual(["company"]);
+    expect(closed[0]?.links.map((l) => l.label)).toEqual([
+      "About",
+      "How We Work",
+      "All What We Do",
     ]);
+    const open = buildWhoWeAreColumns({
+      ...base,
+      industries,
+      gates: evaluateGates({ industries: 1, work: 2, insights: 6, careers: 1 }),
+    });
+    expect(open[0]?.links.map((l) => l.label)).toEqual([
+      "About",
+      "How We Work",
+      "Work",
+      "Insights",
+      "All What We Do",
+      "Careers",
+    ]);
+    const column = open.find((c) => c.key === "industries");
+    expect(column?.href).toBe("/industries");
+    expect(column?.links.map((l) => l.label)).toEqual(["Health & Care", "Growth & Technology"]);
+    expect(column?.links.every((l) => l.icon !== undefined)).toBe(true);
+    expect(column?.more).toEqual({ label: "All industries", href: "/industries" });
   });
 
-  it("keeps a gated section out while below its threshold", () => {
-    const { items } = buildHeaderModel({ ...base, gates: evaluateGates({ work: 1, insights: 5 }) });
-    expect(items.map((item) => item.key)).not.toContain("work");
-    expect(items.map((item) => item.key)).not.toContain("insights");
+  it("gives What We Do and Who We Are a feature card from locked copy only", () => {
+    const { items } = buildHeaderModel({
+      ...base,
+      practices: [summary("c", "Vitalos Consulting")],
+    });
+    const whatWeDo = items.find((item) => item.key === "what-we-do")?.menu?.feature;
+    expect(whatWeDo?.title).toBe("Modernise. Build. Adopt AI.");
+    expect(whatWeDo?.steps).toEqual([
+      "Opportunity Assessment",
+      "Prototype",
+      "Production",
+      "Managed AI",
+    ]);
+    expect(whatWeDo?.links[0]).toEqual({ label: "Talk to Vitalos", href: "/contact" });
+    const whoWeAre = items.find((item) => item.key === "who-we-are")?.menu?.feature;
+    expect(whoWeAre?.title).toBe(
+      "We help ambitious organisations modernise operations, build digital products and adopt AI.",
+    );
+    expect(whoWeAre?.links[0]).toEqual({ label: "About", href: "/about" });
   });
 
-  it("has the Trust Centre utility link and the Talk to Vitalos action to /contact", () => {
-    const { utility, cta } = buildHeaderModel(base);
-    expect(utility).toEqual([{ key: "trust", label: "Trust Centre", href: "/trust" }]);
-    expect(cta).toEqual({ label: "Talk to Vitalos", href: "/contact" });
+  it("lists Contact, the FAQ and the enquiry topics under Support", () => {
+    const { items } = buildHeaderModel(base);
+    const support = items.find((item) => item.key === "support");
+    expect(support?.menu?.layout).toBeUndefined();
+    expect(support?.menu?.columns[0]?.links).toEqual([
+      { key: "contact", label: "Contact", href: "/contact", icon: "mail" },
+      { key: "faq", label: "FAQ", href: "/faq", icon: "info" },
+    ]);
+    const topics = support?.menu?.columns[1];
+    expect(topics?.href).toBe("/contact");
+    expect(topics?.links.map((l) => l.href)).toEqual([
+      "/contact?intent=project",
+      "/contact?intent=engineering",
+      "/contact?intent=ai",
+      "/contact?intent=managed-services",
+      "/contact?intent=procurement",
+      "/contact?intent=partnership",
+    ]);
+    expect(topics?.links[0]?.label).toBe("A new project");
+    expect(items.find((item) => item.key === "who-we-are")?.menu?.layout).toBeUndefined();
+  });
+
+  it("has no Trust Centre link and keeps the Talk to Vitalos action to /contact", () => {
+    const model = buildHeaderModel(base);
+    expect(JSON.stringify(model)).not.toContain("/trust");
+    expect(model.cta).toEqual({ label: "Talk to Vitalos", href: "/contact" });
+  });
+
+  it("carries the social profiles from settings for the compact menu", () => {
+    expect(buildHeaderModel(base).social).toBeUndefined();
+    expect(buildHeaderModel({ ...base, settings: { social } }).social).toEqual(social);
   });
 
   it("puts the colour lockup in the header unless site settings carry a logo", () => {
     expect(buildHeaderModel(base).logo).toEqual(colourLogo);
     expect(buildHeaderModel(base).logoOnDark).toEqual(whiteLogo);
+    expect(buildHeaderModel(base).compactLogo).toEqual(markLogo);
     const logo = { src: "/images/logo.svg", width: 10, height: 10 };
     expect(buildHeaderModel({ ...base, settings: { logo } }).logo).toEqual(logo);
   });
@@ -92,34 +170,48 @@ describe("What We Do mega-menu", () => {
     ]);
   });
 
-  it("lists as popular offers only the priority offers by their locked names", () => {
+  it("has no Popular offers column (owner direction, 15 Oct 2026)", () => {
     const columns = buildWhatWeDoColumns({
       ...base,
-      offers: [
-        offer("a", "Systems Integration"),
-        offer("b", "AI Opportunity Assessment"),
-        offer("c", "Technology Health Assessment"),
-      ],
+      offers: [offer("b", "AI Opportunity Assessment")],
     });
-    expect(columns.find((c) => c.key === "popular-offers")?.links.map((l) => l.label)).toEqual([
-      "AI Opportunity Assessment",
-      "Technology Health Assessment",
-    ]);
+    expect(columns.map((c) => c.key)).not.toContain("popular-offers");
   });
 
-  it("omits empty columns and always keeps Explore (How We Work, All What We Do)", () => {
-    const columns = buildWhatWeDoColumns(base);
-    expect(columns.map((c) => c.key)).toEqual(["explore"]);
-    expect(columns[0]?.links).toEqual([
-      { key: "how-we-work", label: "How We Work", href: "/how-we-work" },
-      { key: "all-what-we-do", label: "All What We Do", href: "/what-we-do" },
-    ]);
+  it("adds Labs, with the lab types that have assets, only once the Labs gate is open", () => {
+    const labAssets = [lab("x", "demonstrators"), lab("y", "research"), lab("z", "research")];
+    expect(buildWhatWeDoColumns({ ...base, labAssets }).map((c) => c.key)).not.toContain("labs");
+    const columns = buildWhatWeDoColumns({
+      ...base,
+      labAssets,
+      gates: evaluateGates({ labs: 1 }),
+    });
+    const labs = columns.find((c) => c.key === "labs");
+    expect(labs?.href).toBe("/labs");
+    expect(labs?.links.map((l) => l.href)).toEqual(["/labs/research", "/labs/demonstrators"]);
   });
 
-  it("attaches the menu to What We Do only", () => {
-    const { items } = buildHeaderModel(base);
-    expect(items.find((item) => item.key === "what-we-do")?.menu).toBeDefined();
-    expect(items.find((item) => item.key === "about")?.menu).toBeUndefined();
+  it("gives practices their icon (no summary), and closes every column with its index", () => {
+    const columns = buildWhatWeDoColumns({
+      ...base,
+      practices: [{ ...summary("c", "Vitalos Consulting"), summary: "Example summary (fixture)." }],
+      solutions: [summary("s", "AI Transformation")],
+    });
+    const practices = columns.find((c) => c.key === "practices");
+    expect(practices?.links[0]).toEqual({
+      label: "Vitalos Consulting",
+      href: "/what-we-do/c",
+      icon: "compass",
+    });
+    expect(practices?.more).toEqual({ label: "All What We Do", href: "/what-we-do" });
+    expect(columns.find((c) => c.key === "solutions")?.more).toEqual({
+      label: "All solutions",
+      href: "/solutions",
+    });
+  });
+
+  it("omits empty columns and has no Explore column", () => {
+    expect(buildWhatWeDoColumns(base)).toEqual([]);
   });
 
   it("links each column heading to its index", () => {
@@ -129,19 +221,18 @@ describe("What We Do mega-menu", () => {
       solutions: [summary("s", "AI Transformation")],
       offers: [offer("o", "AI Opportunity Assessment")],
     });
-    expect(columns.map((c) => c.href)).toEqual(["/what-we-do", "/solutions", "/offers", undefined]);
+    expect(columns.map((c) => c.href)).toEqual(["/what-we-do", "/solutions"]);
   });
 });
 
 describe("footer model", () => {
   it("has no gated link and no empty column while everything is closed and empty", () => {
-    const { columns, contact, legalIdentity } = buildFooterModel(base);
+    const { columns, legalIdentity } = buildFooterModel(base);
     const hrefs = columns.flatMap((column) => column.links.map((link) => link.href));
     for (const gated of ["/industries", "/work", "/insights", "/labs", "/careers"]) {
       expect(hrefs).not.toContain(gated);
     }
     expect(columns.every((column) => column.links.length > 0)).toBe(true);
-    expect(contact).toEqual({ heading: "Contact" });
     expect(legalIdentity).toBeUndefined();
   });
 
@@ -155,6 +246,13 @@ describe("footer model", () => {
     expect(open).toContain("/careers");
   });
 
+  it("links Contact and the FAQ under Company, and never the removed Leadership page", () => {
+    const { columns } = buildFooterModel(base);
+    const company = columns.find((c) => c.key === "company")?.links.map((l) => l.href);
+    expect(company).toEqual(["/about", "/contact", "/faq"]);
+    expect(JSON.stringify(columns)).not.toContain("leadership");
+  });
+
   it("takes the legal identity from site settings only, line by line, without the address", () => {
     const { legalIdentity } = buildFooterModel({
       ...base,
@@ -165,16 +263,13 @@ describe("footer model", () => {
     expect(partial.legalIdentity?.lines).toEqual(["Example Ltd"]);
   });
 
-  it("carries the contact email and verified social links from settings", () => {
-    const { contact } = buildFooterModel({
+  it("puts the social profiles under the logo and no longer repeats the contact email", () => {
+    const model = buildFooterModel({
       ...base,
-      settings: {
-        contactEmail: "hello@example.invalid",
-        social: [{ label: "Profile", href: "https://example.invalid/p" }],
-      },
+      settings: { contactEmail: "hello@example.invalid", social },
     });
-    expect(contact?.email).toBe("hello@example.invalid");
-    expect(contact?.social).toEqual([{ label: "Profile", href: "https://example.invalid/p" }]);
+    expect(model.brand?.social).toEqual(social);
+    expect(JSON.stringify(model)).not.toContain("hello@example.invalid");
   });
 
   it("builds trust and legal columns from published summaries", () => {
@@ -194,30 +289,32 @@ describe("footer model", () => {
 });
 
 describe("activeSectionForPath", () => {
-  it("maps the commercial layers to What We Do", () => {
+  it("maps the commercial layers and Labs to What We Do", () => {
     for (const path of [
       "/what-we-do",
       "/what-we-do/consulting",
       "/solutions",
       "/solutions/x",
       "/offers/y",
-      "/how-we-work",
+      "/labs/research/x",
     ]) {
       expect(activeSectionForPath(path), path).toBe("what-we-do");
     }
   });
 
-  it("maps the other sections and Leadership to About", () => {
-    expect(activeSectionForPath("/industries/x")).toBe("industries");
-    expect(activeSectionForPath("/work")).toBe("work");
-    expect(activeSectionForPath("/insights/x")).toBe("insights");
-    expect(activeSectionForPath("/labs/research/x")).toBe("labs");
-    expect(activeSectionForPath("/about/leadership")).toBe("about");
+  it("maps About, How We Work, Industries, Work and Insights to Who We Are", () => {
+    for (const path of ["/about", "/how-we-work", "/industries/x", "/work", "/insights/x"]) {
+      expect(activeSectionForPath(path), path).toBe("who-we-are");
+    }
+  });
+
+  it("maps Contact and the FAQ to Support", () => {
+    expect(activeSectionForPath("/contact")).toBe("support");
+    expect(activeSectionForPath("/faq")).toBe("support");
   });
 
   it("has no active section elsewhere, and respects path boundaries", () => {
     expect(activeSectionForPath("/")).toBeUndefined();
-    expect(activeSectionForPath("/contact")).toBeUndefined();
     expect(activeSectionForPath("/trust")).toBeUndefined();
     expect(activeSectionForPath("/worksheets")).toBeUndefined();
     expect(activeSectionForPath("/what-we-do/")).toBe("what-we-do");

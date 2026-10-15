@@ -36,7 +36,7 @@ Add one `LegalPageView` to `approvedLegalPages` in `packages/cms/src/repo/legal.
 
 ## Sections that stay closed
 
-Work, Insights, Careers and Leadership only open when there is real, approved content behind them (publication gates, ADR-022). The documents that would open them today are invented placeholders, so they stay out of the `repo` source and the sections stay closed. Replace a placeholder with approved content (remove `placeholder: true` and the invented details) to open its section.
+Work, Insights and Careers only open when there is real, approved content behind them (the Leadership page was removed, ADR-031) (publication gates, ADR-022). The documents that would open them today are invented placeholders, so they stay out of the `repo` source and the sections stay closed. Replace a placeholder with approved content (remove `placeholder: true` and the invented details) to open its section.
 
 ## Images
 

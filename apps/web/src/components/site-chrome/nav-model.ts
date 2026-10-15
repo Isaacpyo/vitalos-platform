@@ -8,22 +8,33 @@
  * only when their gate is open, so no navigation link leads to a closed section.
  */
 import {
+  aiJourneyStages,
+  brandName,
   ctaNav,
   exploreNav,
   filterNavByGates,
   footerColumns,
   footerNav,
+  industryNames,
+  labTypeLabels,
   megaMenuColumns,
   navLabels,
   practiceNames,
   primaryNav,
-  priorityOfferNames,
+  proposition,
+  propositionLong,
   routes,
+  sectionNav,
   solutionNames,
-  utilityNav,
+  supportNav,
+  trustNav,
+  whoWeAreNav,
   wordmarkText,
 } from "@vitalos/cms";
 import type {
+  ContactIntent,
+  IndustrySummary,
+  LabAssetSummary,
   LegalPageSummary,
   NavItem,
   OfferSummary,
@@ -35,16 +46,22 @@ import type {
 } from "@vitalos/cms";
 import type {
   FooterColumn,
+  IconName,
   MegaMenuColumn,
   PatternLink,
   SiteFooterProps,
   SiteHeaderProps,
   SiteNavItem,
+  MegaMenuFeature,
   SiteNavLink,
+  SiteNavMenu,
 } from "@vitalos/ui";
 import { hrefForSummary } from "../../lib/view-mapping/hrefs";
+import { iconFor } from "../../lib/view-mapping/icons";
+import { intentFallbackLabels } from "../contact/labels";
 import { structuralLabels } from "../../lib/view-mapping/labels";
-import { orderByLockedNames, pickByLockedNames } from "../../lib/view-mapping/ordering";
+import { orderByLockedNames } from "../../lib/view-mapping/ordering";
+import { typesWithAssets } from "../../templates/labs/map";
 
 export interface ChromeContent {
   gates: PublicationGates;
@@ -52,16 +69,20 @@ export interface ChromeContent {
   practices: readonly PracticeSummary[];
   solutions: readonly SolutionSummary[];
   offers: readonly OfferSummary[];
+  /** Industries, for the Who We Are menu (shown while the Industries gate is open). */
+  industries: readonly IndustrySummary[];
+  /** Lab assets, for the Labs column of What We Do (the lab types that have assets). */
+  labAssets: readonly LabAssetSummary[];
   trustTopics: readonly TrustTopicSummary[];
   legalPages: readonly LegalPageSummary[];
 }
 
 export type HeaderModel = Pick<
   SiteHeaderProps,
-  "items" | "utility" | "cta" | "logo" | "logoOnDark" | "wordmarkText" | "homeHref"
+  "items" | "social" | "cta" | "logo" | "logoOnDark" | "compactLogo" | "wordmarkText" | "homeHref"
 > & { items: readonly SiteNavItem[]; cta: PatternLink };
 
-export type FooterModel = Pick<SiteFooterProps, "brand" | "columns" | "contact" | "legalIdentity">;
+export type FooterModel = Pick<SiteFooterProps, "brand" | "columns" | "legalIdentity">;
 
 /**
  * Full-colour lockup for the light header, made from the owner-supplied logo (15 Oct 2026;
@@ -71,6 +92,17 @@ export const colourLogo = {
   src: "/brand/vitalos-logo.png",
   width: 940,
   height: 160,
+} as const;
+
+/**
+ * The V symbol alone, for the header on narrow phones (below 400px), where the lockup would push
+ * the action and menu off screen. From the owner-supplied site icon (15 Oct 2026); its blue and
+ * aqua read on the light bar and on the clear bar over the hero.
+ */
+export const markLogo = {
+  src: "/brand/vitalos-mark.png",
+  width: 184,
+  height: 128,
 } as const;
 
 /**
@@ -100,64 +132,200 @@ function summaryLinks<T extends { title: string }>(
   });
 }
 
-/** The What We Do mega-menu: Practices, Solutions, Popular offers, Explore (Stage 8 section 6). */
+/**
+ * The What We Do mega-menu: Practices (with their icon), Solutions and Labs, each closed by a link
+ * to its index, and a card with the AI journey (Stage 8 section 6, changed by owner direction on
+ * 15 Oct 2026: Labs moved in, the Explore column moved to Who We Are, and Popular offers was
+ * removed; the offers stay reachable from the What We Do page and the footer).
+ */
 export function buildWhatWeDoColumns(content: ChromeContent): MegaMenuColumn[] {
-  const practices = summaryLinks(orderByLockedNames(content.practices, practiceNames), (item) =>
-    hrefForSummary("practice", item),
-  );
+  const practices = orderByLockedNames(content.practices, practiceNames).flatMap((item) => {
+    const href = hrefForSummary("practice", item);
+    return href
+      ? [
+          {
+            label: item.title,
+            href,
+            icon: iconFor("practice", item.title),
+          },
+        ]
+      : [];
+  });
   const solutions = summaryLinks(orderByLockedNames(content.solutions, solutionNames), (item) =>
     hrefForSummary("solution", item),
   );
-  // Popular offers are the priority offers named in the locked copy; an offer the CMS has not
-  // published under one of those names simply does not appear (no filler, no "first six").
-  const offers = summaryLinks(pickByLockedNames(content.offers, priorityOfferNames), (item) =>
-    hrefForSummary("offer", item),
-  );
+  // Labs lists the lab types that have assets, and only once the Labs gate is open.
+  const labs = content.gates.open.labs
+    ? typesWithAssets(content.labAssets).map((type) => ({
+        label: labTypeLabels[type],
+        href: routes.labType(type),
+      }))
+    : [];
   const columns: MegaMenuColumn[] = [
     {
       key: "practices",
       heading: megaMenuColumns.practices,
       href: routes.whatWeDo(),
       links: practices,
+      more: { label: navLabels.allWhatWeDo, href: routes.whatWeDo() },
     },
     {
       key: "solutions",
       heading: megaMenuColumns.solutions,
       href: routes.solutions(),
       links: solutions,
+      more: { label: structuralLabels.allSolutions, href: routes.solutions() },
     },
     {
-      key: "popular-offers",
-      heading: megaMenuColumns.popularOffers,
-      href: routes.offers(),
-      links: offers,
+      key: "labs",
+      heading: navLabels.labs,
+      href: routes.labs(),
+      links: labs,
+      more: { label: structuralLabels.allLabs, href: routes.labs() },
     },
-    { key: "explore", heading: megaMenuColumns.explore, links: exploreNav.map(link) },
   ];
   return columns.filter((column) => column.links.length > 0);
 }
 
+/** The What We Do card: the locked headline and the AI journey, with the primary action. */
+const whatWeDoFeature: MegaMenuFeature = {
+  title: proposition,
+  steps: aiJourneyStages,
+  links: [
+    { label: ctaNav.label, href: ctaNav.href },
+    { label: navLabels.howWeWork, href: routes.howWeWork() },
+  ],
+};
+
+/** Subject icons for the Who We Are company links (decorative, beside the visible label). */
+const companyIcons: Readonly<Record<string, IconName>> = {
+  about: "building",
+  "how-we-work": "workflow",
+  work: "document",
+  insights: "search",
+  "all-what-we-do": "layers",
+  careers: "compass",
+};
+
+/**
+ * The Who We Are mega-menu: the company pages (About, How We Work, then Work, Insights and Careers
+ * as their gates open, and All What We Do), the industries while their gate is open, and a card
+ * with the proposition.
+ */
+export function buildWhoWeAreColumns(content: ChromeContent): MegaMenuColumn[] {
+  const { gates } = content;
+  const company = [
+    ...filterNavByGates(whoWeAreNav, gates).filter((item) => item.key !== "industries"),
+    ...filterNavByGates(footerNav, gates).filter((item) => item.key === "careers"),
+  ].map((item) => ({
+    ...link(item),
+    ...(companyIcons[item.key] ? { icon: companyIcons[item.key] } : {}),
+  }));
+  const industries = gates.open.industries
+    ? orderByLockedNames(content.industries, industryNames).flatMap((item) => {
+        const href = hrefForSummary("industry", item);
+        return href ? [{ label: item.title, href, icon: iconFor("industry", item.title) }] : [];
+      })
+    : [];
+  const columns: MegaMenuColumn[] = [
+    { key: "company", heading: footerColumns.company, links: company },
+    {
+      key: "industries",
+      heading: navLabels.industries,
+      href: routes.industries(),
+      links: industries,
+      more: { label: structuralLabels.allIndustries, href: routes.industries() },
+    },
+  ];
+  return columns.filter((column) => column.links.length > 0);
+}
+
+const whoWeAreFeature: MegaMenuFeature = {
+  eyebrow: brandName,
+  title: propositionLong,
+  links: [
+    { label: navLabels.about, href: routes.about() },
+    { label: navLabels.howWeWork, href: routes.howWeWork() },
+  ],
+};
+
+/** Subject icons for the Support menu's links (decorative, beside the visible label). */
+const supportIcons: Readonly<Record<string, IconName>> = { contact: "mail", faq: "info" };
+
+/** The enquiry topics the Support menu opens the contact form on, in the form's order. */
+const enquiryTopics: readonly { intent: ContactIntent; icon: IconName }[] = [
+  { intent: "project", icon: "layers" },
+  { intent: "engineering", icon: "code" },
+  { intent: "ai", icon: "chip" },
+  { intent: "managed-services", icon: "server" },
+  { intent: "procurement", icon: "shield" },
+  { intent: "partnership", icon: "workflow" },
+];
+
+/**
+ * The Support menu: Contact and the FAQ, and the contact form opened on a topic (its own labels,
+ * `components/contact/labels.ts`, so the menu and the form's preselected topic always match).
+ */
+export function buildSupportColumns(content: ChromeContent): MegaMenuColumn[] {
+  return [
+    {
+      key: "help",
+      heading: navLabels.support,
+      links: filterNavByGates(supportNav, content.gates).map((item) => ({
+        ...link(item),
+        ...(supportIcons[item.key] ? { icon: supportIcons[item.key] } : {}),
+      })),
+    },
+    {
+      key: "enquiries",
+      heading: structuralLabels.enquiries,
+      href: routes.contact(),
+      links: enquiryTopics.map(({ intent, icon }) => ({
+        label: intentFallbackLabels[intent],
+        href: routes.contact(intent),
+        icon,
+      })),
+    },
+  ];
+}
+
+/** The social profiles in site settings that have a name and an address. */
+function socialOf(settings: SiteSettingsView) {
+  return (settings.social ?? []).filter(
+    (item) => item.label.trim() !== "" && item.href.trim() !== "",
+  );
+}
+
 export function buildHeaderModel(content: ChromeContent): HeaderModel {
-  const items = filterNavByGates(primaryNav, content.gates).map((item): SiteNavItem => {
+  const { gates } = content;
+  const menus: Record<string, SiteNavMenu | undefined> = {
+    "what-we-do": { columns: buildWhatWeDoColumns(content), feature: whatWeDoFeature },
+    "who-we-are": { columns: buildWhoWeAreColumns(content), feature: whoWeAreFeature },
+    support: { columns: buildSupportColumns(content) },
+  };
+  const items = filterNavByGates(primaryNav, gates).map((item): SiteNavItem => {
     const base = { key: item.key, label: item.label, href: item.href };
-    if (item.key !== "what-we-do") return base;
-    const columns = buildWhatWeDoColumns(content);
-    return columns.length > 0 ? { ...base, menu: { columns } } : base;
+    const menu = menus[item.key];
+    return menu && menu.columns.some((column) => column.links.length > 0)
+      ? { ...base, menu }
+      : base;
   });
+  const social = socialOf(content.settings);
   return {
     items,
-    utility: filterNavByGates(utilityNav, content.gates).map(link),
     cta: { label: ctaNav.label, href: ctaNav.href },
     homeHref: routes.home(),
     wordmarkText,
     logo: content.settings.logo ?? colourLogo,
     logoOnDark: whiteLogo,
+    compactLogo: markLogo,
+    ...(social.length > 0 ? { social } : {}),
   };
 }
 
 export function buildFooterModel(content: ChromeContent): FooterModel {
   const { gates, settings } = content;
-  const gated = filterNavByGates(primaryNav, gates);
+  const gated = filterNavByGates(sectionNav, gates);
   const gatedSection = (key: string) => gated.filter((item) => item.key === key).map(link);
 
   const columns: FooterColumn[] = [
@@ -194,7 +362,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
       key: "trust",
       heading: footerColumns.trust,
       links: [
-        ...filterNavByGates(utilityNav, gates).map(link),
+        link(trustNav),
         ...summaryLinks(
           // The Trust Centre overview is already linked above; topics follow it.
           content.trustTopics,
@@ -210,26 +378,23 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
   ];
 
   // The registered office address is not repeated on every page (owner decision, 12 Oct 2026);
-  // it stays in the privacy notice, which identifies the controller.
+  // it stays in the privacy notice, which identifies the controller. The contact email is not
+  // repeated under the columns either (owner direction, 15 Oct 2026): Contact is in the menus.
   const identityLines = [
     settings.legalName,
     settings.companyNumber ? `Company number ${settings.companyNumber}` : undefined,
   ].filter((line): line is string => typeof line === "string" && line.trim() !== "");
 
-  const social = (settings.social ?? []).filter((item) => item.label.trim() !== "");
+  const social = socialOf(settings);
 
   return {
     brand: {
       homeHref: routes.home(),
       wordmarkText,
       logo: whiteLogo,
-    },
-    columns: columns.filter((column) => column.links.length > 0),
-    contact: {
-      heading: navLabels.contact,
-      ...(settings.contactEmail ? { email: settings.contactEmail } : {}),
       ...(social.length > 0 ? { social } : {}),
     },
+    columns: columns.filter((column) => column.links.length > 0),
     ...(identityLines.length > 0 ? { legalIdentity: { lines: identityLines } } : {}),
   };
 }

@@ -23,14 +23,7 @@ export function ProfilePage({ data }: Readonly<{ data: PersonData }>) {
   const credentials = verifiedCredentials(person);
   // Insights are linked only while their section is public (a closed section is noindex).
   const insights = gates.open.insights ? person.insights : [];
-  const trail: Crumb[] = person.isLeadership
-    ? [
-        homeCrumb,
-        { name: navLabels.about, path: routes.about() },
-        { name: navLabels.leadership, path: routes.leadership() },
-        { name: person.name, path: routes.person(person.slug) },
-      ]
-    : [homeCrumb, { name: person.name, path: routes.person(person.slug) }];
+  const trail: Crumb[] = [homeCrumb, { name: person.name, path: routes.person(person.slug) }];
 
   const placeholder = hasPlaceholder(person, insights);
 

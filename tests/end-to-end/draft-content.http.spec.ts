@@ -23,7 +23,6 @@ test("placeholder sections are served but never listed in the sitemap", async ({
     "/insights/why-ai-pilots-stall-before-production",
     "/people/alex-morgan",
     "/careers/senior-engineer-technical-lead",
-    "/about/leadership",
   ]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);

@@ -19,6 +19,12 @@ export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "c
   logo?: WordmarkLogo;
   /** Shown instead of `logo` inside a dark tone scope (`data-tone="dark"`), for example white. */
   darkLogo?: WordmarkLogo | undefined;
+  /**
+   * The symbol alone, for a crowded bar: below 25rem it replaces the logo (which is then drawn
+   * 24px high up to 28rem), so the header's action and menu still fit at 320px. It must read on
+   * light and dark surfaces alike.
+   */
+  compactLogo?: WordmarkLogo | undefined;
   /** Fallback text. Defaults to "VITALOS". */
   text?: string;
   /** Wrap in a plain anchor, for example the header home link. */
@@ -38,6 +44,7 @@ export const LOGO_IMAGE_CLASSES = `block ${LOGO_SIZE_CLASSES}`;
 export function Wordmark({
   logo,
   darkLogo,
+  compactLogo,
   text = "VITALOS",
   href,
   className,
@@ -52,17 +59,27 @@ export function Wordmark({
       className={classes}
     />
   );
+  // With a compact mark the lockup steps down to 24px below 28rem and gives way to the mark
+  // below 25rem (`!` so it also beats the dark-scope rule below).
+  const size = compactLogo
+    ? cx(LOGO_SIZE_CLASSES, "max-[27.99rem]:h-6 max-[24.99rem]:hidden!")
+    : LOGO_SIZE_CLASSES;
   // With a dark-surface logo, a dark tone scope around the wordmark decides which of the two is
-  // drawn; the other is display:none, so only one is ever in the accessibility tree.
+  // drawn. Every image not drawn is display:none, so only one is ever in the accessibility tree.
   const mark = logo ? (
-    darkLogo ? (
-      <>
-        {image(logo, cx(LOGO_SIZE_CLASSES, "block [[data-tone=dark]_&]:hidden"))}
-        {image(darkLogo, cx(LOGO_SIZE_CLASSES, "hidden [[data-tone=dark]_&]:block"))}
-      </>
-    ) : (
-      image(logo, LOGO_IMAGE_CLASSES)
-    )
+    <>
+      {darkLogo ? (
+        <>
+          {image(logo, cx(size, "block [[data-tone=dark]_&]:hidden"))}
+          {image(darkLogo, cx(size, "hidden [[data-tone=dark]_&]:block"))}
+        </>
+      ) : (
+        image(logo, cx(size, "block"))
+      )}
+      {compactLogo
+        ? image(compactLogo, "hidden h-8 w-auto object-contain max-[24.99rem]:block")
+        : null}
+    </>
   ) : (
     <span className="text-body-l font-semibold tracking-widest text-tone-heading">{text}</span>
   );

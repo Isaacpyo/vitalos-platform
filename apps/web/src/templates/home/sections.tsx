@@ -2,13 +2,13 @@ import { useId } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   aiJourneyStages,
-  brandLine,
   ctas,
   howWeWorkStages,
   megaMenuColumns,
   navLabels,
   practiceNames,
   proposition,
+  propositionLong,
   routes,
   solutionNames,
 } from "@vitalos/cms";
@@ -27,7 +27,6 @@ import {
   ArticleRow,
   MotionPause,
   Lead,
-  PersonCard,
   PracticeRow,
   ProcessJourney,
   ProofStrip,
@@ -38,7 +37,6 @@ import {
   SettleText,
   SolutionCard,
   TerminalCTA,
-  TrustTopicRow,
   isNonEmpty,
 } from "@vitalos/ui";
 import type { MediaPlaceholderVariant } from "@vitalos/ui";
@@ -51,7 +49,6 @@ import {
   caseStudyMeta,
   labAssetPresentation,
   toArticleRow,
-  toPersonCard,
   toProofStripItems,
   toRow,
   toRows,
@@ -146,8 +143,8 @@ const heroGlints = [
 ] as const;
 
 /**
- * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, brand
- * line and two actions on the left; the decorative hero visual on the right (below the copy on
+ * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, proposition
+ * sentence and one action on the left; the decorative hero visual on the right (below the copy on
  * compact screens), carrying the locked AI journey stage names and no figures.
  */
 export function HeroSection(): ReactNode {
@@ -173,11 +170,8 @@ export function HeroSection(): ReactNode {
           <Display size="xl" as="h1" className="break-words">
             <PropositionTitle />
           </Display>
-          <Lead className="mt-(--space-5)">{brandLine}</Lead>
+          <Lead className="mt-(--space-5)">{propositionLong}</Lead>
           <CTAGroup className="mt-(--space-7)">
-            <Button href={contactHref()} size="lg" arrow>
-              {ctas.primary}
-            </Button>
             <Button href={routes.whatWeDo()} variant="secondary" size="lg" arrow>
               {ctas.secondary}
             </Button>
@@ -422,29 +416,6 @@ export const industriesSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 9. Trust: highlighted topics and a link to the Trust Centre. */
-export const trustSection: SectionRender = (context, tone) => {
-  const title = heading(context, "trust");
-  const rows = toRows("trustItem", context.home.trustHighlights, {
-    headingLevel: itemLevel(title),
-  });
-  if (rows.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.trustCentre}
-      link={{ label: navLabels.trustCentre, href: routes.trust() }}
-    >
-      <RowList>
-        {rows.map((row) => (
-          <TrustTopicRow key={row.href} {...row} />
-        ))}
-      </RowList>
-    </Band>
-  );
-};
-
 /** 10. Labs: only when the Labs gate is open. Maturity is stated in words on every asset. */
 export const labsSection: SectionRender = (context, tone) => {
   if (!context.gates.open.labs) return null;
@@ -496,32 +467,6 @@ export const insightsSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 12. Leadership: named, accountable people with an approved portrait when there is one. */
-export const leadershipSection: SectionRender = (context, tone) => {
-  const title = heading(context, "leadership");
-  const cards = context.home.leadership.flatMap((person) => {
-    const card = toPersonCard(person, { headingLevel: itemLevel(title) });
-    return card ? [card] : [];
-  });
-  if (cards.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.leadership}
-      link={{ label: navLabels.leadership, href: routes.leadership() }}
-    >
-      <ul className="m-0 grid list-none grid-cols-1 gap-(--space-6) p-0 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <li key={card.href} className="min-w-0">
-            <PersonCard {...card} />
-          </li>
-        ))}
-      </ul>
-    </Band>
-  );
-};
-
 /**
  * 13. Final conversion: needs its heading from the CMS. The action is the CMS call to action, or
  * the locked "Talk to Vitalos" to the contact page. The comp's single-row closing band.
@@ -542,8 +487,6 @@ export const homeBands: readonly SectionRender[] = [
   aiAtTheCentreSection,
   selectedWorkSection,
   industriesSection,
-  trustSection,
   labsSection,
   insightsSection,
-  leadershipSection,
 ];

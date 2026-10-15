@@ -54,7 +54,8 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(howWeWorkStages).toHaveLength(9);
     expect(howWeWorkStages[0]).toBe("Qualify");
     expect(howWeWorkStages[8]).toBe("Improve");
-    expect(homeSections).toHaveLength(13);
+    // Stage 8 §8 listed 13; the Trust and Leadership bands were removed (owner, 15 Oct 2026).
+    expect(homeSections).toHaveLength(11);
     expect(homeSections[0]?.key).toBe("hero");
   });
 

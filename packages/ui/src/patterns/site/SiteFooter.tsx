@@ -3,6 +3,7 @@ import { Reveal, RevealItem } from "../../motion/Reveal";
 import { cx } from "../../primitives/_internal/cx";
 import { Container } from "../../primitives/Container";
 import { Icon } from "../../primitives/Icon";
+import { SocialLinks, type SocialLink } from "./SocialLinks";
 import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import { hasText } from "../_internal/types";
 import { FooterNav } from "./FooterNav";
@@ -25,6 +26,8 @@ export interface SiteFooterProps {
         descriptor?: string | undefined;
         /** Concise proposition. */
         proposition?: string | undefined;
+        /** Social profiles, as a row of marks under the logo. */
+        social?: readonly SocialLink[] | undefined;
       }
     | undefined;
   /**
@@ -32,15 +35,7 @@ export interface SiteFooterProps {
    * omitted: the footer is an institutional close, not a directory of every URL.
    */
   columns: readonly FooterColumn[];
-  /** Verified contact channels only. Omitted when there is no email and no social link. */
-  contact?:
-    | {
-        heading: string;
-        email?: string | undefined;
-        social?: readonly { label: string; href: string }[] | undefined;
-      }
-    | undefined;
-  /** Registered company information. Rendered only for the lines supplied. */
+  /** Registered company information, centred under the columns. Rendered only for the lines supplied. */
   legalIdentity?:
     | {
         heading?: string | undefined;
@@ -61,16 +56,12 @@ export interface SiteFooterProps {
 export function SiteFooter({
   brand,
   columns,
-  contact,
   legalIdentity,
   navLabel = "Footer",
   className,
 }: SiteFooterProps) {
   const footerId = useId();
   const visibleColumns = columns.filter((column) => column.links.length > 0);
-  const email = hasText(contact?.email) ? contact.email : undefined;
-  const social = contact?.social ?? [];
-  const showContact = Boolean(contact) && (email !== undefined || social.length > 0);
   const identityLines = (legalIdentity?.lines ?? []).filter(hasText);
   const showBrand = brand !== undefined;
 
@@ -103,6 +94,9 @@ export function SiteFooter({
                 <p className="mt-(--space-3) max-w-(--container-prose) text-body text-tone-text">
                   {brand.proposition}
                 </p>
+              ) : null}
+              {brand?.social && brand.social.length > 0 ? (
+                <SocialLinks links={brand.social} className="mt-(--space-5)" />
               ) : null}
             </RevealItem>
           ) : null}
@@ -160,62 +154,23 @@ export function SiteFooter({
             </FooterNav>
           ) : null}
         </Reveal>
-        {showContact || identityLines.length > 0 ? (
-          <div className="mt-(--space-8) grid gap-x-(--space-7) gap-y-(--space-6) border-t border-tone-border pt-(--space-6) md:grid-cols-2">
-            {showContact && contact ? (
-              <div className="min-w-0">
-                <h2 className="text-eyebrow text-tone-muted uppercase">{contact.heading}</h2>
-                <ul className="m-0 mt-(--space-3) list-none p-0">
-                  {email ? (
-                    <li>
-                      <a
-                        href={`mailto:${email}`}
-                        className={cx(
-                          quietLinkClasses,
-                          "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
-                        )}
-                      >
-                        {email}
-                      </a>
-                    </li>
-                  ) : null}
-                  {social.map((link) => (
-                    <li key={link.href}>
-                      <a
-                        href={link.href}
-                        className={cx(
-                          quietLinkClasses,
-                          "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
-                        )}
-                      >
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {identityLines.length > 0 ? (
+          <div className="mt-(--space-8) border-t border-tone-border pt-(--space-6) text-center">
+            {hasText(legalIdentity?.heading) ? (
+              <h2 className="text-eyebrow text-tone-muted uppercase">{legalIdentity.heading}</h2>
             ) : null}
-            {identityLines.length > 0 ? (
-              <div className="min-w-0">
-                {hasText(legalIdentity?.heading) ? (
-                  <h2 className="text-eyebrow text-tone-muted uppercase">
-                    {legalIdentity.heading}
-                  </h2>
-                ) : null}
-                <div
-                  className={cx(
-                    "text-small text-tone-muted",
-                    hasText(legalIdentity?.heading) && "mt-(--space-3)",
-                  )}
-                >
-                  {identityLines.map((line, index) => (
-                    <p key={index} className="m-0">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+            <div
+              className={cx(
+                "text-small text-tone-muted",
+                hasText(legalIdentity?.heading) && "mt-(--space-3)",
+              )}
+            >
+              {identityLines.map((line, index) => (
+                <p key={index} className="m-0">
+                  {line}
+                </p>
+              ))}
+            </div>
           </div>
         ) : null}
       </Container>

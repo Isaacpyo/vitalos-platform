@@ -27,17 +27,20 @@ async function hrefsOf(page: Page, route: string) {
 }
 
 test.describe("shell with every gate closed", () => {
-  test("the header shows only the ungated sections", async ({ page }) => {
+  test("the header shows the three menus and no gated section", async ({ page }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
-    await expect(nav.getByRole("link", { name: "What We Do", exact: true })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "About", exact: true })).toBeVisible();
-    for (const label of ["Industries", "Work", "Insights", "Labs"]) {
-      await expect(nav.getByRole("link", { name: label, exact: true })).toHaveCount(0);
+    for (const label of ["What We Do", "Who We Are", "Support"]) {
+      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
-    await expect(
-      page.getByRole("banner").getByRole("link", { name: "Trust Centre" }),
-    ).toBeVisible();
+    for (const label of ["Industries", "Work", "Insights", "Labs"]) {
+      await expect(
+        nav.getByRole("link", { name: label, exact: true, includeHidden: true }),
+      ).toHaveCount(0);
+    }
+    await expect(page.getByRole("banner").getByRole("link", { name: "Trust Centre" })).toHaveCount(
+      0,
+    );
   });
 
   test("the footer omits gated sections, careers and any legal identity", async ({ page }) => {
@@ -103,8 +106,8 @@ test.describe("sections without data are omitted", () => {
     // No section heading is invented: only the item titles are headings.
     const headings = await main.getByRole("heading", { level: 2 }).allInnerTexts();
     expect(headings.every((text) => /\(fixture\)/.test(text))).toBe(true);
-    // Closed or empty sections leave no trace: no work, labs, insights, leadership, trust links.
-    for (const prefix of ["/work", "/labs", "/insights", "/industries", "/about/leadership"]) {
+    // Closed or empty sections leave no trace: no work, labs, insights, industries or trust links.
+    for (const prefix of ["/work", "/labs", "/insights", "/industries", "/trust"]) {
       await expect(main.locator(`a[href^="${prefix}"]`)).toHaveCount(0);
     }
     await expect(page.locator("[data-content-gap]")).toHaveCount(0);

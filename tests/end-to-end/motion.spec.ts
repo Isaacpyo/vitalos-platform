@@ -14,7 +14,7 @@ import { waitForSettledLayout } from "../support/overflow";
  * - the compact menu sheet is modal while open: focus is trapped, the page behind it is inert and
  *   does not scroll, Escape closes it and focus returns to the trigger;
  * - the tablet sheet is the two-column state, and the primary action stays in the bar at every
- *   compact width; the Trust Centre has a home in the desktop bar from 1024px;
+ *   compact width; the Trust Centre is not in the bar (footer only, 15 Oct 2026);
  * - the header condenses on scroll without moving the content below it.
  */
 
@@ -266,7 +266,7 @@ test.describe("compact menu sheet", () => {
     const rowBox = await row.boundingBox();
     const groupBox = await group.boundingBox();
     expect((groupBox?.x ?? 0) > (rowBox?.x ?? 0) + (rowBox?.width ?? 0)).toBe(true);
-    await expect(nav.getByRole("link", { name: "Trust Centre" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Trust Centre" })).toHaveCount(0);
   });
 });
 
@@ -288,12 +288,14 @@ test.describe("header", () => {
     });
   }
 
-  test("from 1024px the Trust Centre has its own link in the bar", async ({ page }) => {
+  test("at 1024px the bar has the three menus and no Trust Centre", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("/");
-    await expect(
-      page.getByRole("banner").getByRole("link", { name: "Trust Centre", exact: true }),
-    ).toBeVisible();
+    const banner = page.getByRole("banner");
+    for (const label of ["What We Do", "Who We Are", "Support"]) {
+      await expect(banner.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await expect(banner.getByRole("link", { name: "Trust Centre", exact: true })).toHaveCount(0);
   });
 
   test("condenses once the page scrolls, without moving the content below it", async ({ page }) => {

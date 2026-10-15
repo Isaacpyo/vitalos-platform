@@ -26,8 +26,7 @@ const [aiTitle, bpmTitle, dptTitle, appModTitle, dataTitle] = solutionNames;
 const aiTransformation: SolutionDraft = {
   slug: "ai-transformation",
   title: aiTitle,
-  summary:
-    "AI pressure exists, but value, governance, data and the path to production are unclear. Turn AI ambition into operational value.",
+  summary: "Turn AI ambition into operational value.",
   seo: seo(
     "AI Transformation",
     "Move from scattered AI pilots to governed, production AI that creates measurable value.",
@@ -144,8 +143,7 @@ const aiTransformation: SolutionDraft = {
 const businessProcess: SolutionDraft = {
   slug: "business-process-modernisation",
   title: bpmTitle,
-  summary:
-    "Manual, fragmented or inefficient operations constrain growth and service. Redesign the work, then automate and integrate it.",
+  summary: "Redesign the work, then automate and integrate it.",
   seo: seo(
     "Business Process Modernisation",
     "Redesign manual, fragmented operations, then automate and integrate them so the business can grow.",
@@ -247,8 +245,7 @@ const businessProcess: SolutionDraft = {
 const digitalProduct: SolutionDraft = {
   slug: "digital-product-transformation",
   title: dptTitle,
-  summary:
-    "A new or existing digital product must create measurable value for customers or employees. Discover, design, engineer, launch and improve it.",
+  summary: "Discover, design, engineer, launch and improve a digital product.",
   seo: seo(
     "Digital Product Transformation",
     "Discover, design, engineer and keep improving a digital product that creates measurable customer or employee value.",
@@ -341,8 +338,7 @@ const digitalProduct: SolutionDraft = {
 const applicationModernisation: SolutionDraft = {
   slug: "application-modernisation",
   title: appModTitle,
-  summary:
-    "Legacy applications create cost, risk, slowness or integration limits. Modernise in controlled stages towards a platform you can keep changing.",
+  summary: "Modernise in controlled stages towards a platform you can keep changing.",
   seo: seo(
     "Application Modernisation",
     "Assess, re-architect and progressively modernise legacy applications, then operate them reliably.",
@@ -439,8 +435,7 @@ const applicationModernisation: SolutionDraft = {
 const dataIntelligence: SolutionDraft = {
   slug: "data-intelligence-transformation",
   title: dataTitle,
-  summary:
-    "Data is fragmented, unreliable or not turning into decisions and AI capability. Build the foundation, then the intelligence on top of it.",
+  summary: "Build the foundation, then the intelligence on top of it.",
   seo: seo(
     "Data & Intelligence Transformation",
     "Connect, clean, model and govern your data, then build the reporting and AI capability decisions depend on.",
@@ -541,7 +536,7 @@ const technologyRecovery: SolutionDraft = {
   slug: "technology-recovery-reliability",
   title: "Technology Recovery & Reliability",
   summary:
-    "A critical platform is unstable, slow or unfinished. Triage it, establish a known baseline, stabilise and remediate, then operate it.",
+    "Triage a critical platform, establish a known baseline, stabilise and remediate, then operate it.",
   seo: seo(
     "Technology Recovery & Reliability",
     "Stabilise and recover a critical platform that is unstable, slow or unfinished, then keep it reliable.",
