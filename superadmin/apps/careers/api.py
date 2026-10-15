@@ -23,6 +23,10 @@ from . import intake
 logger = logging.getLogger(__name__)
 
 MAX_JSON = 16 * 1024
+# The applicant's IP, added by the website to its signed upload-ticket request (the contract's ticket
+# body has no clientIp). It is not part of the canonical string, but only the website holds a submit
+# key, so the header is trusted like the rest of that request. It is only ever hashed.
+CLIENT_IP_HEADER = "X-Vitalos-Client-Ip"
 
 
 def _json(data, status: int) -> JsonResponse:
@@ -70,7 +74,9 @@ def upload_tickets(request):
     if failure is not None:
         return failure
     try:
-        return _json(intake.create_ticket(data), 201)
+        return _json(
+            intake.create_ticket(data, client_ip=request.headers.get(CLIENT_IP_HEADER, "")[:45]), 201
+        )
     except intake.IntakeError as exc:
         return _json({"errors": exc.errors}, exc.status)
 

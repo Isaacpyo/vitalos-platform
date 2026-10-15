@@ -73,10 +73,13 @@ def run(now=None) -> dict:
             last_daily_at=now
         )
         if claimed:
-            daily = {
-                "retention": careers_services.run_retention(now),
-                "orphans": careers_services.purge_orphan_uploads(now),
-            }
+            daily = run_daily(now)
+            if any(value == "error" for value in daily.values()):
+                # Hand the claim back so the next tick tries the failed step again (the claim still
+                # stops two processes running the daily part at once).
+                TickState.objects.filter(pk=state.pk, last_daily_at=now).update(
+                    last_daily_at=state.last_daily_at
+                )
     result = {
         "promoted": promoted,
         "closed": closed,
@@ -88,6 +91,21 @@ def run(now=None) -> dict:
     )
     if promoted or closed or delivered:
         logger.info("Content tick", extra={"promoted": promoted, "closed": closed, "delivered": delivered})
+    return result
+
+
+def run_daily(now) -> dict:
+    """Retention and the upload purge, each on its own: one failing never skips the other."""
+    from apps.careers import services as careers_services
+
+    steps = {"retention": careers_services.run_retention, "orphans": careers_services.purge_orphan_uploads}
+    result = {}
+    for name, step in steps.items():
+        try:
+            result[name] = step(now)
+        except Exception:  # noqa: BLE001 - recorded in last_result and retried on the next tick
+            logger.exception("Daily content step failed", extra={"step": name})
+            result[name] = "error"
     return result
 
 

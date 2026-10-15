@@ -36,6 +36,7 @@ from apps.content_sync import formatting, media
 from apps.content_sync.models import SiteSettings
 
 from . import config as careers_config
+from . import retention
 from .models import (
     Application,
     ApplicationSource,
@@ -70,6 +71,23 @@ FIELD_LIMITS = {
     "userAgent": 300,
 }
 _UNSAFE = re.compile(r"[^\w .()-]+")
+_CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f-\x9f\u2028\u2029]")
+MULTI_LINE = ("coverNote",)
+TICKETS_PER_IP_HOUR = 10
+APPLICATIONS_PER_IP_HOUR = 5
+
+
+def single_line(value: str) -> str:
+    """Collapse all whitespace (newlines included) and drop control characters: these values go into
+    staff email bodies and subjects, so a candidate must not be able to add lines to them."""
+    value = " ".join(value.split())  # every kind of whitespace, line breaks included, becomes one space
+    return "".join(ch for ch in value if unicodedata.category(ch) not in ("Cc", "Cf", "Zl", "Zp")).strip()
+
+
+def multi_line(value: str) -> str:
+    """Keep newlines (normalised to LF) and drop every other control character."""
+    value = value.replace("\r\n", "\n").replace("\r", "\n")
+    return _CONTROL.sub("", value).strip()
 
 
 class IntakeError(Exception):
@@ -168,7 +186,8 @@ def presign_put(key: str, mime: str, size: int) -> str:
     )
 
 
-def create_ticket(data: dict) -> dict:
+def create_ticket(data: dict, *, client_ip: str = "") -> dict:
+    """``client_ip`` comes from the X-Vitalos-Client-Ip header of the website's signed request."""
     errors = {}
     slug = data.get("roleSlug")
     filename = data.get("filename")
@@ -193,6 +212,14 @@ def create_ticket(data: dict) -> dict:
     role = open_role_for(slug)
     if role is None:
         raise IntakeError(409, {"roleSlug": "role_closed"})
+    ip_hash = hash_ip(client_ip)
+    if ip_hash:
+        recent = UploadTicket.objects.filter(
+            ip_hash=ip_hash, created_at__gte=timezone.now() - timedelta(hours=1)
+        ).count()
+        if recent >= TICKETS_PER_IP_HOUR:
+            logger.info("Upload tickets rate limited", extra={"code": "ticket_ip_limit"})
+            raise IntakeError(429, {"uploadId": "rate_limited"})
     bucket = bool(settings.CAREERS_CV_BUCKET)
     if not bucket and not media.cv_storage_enabled():
         logger.error("CV upload refused", extra={"code": "cv_storage_not_configured"})
@@ -211,6 +238,7 @@ def create_ticket(data: dict) -> dict:
         filename=safe_filename(filename),
         key=key,
         expires_at=now + TICKET_TTL,
+        ip_hash=ip_hash,
     )
     if bucket:
         url = presign_put(key, mime, size)
@@ -283,7 +311,7 @@ def _text(data: dict, name: str, errors: dict, *, required: bool = False) -> str
     if not isinstance(value, str):
         errors[name] = "invalid"
         return ""
-    value = value.strip()
+    value = (multi_line if name in MULTI_LINE else single_line)(value)
     if required and not value:
         errors[name] = "required"
     elif len(value) > FIELD_LIMITS[name]:
@@ -349,6 +377,14 @@ def submit(data: dict, *, now=None) -> Accepted:
     if role is None:
         raise IntakeError(409, {"roleSlug": "role_closed"})
     email = cleaned["email"].lower()
+    ip_hash = hash_ip(cleaned["clientIp"])
+    if ip_hash:
+        from_ip = Application.objects.filter(
+            ip_hash=ip_hash, created_at__gte=now - timedelta(hours=1)
+        ).count()
+        if from_ip >= APPLICATIONS_PER_IP_HOUR:
+            logger.info("Applications rate limited", extra={"code": "application_ip_limit"})
+            raise IntakeError(429, {"email": "rate_limited"})
     recent = Application.objects.filter(email__iexact=email, created_at__gte=now - timedelta(days=1)).count()
     if recent >= EMAIL_DAILY_LIMIT:
         raise IntakeError(429, {"email": "rate_limited"})
@@ -399,14 +435,15 @@ def submit(data: dict, *, now=None) -> Accepted:
                 source=cleaned["source"],
                 submission_id=submission_id,
                 duplicate_of=duplicate,
-                ip_hash=hash_ip(cleaned["clientIp"]),
+                ip_hash=ip_hash,
                 user_agent=cleaned["userAgent"],
                 created_at=now,
                 updated_at=now,
             )
             record(
                 "careers.application_received",
-                entity=application,
+                entity_type="careers.application",
+                entity_id=retention.hashed_id(application.pk),
                 summary=f"Application for {role.title}",
                 duplicate=duplicate is not None,
             )

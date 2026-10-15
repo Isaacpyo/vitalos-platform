@@ -157,3 +157,40 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
     - **Finding:** the browser checks and the two-app suite showed that scheduling a post emitted no event, so the website's cached `nextDueAt` stayed stale until the TTL. The Worker tick would then miss the 2-minute target.
     - **Fix:** new events `post.scheduled` and `post.unscheduled` (kind publish, tag `site`, no paths), and `site` added to `role.opened` and `role.changes_published`, whose closing dates also feed `nextDueAt`.
 85. **Admin sub-navigation scrollbar.** Insights and Careers sub-navigation hide vertical overflow; the tab underline's `-mb-px` made a stray scrollbar.
+
+## Phase 4: website
+
+86. **Careers filters** use the same rewrite technique as the Insights formats: `/careers?{practice|workModel|employmentType}=value` is served from `/careers/filter/{dimension}/{value}`. One filter at a time; links appear only above six roles; filtered views are `noindex, follow`.
+87. **Turnstile** is verified at the upload-ticket step only, because tokens are single use. The application step relies on the single-use upload capability, rate limits, the honeypot and a same-origin check. Without Turnstile keys the check is off outside production and fails closed (503) in production.
+88. **The application route re-reads the role** through the cached reader to refuse a closed role early (409). The admin checks again. `source` is always `role_page`.
+89. **Copy not in the brief:** "We couldn't send your application. Check your connection and try again." is used when the application step cannot reach the admin. Upload failures use the brief's "Couldn't upload your CV…".
+90. **The application form is hidden until hydration**, so without JavaScript only the brief's `<noscript>` line shows, rather than a form that would submit nowhere.
+91. **The form is offered only when the role carries a privacy notice URL.** A null `privacy.noticeUrl` means no form and "Applications are not open yet". The notice is seeded empty until the owner approves it.
+92. **JobPosting JSON-LD:**
+    - `hiringOrganization` is the name plus `sameAs` the site URL, with a logo only when one is configured.
+    - `jobLocation` carries only `addressLocality` from the free-text location; no country is invented. Remote roles use TELECOMMUTE with United Kingdom.
+    - `baseSalary` appears only when the salary is shown, and `directApply` only for form roles.
+    - The whole block is omitted if anything required is missing.
+93. **The external apply link** opens in the same tab and says "opens a new site", both visibly and for screen readers.
+94. **CSP `connect-src`** uses `CAREERS_UPLOAD_HOST`, falling back to the admin API origin.
+95. **`pnpm content:export-repo`** writes `{posts, roles}` from the `repo` source, matched by `sourcePath` `repo:{kind}/{slug}`, with no placeholders. Today it writes empty lists.
+96. **Unused CMS builders removed.** The CMS `articleJsonLd` and `jobPostingJsonLd` builders and the old CMS Careers templates are removed, because nothing uses them. `@vitalos/cms` exports are unchanged.
+
+## Phase 6: security review (15 Oct 2026)
+
+97. **Scope and result.** A read-only review of every inter-app endpoint in both apps found no high-severity issue and no authentication bypass. The signing scheme, read-API leak filters, renderer sanitisation, upload tokens and CV access held up.
+98. **Fixed after the review:**
+    - **Retention order (medium):** retention now deletes the storage object before the row, and a storage failure can no longer skip the nightly work.
+    - **Random-slug probing (medium):** it can no longer exhaust the admin's read rate limit. The website pre-filters slugs against the cached sitemap with a small confirm budget, and the lookup is rate-limited by the real client IP.
+    - **Strict signature headers:** malformed headers give 401, not 500.
+    - **Single-line fields:** these are normalised at intake, so a newline cannot inject lines into staff emails.
+    - **Production settings on the admin:** they enforce key length and https targets.
+    - **Audit rows:** careers rows reference applications only by a salted hash.
+    - **Per-IP caps:** the admin caps upload tickets and applications per hashed client IP, because the website's per-IP limits are per serverless instance.
+    - **Lookup origin:** the proxy trusts localhost lookup origins only in local runs.
+99. **Abandoned uploads.** Pending uploads and unused tickets older than 24 hours are purged for real even while `RETENTION_ENFORCE` is off. They are not records covered by the retention policy. The dry-run switch still governs applications.
+100.  **Candidate emails** go to an address the applicant typed, so once enabled they act as a small relay (3 a day per address). Review this with the owner before switching them on (#43).
+101.  **The presigned CV PUT binds the exact size.** With botocore 1.43 and S3v4, `X-Amz-SignedHeaders` includes `content-length` and `content-type`, so the ticket stays a PUT and the contract is unchanged. A test asserts this without any network call.
+102.  **Failed daily steps retry on the next tick, not tomorrow.** A storage failure keeps the application row, logs `cv_delete_failed` and moves on. Signature hex must be lowercase, as the contract says.
+103.  **Per-IP caps.** The upload-ticket endpoint takes an optional `X-Vitalos-Client-Ip` header (documented in the contract; outside the canonical string, trusted because only the website holds a submit key) for a cap of 10 tickets an hour per hashed IP. Applications are capped at 5 an hour per hashed `clientIp`, on top of 3 a day per email. Without the header, tickets have no IP cap.
+104.  **404s on post and role detail reads count in a separate miss bucket**, 10 times the read limit, so slug probing cannot push the website's real reads into 429.

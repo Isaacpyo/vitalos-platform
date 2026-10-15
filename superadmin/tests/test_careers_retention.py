@@ -100,7 +100,7 @@ def test_add_months_handles_month_ends():
     assert retention.add_months(datetime(2026, 1, 15), 12) == datetime(2027, 1, 15)
 
 
-def test_pending_uploads_are_purged_after_a_day(superadmin, settings):
+def test_pending_uploads_are_purged_after_a_day(superadmin):
     role = make_role(actor=superadmin)
     now = timezone.now()
     old = UploadTicket.objects.create(
@@ -126,10 +126,7 @@ def test_pending_uploads_are_purged_after_a_day(superadmin, settings):
         expires_at=now,
         created_at=now - timedelta(hours=2),
     )
-    assert retention.purge_uploads() == 1  # dry run
-    assert UploadTicket.objects.count() == 2 and storages["careers_cvs"].exists(old.key)
-    settings.RETENTION_ENFORCE = True
-    assert retention.purge_uploads() == 1
+    assert retention.purge_uploads() == 1  # runs for real: abandoned uploads are not retention data
     assert not storages["careers_cvs"].exists(old.key)
     assert list(UploadTicket.objects.values_list("pk", flat=True)) == [fresh.pk]
     assert AuditEvent.objects.filter(action="careers.upload_purged").count() == 1

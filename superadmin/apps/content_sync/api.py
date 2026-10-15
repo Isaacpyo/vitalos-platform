@@ -40,16 +40,29 @@ def _error(message: str, status: int) -> JsonResponse:
     return _json({"error": message}, status)
 
 
-def _rate_limited(key_id: str) -> bool:
+MISS_FACTOR = 10
+
+
+def _bucket(kind: str, key_id: str) -> str:
     minute = int(timezone.now().timestamp() // 60)
-    bucket = f"content-api-rate:{key_id}:{minute}"
-    added = cache.add(bucket, 1, 120)
-    count = 1 if added else cache.incr(bucket)
-    return count > settings.CONTENT_READ_RATE_LIMIT
+    return f"content-api-{kind}:{key_id}:{minute}"
 
 
-def signed(scope: str, methods: tuple[str, ...] = ("GET",)):
-    """Verify the v1 signature for ``scope`` before the view runs; 503 when the scope has no keys."""
+def _count(kind: str, key_id: str) -> int:
+    return cache.get(_bucket(kind, key_id), 0)
+
+
+def _increment(kind: str, key_id: str) -> int:
+    bucket = _bucket(kind, key_id)
+    return 1 if cache.add(bucket, 1, 120) else cache.incr(bucket)
+
+
+def signed(scope: str, methods: tuple[str, ...] = ("GET",), *, separate_misses: bool = False):
+    """Verify the v1 signature for ``scope`` before the view runs; 503 when the scope has no keys.
+
+    Requests count against CONTENT_READ_RATE_LIMIT per key id per minute. With ``separate_misses``
+    (detail by slug), a 404 counts in its own bucket, ten times larger, so probing random slugs can
+    never push the website's real reads into 429."""
 
     def decorator(view):
         @csrf_exempt
@@ -72,10 +85,16 @@ def signed(scope: str, methods: tuple[str, ...] = ("GET",)):
             except signing.InvalidSignature as exc:
                 logger.info("Content API signature refused", extra={"reason": str(exc), "path": request.path})
                 return _error("Invalid signature", 401)
-            if _rate_limited(key.key_id):
+            limit = settings.CONTENT_READ_RATE_LIMIT
+            if _count("rate", key.key_id) >= limit:
                 return _error("Too many requests", 429)
             request.content_key_id = key.key_id
             response = view(request, *args, **kwargs)
+            if separate_misses and response.status_code == 404:
+                if _increment("miss", key.key_id) > limit * MISS_FACTOR:
+                    return _error("Too many requests", 429)
+            else:
+                _increment("rate", key.key_id)
             response["Cache-Control"] = "no-store"
             return response
 
@@ -201,7 +220,7 @@ def insights_posts(request):
     return _json(data) if data is not None else _error("Not found", 404)
 
 
-@signed("read")
+@signed("read", separate_misses=True)
 def insights_post(request, slug):
     from apps.insights import public
 
@@ -264,7 +283,7 @@ def careers_page(request):
     return _json(public.careers_page())
 
 
-@signed("read")
+@signed("read", separate_misses=True)
 def careers_role(request, slug):
     from apps.careers import public
 

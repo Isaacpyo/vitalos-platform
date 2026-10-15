@@ -13,6 +13,7 @@ from apps.audit.services import record
 from . import access, retention
 from .models import Application, ApplicationEvent, ApplicationEventType, ApplicationNote, ApplicationStage
 
+AUDIT_TYPE = "careers.application"
 DECIDED = (ApplicationStage.HIRED, ApplicationStage.REJECTED, ApplicationStage.WITHDRAWN)
 CV_URL_SECONDS = 60
 
@@ -44,7 +45,8 @@ def set_stage(application: Application, stage: str, *, actor, request=None) -> A
             "careers.application_stage",
             request=request,
             actor=actor,
-            entity=application,
+            entity_type=AUDIT_TYPE,
+            entity_id=retention.hashed_id(application.pk),
             summary=f"Stage {previous} to {stage}",
         )
     return application
@@ -66,7 +68,8 @@ def assign(application: Application, assignee, *, actor, request=None) -> Applic
             "careers.application_assigned",
             request=request,
             actor=actor,
-            entity=application,
+            entity_type=AUDIT_TYPE,
+            entity_id=retention.hashed_id(application.pk),
             summary="Reviewer assigned",
         )
     return application
@@ -87,7 +90,8 @@ def add_note(application: Application, body: str, *, actor, request=None) -> App
             "careers.application_noted",
             request=request,
             actor=actor,
-            entity=application,
+            entity_type=AUDIT_TYPE,
+            entity_id=retention.hashed_id(application.pk),
             summary="Note added",
         )
     return note
@@ -102,7 +106,14 @@ def cv_access(application: Application, *, actor, request=None):
         ApplicationEvent.objects.create(
             application=application, actor_admin=actor, type=ApplicationEventType.CV_VIEWED
         )
-        record("careers.cv_viewed", request=request, actor=actor, entity=application, summary="CV downloaded")
+        record(
+            "careers.cv_viewed",
+            request=request,
+            actor=actor,
+            entity_type=AUDIT_TYPE,
+            entity_id=retention.hashed_id(application.pk),
+            summary="CV downloaded",
+        )
     if getattr(storage, "querystring_auth", False):
         filename = application.cv_filename or f"cv.{application.cv_path.rsplit('.', 1)[-1]}"
         safe = filename.replace('"', "")
@@ -120,6 +131,10 @@ def cv_access(application: Application, *, actor, request=None):
 
 
 def delete(application: Application, *, actor, request=None) -> None:
-    retention.delete_application(
+    deleted = retention.delete_application(
         application, actor=actor, request=request, reason="Deleted by an administrator"
     )
+    if not deleted:
+        raise ValidationError(
+            "The CV could not be removed from storage, so nothing was deleted. Try again shortly."
+        )

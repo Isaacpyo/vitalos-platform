@@ -428,7 +428,7 @@ Insights and Careers live in this app (ADR-035 to ADR-038). Both sections stay c
 | `CONTENT_RELAY_SYNC_ENABLED` | variable | | `false` (Relay is not built) |
 | `CONTENT_READ_RATE_LIMIT`, `CONTENT_OPPORTUNISTIC_TICK` | variables | | Defaults 600 a minute and `true` |
 
-Each key list is `keyId:secret[,keyId:secret...]`. To rotate with no downtime: add the new entry **after** the old one on the receiving side, deploy both apps, move the new entry **first** on the signing side, deploy, then remove the old entry everywhere. Never print the values; set them with `az containerapp secret set` or through the deploy workflow only.
+Production refuses to start when a set value is weak (`config/content_validation.py`): every secret in a key list must be at least 32 characters with a key id matching `[a-z0-9-]{1,32}`, every `CONTENT_WEB_TARGETS` entry must be https, and `CONTENT_IP_SALT` (32+ characters) is required once `CAREERS_SUBMIT_CLIENT_KEYS` is set. Each key list is `keyId:secret[,keyId:secret...]`. To rotate with no downtime: add the new entry **after** the old one on the receiving side, deploy both apps, move the new entry **first** on the signing side, deploy, then remove the old entry everywhere. Never print the values; set them with `az containerapp secret set` or through the deploy workflow only.
 
 ### Object storage (Cloudflare R2, free tier)
 
@@ -451,7 +451,7 @@ Add preview origins only for the bucket a preview deployment uses. The access ke
 
 ### Content tick job (prepared; do not create without owner approval)
 
-The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs retention and purges unused CV uploads (a dry run until `RETENTION_ENFORCE=true`). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-038). A per-minute Container Apps job would be:
+The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention (a dry run until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-038). A per-minute Container Apps job would be:
 
 ```sh
 RG=rg-vitalos-superadmin

@@ -241,6 +241,7 @@ class Application(models.Model):
         indexes = [
             models.Index(fields=["role", "stage", "-created_at"], name="careers_app_role_stage_idx"),
             models.Index(fields=["email"], name="careers_app_email_idx"),
+            models.Index(fields=["ip_hash", "created_at"], name="careers_app_ip_idx"),
         ]
 
     def __str__(self):
@@ -310,6 +311,8 @@ class UploadTicket(models.Model):
     filename = models.CharField(max_length=200)
     key = models.CharField(max_length=200)
     token_hash = models.CharField(max_length=64, blank=True)
+    # Salted hash of the applicant's IP (from the website), for the per-IP ticket cap. Never the raw IP.
+    ip_hash = models.CharField(max_length=64, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     expires_at = models.DateTimeField()
     uploaded_at = models.DateTimeField(null=True, blank=True)

@@ -1117,7 +1117,10 @@ export interface operations {
   createUploadTicket: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        /** @description The applicant's IP as the website sees it, hashed by the admin with a salt for a per-IP cap (10 tickets an hour) and never stored raw. It is outside the canonical string and trusted because only the website holds a submit key. */
+        "X-Vitalos-Client-Ip"?: string;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1148,6 +1151,24 @@ export interface operations {
       401: components["responses"]["Unauthorized"];
       /** @description The role is not accepting applications. */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApplicationErrors"];
+        };
+      };
+      /** @description Too many tickets for this client IP (rate_limited). */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApplicationErrors"];
+        };
+      };
+      /** @description CV storage is not configured in production (upload_missing). */
+      503: {
         headers: {
           [name: string]: unknown;
         };

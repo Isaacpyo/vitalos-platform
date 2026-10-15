@@ -1052,6 +1052,12 @@ paths:
       operationId: createUploadTicket
       summary: A single-use, 10-minute upload URL for a CV under pending/ (scope submit).
       security: [{ vitalosSignature: [] }]
+      parameters:
+        - name: X-Vitalos-Client-Ip
+          in: header
+          required: false
+          description: The applicant's IP as the website sees it, hashed by the admin with a salt for a per-IP cap (10 tickets an hour) and never stored raw. It is outside the canonical string and trusted because only the website holds a submit key.
+          schema: { type: string, maxLength: 45 }
       requestBody:
         required: true
         content:
@@ -1073,6 +1079,18 @@ paths:
         "409":
           {
             description: The role is not accepting applications.,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "429":
+          {
+            description: Too many tickets for this client IP (rate_limited).,
+            content:
+              { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
+          }
+        "503":
+          {
+            description: CV storage is not configured in production (upload_missing).,
             content:
               { application/json: { schema: { $ref: "#/components/schemas/ApplicationErrors" } } },
           }

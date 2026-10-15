@@ -31,7 +31,10 @@ VERSION = "v1"
 TOLERANCE_SECONDS = 300
 PREVIEW_TTL_SECONDS = 15 * 60
 SCOPES = ("read", "tick", "submit", "revalidate", "render", "preview")
-KEY_ID_RE = re.compile(r"^[a-z0-9-]{1,32}$")
+KEY_ID_RE = re.compile(r"[a-z0-9-]{1,32}", re.ASCII)
+TIMESTAMP_RE = re.compile(r"[0-9]{1,12}", re.ASCII)
+SIGNATURE_RE = re.compile(r"v1=([0-9a-f]{64})", re.ASCII)
+TOKEN_RE = re.compile(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", re.ASCII)
 HEADER_KEY_ID = "X-Vitalos-Key-Id"
 HEADER_TIMESTAMP = "X-Vitalos-Timestamp"
 HEADER_SIGNATURE = "X-Vitalos-Signature"
@@ -68,7 +71,7 @@ def parse_keys(raw: str) -> list[Key]:
     keys = []
     for entry in (raw or "").split(","):
         key_id, sep, secret = entry.strip().partition(":")
-        if sep and KEY_ID_RE.match(key_id) and secret:
+        if sep and KEY_ID_RE.fullmatch(key_id) and secret:
             keys.append(Key(key_id, secret))
     return keys
 
@@ -126,18 +129,24 @@ def verify(
         raise NotConfigured(scope)
     if not key_id or not timestamp or not signature_header:
         raise InvalidSignature("missing")
-    if not timestamp.isdigit():
+    # Strict ASCII patterns: str.isdigit() accepts "²", and compare_digest raises on non-ASCII text.
+    if not TIMESTAMP_RE.fullmatch(timestamp):
         raise InvalidSignature("timestamp")
+    if not KEY_ID_RE.fullmatch(key_id):
+        raise InvalidSignature("key")
+    match = SIGNATURE_RE.fullmatch(signature_header.strip())
+    if match is None:
+        raise InvalidSignature("format")
     if abs((now if now is not None else time.time()) - int(timestamp)) > TOLERANCE_SECONDS:
         raise InvalidSignature("stale")
-    version, _, sent = signature_header.strip().partition("=")
-    if version != VERSION or not sent:
-        raise InvalidSignature("format")
-    key = next((candidate for candidate in keys if hmac.compare_digest(candidate.key_id, key_id)), None)
+    key = next(
+        (candidate for candidate in keys if hmac.compare_digest(candidate.key_id.encode(), key_id.encode())),
+        None,
+    )
     if key is None:
         raise InvalidSignature("key")
     expected = signature(key.secret, scope, timestamp, method, path, body)
-    if not hmac.compare_digest(expected, sent.lower()):
+    if not hmac.compare_digest(expected.encode(), match.group(1).encode()):
         raise InvalidSignature("signature")
     return key
 
@@ -193,7 +202,7 @@ def verify_preview_token(token: str, entity: str, item_id, *, now: float | None 
     keys = keys_for("preview")
     if not keys:
         raise NotConfigured("preview")
-    if not token or len(token) > 2000 or token.count(".") != 1:
+    if not token or len(token) > 2000 or not TOKEN_RE.fullmatch(token):
         raise InvalidSignature("format")
     encoded, mac_text = token.split(".")
     try:

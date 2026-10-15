@@ -67,9 +67,32 @@ def due(now=None) -> tuple[list[Application], list[Application]]:
     return delete, flag
 
 
-def delete_application(application: Application, *, actor=None, request=None, reason: str = "") -> None:
-    """Hard delete of the row (notes and events cascade) and its CV, audited with a hashed id."""
-    key = application.cv_path
+def remove_object(key: str) -> bool:
+    """Delete one object from CV storage. True when it is gone (a missing object counts as gone).
+
+    Any storage error (botocore raises its own exceptions, not OSError) is logged with a code and
+    reported as False, so callers keep the database row and carry on with the next item.
+    """
+    if not key:
+        return True
+    try:
+        storages["careers_cvs"].delete(key)
+    except FileNotFoundError:
+        return True
+    except Exception:  # noqa: BLE001 - any backend failure: keep the row, try again next run
+        logger.error("CV storage delete failed", extra={"code": "cv_delete_failed"})
+        return False
+    return True
+
+
+def delete_application(application: Application, *, actor=None, request=None, reason: str = "") -> bool:
+    """Hard delete of the CV, then the row (notes and events cascade), audited with a hashed id.
+
+    The object goes first: if storage refuses, the row stays (so the CV is never orphaned) and this
+    returns False.
+    """
+    if not remove_object(application.cv_path):
+        return False
     with transaction.atomic():
         record(
             "careers.application_deleted",
@@ -81,11 +104,7 @@ def delete_application(application: Application, *, actor=None, request=None, re
         )
         Application.objects.filter(duplicate_of=application).update(duplicate_of=None)
         application.delete()
-    if key:
-        try:
-            storages["careers_cvs"].delete(key)
-        except OSError:
-            logger.warning("CV not removed from storage", extra={"code": "cv_delete_failed"})
+    return True
 
 
 def run(now=None, *, enforce: bool | None = None) -> int:
@@ -104,34 +123,40 @@ def run(now=None, *, enforce: bool | None = None) -> int:
             entity_id=hashed_id(application.pk),
             summary="Hired application past retention: handle manually",
         )
+    deleted = failed = 0
     for application in delete:
-        delete_application(application, reason="Retention period ended")
-    logger.info("Careers retention", extra={"deleted": len(delete), "flagged": len(flag)})
-    return len(delete)
+        if delete_application(application, reason="Retention period ended"):
+            deleted += 1
+        else:
+            failed += 1
+    log = logger.error if failed else logger.info
+    log("Careers retention", extra={"deleted": deleted, "failed": failed, "flagged": len(flag)})
+    return deleted
 
 
-def purge_uploads(now=None, *, enforce: bool | None = None) -> int:
-    """Delete pending uploads and unused tickets older than 24 hours (and spent tickets' rows)."""
+def purge_uploads(now=None) -> int:
+    """Delete pending CV uploads and unused tickets older than 24 hours, for real.
+
+    Abandoned uploads are not retention-policy data, so this does not wait for RETENTION_ENFORCE
+    (docs/content/README.md promises pending uploads are gone within 24 hours). Spent tickets' rows
+    (no personal data) are removed too. A storage failure keeps that ticket for the next run.
+    """
     now = now or timezone.now()
-    enforce = settings.RETENTION_ENFORCE if enforce is None else enforce
     stale = list(UploadTicket.objects.filter(created_at__lt=now - UPLOAD_MAX_AGE))
-    unused = [ticket for ticket in stale if ticket.consumed_at is None]
-    if not enforce:
-        logger.info("Upload purge dry run", extra={"would_delete": len(unused), "tickets": len(stale)})
-        return len(unused)
-    storage = storages["careers_cvs"]
-    for ticket in unused:
-        try:
-            if storage.exists(ticket.key):
-                storage.delete(ticket.key)
-        except OSError:
-            logger.warning("Pending upload not removed", extra={"code": "pending_delete_failed"})
-        record(
-            "careers.upload_purged",
-            entity_type="careers.uploadticket",
-            entity_id=hashed_id(ticket.pk),
-            summary="Unused CV upload older than 24 hours",
-        )
-    UploadTicket.objects.filter(pk__in=[ticket.pk for ticket in stale]).delete()
-    logger.info("Upload purge", extra={"deleted": len(unused), "tickets": len(stale)})
-    return len(unused)
+    purged = failed = 0
+    for ticket in stale:
+        if ticket.consumed_at is None:
+            if not remove_object(ticket.key):
+                failed += 1
+                continue
+            record(
+                "careers.upload_purged",
+                entity_type="careers.uploadticket",
+                entity_id=hashed_id(ticket.pk),
+                summary="Unused CV upload older than 24 hours",
+            )
+            purged += 1
+        UploadTicket.objects.filter(pk=ticket.pk).delete()
+    log = logger.error if failed else logger.info
+    log("Upload purge", extra={"deleted": purged, "failed": failed, "tickets": len(stale)})
+    return purged

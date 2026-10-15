@@ -26,7 +26,7 @@ from apps.mailer import layout
 from apps.mailer.messages import build_message
 from apps.notifications.services import notify
 
-from . import access
+from . import access, intake, retention
 from . import config as careers_config
 from .models import Application, ApplicationEvent, ApplicationEventType, CareersAlertEmail
 
@@ -82,7 +82,7 @@ def application_received(application_id) -> None:
     notify(
         recipients(),
         NOTIFICATION_KIND,
-        f"{application.name} applied for {role_title}"[:200],
+        f"{intake.single_line(application.name)} applied for {role_title}"[:200],
         url=detail_url(application.pk),
     )
     flush(timezone.now())
@@ -115,14 +115,16 @@ def flush(now=None) -> int:
             )
             if not rows:
                 continue
-            role_title = rows[0].role.title if rows[0].role else "Speculative applications"
+            role_title = (
+                intake.single_line(rows[0].role.title) if rows[0].role else "Speculative applications"
+            )
             subject = (
                 f"New application: {role_title}"
                 if len(rows) == 1
                 else f"{len(rows)} new applications: {role_title}"
             )
             lines = [
-                f"- {row.name}, received {timezone.localtime(row.created_at):%d %b %Y %H:%M}"
+                f"- {intake.single_line(row.name)}, received {timezone.localtime(row.created_at):%d %b %Y %H:%M}"
                 f"{' (possible duplicate)' if row.duplicate_of_id else ''}\n"
                 f"  {settings.APP_BASE_URL}{detail_url(row.pk)}"
                 for row in rows
@@ -208,7 +210,8 @@ def send_candidate_email(application: Application, kind: str, *, actor, request=
         "careers.candidate_emailed",
         request=request,
         actor=actor,
-        entity=application,
+        entity_type="careers.application",
+        entity_id=retention.hashed_id(application.pk),
         summary=f"Sent the {kind} email",
         kind=kind,
     )

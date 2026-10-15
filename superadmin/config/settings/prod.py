@@ -2,6 +2,8 @@
 
 from django.core.exceptions import ImproperlyConfigured
 
+from config import content_validation
+
 from .base import *  # noqa: F403
 from .base import (
     ATTACHMENTS_STORAGE,
@@ -62,6 +64,16 @@ ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET)
 # Same rule for post images and CVs: no bucket, no uploads (ADR-037: no CV upload tickets).
 CONTENT_MEDIA_STORAGE_ENABLED = bool(CONTENT_MEDIA_BUCKET)
 CAREERS_CV_STORAGE_ENABLED = bool(CAREERS_CV_BUCKET)
+
+# Insights and Careers keys, targets and the applicant IP salt (empty values leave the features off).
+_content_problems = content_validation.problems(
+    {
+        name: globals().get(name)
+        for name in (*content_validation.KEY_SETTINGS, "CONTENT_WEB_TARGETS", "CONTENT_IP_SALT")
+    }
+)
+if _content_problems:
+    raise ImproperlyConfigured(" ".join(_content_problems))
 
 if SENTRY_DSN:
     import sentry_sdk
