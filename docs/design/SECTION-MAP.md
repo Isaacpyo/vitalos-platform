@@ -1,6 +1,6 @@
 # Section map: carrying the homepage across the site
 
-Phase 0 of the pages redesign (`feat/pages-redesign`, 15 Oct 2026). For every public route, the sections it has and the homepage pattern each one uses. Decisions and deviations are in [DECISIONS.md](DECISIONS.md); copy edits in [COPY-CHANGES.md](COPY-CHANGES.md); image slots in [IMAGE-SLOTS.md](IMAGE-SLOTS.md).
+Phase 0 of the pages redesign (`feat/pages-redesign`, 15 Oct 2026), updated to match what was built. Where the build differs from the first plan, the reason is in DECISIONS.md (rows 15 to 24). For every public route, the sections it has and the homepage pattern each one uses. Decisions and deviations are in [DECISIONS.md](DECISIONS.md); copy edits in [COPY-CHANGES.md](COPY-CHANGES.md); image slots in [IMAGE-SLOTS.md](IMAGE-SLOTS.md).
 
 ## The homepage patterns (baseline)
 
@@ -61,35 +61,35 @@ Sections in order. "→ Hn" names the homepage pattern each one carries.
 
 ### About and How We Work
 
-| Route          | Sections                                                                                                                                 |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `/about`       | Hero full with `MediaSlot` `about.hero` → H1 · Body sections → principles (H2 cards) · Explore → `FeatureGrid` with icons · Closing → H7 |
-| `/how-we-work` | Hero full → H1 · The lifecycle → H3 `ProcessCycle` dark band · Stage detail → `ProcessJourney` · Closing → H7                            |
+| Route          | Sections                                                                                                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/about`       | Hero full with `MediaSlot` `about.hero` → H1 · Body sections → principles (H2 cards) · Explore → `FeatureGrid` with icons · Closing → H7                                                       |
+| `/how-we-work` | Hero full → H1 · The lifecycle → H3 `ProcessCycle` dark band (titles and discs) · Ways to start, engagement lead, gates → H2 cards · Stage detail → `ProcessJourney` (anchored) · Closing → H7 |
 
 ### Insights and Labs
 
-| Route                 | Sections                                                                                                                                     |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/insights` (gated)   | Hero full → H1 · Feature, filter and rows (unchanged behaviour) · Closing → H7                                                               |
-| `/insights/[slug]`    | Hero compact with `MediaSlot` `insights.article.{slug}` cover → H1 · Article body (exempt) · Authors · Related · Closing → H7                |
-| `/labs`               | Hero full → H1 · Assets → H6 `LabShowcase` with the index card · Categories · Closing → H7                                                   |
-| `/labs/[type]`        | Hero compact → H1 · Assets → H6 `LabShowcase` · Closing → H7                                                                                 |
-| `/labs/[type]/[slug]` | Hero compact with maturity and `MediaSlot` `labs.asset.{slug}` → H1 · Is / is not, body, limitations, resources (layout only) · Closing → H7 |
-| `/people/[slug]`      | Hero compact (person heading) → H1 · Credentials, insights · Closing → H7                                                                    |
+| Route                 | Sections                                                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/insights` (gated)   | Hero full → H1 · Feature, filter and rows (unchanged behaviour) · Closing → H7                                                                              |
+| `/insights/[slug]`    | Hero compact with `MediaSlot` `insights.article.{slug}` cover → H1 · Article body (exempt) · Authors · Related · Closing → H7                               |
+| `/labs`               | Hero full → H1 · Maturity labels (body) as rows · Categories → `FeatureGrid` icon cards · Assets → the filterable list (unchanged behaviour) · Closing → H7 |
+| `/labs/[type]`        | Hero compact → H1 · Assets → H6 `LabShowcase` · Closing → H7                                                                                                |
+| `/labs/[type]/[slug]` | Hero compact with maturity and `MediaSlot` `labs.asset.{slug}` → H1 · Is / is not, body, limitations, resources (layout only) · Closing → H7                |
+| `/people/[slug]`      | Hero compact (person heading) → H1 · Credentials, insights · Closing → H7                                                                                   |
 
 ### Careers (gated)
 
-| Route             | Sections                                                                      |
-| ----------------- | ----------------------------------------------------------------------------- |
-| `/careers`        | Hero full → H1 · Intro, open roles (unchanged sync and state) · Closing → H7  |
-| `/careers/[slug]` | Hero compact with status and facts → H1 · Role description and apply (exempt) |
+| Route             | Sections                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `/careers`        | Hero full → H1 · Intro, open roles (unchanged sync and state) · Closing → H7                                  |
+| `/careers/[slug]` | Hero compact with status and facts → H1 · Role description and apply (exempt); ends with its own apply action |
 
 ### Trust Centre
 
-| Route                | Sections                                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `/trust`             | Hero full → H1 · Topics → `FeatureGrid` cards with icons · Evidence request → H7-style card                |
-| `/trust/[topic]` (6) | Hero compact → H1 · Policy text (exempt), certifications, subprocessors · Evidence request → H7-style card |
+| Route                | Sections                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `/trust`             | Hero full → H1 · Body · Topics → `FeatureGrid` cards with icons · Closing → H7 with the evidence request as its action |
+| `/trust/[topic]` (6) | Hero compact → H1 · Policy text (exempt), certifications, subprocessors · Evidence request → H7-style card             |
 
 ### Contact, legal and the rest
 
