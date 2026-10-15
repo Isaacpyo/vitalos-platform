@@ -1,0 +1,36 @@
+{
+  "name": "@vitalos/relay-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vitalos Relay server-side domain logic (ADR-031 to ADR-034). Server-only except ./contract.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts",
+    "./knowledge": "./src/knowledge/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/deepseek": "3.0.58",
+    "@notionhq/client": "5.27.0",
+    "@supabase/supabase-js": "2.117.3",
+    "@vitalos/email-layout": "workspace:*",
+    "@vitalos/security": "workspace:*",
+    "ai": "7.0.126",
+    "server-only": "0.0.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@vitalos/typescript-config": "workspace:*",
+    "eslint": "10.12.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  }
+}
