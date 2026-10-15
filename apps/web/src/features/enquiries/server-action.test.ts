@@ -17,6 +17,11 @@ vi.mock("next/server", () => ({
     state.afterTasks.push(task);
   },
 }));
+vi.mock("next/navigation", () => ({
+  redirect: (url: string) => {
+    throw Object.assign(new Error("NEXT_REDIRECT"), { url });
+  },
+}));
 vi.mock("./get-enquiry-service", () => ({
   getEnquiryService: () => state.service as EnquiryService,
 }));
@@ -56,12 +61,12 @@ beforeEach(() => {
 });
 
 describe("submitEnquiryAction", () => {
-  it("accepted: returns the reference and schedules best-effort dispatch", async () => {
-    const result = await submitEnquiryAction(initialEnquiryFormState, form(validBody()));
-    expect(result).toMatchObject({
-      status: "accepted",
-      reference: expect.stringMatching(/^VIT-[0-9A-F]{12}$/),
-    });
+  it("accepted: redirects to the thank-you page with the reference and schedules dispatch", async () => {
+    const redirected = await submitEnquiryAction(initialEnquiryFormState, form(validBody())).then(
+      () => undefined,
+      (error: unknown) => error as { url?: string },
+    );
+    expect(redirected?.url).toMatch(/^\/contact\/thank-you\?ref=VIT-[0-9A-F]{12}$/);
     expect(state.afterTasks).toHaveLength(1);
     expect(getMemoryBackendForTests().repository.enquiries.size).toBe(1);
   });
@@ -96,12 +101,15 @@ describe("submitEnquiryAction", () => {
   });
 
   it("rate-limited: carries a human message and retryAfterSeconds", async () => {
-    let result = await submitEnquiryAction(initialEnquiryFormState, form(validBody()));
+    // Accepted submissions redirect to the thank-you page (they throw); keep the last state.
+    const submit = () =>
+      submitEnquiryAction(initialEnquiryFormState, form(validBody())).catch(() => undefined);
+    let result = await submit();
     for (let i = 0; i < 10; i += 1) {
-      result = await submitEnquiryAction(initialEnquiryFormState, form(validBody()));
+      result = await submit();
     }
-    expect(result.status).toBe("rate-limited");
-    if (result.status === "rate-limited") {
+    expect(result?.status).toBe("rate-limited");
+    if (result?.status === "rate-limited") {
       expect(result.retryAfterSeconds).toBeGreaterThan(0);
       expect(result.message).toMatch(/try again in/);
     }

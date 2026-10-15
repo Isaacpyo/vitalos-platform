@@ -90,11 +90,14 @@ test.describe("enquiry journey", () => {
     });
     await page.getByRole("button", { name: "Send enquiry" }).click();
 
-    const receipt = page.getByRole("status");
-    // Cloudflare's dummy secret is answered locally (no siteverify call), so no network is involved.
-    await expect(receipt).toContainText("Your enquiry has been received", { timeout: 20_000 });
-    await expect(receipt).toContainText(/VIT-[0-9A-F]{12}/i);
-    await expect(page.locator("#enquiry-outcome")).toBeFocused();
+    // An accepted enquiry lands on the thank-you page with its reference.
+    await expect(page).toHaveURL(/\/contact\/thank-you\?ref=VIT-[0-9A-F]{12}$/i, {
+      timeout: 20_000,
+    });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Your enquiry has been received",
+    );
+    await expect(page.getByRole("status")).toContainText(/VIT-[0-9A-F]{12}/i);
     await expectNoA11yViolations(page, {
       exclude: ['iframe[src*="challenges.cloudflare.com"]'],
     });
