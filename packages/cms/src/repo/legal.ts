@@ -1,12 +1,13 @@
 /**
  * Legal pages the owner has approved for publication from the repo.
  *
- * To add another approved legal page (cookies, terms, acceptable-use): write its `LegalPageView`
+ * To add another approved legal page (terms, acceptable-use): write its `LegalPageView`
  * here and add it to `approvedLegalPages`. The draft skeletons in `../draft/content/legal.ts` are
  * never served by the repo source.
  */
 import type { LegalPageView } from "../content/types";
-import { h2, p, richText, seo } from "../draft/build";
+import { h2, p, pLink, richText, seo } from "../draft/build";
+import { trustAccessibilityBody } from "../draft/content/trust";
 
 /** Version the contact form records consent against. Must equal ENQUIRY_PRIVACY_NOTICE_VERSION. */
 export const PRIVACY_NOTICE_VERSION = "2026-10";
@@ -63,4 +64,57 @@ const privacy: LegalPageView = {
   ),
 };
 
-export const approvedLegalPages: readonly LegalPageView[] = [privacy];
+/**
+ * Cookies (owner direction, 15 Oct 2026: "add them"). Every statement is taken from the approved
+ * privacy notice above; nothing new is claimed. The site sets no cookies of its own (no
+ * analytics, advertising or consent cookies in the code).
+ */
+const cookies: LegalPageView = {
+  id: "legalPage-cookies",
+  slug: "cookies",
+  title: "Cookies",
+  version: PRIVACY_NOTICE_VERSION,
+  effectiveDate: "2026-10-15",
+  body: richText(
+    "legal-cookies",
+    h2("Cookies on this website"),
+    p("We do not use analytics or advertising cookies on this website."),
+    h2("Protecting the enquiry form"),
+    p(
+      "To protect the form from abuse we store a one-way hash of your IP address, and we use Cloudflare Turnstile to check that the enquiry is not from an automated bot.",
+    ),
+    h2("Personal data"),
+    pLink(
+      "How we collect and use personal data is set out in our ",
+      "privacy notice",
+      "/legal/privacy",
+      ".",
+    ),
+    h2("Changes to this notice"),
+    p(
+      "If we change this notice we will publish the new version on this page with a new version number and effective date.",
+    ),
+  ),
+  seo: seo("Cookies", "How the Vitalos website uses cookies: no analytics or advertising cookies."),
+};
+
+/**
+ * Accessibility under /legal (owner direction, 15 Oct 2026). The same published text as the
+ * Trust Centre's accessibility topic (one source). It is not titled a "statement": the site has
+ * not been evaluated yet, and the text says the full statement follows that evaluation (Stage 8
+ * §24). Replace the body with the statement once the evaluation is done.
+ */
+const accessibility: LegalPageView = {
+  id: "legalPage-accessibility",
+  slug: "accessibility",
+  title: "Accessibility",
+  version: PRIVACY_NOTICE_VERSION,
+  effectiveDate: "2026-10-15",
+  body: trustAccessibilityBody,
+  seo: seo(
+    "Accessibility",
+    "Vitalos's accessibility commitment for this website and for the digital services it delivers.",
+  ),
+};
+
+export const approvedLegalPages: readonly LegalPageView[] = [privacy, cookies, accessibility];

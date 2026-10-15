@@ -166,4 +166,28 @@ export const legalDrafts: readonly LegalDraft[] = [
     ),
     [cite(8, "5. Core information architecture")],
   ),
+  // The full accessibility statement, to be completed after the site has been evaluated
+  // (Stage 8 §24). Production shows the Trust Centre's published commitment until then.
+  legalPage(
+    "accessibility",
+    "Accessibility statement",
+    "Draft structure for the Vitalos website accessibility statement. Not in force.",
+    richText(
+      "legal-accessibility",
+      notInForce,
+      h2("Who we are"),
+      identity,
+      h2("Compliance status"),
+      p("[Conformance with WCAG 2.2 Level AA, stated only after an evaluation.]"),
+      h2("Content that is not accessible"),
+      p("[Known issues found by the evaluation, and when each will be fixed.]"),
+      h2("How we tested this website"),
+      p("[Evaluation method, who carried it out and the date.]"),
+      h2("Feedback and contact"),
+      p("[How to report an accessibility problem and what happens next.]"),
+      h2("Changes to this statement"),
+      p("[Version history and effective date.]"),
+    ),
+    [cite(8, "24. Accessibility architecture"), cite(10, "26. Accessibility QA programme")],
+  ),
 ];

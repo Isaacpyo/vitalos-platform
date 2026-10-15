@@ -344,7 +344,7 @@ describe("document shapes", () => {
   });
 
   it("legal pages are marked not in force, unindexed and full of placeholders", () => {
-    expect(set.documents.legalPage).toHaveLength(4);
+    expect(set.documents.legalPage).toHaveLength(5);
     for (const legal of set.documents.legalPage) {
       expect(legal.title).toContain(DRAFT_LEGAL_MARK);
       expect(legal.seo.noindex).toBe(true);
