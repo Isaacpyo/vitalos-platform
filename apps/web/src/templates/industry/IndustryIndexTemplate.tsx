@@ -1,10 +1,9 @@
 import { industryNames, navLabels, routes } from "@vitalos/cms";
 import type { IndustrySummary, RoutePageView } from "@vitalos/cms";
-import { IndustryRow } from "@vitalos/ui";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
-import { toRows } from "../../lib/view-mapping/patterns";
-import { Band, RowList } from "../commercial/bands";
+import { industryShowcaseItems } from "../../lib/view-mapping/showcase";
+import { IndustryBand } from "../commercial/dark-bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface IndustryIndexTemplateProps {
@@ -16,11 +15,12 @@ export const industriesTrail = () =>
   trail({ label: navLabels.industries, path: routes.industries() });
 
 /**
- * Industries index. The route is served only while the Industries gate is open (the page calls
+ * Industries index, as the homepage's dark aurora showcase (pages redesign, 15 Oct 2026). The
+ * route is served only while the Industries gate is open (the page calls
  * `requireIndexGate`), so every row here links to a published, indexable industry page.
  */
 export function IndustryIndexTemplate({ page, industries }: Readonly<IndustryIndexTemplateProps>) {
-  const rows = toRows("industry", orderByLockedNames(industries, industryNames), {
+  const items = industryShowcaseItems(orderByLockedNames(industries, industryNames), {
     headingLevel: 2,
   });
   return (
@@ -29,18 +29,7 @@ export function IndustryIndexTemplate({ page, industries }: Readonly<IndustryInd
       title={page?.heading ?? navLabels.industries}
       lead={page?.intro}
       body={page?.body}
-      bands={[
-        (tone) =>
-          rows.length > 0 ? (
-            <Band tone={tone}>
-              <RowList>
-                {rows.map((row) => (
-                  <IndustryRow key={row.href} {...row} />
-                ))}
-              </RowList>
-            </Band>
-          ) : null,
-      ]}
+      bands={[() => <IndustryBand title={undefined} items={items} link={null} />]}
     />
   );
 }

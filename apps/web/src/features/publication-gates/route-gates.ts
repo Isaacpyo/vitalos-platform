@@ -9,13 +9,8 @@ import type { GateKey, RoutePageKey } from "@vitalos/cms";
 
 /** Gate for a route-page key (the singleton behind an index page), if any. */
 export function gateForRoutePage(key: RoutePageKey): GateKey | undefined {
-  const entry = routeManifest.find((route) => route.pattern === `/${keyToPath(key)}`);
+  const entry = routeManifest.find((route) => route.pattern === `/${key}`);
   return entry?.gate;
-}
-
-/** `leadership` is served at `/about/leadership`; every other key is its own path. */
-function keyToPath(key: RoutePageKey): string {
-  return key === "leadership" ? "about/leadership" : key;
 }
 
 const patternRegexes = routeManifest.map((entry) => ({

@@ -62,3 +62,11 @@ export function deriveStages(
   });
   return { stages, lead };
 }
+
+/** The anchor of a stage on the How We Work page, for example `stage-design`. */
+export const stageAnchor = (title: string): string =>
+  `stage-${title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;

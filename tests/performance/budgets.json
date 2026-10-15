@@ -61,7 +61,7 @@
     "/about": {
       "maxJsGzipBytes": 205000
     },
-    "/about/leadership": {
+    "/faq": {
       "maxJsGzipBytes": 205000
     },
     "/trust": {

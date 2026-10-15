@@ -33,6 +33,7 @@ describe("seed redirect map", () => {
       { source: "/technologies", destination: "/labs", statusCode: 301 },
       { source: "/privacy", destination: "/legal/privacy", statusCode: 301 },
       { source: "/terms", destination: "/legal/terms", statusCode: 301 },
+      { source: "/about/leadership", destination: "/about", statusCode: 301 },
     ]);
   });
 });

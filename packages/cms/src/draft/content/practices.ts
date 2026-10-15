@@ -28,11 +28,11 @@ const consulting: PracticeDraft = {
     "Technology strategy, assessments, architecture and transformation roadmaps that end in decisions and implementable direction.",
   ),
   proposition:
-    "Consulting helps you decide what should change, why it matters, what the target state should be and how technology, data and AI should enable it. Every engagement ends with a clear next step, in order, with its dependencies and a way to measure success.",
+    "Consulting helps you decide what should change and how technology, data and AI enable it. Every engagement ends with a clear next step, in order, with dependencies and a success measure.",
   problems: [
     "Parts of the business need modernising, but there is no coherent plan.",
     "Nobody can say with confidence what is wrong, risky or holding the platform back.",
-    "Leadership is unsure whether the organisation, its data and its controls are ready for AI.",
+    "Leadership is unsure whether the organisation, data and controls are ready for AI.",
     "Technology investment over the next one to three years needs a sequenced, defensible roadmap.",
     "Architecture or integration decisions are unresolved and implementation is about to start.",
     "Requirements are contested, incomplete or likely to change materially.",
@@ -53,18 +53,18 @@ const consulting: PracticeDraft = {
     "practice-consulting-body",
     h2("Decisions, not slideware"),
     p(
-      "Consulting must produce decisions and implementable direction. Every advisory engagement should answer what you should do next, why, in what order, with what dependencies, and how success will be measured.",
+      "Consulting must produce decisions and direction you can implement. Each engagement should answer what to do next, why, in what order, with what dependencies and how to measure success.",
     ),
     h2("Discovery when it reduces risk"),
     p(
-      "Discovery exists to reduce uncertainty, not to create billable steps. It is the right start when the problem is unclear, several departments or systems are affected, legacy behaviour is poorly understood, data or AI readiness is unknown, or the investment is large enough that you need evidence before committing. A clear, low-risk build can go straight to Engineering.",
+      "Discovery exists to reduce uncertainty, not to create billable steps. Use it when the problem, legacy behaviour or data and AI readiness is unclear, several systems are affected or a large investment needs evidence; a clear, low-risk build can go straight to Engineering.",
     ),
-    h2("How Consulting works with the other practices"),
+    h2("Working with the other practices"),
     p(
-      "Consulting is often the front door to larger programmes. Its roadmaps and architecture are written to be delivered by Engineering, AI & Data, Experience and Managed Services, so advice stays connected to what can actually be built and operated.",
+      "Consulting is often the front door to larger programmes. Its roadmaps and architecture are written so the other practices can build and operate them.",
     ),
     p(
-      "AI appears in Consulting as strategy, opportunity identification, operating model, governance, adoption and the business case.",
+      "In Consulting, AI means strategy, opportunities, operating model, governance, adoption and the business case.",
     ),
     p("Where an assessment finds that Vitalos should not implement the solution, we say so."),
   ),
@@ -100,11 +100,11 @@ const engineering: PracticeDraft = {
     "Production software, application modernisation, platforms, integration, cloud and reliability engineering.",
   ),
   proposition:
-    "Engineering designs, builds, integrates, modernises and improves production software and platforms. You can come to us directly with a clear need, or continue from discovery, with architecture, testing, security, documentation and operational handover built into the work.",
+    "Engineering designs, builds, integrates, modernises and improves production software and platforms. Come directly with a clear need or from discovery; architecture, testing, security, documentation and operational handover are built in.",
   problems: [
     "A new product, portal, workflow platform or application is needed.",
     "Ageing software holds the organisation back and is hard to change.",
-    "Platforms, services and data flows are disconnected, so people re-key information and hand work over by hand.",
+    "Disconnected platforms and data flows force people to re-key information and hand work over manually.",
     "Infrastructure, deployments and observability make releases slow or risky.",
     "A product is slow, unstable, unfinished or poorly engineered.",
     "Defects and operational risk undermine confidence in every release.",
@@ -125,26 +125,26 @@ const engineering: PracticeDraft = {
     "practice-engineering-body",
     h2("Built for production"),
     p(
-      "Fast must never mean careless, and enterprise must never mean unnecessarily complicated. Vitalos Engineering aims to be known for strong architecture, pragmatic implementation, production readiness, documentation, testing, security awareness and operational handover.",
+      "Fast must never mean careless, and enterprise must never mean needlessly complicated. We aim for strong architecture, pragmatic implementation, production readiness, testing, security, documentation and handover.",
     ),
     h2("How we engineer"),
     p(
-      "Work moves through version control, peer review, automated checks and controlled environments, so evidence builds up continuously instead of risk accumulating until the end. An increment is done when:",
+      "Work moves through version control, peer review, automated checks and controlled environments, so evidence builds as we go. An increment is done when:",
     ),
     ul(
-      "its acceptance criteria are met and the relevant tests pass;",
-      "it has been peer reviewed and its security and privacy requirements are satisfied;",
+      "acceptance criteria are met and relevant tests pass;",
+      "it is peer reviewed and meets security and privacy requirements;",
       "observability covers material production paths;",
-      "operational and documentation changes are complete, with migrations and rollback considered where relevant;",
+      "operations and documentation are updated, with migrations and rollback considered where relevant;",
       "no critical defect or unowned material risk remains.",
     ),
     h2("Direct engineering, with judgement"),
     p(
-      "Clients may come directly for engineering when the objective, requirements, constraints, decision-makers and dependencies are clear enough. We do not invent a discovery phase, but we stop and recommend one when the risk of building the wrong thing becomes material.",
+      "Come straight to engineering when the objective, requirements, constraints, decision-makers and dependencies are clear enough. We do not invent discovery, but we stop and recommend it when building the wrong thing becomes a material risk.",
     ),
-    h2("How Engineering works with the other practices"),
+    h2("Working with the other practices"),
     p(
-      "Engineering takes work forward from Consulting, AI & Data and Experience, and hands live systems to Managed Services through a formal transition. AI appears here as AI-enabled products, agents, integrations, inference services and secure application architecture.",
+      "Engineering continues work from the other practices and hands live systems to Managed Services through a formal transition. Here, AI means AI-enabled products, agents, integrations, inference services and secure architecture.",
     ),
   ),
   solutions: [
@@ -185,11 +185,11 @@ const aiData: PracticeDraft = {
     "Find valuable AI opportunities, build the data foundations, prototype quickly, then engineer and operate production AI responsibly.",
   ),
   proposition:
-    "We help organisations identify valuable AI opportunities, build the data foundations, prototype quickly, engineer production systems and operate them responsibly. AI is used where it creates a measurable business or user outcome and can be governed.",
+    "We help you find valuable AI opportunities, build data foundations, prototype quickly, and engineer and run production systems responsibly. We use AI where it creates measurable outcomes and can be governed.",
   problems: [
     "Leadership wants measurable AI value but has no safe, prioritised route from experimentation to production.",
     "AI pilots are scattered and few have made it into production.",
-    "Data sits across several systems and is too fragmented or low-confidence to support decisions or AI.",
+    "Data across several systems is too fragmented or low-confidence to support decisions or AI.",
     "Reporting and management information cannot be trusted.",
     "Governance, privacy, security and human oversight of AI use are unclear.",
   ],
@@ -209,25 +209,23 @@ const aiData: PracticeDraft = {
     "practice-ai-data-body",
     h2("From opportunity to production"),
     p(
-      "AI follows one signature journey: AI Opportunity Assessment, then a Prototype, then Production, then Managed AI. Each stage ends with a decision: is there a use case worth testing, did the evidence justify production investment, is the system ready for controlled live use, and is it still delivering value safely.",
+      "AI follows one journey: AI Opportunity Assessment, Prototype, Production, then Managed AI. Each stage ends with a decision: worth testing, worth production investment, ready for controlled live use, still delivering value safely.",
     ),
     h2("How we approach AI"),
     ul(
-      "No AI for AI's sake: every use case needs a business or user outcome.",
-      "Prototype evidence does not automatically mean production readiness.",
-      "Data readiness, security, privacy and human oversight are made explicit.",
-      "Bounded, measurable workflows come before broad autonomous systems.",
-      "Evaluation criteria are defined before production launch.",
-      "Operational cost, reliability and vendor dependence are understood up front.",
-      "We stay pragmatic about technology and vendors rather than tying the work to one model provider.",
+      "No AI for AI's sake: every use case needs an outcome.",
+      "Prototype evidence is not automatically production readiness.",
+      "Data, security, privacy and human oversight are explicit.",
+      "Bounded, measurable workflows before broad autonomy; evaluation criteria before launch.",
+      "Cost, reliability and vendor dependence understood early; not tied to one model provider.",
     ),
     h2("Data foundations"),
     p(
-      "Useful analytics and AI depend on data that is connected, cleaned, modelled and governed. Data work covers source ownership and lineage, quality expectations, schema and contract management, access control, retention and deletion rules, monitoring for pipeline failure and freshness, and documented definitions for the metrics that matter.",
+      "Useful analytics and AI need data that is connected, cleaned, modelled and governed. That means ownership, lineage, quality, schema contracts, access control, retention and deletion, pipeline monitoring and documented metric definitions.",
     ),
     h2("AI across every practice"),
     p(
-      "AI & Data is a specialist practice and a horizontal capability. Consulting shapes AI strategy and governance, Engineering builds AI into products and integrations, Experience designs conversational interfaces, intelligent search and human-centred AI, and Managed Services monitors, evaluates and improves live AI.",
+      "AI & Data is both a specialist practice and a capability across the firm. Consulting shapes strategy, Engineering builds AI in, Experience designs AI interfaces and Managed Services monitors and improves live AI.",
     ),
   ),
   solutions: [
@@ -264,7 +262,7 @@ const experience: PracticeDraft = {
     "Product discovery, research, service and UX design, design systems, commerce and accessible digital experiences connected to engineering.",
   ),
   proposition:
-    "Experience shapes how customers, employees and partners use digital services. It connects user needs, service design, product strategy and engineering so that technology is useful, understandable and adopted, and designs can be delivered within real constraints.",
+    "Experience shapes how customers, employees and partners use digital services. It connects user needs, design and engineering so technology is useful, adopted and deliverable within real constraints.",
   problems: [
     "A new product needs defining before major engineering investment.",
     "Usability, accessibility or conversion friction is losing customers or slowing service.",
@@ -288,15 +286,15 @@ const experience: PracticeDraft = {
     "practice-experience-body",
     h2("Design that can be delivered"),
     p(
-      "Experience is not a standalone graphic-design department. Its work usually connects to engineering or measurable implementation, so we avoid beautiful prototypes that cannot be delivered within your technology, operational or commercial constraints.",
+      "Experience is not a standalone graphic-design department. Its work usually connects to engineering, so we avoid beautiful prototypes that cannot be delivered within your constraints.",
     ),
     h2("Accessible by default"),
     p(
       "Accessibility is part of design quality, not an after-launch audit. Interfaces are checked against the accessibility target agreed for the engagement before release.",
     ),
-    h2("How Experience works with the other practices"),
+    h2("Working with the other practices"),
     p(
-      "Experience leads discovery and design for new products, portals and commerce journeys, then works alongside Engineering through build and release. AI appears here as conversational interfaces, intelligent search, personalisation and human-centred AI experience design.",
+      "Experience leads discovery and design for new products, portals and commerce, then works with Engineering through release. Here, AI means conversational interfaces, intelligent search, personalisation and human-centred design.",
     ),
   ),
   solutions: ["digital-product-transformation", "business-process-modernisation"],
@@ -323,7 +321,7 @@ const managedServices: PracticeDraft = {
     "Application care, managed engineering, platform operations, managed AI and data, for systems we build or responsibly take over.",
   ),
   proposition:
-    "Managed Services takes ongoing operational responsibility for live systems and keeps improving them. It covers systems Vitalos built and systems others built, but only after an assessment establishes a baseline we can responsibly support.",
+    "Managed Services takes ongoing responsibility for live systems and keeps improving them. Systems others built are included only after an assessment sets a baseline we can responsibly support.",
   problems: [
     "Live systems need ongoing ownership, but there is no full internal product engineering function.",
     "The internal team needs flexible access to multidisciplinary engineering capacity.",
@@ -350,17 +348,17 @@ const managedServices: PracticeDraft = {
     p(
       "“We will support it” is an operational commitment, not a sales phrase. Vitalos does not accept a service level for an inherited system it does not understand.",
     ),
-    h2("Taking over systems built by others"),
+    h2("Taking over others' systems"),
     p(
-      "Before taking responsibility for a third-party or inherited system, we assess ownership and access, architecture, code and quality, security, data, operations, documentation and service expectations. The outcome is one of four: accepted as it is, accepted with conditions and a transition backlog, assessment or rescue needed before service starts, or declined where responsible support is not possible.",
+      "Before taking on an inherited system, we assess ownership, access, architecture, code, security, data, operations, documentation and service expectations. We then accept, accept with conditions, assess or rescue first, or decline where responsible support is not possible.",
     ),
     h2("Formal service transition"),
     p(
-      "Operations are not an informal extension of a project. Before service-level-backed operation begins we agree service boundaries, support contacts, escalation, monitoring, runbooks, access, maintenance responsibilities, known exceptions and any initial remediation.",
+      "Operations are not an informal extension of a project. Before service levels apply, we agree boundaries, contacts, escalation, monitoring, runbooks, access, maintenance, known exceptions and any initial remediation.",
     ),
     h2("Improvement, not ticket handling"),
     p(
-      "Each service keeps an improvement backlog covering reliability, automation, cost, security, user friction and product evolution. AI appears here as monitoring, incident response, evaluation, cost and quality optimisation and continuous improvement of live AI.",
+      "Each service keeps an improvement backlog: reliability, automation, cost, security, user friction and product evolution. Here, AI means monitoring, incident response, evaluation, optimisation and improvement of live AI.",
     ),
   ),
   solutions: ["application-modernisation", "technology-recovery-reliability", "ai-transformation"],

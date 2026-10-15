@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   Breadcrumb,
+  FeatureGrid,
   Button,
   Carousel,
   Container,
@@ -89,6 +90,69 @@ export const PageHeroDisplay: Story = {
 export const PageHeroTitle: Story = {
   name: "Page hero (content page, long title)",
   render: () => <PageHero size="title" containerSize="content" title={text.longTitle} />,
+};
+
+export const PageHeroDark: Story = {
+  name: "Page hero (dark, full)",
+  render: () => (
+    <div className="pt-(--size-header)">
+      <PageHero
+        tone="dark"
+        eyebrow={text.label}
+        title="Example page title (fixture)"
+        lead={text.shortSummary}
+        actions={
+          <Button href={url("contact")} variant="secondary" arrow>
+            Example action (fixture)
+          </Button>
+        }
+      />
+    </div>
+  ),
+};
+
+export const PageHeroDarkCompactWithMedia: Story = {
+  name: "Page hero (dark, compact, media)",
+  render: () => (
+    <div className="pt-(--size-header)">
+      <PageHero
+        tone="dark"
+        size="title"
+        eyebrow={text.label}
+        title="Example detail page (fixture)"
+        lead={text.shortSummary}
+        media={<MediaPlaceholder className="aspect-[4/3] w-full rounded-2xl" />}
+      />
+    </div>
+  ),
+};
+
+export const FeatureGrids: Story = {
+  render: () => (
+    <OnEveryTone>
+      <FeatureGrid
+        items={[
+          { title: "Example item one (fixture)", text: text.shortSummary, icon: "compass" },
+          { title: "Example item two (fixture)", text: text.shortSummary, icon: "target" },
+          {
+            title: "Example linked item (fixture)",
+            text: text.shortSummary,
+            icon: "users",
+            href: url("x"),
+          },
+        ]}
+      />
+      <FeatureGrid
+        variant="rows"
+        className="mt-(--space-8)"
+        items={[
+          { text: text.shortSummary },
+          { text: text.summary },
+          { text: text.shortSummary, icon: "lock" },
+        ]}
+      />
+    </OnEveryTone>
+  ),
 };
 
 export const Hero: Story = {

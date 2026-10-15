@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { routes } from "@vitalos/cms";
+import { howWeWorkStages, routes } from "@vitalos/cms";
 import { JsonLd } from "../../src/components/json-ld";
 import { loadChromeContent } from "../../src/components/site-chrome/load";
 import { getSeoContext } from "../../src/features/seo/context";
 import { organizationJsonLd, webSiteJsonLd } from "../../src/features/seo/json-ld";
 import { buildMetadata } from "../../src/features/seo/metadata";
 import { getContentSource } from "../../src/lib/cms/get-content-source";
+import { deriveStages } from "../../src/lib/view-mapping/stages";
 import { loadRoutePage } from "../../src/templates/commercial/load";
 import { HomeTemplate } from "../../src/templates/home/HomeTemplate";
 
@@ -32,7 +33,12 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={[organizationJsonLd(settings, ctx), webSiteJsonLd(ctx)]} />
-      <HomeTemplate home={home} gates={gates} howWeWorkIntro={howWeWork?.intro} />
+      <HomeTemplate
+        home={home}
+        gates={gates}
+        howWeWorkIntro={howWeWork?.intro}
+        howWeWorkStages={deriveStages(howWeWork?.body, howWeWorkStages).stages}
+      />
     </>
   );
 }

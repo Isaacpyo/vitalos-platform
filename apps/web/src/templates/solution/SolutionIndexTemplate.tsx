@@ -1,11 +1,11 @@
 import { routes, solutionNames } from "@vitalos/cms";
 import type { RoutePageView, SolutionSummary } from "@vitalos/cms";
-import { SolutionCard } from "@vitalos/ui";
+import { SolutionShowcase } from "@vitalos/ui";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
-import { toSolutionCard } from "../../lib/view-mapping/patterns";
-import { Band, CardGrid } from "../commercial/bands";
+import { solutionShowcaseItems } from "../../lib/view-mapping/showcase";
+import { Band } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
 
 export interface SolutionIndexTemplateProps {
@@ -19,11 +19,10 @@ export const solutionsTrail = () =>
     { label: structuralLabels.solutions, path: routes.solutions() },
   );
 
-/** Solutions index: problem-led propositions, in the order the specs fix. */
+/** Solutions index: problem-led propositions, in the order the specs fix, as the showcase. */
 export function SolutionIndexTemplate({ page, solutions }: Readonly<SolutionIndexTemplateProps>) {
-  const cards = orderByLockedNames(solutions, solutionNames).flatMap((solution) => {
-    const card = toSolutionCard(solution);
-    return card ? [card] : [];
+  const items = solutionShowcaseItems(orderByLockedNames(solutions, solutionNames), {
+    headingLevel: 2,
   });
   return (
     <IndexLayout
@@ -33,15 +32,9 @@ export function SolutionIndexTemplate({ page, solutions }: Readonly<SolutionInde
       body={page?.body}
       bands={[
         (tone) =>
-          cards.length > 0 ? (
+          items.length > 0 ? (
             <Band tone={tone}>
-              <CardGrid>
-                {cards.map((card) => (
-                  <li key={card.href} className="min-w-0">
-                    <SolutionCard {...card} headingLevel={2} />
-                  </li>
-                ))}
-              </CardGrid>
+              <SolutionShowcase items={items} headingLevel={2} />
             </Band>
           ) : null,
       ]}

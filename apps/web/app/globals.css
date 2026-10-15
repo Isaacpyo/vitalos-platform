@@ -72,3 +72,14 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The footer has rounded top corners and overlaps the last band by their radius (SiteFooter), so
+   the corners show that band's surface. Give the last band of every page that room back. */
+main > :last-child {
+  padding-bottom: calc(var(--section-default) + 2rem);
+}
+@media (min-width: 64rem) {
+  main > :last-child {
+    padding-bottom: calc(var(--section-default) + 3rem);
+  }
+}

@@ -236,23 +236,19 @@ export function buildDraftContentSet(): DraftContentSet {
   const labAssets = labDrafts.map((d) => d.view);
   const legalPages = legalDrafts.map((d) => d.view);
 
-  const trustHighlightTopics = ["security", "privacy", "responsible-ai", "accessibility"];
   const home: HomePageView = {
     seo: { description: settingsDraft.view.defaultSeo?.description ?? "" },
     headings: homeHeadings,
     proof: [],
-    // Stage 8 §8: the five client-problem-led solutions (the locked initial five).
-    solutions: pick(solutionSummary, solutionOrder.slice(0, 5)),
+    // Stage 8 §8: the client-problem-led solutions; all six since the owner locked the sixth
+    // (15 Oct 2026).
+    solutions: pick(solutionSummary, solutionOrder),
     practices: pick(practiceSummary, practiceOrder),
     selectedWork: [],
     industries: pick(industrySummary, industryOrder),
     // Stage 9 §20: one or two technical proof assets.
     labs: labAssets.slice(0, 2).map((lab) => summaryOf("labAsset", lab)),
     insights: [],
-    leadership: [],
-    trustHighlights: trustItems
-      .filter((item) => trustHighlightTopics.includes(item.topic))
-      .map((item) => summaryOf("trustItem", item)),
     finalCta: cta(ctas.primary, "general"),
   };
 

@@ -39,7 +39,6 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
 
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       {open ? (
         <JsonLd data={jobPostingJsonLd(job, { siteUrl: getSeoContext().siteUrl }, now)} />
       ) : null}
@@ -61,6 +60,7 @@ export function JobPage({ data }: Readonly<{ data: JobData }>) {
         {open ? null : <Tag>{careersLabels.closed}</Tag>}
         <MetaRow items={facts} />
       </PageHeroBand>
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           {hasRichText(job.description) ? <RichText value={job.description} /> : null}

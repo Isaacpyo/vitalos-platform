@@ -4,6 +4,7 @@ import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import type { PatternLink } from "../_internal/types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileNav } from "./MobileNav";
+import type { SocialLink } from "./SocialLinks";
 import { StickyHeader } from "./StickyHeader";
 import { topLevelLinkClasses, utilityLinkClasses } from "./nav-styles";
 import type { SiteNavItem, SiteNavLink } from "./types";
@@ -11,16 +12,24 @@ import type { SiteNavItem, SiteNavLink } from "./types";
 export interface SiteHeaderProps {
   /** Primary navigation, already filtered by publication gates. */
   items: readonly SiteNavItem[];
-  /** Lower-emphasis utility links (the Trust Centre). In the bar from lg; in MobileNav below it. */
+  /** Lower-emphasis utility links. In the bar from lg; in MobileNav below it. */
   utility?: readonly SiteNavLink[] | undefined;
+  /** Social profiles, at the foot of the compact menu sheet (MobileNav). */
+  social?: readonly SocialLink[] | undefined;
   /** The primary action. In the bar at every width (beside the menu trigger on compact screens). */
   cta?: PatternLink | undefined;
   /** Key of the current section: underlined, bold and `aria-current` (never colour alone). */
   activeSection?: string | undefined;
   /** Where the wordmark links. */
   homeHref?: string | undefined;
-  /** Approved logo export; omitted until the production SVG exists (text fallback renders). */
+  /** Logo export; the text wordmark renders when it is omitted. */
   logo?: WordmarkLogo | undefined;
+  /** Logo for the clear bar over a dark first band (see `overlay`), for example white. */
+  logoOnDark?: WordmarkLogo | undefined;
+  /** The symbol alone, drawn instead of the logo on narrow phones (Wordmark `compactLogo`). */
+  compactLogo?: WordmarkLogo | undefined;
+  /** Transparent over a dark first band until the page scrolls (StickyHeader `overlay`). */
+  overlay?: boolean | undefined;
   wordmarkText?: string | undefined;
   /** Visible label of the compact menu trigger. */
   menuLabel?: string | undefined;
@@ -41,10 +50,14 @@ export interface SiteHeaderProps {
 export function SiteHeader({
   items,
   utility,
+  social,
   cta,
   activeSection,
   homeHref = "/",
   logo,
+  logoOnDark,
+  compactLogo,
+  overlay,
   wordmarkText,
   menuLabel,
   navLabel = "Primary",
@@ -52,12 +65,14 @@ export function SiteHeader({
   className,
 }: SiteHeaderProps) {
   return (
-    <StickyHeader className={className} defaultCondensed={defaultCondensed}>
+    <StickyHeader className={className} defaultCondensed={defaultCondensed} overlay={overlay}>
       <Container size="wide">
         <div className="flex h-(--header-h) items-center gap-(--space-3) transition-[height] duration-(--duration-reveal) ease-(--ease-standard) sm:gap-(--space-4) lg:gap-(--space-5)">
           <Wordmark
             href={homeHref}
             {...(logo ? { logo } : {})}
+            {...(logoOnDark ? { darkLogo: logoOnDark } : {})}
+            {...(compactLogo ? { compactLogo } : {})}
             {...(wordmarkText ? { text: wordmarkText } : {})}
             className="shrink-0"
           />
@@ -71,6 +86,8 @@ export function SiteHeader({
                     label={item.label}
                     href={item.href}
                     columns={item.menu.columns}
+                    layout={item.menu.layout}
+                    feature={item.menu.feature}
                     active={item.key === activeSection}
                     toggleLabel={item.menu.toggleLabel}
                   />
@@ -111,6 +128,7 @@ export function SiteHeader({
               <MobileNav
                 items={items}
                 utility={utility}
+                social={social}
                 cta={cta}
                 menuLabel={menuLabel}
                 aria-label={navLabel}

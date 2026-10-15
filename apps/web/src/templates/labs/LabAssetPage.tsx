@@ -9,6 +9,8 @@ import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import type { LabAssetData } from "./load";
 import { isIsNotItems, labLabels, labTypeLabel, maturityLabel, resourceLinks } from "./map";
+import { MediaSlot } from "../../components/media-slot";
+import { ClosingBand } from "../commercial/bands";
 
 /**
  * Lab asset page. The maturity badge sits directly under the title so it is the first thing read
@@ -35,6 +37,7 @@ export function LabAssetPage({ data }: Readonly<{ data: LabAssetData }>) {
   return (
     <PageMain>
       <PageHeroBand
+        media={<MediaSlot id="labs.asset" item={asset.slug} priority />}
         crumbs={<Breadcrumbs trail={trail} />}
         title={asset.title}
         eyebrow={typeLabel}
@@ -71,6 +74,7 @@ export function LabAssetPage({ data }: Readonly<{ data: LabAssetData }>) {
           ) : null}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

@@ -466,8 +466,6 @@ const home: HomePageView = {
   industries: [summaryOf("industry", industryOne), summaryOf("industry", industryTwo)],
   labs: [summaryOf("labAsset", labOne), summaryOf("labAsset", labTwo)],
   insights: insightSummaries.slice(0, 3),
-  leadership: [summaryOf("person", examplePerson)],
-  trustHighlights: trustItems.slice(0, 3).map((item) => summaryOf("trustItem", item)),
   finalCta: { label: `Talk about example work ${L}`, href: "/contact", intent: "general" },
 };
 

@@ -115,6 +115,25 @@ describe("Wordmark", () => {
     expect(classes).not.toContain("h-auto");
   });
 
+  it("swaps to the dark logo in a dark scope and to the compact mark on narrow screens", () => {
+    render(
+      <Wordmark
+        logo={{ src: "/light.png", width: 940, height: 160 }}
+        darkLogo={{ src: "/dark.png", width: 937, height: 160 }}
+        compactLogo={{ src: "/mark.png", width: 184, height: 128 }}
+      />,
+    );
+    const bySrc = (src: string) => document.querySelector(`img[src="${src}"]`)?.className ?? "";
+    expect(bySrc("/light.png")).toContain("[[data-tone=dark]_&]:hidden");
+    expect(bySrc("/dark.png")).toContain("[[data-tone=dark]_&]:block");
+    for (const src of ["/light.png", "/dark.png"]) {
+      expect(bySrc(src)).toContain("max-[24.99rem]:hidden!");
+      expect(bySrc(src)).toContain("max-[27.99rem]:h-6");
+    }
+    expect(bySrc("/mark.png")).toContain("max-[24.99rem]:block");
+    expect(bySrc("/mark.png")).toMatch(/(^| )hidden( |$)/);
+  });
+
   it("links home with a plain anchor when href is given", () => {
     render(<Wordmark href="/" />);
     const link = screen.getByRole("link", { name: "VITALOS" });

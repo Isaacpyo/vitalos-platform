@@ -21,6 +21,8 @@ import {
   verifiedMetrics,
   workLabels,
 } from "./map";
+import { MediaSlot } from "../../components/media-slot";
+import { ClosingBand } from "../commercial/bands";
 
 /**
  * Case study detail. Outcome-led: the title and summary lead, proof (sourced, verified metrics) is
@@ -37,8 +39,8 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
 
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
+        media={<MediaSlot id="work.case-study" item={study.slug} priority />}
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -56,6 +58,7 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
       >
         <MetaRow items={caseStudyFacts(study)} />
       </PageHeroBand>
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           {metrics ? <OutcomeStats stats={metrics} aria-label={workLabels.outcome} /> : null}
@@ -89,6 +92,7 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
           ) : null}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

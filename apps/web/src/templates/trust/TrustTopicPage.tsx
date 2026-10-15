@@ -23,6 +23,7 @@ import {
   trustLabels,
   trustTopicLabel,
 } from "./map";
+import { ClosingBand } from "../commercial/bands";
 
 /**
  * One Trust Centre topic. Certification blocks are omitted when there are none; the subprocessor
@@ -105,6 +106,7 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
           ) : null}
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }

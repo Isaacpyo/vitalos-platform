@@ -26,7 +26,7 @@ const FIXTURE_OTHER_ROUTES = [
   "/people/example-person",
   "/labs",
   "/about",
-  "/about/leadership",
+  "/faq",
   "/trust",
   "/trust/security",
   "/careers",
@@ -65,12 +65,16 @@ test.describe("every commercial route", () => {
     });
 
     test(`${route}: internal links resolve`, async ({ page, request }) => {
+      // A crawl of every link on the page (dozens of requests): allow it more time than one page.
+      test.slow();
       await page.goto(route);
       const hrefs = await internalLinks(page);
       expect(hrefs.length).toBeGreaterThan(0);
-      for (const href of hrefs) {
-        const response = await request.get(href);
-        expect(response.status(), `${route} links to ${href}`).toBeLessThan(400);
+      const statuses = await Promise.all(
+        hrefs.map(async (href) => [href, (await request.get(href)).status()] as const),
+      );
+      for (const [href, status] of statuses) {
+        expect(status, `${route} links to ${href}`).toBeLessThan(400);
       }
     });
   }
@@ -99,26 +103,30 @@ test.describe("homepage", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modernise. Build. Adopt AI.");
     // The category eyebrow was removed (owner decision 2026-10-12).
     await expect(page.getByText("Technology Consulting, Engineering")).toHaveCount(0);
-    await expect(page.getByText("From strategy to production.", { exact: true })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Explore what we do" })).toHaveAttribute(
+    await expect(
+      page
+        .locator("main")
+        .getByText(
+          "We help ambitious organisations modernise operations, build digital products and adopt AI.",
+          { exact: true },
+        ),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Explore what we do" }).first()).toHaveAttribute(
       "href",
       "/what-we-do",
     );
     const main = page.locator("main");
     // 2. Credibility: a verified proof marker.
     await expect(main.getByText("Example verified marker (fixture)")).toBeVisible();
-    // 3 to 13: each section's authored heading.
+    // Each later section's authored heading (the Trust and Leadership bands were removed).
     const headings: Record<string, string> = {
       problems: "Problems (fixture)",
       strategyToProduction: "Strategy to production (fixture)",
       practices: "Practices (fixture)",
-      aiAtTheCentre: "AI at the centre (fixture)",
       selectedWork: "Selected work (fixture)",
       industries: "Industries (fixture)",
-      trust: "Trust (fixture)",
       labs: "Labs (fixture)",
       insights: "Insights (fixture)",
-      leadership: "Leadership (fixture)",
       finalConversion: "Final conversion (fixture)",
     };
     for (const [key, heading] of Object.entries(headings)) {
@@ -149,24 +157,49 @@ test.describe("homepage", () => {
 });
 
 test.describe("site shell", () => {
-  test("desktop header shows the gated navigation, the utility link and the CTA", async ({
+  test("desktop header shows the three menus and the CTA, and no Trust Centre", async ({
     page,
   }) => {
+    test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    for (const [label, href] of [
+      ["What We Do", "/what-we-do"],
+      ["Who We Are", "/about"],
+      ["Support", "/contact"],
+    ] as const) {
+      await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute(
+        "href",
+        href,
+      );
+    }
+    const banner = page.getByRole("banner");
+    await expect(banner.getByRole("link", { name: "Trust Centre" })).toHaveCount(0);
+    await expect(banner.getByRole("link", { name: "Talk to Vitalos" })).toHaveAttribute(
+      "href",
+      "/contact",
+    );
+  });
+
+  test("Who We Are and Support open their panels", async ({ page }) => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
-    for (const label of ["What We Do", "Industries", "Work", "Insights", "Labs", "About"]) {
-      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    await nav.getByRole("button", { name: /Who We Are/ }).click();
+    for (const label of ["About", "Work", "Insights", "All What We Do", "Industries"]) {
+      await expect(nav.getByRole("link", { name: label, exact: true }).first()).toBeVisible();
     }
-    const banner = page.getByRole("banner");
-    await expect(banner.getByRole("link", { name: "Trust Centre" })).toHaveAttribute(
-      "href",
-      "/trust",
-    );
-    await expect(banner.getByRole("link", { name: "Talk to Vitalos" })).toHaveAttribute(
+    await expect(nav.getByRole("link", { name: "Example Industry (fixture)" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await nav.getByRole("button", { name: /Support/ }).click();
+    await expect(nav.getByRole("link", { name: "Contact", exact: true })).toHaveAttribute(
       "href",
       "/contact",
+    );
+    await expect(nav.getByRole("link", { name: "FAQ", exact: true })).toHaveAttribute(
+      "href",
+      "/faq",
     );
   });
 
@@ -181,12 +214,17 @@ test.describe("site shell", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    // Practices and Solutions are headings that link to their index; Explore is a plain heading.
-    for (const heading of ["Practices", "Solutions"]) {
+    // Practices, Solutions and Labs are headings that link to their index; Labs moved in here.
+    for (const heading of ["Practices", "Solutions", "Labs"]) {
       await expect(nav.getByRole("link", { name: heading, exact: true })).toBeVisible();
     }
-    await expect(nav.getByText("Explore", { exact: true })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "How We Work" })).toBeVisible();
+    await expect(nav.getByText("Explore", { exact: true })).toHaveCount(0);
+    // Each column closes with a link to its index; the card carries the AI journey and the action.
+    await expect(nav.getByRole("link", { name: "All solutions" })).toHaveAttribute(
+      "href",
+      "/solutions",
+    );
+    await expect(nav.getByText("Managed AI", { exact: true })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Example Practice (fixture)" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
@@ -203,28 +241,33 @@ test.describe("site shell", () => {
     await expect(current).toHaveAttribute("aria-current", "true");
   });
 
-  test("the compact viewport exposes the same sections and the CTA through the menu", async ({
+  test("the compact viewport exposes the same menus, the social profiles and the CTA", async ({
     page,
   }) => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(isDesktop(page), "the desktop header shows the navigation directly");
     await page.goto("/");
-    await page.getByRole("banner").getByText("Menu", { exact: true }).click();
+    await page.getByRole("banner").locator("summary", { hasText: "Menu" }).click();
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });
-    for (const label of ["Industries", "Work", "Insights", "Labs", "About"]) {
-      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
-    }
-    await expect(nav.getByRole("link", { name: "Trust Centre" })).toBeVisible();
-    // What We Do is a disclosure whose first link is the section index.
+    await expect(nav.getByRole("link", { name: "Trust Centre" })).toHaveCount(0);
+    await expect(
+      nav.getByRole("link", { name: "Vitalos on Example profile (fixture)" }),
+    ).toBeVisible();
+    // Each menu is a disclosure whose first link is the section index.
     await nav.locator("summary", { hasText: "What We Do" }).click();
     await expect(nav.getByRole("link", { name: "What We Do", exact: true })).toHaveAttribute(
       "href",
       "/what-we-do",
     );
-    await expect(nav.getByRole("link", { name: "How We Work" })).toBeVisible();
+    await nav.locator("summary", { hasText: "Who We Are" }).click();
+    for (const label of ["About", "How We Work", "Industries"]) {
+      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await nav.locator("summary", { hasText: "Support" }).click();
+    await expect(nav.getByRole("link", { name: "FAQ", exact: true })).toBeVisible();
   });
 
-  test("the footer lists the gated sections, company links and legal identity", async ({
+  test("the footer lists the gated sections, company links, social profiles and legal identity", async ({
     page,
   }) => {
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
@@ -235,9 +278,14 @@ test.describe("site shell", () => {
       await expect(footer.locator("details[open]")).toHaveCount(0);
       for (const heading of await footer.locator("summary").all()) await heading.click();
     }
-    for (const label of ["Industries", "Work", "Insights", "Labs", "Careers", "Leadership"]) {
+    for (const label of ["Industries", "Work", "Insights", "Labs", "Careers", "FAQ"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
+    await expect(footer.getByRole("link", { name: "Leadership" })).toHaveCount(0);
+    await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(0);
+    await expect(
+      footer.getByRole("link", { name: "Vitalos on Example profile (fixture)" }),
+    ).toBeVisible();
     await expect(footer.getByText("Example Practice Ltd (fixture)")).toBeVisible();
     await expect(footer.getByText("Company number 00000000 (fixture)")).toBeVisible();
   });

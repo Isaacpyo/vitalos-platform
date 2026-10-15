@@ -7,7 +7,7 @@ import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
  * Institutional templates with sparse content (workstream G2b).
  *
  * Runs in the `sparse` Playwright project against a server built with VITALOS_FIXTURE_SET=sparse:
- * no About, Leadership or Trust route pages, one trust topic without certifications or
+ * no About or Trust route pages, one trust topic without certifications or
  * subprocessors, one leadership profile, only a closed role, one legal page. Pages without a CMS
  * document fall back to the locked navigation label as their heading, say nothing else, and are
  * not indexed; nothing links to a page that does not exist.
@@ -33,7 +33,7 @@ async function expectNoDeadLinks(page: Page) {
 
 const pages: { name: string; path: string; h1: string }[] = [
   { name: "about", path: "/about", h1: "About" },
-  { name: "leadership", path: "/about/leadership", h1: "Leadership" },
+  { name: "faq", path: "/faq", h1: "Frequently asked questions" },
   { name: "trust overview", path: "/trust", h1: "Trust Centre" },
   { name: "trust topic", path: "/trust/security", h1: "Example trust topic: security (fixture)" },
   {
@@ -59,20 +59,30 @@ test.describe("sparse content", () => {
     });
   }
 
-  test("about and leadership without a route page are not indexed and do not link to Careers", async ({
+  test("about without a route page is not indexed and does not link to Careers", async ({
     page,
   }) => {
     await page.goto("/about");
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
     await expect(page.getByRole("link", { name: "Careers" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Example Person (fixture)" })).toBeVisible();
+  });
+
+  test("the FAQ without any question is not indexed", async ({ page }) => {
+    await page.goto("/faq");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   });
 
   test("a trust topic with nothing but a title omits every empty block", async ({ page }) => {
     await page.goto("/trust/security");
     await expect(page.getByRole("heading", { name: "Certifications" })).toHaveCount(0);
     await expect(page.getByRole("table")).toHaveCount(0);
-    await expect(page.locator("main").getByRole("heading", { level: 2 })).toHaveCount(0);
+    // The closing card ends every page (pages redesign); no content section may be empty.
+    await expect(
+      page
+        .locator("main")
+        .getByRole("heading", { level: 2 })
+        .filter({ hasNotText: "Have a problem worth solving?" }),
+    ).toHaveCount(0);
   });
 
   test("the trust overview still offers the controlled evidence request", async ({ page }) => {

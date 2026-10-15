@@ -9,6 +9,7 @@ import { rowFilterAttributes } from "../institutional/list-filter-model";
 import { PageMain } from "../institutional/page-main";
 import type { InsightsIndexData } from "./load";
 import { insightCardProps, insightFilterDimensions, insightFilterGroups } from "./map";
+import { ClosingBand } from "../commercial/bands";
 
 const LIST_ID = "insights-list";
 
@@ -24,8 +25,8 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
   const placeholder = hasPlaceholder(insights);
   return (
     <PageMain>
-      <PlaceholderNotice show={placeholder} />
       <PageHeroBand
+        full
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -35,6 +36,7 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
         title={page?.heading ?? navLabels.insights}
         lead={page?.intro}
       />
+      <PlaceholderNotice show={placeholder} />
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />
@@ -52,6 +54,7 @@ export function InsightsIndex({ data }: Readonly<{ data: InsightsIndexData }>) {
           </ul>
         </Stack>
       </PageBand>
+      <ClosingBand />
     </PageMain>
   );
 }
