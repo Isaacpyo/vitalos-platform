@@ -388,8 +388,11 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* Failed send: a dashed outline, not reduced opacity, so the text keeps AA contrast. The
+   "Couldn't send" notice under it carries the meaning. */
 .relay-visitor--failed .relay-visitor-bubble {
-  opacity: 0.6;
+  outline: 1px dashed var(--relay-ink-muted);
+  outline-offset: 2px;
 }
 .relay-meta-right {
   text-align: right;
@@ -570,7 +573,7 @@ a.relay-source:hover .relay-source-title {
   padding: 0;
   border: 1px solid var(--relay-line);
   border-radius: 2px;
-  background: var(--relay-white);
+  background: var(--relay-surface-200);
   color: var(--relay-ink);
   cursor: pointer;
 }
@@ -636,7 +639,7 @@ a.relay-source:hover .relay-source-title {
   padding: 0 12px;
   border: 1px solid var(--relay-line-strong);
   border-radius: 2px;
-  background: var(--relay-white);
+  background: var(--relay-surface-200);
   color: var(--relay-ink);
   font: 400 15px/20px var(--relay-font-text);
 }
@@ -711,7 +714,7 @@ a.relay-source:hover .relay-source-title {
   padding: 13px 14px;
   border: 1px solid var(--relay-line-strong);
   border-radius: 2px;
-  background: var(--relay-white);
+  background: var(--relay-surface-200);
   color: var(--relay-ink);
   font: 400 15px/20px var(--relay-font-text);
   resize: none;
@@ -744,7 +747,7 @@ a.relay-source:hover .relay-source-title {
 }
 .relay-stop-button {
   border: 1px solid var(--relay-ink);
-  background: var(--relay-white);
+  background: var(--relay-surface-200);
 }
 .relay-stop-square {
   display: block;
