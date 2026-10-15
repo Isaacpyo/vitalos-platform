@@ -108,7 +108,8 @@ describe("Insights pages when open", () => {
 
   it("renders an article with its body, sources, editorial note, author and JSON-LD", async () => {
     const markup = html(await (await pages.article()).default(params({ slug: "example-post-1" })));
-    expect(markup).toContain('<h1 id="article-title"');
+    expect(markup.match(/<h1[\s>]/g)).toHaveLength(1);
+    expect(markup).toContain("Example post 1 (fixture)</h1>");
     expect(markup).toContain('<h2 id="example-heading">Example heading</h2>');
     expect(markup).toContain(">Sources</h2>");
     expect(markup).toContain("Every substantive Vitalos Insight has a named human author");

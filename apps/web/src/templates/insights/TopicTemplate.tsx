@@ -39,15 +39,16 @@ export async function renderTopicPage(slug: string, page: number) {
       intro={topic.topic.description}
       posts={posts}
       covers={gridHasCovers(posts)}
+      crumbs={
+        <Breadcrumbs
+          trail={[
+            { name: brandName, path: "/" },
+            { name: "Insights", path: INSIGHTS_BASE },
+            { name: topic.topic.name, path: topicHref(slug) },
+          ]}
+        />
+      }
       pagination={pagination(page, topic.posts.totalPages, (n) => topicPageHref(slug, n))}
-    >
-      <Breadcrumbs
-        trail={[
-          { name: brandName, path: "/" },
-          { name: "Insights", path: INSIGHTS_BASE },
-          { name: topic.topic.name, path: topicHref(slug) },
-        ]}
-      />
-    </ListingTemplate>
+    />
   );
 }

@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 import { closesLine, roleFactsLine, rolePathOf } from "../../features/content/careers/model";
 import type { Fact, RoleSummaryData } from "../../features/content/careers/model";
-import { monoLabel } from "../insights/parts";
+import { CardArrow, monoLabel } from "../insights/parts";
 
 /**
- * Building blocks of the Careers pages (brief 6.1, 6.2, 6.5). Tokens only, radius 0, hairlines.
+ * Building blocks of the Careers pages (brief 6.1, 6.2, 6.5) in the site's design (pages
+ * redesign, 15 Oct 2026): hairline rows with the round arrow, as the site's other row lists.
+ * Tokens only.
  */
 
-/** A role as a full-width link row: title, mono facts, salary, closing date, chevron. */
+/** A role as a full-width link row: title, mono facts, salary, closing date, the round arrow. */
 export function RoleRow({
   role,
   headingLevel = 3,
@@ -15,7 +17,7 @@ export function RoleRow({
   const Title = `h${headingLevel}` as "h3";
   const closes = closesLine(role);
   return (
-    <article className="group relative flex items-center justify-between gap-(--space-5) border-b border-tone-border py-(--space-5)">
+    <article className="group relative flex items-center justify-between gap-(--space-5) border-b border-tone-border py-(--space-6)">
       <div className="flex min-w-0 flex-col gap-(--space-2)">
         <Title className="m-0 text-h3 text-tone-heading text-balance">
           <a
@@ -29,12 +31,7 @@ export function RoleRow({
         {role.salary ? <p className="m-0 text-body text-tone-text">{role.salary.label}</p> : null}
         {closes ? <p className="m-0 text-small text-tone-muted">{closes}</p> : null}
       </div>
-      <span
-        aria-hidden="true"
-        className="shrink-0 text-h3 text-tone-control-border group-hover:text-tone-link"
-      >
-        ›
-      </span>
+      <CardArrow />
     </article>
   );
 }

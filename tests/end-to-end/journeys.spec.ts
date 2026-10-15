@@ -98,6 +98,9 @@ test.describe("enquiry journey", () => {
       "Your enquiry has been received",
     );
     await expect(page.getByRole("status")).toContainText(/VIT-[0-9A-F]{12}/i);
+    // After the server action's redirect the document title arrives with the streamed metadata,
+    // a moment after the body: wait for it before the scan checks it.
+    await expect(page).toHaveTitle(/^Your enquiry has been received/);
     await expectNoA11yViolations(page, {
       exclude: ['iframe[src*="challenges.cloudflare.com"]'],
     });

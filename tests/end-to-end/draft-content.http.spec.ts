@@ -22,10 +22,7 @@ test("placeholder sections are served but never listed in the sitemap", async ({
     expect((await request.get(section)).status(), section).toBe(200);
     expect(paths.some((path) => path === section || path.startsWith(`${section}/`))).toBe(false);
   }
-  for (const path of [
-    "/work/connecting-field-and-warehouse-systems",
-    "/people/alex-morgan",
-  ]) {
+  for (const path of ["/work/connecting-field-and-warehouse-systems", "/people/alex-morgan"]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);
     expect(await response.text(), path).toContain("Placeholder — replace before launch");

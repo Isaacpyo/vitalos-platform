@@ -103,12 +103,14 @@ test.describe("Application form", () => {
 
   test("can be completed with the keyboard alone", async ({ page }) => {
     await page.goto(ROLE);
+    // The file picker is the browser's own dialog: choose the file programmatically. Its name
+    // appears once the form has hydrated, so nothing typed below is lost to hydration.
+    await page.locator('input[type="file"]').setInputFiles(pdf());
+    await expect(page.getByText("example-cv.pdf, 2 KB")).toBeVisible();
     await page.getByLabel("Full name").focus();
     await page.keyboard.type("Example Applicant");
     await page.keyboard.press("Tab");
     await page.keyboard.type("applicant@example.test");
-    // The file picker is the browser's own dialog: choose the file programmatically.
-    await page.locator('input[type="file"]').setInputFiles(pdf());
     await page.getByLabel("Yes", { exact: true }).focus();
     await page.keyboard.press("Space");
     await page.getByRole("checkbox").focus();

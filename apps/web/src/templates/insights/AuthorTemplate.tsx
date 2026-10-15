@@ -34,23 +34,25 @@ export async function renderAuthorPage(slug: string) {
       title={author.author.name}
       posts={posts}
       covers={gridHasCovers(posts)}
+      crumbs={
+        <Breadcrumbs
+          trail={[
+            { name: brandName, path: "/" },
+            { name: "Insights", path: INSIGHTS_BASE },
+            { name: author.author.name, path: authorHref(author.author.slug) },
+          ]}
+        />
+      }
     >
-      <Breadcrumbs
-        trail={[
-          { name: brandName, path: "/" },
-          { name: "Insights", path: INSIGHTS_BASE },
-          { name: author.author.name, path: authorHref(author.author.slug) },
-        ]}
-      />
       {bio.html ? (
         <div
-          className="mt-(--space-5) max-w-(--container-prose) text-body-l text-tone-muted [&_a]:text-tone-link [&_a]:underline [&_p]:my-(--space-3)"
+          className="max-w-(--container-prose) text-body-l text-tone-text [&_a]:text-tone-link [&_a]:underline [&_p]:my-(--space-3) [&>p:first-child]:mt-0"
           // Sanitised by the site's one renderer (author context).
           dangerouslySetInnerHTML={{ __html: bio.html }}
         />
       ) : null}
       {author.author.linkedinUrl ? (
-        <p className="mt-(--space-4)">
+        <p className="m-0">
           <a
             href={author.author.linkedinUrl}
             rel="noopener noreferrer"

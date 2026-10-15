@@ -5,7 +5,7 @@ import { stubMedia } from "./support/media";
 test.beforeEach(async ({ page }) => stubMedia(page));
 
 test.describe("Insights index", () => {
-  test("hero, format tabs, featured row, grid and closing band", async ({ page }) => {
+  test("hero, format tabs, featured card, grid and closing card", async ({ page }) => {
     const response = await page.goto("/insights");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -14,7 +14,13 @@ test.describe("Insights index", () => {
     await expect(page.getByRole("navigation", { name: "Formats" })).toBeVisible();
     await expect(page.locator('main a[href="/insights/example-post-1"]').first()).toBeVisible();
     await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveCount(1);
-    await expect(page.getByRole("heading", { name: "Talk to Vitalos" })).toBeVisible();
+    // The site's closing card (pages redesign): the locked closing heading and Talk to Vitalos.
+    await expect(
+      page.locator("main").getByRole("heading", { name: "Have a problem worth solving?" }),
+    ).toBeVisible();
+    await expect(
+      page.locator("main").getByRole("link", { name: "Talk to Vitalos" }),
+    ).toHaveAttribute("href", "/contact");
   });
 
   test("format views are noindex, follow with the canonical on /insights", async ({ page }) => {
@@ -32,7 +38,15 @@ test.describe("Insights article", () => {
     const response = await page.goto("/insights/example-post-1");
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Example post 1 (fixture)");
-    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("INSIGHTS");
+    // The site's dark hero: the format as the eyebrow, no visible breadcrumb trail (owner
+    // decision 2026-10-12); the BreadcrumbList stays in the structured data.
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("article", { name: "Example post 1 (fixture)" })
+        .getByText("Engineering note")
+        .first(),
+    ).toBeVisible();
     await expect(
       page.getByText("PUBLISHED 12 OCT 2026 · UPDATED 14 OCT 2026 · 3 MIN READ"),
     ).toBeVisible();

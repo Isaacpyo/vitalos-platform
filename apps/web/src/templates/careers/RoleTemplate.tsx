@@ -8,28 +8,35 @@ import {
   privacyNoticeHref,
   roleFacts,
 } from "../../features/content/careers/model";
-import { CAREERS_BASE } from "../../features/content/routes";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 import { PageMain } from "../institutional/page-main";
-import { TalkBand, monoLabel } from "../insights/parts";
+import { InsightsHero, monoLabel } from "../insights/parts";
 import { ApplicationForm } from "./ApplicationForm";
 import { FactsGrid, HtmlSection } from "./parts";
 
-function Breadcrumb({ practice }: Readonly<{ practice: string }>) {
-  return (
-    <nav aria-label="Breadcrumb" className={`${monoLabel} text-tone-muted`}>
-      <a href={CAREERS_BASE} className="text-tone-link underline underline-offset-4">
-        {careersCopy.eyebrow}
-      </a>
-      <span aria-hidden="true"> / </span>
-      <span>{practice.toUpperCase()}</span>
-    </nav>
+/** The apply action for the hero and the end of the page; an external site says so. */
+function ApplyButton({
+  apply,
+  onDark = false,
+}: Readonly<{ apply: NonNullable<ReturnType<typeof applyLink>>; onDark?: boolean }>) {
+  const variant = onDark ? "secondary" : "primary";
+  return apply.external ? (
+    <Button href={apply.href} rel="noopener noreferrer" variant={variant} size="lg" arrow>
+      {careersCopy.applyForRole}
+      <span className="sr-only"> ({careersCopy.opensNewSite})</span>
+    </Button>
+  ) : (
+    <Button href={apply.href} variant={variant} size="lg" arrow>
+      {careersCopy.applyForRole}
+    </Button>
   );
 }
 
 /**
- * A role (brief 6.2). Open: breadcrumb, H1, dek, facts, the apply action, the role's sections and
- * the application form. Closed: the closed notice and a link to open roles, nothing else.
+ * A role (brief 6.2) in the site's design: the compact dark hero (practice, H1, dek, the apply
+ * action and the facts), then the role's sections and the application form. As the redesign set
+ * it, the page ends with its own apply action, not the client closing card. Closed: the closed
+ * notice and a link to open roles, nothing else.
  */
 export function RoleTemplate({
   view,
@@ -44,29 +51,22 @@ export function RoleTemplate({
     const { role } = view;
     return (
       <PageMain>
+        <InsightsHero
+          eyebrow={role.practice.label}
+          title={role.title}
+          intro={careersCopy.closedText(role.closedAt.long)}
+        >
+          <p className={`${monoLabel} m-0 text-tone-muted`}>
+            {careersCopy.closedLabel(role.closedAt.short)}
+          </p>
+        </InsightsHero>
         <Section as="div" tone="light" spacing="default">
           <Container size="wide">
-            <Breadcrumb practice={role.practice.label} />
-            <h1 className="mt-(--space-4) max-w-[22ch] text-h1 text-tone-heading text-balance">
-              {role.title}
-            </h1>
-            <p className={`${monoLabel} mt-(--space-4) text-tone-muted`}>
-              {careersCopy.closedLabel(role.closedAt.short)}
-            </p>
-            <p className="mt-(--space-4) text-body-l text-tone-text">
-              {careersCopy.closedText(role.closedAt.long)}
-            </p>
-            <p className="mt-(--space-5)">
-              <a
-                href={routes.careers()}
-                className="text-body text-tone-link underline underline-offset-4"
-              >
-                {careersCopy.seeOpenRoles}
-              </a>
-            </p>
+            <Button href={routes.careers()} arrow>
+              {careersCopy.seeOpenRoles}
+            </Button>
           </Container>
         </Section>
-        <TalkBand />
       </PageMain>
     );
   }
@@ -78,41 +78,20 @@ export function RoleTemplate({
   return (
     <PageMain>
       <JsonLd data={jsonLd as JsonLdNode[]} />
-      <article aria-labelledby="role-title">
-        <Section as="div" tone="light" spacing="default" className="border-b border-tone-border">
-          <Container size="wide">
-            <Breadcrumb practice={role.practice.label} />
-            <h1
-              id="role-title"
-              className="mt-(--space-4) max-w-[22ch] text-h1 text-tone-heading text-balance"
-            >
-              {role.title}
-            </h1>
-            <p className="mt-(--space-5) max-w-(--container-prose) text-body-l text-tone-muted">
-              {role.summary}
+      <article aria-label={role.title}>
+        <InsightsHero
+          eyebrow={role.practice.label}
+          title={role.title}
+          intro={role.summary}
+          actions={apply ? <ApplyButton apply={apply} onDark /> : undefined}
+        >
+          <FactsGrid facts={roleFacts(role)} />
+          {apply?.external ? (
+            <p className="m-0 text-small text-tone-muted" aria-hidden="true">
+              This {careersCopy.opensNewSite}.
             </p>
-            <div className="mt-(--space-6)">
-              <FactsGrid facts={roleFacts(role)} />
-            </div>
-            {apply ? (
-              <div className="mt-(--space-6)">
-                {apply.external ? (
-                  <Button href={apply.href} rel="noopener noreferrer">
-                    {careersCopy.applyForRole}
-                    <span className="sr-only"> ({careersCopy.opensNewSite})</span>
-                  </Button>
-                ) : (
-                  <Button href={apply.href}>{careersCopy.applyForRole}</Button>
-                )}
-                {apply.external ? (
-                  <p className="mt-(--space-2) text-small text-tone-muted" aria-hidden="true">
-                    This {careersCopy.opensNewSite}.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-          </Container>
-        </Section>
+          ) : null}
+        </InsightsHero>
 
         <Section as="div" tone="light" spacing="default">
           {/* The band's own padding is the gap above the first section (no extra margin). */}
@@ -130,7 +109,7 @@ export function RoleTemplate({
               <section
                 id="apply"
                 aria-labelledby="apply-heading"
-                className="mt-(--space-8) scroll-mt-(--space-8) border-t border-tone-border pt-(--space-7)"
+                className="mt-(--space-8) scroll-mt-(--size-header) rounded-2xl border border-tone-border bg-tone-bg p-(--space-6) md:p-(--space-7)"
               >
                 <h2 id="apply-heading" className="m-0 mb-(--space-5) text-h2 text-tone-heading">
                   {careersCopy.applyForRole}
@@ -146,11 +125,14 @@ export function RoleTemplate({
                   <p className="m-0 text-body-l text-tone-text">{careersCopy.notOpenYet}</p>
                 )}
               </section>
+            ) : apply ? (
+              <div className="mt-(--space-8)">
+                <ApplyButton apply={apply} />
+              </div>
             ) : null}
           </Container>
         </Section>
       </article>
-      <TalkBand />
     </PageMain>
   );
 }

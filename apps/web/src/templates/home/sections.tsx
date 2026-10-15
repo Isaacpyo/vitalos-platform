@@ -347,22 +347,24 @@ export const labsSection: SectionRender = (context, tone) => {
 /**
  * 11. Insights, from the Super Admin's `home` read (brief 5.6, ADR-035): wired into the band the
  * homepage already had. Absent when the admin returns no section (closed, disabled, nothing
- * published) and when the read failed (the homepage never fails because of it).
+ * published) and when the read failed (the homepage never fails because of it). It takes the
+ * redesign's alternating band surface, so it never merges with the Labs band above it.
  */
-// The brief sets this section on a white ground whatever the band rhythm around it (5.6).
-export const insightsSection: SectionRender = (context) => {
+export const insightsSection: SectionRender = (context, tone) => {
   const section = context.content?.insights;
-  return section && section.items.length > 0 ? <HomeInsights section={section} /> : null;
+  return section && section.items.length > 0 ? (
+    <HomeInsights section={section} tone={tone} />
+  ) : null;
 };
 
 /**
- * 11b. Careers, from the admin's `home` read (brief 6.5), directly after Insights on its muted
- * band. Absent when the admin returns no section (closed, disabled, or no roles and set to hide)
- * and when the read failed.
+ * 11b. Careers, from the admin's `home` read (brief 6.5), directly after Insights, on the next
+ * band surface. Absent when the admin returns no section (closed, disabled, or no roles and set
+ * to hide) and when the read failed.
  */
-export const careersSection: SectionRender = (context) => {
+export const careersSection: SectionRender = (context, tone) => {
   const section = context.content?.careers;
-  return section ? <HomeCareers section={section} /> : null;
+  return section ? <HomeCareers section={section} tone={tone} /> : null;
 };
 
 /**

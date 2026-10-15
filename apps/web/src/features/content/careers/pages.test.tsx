@@ -117,8 +117,10 @@ describe("Careers pages when open", () => {
     const markup = html(
       await (await pages.role()).default(params({ slug: "example-role-fixture" })),
     );
-    expect(markup).toContain('<h1 id="role-title"');
-    expect(markup).toContain("CAREERS</a>");
+    // The site's dark hero: the role is the single h1; no visible breadcrumb trail.
+    expect(markup.match(/<h1[\s>]/g)).toHaveLength(1);
+    expect(markup).toContain("Example role (fixture)</h1>");
+    expect(markup).not.toContain('aria-label="Breadcrumb"');
     expect(markup).toContain("About the role");
     expect(markup).toContain("What you&#x27;ll do");
     expect(markup).not.toContain("Nice to have");

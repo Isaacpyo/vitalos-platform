@@ -1,4 +1,5 @@
 import { Container, Section } from "@vitalos/ui";
+import { MediaSlot } from "../../components/media-slot";
 import { JsonLd } from "../../components/json-ld";
 import type { ArticlePageData } from "../../features/content/insights/load";
 import {
@@ -10,11 +11,13 @@ import {
   showsToc,
 } from "../../features/content/insights/model";
 import type { PostDetail } from "../../features/content/insights/model";
-import { INSIGHTS_BASE } from "../../features/content/routes";
+import { isAllowedImage } from "../../features/content/markdown/render";
+import { mediaOrigin } from "../../features/content/site-hosts";
+import { Band } from "../commercial/bands";
 import { PageMain } from "../institutional/page-main";
 import { articleBodyClass } from "./body-styles";
 import { CodeCopyButtons, CopyLinkButton } from "./copy-buttons";
-import { ContentImage, PostGrid, TalkBand, monoLabel } from "./parts";
+import { ContentImage, InsightsHero, PostGrid, TalkBand, monoLabel } from "./parts";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 
 const BODY_ID = "article-body";
@@ -53,12 +56,12 @@ function Byline({ post }: Readonly<{ post: PostDetail }>) {
             <ContentImage
               image={author.avatar}
               sizes="40px"
-              className="size-10 shrink-0 object-cover"
+              className="size-10 shrink-0 rounded-full object-cover"
             />
           ) : (
             <span
               aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center bg-tone-tile-bg font-mono text-small font-semibold text-tone-tile-fg"
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg font-mono text-small font-semibold text-tone-tile-fg"
             >
               {author.initials}
             </span>
@@ -78,6 +81,32 @@ function Byline({ post }: Readonly<{ post: PostDetail }>) {
   );
 }
 
+/**
+ * The hero media: the admin's cover (with its caption) when it is on the media host; otherwise
+ * the `insights.article.{slug}` image slot, as the redesign places it (a branded placeholder
+ * until an image is added).
+ */
+function ArticleCover({ post }: Readonly<{ post: PostDetail }>) {
+  if (post.cover && isAllowedImage(post.cover.url, mediaOrigin())) {
+    return (
+      <figure className="m-0">
+        <ContentImage
+          image={post.cover}
+          priority
+          sizes="(min-width: 1024px) 42vw, 100vw"
+          className="aspect-video h-auto w-full rounded-2xl object-cover"
+        />
+        {post.cover.caption ? (
+          <figcaption className="mt-(--space-2) text-small text-tone-muted">
+            {post.cover.caption}
+          </figcaption>
+        ) : null}
+      </figure>
+    );
+  }
+  return <MediaSlot id="insights.article" item={post.slug} priority />;
+}
+
 export interface ArticleTemplateProps {
   data: ArticlePageData;
   /** Absolute canonical URL of the article (copy link, share link). */
@@ -86,9 +115,9 @@ export interface ArticleTemplateProps {
 }
 
 /**
- * The article (brief 5.2): mono breadcrumb, H1, dek, byline and dates, optional cover, the
- * rendered body with its contents list, the sources, the editorial note, the authors, sharing,
- * related posts and the closing band.
+ * The article (brief 5.2) in the site's design: the compact dark hero (format, H1, dek, byline
+ * and dates, the cover beside them), the rendered body with its contents list, the sources, the
+ * editorial note, the authors, sharing, related posts and the closing card.
  */
 export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateProps>) {
   const { post, body, authors, state } = data;
@@ -98,45 +127,18 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
   return (
     <PageMain>
       <JsonLd data={jsonLd as JsonLdNode[]} />
-      <article aria-labelledby="article-title">
-        <Section as="div" tone="light" spacing="default" className="border-b border-tone-border">
-          <Container size="wide">
-            <nav aria-label="Breadcrumb" className={`${monoLabel} text-tone-muted`}>
-              <a href={INSIGHTS_BASE} className="text-tone-link underline underline-offset-4">
-                {insightsCopy.eyebrow}
-              </a>
-              <span aria-hidden="true"> / </span>
-              <span>{post.format.label}</span>
-            </nav>
-            <h1
-              id="article-title"
-              className="mt-(--space-4) max-w-[22ch] text-h1 break-words text-tone-heading text-balance"
-            >
-              {post.title}
-            </h1>
-            <p className="mt-(--space-5) max-w-(--container-prose) text-body-l text-tone-muted">
-              {post.excerpt}
-            </p>
-            <div className="mt-(--space-6) flex flex-col gap-(--space-4)">
-              <Byline post={post} />
-              <p className={`${monoLabel} m-0 text-tone-muted`}>{articleDatesLine(post)}</p>
-            </div>
-            {post.cover ? (
-              <figure className="m-0 mt-(--space-7)">
-                <ContentImage
-                  image={post.cover}
-                  priority
-                  sizes="(min-width: 1440px) 1360px, 100vw"
-                />
-                {post.cover.caption ? (
-                  <figcaption className="mt-(--space-2) text-small text-tone-muted">
-                    {post.cover.caption}
-                  </figcaption>
-                ) : null}
-              </figure>
-            ) : null}
-          </Container>
-        </Section>
+      <article aria-label={post.title}>
+        <InsightsHero
+          eyebrow={post.format.label}
+          title={post.title}
+          intro={post.excerpt}
+          media={<ArticleCover post={post} />}
+        >
+          <div className="flex flex-col gap-(--space-4)">
+            <Byline post={post} />
+            <p className={`${monoLabel} m-0 text-tone-muted`}>{articleDatesLine(post)}</p>
+          </div>
+        </InsightsHero>
 
         <Section as="div" tone="light" spacing="default">
           <Container size="wide">
@@ -237,19 +239,9 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
       </article>
 
       {related.length > 0 ? (
-        <Section
-          tone="light"
-          spacing="default"
-          aria-labelledby="related-insights"
-          className="border-t border-tone-border"
-        >
-          <Container size="wide">
-            <h2 id="related-insights" className="m-0 mb-(--space-6) text-h2 text-tone-heading">
-              {insightsCopy.related}
-            </h2>
-            <PostGrid posts={related} covers={false} headingLevel={3} />
-          </Container>
-        </Section>
+        <Band tone="muted" heading={insightsCopy.related}>
+          <PostGrid posts={related} covers={false} headingLevel={3} />
+        </Band>
       ) : null}
 
       <TalkBand cta={post.cta} />
