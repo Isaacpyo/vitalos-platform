@@ -50,14 +50,6 @@
         {{ form.title }}
         {% for error in form.title.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
       </div>
-      <div>
-        <div class="flex items-baseline justify-between gap-2">
-          <label for="{{ form.excerpt.id_for_label }}" class="field-label">Excerpt</label>
-          <span class="mono-label muted" data-counter-for="{{ form.excerpt.id_for_label }}">{{ post.excerpt|length }} / 220</span>
-        </div>
-        {{ form.excerpt }}
-        <p class="field-help">Shown on the index, in search results and as the article's dek.</p>
-      </div>
 
       <div class="card" data-md-root>
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-2 py-1.5 dark:border-slate-800">

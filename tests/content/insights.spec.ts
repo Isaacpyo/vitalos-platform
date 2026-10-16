@@ -53,10 +53,32 @@ test.describe("Insights article", () => {
     await expect(page.locator("#example-heading")).toHaveText("Example heading");
     await expect(page.getByRole("heading", { name: "Sources" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More from Example" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Share on LinkedIn" })).toHaveAttribute(
+    // No excerpt under the title (owner decision, 16 Oct 2026); related cards may still show theirs.
+    await expect(
+      page.locator("h1 ~ p", { hasText: "Example excerpt for a fixture post." }),
+    ).toHaveCount(0);
+    // The author block has the avatar (initials when there is no photo) beside the name.
+    await expect(
+      page.getByRole("region", { name: "Author" }).getByText("EA", { exact: true }),
+    ).toBeVisible();
+    // One Share button opens a menu of plain share links; Escape closes it.
+    const share = page.locator("summary", { hasText: "Share" });
+    await share.click();
+    const menu = page.getByRole("group", { name: "Share this article" });
+    for (const network of ["LinkedIn", "X", "Facebook", "WhatsApp", "Reddit", "Bluesky", "Email"]) {
+      await expect(menu.getByRole("link", { name: new RegExp(`^${network}\\b`) })).toBeVisible();
+    }
+    await expect(menu.getByRole("link", { name: /^LinkedIn/ })).toHaveAttribute(
       "href",
       /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=/,
     );
+    await expect(menu.getByRole("link", { name: /^LinkedIn/ })).toHaveAttribute(
+      "rel",
+      "noopener noreferrer",
+    );
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(share).toBeFocused();
     const jsonLd = (
       await page.locator('script[type="application/ld+json"]').allTextContents()
     ).join("");

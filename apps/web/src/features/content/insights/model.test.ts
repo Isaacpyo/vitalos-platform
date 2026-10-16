@@ -11,7 +11,6 @@ import {
   gridHasCovers,
   indexHref,
   insightsTitle,
-  linkedInShareHref,
   metaLine,
   pagination,
   safeCtaHref,
@@ -135,12 +134,6 @@ describe("links", () => {
     ]) {
       expect(safeCtaHref(bad), bad).toBeUndefined();
     }
-  });
-
-  it("builds a plain LinkedIn share link", () => {
-    expect(linkedInShareHref("https://www.example.test/insights/a?b=1")).toBe(
-      "https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fwww.example.test%2Finsights%2Fa%3Fb%3D1",
-    );
   });
 
   it("shows the contents list for three or more h2s", () => {

@@ -13,6 +13,7 @@ and the renderer reports no blocking warning.
 import difflib
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from datetime import timedelta
 from urllib.parse import urlsplit
@@ -66,7 +67,6 @@ HASH_FIELDS = (
 )
 WORKING_FIELDS = (
     "title",
-    "excerpt",
     "body_md",
     "format",
     "slug",
@@ -263,6 +263,40 @@ def _clean_ids(values, model, *, limit: int, exclude=None) -> list[str]:
     return [pk for pk in ids if pk in known]
 
 
+EXCERPT_LIMIT = 220
+_MD_LINK = re.compile(r"!?\[([^\]]*)\]\([^)]*\)")
+_MD_FOOTNOTE_REF = re.compile(r"\[\^[^\]]+\]")
+_MD_EMPHASIS = re.compile(r"(\*\*|__|\*|_|`)")
+_NON_PROSE = ("#", ">", "```", "~~~", "|", "- ", "* ", "+ ", "[^")
+
+
+def _first_paragraph(body_md: str) -> str:
+    """The first prose paragraph of the body, as plain text (no headings, lists, quotes or code)."""
+    for block in re.split(r"\n\s*\n", (body_md or "").replace("\r\n", "\n")):
+        text = block.strip()
+        if not text or text.startswith(_NON_PROSE) or re.match(r"^\d+[.)] ", text):
+            continue
+        text = _MD_FOOTNOTE_REF.sub("", text)
+        text = _MD_LINK.sub(lambda match: match.group(1), text)
+        text = _MD_EMPHASIS.sub("", text)
+        text = " ".join(text.split())
+        if text:
+            return text
+    return ""
+
+
+def derive_excerpt(seo_description: str, body_md: str, limit: int = EXCERPT_LIMIT) -> str:
+    """The summary shown on cards, the feed and search results (there is no separate excerpt field):
+    the SEO description when written, else the body's opening paragraph, cut at a word boundary."""
+    text = " ".join((seo_description or "").split()) or _first_paragraph(body_md)
+    if len(text) <= limit:
+        return text
+    cut = text[: limit - 1]
+    if " " in cut:
+        cut = cut[: cut.rindex(" ")]
+    return cut.rstrip(" ,;:.-") + "…"
+
+
 def validate_working(post: Post, data: dict) -> dict[str, str]:
     errors = {}
     if not (data.get("title") or "").strip():
@@ -304,7 +338,7 @@ def save_working_copy(
             if name in data:
                 setattr(current, name, data[name])
         current.title = current.title.strip()[:200]
-        current.excerpt = current.excerpt.strip()
+        current.excerpt = derive_excerpt(current.seo_description, current.body_md)
         author_list = _clean_ids(authors, Author, limit=MAX_AUTHORS)
         topic_list = _clean_ids(topics, Topic, limit=50)
         related_list = _clean_ids(related, Post, limit=MAX_RELATED, exclude=current.pk)

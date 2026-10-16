@@ -185,7 +185,7 @@
 
   function updateSeoPreview() {
     var title = field("seo_title").value || field("title").value;
-    var description = field("seo_description").value || field("excerpt").value;
+    var description = field("seo_description").value;
     var slug = field("slug").value;
     var map = { "[data-seo-title]": title, "[data-seo-description]": description, "[data-seo-slug]": slug, "[data-slug-mirror]": slug };
     Object.keys(map).forEach(function (selector) {

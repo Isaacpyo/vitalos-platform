@@ -33,6 +33,7 @@ export const careersCopy = {
   notOpenYet:
     "Applications are not open yet. Please check back soon, or get in touch through the contact page.",
   titleSuffix: "Careers at Vitalos",
+  shareMenu: "Share this role",
 } as const;
 
 /** The role page's sections, in order (brief 6.2). Empty ones are not shown. */

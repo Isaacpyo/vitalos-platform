@@ -24,7 +24,7 @@ export const insightsCopy = {
   linkCopied: "Link copied",
   copyCode: "Copy",
   codeCopied: "Copied",
-  shareOnLinkedIn: "Share on LinkedIn",
+  shareMenu: "Share this article",
   related: "Related insights",
   moreFrom: (firstName: string) => `More from ${firstName}`,
   titleSuffix: "Vitalos Insights",
@@ -186,10 +186,6 @@ export function safeCtaHref(href: string): string | undefined {
     ? value
     : undefined;
 }
-
-/** A plain LinkedIn share link (no SDK, no script). */
-export const linkedInShareHref = (url: string): string =>
-  `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
 
 const absolute = (siteUrl: string, path: string) => new URL(path, siteUrl).toString();
 

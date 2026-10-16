@@ -1,6 +1,7 @@
 import { routes } from "@vitalos/cms";
 import { Button, Container, Section } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
+import { ShareMenu } from "../../components/share-menu";
 import type { RolePageView } from "../../features/content/careers/load";
 import {
   applyLink,
@@ -35,15 +36,18 @@ function ApplyButton({
 /**
  * A role (brief 6.2) in the site's design: the compact dark hero (practice, H1, dek, the apply
  * action and the facts), then the role's sections and the application form. As the redesign set
- * it, the page ends with its own apply action, not the client closing card. Closed: the closed
- * notice and a link to open roles, nothing else.
+ * it, the page ends with its own apply action and the Share menu, not the client closing card.
+ * Closed: the closed notice and a link to open roles, nothing else.
  */
 export function RoleTemplate({
   view,
+  url,
   jsonLd,
   turnstileSiteKey,
 }: Readonly<{
   view: RolePageView;
+  /** The role's canonical URL, for the Share menu. */
+  url: string;
   jsonLd: readonly (JsonLdNode | Record<string, unknown> | null)[];
   turnstileSiteKey?: string | undefined;
 }>) {
@@ -130,6 +134,10 @@ export function RoleTemplate({
                 <ApplyButton apply={apply} />
               </div>
             ) : null}
+
+            <div className="mt-(--space-7)">
+              <ShareMenu url={url} title={role.title} menuLabel={careersCopy.shareMenu} />
+            </div>
           </Container>
         </Section>
       </article>

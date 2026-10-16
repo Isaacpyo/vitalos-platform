@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
 /**
- * The only client JavaScript on an article (brief 5.2): Copy buttons for code blocks and a Copy
- * link button. Both appear only after hydration and only when the Clipboard API exists, so the
- * server-rendered page is complete without them.
+ * Copy buttons for the article's code blocks (brief 5.2). They appear only after hydration and
+ * only when the Clipboard API exists, so the server-rendered page is complete without them. The
+ * article's other client island is the Share menu (`share-menu.tsx`).
  */
 
 const buttonClass =
@@ -13,8 +13,6 @@ const buttonClass =
 
 const canCopy = () =>
   typeof navigator !== "undefined" && typeof navigator.clipboard?.writeText === "function";
-
-const noSubscription = () => () => undefined;
 
 /** Adds a Copy button to every code block inside `#rootId` (the rendered article body). */
 export function CodeCopyButtons({
@@ -51,30 +49,4 @@ export function CodeCopyButtons({
     };
   }, [rootId, label, copiedLabel]);
   return null;
-}
-
-/** Copies the article's canonical URL. Renders nothing until it can work. */
-export function CopyLinkButton({
-  url,
-  label,
-  copiedLabel,
-}: Readonly<{ url: string; label: string; copiedLabel: string }>) {
-  // False on the server and before hydration; the Clipboard API never appears later.
-  const ready = useSyncExternalStore(noSubscription, canCopy, () => false);
-  const [copied, setCopied] = useState(false);
-  if (!ready) return null;
-  return (
-    <button
-      type="button"
-      className={buttonClass}
-      onClick={() => {
-        void navigator.clipboard.writeText(url).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        });
-      }}
-    >
-      <span aria-live="polite">{copied ? copiedLabel : label}</span>
-    </button>
-  );
 }

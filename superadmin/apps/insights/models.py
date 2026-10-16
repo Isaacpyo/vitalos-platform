@@ -64,7 +64,7 @@ CHECK_TEXT = {
     CheckKey.CLAIMS: "Claims and figures are checked; there are no invented statistics.",
     CheckKey.CITATIONS: "Citations and links are checked.",
     CheckKey.IMAGES: "Images have alt text, and we have the rights to use them.",
-    CheckKey.SEO: "The excerpt, SEO title and SEO description are written (or the defaults accepted).",
+    CheckKey.SEO: "The SEO title and SEO description are written (or the defaults accepted).",
 }
 
 
