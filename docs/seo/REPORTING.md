@@ -32,9 +32,9 @@ Sources: Google Search Console (Domain property `vitalos.co.uk`), Bing Webmaster
 | ------------------------ | ----------------- | ----------- | ------ | --- | ---------------- | ------- | ------- | ----------------- | ---------------------- | ----- |
 | _first row after launch_ |                   |             |        |     |                  |         |         |                   |                        |       |
 
-## Privacy notice wording for analytics (draft, for approval; not published)
+## Privacy notice wording for analytics (published 16 Oct 2026, notice version `2026-10-analytics`)
 
-To add to `/legal/privacy` (section "What we collect") and `/legal/cookies` when `NEXT_PUBLIC_ANALYTICS_PROVIDER=vercel` is switched on. Vercel's current documentation and data processing agreement must be checked against this text before it is published.
+Published in `/legal/privacy` ("Website analytics") and `/legal/cookies`, checked against Vercel's Web Analytics and Speed Insights privacy documentation on 16 Oct 2026. The text below was the draft; the published wording is in `packages/cms/src/repo/legal.ts`.
 
 > **Website analytics.** We use Vercel Web Analytics and Vercel Speed Insights to understand how the website is used and how fast it is. They do not use cookies or similar storage on your device, and they do not identify you. Vercel receives the address of the page you visit (without any query string), the referring website, your browser, operating system and device type, your country, and page performance measurements. Visits are counted using a value derived from your request that changes every day and cannot be used to recognise you over time. We also count when a "Talk to Vitalos" link is clicked and when an enquiry is accepted; these events contain no personal data or form content. Vercel Inc. processes this data for us as a processor, under its data processing agreement, which covers transfers outside the UK. We keep the aggregated reports for [retention period to confirm].
 

@@ -28,4 +28,4 @@ The SEO audit (`docs/seo/AUDIT.md`) found that `www.vitalos.co.uk` already serve
 
 - robots.txt and `/indexnow-key.txt` are dynamic (tiny responses). Pages stay static.
 - Moving the canonical host (www → apex, LAUNCH.md §2) needs only `NEXT_PUBLIC_SITE_URL` and the Vercel domain redirect to change together. A request on the old host is then noindexed automatically until the redirect is in place.
-- The visible breadcrumb trail returns below the top level (docs/seo/DECISIONS.md 13), which reverses the 12 Oct 2026 design decision. One switch turns it off.
+- Breadcrumbs stay as structured data only; the owner kept the 12 Oct 2026 decision against a visible trail (docs/seo/DECISIONS.md 13).

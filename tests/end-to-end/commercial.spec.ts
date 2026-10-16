@@ -316,7 +316,7 @@ test.describe("commercial pages", () => {
     );
   });
 
-  test("a practice page shows its sections and a breadcrumb that matches its structured data", async ({
+  test("a practice page shows its sections, no visible breadcrumb, and a BreadcrumbList", async ({
     page,
   }) => {
     await page.goto("/what-we-do/example-practice");
@@ -326,14 +326,8 @@ test.describe("commercial pages", () => {
     for (const heading of ["Problems", "Capabilities", "Related offers", "Industries"]) {
       await expect(main.getByRole("heading", { level: 2, name: heading })).toBeVisible();
     }
-    // Visible below the top level (docs/seo/DECISIONS.md 13), with the same names as the
-    // BreadcrumbList, the last step being the current page.
-    const crumbs = page.locator('nav[aria-label="Breadcrumb"] li');
-    await expect(crumbs).toHaveText(["Home", "What We Do", "Example Practice (fixture)"]);
-    await expect(crumbs.last().locator('[aria-current="page"]')).toHaveCount(1);
-    await expect(
-      page.locator('nav[aria-label="Breadcrumb"]').getByRole("link", { name: "What We Do" }),
-    ).toHaveAttribute("href", "/what-we-do");
+    // No visible trail (owner decisions 12 and 16 Oct 2026); the structured data keeps it.
+    await expect(page.locator('nav[aria-label*="readcrumb"]')).toHaveCount(0);
     const names = (
       ((await jsonLdNode(page, "BreadcrumbList"))?.itemListElement ?? []) as { name: string }[]
     ).map((item) => item.name);

@@ -30,7 +30,7 @@ Context (AUDIT.md): `www.vitalos.co.uk` already serves this app and is crawlable
 Before merging, also:
 
 - [ ] Compare the crawls: every URL in `crawl/live.csv` still answers 200, or 308 to its new URL, in `crawl/after.csv` (see the end of AUDIT.md).
-- [ ] Owner decisions in the PR's approval list are made (visible breadcrumbs, training crawlers, analytics).
+- [x] Owner decisions made on 16 Oct 2026: no visible breadcrumbs, AI training crawlers allowed, free Vercel analytics on.
 
 ## 2. Move the canonical host from www to the apex (owner: Vercel domains)
 

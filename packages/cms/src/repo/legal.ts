@@ -9,14 +9,14 @@ import type { LegalPageView } from "../content/types";
 import { h2, p, pLink, richText, seo, ul } from "../draft/build";
 
 /** Version the contact form records consent against. Must equal ENQUIRY_PRIVACY_NOTICE_VERSION. */
-export const PRIVACY_NOTICE_VERSION = "2026-10-relay";
+export const PRIVACY_NOTICE_VERSION = "2026-10-analytics";
 
 const privacy: LegalPageView = {
   id: "legalPage-privacy",
   slug: "privacy",
   title: "Privacy notice",
   version: PRIVACY_NOTICE_VERSION,
-  effectiveDate: "2026-10-15",
+  effectiveDate: "2026-10-16",
   body: richText(
     "legal-privacy",
     h2("Who we are"),
@@ -31,6 +31,16 @@ const privacy: LegalPageView = {
       "To protect the form from abuse we store a one-way hash of your IP address, and we use Cloudflare Turnstile to check that the enquiry is not from an automated bot.",
     ),
     p("We do not use analytics or advertising cookies on this website."),
+    h2("Website analytics"),
+    p(
+      "We use Vercel Web Analytics and Vercel Speed Insights to understand how this website is used and how quickly its pages load. They do not set cookies or store anything on your device, and they do not identify you.",
+    ),
+    p(
+      'For each page view, Vercel records the page address (without any query string), the referring website, your approximate location (country, region and city), your browser, operating system and device type, and measurements of how quickly the page loaded. Visits are counted using a value derived from your request that is discarded after 24 hours, so it cannot be used to recognise you over time. We may also count when a "Talk to Vitalos" link is clicked or an enquiry is accepted; these counts contain no personal data or form content.',
+    ),
+    p(
+      "We see this information only as aggregated reports. Our lawful basis is our legitimate interest in understanding and improving our website.",
+    ),
     h2("Relay, our website assistant"),
     p(
       "Our website has an optional chat assistant, Relay. Relay answers questions about Vitalos using an AI model and the information published on this website. If you ask, it passes the conversation to a member of our team.",
@@ -89,11 +99,14 @@ const cookies: LegalPageView = {
   slug: "cookies",
   title: "Cookies",
   version: PRIVACY_NOTICE_VERSION,
-  effectiveDate: "2026-10-15",
+  effectiveDate: "2026-10-16",
   body: richText(
     "legal-cookies",
     h2("Cookies on this website"),
     p("We do not use analytics or advertising cookies on this website."),
+    p(
+      "Our website analytics (Vercel Web Analytics and Speed Insights) do not use cookies or store anything on your device.",
+    ),
     h2("Protecting the enquiry form"),
     p(
       "To protect the form from abuse we store a one-way hash of your IP address, and we use Cloudflare Turnstile to check that the enquiry is not from an automated bot.",

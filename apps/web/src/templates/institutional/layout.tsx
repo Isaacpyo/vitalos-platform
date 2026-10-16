@@ -1,10 +1,7 @@
-import { isValidElement } from "react";
 import type { ReactNode } from "react";
 import { Container, Eyebrow, Heading, Lead, PageHero, Section, Stack } from "@vitalos/ui";
 import type { HeadingLevel, ContainerSize, SectionTone } from "@vitalos/ui";
 import { heroPhotograph } from "../../lib/view-mapping/hero-images";
-import { VisibleBreadcrumb } from "../../components/site-chrome/visible-breadcrumb";
-import type { TrailStep } from "../../components/site-chrome/visible-breadcrumb";
 
 /** A page band: Section plus Container. The page's own `<main>` is `PageMain`. */
 export function PageBand({
@@ -51,10 +48,7 @@ export function PageHeroBand({
 }: Readonly<{
   /** Retained for callers: every hero now uses the wide container, like the homepage. */
   size?: ContainerSize;
-  /**
-   * The `<Breadcrumbs trail>` element: it renders the BreadcrumbList JSON-LD, and its trail is shown
-   * above the eyebrow below the top level (VisibleBreadcrumb).
-   */
+  /** Invisible BreadcrumbList JSON-LD element (Breadcrumbs); no visible trail. */
   crumbs?: ReactNode;
   title: string;
   eyebrow?: string | undefined;
@@ -69,7 +63,6 @@ export function PageHeroBand({
   full?: boolean;
   children?: ReactNode;
 }>) {
-  const trail = trailOf(crumbs);
   return (
     <>
       {crumbs}
@@ -78,7 +71,6 @@ export function PageHeroBand({
         backdrop={heroPhotograph}
         size={full ? "display" : "title"}
         containerSize="wide"
-        before={trail ? <VisibleBreadcrumb trail={trail} /> : undefined}
         title={title}
         eyebrow={eyebrow}
         lead={lead}
@@ -90,13 +82,6 @@ export function PageHeroBand({
       </PageHero>
     </>
   );
-}
-
-/** The trail carried by a `<Breadcrumbs trail>` element, if that is what `crumbs` is. */
-function trailOf(crumbs: ReactNode): readonly TrailStep[] | undefined {
-  if (!isValidElement<{ trail?: unknown }>(crumbs)) return undefined;
-  const trail = crumbs.props.trail;
-  return Array.isArray(trail) ? (trail as TrailStep[]) : undefined;
 }
 
 /** The page header: the single H1, an optional eyebrow and lead, and anything beneath them. */
