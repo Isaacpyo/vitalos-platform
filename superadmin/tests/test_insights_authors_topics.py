@@ -53,15 +53,13 @@ def test_seeds_hold_only_the_approved_copy_and_everything_starts_closed():
     )
     config = careers_config.load()
     assert config["heading"] == "Build what you advise." and config["values"][0] == "Ownership"
-    assert (
-        config["benefits"]
-        == config["process"]
-        == config["salary_policy"]
-        == config["equal_opportunities"]
-        == ""
-    )
+    assert config["benefits"] == config["process"] == config["salary_policy"] == ""
+    # Owner approvals of 16 Oct 2026 (careers migrations 0004 and 0005).
+    assert config["equal_opportunities"].startswith("Vitalos welcomes applications from everyone.")
+    assert config["privacy_notice_url"] == "/legal/candidate-privacy"
+    # CAR-01 was answered "no" on 16 Oct 2026: the associates line stays off.
     assert config["associates_line_enabled"] is False and config["speculative_applications_enabled"] is False
-    assert config["retention_months"] == 6 and config["privacy_notice_url"] == ""
+    assert config["retention_months"] == 6
     assert config["candidate_emails_enabled"] is False
     assert sections.load("home_insights")["count"] == 3
     assert sections.load("home_careers")["when_no_roles"] == "hide"

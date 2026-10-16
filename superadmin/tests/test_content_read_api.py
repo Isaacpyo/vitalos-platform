@@ -145,7 +145,9 @@ def test_nothing_unpublished_leaks_anywhere(every_status, client: Client):
     for path, response in responses.items():
         text = response.content.decode()
         assert HIDDEN not in text, path
-        assert "@" not in text, path  # no admin users, applicants or any email address
+        # No admin users, applicants or any email address; the one exception is the company's public
+        # support mailbox in the approved equal-opportunities statement.
+        assert "@" not in text.replace("support@vitalos.co.uk", ""), path
         assert "applicant" not in text.lower(), path
     listing = response_json(responses["/api/content/v1/insights/posts"])
     titles = [item["title"] for item in listing["items"]] + [listing["featured"]["title"]]

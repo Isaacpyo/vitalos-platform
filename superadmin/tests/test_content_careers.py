@@ -62,8 +62,10 @@ def test_role_detail_fills_settings_and_hides_what_is_not_shown(superadmin):
     detail = public.role_detail(role.published_slug)
     assert detail["level"] is None and detail["salary"] is None
     assert detail["sponsorship"] == {"key": "available", "label": "Available"}
-    assert detail["privacy"] == {"noticeUrl": None, "noticeVersion": None}
-    assert detail["sections"]["process"] == "" and detail["sections"]["equalOpportunities"] == ""
+    assert detail["privacy"] == {"noticeUrl": "/legal/candidate-privacy", "noticeVersion": "2026-10-careers"}
+    assert detail["sections"]["process"] == ""
+    # The owner-approved statement (careers migration 0005) shows on every role.
+    assert detail["sections"]["equalOpportunities"].startswith("Vitalos welcomes applications")
 
 
 def test_careers_config_validation():

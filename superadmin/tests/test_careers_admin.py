@@ -471,3 +471,13 @@ def test_careers_settings_point_at_the_published_candidate_privacy_notice():
     config = careers_config.load()
     assert config["privacy_notice_url"] == "/legal/candidate-privacy"
     assert config["privacy_notice_version"] == "2026-10-careers"
+
+
+@pytest.mark.django_db
+def test_the_approved_equal_opportunities_statement_is_seeded_and_served():
+    """Migration 0005 (owner approval, 16 Oct 2026); role pages show it (brief 6.2)."""
+    from apps.careers import config as careers_config
+
+    statement = careers_config.load()["equal_opportunities"]
+    assert statement.startswith("Vitalos welcomes applications from everyone.")
+    assert "Equality Act 2010" in statement and "support@vitalos.co.uk" in statement
