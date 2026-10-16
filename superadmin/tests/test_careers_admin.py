@@ -461,3 +461,13 @@ def test_new_pages_have_unique_ids_and_labelled_controls(world, superadmin, clie
             control_id = re.search(r'\sid="([^"]+)"', tag)
             assert control_id and control_id.group(1) in labelled, (url, tag[:120])
     assert Post.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_careers_settings_point_at_the_published_candidate_privacy_notice():
+    """Migration 0004: the owner approved the candidate notice on 16 Oct 2026."""
+    from apps.careers import config as careers_config
+
+    config = careers_config.load()
+    assert config["privacy_notice_url"] == "/legal/candidate-privacy"
+    assert config["privacy_notice_version"] == "2026-10-careers"

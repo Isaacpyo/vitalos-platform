@@ -79,6 +79,72 @@ const privacy: LegalPageView = {
   ),
 };
 
+/** Version applications record consent against (Super Admin careers settings, ADR-041). */
+export const CANDIDATE_PRIVACY_NOTICE_VERSION = "2026-10-careers";
+
+/**
+ * Candidate privacy notice: the owner approved docs/content/PRIVACY.md part 1 on 16 Oct 2026, with
+ * 6-month retention. Processors and the transfers wording follow the approved privacy notice above.
+ */
+const candidatePrivacy: LegalPageView = {
+  id: "legalPage-candidate-privacy",
+  slug: "candidate-privacy",
+  title: "Candidate privacy notice",
+  version: CANDIDATE_PRIVACY_NOTICE_VERSION,
+  effectiveDate: "2026-10-16",
+  body: richText(
+    "legal-candidate-privacy",
+    h2("Who we are"),
+    p(
+      "Vitalos Technologies Limited (company number 16696895), registered office 114 High Street, Bentley, Doncaster, England, DN5 0AT, is the controller of the personal data you give us when you apply for a role. You can contact us about it at support@vitalos.co.uk.",
+    ),
+    h2("What we collect"),
+    p(
+      "When you apply through our careers pages we collect your name and email address; optionally your phone number, where you are based, your LinkedIn and portfolio or GitHub links, your notice period and a cover note; your answer to whether you have the right to work in the UK; your CV; the role you applied for, when you applied, and your agreement to this notice and its version.",
+    ),
+    p(
+      "To protect the form from abuse we store a one-way hash of your IP address and your browser's user agent, and we use Cloudflare Turnstile to check that the application is not from an automated bot.",
+    ),
+    p(
+      "We do not ask for special-category data such as health, ethnicity or religion. If your CV or cover note includes it, we use it only as part of assessing your application and do not record it anywhere else.",
+    ),
+    p(
+      "If you apply, our team adds its own notes, a record of the stage your application has reached, and a record of who viewed your CV and when.",
+    ),
+    h2("Why we use it"),
+    p(
+      "We use your application to assess it and to contact you about it. Our lawful basis is taking steps at your request before entering into a contract. If we make you an offer, we check your right to work in the UK because the law requires it. We protect the application form from abuse because we have a legitimate interest in keeping it secure.",
+    ),
+    p(
+      "We do not use your data for marketing, we do not sell it, we do not send your CV or application to any AI service, and we do not use automated decision-making to decide the outcome of an application.",
+    ),
+    h2("How long we keep it"),
+    p(
+      "We delete your application and CV 6 months after the later of the date we made a decision about it and the date the role closed. If we hire you, your application becomes part of your employment records. Uploads that were never submitted are deleted within 24 hours.",
+    ),
+    h2("Who we share it with"),
+    p(
+      "We use service providers who process your data on our behalf: Microsoft Azure (our internal team console, where applications are stored), Supabase (its database), Cloudflare (private storage for CV files, and bot protection), Vercel (website hosting) and Resend (email delivery). We do not sell your personal data.",
+    ),
+    h2("International transfers"),
+    p(
+      "Some of these providers process personal data outside the UK, including in the United States. Where they do, the transfer is protected by UK adequacy regulations or the UK International Data Transfer Addendum with that provider.",
+    ),
+    h2("Your rights"),
+    p(
+      "You can ask us to access, correct or delete your personal data, to restrict or object to how we use it, or to give you a copy. You can withdraw your application at any time and we will delete it. Email support@vitalos.co.uk. You also have the right to complain to the Information Commissioner's Office at ico.org.uk.",
+    ),
+    h2("Changes to this notice"),
+    p(
+      "If we change this notice we will publish the new version on this page with a new version number and effective date. The application form records which version you agreed to.",
+    ),
+  ),
+  seo: seo(
+    "Candidate privacy notice",
+    "How Vitalos Technologies Limited collects and uses personal data when you apply for a role.",
+  ),
+};
+
 /**
  * Cookies (owner direction, 15 Oct 2026: "add them"). Every statement is taken from the approved
  * privacy notice above; nothing new is claimed. The site sets no cookies of its own (no
@@ -325,6 +391,7 @@ const terms: LegalPageView = {
 
 export const approvedLegalPages: readonly LegalPageView[] = [
   privacy,
+  candidatePrivacy,
   cookies,
   terms,
   accessibility,

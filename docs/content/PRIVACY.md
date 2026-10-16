@@ -1,6 +1,6 @@
 # Candidate privacy notice (draft) and recruitment DPIA note
 
-Status: **draft for owner approval. Not published.** Careers stays closed in production until the owner approves this notice, its retention period and the processors listed (ADR-041). Items in square brackets are decisions for the owner and must be resolved before publication. They are never shown on the site.
+Status: **approved by the owner on 16 October 2026** with 6-month retention, and published at `/legal/candidate-privacy` (version `2026-10-careers`, `packages/cms/src/repo/legal.ts`). The bracketed options below were resolved as follows: the lawful basis is steps at the candidate's request before a contract; the processors and the international-transfers wording follow the approved site privacy notice; the admin database is Supabase. The published page is the text of record; Part 1 below is the original draft.
 
 ---
 
