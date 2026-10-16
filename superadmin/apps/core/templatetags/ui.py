@@ -24,6 +24,7 @@ _ICON_SHAPES = {
     "plus": '<path d="M12 5v14M5 12h14"/>',
     "edit": '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/>',
     "archive": '<path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/>',
+    "refresh": '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
     "restore": '<path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/>',
     "up": '<path d="M6 15l6-6 6 6"/>',
     "down": '<path d="M6 9l6 6 6-6"/>',

@@ -175,6 +175,11 @@
     if (target.closest("[data-sidebar-close]") || target.matches("[data-sidebar-backdrop]")) closeSheet();
     if (target.closest("[data-theme-toggle]")) cycleTheme();
     if (target.closest("[data-palette-open]")) openPalette();
+    // The top bar's Refresh link: reload the address bar's URL (HTMX may have moved it on).
+    if (target.closest("a[data-refresh]") && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+      event.preventDefault();
+      window.location.reload();
+    }
     var dialog = palette();
     if (dialog && target === dialog) dialog.close(); // Click on the backdrop.
   });

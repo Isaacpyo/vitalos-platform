@@ -52,6 +52,7 @@
             </form>
             <div id="search-results" class="absolute right-0 z-50 mt-1 w-full min-w-[18rem]"></div>
           </div>
+          <a href="{{ request.get_full_path }}" class="btn btn-ghost btn-sm" data-refresh aria-label="Refresh this page" title="Refresh">{% icon "refresh" %}</a>
           <button type="button" class="btn btn-ghost btn-sm" data-palette-open aria-haspopup="dialog" aria-controls="palette" aria-keyshortcuts="Control+K Meta+K" aria-label="Open command palette">{% icon "command" %}</button>
           <div hx-get="{% url 'notifications:badge' %}" hx-trigger="load, every 60s" hx-swap="innerHTML">
             <a href="{% url 'notifications:list' %}" class="btn btn-ghost btn-sm" aria-label="Notifications">{% icon "bell" %}</a>

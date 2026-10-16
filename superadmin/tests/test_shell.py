@@ -74,6 +74,14 @@ def test_user_menu_shows_role_and_two_factor_status(client_for, superadmin, seed
     assert "Two-factor:</dt><dd>On" in body
 
 
+def test_top_bar_has_a_refresh_link_to_the_current_page(client_for, superadmin, seeded):
+    body = client_for(superadmin).get("/notifications/?tab=attention").content.decode()
+    link = re.search(r'<a href="([^"]*)" class="[^"]*" data-refresh aria-label="Refresh this page"', body)
+    assert link and link.group(1) == "/notifications/?tab=attention"
+    # It sits after the search field, before the command palette button.
+    assert body.index('id="global-search"') < link.start() < body.index("data-palette-open")
+
+
 def test_no_chrome_before_sign_in(client):
     body = client.get("/login/").content.decode()
     assert 'id="sidebar"' not in body and 'id="palette"' not in body
