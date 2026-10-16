@@ -18,6 +18,7 @@ import { repoSettingsFacts } from "./settings";
 
 export { approvedLegalPages, PRIVACY_NOTICE_VERSION } from "./legal";
 export { repoSettingsFacts } from "./settings";
+export { structuralSeo } from "./seo";
 
 // The inner class excludes "[" too, so matching stays linear on text with many unclosed brackets.
 const BRACKETED = /\[[^[\]]+\]/;

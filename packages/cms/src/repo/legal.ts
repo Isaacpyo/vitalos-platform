@@ -110,7 +110,10 @@ const cookies: LegalPageView = {
       "If we change this notice we will publish the new version on this page with a new version number and effective date.",
     ),
   ),
-  seo: seo("Cookies", "How the Vitalos website uses cookies: no analytics or advertising cookies."),
+  seo: seo(
+    "Cookies",
+    "How the Vitalos website uses cookies and protects the enquiry form: no analytics or advertising cookies, a hashed IP address and Cloudflare Turnstile.",
+  ),
 };
 
 /**
@@ -182,7 +185,7 @@ const accessibility: LegalPageView = {
   ),
   seo: seo(
     "Accessibility statement",
-    "How accessible vitalos.co.uk is, what we are doing about it and how to tell us about a problem.",
+    "How accessible vitalos.co.uk is: our WCAG 2.2 AA commitment, how you can use the site, its compliance status and how to tell us about a problem.",
   ),
 };
 
@@ -319,7 +322,7 @@ const terms: LegalPageView = {
   ),
   seo: seo(
     "Website terms of use",
-    "The rules for using vitalos.co.uk, including Insights, Careers and Relay.",
+    "Rules for using vitalos.co.uk, including Insights, Careers and Relay: using the site, intellectual property, what you send us, liability and governing law.",
   ),
 };
 

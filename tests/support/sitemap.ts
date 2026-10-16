@@ -9,22 +9,44 @@ export interface SitemapCheck {
   xml: string;
 }
 
+/** Fetches one sitemap document and asserts it is well-formed XML of the given root element. */
+async function fetchSitemapDocument(
+  request: APIRequestContext,
+  path: string,
+  root: "urlset" | "sitemapindex",
+): Promise<string> {
+  const response = await request.get(path, { maxRedirects: 0 });
+  expect(response.status(), `${path} answers 200`).toBe(200);
+  expect(response.headers()["content-type"]).toMatch(/xml/);
+  const xml = await response.text();
+  expect(xml).toContain(`<${root} xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`);
+  expect(xml.trimEnd().endsWith(`</${root}>`)).toBe(true);
+  return xml;
+}
+
 /**
- * Fetches /sitemap.xml and asserts what must hold for ANY fixture set: well-formed urlset, absolute
- * unique same-origin URLs without query or fragment, nothing from the API or draft surfaces, every
- * URL belongs to a known template family, and every listed URL answers 200 (a sitemap never lists
- * a 404, a redirect or a gated page).
+ * Fetches the /sitemap.xml index and every child it lists (docs/seo/DECISIONS.md 12), and asserts
+ * what must hold for ANY fixture set: a well-formed index whose children are same-origin
+ * `/sitemaps/{section}.xml` files; well-formed urlsets; absolute unique same-origin URLs without
+ * query or fragment; nothing from the API or draft surfaces; every URL belongs to a known template
+ * family; and every listed URL answers 200 (a sitemap never lists a 404, a redirect or a gated
+ * page).
  */
 export async function fetchAndCheckSitemap(
   request: APIRequestContext,
   origin: string,
 ): Promise<SitemapCheck> {
-  const response = await request.get("/sitemap.xml", { maxRedirects: 0 });
-  expect(response.status()).toBe(200);
-  expect(response.headers()["content-type"]).toMatch(/xml/);
-  const xml = await response.text();
-  expect(xml).toMatch(/<urlset[^>]+xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/);
-  expect(xml.trimEnd().endsWith("</urlset>")).toBe(true);
+  const index = await fetchSitemapDocument(request, "/sitemap.xml", "sitemapindex");
+  const children = sitemapLocs(index);
+  expect(children.length, "the index lists at least the pages sitemap").toBeGreaterThan(0);
+  const parts: string[] = [];
+  for (const child of children) {
+    const url = new URL(child);
+    expect(url.origin, `${child} uses the canonical origin`).toBe(origin);
+    expect(url.pathname).toMatch(/^\/sitemaps\/(pages|insights|careers)\.xml$/);
+    parts.push(await fetchSitemapDocument(request, url.pathname, "urlset"));
+  }
+  const xml = parts.join("\n");
 
   const locs = sitemapLocs(xml);
   expect(locs.length, "sitemap lists at least the home page").toBeGreaterThan(0);

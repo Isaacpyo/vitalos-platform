@@ -42,6 +42,8 @@ export interface PageHeroProps {
 export interface PageHeroBackdrop {
   src: string;
   srcSet?: string | undefined;
+  /** `sizes` for `srcSet`. Default `100vw`. */
+  sizes?: string | undefined;
   width: number;
   height: number;
 }
@@ -158,7 +160,7 @@ function DarkPageHero({
             <img
               src={backdrop.src}
               srcSet={backdrop.srcSet}
-              sizes="100vw"
+              sizes={backdrop.sizes ?? "100vw"}
               width={backdrop.width}
               height={backdrop.height}
               alt=""

@@ -28,8 +28,8 @@ const aiTransformation: SolutionDraft = {
   title: aiTitle,
   summary: "Turn AI ambition into operational value.",
   seo: seo(
-    "AI Transformation",
-    "Move from scattered AI pilots to governed, production AI that creates measurable value.",
+    "AI Transformation: From Pilots to Production",
+    "Move from scattered AI pilots to governed, production AI with measurable value: the right use cases, ready data, managed risk and workflow integration.",
   ),
   problemStatement:
     "AI value depends on the right use cases, ready data, governed risk, real workflow integration and reliable production. Leadership wants measurable results but lacks a safe, prioritised route to production.",
@@ -146,7 +146,7 @@ const businessProcess: SolutionDraft = {
   summary: "Redesign the work, then automate and integrate it.",
   seo: seo(
     "Business Process Modernisation",
-    "Redesign manual, fragmented operations, then automate and integrate them so the business can grow.",
+    "Redesign manual, slow or fragmented workflows, then automate and integrate them, so critical processes no longer run on spreadsheets, re-keying and email.",
   ),
   problemStatement:
     "Manual, slow or fragmented workflows create cost, delay and risk. When critical processes run on spreadsheets, re-keying and email, operations hold back growth and service quality.",
@@ -248,7 +248,7 @@ const digitalProduct: SolutionDraft = {
   summary: "Discover, design, engineer, launch and improve a digital product.",
   seo: seo(
     "Digital Product Transformation",
-    "Discover, design, engineer and keep improving a digital product that creates measurable customer or employee value.",
+    "Discover, design, engineer, launch and improve a platform, portal, application or digital service that creates measurable customer or employee value.",
   ),
   problemStatement:
     "The organisation needs a new or much better platform, portal, application, commerce experience or digital service. It must create measurable value for customers or employees, not just ship features.",
@@ -340,8 +340,8 @@ const applicationModernisation: SolutionDraft = {
   title: appModTitle,
   summary: "Modernise in controlled stages towards a platform you can keep changing.",
   seo: seo(
-    "Application Modernisation",
-    "Assess, re-architect and progressively modernise legacy applications, then operate them reliably.",
+    "Legacy Application Modernisation",
+    "Modernise ageing applications in controlled stages: assess, re-architect and progressively modernise legacy software, then operate it reliably.",
   ),
   problemStatement:
     "Ageing applications and architecture constrain growth, reliability and the speed of change. They are expensive to maintain, risky to alter and hard to integrate with the rest of the business.",
@@ -438,7 +438,7 @@ const dataIntelligence: SolutionDraft = {
   summary: "Build the foundation, then the intelligence on top of it.",
   seo: seo(
     "Data & Intelligence Transformation",
-    "Connect, clean, model and govern your data, then build the reporting and AI capability decisions depend on.",
+    "Connect, clean, model and govern fragmented data, then build the reporting, operational intelligence and AI capability that decisions depend on.",
   ),
   problemStatement:
     "Data exists across several systems but is fragmented, low-confidence or difficult to turn into decisions. Management lacks reliable operational intelligence, and the data is not ready to support AI.",
@@ -539,7 +539,7 @@ const technologyRecovery: SolutionDraft = {
     "Triage a critical platform, establish a known baseline, stabilise and remediate, then operate it.",
   seo: seo(
     "Technology Recovery & Reliability",
-    "Stabilise and recover a critical platform that is unstable, slow or unfinished, then keep it reliable.",
+    "Triage an unstable, slow or unfinished critical platform, even one another supplier built: set a known baseline, stabilise, remediate and keep it reliable.",
   ),
   problemStatement:
     "A critical platform is unstable, slow or unfinished. It may have been built by another supplier, documentation may be thin, and the business depends on it working.",

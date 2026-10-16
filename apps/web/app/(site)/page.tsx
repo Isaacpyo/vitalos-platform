@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { howWeWorkStages, routes } from "@vitalos/cms";
 import { JsonLd } from "../../src/components/json-ld";
+import { LegacyAnchorRedirect } from "../../src/components/legacy-anchor-redirect";
 import { loadChromeContent } from "../../src/components/site-chrome/load";
 import { getSeoContext } from "../../src/features/seo/context";
 import { organizationJsonLd, webSiteJsonLd } from "../../src/features/seo/json-ld";
@@ -33,6 +34,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={[organizationJsonLd(settings, ctx), webSiteJsonLd(ctx)]} />
+      <LegacyAnchorRedirect />
       <HomeTemplate
         home={home}
         gates={gates}

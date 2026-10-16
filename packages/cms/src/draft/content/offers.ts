@@ -40,7 +40,7 @@ const offers: readonly OfferDraft[] = [
       "Turn an ambiguous need to modernise into a coherent, prioritised plan: current state, future state and roadmap.",
     seo: seo(
       "Digital Transformation Discovery",
-      "A bounded discovery that turns a broad need to modernise into a current-state view, a future state and a prioritised roadmap.",
+      "A bounded discovery that maps processes, systems, data and pain points, defines the future state and sequences a prioritised transformation roadmap.",
     ),
     audience:
       "Leaders modernising parts of the business where several departments or systems are affected and the right answer is unclear.",
@@ -81,7 +81,7 @@ const offers: readonly OfferDraft[] = [
     summary: "Find out what is wrong, risky or holding a platform back, and what to fix first.",
     seo: seo(
       "Technology Health Assessment",
-      "A review of architecture, technical debt, security, reliability and performance risk, with a prioritised remediation plan.",
+      "A technology health check of architecture, code, technical debt, security, reliability and performance, ending in a prioritised remediation plan.",
     ),
     audience:
       "Leaders unsure of a platform's risk, debt or reliability, before deciding to modernise, rescue or hand it to a managed service.",
@@ -125,8 +125,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Find the AI opportunities worth building: viable use cases ranked by value, feasibility, data readiness and risk.",
     seo: seo(
-      "AI Opportunity Assessment",
-      "A focused engagement that ranks viable AI use cases by value, feasibility, data readiness and risk, with a roadmap to prototype.",
+      "AI Opportunity & Readiness Assessment",
+      "Find the AI opportunities worth building. Vitalos evaluates processes, data readiness, systems and risk, and ranks use cases by value and feasibility.",
     ),
     audience:
       "Leaders who know AI matters but not where it creates value safely, or who must choose between several AI ideas.",
@@ -174,7 +174,7 @@ const offers: readonly OfferDraft[] = [
       "Test the highest-value AI hypothesis quickly, with real workflows and data where appropriate, and decide on evidence.",
     seo: seo(
       "AI Prototype Sprint",
-      "A bounded sprint that tests the strongest AI use case with a working prototype and evaluation findings.",
+      "Test your highest-value AI hypothesis quickly: agreed evaluation criteria, a bounded prototype on real workflows, and evidence to decide on production.",
     ),
     audience:
       "Organisations with a prioritised AI use case that must prove value and feasibility before production investment.",
@@ -218,8 +218,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Build a new product, portal, workflow platform or application, designed around measurable user and business outcomes.",
     seo: seo(
-      "Custom Digital Product",
-      "Design and engineer a new product, portal, workflow platform or application for production.",
+      "Custom Digital Product Development",
+      "Design and build a new product, portal, workflow platform or application in tested increments, validated for security, performance and accessibility.",
     ),
     audience:
       "Organisations that need a defined new product or platform, with product ownership and decision-makers available.",
@@ -264,8 +264,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Modernise, replace or progressively refactor ageing software to reduce technical constraint and restore the ability to change.",
     seo: seo(
-      "Application Modernisation",
-      "Modernise, replace or progressively refactor legacy software in controlled stages.",
+      "Refactor or Replace Legacy Software",
+      "Modernise, replace or progressively refactor ageing software in planned stages, each with migration, testing and rollback, restoring the ability to change.",
     ),
     audience:
       "Technology leaders whose ageing application constrains growth, reliability or integration.",
@@ -304,8 +304,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Connect disconnected platforms, services and data flows so information moves reliably and manual handoffs disappear.",
     seo: seo(
-      "Systems Integration",
-      "Connect disconnected platforms, services and data flows for reliable automated exchange of information.",
+      "Systems Integration Services",
+      "Connect disconnected platforms, services and data flows so information moves reliably, with integrations that handle failures, retries and idempotency.",
     ),
     audience:
       "Operations and technology leaders whose teams re-key data between systems or depend on fragile manual handoffs.",
@@ -343,7 +343,7 @@ const offers: readonly OfferDraft[] = [
     summary: "Redesign and automate repeatable operations, combining workflow, integration and AI.",
     seo: seo(
       "Business Process Automation",
-      "Redesign manual, repetitive operations and automate them with workflow, integration and AI where it adds value.",
+      "Redesign repeatable operations first, then automate them with workflow, integration and AI where each helps, measured against the original baseline.",
     ),
     audience:
       "Operations leaders running manual, repetitive processes that limit growth or service.",
@@ -377,7 +377,7 @@ const offers: readonly OfferDraft[] = [
     summary: "Create a usable data foundation and the reporting and decision systems built on it.",
     seo: seo(
       "Data & BI Modernisation",
-      "Connect, clean, model and govern data, then modernise reporting, metrics and decision systems.",
+      "Create a usable data foundation: connect, clean, model and govern your data, then modernise the reporting, metrics and decision systems built on it.",
     ),
     audience:
       "Leaders who cannot trust their reporting, or whose data is too fragmented to support decisions or AI.",
@@ -419,7 +419,7 @@ const offers: readonly OfferDraft[] = [
       "Improve the end-to-end customer digital journey, connected to the processes and systems behind it.",
     seo: seo(
       "Customer Experience Transformation",
-      "Redesign the customer digital journey and the workflows behind it, with an implementation roadmap.",
+      "Improve the customer digital journey: review usability, accessibility and friction, then redesign it with the workflow behind it and plan delivery.",
     ),
     audience:
       "Digital, product and customer leaders whose customer journeys are fragmented, hard to use or disconnected from operations.",
@@ -456,8 +456,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Stabilise or complete a slow, unstable, unfinished or poorly engineered product, starting from a known baseline.",
     seo: seo(
-      "Engineering Rescue",
-      "Stabilise a stalled, unreliable or poorly engineered system with a rescue assessment and controlled remediation.",
+      "Engineering Rescue for Failing Software",
+      "Stabilise or complete slow, unstable, unfinished or poorly engineered software. A rescue assessment sets a known baseline before controlled remediation.",
     ),
     audience:
       "Organisations whose product is unstable, stalled or poorly engineered, including systems built by another supplier.",
@@ -498,8 +498,8 @@ const offers: readonly OfferDraft[] = [
     summary:
       "Ongoing ownership and improvement of live applications: maintenance, fixes, updates, incident support and retained engineering capacity.",
     seo: seo(
-      "Managed Engineering & Application Care",
-      "Application care and retained engineering capacity that keep live systems supported and improving.",
+      "Application Maintenance & Support",
+      "Managed engineering and application care: maintenance, defect fixes, updates, incident support and retained engineering capacity for live applications.",
     ),
     audience:
       "Organisations needing continuity for live systems without a full internal product engineering function, or extra capacity for their team.",
@@ -541,7 +541,7 @@ const offers: readonly OfferDraft[] = [
       "Define a new product before major engineering investment: validated problem, users, journeys, scope and backlog.",
     seo: seo(
       "Product Discovery",
-      "Validate the problem, users, journeys and scope of a new product before major engineering investment.",
+      "Define a new product before major engineering investment: research the problem and users, map journeys, shape scope and set prototype direction.",
     ),
     audience:
       "Leaders planning a new product or major redesign whose problem, users or scope are not yet validated.",

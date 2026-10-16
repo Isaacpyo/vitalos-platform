@@ -4,6 +4,7 @@ import type { ImageView, SeoView } from "@vitalos/cms";
 import { isSafeRelativeRedirect } from "@vitalos/security/url";
 import { isSameOriginImage } from "../../lib/cms/images";
 import { getSeoContext } from "./context";
+import { sanitiseSeo } from "./seo-block";
 import type { SeoContext } from "./context";
 
 export interface PageMetadataInput {
@@ -50,9 +51,12 @@ const usableImage = (image: ImageView | undefined): ImageView | undefined =>
  *   deployment is not indexable. Otherwise the default (index, follow) is left alone.
  */
 export function composeMetadata(input: PageMetadataInput, context: SeoContext): Metadata {
-  const title = input.seo?.title ?? input.title ?? input.defaultSeo?.title;
-  const description = input.seo?.description ?? input.description ?? input.defaultSeo?.description;
-  const ogImage = usableImage(input.seo?.ogImage ?? input.defaultSeo?.ogImage);
+  // Content SEO blocks are validated field by field; an invalid field falls back (seo-block.ts).
+  const seo = sanitiseSeo(input.seo);
+  const defaultSeo = sanitiseSeo(input.defaultSeo);
+  const title = seo?.title ?? input.title ?? defaultSeo?.title;
+  const description = seo?.description ?? input.description ?? defaultSeo?.description;
+  const ogImage = usableImage(seo?.ogImage ?? defaultSeo?.ogImage);
 
   // A path such as `//evil.invalid` would resolve to another host: no canonical at all then.
   let url: string | undefined;
@@ -63,7 +67,7 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
     url = canonical.toString();
   }
 
-  const noindex = Boolean(input.noindex || input.seo?.noindex) || !context.indexable;
+  const noindex = Boolean(input.noindex || seo?.noindex) || !context.indexable;
   // A title equal to the brand name would render "Vitalos | Vitalos" through the template.
   const absolute = Boolean(input.absoluteTitle) || title === brandName;
   const socialTitle = title ? (absolute ? title : `${title} | ${brandName}`) : brandName;

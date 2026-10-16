@@ -37,7 +37,7 @@ export function LabAssetPage({ data }: Readonly<{ data: LabAssetData }>) {
   return (
     <PageMain>
       <PageHeroBand
-        media={<MediaSlot id="labs.asset" item={asset.slug} priority />}
+        media={<MediaSlot id="labs.asset" item={asset.slug} itemName={asset.title} priority />}
         crumbs={<Breadcrumbs trail={trail} />}
         title={asset.title}
         eyebrow={typeLabel}

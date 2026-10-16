@@ -17,6 +17,18 @@ import { cta, h2, p, pLink, richText, seo, ul } from "../build";
 import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
 
+/* ---------- Home page SEO ---------- */
+
+/**
+ * The homepage's title and description (docs/seo/KEYWORD-MAP.md). The title is used as is (it
+ * already ends with the brand): topic first, from the locked descriptor. The description is the
+ * locked proposition plus the brand line's idea, within 155 characters.
+ */
+export const homeSeo = seo(
+  "Consulting, Engineering & Digital Transformation | Vitalos",
+  "We help ambitious organisations modernise operations, build digital products and adopt AI: consulting and engineering from strategy to production.",
+);
+
 /* ---------- Site settings ---------- */
 
 /**
@@ -132,8 +144,8 @@ const howWeWork: RoutePageDraft = {
     ),
     cta: cta(ctas.primary, "project"),
     seo: seo(
-      "How We Work",
-      "One delivery lifecycle from Qualify to Improve, with an accountable Engagement Lead and mandatory quality gates.",
+      "How We Work: Delivery Lifecycle & Quality Gates",
+      "Start with consulting or come straight to engineering. One delivery lifecycle from Qualify to Improve, an accountable Engagement Lead and quality gates.",
     ),
   },
   provenance: drafted([
@@ -174,8 +186,8 @@ const whatWeDo: RoutePageDraft = {
     ),
     cta: cta(ctas.primary, "general"),
     seo: seo(
-      "What We Do",
-      "Practices, solutions and offers: how Vitalos connects consulting, engineering and AI from strategy to production.",
+      "Consulting, Engineering & AI Services",
+      "Practices, solutions and offers: how Vitalos combines consulting with hands-on engineering and AI, from problem definition through to production.",
     ),
   },
   provenance: drafted([
@@ -195,8 +207,8 @@ const solutions: RoutePageDraft = {
       "Solutions are organised around problems executives recognise. Each brings together the practices the outcome needs, under one accountable engagement lead.",
     cta: cta(ctas.primary, "project"),
     seo: seo(
-      "Solutions",
-      "Cross-practice solutions organised around the business and technology problems leaders recognise.",
+      "Digital Transformation Solutions",
+      "Solutions for problems executives recognise: AI, processes, digital products, legacy applications, data and unstable platforms, each under one lead.",
     ),
   },
   provenance: drafted([
@@ -216,8 +228,8 @@ const offers: RoutePageDraft = {
       "Offers are bounded engagements, not discount packages. Each sets out the work, what you get and what we need; pricing comes in a proposal once scope is understood.",
     cta: cta(ctas.primary, "offer"),
     seo: seo(
-      "Offers",
-      "Bounded engagements to start with: assessments, discoveries, sprints, delivery and managed services. Pricing is proposal-led.",
+      "Offers: Assessments, Sprints and Delivery",
+      "Bounded ways to start: assessments, discoveries, sprints, delivery and managed services. Each sets out the work and what you get; pricing is proposal-led.",
     ),
   },
   provenance: drafted([
@@ -236,8 +248,8 @@ const industries: RoutePageDraft = {
       "We start with three sectors where we are building repeatable domain knowledge, and work selectively with growth and technology companies.",
     cta: cta(ctas.primary, "project"),
     seo: seo(
-      "Industries",
-      "Health & Care; Retail, Commerce & Consumer; Operations, Industry & Logistics; and selective Growth & Technology work.",
+      "Industries: Health, Retail, Logistics & Tech",
+      "Consulting and engineering for Health & Care; Retail, Commerce & Consumer; Operations, Industry & Logistics; and selected growth and technology companies.",
     ),
   },
   provenance: drafted([
@@ -298,8 +310,8 @@ const labs: RoutePageDraft = {
       p("Each asset states what it is, what it is not and its known limitations."),
     ),
     seo: seo(
-      "Vitalos Labs",
-      "Research, concepts, prototypes and accelerators from Vitalos Labs, each with an explicit maturity label.",
+      "Labs: AI Research, Frameworks & Accelerators",
+      "Vitalos Labs explores emerging technology, builds reference architectures and tests ideas before they reach clients, each with a maturity label.",
     ),
   },
   provenance: drafted([
@@ -349,8 +361,8 @@ const about: RoutePageDraft = {
     ),
     cta: cta(ctas.primary, "general"),
     seo: seo(
-      "About Vitalos",
-      "A technology consulting, engineering and digital transformation company with AI at the centre, from strategy to production.",
+      "About Our Consulting & Engineering Firm",
+      "Vitalos is a technology consulting, engineering and digital transformation company with AI at the centre, connecting strategy and engineering to outcomes.",
     ),
   },
   provenance: drafted(
@@ -382,8 +394,8 @@ const trust: RoutePageDraft = {
     ),
     cta: cta("Ask a procurement question", "procurement"),
     seo: seo(
-      "Trust Centre",
-      "How Vitalos approaches security, privacy, Responsible AI, accessibility, resilience and procurement.",
+      "Trust Centre: Security, Privacy & Responsible AI",
+      "How Vitalos approaches security, privacy, Responsible AI, accessibility, resilience and delivery assurance, with controlled evidence for procurement.",
     ),
     topics: [],
   },
@@ -466,8 +478,8 @@ const contact: RoutePageDraft = {
       { intent: "general", label: "General and media", description: "Anything else." },
     ],
     seo: seo(
-      ctas.primary,
-      "Start a conversation with Vitalos about consulting, engineering, AI and data or managed services.",
+      "Contact Us",
+      "Talk to Vitalos about consulting, direct engineering, AI and data or managed services. Tell us your goal and we will help find the right starting point.",
     ),
   },
   provenance: drafted(

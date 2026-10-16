@@ -34,8 +34,8 @@ export const industryDrafts: readonly IndustryDraft[] = [
     summary:
       "Technology that improves care, operations and access for providers and care organisations.",
     seo: seo(
-      "Health & Care",
-      "Modernising care operations, digital services, data and AI while managing privacy, accessibility, safety and trust.",
+      "Health & Care Technology",
+      "Technology for care providers and care organisations: modernising operations, digital services, data and AI while managing privacy, safety and trust.",
     ),
     realities: [
       "Workflows, scheduling, records and data flows shape how care staff spend their time.",
@@ -96,8 +96,8 @@ export const industryDrafts: readonly IndustryDraft[] = [
     summary:
       "Commerce platforms, integration and AI-enabled operations for retailers and consumer brands.",
     seo: seo(
-      "Retail, Commerce & Consumer",
-      "Commerce platforms, inventory and order integration, customer experience, data and AI-enabled operations.",
+      "Retail & Commerce Technology",
+      "Commerce platforms, inventory and order integration, customer experience, data and AI-enabled operations for retailers and consumer brands.",
     ),
     realities: [
       "Customer experience, merchandising and fulfilment have to work together across online and operational systems.",
@@ -155,8 +155,8 @@ export const industryDrafts: readonly IndustryDraft[] = [
     summary:
       "Workflow modernisation and operational intelligence for manufacturing, logistics and field operations.",
     seo: seo(
-      "Operations, Industry & Logistics",
-      "Process digitisation, integration, field and warehouse tools, operational intelligence and AI-assisted operations.",
+      "Operations, Industry & Logistics Technology",
+      "Workflow modernisation and operational intelligence for manufacturing, logistics and field operations, from process digitisation to AI-assisted work.",
     ),
     realities: [
       "Operationally intensive businesses often still run critical processes on manual steps and disconnected tools.",
@@ -211,8 +211,8 @@ export const industryDrafts: readonly IndustryDraft[] = [
     summary:
       "Selective work with startups and scale-ups: architecture, product engineering and AI.",
     seo: seo(
-      "Growth & Technology",
-      "Architecture, product engineering, platform modernisation, AI implementation and engineering rescue for technology companies.",
+      "Engineering for Startups & Scale-ups",
+      "Selective work with startups and scale-ups: architecture, product engineering, platform modernisation, AI implementation and engineering rescue.",
     ),
     realities: [
       "A capable internal team may lack specialist capacity for a major build or modernisation.",

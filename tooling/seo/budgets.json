@@ -1,5 +1,5 @@
 {
-  "$comment": "Lighthouse lab budgets per template (docs/seo/AUDIT.md). One URL stands for each template. Mobile emulation with simulated throttling. Targets: LCP <= 2.5 s, CLS <= 0.1; INP is a field metric (Speed Insights), so TBT stands in for it in the lab.",
+  "$comment": "Lighthouse lab budgets per template (docs/seo/AUDIT.md, DECISIONS 15). One URL stands for each template. Mobile emulation with simulated throttling, against a local production build. They guard against regressions; the Core Web Vitals targets (LCP <= 2.5 s, INP <= 200 ms, CLS <= 0.1 at p75) are field targets, measured by Speed Insights. Simulated LCP on a local server counts every early request against the LCP, so it reads about 1.5 s higher than applied throttling (2.1 s on 16 Oct 2026). TBT stands in for INP in the lab.",
   "urls": {
     "home": "/",
     "section-index": "/what-we-do",
@@ -18,7 +18,7 @@
     "seo": 100,
     "performance": 85,
     "accessibility": 95,
-    "lcpMs": 2500,
+    "lcpMs": 4000,
     "cls": 0.1,
     "tbtMs": 300
   }

@@ -15,6 +15,7 @@ import { ctas, homeSections, routes } from "@vitalos/cms";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
 import { heroPhotograph } from "../../lib/view-mapping/hero-images";
 import { contactHref } from "../../lib/view-mapping/hrefs";
+import { VisibleBreadcrumb } from "../../components/site-chrome/visible-breadcrumb";
 
 /** The homepage's closing heading (locked copy), closing every page. */
 const closingHeading =
@@ -27,7 +28,7 @@ const closingHeading =
  */
 
 export interface PageIntroProps {
-  /** Retained for callers; the visible trail was removed (owner decision 2026-10-12). */
+  /** The page's trail: visible above the eyebrow below the top level (VisibleBreadcrumb). */
   crumbs?: readonly Crumb[] | undefined;
   /** Small category line above the title (locked copy or CMS text). */
   eyebrow?: string | undefined;
@@ -50,6 +51,7 @@ export interface PageIntroProps {
  * and actions, and optional media on the right. The page has no other h1.
  */
 export function PageIntro({
+  crumbs,
   eyebrow,
   title,
   lead,
@@ -63,6 +65,13 @@ export function PageIntro({
       tone="dark"
       backdrop={heroPhotograph}
       size={compact ? "title" : "display"}
+      before={
+        crumbs ? (
+          <VisibleBreadcrumb
+            trail={crumbs.map((crumb) => ({ name: crumb.label, path: crumb.path }))}
+          />
+        ) : undefined
+      }
       title={title}
       eyebrow={eyebrow}
       lead={lead}

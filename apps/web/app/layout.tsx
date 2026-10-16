@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { GeistMono } from "geist/font/mono";
+import { geistMono } from "../src/config/fonts";
 import { GeistSans } from "geist/font/sans";
 import { descriptor, brandName } from "@vitalos/cms";
 import { readBuildEnv } from "@vitalos/config/build";
@@ -16,8 +16,9 @@ export const metadata: Metadata = {
 };
 
 /*
- * Fonts: Geist Sans and Geist Mono through the installed `geist` package (self-hosted by
- * next/font, no request to Google). Provisional pending owner confirmation of the typography
+ * Fonts: Geist Sans and Geist Mono from the installed `geist` package (self-hosted by next/font,
+ * no request to Google). Geist Mono is loaded through `src/config/fonts.ts` without a preload, so
+ * it does not compete with the hero image (docs/seo/DECISIONS.md 15). Provisional pending owner confirmation of the typography
  * (Stage 7 §15.1). The `.variable` classes on <html> expose --font-geist-sans and
  * --font-geist-mono; the design-token font stack (--font-sans, --font-mono) reads them first and
  * then falls back to system fonts. Source Serif 4 is not loaded yet (see token-reconciliation).
@@ -27,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const relay = readBuildEnv().relayEnabled;
   const turnstileSiteKey = readPublicEnv().turnstileSiteKey;
   return (
-    <html lang="en-GB" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en-GB" className={`${GeistSans.variable} ${geistMono.variable}`}>
       <body>
         <a className="skip-link" href="#main">
           Skip to main content
