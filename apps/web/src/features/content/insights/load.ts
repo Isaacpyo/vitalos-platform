@@ -87,6 +87,9 @@ export interface AuthorBlock {
   roleTitle: string;
   firstName: string;
   bioHtml: string;
+  /** Photo for the avatar beside the name; the initials stand in when there is none. */
+  avatar: PostDetailData["authors"][number]["avatar"];
+  initials: string;
 }
 
 export interface ArticlePageData {
@@ -117,6 +120,8 @@ async function authorBlocks(post: PostDetailData): Promise<AuthorBlock[]> {
         roleTitle: author.roleTitle,
         firstName: author.name.trim().split(/\s+/)[0] ?? author.name,
         bioHtml: "",
+        avatar: author.avatar,
+        initials: author.initials,
       };
       try {
         const result = await getContentReaders().author(author.slug);

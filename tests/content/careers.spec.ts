@@ -47,6 +47,11 @@ test.describe("Careers pages", () => {
       "#apply",
     );
     await expect(page.getByRole("button", { name: "Send application" })).toBeVisible();
+    // The same Share menu as an article, with the role's canonical URL.
+    await page.locator("summary", { hasText: "Share" }).click();
+    await expect(
+      page.getByRole("group", { name: "Share this role" }).getByRole("link", { name: /^LinkedIn/ }),
+    ).toHaveAttribute("href", /share-offsite\/\?url=.*%2Fcareers%2Fexample-role-fixture$/);
     const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join(
       "",
     );
@@ -64,6 +69,7 @@ test.describe("Careers pages", () => {
     await expect(page.locator("form")).toHaveCount(0);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    await expect(page.locator("summary", { hasText: "Share" })).toHaveCount(0);
   });
 
   test("an old slug answers 308 and an unknown role a server-rendered 404", async ({ request }) => {

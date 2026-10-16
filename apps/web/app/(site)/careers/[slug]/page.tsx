@@ -81,5 +81,12 @@ export default async function RoleRoute({ params }: Readonly<{ params: Promise<P
       ]),
     ];
   }
-  return <RoleTemplate view={view} jsonLd={jsonLd} turnstileSiteKey={getEnv().turnstile.siteKey} />;
+  return (
+    <RoleTemplate
+      view={view}
+      url={new URL(rolePathOf(view.role.slug), ctx.siteUrl).toString()}
+      jsonLd={jsonLd}
+      turnstileSiteKey={getEnv().turnstile.siteKey}
+    />
+  );
 }

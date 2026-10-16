@@ -357,3 +357,16 @@ def test_scheduling_and_unscheduling_refresh_the_site_state_for_the_website_tick
     assert scheduled.tags == ["site"] and scheduled.paths == [] and scheduled.kind == "publish"
     services.unschedule(Post.objects.get(pk=post.pk), superadmin)
     assert SyncEvent.objects.get(action="post.unscheduled").tags == ["site"]
+
+
+def test_the_summary_is_the_seo_description_or_the_opening_paragraph():
+    body = (
+        "## Example heading\n\n"
+        "Example **opening** paragraph with [a link](/work).[^1]\n\n"
+        "- Example list item\n"
+    )
+    assert services.derive_excerpt("", body) == "Example opening paragraph with a link."
+    assert services.derive_excerpt("  Example SEO   text. ", body) == "Example SEO text."
+    long = services.derive_excerpt("", "word " * 100)
+    assert len(long) <= 220 and long.endswith("…") and not long.endswith(" …")
+    assert services.derive_excerpt("", "## Only a heading\n\n- and a list") == ""

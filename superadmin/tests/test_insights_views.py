@@ -200,7 +200,6 @@ def test_new_post_flow(superadmin, client_for):
 def _form_data(post, **changes):
     data = {
         "title": post.title,
-        "excerpt": post.excerpt,
         "body_md": post.body_md,
         "format": post.format,
         "slug": post.slug,
@@ -235,10 +234,26 @@ def test_autosave_saves_and_detects_conflicts(world, superadmin, client_for):
 def test_full_save_without_javascript(world, superadmin, client_for):
     draft = world["draft"]
     response = client_for(superadmin).post(
-        reverse("insights:post", args=[draft.pk]), _form_data(draft, excerpt="Example new excerpt (fixture).")
+        reverse("insights:post", args=[draft.pk]),
+        _form_data(draft, seo_description="Example SEO description (fixture)."),
     )
     assert response.status_code == 302
-    assert Post.objects.get(pk=draft.pk).excerpt == "Example new excerpt (fixture)."
+    # There is no excerpt field: the summary comes from the SEO description (or the opening paragraph).
+    assert Post.objects.get(pk=draft.pk).excerpt == "Example SEO description (fixture)."
+
+
+def test_the_editor_has_no_excerpt_field_and_ignores_a_posted_one(world, superadmin, client_for):
+    client = client_for(superadmin)
+    draft = world["draft"]
+    page = client.get(reverse("insights:post", args=[draft.pk])).content.decode()
+    assert 'name="excerpt"' not in page
+    client.post(
+        reverse("insights:post", args=[draft.pk]),
+        _form_data(draft, excerpt="Example ignored excerpt (fixture).", seo_description=""),
+    )
+    saved = Post.objects.get(pk=draft.pk)
+    assert saved.excerpt != "Example ignored excerpt (fixture)."
+    assert saved.excerpt == services.derive_excerpt("", saved.body_md)
 
 
 def test_checks_through_the_rail(world, superadmin, client_for):

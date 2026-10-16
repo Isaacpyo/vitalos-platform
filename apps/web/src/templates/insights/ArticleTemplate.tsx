@@ -1,11 +1,11 @@
 import { Container, Section } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
+import { ShareMenu } from "../../components/share-menu";
 import type { ArticlePageData } from "../../features/content/insights/load";
 import {
   articleDatesLine,
   authorHref,
   insightsCopy,
-  linkedInShareHref,
   postHref,
   showsToc,
 } from "../../features/content/insights/model";
@@ -15,7 +15,7 @@ import { mediaOrigin } from "../../features/content/site-hosts";
 import { Band } from "../commercial/bands";
 import { PageMain } from "../institutional/page-main";
 import { articleBodyClass } from "./body-styles";
-import { CodeCopyButtons, CopyLinkButton } from "./copy-buttons";
+import { CodeCopyButtons } from "./copy-buttons";
 import { ContentImage, InsightsHero, PostGrid, TalkBand, monoLabel } from "./parts";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 
@@ -45,26 +45,41 @@ function TocList({ toc }: Readonly<{ toc: Toc }>) {
   );
 }
 
-/** Byline: 40px square photo or initials square, linked name, role. */
+/** An author's photo, or their initials when there is none (decorative: the name is beside it). */
+function AuthorAvatar({
+  author,
+  size = "sm",
+}: Readonly<{
+  author: Pick<PostDetail["authors"][number], "avatar" | "initials">;
+  size?: "sm" | "lg";
+}>) {
+  const box = size === "lg" ? "size-14 text-body" : "size-10 text-small";
+  if (author.avatar) {
+    return (
+      <ContentImage
+        image={{ ...author.avatar, alt: "" }}
+        sizes={size === "lg" ? "56px" : "40px"}
+        className={`${box} shrink-0 rounded-full object-cover`}
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex ${box} shrink-0 items-center justify-center rounded-full bg-tone-tile-bg font-mono font-semibold text-tone-tile-fg`}
+    >
+      {author.initials}
+    </span>
+  );
+}
+
+/** Byline: round photo or initials, linked name, role. */
 function Byline({ post }: Readonly<{ post: PostDetail }>) {
   return (
     <ul className="m-0 flex list-none flex-wrap gap-x-(--space-6) gap-y-(--space-4) p-0">
       {post.authors.map((author) => (
         <li key={author.id} className="flex items-center gap-(--space-3)">
-          {author.avatar ? (
-            <ContentImage
-              image={author.avatar}
-              sizes="40px"
-              className="size-10 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-tone-tile-bg font-mono text-small font-semibold text-tone-tile-fg"
-            >
-              {author.initials}
-            </span>
-          )}
+          <AuthorAvatar author={author} />
           <span className="flex flex-col">
             <a
               href={authorHref(author.slug)}
@@ -133,7 +148,6 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
         <InsightsHero
           eyebrow={post.format.label}
           title={post.title}
-          intro={post.excerpt}
           media={hasCover(post) ? <ArticleCover post={post} /> : undefined}
         >
           <div className="flex flex-col gap-(--space-4)">
@@ -186,10 +200,15 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
                           key={author.slug}
                           className="border-t border-tone-border pt-(--space-4)"
                         >
-                          <p className="m-0 text-body-l font-semibold text-tone-heading">
-                            {author.name}
-                          </p>
-                          <p className="m-0 text-small text-tone-muted">{author.roleTitle}</p>
+                          <div className="flex items-center gap-(--space-4)">
+                            <AuthorAvatar author={author} size="lg" />
+                            <div>
+                              <p className="m-0 text-body-l font-semibold text-tone-heading">
+                                {author.name}
+                              </p>
+                              <p className="m-0 text-small text-tone-muted">{author.roleTitle}</p>
+                            </div>
+                          </div>
                           {author.bioHtml ? (
                             <div
                               className="mt-(--space-3) text-body [&_a]:text-tone-link [&_a]:underline [&_p]:my-(--space-2)"
@@ -208,19 +227,8 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
                   </section>
                 ) : null}
 
-                <div className="mt-(--space-7) flex flex-wrap items-center gap-(--space-4)">
-                  <CopyLinkButton
-                    url={url}
-                    label={insightsCopy.copyLink}
-                    copiedLabel={insightsCopy.linkCopied}
-                  />
-                  <a
-                    href={linkedInShareHref(url)}
-                    rel="noopener noreferrer"
-                    className="text-body text-tone-link underline underline-offset-4"
-                  >
-                    {insightsCopy.shareOnLinkedIn}
-                  </a>
+                <div className="mt-(--space-7)">
+                  <ShareMenu url={url} title={post.title} menuLabel={insightsCopy.shareMenu} />
                 </div>
               </div>
 

@@ -22,9 +22,6 @@ class PostForm(StyledFormMixin, forms.Form):
     """The editor's working copy. Rail fields sit outside the <form> and join it with form="post-form"."""
 
     title = forms.CharField(max_length=200, required=False)
-    excerpt = forms.CharField(
-        max_length=220, required=False, widget=forms.Textarea(attrs={"maxlength": 220, "data-counter": "220"})
-    )
     body_md = forms.CharField(label="Body", max_length=200_000, required=False, widget=forms.Textarea())
     format = forms.ChoiceField(choices=PostFormat.choices)
     slug = forms.CharField(max_length=80, required=False)
@@ -90,7 +87,6 @@ class PostForm(StyledFormMixin, forms.Form):
             self.initial.update(
                 {
                     "title": post.title,
-                    "excerpt": post.excerpt,
                     "body_md": post.body_md,
                     "format": post.format,
                     "slug": post.slug,
@@ -128,15 +124,12 @@ class PostForm(StyledFormMixin, forms.Form):
                         "class": INPUT + " font-mono text-[13px] leading-6",
                     }
                 )
-            elif name == "excerpt":
-                field.widget.attrs["rows"] = 3
 
     def working_data(self) -> dict:
         data = {
             key: self.cleaned_data[key]
             for key in (
                 "title",
-                "excerpt",
                 "body_md",
                 "format",
                 "slug",
