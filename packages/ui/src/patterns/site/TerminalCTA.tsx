@@ -53,7 +53,7 @@ export function TerminalCTA({
           <Reveal>
             <div
               data-tone="dark"
-              className="relative isolate overflow-hidden rounded-[2rem] bg-linear-135 from-blue-600 via-blue-700 to-midnight-950 px-(--space-6) py-(--space-9) text-tone-text sm:px-(--space-8) lg:px-(--space-9) lg:py-(--space-10)"
+              className="relative isolate overflow-hidden rounded-[2rem] bg-linear-135 from-blue-600 via-blue-700 to-midnight-950 px-(--space-5) py-(--space-9) text-tone-text sm:px-(--space-8) lg:px-(--space-9) lg:py-(--space-10)"
             >
               <span
                 aria-hidden="true"

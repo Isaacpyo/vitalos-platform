@@ -1228,7 +1228,34 @@ function MessageView(props: {
       case "ai_back":
         return <Divider>RELAY AI IS BACK</Divider>;
       case "closed":
-        return <Divider>{`CONVERSATION CLOSED · ${time(m.createdAt)}`}</Divider>;
+        return (
+          <>
+            <Divider>{`CONVERSATION CLOSED · ${time(m.createdAt)}`}</Divider>
+            {/* A review of the whole conversation (owner direction, 16 Oct 2026). */}
+            <div className="relay-feedback relay-closing-review">
+              <span className="relay-feedback-label">Was this conversation helpful?</span>
+              <button
+                type="button"
+                className="relay-feedback-button"
+                aria-label="Conversation was helpful"
+                aria-pressed={m.feedback === 1}
+                onClick={() => props.onFeedback(m, 1)}
+              >
+                <Icon name="thumbUp" size={18} />
+              </button>
+              <button
+                type="button"
+                className="relay-feedback-button"
+                aria-label="Conversation was not helpful"
+                aria-pressed={m.feedback === -1}
+                onClick={() => props.onFeedback(m, -1)}
+              >
+                <Icon name="thumbDown" size={18} />
+              </button>
+              {(m.noted || m.feedback) && <span className="relay-mono relay-muted">THANK YOU</span>}
+            </div>
+          </>
+        );
       default:
         return null;
     }

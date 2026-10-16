@@ -202,11 +202,9 @@ function DarkPageHero({
           {actions ? <CTAGroup className="mt-(--space-7)">{actions}</CTAGroup> : null}
           {children ? <div className="mt-(--space-7)">{children}</div> : null}
         </div>
-        {/* Compact screens: the media stays small under the copy, so the first screen keeps the
-            title, lead and action (designed for 390px, not shrunk). */}
-        {media ? (
-          <div className="w-full max-w-60 min-w-0 md:max-w-sm lg:max-w-none">{media}</div>
-        ) : null}
+        {/* The media (illustration or photograph) shows from lg only: on phones and tablets the hero
+            is the title, lead and action (owner direction, 16 Oct 2026). */}
+        {media ? <div className="hidden w-full min-w-0 lg:block">{media}</div> : null}
       </Container>
     </Section>
   );

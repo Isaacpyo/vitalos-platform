@@ -77,8 +77,10 @@ export default async function ContactPage({
           {/* The ways to reach us first (reading and focus order), then the form. */}
           <div className="min-w-0 lg:pt-(--space-5)">
             <ul className="m-0 flex list-none flex-col gap-(--space-6) p-0">
+              {/* Email: in this column from lg; on smaller screens it follows the form (owner
+                  direction, 16 Oct 2026), see the copy after the form below. */}
               {settings.contactEmail ? (
-                <li className="flex items-center gap-(--space-4)">
+                <li className="hidden items-center gap-(--space-4) lg:flex">
                   <IconTile name="mail" />
                   <div className="min-w-0">
                     <p className="m-0 text-small text-tone-muted">Email</p>
@@ -125,6 +127,20 @@ export default async function ContactPage({
               <ContactAlternative contactEmail={settings.contactEmail} />
             )}
           </div>
+          {settings.contactEmail ? (
+            <div className="flex min-w-0 items-center gap-(--space-4) lg:hidden">
+              <IconTile name="mail" />
+              <div className="min-w-0">
+                <p className="m-0 text-small text-tone-muted">Email</p>
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="text-body-l font-semibold text-tone-heading underline-offset-4 hover:underline"
+                >
+                  {settings.contactEmail}
+                </a>
+              </div>
+            </div>
+          ) : null}
         </Container>
       </Section>
     </main>

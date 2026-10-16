@@ -522,12 +522,26 @@ export class VisitorService {
     const conversation = await this.authenticate(body.conversationId, bearer);
     await this.limit(`feedback:${conversation.id}`, 600, 30);
     const message = await this.store.getMessage(body.messageId);
-    if (!message || message.conversationId !== conversation.id || message.senderType !== "ai")
+    // Two kinds of rating: an AI answer, or the whole conversation once it is closed (the review
+    // under "CONVERSATION CLOSED", owner direction 16 Oct 2026).
+    const closingReview = message?.senderType === "system" && message.body === "closed";
+    if (
+      !message ||
+      message.conversationId !== conversation.id ||
+      (message.senderType !== "ai" && !closingReview)
+    )
       throw new RelayError("not_found");
     await this.store.updateMessage(message.id, {
       feedback: body.value,
       feedbackAt: this.ctx.deps.now().toISOString(),
     });
+    if (closingReview) {
+      await this.addTags(conversation, body.value === 1 ? "RATED_HELPFUL" : "RATED_NOT_HELPFUL");
+      this.ctx.deps.defer(() =>
+        this.ctx.deps.broadcaster.admins("inbox_changed", { conversationId: conversation.id }),
+      );
+      return { showHandoff: false };
+    }
     if (body.value === -1) {
       await this.addTags(conversation, "NOT_HELPFUL");
       const question = [...(await this.store.listMessages(conversation.id))]
@@ -873,6 +887,7 @@ export function toVisitorMessage(m: MessageRecord): VisitorMessage {
         ...base,
         senderType: "system",
         event: m.body as SystemEvent,
+        ...(m.body === "closed" ? { feedback: m.feedback } : {}),
         meta: {
           ...(meta.name ? { name: meta.name } : {}),
           ...(meta.email ? { email: meta.email } : {}),

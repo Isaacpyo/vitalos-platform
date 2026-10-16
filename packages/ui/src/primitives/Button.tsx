@@ -38,7 +38,10 @@ const base =
 const sizes: Record<ButtonSize, string> = {
   sm: "min-h-(--size-button-sm) px-(--space-4) text-small",
   md: "min-h-(--size-button-md) px-(--space-5) text-body",
-  lg: "min-h-(--size-button-lg) px-(--space-6) text-body-l",
+  // On phones the large size scales its text with the screen and tightens its padding, so a long
+  // label ("Start with an AI Opportunity Assessment") stays on one line from 360px (owner direction,
+  // 16 Oct 2026). Below 360px it may wrap rather than overflow.
+  lg: "min-h-(--size-button-lg) px-(--space-6) text-body-l max-sm:min-h-(--size-button-md) max-sm:gap-(--space-2) max-sm:px-(--space-3) max-sm:text-[clamp(0.75rem,3.55vw,1rem)] min-[360px]:max-sm:whitespace-nowrap",
 };
 
 const variants: Record<ButtonVariant, string> = {

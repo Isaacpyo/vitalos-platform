@@ -50,6 +50,8 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug" },
   { name: "contact", path: "/contact", pattern: "/contact" },
+  // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026).
+  { name: "podcast", path: "/podcast", pattern: "/podcast", inSitemap: false },
 ];
 
 /**

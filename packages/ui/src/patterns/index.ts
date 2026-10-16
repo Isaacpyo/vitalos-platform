@@ -23,6 +23,7 @@ export {
 
 // Site chrome
 export { SiteHeader, type SiteHeaderProps } from "./site/SiteHeader";
+export { podcastMarkPaths } from "./site/podcast-marks";
 export { MegaMenu, type MegaMenuProps } from "./site/MegaMenu";
 export { MobileNav, type MobileNavProps } from "./site/MobileNav";
 export {

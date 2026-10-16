@@ -565,6 +565,10 @@ a.relay-source:hover .relay-source-title {
   align-items: center;
   gap: 8px;
 }
+.relay-closing-review {
+  justify-content: center;
+  margin: 4px 0 12px;
+}
 .relay-feedback-label {
   font-size: 13px;
   line-height: 18px;

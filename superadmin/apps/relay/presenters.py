@@ -207,7 +207,15 @@ def system_label(message: dict) -> str:
     if template is None:
         return f"{key.replace('_', ' ').upper()} · {at}".strip(" ·")
     name = (meta.get("name") or message.get("adminName") or "A colleague").upper()
-    return f"{template.format(name=name)} · {at}"
+    label = f"{template.format(name=name)} · {at}"
+    if key == "closed":
+        # The visitor's review of the whole conversation, given after it closed.
+        rating = message.get("feedback")
+        if rating == 1:
+            label += " · VISITOR RATED IT HELPFUL"
+        elif rating == -1:
+            label += " · VISITOR RATED IT NOT HELPFUL"
+    return label
 
 
 def message(item: dict) -> dict:

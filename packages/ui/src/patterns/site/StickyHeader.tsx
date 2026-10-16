@@ -89,8 +89,9 @@ export function StickyHeader({
       {...(condensed ? { "data-condensed": "" } : {})}
       {...(clear ? { "data-tone": "dark", "data-clear": "" } : {})}
       className={cx(
-        "sticky top-0 z-40 border-b text-tone-text",
-        clear ? "border-white/15 bg-transparent" : "border-tone-border bg-tone-bg",
+        // No bottom rule under the navigation (owner direction, 16 Oct 2026).
+        "sticky top-0 z-40 text-tone-text",
+        clear ? "bg-transparent" : "bg-tone-bg",
         "[--header-h:var(--size-header)] data-condensed:[--header-h:var(--size-header-condensed)]",
         "data-condensed:mb-[calc(var(--size-header)-var(--size-header-condensed))]",
         "data-condensed:bg-tone-bg/92 data-condensed:backdrop-blur-md",
