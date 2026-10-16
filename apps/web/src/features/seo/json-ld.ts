@@ -1,4 +1,4 @@
-import { absoluteUrl, brandName, routes } from "@vitalos/cms";
+import { absoluteUrl, brandName, propositionLong, routes } from "@vitalos/cms";
 import type {
   ImageView,
   InsightView,
@@ -75,9 +75,32 @@ export function serializeJsonLd(data: unknown): string {
     .replace(/\u2029/g, "\\u2029");
 }
 
+/**
+ * The square brand logo for Organization (the approved Vitalos symbol at 512 px, mark unchanged;
+ * Google asks for at least 112 px). Used unless site settings supply another.
+ */
+export const brandLogo = { src: "/brand/vitalos-symbol-512.png", width: 512, height: 512 } as const;
+
+/**
+ * What Vitalos knows about: its pillars (docs/seo/STRATEGY.md §4), named plainly. They summarise
+ * the five practices; they are topics, not claims of expertise beyond the site's own copy.
+ */
+export const organizationKnowsAbout = [
+  "Technology consulting",
+  "Digital transformation",
+  "Software engineering",
+  "Application modernisation",
+  "Artificial intelligence",
+  "Data and analytics",
+  "Product, service and UX design",
+  "Managed application services",
+] as const;
+
 export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContext): JsonLdNode {
-  const logoUrl = settings.logo ? imageUrl(ctx, settings.logo.src) : undefined;
-  const logo = settings.logo && logoUrl ? { ...settings.logo, src: logoUrl } : undefined;
+  const source = settings.logo ?? brandLogo;
+  const logoUrl = imageUrl(ctx, source.src);
+  const logo = logoUrl ? { ...source, src: logoUrl } : undefined;
+  const companyNumber = settings.companyNumber?.trim();
   const sameAs = (settings.social ?? []).map((link) => link.href).filter(isHttps);
   return compact({
     "@context": CONTEXT,
@@ -94,9 +117,19 @@ export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContex
           height: logo.height,
         })
       : undefined,
+    description: propositionLong,
     email: settings.contactEmail,
     // No address: the registered office is published only in the privacy notice (owner decision,
     // 12 Oct 2026), not in markup on every page.
+    identifier: companyNumber
+      ? {
+          "@type": "PropertyValue",
+          propertyID: "Companies House company number",
+          value: companyNumber,
+        }
+      : undefined,
+    areaServed: { "@type": "Country", name: "United Kingdom" },
+    knowsAbout: [...organizationKnowsAbout],
     sameAs,
   }) as JsonLdNode;
 }
@@ -129,6 +162,7 @@ export function breadcrumbJsonLd(
   return {
     "@context": CONTEXT,
     "@type": "BreadcrumbList",
+    "@id": `${absoluteUrl(ctx.siteUrl, crumbs.at(-1)!.path)}#breadcrumb`,
     itemListElement: crumbs.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,

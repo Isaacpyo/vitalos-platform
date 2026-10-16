@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
+import { jsonLdNode, jsonLdTypes } from "../support/json-ld";
 
 /**
  * Proof and authority templates (workstream G2b): Work, Insights, People, Labs.
@@ -29,23 +30,8 @@ const PERSON_BARE = "/people/example-person-two";
 const LAB_CONCEPT = "/labs/reference-architectures/example-reference-architecture";
 const LAB_MAINTAINED = "/labs/open-source/example-open-source-tool";
 
-async function jsonLdTypes(page: Page): Promise<string[]> {
-  const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-  return scripts.flatMap((text) => {
-    const data: unknown = JSON.parse(text);
-    return (Array.isArray(data) ? data : [data]).map(
-      (node) => (node as { "@type": string })["@type"],
-    );
-  });
-}
-
 async function jsonLd(page: Page, type: string): Promise<Record<string, unknown>> {
-  const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-  const nodes = scripts.flatMap((text) => {
-    const data: unknown = JSON.parse(text);
-    return (Array.isArray(data) ? data : [data]) as Record<string, unknown>[];
-  });
-  const node = nodes.find((candidate) => candidate["@type"] === type);
+  const node = await jsonLdNode(page, type);
   expect(node, `JSON-LD ${type}`).toBeDefined();
   return node!;
 }

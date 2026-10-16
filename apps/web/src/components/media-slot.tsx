@@ -33,10 +33,16 @@ function findFile(file: string): string | undefined {
   return undefined;
 }
 
+/** The registry's draft alt with `{name}` filled in (or a neutral word when no title is given). */
+export const draftAlt = (template: string, itemName: string | undefined): string =>
+  template.replaceAll("{name}", itemName?.trim() || "this item");
+
 export interface MediaSlotProps {
   id: MediaSlotId;
   /** The item's slug, for a per-item slot (for example a lab asset). */
   item?: string | undefined;
+  /** The item's title: fills `{name}` in the registry's draft alt. */
+  itemName?: string | undefined;
   /** Alt text; defaults to the registry's draft alt. Pass "" for a decorative image. */
   alt?: string | undefined;
   /** Above-the-fold images (heroes). */
@@ -53,7 +59,15 @@ export interface MediaSlotProps {
  * placeholder is decorative (hidden from assistive technology); its label shows in development
  * and on previews only. Files are served pre-sized, without the image optimiser, like CmsImage.
  */
-export function MediaSlot({ id, item, alt, priority, sizes, className }: Readonly<MediaSlotProps>) {
+export function MediaSlot({
+  id,
+  item,
+  itemName,
+  alt,
+  priority,
+  sizes,
+  className,
+}: Readonly<MediaSlotProps>) {
   const slot = mediaSlot(id);
   const file = slot.perItem && item ? `${id}.${item}` : id;
   const src = findFile(file);
@@ -63,7 +77,7 @@ export function MediaSlot({ id, item, alt, priority, sizes, className }: Readonl
       <span className={frame}>
         <Image
           src={src}
-          alt={alt ?? slot.alt}
+          alt={alt ?? draftAlt(slot.alt, itemName)}
           width={slot.size[0]}
           height={slot.size[1]}
           sizes={sizes ?? "(min-width: 1024px) 42vw, 100vw"}

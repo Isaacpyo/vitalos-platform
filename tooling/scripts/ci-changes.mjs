@@ -63,12 +63,23 @@ export function classify(files, affected = []) {
     unit: builds,
     web: browser || (builds && affected.includes("@vitalos/web")),
     storybook: browser || (builds && affected.includes("@vitalos/storybook")),
+    // `pnpm seo:check` (docs/seo): the web app, its tests, or editorial content, which sets
+    // titles and descriptions.
+    seo: browser || content.length > 0 || (builds && affected.includes("@vitalos/web")),
     database,
   };
 }
 
 export function everything() {
-  return { full: true, static: true, unit: true, web: true, storybook: true, database: true };
+  return {
+    full: true,
+    static: true,
+    unit: true,
+    web: true,
+    storybook: true,
+    seo: true,
+    database: true,
+  };
 }
 
 function git(...args) {

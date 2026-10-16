@@ -40,7 +40,7 @@ export const labDrafts: readonly LabDraft[] = [
         "A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk.",
       seo: seo(
         "AI opportunity and readiness framework (concept)",
-        "A concept for ranking AI use cases by value, feasibility, data readiness and risk. Concept maturity: no implementation is claimed.",
+        "A concept for a reusable framework that ranks AI use cases by value, feasibility, data readiness and risk. Concept maturity: no implementation is claimed.",
       ),
       updatedAt: DRAFTED_ON,
       labType: "research",
@@ -92,7 +92,7 @@ export const labDrafts: readonly LabDraft[] = [
         "A concept for repeatable testing of AI models and agents against agreed quality and risk criteria, before release and after changes.",
       seo: seo(
         "Production AI evaluation harness (concept)",
-        "A concept for repeatable evaluation of AI models and agents before and after release. Concept maturity: no implementation is claimed.",
+        "A concept for testing AI models and agents against agreed quality and risk criteria, before release and after changes. No implementation is claimed.",
       ),
       updatedAt: DRAFTED_ON,
       labType: "research",
@@ -139,7 +139,7 @@ export const labDrafts: readonly LabDraft[] = [
         "A concept for a standard assessment used before taking operational responsibility for a system someone else built.",
       seo: seo(
         "Inherited-system takeover assessment (concept)",
-        "A concept for assessing a system built by others before accepting operational responsibility. Concept maturity: no implementation is claimed.",
+        "A concept for an assessment before taking operational responsibility for a system someone else built. Concept maturity: no implementation is claimed.",
       ),
       updatedAt: DRAFTED_ON,
       labType: "research",

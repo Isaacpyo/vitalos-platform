@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { routes } from "@vitalos/cms";
+import { structuralSeo } from "@vitalos/cms/repo";
 import { requireGateOpen } from "../../../../src/features/publication-gates/gates";
 import { pageMetadata } from "../../../../src/templates/institutional/metadata";
 import { LabTypePage } from "../../../../src/templates/labs/LabTypePage";
@@ -21,7 +22,11 @@ export async function generateMetadata({
   await requireGateOpen("labs");
   const data = await loadLabType(type);
   if (!data) notFound();
-  return pageMetadata({ path: routes.labType(type), title: labTypeLabel(type) });
+  return pageMetadata({
+    path: routes.labType(type),
+    title: labTypeLabel(type),
+    description: structuralSeo.labTypes[type]?.description,
+  });
 }
 
 export default async function LabTypeRoute({ params }: Readonly<{ params: Promise<Params> }>) {

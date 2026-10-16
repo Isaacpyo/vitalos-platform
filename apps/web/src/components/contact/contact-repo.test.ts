@@ -10,7 +10,7 @@ describe("contact page over the repo content source", () => {
       enquiryPersistence: true,
       configuredPrivacyNoticeVersion: "2026-10",
     });
-    expect(PRIVACY_NOTICE_VERSION).toBe("2026-10-relay");
+    expect(PRIVACY_NOTICE_VERSION).toBe("2026-10-analytics");
     expect(data.form).toEqual({ available: true, privacyNoticeVersion: "2026-10" });
     expect(data.settings.contactEmail).toBe("support@vitalos.co.uk");
   });
@@ -21,7 +21,7 @@ describe("contact page over the repo content source", () => {
       enquiryPersistence: true,
       configuredPrivacyNoticeVersion: undefined,
     });
-    expect(data.form).toEqual({ available: true, privacyNoticeVersion: "2026-10-relay" });
+    expect(data.form).toEqual({ available: true, privacyNoticeVersion: "2026-10-analytics" });
   });
 
   it("withholds the form, leaving the email alternative, while enquiries cannot be stored", async () => {

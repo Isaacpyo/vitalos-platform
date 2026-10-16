@@ -46,7 +46,7 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 | Delivery                | `docs/delivery/launch-gates.md`                                                                                                         |
 | Operations and runbooks | `docs/operations/` (local development, deployment, observability), `docs/runbooks/` (cutover, rollback, enquiry delivery failure)       |
 | Security                | `SECURITY.md`, `docs/security/` (threat model, secret management)                                                                       |
-| Brand and SEO           | `docs/brand/`, `docs/seo/redirect-inventory.md`                                                                                         |
+| Brand and SEO           | `docs/brand/`, `docs/seo/REDIRECTS.md`                                                                                                  |
 
 ## Sources of truth
 

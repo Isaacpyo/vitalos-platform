@@ -1,6 +1,8 @@
 import { brandName, routes } from "@vitalos/cms";
 import { JsonLd } from "../../components/json-ld";
 import { breadcrumbJsonLd } from "../../features/seo/json-ld";
+import { jsonLdGraph, webPageNode } from "../../features/seo/graph";
+import type { WebPageType } from "../../features/seo/graph";
 import { getSeoContext } from "../../features/seo/context";
 
 export interface Crumb {
@@ -13,19 +15,47 @@ export interface Crumb {
 export const homeCrumb: Crumb = { name: brandName, path: routes.home() };
 
 /**
- * BreadcrumbList JSON-LD only. The visible breadcrumb trail was removed (owner decision
- * 2026-10-12); the structured data stays for search. The last crumb is the current page. Crumbs
- * without a name are dropped; a trail shorter than two renders nothing.
+ * The page's JSON-LD graph: its WebPage and BreadcrumbList, linked by `@id` (docs/seo/DECISIONS.md
+ * 22). The last crumb is the current page and gives the WebPage its URL and name (the h1).
+ * `PageHeroBand` reads `trail` from this element to show the visible trail below the top level.
+ * Crumbs without a name are dropped; a trail shorter than two renders nothing.
  */
 export function Breadcrumbs({
   trail,
+  page,
   jsonLd = true,
 }: Readonly<{
   trail: readonly Crumb[];
+  /** The WebPage's type, its h1 (when it differs from the crumb) and its visible lead. */
+  page?:
+    | {
+        type?: WebPageType | undefined;
+        name?: string | undefined;
+        description?: string | undefined;
+      }
+    | undefined;
   /** False on placeholder pages (ADR-025): no structured data. */ jsonLd?: boolean;
 }>) {
   const crumbs = trail.filter((crumb) => crumb.name.trim() !== "");
   if (crumbs.length < 2) return null;
   if (!jsonLd) return null;
-  return <JsonLd data={breadcrumbJsonLd(crumbs, { siteUrl: getSeoContext().siteUrl })} />;
+  const ctx = { siteUrl: getSeoContext().siteUrl };
+  const current = crumbs.at(-1)!;
+  return (
+    <JsonLd
+      data={jsonLdGraph([
+        webPageNode(
+          {
+            path: current.path,
+            name: page?.name ?? current.name,
+            description: page?.description,
+            type: page?.type,
+            breadcrumb: true,
+          },
+          ctx,
+        ),
+        breadcrumbJsonLd(crumbs, ctx),
+      ])}
+    />
+  );
 }

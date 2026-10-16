@@ -6,7 +6,7 @@ import {
   loadDocument,
   staticParams,
 } from "../../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../../src/templates/commercial/seo";
 import { OfferTemplate, offerTrail } from "../../../../src/templates/offer/OfferTemplate";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -32,7 +32,15 @@ export default async function OfferPage({ params }: Props) {
   const { doc } = await loadDetailPage("offer", slug);
   return (
     <>
-      <JsonLd data={breadcrumbNode(offerTrail(doc))} />
+      <JsonLd
+        data={pageGraph({
+          trail: offerTrail(doc),
+          name: doc.title,
+          description: doc.summary,
+          serviceType: doc.title,
+          dateModified: doc.updatedAt,
+        })}
+      />
       <OfferTemplate offer={doc} />
     </>
   );

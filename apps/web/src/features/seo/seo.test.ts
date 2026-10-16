@@ -4,6 +4,9 @@ import type { ContentSource, RoutePageKey, SitemapEntry } from "@vitalos/cms";
 import { EmptyContentSource } from "@vitalos/cms";
 import { composeMetadata } from "./metadata";
 import { robotsPolicy } from "./robots-policy";
+import { sanitiseSeo } from "./seo-block";
+import { isIndexableRequest } from "./site";
+import { latestModified, partitionSitemap, sitemapIndexXml, urlsetXml } from "./sitemap-xml";
 import { buildSitemap, loadSitemap } from "./sitemap";
 
 const production = { siteUrl: "https://www.example.invalid", indexable: true };
@@ -33,7 +36,7 @@ describe("composeMetadata", () => {
       description: "Advisory work.",
     });
     expect(metadata.twitter).toMatchObject({
-      card: "summary",
+      card: "summary_large_image",
       title: "Vitalos Consulting | Vitalos",
     });
     expect(metadata.robots).toBeUndefined();
@@ -96,7 +99,7 @@ describe("composeMetadata", () => {
     ]) {
       const metadata = composeMetadata({ path: "/", seo: { ogImage: bad } }, production);
       expect(metadata.openGraph?.images).toBeUndefined();
-      expect(metadata.twitter).toMatchObject({ card: "summary" });
+      expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
     }
   });
 
@@ -147,10 +150,118 @@ describe("robotsPolicy", () => {
     expect(robots.sitemap).toBeUndefined();
   });
 
-  it("allows crawling in production, keeps /api/ out and points at the sitemap", () => {
+  it("allows crawling in production, keeps /api/ out and points at the sitemap index", () => {
     const robots = robotsPolicy({ indexable: true, siteUrl: production.siteUrl });
-    expect(robots.rules).toEqual([{ userAgent: "*", allow: "/", disallow: "/api/" }]);
+    const rules = [robots.rules].flat();
+    expect(rules[0]).toEqual({ userAgent: "*", allow: "/", disallow: ["/api/"] });
     expect(robots.sitemap).toBe("https://www.example.invalid/sitemap.xml");
+  });
+
+  it("names search engines and AI search agents with the same rules as everyone", () => {
+    const rules = [robotsPolicy({ indexable: true, siteUrl: production.siteUrl }).rules].flat();
+    const groupFor = (agent: string) =>
+      rules.find((rule) => [rule.userAgent].flat().includes(agent));
+    for (const agent of [
+      "Googlebot",
+      "Bingbot",
+      "Applebot",
+      "OAI-SearchBot",
+      "ChatGPT-User",
+      "Claude-SearchBot",
+      "Claude-User",
+      "PerplexityBot",
+      "Perplexity-User",
+    ]) {
+      expect(groupFor(agent), agent).toMatchObject({ allow: "/", disallow: ["/api/"] });
+    }
+  });
+
+  it("switches AI training crawlers with one flag", () => {
+    const training = [
+      "GPTBot",
+      "ClaudeBot",
+      "Google-Extended",
+      "Applebot-Extended",
+      "CCBot",
+      "meta-externalagent",
+    ];
+    const groupFor = (allowAiTraining: boolean, agent: string) =>
+      [robotsPolicy({ indexable: true, siteUrl: production.siteUrl, allowAiTraining }).rules]
+        .flat()
+        .find((rule) => [rule.userAgent].flat().includes(agent));
+    for (const agent of training) {
+      expect(groupFor(true, agent), agent).toMatchObject({ allow: "/" });
+      expect(groupFor(false, agent), agent).toEqual({ userAgent: training, disallow: "/" });
+    }
+  });
+});
+
+describe("isIndexableRequest", () => {
+  it("is true only for the canonical host of an indexable deployment", () => {
+    expect(isIndexableRequest(production, "www.example.invalid")).toBe(true);
+    expect(isIndexableRequest(production, "WWW.Example.invalid")).toBe(true);
+    expect(isIndexableRequest(production, "vitalos-platform.vercel.app")).toBe(false);
+    expect(isIndexableRequest(production, "example.invalid")).toBe(false);
+    expect(isIndexableRequest(production, null)).toBe(false);
+    expect(isIndexableRequest(preview, "preview.example.invalid")).toBe(false);
+  });
+});
+
+describe("sanitiseSeo", () => {
+  it("keeps valid fields and drops invalid ones so the page falls back", () => {
+    expect(
+      sanitiseSeo({
+        title: "  ",
+        description: "A good description.",
+        noindex: "yes" as unknown as boolean,
+      }),
+    ).toEqual({ description: "A good description." });
+    expect(sanitiseSeo({ title: "<script>" })).toEqual({});
+    expect(sanitiseSeo(undefined)).toBeUndefined();
+  });
+
+  it("falls back to the document title when the SEO title is invalid", () => {
+    const metadata = composeMetadata(
+      { path: "/about", title: "About", seo: { title: "" } },
+      production,
+    );
+    expect(metadata.title).toBe("About");
+  });
+});
+
+describe("sitemap sections", () => {
+  it("splits URLs into pages, insights and careers", () => {
+    const parts = partitionSitemap([
+      { url: "https://www.example.invalid/" },
+      { url: "https://www.example.invalid/insights" },
+      { url: "https://www.example.invalid/insights/a" },
+      { url: "https://www.example.invalid/insightsx" },
+      { url: "https://www.example.invalid/careers/role" },
+      { url: "https://www.example.invalid/people/someone" },
+    ]);
+    expect(parts.pages.map((e) => e.url)).toEqual([
+      "https://www.example.invalid/",
+      "https://www.example.invalid/insightsx",
+      "https://www.example.invalid/people/someone",
+    ]);
+    expect(parts.insights).toHaveLength(2);
+    expect(parts.careers).toHaveLength(1);
+  });
+
+  it("renders escaped XML with lastmod only from real dates", () => {
+    const xml = urlsetXml([
+      { url: "https://www.example.invalid/a?x=1&y=2" },
+      { url: "https://www.example.invalid/b", lastModified: new Date("2026-10-10T00:00:00Z") },
+    ]);
+    expect(xml).toContain("<loc>https://www.example.invalid/a?x=1&amp;y=2</loc></url>");
+    expect(xml).toContain("<lastmod>2026-10-10T00:00:00.000Z</lastmod>");
+    expect(latestModified([{ url: "a" }, { url: "b", lastModified: "2026-01-02" }])).toBe(
+      "2026-01-02T00:00:00.000Z",
+    );
+    expect(latestModified([{ url: "a" }])).toBeUndefined();
+    expect(sitemapIndexXml([{ loc: "https://www.example.invalid/sitemaps/pages.xml" }])).toContain(
+      "<sitemapindex",
+    );
   });
 });
 

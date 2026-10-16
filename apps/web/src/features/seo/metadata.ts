@@ -4,6 +4,7 @@ import type { ImageView, SeoView } from "@vitalos/cms";
 import { isSafeRelativeRedirect } from "@vitalos/security/url";
 import { isSameOriginImage } from "../../lib/cms/images";
 import { getSeoContext } from "./context";
+import { sanitiseSeo } from "./seo-block";
 import type { SeoContext } from "./context";
 
 export interface PageMetadataInput {
@@ -45,14 +46,20 @@ const usableImage = (image: ImageView | undefined): ImageView | undefined =>
  *   are left unset and the root layout's defaults (brand name and descriptor) apply.
  * - Canonical is always the absolute URL of `path`; `metadataBase` is set in the root layout.
  * - Open Graph and Twitter repeat the resolved title/description, because a page-level
- *   `openGraph` replaces the layout's entirely. Images only when approved and renderable.
+ *   `openGraph` replaces the layout's entirely. Images only when the content supplies an approved,
+ *   renderable one; otherwise the segment's generated `opengraph-image` applies (file-based
+ *   metadata wins over config), and X falls back to `og:image`. The card is always
+ *   `summary_large_image`: every page has a 1200×630 image (docs/seo/DECISIONS.md 21).
  * - Robots: `noindex, nofollow` when the document says so, when `noindex` is forced, or when the
  *   deployment is not indexable. Otherwise the default (index, follow) is left alone.
  */
 export function composeMetadata(input: PageMetadataInput, context: SeoContext): Metadata {
-  const title = input.seo?.title ?? input.title ?? input.defaultSeo?.title;
-  const description = input.seo?.description ?? input.description ?? input.defaultSeo?.description;
-  const ogImage = usableImage(input.seo?.ogImage ?? input.defaultSeo?.ogImage);
+  // Content SEO blocks are validated field by field; an invalid field falls back (seo-block.ts).
+  const seo = sanitiseSeo(input.seo);
+  const defaultSeo = sanitiseSeo(input.defaultSeo);
+  const title = seo?.title ?? input.title ?? defaultSeo?.title;
+  const description = seo?.description ?? input.description ?? defaultSeo?.description;
+  const ogImage = usableImage(seo?.ogImage ?? defaultSeo?.ogImage);
 
   // A path such as `//evil.invalid` would resolve to another host: no canonical at all then.
   let url: string | undefined;
@@ -63,7 +70,7 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
     url = canonical.toString();
   }
 
-  const noindex = Boolean(input.noindex || input.seo?.noindex) || !context.indexable;
+  const noindex = Boolean(input.noindex || seo?.noindex) || !context.indexable;
   // A title equal to the brand name would render "Vitalos | Vitalos" through the template.
   const absolute = Boolean(input.absoluteTitle) || title === brandName;
   const socialTitle = title ? (absolute ? title : `${title} | ${brandName}`) : brandName;
@@ -92,7 +99,7 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
       ...(article?.authors?.length ? { authors: [...article.authors] } : {}),
     } as Metadata["openGraph"],
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: socialTitle,
       ...(description ? { description } : {}),
       ...(images ? { images: images.map((image) => image.url) } : {}),

@@ -5,7 +5,7 @@ import { JsonLd } from "../../../src/components/json-ld";
 import { loadChromeContent } from "../../../src/components/site-chrome/load";
 import { structuralLabels } from "../../../src/lib/view-mapping/labels";
 import { loadRoutePage } from "../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../src/templates/commercial/seo";
 import {
   SolutionIndexTemplate,
   solutionsTrail,
@@ -28,7 +28,14 @@ export default async function SolutionsPage() {
   if (!page && solutions.length === 0) notFound();
   return (
     <>
-      <JsonLd data={breadcrumbNode(solutionsTrail())} />
+      <JsonLd
+        data={pageGraph({
+          trail: solutionsTrail(),
+          name: page?.heading ?? structuralLabels.solutions,
+          description: page?.intro,
+          type: "CollectionPage",
+        })}
+      />
       <SolutionIndexTemplate page={page} solutions={solutions} />
     </>
   );

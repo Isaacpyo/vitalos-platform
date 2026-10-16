@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 import type { BuildEnv } from "@vitalos/config/build";
 import { buildCsp } from "@vitalos/security/csp";
-import { buildSecurityHeaders } from "@vitalos/security/headers";
+import { ROBOTS_NOINDEX, buildSecurityHeaders } from "@vitalos/security/headers";
 
 type HeaderRules = Awaited<ReturnType<NonNullable<NextConfig["headers"]>>>;
 
@@ -20,6 +20,9 @@ export interface SecurityHeaderOptions {
  * - The Relay realtime WebSocket origin only when Relay and its realtime key are configured.
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
+ * - Production is indexable only on its canonical host (docs/seo/DECISIONS.md 9): a second rule
+ *   sends `X-Robots-Tag: noindex, nofollow` for any other host, such as a `*.vercel.app` alias
+ *   of the production deployment. It covers every path, static assets included.
  */
 export function getSecurityHeaders(
   env: BuildEnv,
@@ -41,5 +44,16 @@ export function getSecurityHeaders(
     csp: buildCsp(policy),
   });
 
-  return [{ source: "/:path*", headers }];
+  const rules: HeaderRules = [{ source: "/:path*", headers }];
+  if (env.indexable) {
+    rules.push({
+      source: "/:path*",
+      missing: [{ type: "host", value: escapeRegExp(new URL(env.siteUrl).hostname) }],
+      headers: [{ key: "X-Robots-Tag", value: ROBOTS_NOINDEX }],
+    });
+  }
+  return rules;
 }
+
+/** `has`/`missing` values are regular expressions; a host is matched literally. */
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

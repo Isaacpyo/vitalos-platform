@@ -36,7 +36,10 @@ export function TrustOverview({ data }: Readonly<{ data: TrustOverviewData }>) {
       <PageHeroBand
         full
         crumbs={
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.trustCentre, path: routes.trust() }]} />
+          <Breadcrumbs
+            trail={[homeCrumb, { name: navLabels.trustCentre, path: routes.trust() }]}
+            page={{ type: "CollectionPage", name: page?.heading, description: page?.intro }}
+          />
         }
         title={page?.heading ?? navLabels.trustCentre}
         lead={page?.intro}
