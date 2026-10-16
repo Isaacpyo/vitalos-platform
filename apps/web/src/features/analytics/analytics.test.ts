@@ -5,9 +5,12 @@ import { createLoggerAnalyticsSink, createValidatingSink, noopAnalyticsSink } fr
 import type { AnalyticsSink } from "./sink";
 
 describe("analytics taxonomy", () => {
-  it("is exactly the Stage 10 §22 event list", () => {
+  it("is exactly the Stage 10 §22 event list plus the SEO brief's conversions", () => {
     expect([...analyticsEventNames].sort()).toEqual(
       [
+        // docs/seo/DECISIONS.md 23: application submits and Insight reads (PR #46).
+        "application_submit",
+        "insight_read",
         "case_study_view",
         "contact_submit",
         "insight_to_offer_click",

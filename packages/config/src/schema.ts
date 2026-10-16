@@ -63,9 +63,18 @@ const relayModel = z
   });
 
 /** NEXT_PUBLIC_* variables: safe for browser bundles. Shared by `public.ts` and the full schema. */
+export const analyticsProviders = ["none", "vercel"] as const;
+export type AnalyticsProvider = (typeof analyticsProviders)[number];
+
 export const publicEnvShape = {
   NEXT_PUBLIC_SITE_URL: originUrl.optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(10).optional(),
+  /**
+   * Cookieless analytics (docs/seo/DECISIONS.md 23). `none` (the default) loads nothing;
+   * `vercel` loads Vercel Web Analytics and Speed Insights. Switching it on is an owner decision:
+   * it needs the privacy notice update in docs/seo/REPORTING.md.
+   */
+  NEXT_PUBLIC_ANALYTICS_PROVIDER: z.enum(analyticsProviders).optional(),
 } as const;
 
 const rawSchema = z.object({

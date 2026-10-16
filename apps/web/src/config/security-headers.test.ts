@@ -11,6 +11,7 @@ const baseEnv: BuildEnv = {
   turnstileEnabled: false,
   relayEnabled: false,
   relayRealtimeOrigin: undefined,
+  siteVerification: { google: undefined, bing: undefined },
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {

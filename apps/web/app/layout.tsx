@@ -7,11 +7,20 @@ import { readPublicEnv } from "@vitalos/config/public";
 import { RelayLauncher } from "@vitalos/relay-widget";
 import { relayFontClassName } from "../src/features/relay/fonts";
 import { seoSite } from "../src/features/seo/site";
+import { SiteAnalytics } from "../src/components/analytics/site-analytics";
 import "./globals.css";
+
+const { siteVerification } = readBuildEnv();
 
 export const metadata: Metadata = {
   // Resolves canonical, Open Graph and Twitter URLs. The site URL is injected by next.config.ts.
   metadataBase: new URL(readPublicEnv().siteUrl),
+  // Search Console and Bing Webmaster Tools HTML-tag verification, when the tokens are set
+  // (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION; docs/seo/LAUNCH.md).
+  verification: {
+    ...(siteVerification.google ? { google: siteVerification.google } : {}),
+    ...(siteVerification.bing ? { other: { "msvalidate.01": siteVerification.bing } } : {}),
+  },
   title: { default: brandName, template: seoSite.titleTemplate },
   description: descriptor,
   // Defaults for pages outside the (site) group, such as the root 404. Every site page has its own
@@ -44,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to main content
         </a>
         {children}
+        <SiteAnalytics />
         {relay && (
           <RelayLauncher
             symbolSrc="/brand/vitalos-symbol.png"
