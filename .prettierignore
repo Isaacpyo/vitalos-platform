@@ -12,3 +12,6 @@ docs/relay/reference/
 
 # Owner-supplied prompts and reference zips, kept byte-for-byte
 Claude outputs/
+
+# Approved Insights batches for import_insights_batch, kept byte-for-byte (the founder's wording)
+docs/content/imports/
