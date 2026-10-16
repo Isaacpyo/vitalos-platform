@@ -13,10 +13,10 @@ import type { RedirectRule } from "./types";
  * plan section 6) will add rules in `additional-redirects.ts`.
  */
 export const seedRedirects: readonly RedirectRule[] = [
-  { source: "/services", destination: routes.whatWeDo(), status: 301 },
-  { source: "/technologies", destination: routes.labs(), status: 301 },
-  { source: "/privacy", destination: routes.legal("privacy"), status: 301 },
-  { source: "/terms", destination: routes.legal("terms"), status: 301 },
+  { source: "/services", destination: routes.whatWeDo(), status: 308 },
+  { source: "/technologies", destination: routes.labs(), status: 308 },
+  { source: "/privacy", destination: routes.legal("privacy"), status: 308 },
+  { source: "/terms", destination: routes.legal("terms"), status: 308 },
 ];
 
 export const redirectMap: readonly RedirectRule[] = [...seedRedirects, ...additionalRedirects];

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
+import { jsonLdTypes } from "../support/json-ld";
 
 /**
  * Institutional templates with sparse content (workstream G2b).
@@ -98,9 +99,7 @@ test.describe("sparse content", () => {
   }) => {
     await page.goto("/careers/example-closed-role");
     await expect(page.getByText("This role is closed")).toBeVisible();
-    const types = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((nodes) => nodes.map((n) => JSON.parse(n.textContent ?? "{}")["@type"]));
+    const types = await jsonLdTypes(page);
     expect(types).not.toContain("JobPosting");
     await expect(page.getByRole("link", { name: "Apply for this role" })).toHaveCount(0);
     await expect(page.locator('nav[aria-label="Breadcrumb"] a[href="/careers"]')).toHaveCount(0);

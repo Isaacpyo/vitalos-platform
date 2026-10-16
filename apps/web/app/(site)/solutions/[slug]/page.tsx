@@ -6,7 +6,7 @@ import {
   loadDocument,
   staticParams,
 } from "../../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../../src/templates/commercial/seo";
 import {
   SolutionTemplate,
   solutionTrail,
@@ -35,7 +35,16 @@ export default async function SolutionPage({ params }: Props) {
   const { doc, gates } = await loadDetailPage("solution", slug);
   return (
     <>
-      <JsonLd data={breadcrumbNode(solutionTrail(doc))} />
+      <JsonLd
+        data={pageGraph({
+          trail: solutionTrail(doc),
+          name: doc.title,
+          description: doc.problemStatement,
+          serviceType: doc.title,
+          faq: doc.faq,
+          dateModified: doc.updatedAt,
+        })}
+      />
       <SolutionTemplate solution={doc} gates={gates} />
     </>
   );

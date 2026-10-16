@@ -8,6 +8,7 @@ const none = {
   unit: false,
   web: false,
   storybook: false,
+  seo: false,
   database: false,
 };
 
@@ -45,14 +46,15 @@ describe("CI change classifier", () => {
 
   it("runs only the browser suites for root test files", () => {
     for (const file of ["tests/end-to-end/home.spec.ts", "playwright.config.ts"]) {
-      expect(classify([file]), file).toEqual({ ...none, web: true, storybook: true });
+      expect(classify([file]), file).toEqual({ ...none, web: true, storybook: true, seo: true });
     }
   });
 
-  it("runs only static checks for editorial content", () => {
+  it("runs only static checks and the SEO check for editorial content", () => {
     expect(classify(["packages/cms/src/repo/pages.ts"], ["@vitalos/cms", "@vitalos/web"])).toEqual({
       ...none,
       static: true,
+      seo: true,
     });
   });
 
@@ -68,6 +70,7 @@ describe("CI change classifier", () => {
       unit: true,
       web: true,
       storybook: true,
+      seo: true,
     });
     expect(
       classify(["packages/email-layout/src/render.ts"], ["@vitalos/email-layout", "@vitalos/web"]),
@@ -76,6 +79,7 @@ describe("CI change classifier", () => {
       static: true,
       unit: true,
       web: true,
+      seo: true,
     });
   });
 

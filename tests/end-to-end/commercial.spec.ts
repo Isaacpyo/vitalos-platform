@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
+import { jsonLdNode, jsonLdTypes } from "../support/json-ld";
 import {
   COMMERCIAL_ROUTES_DRAFT,
   COMMERCIAL_ROUTES_FULL,
@@ -147,10 +148,7 @@ test.describe("homepage", () => {
     page,
   }) => {
     await page.goto("/");
-    const nodes = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((scripts) => scripts.flatMap((s) => JSON.parse(s.textContent ?? "[]")));
-    const types = nodes.map((node: { "@type": string }) => node["@type"]);
+    const types = await jsonLdTypes(page);
     expect(types).toContain("Organization");
     expect(types).toContain("WebSite");
   });
@@ -318,7 +316,9 @@ test.describe("commercial pages", () => {
     );
   });
 
-  test("a practice page shows its sections and no visible breadcrumb", async ({ page }) => {
+  test("a practice page shows its sections, no visible breadcrumb, and a BreadcrumbList", async ({
+    page,
+  }) => {
     await page.goto("/what-we-do/example-practice");
     const main = page.locator("main");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Example Practice (fixture)");
@@ -326,7 +326,12 @@ test.describe("commercial pages", () => {
     for (const heading of ["Problems", "Capabilities", "Related offers", "Industries"]) {
       await expect(main.getByRole("heading", { level: 2, name: heading })).toBeVisible();
     }
+    // No visible trail (owner decisions 12 and 16 Oct 2026); the structured data keeps it.
     await expect(page.locator('nav[aria-label*="readcrumb"]')).toHaveCount(0);
+    const names = (
+      ((await jsonLdNode(page, "BreadcrumbList"))?.itemListElement ?? []) as { name: string }[]
+    ).map((item) => item.name);
+    expect(names).toEqual(["Home", "What We Do", "Example Practice (fixture)"]);
   });
 
   test("a solution page shows the problem statement, the journey and its offers", async ({
@@ -409,11 +414,10 @@ test.describe("commercial pages", () => {
       "href",
       /\/what-we-do\/example-practice$/,
     );
-    const nodes = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((scripts) => scripts.flatMap((s) => JSON.parse(s.textContent ?? "[]")));
-    const crumbs = nodes.find((node: { "@type": string }) => node["@type"] === "BreadcrumbList");
-    expect(crumbs.itemListElement.map((item: { name: string }) => item.name)).toEqual([
+    const crumbs = (await jsonLdNode(page, "BreadcrumbList")) as {
+      itemListElement: { name: string }[];
+    };
+    expect(crumbs.itemListElement.map((item) => item.name)).toEqual([
       "Home",
       "What We Do",
       "Example Practice (fixture)",

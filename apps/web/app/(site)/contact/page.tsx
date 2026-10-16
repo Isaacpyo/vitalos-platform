@@ -13,6 +13,7 @@ import { parseContactSearchParams } from "../../../src/components/contact/contac
 import type { ContactSearchParams } from "../../../src/components/contact/contact-params";
 import { resolveContactPage } from "../../../src/components/contact/contact-view";
 import { buildIntentOptions } from "../../../src/components/contact/labels";
+import { Breadcrumbs, homeCrumb } from "../../../src/templates/institutional/breadcrumbs";
 
 export async function generateMetadata(): Promise<Metadata> {
   const source = await getContentSource();
@@ -50,6 +51,14 @@ export default async function ContactPage({
 
   return (
     <main id="main" tabIndex={-1}>
+      <Breadcrumbs
+        trail={[homeCrumb, { name: navLabels.contact, path: routes.contact() }]}
+        page={{
+          type: "ContactPage",
+          name: page?.heading ?? ctas.primary,
+          description: page?.intro,
+        }}
+      />
       {/* The compact dark hero of every page (pages redesign, 15 Oct 2026). Heading and intro come
           from the CMS; locked copy is the only fallback. */}
       <PageHero

@@ -23,7 +23,12 @@ export function LabsIndex({ data }: Readonly<{ data: LabsIndexData }>) {
     <PageMain>
       <PageHeroBand
         full
-        crumbs={<Breadcrumbs trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]} />}
+        crumbs={
+          <Breadcrumbs
+            trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]}
+            page={{ type: "CollectionPage", name: page?.heading, description: page?.intro }}
+          />
+        }
         title={page?.heading ?? navLabels.labs}
         lead={page?.intro}
       />

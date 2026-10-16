@@ -22,11 +22,11 @@ test.describe("redirects (seed map, ADR-018)", () => {
   ] as const;
 
   for (const [source, destination] of seeded) {
-    test(`${source} answers 301 to ${destination}, which is not itself a redirect`, async ({
+    test(`${source} answers 308 to ${destination}, which is not itself a redirect`, async ({
       request,
     }) => {
       const response = await request.get(source, noFollow);
-      expect(response.status()).toBe(301);
+      expect(response.status()).toBe(308);
       expect(new URL(response.headers()["location"] ?? "", "http://x").pathname).toBe(destination);
       // One hop only: the destination must be a live page.
       expect((await request.get(destination, noFollow)).status()).toBe(200);
@@ -35,7 +35,7 @@ test.describe("redirects (seed map, ADR-018)", () => {
 
   test("a redirect never depends on the HTTP method used by a crawler", async ({ request }) => {
     const response = await request.head("/services", noFollow);
-    expect(response.status()).toBe(301);
+    expect(response.status()).toBe(308);
   });
 });
 

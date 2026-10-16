@@ -5,9 +5,12 @@ import { createLoggerAnalyticsSink, createValidatingSink, noopAnalyticsSink } fr
 import type { AnalyticsSink } from "./sink";
 
 describe("analytics taxonomy", () => {
-  it("is exactly the Stage 10 §22 event list", () => {
+  it("is exactly the Stage 10 §22 event list plus the SEO brief's conversions", () => {
     expect([...analyticsEventNames].sort()).toEqual(
       [
+        // docs/seo/DECISIONS.md 23: application submits and Insight reads (PR #46).
+        "application_submit",
+        "insight_read",
         "case_study_view",
         "contact_submit",
         "insight_to_offer_click",
@@ -82,5 +85,13 @@ describe("sinks", () => {
       insightSlug: "example-insight",
       offerSlug: "example-offer",
     });
+  });
+});
+
+describe("client analytics bundle", () => {
+  it("imports the taxonomy as types only, so zod never reaches the browser", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(new URL("./vercel-sink.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/^import (?!type )[^;]*from "(zod|\.\/events|\.\/sink)";/m);
   });
 });
