@@ -47,6 +47,7 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
               { name: navLabels.trustCentre, path: routes.trust() },
               { name: view.title, path: routes.trustTopic(topic) },
             ]}
+            page={{ description: view.summary }}
           />
         }
         title={view.title}

@@ -6,7 +6,7 @@ import { loadChromeContent } from "../../../src/components/site-chrome/load";
 import { lifecycleStages } from "../../../src/lib/view-mapping/showcase";
 import { deriveStages } from "../../../src/lib/view-mapping/stages";
 import { loadRoutePage } from "../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../src/templates/commercial/seo";
 import { WhatWeDoTemplate, whatWeDoTrail } from "../../../src/templates/practice/WhatWeDoTemplate";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,7 +30,14 @@ export default async function WhatWeDoPage() {
   if (!page && practices.length + solutions.length + offers.length === 0) notFound();
   return (
     <>
-      <JsonLd data={breadcrumbNode(whatWeDoTrail())} />
+      <JsonLd
+        data={pageGraph({
+          trail: whatWeDoTrail(),
+          name: page?.heading ?? navLabels.whatWeDo,
+          description: page?.intro,
+          type: "CollectionPage",
+        })}
+      />
       <WhatWeDoTemplate
         page={page}
         practices={practices}

@@ -36,7 +36,7 @@ describe("composeMetadata", () => {
       description: "Advisory work.",
     });
     expect(metadata.twitter).toMatchObject({
-      card: "summary",
+      card: "summary_large_image",
       title: "Vitalos Consulting | Vitalos",
     });
     expect(metadata.robots).toBeUndefined();
@@ -99,7 +99,7 @@ describe("composeMetadata", () => {
     ]) {
       const metadata = composeMetadata({ path: "/", seo: { ogImage: bad } }, production);
       expect(metadata.openGraph?.images).toBeUndefined();
-      expect(metadata.twitter).toMatchObject({ card: "summary" });
+      expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
     }
   });
 

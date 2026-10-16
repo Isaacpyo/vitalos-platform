@@ -20,7 +20,16 @@ const groupId = (index: number) => `faq-${index}`;
 export function FaqPage({ groups }: Readonly<{ groups: readonly FaqGroup[] }>) {
   return (
     <PageMain>
-      <PageHeroBand full crumbs={<Breadcrumbs trail={faqTrail()} />} title={structuralLabels.faq} />
+      <PageHeroBand
+        full
+        crumbs={
+          <Breadcrumbs
+            trail={faqTrail()}
+            page={{ type: "CollectionPage", name: structuralLabels.faq }}
+          />
+        }
+        title={structuralLabels.faq}
+      />
       <PageBand>
         <Stack gap={8}>
           {groups.map((group, index) => (

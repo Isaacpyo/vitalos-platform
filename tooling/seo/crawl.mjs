@@ -74,7 +74,8 @@ export function parsePage(html) {
     height: attr(img, "height"),
   }));
   const main = find(doc, tag("main")) ?? body;
-  const words = text(main).split(" ").filter(Boolean).length;
+  const mainText = text(main);
+  const words = mainText.split(" ").filter(Boolean).length;
   const canonical = head
     ? findAll(head, (n) => n.tagName === "link" && attr(n, "rel") === "canonical")
     : [];
@@ -88,6 +89,8 @@ export function parsePage(html) {
     robots: meta("name", "robots"),
     headings,
     words,
+    /** Visible text of the main content (scripts, styles and templates excluded). */
+    visibleText: mainText,
     links,
     images,
     jsonLd,

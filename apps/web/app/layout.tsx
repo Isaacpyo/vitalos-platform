@@ -6,13 +6,23 @@ import { readBuildEnv } from "@vitalos/config/build";
 import { readPublicEnv } from "@vitalos/config/public";
 import { RelayLauncher } from "@vitalos/relay-widget";
 import { relayFontClassName } from "../src/features/relay/fonts";
+import { seoSite } from "../src/features/seo/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   // Resolves canonical, Open Graph and Twitter URLs. The site URL is injected by next.config.ts.
   metadataBase: new URL(readPublicEnv().siteUrl),
-  title: { default: brandName, template: `%s | ${brandName}` },
+  title: { default: brandName, template: seoSite.titleTemplate },
   description: descriptor,
+  // Defaults for pages outside the (site) group, such as the root 404. Every site page has its own
+  // generated image (opengraph-image.tsx), which takes precedence (docs/seo/DECISIONS.md 21).
+  openGraph: {
+    type: "website",
+    siteName: brandName,
+    locale: seoSite.ogLocale,
+    images: [{ ...seoSite.defaultOgImage, alt: brandName }],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 /*

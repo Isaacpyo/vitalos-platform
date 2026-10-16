@@ -5,7 +5,7 @@ import { JsonLd } from "../../../src/components/json-ld";
 import { loadChromeContent } from "../../../src/components/site-chrome/load";
 import { structuralLabels } from "../../../src/lib/view-mapping/labels";
 import { loadRoutePage } from "../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../src/templates/commercial/seo";
 import { OfferIndexTemplate, offersTrail } from "../../../src/templates/offer/OfferIndexTemplate";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +22,14 @@ export default async function OffersPage() {
   if (!page && offers.length === 0) notFound();
   return (
     <>
-      <JsonLd data={breadcrumbNode(offersTrail())} />
+      <JsonLd
+        data={pageGraph({
+          trail: offersTrail(),
+          name: page?.heading ?? structuralLabels.offers,
+          description: page?.intro,
+          type: "CollectionPage",
+        })}
+      />
       <OfferIndexTemplate page={page} offers={offers} />
     </>
   );

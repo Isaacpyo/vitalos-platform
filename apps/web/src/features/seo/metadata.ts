@@ -46,7 +46,10 @@ const usableImage = (image: ImageView | undefined): ImageView | undefined =>
  *   are left unset and the root layout's defaults (brand name and descriptor) apply.
  * - Canonical is always the absolute URL of `path`; `metadataBase` is set in the root layout.
  * - Open Graph and Twitter repeat the resolved title/description, because a page-level
- *   `openGraph` replaces the layout's entirely. Images only when approved and renderable.
+ *   `openGraph` replaces the layout's entirely. Images only when the content supplies an approved,
+ *   renderable one; otherwise the segment's generated `opengraph-image` applies (file-based
+ *   metadata wins over config), and X falls back to `og:image`. The card is always
+ *   `summary_large_image`: every page has a 1200×630 image (docs/seo/DECISIONS.md 21).
  * - Robots: `noindex, nofollow` when the document says so, when `noindex` is forced, or when the
  *   deployment is not indexable. Otherwise the default (index, follow) is left alone.
  */
@@ -96,7 +99,7 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
       ...(article?.authors?.length ? { authors: [...article.authors] } : {}),
     } as Metadata["openGraph"],
     twitter: {
-      card: images ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: socialTitle,
       ...(description ? { description } : {}),
       ...(images ? { images: images.map((image) => image.url) } : {}),

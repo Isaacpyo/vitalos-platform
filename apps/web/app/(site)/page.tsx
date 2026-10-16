@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { howWeWorkStages, routes } from "@vitalos/cms";
+import { howWeWorkStages, proposition, propositionLong, routes } from "@vitalos/cms";
 import { JsonLd } from "../../src/components/json-ld";
 import { LegacyAnchorRedirect } from "../../src/components/legacy-anchor-redirect";
 import { loadChromeContent } from "../../src/components/site-chrome/load";
 import { getSeoContext } from "../../src/features/seo/context";
 import { organizationJsonLd, webSiteJsonLd } from "../../src/features/seo/json-ld";
+import { homePageNode, jsonLdGraph } from "../../src/features/seo/graph";
 import { buildMetadata } from "../../src/features/seo/metadata";
 import { getContentSource } from "../../src/lib/cms/get-content-source";
 import { deriveStages } from "../../src/lib/view-mapping/stages";
@@ -33,7 +34,14 @@ export default async function HomePage() {
   const ctx = { siteUrl: getSeoContext().siteUrl };
   return (
     <>
-      <JsonLd data={[organizationJsonLd(settings, ctx), webSiteJsonLd(ctx)]} />
+      {/* The full Organization and WebSite live here; every other page links to them by @id. */}
+      <JsonLd
+        data={jsonLdGraph([
+          organizationJsonLd(settings, ctx),
+          webSiteJsonLd(ctx),
+          homePageNode({ name: proposition, description: propositionLong }, ctx),
+        ])}
+      />
       <LegacyAnchorRedirect />
       <HomeTemplate
         home={home}
