@@ -46,7 +46,7 @@ export async function renderOgImage({ eyebrow, title }: OgImageInput): Promise<I
   const { text, stop } = splitTitle(title);
   // The image renderer lays out every element as a flex item, so each word is its own item and
   // the full stop stays attached to the last word instead of floating at the end of the line.
-  const words = text.split(/s+/);
+  const words = text.split(/\s+/);
   const last = words.pop() ?? "";
   return new ImageResponse(
     <div

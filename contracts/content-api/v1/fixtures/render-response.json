@@ -1,0 +1,18 @@
+{
+  "html": "<h2 id=\"example-heading\">Example heading</h2>\n<p>Example paragraph.</p>",
+  "toc": [
+    {
+      "id": "example-heading",
+      "text": "Example heading",
+      "depth": 2
+    }
+  ],
+  "footnotes": 0,
+  "warnings": [
+    {
+      "code": "missing_alt",
+      "message": "An image has no alt text.",
+      "blocking": true
+    }
+  ]
+}

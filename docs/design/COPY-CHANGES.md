@@ -213,3 +213,4 @@ Only `<title>` and meta descriptions changed; no visible copy changed. Each desc
 - **Industries:** "Health & Care Technology", "Retail & Commerce Technology", "Operations, Industry & Logistics Technology", "Engineering for Startups & Scale-ups"; descriptions from the summaries.
 - **Trust topics:** titles gain "| Trust Centre"; descriptions add the topic's summary sentence.
 - **Labs assets, legal pages (cookies, terms, accessibility), FAQ and the Labs research category:** descriptions lengthened from their own text. Titles are unchanged.
+- **Candidate privacy notice (merge with feat/insights-careers):** the description was 91 characters; it now also says when the application and CV are deleted, from the notice's own "How long we keep it" section (136 characters). Title unchanged.

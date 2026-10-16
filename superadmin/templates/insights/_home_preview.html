@@ -1,0 +1,25 @@
+{# A simple rendition of the homepage Insights section (brief 5.6) with the current published posts. #}
+<div class="border border-slate-200 bg-white p-5 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100" data-testid="home-preview">
+  {% if not preview.config.enabled %}
+    <p class="muted text-sm">The section is turned off, so the homepage does not show it.</p>
+  {% elif not preview.items %}
+    <p class="muted text-sm">No posts are published yet, so the homepage does not show the section.</p>
+  {% else %}
+    <p class="mono-label muted">Insights</p>
+    <div class="mt-1 flex items-end justify-between gap-4">
+      <p class="font-display text-2xl font-extrabold">{{ preview.config.heading }}</p>
+      <span class="shrink-0 text-sm text-cobalt-600 dark:text-cobalt-300">All insights →</span>
+    </div>
+    <p class="muted mt-2 text-sm">{{ preview.config.intro }}</p>
+    <ol class="mt-4 grid gap-4 sm:grid-cols-2">
+      {% for item in preview.items %}
+        <li class="border-t border-slate-200 pt-3 dark:border-slate-800 {% if forloop.first %}sm:col-span-2{% endif %}">
+          <p class="mono-label text-cobalt-600 dark:text-cobalt-300">{{ item.format.label }}</p>
+          <p class="mt-1 font-display font-bold">{{ item.title }}</p>
+          <p class="muted mt-1 line-clamp-2 text-sm">{{ item.excerpt }}</p>
+          <p class="mono-label muted mt-2">{% for author in item.authors %}{{ author.name }}{% if not forloop.last %}, {% endif %}{% endfor %} · {{ item.publishedAt.short }} · {{ item.readingMinutes }} min read</p>
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+</div>

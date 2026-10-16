@@ -1,0 +1,11 @@
+<span class="mono-label inline-flex items-center gap-2 {% if sync.state == 'live' %}text-mineral-700 dark:text-mineral-300{% elif sync.state == 'failed' %}text-slate-900 dark:text-white{% else %}text-slate-500 dark:text-slate-400{% endif %}"
+      data-sync-state="{{ sync.state }}"
+      {% if sync.polling and poll_url %}hx-get="{{ poll_url }}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {% if sync.state == "pending" %}{% include "content_sync/_loader.html" %}{% endif %}
+  {% if sync.state == "failed" and sync.event_id and can_edit %}
+    <span>SYNC FAILED ·</span>
+    <form method="post" action="{% url 'content_sync:retry' sync.event_id %}" class="inline">{% csrf_token %}<input type="hidden" name="next" value="{{ next_url|default:request.get_full_path }}"><button type="submit" class="mono-label underline underline-offset-2 hover:text-cobalt-600">Retry</button></form>
+  {% else %}
+    <span>{{ sync.label }}</span>
+  {% endif %}
+</span>

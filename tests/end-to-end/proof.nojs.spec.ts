@@ -7,7 +7,7 @@ import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
  * which need JavaScript, are absent rather than dead.
  */
 
-// Reads the fixture Work, Labs and Insights documents (ADR-025: none of these exist as such in
+// Reads the fixture Work and Labs documents (ADR-025: none of these exist as such in
 // the draft set; draft-content.nojs.spec.ts covers the draft source without JavaScript).
 test.skip(isDraftRun, FIXTURE_SPECIFIC);
 
@@ -23,11 +23,4 @@ test("labs index lists every asset and its maturity with no filter controls", as
   await page.goto("/labs");
   await expect(page.locator("[data-maturity]")).toHaveCount(2);
   await expect(page.locator("main select")).toHaveCount(0);
-});
-
-test("an article renders its content and author without JavaScript", async ({ page }) => {
-  await page.goto("/insights/example-insight-1");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-  await expect(page.getByText("Artificial article body (fixture)")).toBeVisible();
-  await expect(page.locator("main button")).toHaveCount(0);
 });

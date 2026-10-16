@@ -1,0 +1,93 @@
+{% load ui %}
+{# Status & publishing and editorial checks. Refreshed after every autosave (vsa-post-saved). #}
+<div id="post-rail" class="space-y-4" hx-get="{% url 'insights:post_rail' post.pk %}" hx-trigger="vsa-post-saved from:body" hx-swap="outerHTML" data-testid="post-rail">
+  <section class="card p-4" aria-labelledby="status-heading">
+    <h2 id="status-heading" class="mono-label muted">Status &amp; publishing</h2>
+    <p class="mono-label mt-2 {{ status_tone }}" data-testid="post-status">{{ status_label }}</p>
+    <div class="mt-1" id="post-sync">{% url 'insights:post_sync' post.pk as sync_url %}{% include "content_sync/_item_status.html" with poll_url=sync_url %}</div>
+    {% if post.has_unpublished_changes %}<p class="mono-label mt-1 text-slate-900 dark:text-white" data-testid="unpublished-changes">Unpublished changes</p>{% endif %}
+    <div class="mt-3 flex flex-wrap gap-2 text-sm">
+      {% if preview_ready %}
+        <a class="btn btn-secondary btn-sm" href="{% url 'insights:post_site_preview' post.pk %}" target="_blank" rel="noopener" data-flush-link>{% icon "globe" "h-4 w-4" %} Preview on website<span class="sr-only"> (opens in a new tab)</span></a>
+      {% endif %}
+      {% if live_url %}<a class="btn btn-secondary btn-sm" href="{{ live_url }}" target="_blank" rel="noopener">View on site<span class="sr-only"> (opens in a new tab)</span></a>{% endif %}
+    </div>
+    {% if not preview_ready %}<p class="field-help">Website preview needs CONTENT_WEB_TARGETS and CONTENT_PREVIEW_SECRET.</p>{% endif %}
+
+    <div class="mt-4 space-y-2">
+      {% if post.status == "draft" and can_edit %}
+        <form method="post" action="{% url 'insights:post_action' post.pk 'submit' %}" data-flush>{% csrf_token %}<button type="submit" class="btn btn-primary w-full">Submit for review</button></form>
+      {% endif %}
+      {% if post.status == "in_review" %}
+        {% if can_publish %}<form method="post" action="{% url 'insights:post_action' post.pk 'approve' %}" data-flush>{% csrf_token %}<button type="submit" class="btn btn-primary w-full">Approve</button></form>{% endif %}
+      {% endif %}
+      {% if post.status == "approved" or post.status == "scheduled" %}
+        {% if can_publish %}
+          <form method="post" action="{% url 'insights:post_action' post.pk 'publish' %}" data-flush>{% csrf_token %}<button type="submit" class="btn btn-primary w-full" {% if blockers %}disabled aria-describedby="publish-blockers"{% endif %} data-testid="publish">{% if post.status == "scheduled" %}Publish now{% else %}Publish{% endif %}</button></form>
+          <form method="post" action="{% url 'insights:post_action' post.pk 'schedule' %}" class="space-y-1" data-flush>
+            {% csrf_token %}
+            <label for="publish-at" class="field-label">{% if post.status == "scheduled" %}Reschedule{% else %}Schedule{% endif %} (Europe/London)</label>
+            <div class="flex gap-2">
+              <input id="publish-at" type="datetime-local" name="publish_at" value="{% if post.publish_at %}{{ post.publish_at|date:'Y-m-d\TH:i' }}{% else %}{{ schedule_default }}{% endif %}" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800" required>
+              <button type="submit" class="btn btn-secondary" {% if blockers %}disabled aria-describedby="publish-blockers"{% endif %}>{% if post.status == "scheduled" %}Reschedule{% else %}Schedule{% endif %}</button>
+            </div>
+          </form>
+          {% if post.status == "scheduled" %}
+            <form method="post" action="{% url 'insights:post_action' post.pk 'unschedule' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary w-full">Cancel schedule</button></form>
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      {% if post.status == "published" and can_publish %}
+        <form method="post" action="{% url 'insights:post_action' post.pk 'publish' %}" data-flush>{% csrf_token %}<button type="submit" class="btn btn-primary w-full" {% if blockers or not post.has_unpublished_changes %}disabled{% endif %} {% if blockers %}aria-describedby="publish-blockers"{% endif %} data-testid="publish-changes">Publish changes</button></form>
+        <div class="flex justify-end">{% url 'insights:post_action' post.pk 'unpublish' as unpublish_url %}{% include "insights/_confirm.html" with label="Unpublish" question="Unpublish this post? It leaves the website within seconds and returns to draft." confirm_label="Unpublish post" url=unpublish_url style="btn-secondary" %}</div>
+      {% endif %}
+      {% if post.status == "in_review" or post.status == "approved" %}
+        {% if can_edit %}<form method="post" action="{% url 'insights:post_action' post.pk 'return' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost w-full">Back to draft</button></form>{% endif %}
+      {% endif %}
+      {% if post.status == "archived" and can_edit %}
+        <form method="post" action="{% url 'insights:post_action' post.pk 'restore' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary w-full">Restore to draft</button></form>
+      {% endif %}
+    </div>
+
+    {% if blockers and post.status != "draft" and post.status != "in_review" and post.status != "archived" %}
+      <div id="publish-blockers" class="mt-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800" role="note" data-testid="publish-blockers">
+        <p class="font-medium">{% if post.status == "published" %}Publish changes{% else %}Publish{% endif %} is blocked until:</p>
+        <ul class="mt-1 list-disc space-y-1 pl-5">{% for blocker in blockers %}<li>{{ blocker }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+
+    <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+      {% if can_edit %}<form method="post" action="{% url 'insights:post_action' post.pk 'duplicate' %}" data-flush>{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Duplicate</button></form>{% endif %}
+      {% if post.status != "archived" %}
+        {% if live and can_publish or not live and can_edit %}
+          {% url 'insights:post_action' post.pk 'archive' as archive_url %}{% include "insights/_confirm.html" with label="Archive" question="Archive this post?" confirm_label="Archive post" url=archive_url %}
+        {% endif %}
+      {% endif %}
+      {% if can_delete and can_edit %}
+        {% url 'insights:post_action' post.pk 'delete' as delete_url %}{% include "insights/_confirm.html" with label="Delete" question="Delete this draft for good? It was never published, so nothing changes on the website." confirm_label="Delete draft" url=delete_url %}
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card p-4" aria-labelledby="checks-heading">
+    <h2 id="checks-heading" class="mono-label muted">Editorial checks</h2>
+    <p class="field-help">Each check counts only for this version. Editing the post clears them.</p>
+    <ul class="mt-3 space-y-3" data-testid="editorial-checks">
+      {% for item in checks %}
+        <li>
+          <form method="post" action="{% url 'insights:post_check' post.pk item.key %}" hx-post="{% url 'insights:post_check' post.pk item.key %}" hx-target="#post-rail" hx-swap="outerHTML" data-flush class="flex items-start gap-2">
+            {% csrf_token %}<input type="hidden" name="checked" value="{% if item.done %}0{% else %}1{% endif %}">
+            <button type="submit" role="checkbox" aria-checked="{% if item.done %}true{% else %}false{% endif %}" {% if not can_edit %}disabled{% endif %}
+                    class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border {% if item.done %}border-cobalt-600 bg-cobalt-600 text-white{% else %}border-slate-400 bg-white dark:border-slate-500 dark:bg-slate-900{% endif %}"
+                    aria-label="{{ item.label }}: {{ item.text }}" data-check="{{ item.key }}">{% if item.done %}{% icon "check" "h-3.5 w-3.5" %}{% endif %}</button>
+            <span class="text-sm">
+              {{ item.text }}
+              {% if item.done %}<span class="mono-label muted block">{{ item.check.checked_by.email|default:"Unknown" }} · {{ item.check.checked_at|date:"j M Y, H:i" }}</span>{% endif %}
+              {% if item.key == "authors" and authors_problem %}<span class="field-error block">{{ authors_problem }}</span>{% endif %}
+            </span>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>

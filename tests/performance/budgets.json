@@ -40,12 +40,6 @@
     "/work/example-case-study": {
       "maxJsGzipBytes": 205000
     },
-    "/insights": {
-      "maxJsGzipBytes": 206000
-    },
-    "/insights/example-insight-1": {
-      "maxJsGzipBytes": 205000
-    },
     "/people/example-person": {
       "maxJsGzipBytes": 205000
     },
@@ -68,12 +62,6 @@
       "maxJsGzipBytes": 205000
     },
     "/trust/security": {
-      "maxJsGzipBytes": 205000
-    },
-    "/careers": {
-      "maxJsGzipBytes": 205000
-    },
-    "/careers/example-role": {
       "maxJsGzipBytes": 205000
     },
     "/legal/privacy": {

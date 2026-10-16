@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Website sync · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="mono-label muted">Insights and Careers</p>
+      <h1 class="mt-1 text-2xl font-semibold">Website sync</h1>
+      <p class="muted mt-1 max-w-3xl text-sm">Every change that affects the website is recorded here and delivered to each website target as a signed revalidation. Failed deliveries retry automatically after 1, 2, 4, 8 … minutes, up to 10 times.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      {% include "content_sync/_overall.html" %}
+      {% if can_resync %}
+        <form method="post" action="{% url 'content_sync:resync' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary" data-testid="resync">Resync everything</button></form>
+      {% endif %}
+    </div>
+  </div>
+
+  <dl class="card mt-4 grid gap-x-6 gap-y-2 p-4 text-sm sm:grid-cols-3">
+    <div><dt class="mono-label muted">Website targets</dt><dd class="mt-1 break-all font-mono text-xs">{% for target in targets %}{{ target }}{% if not forloop.last %}<br>{% endif %}{% empty %}None configured: changes are recorded but not sent.{% endfor %}</dd></div>
+    <div><dt class="mono-label muted">Signing key</dt><dd class="mt-1">{% if revalidate_configured %}Set{% else %}Not set (CONTENT_REVALIDATE_SECRET): deliveries fail{% endif %}</dd></div>
+    <div><dt class="mono-label muted">Last tick</dt><dd class="mt-1">{% if tick.last_finished_at %}{{ tick.last_finished_at|date:"j M Y, H:i:s" }}{% else %}Not run yet{% endif %}</dd></div>
+  </dl>
+
+  <div id="sync-events" class="mt-4" {% if polling %}hx-get="{% url 'content_sync:sync' %}" hx-trigger="every 5s" hx-swap="outerHTML" hx-select="#sync-events"{% endif %}>
+    {% include "content_sync/_events.html" %}
+  </div>
+{% endblock %}

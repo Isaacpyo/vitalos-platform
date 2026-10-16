@@ -1,0 +1,33 @@
+{
+  "copy": {
+    "heading": "Build what you advise.",
+    "intro": "Vitalos offers consequential technology work, close to the problem, where you build what you advise. People get senior responsibility and direct client exposure, consulting and engineering in one environment, AI used as a real delivery capability, and high standards without unnecessary bureaucracy.",
+    "values": [
+      "Ownership",
+      "Candour",
+      "Craft",
+      "Commercial sense",
+      "Clarity",
+      "Learning",
+      "Collaboration",
+      "Respect",
+      "Pragmatism",
+      "Client stewardship"
+    ],
+    "statements": [
+      "Work is remote-capable by design, with written context and documented decisions, and in-person time is used where it adds value.",
+      "Technical people can progress without having to become people managers."
+    ],
+    "emptyState": "There are no open roles right now. Roles are published here only when they are real.",
+    "associatesLine": null,
+    "benefits": "",
+    "process": "",
+    "salaryPolicy": "",
+    "equalOpportunities": "",
+    "privacyNoticeUrl": "/legal/privacy",
+    "privacyNoticeVersion": "2026-10",
+    "speculativeApplications": false
+  },
+  "groups": [],
+  "total": 0
+}

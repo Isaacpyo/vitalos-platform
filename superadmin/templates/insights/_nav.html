@@ -1,0 +1,12 @@
+{# Insights sub-navigation with the overall website sync indicator (brief 3.7). #}
+<div class="mt-4 flex flex-wrap items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-800">
+  <nav aria-label="Insights sections" class="flex gap-1 overflow-x-auto overflow-y-hidden">
+    {% for key, label, url in insights_sections %}
+      <a class="-mb-px border-b-2 px-3 py-2 text-sm font-medium {% if section == key %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ url }}" {% if section == key %}aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <div class="pb-1">{% include "content_sync/_overall.html" %}</div>
+</div>
+{% if not insights_open %}
+  <p class="muted mt-3 text-sm" role="note" data-testid="insights-closed-note">Insights is closed on the website. Nothing here is public until a super admin opens it in Settings → Website content.</p>
+{% endif %}

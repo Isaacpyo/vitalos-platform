@@ -1,0 +1,14 @@
+{
+  "state": "closed",
+  "slug": "example-role-fixture",
+  "title": "Example role (fixture)",
+  "practice": {
+    "key": "engineering",
+    "label": "Engineering"
+  },
+  "closedAt": {
+    "iso": "2026-11-30T23:59:00Z",
+    "long": "30 November 2026",
+    "short": "30 Nov 2026"
+  }
+}

@@ -492,6 +492,7 @@ describe("feature flags", () => {
       enquiryPersistence: false,
       emailNotifications: false,
       indexable: false,
+      content: false,
       relay: false,
     });
   });
@@ -514,6 +515,7 @@ describe("feature flags", () => {
       enquiryPersistence: true,
       emailNotifications: false,
       indexable: true,
+      content: false,
       relay: false,
     });
   });
@@ -541,6 +543,9 @@ describe("entries", () => {
     });
     expect(build.indexable).toBe(true);
     expect(Object.keys(build).sort()).toEqual([
+      "careersUploadOrigin",
+      "contentApiOrigin",
+      "contentMediaOrigin",
       "contentSource",
       "deployEnv",
       "enableHsts",
@@ -610,6 +615,120 @@ describe("entries", () => {
       const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");
       expect(source, file).not.toMatch(/(?:import|from)\s+["']server-only["']/);
     }
+  });
+});
+
+describe("content API (Insights and Careers)", () => {
+  const secret = "s".repeat(40);
+  const other = "t".repeat(40);
+
+  it("is not configured by default, with a 600 s cache TTL", () => {
+    const env = parseEnv({});
+    expect(env.content).toEqual({
+      apiBaseUrl: undefined,
+      readKey: undefined,
+      submitKey: undefined,
+      revalidateKeys: [],
+      renderKeys: [],
+      previewKeys: [],
+      cacheTtlSeconds: 600,
+      mediaOrigin: undefined,
+      uploadOrigin: undefined,
+      tickSecret: undefined,
+    });
+    expect(deriveFeatures(env).content).toBe(false);
+  });
+
+  it("reads the base URL, single keys and key lists", () => {
+    const env = parseEnv({
+      CONTENT_API_BASE_URL: "https://admin.example.invalid/",
+      CONTENT_READ_KEY_ID: "web-read-1",
+      CONTENT_READ_SECRET: secret,
+      CAREERS_SUBMIT_KEY_ID: "web-submit-1",
+      CAREERS_SUBMIT_SECRET: other,
+      CONTENT_REVALIDATE_SECRET: `rev-2:${other}, rev-1:${secret}`,
+      CONTENT_RENDER_SECRET: `render-1:${secret}`,
+      CONTENT_PREVIEW_SECRET: `preview-1:${secret}`,
+      CONTENT_CACHE_TTL_SECONDS: "120",
+      CONTENT_MEDIA_HOST: "media.example.invalid",
+      CAREERS_UPLOAD_HOST: "https://uploads.example.invalid",
+    });
+    expect(env.content.apiBaseUrl).toBe("https://admin.example.invalid");
+    expect(env.content.readKey).toEqual({ id: "web-read-1", secret });
+    expect(env.content.submitKey).toEqual({ id: "web-submit-1", secret: other });
+    expect(env.content.revalidateKeys).toEqual([
+      { id: "rev-2", secret: other },
+      { id: "rev-1", secret },
+    ]);
+    expect(env.content.cacheTtlSeconds).toBe(120);
+    expect(env.content.mediaOrigin).toBe("https://media.example.invalid");
+    expect(env.content.uploadOrigin).toBe("https://uploads.example.invalid");
+    expect(deriveFeatures(env).content).toBe(true);
+    const build = readBuildEnv({
+      CONTENT_MEDIA_HOST: "media.example.invalid",
+      CAREERS_UPLOAD_HOST: "uploads.example.invalid",
+    });
+    expect(build.contentMediaOrigin).toBe("https://media.example.invalid");
+    expect(build.careersUploadOrigin).toBe("https://uploads.example.invalid");
+    expect(JSON.stringify(build)).not.toContain("ssss");
+  });
+
+  it("requires the read key once the base URL is set, and key ids with their secrets", () => {
+    expect(issuePaths({ CONTENT_API_BASE_URL: "https://admin.example.invalid" }).sort()).toEqual([
+      "CONTENT_READ_KEY_ID",
+      "CONTENT_READ_SECRET",
+    ]);
+    expect(issuePaths({ CONTENT_READ_KEY_ID: "web-read-1" })).toEqual(["CONTENT_READ_SECRET"]);
+    expect(issuePaths({ CAREERS_SUBMIT_SECRET: secret })).toEqual(["CAREERS_SUBMIT_KEY_ID"]);
+  });
+
+  it("rejects malformed key lists without echoing them", () => {
+    for (const value of [
+      "no-colon",
+      `UPPER:${secret}`,
+      "short:abc",
+      `a:${secret},a:${other}`,
+      `:${secret}`,
+    ]) {
+      const result = safeParseEnv({ CONTENT_REVALIDATE_SECRET: value });
+      expect(result.success, value).toBe(false);
+      if (!result.success) {
+        expect(result.issues.map((issue) => issue.path)).toEqual(["CONTENT_REVALIDATE_SECRET"]);
+        expect(JSON.stringify(result.issues)).not.toContain("sss");
+      }
+    }
+  });
+
+  it("bounds the cache TTL and rejects non-numbers", () => {
+    expect(issuePaths({ CONTENT_CACHE_TTL_SECONDS: "5" })).toEqual(["CONTENT_CACHE_TTL_SECONDS"]);
+    expect(issuePaths({ CONTENT_CACHE_TTL_SECONDS: "ten" })).toEqual(["CONTENT_CACHE_TTL_SECONDS"]);
+  });
+
+  it("requires https for the admin, media and upload hosts in production", () => {
+    expect(
+      issuePaths({
+        ...production,
+        CONTENT_API_BASE_URL: "http://admin.example.invalid",
+        CONTENT_READ_KEY_ID: "web-read-1",
+        CONTENT_READ_SECRET: secret,
+        CONTENT_MEDIA_HOST: "http://media.example.invalid",
+        CAREERS_UPLOAD_HOST: "http://uploads.example.invalid",
+      }).sort(),
+    ).toEqual(["CAREERS_UPLOAD_HOST", "CONTENT_API_BASE_URL", "CONTENT_MEDIA_HOST"]);
+    // Plain http is fine for local runs.
+    expect(
+      issuePaths({
+        CONTENT_API_BASE_URL: "http://127.0.0.1:8010",
+        CONTENT_READ_KEY_ID: "web-read-1",
+        CONTENT_READ_SECRET: secret,
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects a media host with a path", () => {
+    expect(issuePaths({ CONTENT_MEDIA_HOST: "https://media.example.invalid/content" })).toEqual([
+      "CONTENT_MEDIA_HOST",
+    ]);
   });
 });
 

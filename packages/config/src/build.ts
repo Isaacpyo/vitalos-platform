@@ -12,6 +12,12 @@ export interface BuildEnv {
   indexable: boolean;
   enableHsts: boolean;
   turnstileEnabled: boolean;
+  /** Public media origin for Insights and Careers images (CSP img-src, next/image), or undefined. */
+  contentMediaOrigin: string | undefined;
+  /** CV upload origin (CSP connect-src), or undefined. */
+  careersUploadOrigin: string | undefined;
+  /** The Super Admin's origin (not secret): the CV upload fallback when no upload host is set. */
+  contentApiOrigin: string | undefined;
   /** Relay is on: the launcher renders and its API routes answer. */
   relayEnabled: boolean;
   /** Realtime WebSocket origin (ws/wss) for CSP connect-src, when Relay realtime is configured. */
@@ -30,6 +36,9 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
     indexable: features.indexable,
     enableHsts: env.enableHsts,
     turnstileEnabled: features.turnstile,
+    contentMediaOrigin: env.content.mediaOrigin,
+    careersUploadOrigin: env.content.uploadOrigin,
+    contentApiOrigin: env.content.apiBaseUrl,
     relayEnabled: features.relay,
     relayRealtimeOrigin:
       features.relay && env.relay.realtimePublicKey && env.supabase.url

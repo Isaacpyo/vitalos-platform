@@ -12,6 +12,7 @@ import {
 } from "./nav-model";
 import type { ChromeContent } from "./nav-model";
 import { activeSectionForPath } from "./section-for-path";
+import { withContentSections } from "./load";
 
 const summary = (slug: string, title: string): SolutionSummary => ({ id: slug, slug, title });
 const offer = (slug: string, title: string): OfferSummary => ({ id: slug, slug, title });
@@ -373,5 +374,21 @@ describe("activeSectionForPath", () => {
     expect(activeSectionForPath("/worksheets")).toBeUndefined();
     expect(activeSectionForPath("/what-we-do/")).toBe("what-we-do");
     expect(activeSectionForPath(null)).toBeUndefined();
+  });
+});
+
+describe("Insights and Careers in the chrome follow the admin's site state", () => {
+  it("opens or closes only the Insights and Careers gates", () => {
+    const gates = evaluateGates({ work: 3, insights: 0, labs: 2, industries: 2, careers: 1 });
+    const open = withContentSections(gates, { insightsOpen: true, careersOpen: true });
+    expect(open.open.insights).toBe(true);
+    expect(open.open.careers).toBe(true);
+    const closed = withContentSections(
+      { ...gates, open: { ...gates.open, insights: true, careers: true } },
+      { insightsOpen: false, careersOpen: false },
+    );
+    expect(closed.open.insights).toBe(false);
+    expect(closed.open.careers).toBe(false);
+    expect(closed.open.work).toBe(gates.open.work);
   });
 });

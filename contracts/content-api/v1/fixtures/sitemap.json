@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "path": "/insights",
+      "lastModified": "2026-10-14T10:30:00Z"
+    },
+    {
+      "path": "/insights/example-post-1",
+      "lastModified": "2026-10-14T10:30:00Z"
+    },
+    {
+      "path": "/insights/topics/example-topic",
+      "lastModified": "2026-10-14T10:30:00Z"
+    },
+    {
+      "path": "/insights/authors/example-author",
+      "lastModified": "2026-10-14T10:30:00Z"
+    },
+    {
+      "path": "/careers",
+      "lastModified": "2026-10-12T09:00:00Z"
+    },
+    {
+      "path": "/careers/example-role-fixture",
+      "lastModified": "2026-10-12T09:00:00Z"
+    }
+  ]
+}

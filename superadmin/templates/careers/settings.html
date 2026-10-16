@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Settings · Careers · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Careers</p>
+  <h1 class="mt-1 text-2xl font-semibold">Careers settings</h1>
+  {% include "careers/_nav.html" %}
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="card p-5 xl:col-span-2" aria-labelledby="page-heading">
+      <h2 id="page-heading" class="font-semibold">Careers page, policies and applications</h2>
+      <p class="muted mt-1 text-sm">Benefits, the hiring process, the salary policy and the equal opportunities statement stay hidden on the website until they are filled in. The associates line and speculative applications stay off until FAQ CAR-01 is confirmed.</p>
+      <form method="post" class="mt-4 max-w-3xl">
+        {% csrf_token %}<input type="hidden" name="action" value="settings">
+        <fieldset {% if not can_edit_settings %}disabled{% endif %}>
+          <legend class="sr-only">Careers settings</legend>
+          {% include "partials/form_fields.html" with form=settings_form %}
+          <button type="submit" class="btn btn-primary mt-4">Save settings</button>
+        </fieldset>
+      </form>
+    </section>
+
+    <section class="card p-5" aria-labelledby="home-section-heading">
+      <h2 id="home-section-heading" class="font-semibold">Homepage section</h2>
+      <form method="post" class="mt-4" hx-post="{% url 'careers:settings_preview' %}" hx-trigger="input delay:400ms, change" hx-target="#careers-home-preview" hx-swap="innerHTML">
+        {% csrf_token %}<input type="hidden" name="action" value="section">
+        <fieldset {% if not can_edit_settings %}disabled{% endif %}>
+          <legend class="sr-only">Homepage section</legend>
+          {% include "partials/form_fields.html" with form=section_form %}
+          <button type="submit" class="btn btn-primary mt-4">Save section</button>
+        </fieldset>
+      </form>
+    </section>
+    <section class="card p-5" aria-labelledby="home-preview-heading">
+      <h2 id="home-preview-heading" class="font-semibold">Preview</h2>
+      <div id="careers-home-preview" class="mt-3" aria-live="polite">{% include "careers/_home_preview.html" %}</div>
+    </section>
+
+    <section class="card p-5 xl:col-span-2" aria-labelledby="emails-heading">
+      <h2 id="emails-heading" class="font-semibold">Candidate emails</h2>
+      {% if emails_on %}
+        <p class="mt-1 text-sm">Candidate emails are on: the receipt is sent with every application, and the rejection and invitation are sent from an application.</p>
+      {% else %}
+        <p class="mt-1 text-sm" data-testid="emails-off">Candidate emails are off (CAREERS_CANDIDATE_EMAILS_ENABLED). Nothing is sent to candidates; turning them on needs owner approval.</p>
+      {% endif %}
+      <p class="muted mt-1 text-sm">{name} and {role} are filled in with the candidate's name and the role.</p>
+      <div class="mt-4 grid gap-6 lg:grid-cols-2">
+        <form method="post">
+          {% csrf_token %}<input type="hidden" name="action" value="emails">
+          <fieldset {% if not can_edit_settings %}disabled{% endif %}>
+            <legend class="sr-only">Candidate email templates</legend>
+            {% include "partials/form_fields.html" with form=emails_form %}
+            <button type="submit" class="btn btn-primary mt-4">Save templates</button>
+          </fieldset>
+        </form>
+        <div class="space-y-4">
+          {% for kind in email_kinds %}
+            <div>
+              <h3 class="mono-label muted">{{ kind|capfirst }} preview (saved text, example values)</h3>
+              <iframe src="{% url 'careers:email_preview' kind %}" title="{{ kind|capfirst }} email preview" sandbox referrerpolicy="no-referrer" loading="lazy" class="mt-1 block h-80 w-full border border-slate-200 bg-white dark:border-slate-800"></iframe>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

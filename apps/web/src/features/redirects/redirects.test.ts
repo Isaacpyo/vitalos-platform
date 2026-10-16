@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { goneResponse, goneSet, isGone } from "./gone";
-import { nextRedirects } from "./next-redirects";
+import { nextRedirects, sectionMoves } from "./next-redirects";
 import { redirectMap, seedRedirects } from "./redirect-map";
 import type { RedirectRule } from "./types";
 import { assertValidRedirects, validateRedirects } from "./validate";
@@ -34,7 +34,15 @@ describe("seed redirect map", () => {
       { source: "/privacy", destination: "/legal/privacy", statusCode: 308 },
       { source: "/terms", destination: "/legal/terms", statusCode: 308 },
       { source: "/about/leadership", destination: "/about", statusCode: 308 },
+      { source: "/blog", destination: "/insights", statusCode: 308 },
+      { source: "/blog/:path+", destination: "/insights/:path+", statusCode: 308 },
     ]);
+  });
+
+  it("moves every section with an exact rule for its root in the map", () => {
+    for (const move of sectionMoves) {
+      expect(redirectMap).toContainEqual({ source: move.from, destination: move.to, status: 308 });
+    }
   });
 });
 

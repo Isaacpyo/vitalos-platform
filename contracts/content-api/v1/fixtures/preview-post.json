@@ -1,0 +1,115 @@
+{
+  "entity": "post",
+  "status": "draft",
+  "post": {
+    "id": "00000000-0000-4000-8000-000000000101",
+    "slug": "example-post-1",
+    "title": "Example post 1 (fixture)",
+    "excerpt": "Example excerpt for a fixture post. It is not real content.",
+    "format": {
+      "key": "engineering_note",
+      "label": "Engineering note",
+      "plural": "Engineering notes",
+      "slug": "engineering-note"
+    },
+    "authors": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000a1",
+        "slug": "example-author",
+        "name": "Example Author",
+        "roleTitle": "Example role title",
+        "initials": "EA",
+        "avatar": null
+      }
+    ],
+    "topics": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000c1",
+        "slug": "example-topic",
+        "name": "Example topic",
+        "kind": "topic"
+      }
+    ],
+    "practice": {
+      "key": "engineering",
+      "label": "Engineering"
+    },
+    "cover": {
+      "url": "https://media.example.test/content/00000000-0000-4000-8000-000000000f01.jpg",
+      "alt": "Example cover image",
+      "width": 1600,
+      "height": 900,
+      "caption": null
+    },
+    "publishedAt": {
+      "iso": "2026-10-12T09:00:00Z",
+      "long": "12 October 2026",
+      "short": "12 Oct 2026"
+    },
+    "updatedAt": {
+      "iso": "2026-10-14T10:30:00Z",
+      "long": "14 October 2026",
+      "short": "14 Oct 2026"
+    },
+    "readingMinutes": 3,
+    "featured": false,
+    "bodyMarkdown": "## Example heading\n\nExample paragraph with a footnote.[^1]\n\n[^1]: Example source (fixture).\n",
+    "seo": {
+      "title": "Example post 1 (fixture)",
+      "description": "Example description.",
+      "canonicalUrl": null,
+      "noindex": false
+    },
+    "cta": {
+      "label": "Talk to Vitalos",
+      "href": "/contact"
+    },
+    "related": [
+      {
+        "id": "00000000-0000-4000-8000-000000000102",
+        "slug": "example-post-2",
+        "title": "Example post 2 (fixture)",
+        "excerpt": "Example excerpt for a fixture post. It is not real content.",
+        "format": {
+          "key": "engineering_note",
+          "label": "Engineering note",
+          "plural": "Engineering notes",
+          "slug": "engineering-note"
+        },
+        "authors": [
+          {
+            "id": "00000000-0000-4000-8000-0000000000a1",
+            "slug": "example-author",
+            "name": "Example Author",
+            "roleTitle": "Example role title",
+            "initials": "EA",
+            "avatar": null
+          }
+        ],
+        "topics": [
+          {
+            "id": "00000000-0000-4000-8000-0000000000c1",
+            "slug": "example-topic",
+            "name": "Example topic",
+            "kind": "topic"
+          }
+        ],
+        "practice": {
+          "key": "engineering",
+          "label": "Engineering"
+        },
+        "cover": null,
+        "publishedAt": {
+          "iso": "2026-10-12T09:00:00Z",
+          "long": "12 October 2026",
+          "short": "12 Oct 2026"
+        },
+        "updatedAt": null,
+        "readingMinutes": 3,
+        "featured": false
+      }
+    ],
+    "lastModified": "2026-10-14T10:30:00Z"
+  },
+  "role": null
+}

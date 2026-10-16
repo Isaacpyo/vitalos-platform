@@ -5,6 +5,8 @@
  * proves nothing until Siteverify confirms it. This function fails closed. It never throws and
  * never includes the secret or the token in its result.
  */
+export type TurnstileAction = "enquiry" | "careers" | "relay";
+
 export const TURNSTILE_SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 export interface VerifyTurnstileInput {
@@ -13,7 +15,8 @@ export interface VerifyTurnstileInput {
   remoteIp?: string;
   /** When set, the hostname Cloudflare reports for the solved challenge must match. */
   expectedHostname?: string;
-  expectedAction: "enquiry" | "relay";
+  /** The widget's action: `enquiry` (contact form), `careers` (application form) or `relay`. */
+  expectedAction: TurnstileAction;
   fetch?: typeof fetch;
   timeoutMs?: number;
 }

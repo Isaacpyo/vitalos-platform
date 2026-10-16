@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Preview: {{ post.title }}</title>
+<style>
+@font-face { font-family: "Inter"; font-weight: 100 900; font-display: swap; src: url("{% static 'fonts/inter.woff2' %}") format("woff2"); }
+@font-face { font-family: "Manrope"; font-weight: 200 800; font-display: swap; src: url("{% static 'fonts/manrope.woff2' %}") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 100 800; font-display: swap; src: url("{% static 'fonts/jetbrains-mono.woff2' %}") format("woff2"); }
+{% include "insights/_article.css" %}
+</style>
+</head>
+<body>
+<main class="article">
+  <p class="eyebrow">Insights / {{ post.get_format_display }}</p>
+  <h1>{{ post.title }}</h1>
+  {% if post.excerpt %}<p class="dek">{{ post.excerpt }}</p>{% endif %}
+  {% if post.cover_path and cover_url %}<figure class="cover"><img src="{{ cover_url }}" alt="{{ post.cover_alt }}" width="{{ post.cover_width }}" height="{{ post.cover_height }}">{% if post.cover_caption %}<figcaption>{{ post.cover_caption }}</figcaption>{% endif %}</figure>{% endif %}
+  {% if result.available %}
+    <div class="prose">{{ result.html|safe }}</div>
+  {% else %}
+    <p>Preview unavailable. Your changes are saved.</p>
+  {% endif %}
+</main>
+</body>
+</html>

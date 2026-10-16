@@ -1,0 +1,19 @@
+{
+  "submissionId": "00000000-0000-4000-8000-0000000005a1",
+  "roleSlug": "example-role-fixture",
+  "uploadId": "00000000-0000-4000-8000-0000000004a1",
+  "name": "Example Applicant",
+  "email": "applicant@example.test",
+  "phone": "",
+  "location": "Example City",
+  "linkedinUrl": "",
+  "portfolioUrl": "",
+  "rightToWork": "yes",
+  "noticePeriod": "",
+  "coverNote": "Example cover note (fixture).",
+  "consent": true,
+  "noticeVersion": "2026-10",
+  "source": "role_page",
+  "clientIp": "192.0.2.1",
+  "userAgent": "fixture"
+}
