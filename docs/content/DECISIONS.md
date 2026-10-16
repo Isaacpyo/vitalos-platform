@@ -221,3 +221,4 @@ Numbered and append-only. ADRs hold the architecture; this file holds the smalle
 121. **OG images** for articles, roles, `/insights` and `/careers` use the shared ADR-043 template. A bug in that template (titles split on the letter "s") is fixed.
 122. **IndexNow.** The website's revalidate route submits changed Insights and Careers page URLs to IndexNow (ADR-043), in production with `INDEXNOW_KEY` only, after the response. The admin does not ping, so URLs are sent once.
 123. **Candidate privacy notice description** lengthened to fit ADR-043's 120–155 character rule (`docs/design/COPY-CHANGES.md`).
+124. **The canonical host is the apex, `vitalos.co.uk` (#52); `www` answers 308.** Signed POSTs do not follow redirects, and fetch drops `Authorization` on a cross-origin redirect. So the admin's `CONTENT_WEB_TARGETS` and the Worker's `TICK_URL` use `https://vitalos.co.uk` directly. The CV bucket's CORS keeps both origins.

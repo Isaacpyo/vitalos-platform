@@ -53,7 +53,7 @@ info:
 servers:
   - url: https://admin.vitalos.co.uk
     description: Super Admin (read and submit scopes)
-  - url: https://www.vitalos.co.uk
+  - url: https://vitalos.co.uk
     description: Website (revalidate, render and preview scopes)
 
 components:

@@ -2,7 +2,7 @@
 // `GET /api/content/cron/tick` every minute with the website's CONTENT_TICK_SECRET. The website decides
 // whether anything is due and only then wakes the Super Admin, so idle minutes cost nothing.
 //
-// Secrets (wrangler secret put): TICK_URL (https://www.vitalos.co.uk/api/content/cron/tick),
+// Secrets (wrangler secret put): TICK_URL (https://vitalos.co.uk/api/content/cron/tick),
 // TICK_SECRET (the website's CONTENT_TICK_SECRET). Never logged.
 
 const TIMEOUT_MS = 10_000;

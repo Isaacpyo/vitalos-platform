@@ -1,6 +1,6 @@
 # Insights and Careers: runbook
 
-Insights (the blog) and Careers are authored in the Super Admin (admin.vitalos.co.uk) and shown on the website (www.vitalos.co.uk). The two apps share no database and talk only through signed HTTP (ADR-039, ADR-040).
+Insights (the blog) and Careers are authored in the Super Admin (admin.vitalos.co.uk) and shown on the website (vitalos.co.uk). The two apps share no database and talk only through signed HTTP (ADR-039, ADR-040).
 
 - Brief: [`BRIEF.md`](BRIEF.md)
 - Decisions: [`DECISIONS.md`](DECISIONS.md)
@@ -108,12 +108,12 @@ For the website-signed scopes (`read`, `submit`), step 1 is on the admin. For th
 
 ## The scheduler (ADR-042)
 
-The Cloudflare Worker in `infra/cloudflare-content-tick` calls `https://www.vitalos.co.uk/api/content/cron/tick` every minute with the website's `CONTENT_TICK_SECRET` (the route also accepts `CRON_SECRET`, which Vercel Cron uses). The website calls the admin only when its cached `nextDueAt` has passed, so idle minutes cost nothing on Azure.
+The Cloudflare Worker in `infra/cloudflare-content-tick` calls `https://vitalos.co.uk/api/content/cron/tick` every minute with the website's `CONTENT_TICK_SECRET` (the route also accepts `CRON_SECRET`, which Vercel Cron uses). The website calls the admin only when its cached `nextDueAt` has passed, so idle minutes cost nothing on Azure.
 
 **Deploy it** once the website change is live, from `infra/cloudflare-content-tick`:
 
 ```sh
-npx wrangler secret put TICK_URL      # https://www.vitalos.co.uk/api/content/cron/tick
+npx wrangler secret put TICK_URL      # https://vitalos.co.uk/api/content/cron/tick
 npx wrangler secret put TICK_SECRET   # the website's CONTENT_TICK_SECRET
 npx wrangler deploy
 ```

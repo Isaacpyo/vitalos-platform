@@ -1,7 +1,7 @@
 # Vitalos content tick (ADR-042): calls the website's tick route every minute. Workers free plan.
 # No secrets here. Set these once, from this folder, with wrangler (it prompts for each value):
 #
-#   npx wrangler secret put TICK_URL      # https://www.vitalos.co.uk/api/content/cron/tick
+#   npx wrangler secret put TICK_URL      # https://vitalos.co.uk/api/content/cron/tick
 #   npx wrangler secret put TICK_SECRET   # same value as the website's CONTENT_TICK_SECRET (Vercel production)
 #
 # Deploy: npx wrangler deploy   (docs/content/README.md, "Scheduler")
