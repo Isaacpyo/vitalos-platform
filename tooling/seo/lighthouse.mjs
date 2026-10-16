@@ -21,6 +21,17 @@ export async function runLighthouse({ origin, templates, skipCrawlable = true, r
   const browser = await chromium.launch({ args: [`--remote-debugging-port=${port}`] });
   const results = [];
   try {
+    // A discarded warm-up run: the first audit of a fresh browser and server reads slow (cold
+    // JIT and caches), which made the first template fail at random.
+    const [firstPath] = Object.values(templates);
+    if (firstPath) {
+      await lighthouse(new URL(firstPath, origin).toString(), {
+        port,
+        output: "json",
+        logLevel: "error",
+        onlyCategories: ["performance"],
+      });
+    }
     for (const [template, urlPath] of Object.entries(templates)) {
       const samples = [];
       for (let i = 0; i < runs; i += 1) {

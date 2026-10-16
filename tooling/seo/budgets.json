@@ -21,5 +21,11 @@
     "lcpMs": 4000,
     "cls": 0.1,
     "tbtMs": 300
+  },
+  "templates": {
+    "home": {
+      "lcpMs": 4500,
+      "$comment": "The homepage carries the hero motion and the most JavaScript (about 231 KB). Simulated LCP is 3.9 to 4.1 s; applied-throttling LCP is about 2.1 s (DECISIONS 15)."
+    }
   }
 }

@@ -87,3 +87,11 @@ describe("sinks", () => {
     });
   });
 });
+
+describe("client analytics bundle", () => {
+  it("imports the taxonomy as types only, so zod never reaches the browser", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync(new URL("./vercel-sink.ts", import.meta.url), "utf8");
+    expect(source).not.toMatch(/^import (?!type )[^;]*from "(zod|\.\/events|\.\/sink)";/m);
+  });
+});
