@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
+import { jsonLdNode, jsonLdTypes } from "../support/json-ld";
 import {
   COMMERCIAL_ROUTES_DRAFT,
   COMMERCIAL_ROUTES_FULL,
@@ -147,10 +148,7 @@ test.describe("homepage", () => {
     page,
   }) => {
     await page.goto("/");
-    const nodes = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((scripts) => scripts.flatMap((s) => JSON.parse(s.textContent ?? "[]")));
-    const types = nodes.map((node: { "@type": string }) => node["@type"]);
+    const types = await jsonLdTypes(page);
     expect(types).toContain("Organization");
     expect(types).toContain("WebSite");
   });
@@ -336,13 +334,9 @@ test.describe("commercial pages", () => {
     await expect(
       page.locator('nav[aria-label="Breadcrumb"]').getByRole("link", { name: "What We Do" }),
     ).toHaveAttribute("href", "/what-we-do");
-    const names = await page.locator('script[type="application/ld+json"]').evaluateAll((nodes) =>
-      nodes
-        .flatMap((node) => [JSON.parse(node.textContent ?? "null")].flat())
-        .flatMap((data) => (data?.["@graph"] as unknown[] | undefined) ?? [data])
-        .filter((data) => data?.["@type"] === "BreadcrumbList")
-        .flatMap((data) => (data.itemListElement as { name: string }[]).map((item) => item.name)),
-    );
+    const names = (
+      ((await jsonLdNode(page, "BreadcrumbList"))?.itemListElement ?? []) as { name: string }[]
+    ).map((item) => item.name);
     expect(names).toEqual(["Home", "What We Do", "Example Practice (fixture)"]);
   });
 
@@ -426,11 +420,10 @@ test.describe("commercial pages", () => {
       "href",
       /\/what-we-do\/example-practice$/,
     );
-    const nodes = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((scripts) => scripts.flatMap((s) => JSON.parse(s.textContent ?? "[]")));
-    const crumbs = nodes.find((node: { "@type": string }) => node["@type"] === "BreadcrumbList");
-    expect(crumbs.itemListElement.map((item: { name: string }) => item.name)).toEqual([
+    const crumbs = (await jsonLdNode(page, "BreadcrumbList")) as {
+      itemListElement: { name: string }[];
+    };
+    expect(crumbs.itemListElement.map((item) => item.name)).toEqual([
       "Home",
       "What We Do",
       "Example Practice (fixture)",

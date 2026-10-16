@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
+import { jsonLdTypes } from "../support/json-ld";
 
 /**
  * Proof and authority templates below their publication gates (workstream G2b).
@@ -70,9 +71,7 @@ test.describe("detail pages stay reachable but are not indexed", () => {
     const response = await page.goto("/insights/example-insight-1");
     expect(response?.status()).toBe(200);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-    const types = await page
-      .locator('script[type="application/ld+json"]')
-      .evaluateAll((nodes) => nodes.map((n) => JSON.parse(n.textContent ?? "{}")["@type"]));
+    const types = await jsonLdTypes(page);
     expect(types).toContain("Article");
     await expect(page.locator('nav[aria-label="Breadcrumb"] a[href="/insights"]')).toHaveCount(0);
     await expectNoA11yViolations(page);
