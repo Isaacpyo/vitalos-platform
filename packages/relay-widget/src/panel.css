@@ -6,27 +6,30 @@
  */
 
 .relay-root {
-  --relay-font-display:
-    var(--relay-font-manrope, "Manrope"), var(--font-sans, system-ui), sans-serif;
-  --relay-font-text: var(--relay-font-inter, "Inter"), var(--font-sans, system-ui), sans-serif;
-  --relay-font-mono:
-    var(--relay-font-jetbrains, "JetBrains Mono"), var(--font-mono, ui-monospace), monospace;
+  /* The site's brand fonts (owner direction, 16 Oct 2026): no extra font files for Relay. */
+  --relay-font-display: var(--font-sans, system-ui, sans-serif);
+  --relay-font-text: var(--font-sans, system-ui, sans-serif);
+  --relay-font-mono: var(--font-mono, ui-monospace, monospace);
   --relay-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* Desktop and tablet: a floating card above the launcher corner, never the full window height
+   (owner direction, 16 Oct 2026). Mobile stays full screen (.relay-panel--mobile). */
 .relay-panel {
   position: fixed;
   z-index: 70;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   width: 420px;
-  max-width: 100vw;
+  max-width: calc(100vw - 32px);
+  height: min(680px, calc(100dvh - 32px));
+  overflow: hidden;
   background: var(--relay-surface-200);
   color: var(--relay-ink);
-  border-left: 1px solid var(--relay-line);
+  /* Brand rule (header above): square panel, hairline only, no shadow. */
+  border: 1px solid var(--relay-line);
   font-family: var(--relay-font-text);
   font-size: 15px;
   line-height: 24px;
@@ -74,10 +77,13 @@
   width: 400px;
 }
 .relay-panel--mobile {
-  width: 100vw;
-  height: var(--relay-vh, 100dvh);
+  top: 0;
+  right: 0;
   bottom: auto;
-  border-left: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: var(--relay-vh, 100dvh);
+  border: 0;
 }
 .relay-scrim {
   position: fixed;

@@ -5,7 +5,6 @@ import { descriptor, brandName } from "@vitalos/cms";
 import { readBuildEnv } from "@vitalos/config/build";
 import { readPublicEnv } from "@vitalos/config/public";
 import { RelayLauncher } from "@vitalos/relay-widget";
-import { relayFontClassName } from "../src/features/relay/fonts";
 import { seoSite } from "../src/features/seo/site";
 import { SiteAnalytics } from "../src/components/analytics/site-analytics";
 import "./globals.css";
@@ -59,7 +58,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             symbolSrc="/brand/vitalos-symbol.png"
             privacyUrl="/legal/privacy"
             turnstileSiteKey={turnstileSiteKey}
-            fontClassName={relayFontClassName}
           />
         )}
       </body>
