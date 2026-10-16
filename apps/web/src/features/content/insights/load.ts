@@ -90,6 +90,8 @@ export interface AuthorBlock {
   /** Photo for the avatar beside the name; the initials stand in when there is none. */
   avatar: PostDetailData["authors"][number]["avatar"];
   initials: string;
+  /** An organisation shows the Vitalos symbol in place of a photo or initials. */
+  kind: "person" | "organisation";
 }
 
 export interface ArticlePageData {
@@ -122,6 +124,7 @@ async function authorBlocks(post: PostDetailData): Promise<AuthorBlock[]> {
         bioHtml: "",
         avatar: author.avatar,
         initials: author.initials,
+        kind: author.kind ?? "person",
       };
       try {
         const result = await getContentReaders().author(author.slug);

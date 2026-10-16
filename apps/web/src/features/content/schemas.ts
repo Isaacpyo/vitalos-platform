@@ -66,6 +66,8 @@ const authorRefShape = {
   id: Uuid,
   slug: Slug,
   name: text(120),
+  /** Absent from admins older than the organisation-author change: read as "person". */
+  kind: z.enum(["person", "organisation"]).exactOptional(),
   roleTitle: text(120),
   initials: text(3),
   avatar: nullable(Image),
@@ -135,6 +137,8 @@ export const InsightsCopy = z.strictObject({
   heading: text(200),
   intro: text(500),
   editorialNote: text(1000),
+  /** Shown instead of `editorialNote` on posts whose only author is an organisation. */
+  organisationEditorialNote: text(1000).exactOptional(),
 });
 
 export const SalaryValue = z.strictObject({
@@ -286,6 +290,10 @@ export const RenderResponse = z.strictObject({
   toc: z.array(z.strictObject({ id: text(100), text: text(200), depth: z.int().min(2).max(4) })),
   footnotes: z.int().min(0),
   warnings: z.array(RenderWarning),
+  faq: z
+    .array(z.strictObject({ question: text(300), answer: text(5000) }))
+    .max(50)
+    .exactOptional(),
 });
 
 export const cvMimeTypes = [

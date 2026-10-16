@@ -44,6 +44,13 @@ FORMAT_PLURALS = {
 }
 
 
+class AuthorKind(models.TextChoices):
+    """A person, or an organisation (the Vitalos team) that is accountable for the post as a whole."""
+
+    PERSON = "person", "Person"
+    ORGANISATION = "organisation", "Organisation"
+
+
 class TopicKind(models.TextChoices):
     TOPIC = "topic", "Topic"
     SECTOR = "sector", "Sector"
@@ -60,7 +67,10 @@ class CheckKey(models.TextChoices):
 
 
 CHECK_TEXT = {
-    CheckKey.AUTHORS: "A named human author is assigned, and every author is confirmed as a real person.",
+    CheckKey.AUTHORS: (
+        "A named author is assigned. Every person is confirmed as a real person, and an organisation "
+        "author has a recorded founder approval."
+    ),
     CheckKey.CLAIMS: "Claims and figures are checked; there are no invented statistics.",
     CheckKey.CITATIONS: "Citations and links are checked.",
     CheckKey.IMAGES: "Images have alt text, and we have the rights to use them.",
@@ -78,6 +88,7 @@ class Author(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     slug = models.CharField(max_length=80, unique=True)
     name = models.CharField(max_length=120)
+    kind = models.CharField(max_length=12, choices=AuthorKind.choices, default=AuthorKind.PERSON)
     role_title = models.CharField(max_length=120, blank=True)
     bio_md = models.TextField(blank=True)
     avatar_path = models.CharField(max_length=300, blank=True)
@@ -85,7 +96,8 @@ class Author(models.Model):
     avatar_height = models.PositiveIntegerField(null=True, blank=True)
     linkedin_url = models.URLField(max_length=300, blank=True)
     admin_user = _user_fk()
-    # An author must be a real person who approved their profile before any post with them publishes.
+    # A person must be confirmed as real and to have approved their profile before any post with them
+    # publishes. For an organisation author the same fields record the founder's approval.
     confirmed_real_by = _user_fk()
     confirmed_real_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -103,6 +115,10 @@ class Author(models.Model):
     @property
     def is_confirmed(self) -> bool:
         return self.confirmed_real_at is not None
+
+    @property
+    def is_organisation(self) -> bool:
+        return self.kind == AuthorKind.ORGANISATION
 
 
 class Topic(models.Model):

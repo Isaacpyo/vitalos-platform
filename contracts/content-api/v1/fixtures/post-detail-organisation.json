@@ -1,0 +1,57 @@
+{
+  "id": "00000000-0000-4000-8000-000000000103",
+  "slug": "example-post-organisation",
+  "title": "Example organisation post (fixture)",
+  "excerpt": "Example excerpt for a fixture post. It is not real content.",
+  "format": {
+    "key": "engineering_note",
+    "label": "Engineering note",
+    "plural": "Engineering notes",
+    "slug": "engineering-note"
+  },
+  "authors": [
+    {
+      "id": "00000000-0000-4000-8000-0000000000a2",
+      "slug": "example-organisation",
+      "name": "Example Organisation",
+      "kind": "organisation",
+      "roleTitle": "Example Insights",
+      "initials": "EO",
+      "avatar": null
+    }
+  ],
+  "topics": [
+    {
+      "id": "00000000-0000-4000-8000-0000000000c1",
+      "slug": "example-topic",
+      "name": "Example topic",
+      "kind": "topic"
+    }
+  ],
+  "practice": {
+    "key": "engineering",
+    "label": "Engineering"
+  },
+  "cover": null,
+  "publishedAt": {
+    "iso": "2026-10-12T09:00:00Z",
+    "long": "12 October 2026",
+    "short": "12 Oct 2026"
+  },
+  "updatedAt": null,
+  "readingMinutes": 3,
+  "featured": false,
+  "bodyMarkdown": "## Example heading\n\nExample paragraph.\n\n## Frequently asked questions\n\n### Example question one?\n\nExample answer one.\n\n### Example question two?\n\nExample answer two.\n\n## Sources\n\n1. [Example source](https://example.test/source)\n",
+  "seo": {
+    "title": "Example post 1 (fixture)",
+    "description": "Example description.",
+    "canonicalUrl": null,
+    "noindex": false
+  },
+  "cta": {
+    "label": "Talk to Vitalos",
+    "href": "/contact"
+  },
+  "related": [],
+  "lastModified": "2026-10-14T10:30:00Z"
+}

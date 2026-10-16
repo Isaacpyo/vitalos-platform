@@ -7,6 +7,7 @@ import {
   articleJsonLd,
   buildIndexView,
   buildRss,
+  editorialNoteFor,
   formatTabs,
   gridHasCovers,
   indexHref,
@@ -28,6 +29,7 @@ const fixture = (name: string): unknown =>
   );
 const page = PostPage.parse(fixture("post-page"));
 const detail = PostDetail.parse(fixture("post-detail"));
+const organisationPost = PostDetail.parse(fixture("post-detail-organisation"));
 const cover = { url: "https://media.example.test/c.jpg", alt: "A", width: 1600, height: 900 };
 const withId = (id: string, hasCover = false) => ({
   ...page.items[0]!,
@@ -183,6 +185,50 @@ describe("articleJsonLd", () => {
     expect(plain).not.toHaveProperty("image");
     expect(plain["dateModified"]).toBe(detail.lastModified);
     expect(JSON.stringify(plain)).not.toMatch(/logo|rating|address/);
+  });
+
+  it("makes an organisation author an Organization at the site root, not a Person", () => {
+    const node = articleJsonLd(organisationPost, ctx, publisher)!;
+    expect(node["author"]).toEqual([
+      { "@type": "Organization", name: "Example Organisation", url: "https://www.example.test/" },
+    ]);
+    const mixed = articleJsonLd(
+      { ...organisationPost, authors: [...organisationPost.authors, ...detail.authors] },
+      ctx,
+      publisher,
+    )!;
+    expect((mixed["author"] as { "@type": string }[]).map((a) => a["@type"])).toEqual([
+      "Organization",
+      "Person",
+    ]);
+  });
+
+  it("reads an author without a kind as a person (older admins)", () => {
+    const legacy = { ...detail.authors[0]! };
+    delete legacy.kind;
+    const node = articleJsonLd({ ...detail, authors: [legacy] }, ctx, publisher)!;
+    expect((node["author"] as { "@type": string }[])[0]!["@type"]).toBe("Person");
+  });
+});
+
+describe("editorialNoteFor", () => {
+  const copy = { editorialNote: "People note.", organisationEditorialNote: "Team note." };
+
+  it("uses the organisation note only when every author is an organisation", () => {
+    expect(editorialNoteFor(organisationPost, copy)).toBe("Team note.");
+    expect(editorialNoteFor(detail, copy)).toBe("People note.");
+    expect(
+      editorialNoteFor({ authors: [...organisationPost.authors, ...detail.authors] }, copy),
+    ).toBe("People note.");
+  });
+
+  it("falls back to the approved note when the organisation note is unset or blank", () => {
+    expect(editorialNoteFor(organisationPost, { editorialNote: "People note." })).toBe(
+      "People note.",
+    );
+    expect(editorialNoteFor(organisationPost, { ...copy, organisationEditorialNote: "  " })).toBe(
+      "People note.",
+    );
   });
 });
 

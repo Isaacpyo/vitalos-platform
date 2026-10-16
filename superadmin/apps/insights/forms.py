@@ -6,7 +6,7 @@ from apps.content_sync.choices import Practice
 from apps.core.forms import INPUT, StyledFormMixin
 
 from . import public
-from .models import Author, Post, PostFormat, Topic, TopicKind
+from .models import Author, AuthorKind, Post, PostFormat, Topic, TopicKind
 
 MAX_AUTHORS = 4
 MAX_RELATED = 3
@@ -187,6 +187,12 @@ class CoverForm(forms.Form):
 
 class AuthorForm(StyledFormMixin, forms.Form):
     name = forms.CharField(max_length=120)
+    kind = forms.ChoiceField(
+        choices=AuthorKind.choices,
+        initial=AuthorKind.PERSON,
+        required=False,
+        help_text="An organisation author (the Vitalos team) shows the Vitalos symbol instead of a photo.",
+    )
     slug = forms.CharField(max_length=80, required=False, help_text="Lowercase letters, numbers and hyphens.")
     role_title = forms.CharField(label="Role title", max_length=120, required=False)
     bio_md = forms.CharField(
@@ -212,6 +218,8 @@ class AuthorForm(StyledFormMixin, forms.Form):
         data["slug"] = (data.get("slug") or "").strip()
         if not include_slug or not data["slug"]:
             data.pop("slug")
+        if not data.get("kind"):
+            data.pop("kind", None)  # left unchanged (a new author is a person)
         return data
 
 
@@ -247,6 +255,12 @@ class InsightsCopyForm(StyledFormMixin, forms.Form):
     intro = forms.CharField(max_length=500, widget=forms.Textarea())
     editorial_note = forms.CharField(
         label="Editorial note (end of every article)", max_length=1000, widget=forms.Textarea()
+    )
+    organisation_editorial_note = forms.CharField(
+        label="Editorial note for organisation-authored articles",
+        help_text="Shown instead of the note above when an article's only author is an organisation.",
+        max_length=1000,
+        widget=forms.Textarea(),
     )
 
 

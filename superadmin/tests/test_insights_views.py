@@ -441,9 +441,16 @@ def test_settings_page_saves_the_section_and_copy(world, superadmin, client_for)
     assert bad.status_code == 200 and SiteSection.objects.get(key="home_insights").config["count"] == 2
     client.post(
         reverse("insights:settings"),
-        {"action": "copy", "heading": "Example H.", "intro": "Example I.", "editorial_note": "Example N."},
+        {
+            "action": "copy",
+            "heading": "Example H.",
+            "intro": "Example I.",
+            "editorial_note": "Example N.",
+            "organisation_editorial_note": "Example O.",
+        },
     )
     assert SiteSettings.load().insights_heading == "Example H."
+    assert SiteSettings.load().insights_organisation_editorial_note == "Example O."
     assert SyncEvent.objects.filter(action="site.updated", kind="publish").exists()
     preview = client.post(
         reverse("insights:settings_preview"),
@@ -519,6 +526,19 @@ def test_authors_and_topics_ui(world, superadmin, client_for):
         reverse("insights:author_new"), {"name": "Example Bad", "linkedin_url": "http://example.test"}
     )
     assert bad.status_code == 200 and not Author.objects.filter(name="Example Bad").exists()
+    client.post(reverse("insights:author_new"), {"name": "Example Team", "kind": "organisation"})
+    team = Author.objects.get(name="Example Team")
+    assert team.kind == "organisation"
+    client.post(reverse("insights:author_action", args=[team.pk, "confirm"]))
+    team.refresh_from_db()
+    assert team.is_confirmed
+    assert AuditEvent.objects.filter(
+        action="insights.author_confirmed", summary="Example Team approved as an organisation author"
+    ).exists()
+    # Changing the kind withdraws the approval: it means something different for a person.
+    client.post(reverse("insights:author", args=[team.pk]), {"name": "Example Team", "kind": "person"})
+    team.refresh_from_db()
+    assert team.kind == "person" and not team.is_confirmed
     client.post(reverse("insights:author_action", args=[author.pk, "confirm"]))
     author.refresh_from_db()
     assert author.confirmed_real_by == superadmin and author.confirmed_real_at

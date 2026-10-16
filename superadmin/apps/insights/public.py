@@ -60,6 +60,7 @@ def author_ref(author: Author) -> dict:
         "id": str(author.id),
         "slug": author.slug,
         "name": author.name,
+        "kind": author.kind,
         "roleTitle": author.role_title,
         "initials": formatting.initials(author.name),
         "avatar": author_avatar(author),

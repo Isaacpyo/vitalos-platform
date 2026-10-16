@@ -6,6 +6,7 @@
     "post-page": "PostPage",
     "post-page-empty": "PostPage",
     "post-detail": "PostDetail",
+    "post-detail-organisation": "PostDetail",
     "redirect": "Redirect",
     "author": "AuthorResponse",
     "topics": "TopicsResponse",
