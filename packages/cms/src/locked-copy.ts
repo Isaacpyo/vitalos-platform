@@ -71,7 +71,13 @@ export const footerColumns = {
   explore: "Explore",
   company: "Company",
   trust: "Trust",
-  legal: "Legal",
+  podcast: "Podcast",
+  podcastIntro: "Listen to our podcast",
+  spotify: "Spotify",
+  applePodcastsName: "Apple Podcasts",
+  listenOnSpotify: "Listen on Spotify",
+  listenOnApplePodcasts: "Listen on Apple Podcasts",
+  sitemap: "Sitemap",
 } as const;
 
 /** The five practices (names). Stage 8 §5, §6 (mega-menu), §9, §10 (the five practice pages). */

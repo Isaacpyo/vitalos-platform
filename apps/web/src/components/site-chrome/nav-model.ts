@@ -28,6 +28,7 @@ import {
   solutionNames,
   supportNav,
   trustNav,
+  validatePodcast,
   whoWeAreNav,
   wordmarkText,
 } from "@vitalos/cms";
@@ -46,6 +47,7 @@ import type {
 } from "@vitalos/cms";
 import type {
   FooterColumn,
+  FooterPodcastLink,
   IconName,
   MegaMenuColumn,
   PatternLink,
@@ -82,7 +84,10 @@ export type HeaderModel = Pick<
   "items" | "social" | "cta" | "logo" | "logoOnDark" | "compactLogo" | "wordmarkText" | "homeHref"
 > & { items: readonly SiteNavItem[]; cta: PatternLink };
 
-export type FooterModel = Pick<SiteFooterProps, "brand" | "columns" | "legalIdentity">;
+export type FooterModel = Pick<
+  SiteFooterProps,
+  "brand" | "columns" | "legalIdentity" | "podcast" | "legalLinks"
+>;
 
 /**
  * Full-colour lockup for the light header, made from the owner-supplied logo (15 Oct 2026;
@@ -370,11 +375,6 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
         ),
       ],
     },
-    {
-      key: "legal",
-      heading: footerColumns.legal,
-      links: summaryLinks(content.legalPages, (item) => hrefForSummary("legalPage", item)),
-    },
   ];
 
   // The registered office address is not repeated on every page (owner decision, 12 Oct 2026);
@@ -384,6 +384,38 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     settings.legalName,
     settings.companyNumber ? `Company number ${settings.companyNumber}` : undefined,
   ].filter((line): line is string => typeof line === "string" && line.trim() !== "");
+
+  // Podcast links come only from owner-supplied, validated URLs; none is ever invented.
+  const podcastUrls = validatePodcast(settings.podcast);
+  const podcastLinks: FooterPodcastLink[] = [
+    ...(podcastUrls?.spotifyUrl
+      ? [
+          {
+            platform: "spotify" as const,
+            label: footerColumns.spotify,
+            accessibleName: footerColumns.listenOnSpotify,
+            href: podcastUrls.spotifyUrl,
+          },
+        ]
+      : []),
+    ...(podcastUrls?.appleUrl
+      ? [
+          {
+            platform: "apple" as const,
+            label: footerColumns.applePodcastsName,
+            accessibleName: footerColumns.listenOnApplePodcasts,
+            href: podcastUrls.appleUrl,
+          },
+        ]
+      : []),
+  ];
+
+  // Every approved legal page that exists (privacy notice, cookies, terms, accessibility), then
+  // the sitemap. No link is added for a page that does not exist.
+  const legalLinks = [
+    ...summaryLinks(content.legalPages, (item) => hrefForSummary("legalPage", item)),
+    { label: footerColumns.sitemap, href: routes.sitemap() },
+  ];
 
   const social = socialOf(settings);
 
@@ -395,6 +427,16 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
       ...(social.length > 0 ? { social } : {}),
     },
     columns: columns.filter((column) => column.links.length > 0),
+    ...(podcastLinks.length > 0
+      ? {
+          podcast: {
+            heading: footerColumns.podcast,
+            intro: footerColumns.podcastIntro,
+            links: podcastLinks,
+          },
+        }
+      : {}),
+    legalLinks,
     ...(identityLines.length > 0 ? { legalIdentity: { lines: identityLines } } : {}),
   };
 }

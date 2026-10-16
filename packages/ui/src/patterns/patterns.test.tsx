@@ -551,7 +551,7 @@ describe("insights, journey and footer", () => {
     expect(screen.getByRole("list", { name: "Example column (fixture)" })).toBeTruthy();
   });
 
-  it("SiteFooter renders brand, social marks and a centred legal identity from props only", () => {
+  it("SiteFooter renders brand, social marks and a legal identity from props only", () => {
     const { container } = render(
       <SiteFooter
         brand={{
@@ -578,8 +578,55 @@ describe("insights, journey and footer", () => {
       screen.getByRole("link", { name: "Vitalos on Example network (fixture)" }).textContent,
     ).toBe("Example network (fixture)");
     expect(container.querySelector('a[href^="mailto:"]')).toBeNull();
-    const identity = screen.getByText("Example company (fixture)").closest("div.text-center");
-    expect(identity).not.toBeNull();
+    expect(screen.getByText("Example company (fixture)")).toBeTruthy();
+  });
+
+  it("SiteFooter renders the podcast block with logos only for links it is given", () => {
+    const podcast = {
+      heading: "Example podcast (fixture)",
+      intro: "Example intro (fixture)",
+      links: [
+        {
+          platform: "spotify" as const,
+          label: "Example Spotify (fixture)",
+          accessibleName: "Example listen on Spotify (fixture)",
+          href: "https://open.spotify.com/show/example-fixture",
+        },
+      ],
+    };
+    const { container } = render(<SiteFooter columns={[]} podcast={podcast} />);
+    const spotify = screen.getByRole("link", { name: "Example listen on Spotify (fixture)" });
+    expect(spotify.getAttribute("href")).toBe("https://open.spotify.com/show/example-fixture");
+    expect(spotify.getAttribute("rel")).toBe("noopener");
+    expect(spotify.getAttribute("target")).toBeNull();
+    const svg = spotify.querySelector("svg");
+    expect(svg?.getAttribute("aria-hidden")).toBe("true");
+    expect(svg?.getAttribute("fill")).toBe("currentColor");
+    expect(screen.getByText("Example intro (fixture)")).toBeTruthy();
+    expect(container.querySelectorAll("footer nav a")).toHaveLength(1);
+    cleanup();
+    const none = render(<SiteFooter columns={[]} podcast={{ ...podcast, links: [] }} />);
+    expect(none.container.querySelector("footer nav")).toBeNull();
+    expect(screen.queryByText("Example podcast (fixture)")).toBeNull();
+  });
+
+  it("SiteFooter puts the identity on one line with the legal links in the same row", () => {
+    render(
+      <SiteFooter
+        columns={[]}
+        legalIdentity={{ lines: ["Example Ltd (fixture)", "Company number 00000000"] }}
+        legalLinks={[
+          { label: "Example privacy (fixture)", href: url("privacy") },
+          { label: "Example sitemap (fixture)", href: url("sitemap") },
+        ]}
+        legalNavLabel="Example legal nav (fixture)"
+      />,
+    );
+    const identity = screen.getByText("Example Ltd (fixture) · Company number 00000000");
+    const nav = screen.getByRole("navigation", { name: "Example legal nav (fixture)" });
+    expect(identity.parentElement?.parentElement).toBe(nav.parentElement);
+    expect(identity.parentElement?.nextElementSibling).toBe(nav);
+    expect(nav.querySelectorAll("a")).toHaveLength(2);
   });
 
   it("TerminalCTA renders its action and optional secondary link", () => {

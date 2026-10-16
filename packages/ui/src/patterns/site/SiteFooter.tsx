@@ -1,8 +1,9 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { Reveal, RevealItem } from "../../motion/Reveal";
 import { cx } from "../../primitives/_internal/cx";
 import { Container } from "../../primitives/Container";
 import { Icon } from "../../primitives/Icon";
+import { podcastMarkPaths } from "./podcast-marks";
 import { SocialLinks, type SocialLink } from "./SocialLinks";
 import { Wordmark, type WordmarkLogo } from "../../primitives/Wordmark";
 import { hasText } from "../_internal/types";
@@ -14,6 +15,22 @@ export interface FooterColumn {
   key: string;
   heading: string;
   links: readonly SiteNavLink[];
+}
+
+export interface FooterPodcastLink {
+  platform: "spotify" | "apple";
+  /** Visible text next to the logo. */
+  label: string;
+  /** Accessible name of the link, e.g. "Listen on Spotify". Should contain the visible label. */
+  accessibleName: string;
+  href: string;
+}
+
+export interface FooterPodcast {
+  heading: string;
+  /** Line above the links. */
+  intro?: string | undefined;
+  links: readonly FooterPodcastLink[];
 }
 
 export interface SiteFooterProps {
@@ -35,7 +52,16 @@ export interface SiteFooterProps {
    * omitted: the footer is an institutional close, not a directory of every URL.
    */
   columns: readonly FooterColumn[];
-  /** Registered company information, centred under the columns. Rendered only for the lines supplied. */
+  /**
+   * Podcast block, rendered in the last column position (where the Legal column used to be).
+   * Omitted when it has no links; a link is shown only when its URL is supplied.
+   */
+  podcast?: FooterPodcast | undefined;
+  /** Legal links (privacy notice, cookies, terms, sitemap ...), on the right of the bottom row. */
+  legalLinks?: readonly SiteNavLink[] | undefined;
+  /** Accessible name of the legal links navigation. */
+  legalNavLabel?: string | undefined;
+  /** Registered company information, on the left of the bottom row. Rendered only for the lines supplied. */
   legalIdentity?:
     | {
         heading?: string | undefined;
@@ -57,6 +83,9 @@ export function SiteFooter({
   brand,
   columns,
   legalIdentity,
+  podcast,
+  legalLinks = [],
+  legalNavLabel = "Legal",
   navLabel = "Footer",
   className,
 }: SiteFooterProps) {
@@ -64,6 +93,10 @@ export function SiteFooter({
   const visibleColumns = columns.filter((column) => column.links.length > 0);
   const identityLines = (legalIdentity?.lines ?? []).filter(hasText);
   const showBrand = brand !== undefined;
+  const podcastLinks = podcast?.links.filter((link) => hasText(link.href)) ?? [];
+  const showPodcast = Boolean(podcast) && podcastLinks.length > 0;
+  const legalItems = legalLinks.filter((link) => hasText(link.href) && hasText(link.label));
+  const identityText = identityLines.join(" · ");
 
   return (
     <footer
@@ -114,7 +147,7 @@ export function SiteFooter({
               ) : null}
             </RevealItem>
           ) : null}
-          {visibleColumns.length > 0 ? (
+          {visibleColumns.length > 0 || showPodcast ? (
             <FooterNav
               label={navLabel}
               className="min-w-0 border-t border-tone-border md:border-t-0"
@@ -123,68 +156,112 @@ export function SiteFooter({
                 {visibleColumns.map((column) => {
                   const headingId = `${footerId}-${column.key}`;
                   return (
-                    <RevealItem
-                      key={column.key}
-                      className="min-w-0 border-b border-tone-border md:border-b-0 md:border-l md:pl-(--space-5)"
-                    >
-                      <details open className="group/column">
-                        <summary
-                          className={cx(
-                            "flex min-h-11 cursor-pointer list-none items-center justify-between gap-(--space-4) py-(--space-2)",
-                            "marker:hidden md:min-h-0 md:cursor-default md:py-0 [&::-webkit-details-marker]:hidden",
-                          )}
-                        >
-                          <h2 id={headingId} className="text-eyebrow text-tone-eyebrow uppercase">
-                            {column.heading}
-                          </h2>
-                          <Icon
-                            name="chevron-down"
-                            className="shrink-0 text-tone-muted transition-transform duration-(--duration-disclosure) ease-(--ease-standard) group-open/column:rotate-180 md:hidden"
-                          />
-                        </summary>
-                        <ul
-                          aria-labelledby={headingId}
-                          className="m-0 list-none p-0 pb-(--space-4) md:mt-(--space-3) md:pb-0"
-                        >
-                          {column.links.map((link) => (
-                            <li key={`${link.href}-${link.label}`}>
-                              <a
-                                href={link.href}
-                                className={cx(
-                                  quietLinkClasses,
-                                  "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
-                                )}
-                              >
-                                {link.label}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    </RevealItem>
+                    <ColumnShell key={column.key} headingId={headingId} heading={column.heading}>
+                      <ul
+                        aria-labelledby={headingId}
+                        className="m-0 list-none p-0 pb-(--space-4) md:mt-(--space-3) md:pb-0"
+                      >
+                        {column.links.map((link) => (
+                          <li key={`${link.href}-${link.label}`}>
+                            <a
+                              href={link.href}
+                              className={cx(
+                                quietLinkClasses,
+                                "flex min-h-11 items-center py-(--space-1) text-body lg:block lg:min-h-0 lg:text-small",
+                              )}
+                            >
+                              {link.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </ColumnShell>
                   );
                 })}
+                {showPodcast && podcast ? (
+                  <ColumnShell headingId={`${footerId}-podcast`} heading={podcast.heading}>
+                    <div className="pb-(--space-4) md:mt-(--space-3) md:pb-0">
+                      {hasText(podcast.intro) ? (
+                        <p className="m-0 text-body text-tone-text lg:text-small">
+                          {podcast.intro}
+                        </p>
+                      ) : null}
+                      <ul
+                        aria-labelledby={`${footerId}-podcast`}
+                        className="m-0 list-none p-0 lg:mt-(--space-2)"
+                      >
+                        {podcastLinks.map((link) => (
+                          <li key={link.platform}>
+                            <a
+                              href={link.href}
+                              rel="noopener"
+                              aria-label={link.accessibleName}
+                              className={cx(
+                                quietLinkClasses,
+                                "inline-flex min-h-11 items-center gap-(--space-2) py-(--space-1) text-body lg:min-h-0 lg:text-small",
+                              )}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                width={20}
+                                height={20}
+                                fill="currentColor"
+                                aria-hidden="true"
+                                focusable="false"
+                                className="shrink-0"
+                              >
+                                <path d={podcastMarkPaths[link.platform]} />
+                              </svg>
+                              {link.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </ColumnShell>
+                ) : null}
               </div>
             </FooterNav>
           ) : null}
         </Reveal>
-        {identityLines.length > 0 ? (
-          <div className="mt-(--space-8) border-t border-tone-border pt-(--space-6) text-center">
-            {hasText(legalIdentity?.heading) ? (
-              <h2 className="text-eyebrow text-tone-muted uppercase">{legalIdentity.heading}</h2>
-            ) : null}
-            <div
-              className={cx(
-                "text-small text-tone-muted",
-                hasText(legalIdentity?.heading) && "mt-(--space-3)",
-              )}
-            >
-              {identityLines.map((line, index) => (
-                <p key={index} className="m-0">
-                  {line}
+        {identityLines.length > 0 || legalItems.length > 0 ? (
+          <div className="mt-(--space-8) flex flex-col gap-x-(--space-7) gap-y-(--space-4) border-t border-tone-border pt-(--space-6) md:flex-row md:items-center md:justify-between">
+            {identityLines.length > 0 ? (
+              <div className="min-w-0">
+                {hasText(legalIdentity?.heading) ? (
+                  <h2 className="text-eyebrow text-tone-muted uppercase">
+                    {legalIdentity.heading}
+                  </h2>
+                ) : null}
+                <p
+                  className={cx(
+                    "m-0 text-small text-tone-muted",
+                    hasText(legalIdentity?.heading) && "mt-(--space-3)",
+                  )}
+                >
+                  {identityText}
                 </p>
-              ))}
-            </div>
+              </div>
+            ) : null}
+            {legalItems.length > 0 ? (
+              <nav aria-label={legalNavLabel} className="min-w-0 md:ml-auto">
+                <ul className="m-0 flex list-none flex-wrap gap-x-(--space-5) p-0">
+                  {legalItems.map((link) => (
+                    <li key={`${link.href}-${link.label}`}>
+                      <a
+                        href={link.href}
+                        className={cx(
+                          quietLinkClasses,
+                          "inline-flex min-h-11 items-center py-(--space-1) text-small md:min-h-0",
+                        )}
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
           </div>
         ) : null}
         {brand?.logo ? (
@@ -202,5 +279,38 @@ export function SiteFooter({
         ) : null}
       </Container>
     </footer>
+  );
+}
+
+/** One collapsible footer column: heading (with chevron below md) and its content. */
+function ColumnShell({
+  headingId,
+  heading,
+  children,
+}: {
+  headingId: string;
+  heading: string;
+  children: ReactNode;
+}) {
+  return (
+    <RevealItem className="min-w-0 border-b border-tone-border md:border-b-0 md:border-l md:pl-(--space-5)">
+      <details open className="group/column">
+        <summary
+          className={cx(
+            "flex min-h-11 cursor-pointer list-none items-center justify-between gap-(--space-4) py-(--space-2)",
+            "marker:hidden md:min-h-0 md:cursor-default md:py-0 [&::-webkit-details-marker]:hidden",
+          )}
+        >
+          <h2 id={headingId} className="text-eyebrow text-tone-eyebrow uppercase">
+            {heading}
+          </h2>
+          <Icon
+            name="chevron-down"
+            className="shrink-0 text-tone-muted transition-transform duration-(--duration-disclosure) ease-(--ease-standard) group-open/column:rotate-180 md:hidden"
+          />
+        </summary>
+        {children}
+      </details>
+    </RevealItem>
   );
 }

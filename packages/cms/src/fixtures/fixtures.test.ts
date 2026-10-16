@@ -24,6 +24,11 @@ describe.each(Object.values(fixtureSets))("$name fixture set is obviously artifi
   it("uses only .invalid addresses", () => {
     walk(set, (entry) => {
       for (const url of entry.match(/https?:\/\/[^\s"')]+/g) ?? []) {
+        // Podcast URLs are validated against the platforms' hosts, so the fixtures use obvious
+        // fake paths on those hosts (never a real show).
+        if (/^https:\/\/(open\.spotify\.com|podcasts\.apple\.com)\/.*example-fixture$/.test(url)) {
+          continue;
+        }
         expect(url, url).toMatch(/^https:\/\/example\.invalid(\/|$)/);
       }
       for (const email of entry.match(/[\w.+-]+@[\w.-]+/g) ?? []) {

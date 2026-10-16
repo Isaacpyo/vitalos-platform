@@ -477,6 +477,10 @@ export const fullFixtureSet: FixtureSet = {
     registeredAddress: `1 Example Street, Example Town ${L}`,
     contactEmail: exampleEmail("hello"),
     securityEmail: exampleEmail("security"),
+    podcast: {
+      spotifyUrl: "https://open.spotify.com/show/example-fixture",
+      appleUrl: "https://podcasts.apple.com/gb/podcast/example-fixture",
+    },
     social: [{ label: `Example profile ${L}`, href: exampleUrl("social/example") }],
     defaultSeo: { title: `Example site ${L}`, description: `Artificial site description ${L}.` },
   },
