@@ -323,7 +323,7 @@ describe("footer model", () => {
         platform: "spotify",
         label: "Spotify",
         accessibleName: "Listen on Spotify",
-        href: "https://open.spotify.com/show/example-fixture",
+        href: "/podcast", // the footer leads to the podcast page, which opens the app
       },
     ]);
     const both = buildFooterModel({

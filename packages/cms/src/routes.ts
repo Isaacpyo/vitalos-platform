@@ -122,6 +122,8 @@ export const routes = {
   contactThankYou: (reference?: string) =>
     reference ? `/contact/thank-you?ref=${seg(reference)}` : "/contact/thank-you",
   legal: (slug: LegalSlug) => `/legal/${slug}`,
+  /** The podcast page: where the footer's Spotify and Apple links lead (owner direction, 16 Oct 2026). */
+  podcast: () => "/podcast",
   sitemap: () => "/sitemap.xml",
   robots: () => "/robots.txt",
 } as const;
@@ -227,4 +229,5 @@ export const routeManifest: readonly RouteManifestEntry[] = [
   { pattern: "/careers/[slug]", gate: "careers", sitemap: true },
   { pattern: "/contact", sitemap: true },
   { pattern: "/legal/[slug]", sitemap: true },
+  { pattern: "/podcast", sitemap: true },
 ];

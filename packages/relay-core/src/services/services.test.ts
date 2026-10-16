@@ -507,3 +507,38 @@ describe("security review fixes", () => {
     expect(usage?.tokensIn ?? 0).toBeGreaterThan(0);
   });
 });
+
+describe("closing review", () => {
+  it("rates the whole conversation once it is closed, without offering a hand-off", async () => {
+    const { visitor, admin, created, store } = await setup();
+    await admin.join(created.conversationId, ADMIN);
+    await admin.close(created.conversationId, ADMIN);
+    const closed = (await store.listMessages(created.conversationId)).find(
+      (m) => m.senderType === "system" && m.body === "closed",
+    );
+    expect(closed).toBeDefined();
+    const res = await visitor.feedback(
+      { conversationId: created.conversationId, messageId: closed?.id ?? "", value: 1 },
+      created.visitorToken,
+    );
+    expect(res).toEqual({ showHandoff: false });
+    expect((await store.getMessage(closed?.id ?? ""))?.feedback).toBe(1);
+    expect((await store.getConversation(created.conversationId))?.tags).toContain("RATED_HELPFUL");
+    const view = await visitor.messages(created.conversationId, created.visitorToken);
+    expect(view.messages.find((m) => m.event === "closed")?.feedback).toBe(1);
+  });
+
+  it("refuses ratings on other system events", async () => {
+    const { visitor, admin, created, store } = await setup();
+    await admin.join(created.conversationId, ADMIN);
+    const joined = (await store.listMessages(created.conversationId)).find(
+      (m) => m.senderType === "system" && m.body === "admin_joined",
+    );
+    await expect(
+      visitor.feedback(
+        { conversationId: created.conversationId, messageId: joined?.id ?? "", value: 1 },
+        created.visitorToken,
+      ),
+    ).rejects.toMatchObject({ code: "not_found" });
+  });
+});

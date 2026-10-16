@@ -386,7 +386,8 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     settings.companyNumber ? `Company number ${settings.companyNumber}` : undefined,
   ].filter((line): line is string => typeof line === "string" && line.trim() !== "");
 
-  // Podcast links come only from owner-supplied, validated URLs; none is ever invented.
+  // Podcast links show only when owner-supplied, validated URLs exist (none is ever invented). They
+  // lead to the podcast page, which opens each app (owner direction, 16 Oct 2026).
   const podcastUrls = validatePodcast(settings.podcast);
   const podcastLinks: FooterPodcastLink[] = [
     ...(podcastUrls?.spotifyUrl
@@ -395,7 +396,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
             platform: "spotify" as const,
             label: footerColumns.spotify,
             accessibleName: footerColumns.listenOnSpotify,
-            href: podcastUrls.spotifyUrl,
+            href: routes.podcast(),
           },
         ]
       : []),
@@ -405,7 +406,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
             platform: "apple" as const,
             label: footerColumns.applePodcastsName,
             accessibleName: footerColumns.listenOnApplePodcasts,
-            href: podcastUrls.appleUrl,
+            href: routes.podcast(),
           },
         ]
       : []),

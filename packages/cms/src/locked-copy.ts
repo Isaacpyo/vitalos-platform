@@ -79,6 +79,14 @@ export const footerColumns = {
   sitemap: "Sitemap",
 } as const;
 
+/** The podcast page (owner direction, 16 Oct 2026): a few words, then each listening app. */
+export const podcastPage = {
+  title: "The Vitalos podcast",
+  lead: "Conversations on modernising operations, building digital products and adopting AI.",
+  listenHeading: "Listen on",
+  description: "The Vitalos podcast on Spotify and Apple Podcasts.",
+} as const;
+
 /** The five practices (names). Stage 8 §5, §6 (mega-menu), §9, §10 (the five practice pages). */
 export const practiceNames = [
   "Consulting",
@@ -242,7 +250,8 @@ export const homeSections = [
     structuralLabel: "Final conversion",
     /**
      * Stage 11 §9 mockup brief, item 12; Stage 11 §30 ("Bring us the problem."), changed by owner
-     * direction on 15 Oct 2026. The contact page keeps "Bring us the problem." as its heading.
+     * direction on 15 Oct 2026. The contact page heading is "Tell us what you're working on."
+     * (owner direction, 16 Oct 2026).
      */
     visibleHeading: "Have a problem worth solving?",
   },

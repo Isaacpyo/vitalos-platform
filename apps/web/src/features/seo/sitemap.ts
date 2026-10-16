@@ -7,6 +7,7 @@ import {
   isSitemapEligible,
   routePageKeys,
   routes,
+  validatePodcast,
 } from "@vitalos/cms";
 import type { ContentSource, PublicationGates, RoutePageKey, SitemapEntry } from "@vitalos/cms";
 import {
@@ -36,6 +37,8 @@ export interface SitemapInput {
   routePages: ReadonlySet<RoutePageKey>;
   /** The FAQ page has questions (features/faq). */
   hasFaq?: boolean | undefined;
+  /** Podcast listing URLs are configured, so the podcast page is live. */
+  hasPodcast?: boolean | undefined;
   /** Document and route entries from `ContentSource.getSitemapEntries()`. */
   entries: readonly SitemapEntry[];
 }
@@ -64,6 +67,7 @@ export function buildSitemap(input: SitemapInput): MetadataRoute.Sitemap {
   }
 
   if (input.hasFaq) add(routes.faq());
+  if (input.hasPodcast) add(routes.podcast());
 
   for (const entry of input.entries) {
     if (!cleanPath(entry.path) || manifestEntryForPath(entry.path) === undefined) continue;
@@ -83,18 +87,20 @@ export async function loadSitemap(
   source: ContentSource,
   siteUrl: string,
 ): Promise<MetadataRoute.Sitemap> {
-  const [gates, home, pages, entries, faq] = await Promise.all([
+  const [gates, home, pages, entries, faq, chrome] = await Promise.all([
     source.getPublicationGates(),
     source.getHomePage(),
     Promise.all(routePageKeys.map(async (key) => [key, await source.getRoutePage(key)] as const)),
     source.getSitemapEntries(),
     faqGroups(source),
+    source.getSiteChrome(),
   ]);
   return buildSitemap({
     siteUrl,
     gates,
     hasHome: home !== null,
     hasFaq: faq.length > 0,
+    hasPodcast: validatePodcast(chrome.settings.podcast) !== undefined,
     // A route page marked noindex (for example a section index whose only content is placeholder
     // content, ADR-025) is not listed.
     routePages: new Set(
