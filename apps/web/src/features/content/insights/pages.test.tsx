@@ -57,15 +57,24 @@ vi.mock("../../seo/context", () => ({
 }));
 
 /** The page's JSON-LD blocks checked against the site's rules (features/seo/json-ld-rules.ts). */
+
+/** Removes markup until none is left (a single pass can leave tags behind; CodeQL). */
+function stripTags(html: string): string {
+  let text = html;
+  for (let previous = ""; previous !== text;) {
+    previous = text;
+    text = text.replace(/<[^<>]*>/g, "");
+  }
+  return text;
+}
+
 function jsonLdIssues(markup: string, path: string): string[] {
   const origin = "https://www.example.test";
   const blocks = [...markup.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(
     (match) => JSON.parse(match[1] ?? "null") as unknown,
   );
   expect(blocks.length, "the page has structured data").toBeGreaterThan(0);
-  const h1 = /<h1[^>]*>(.*?)<\/h1>/s
-    .exec(markup)?.[1]
-    ?.replace(/<[^>]+>/g, "")
+  const h1 = stripTags(/<h1[^>]*>(.*?)<\/h1>/s.exec(markup)?.[1] ?? "")
     .replaceAll("&#x27;", "'")
     .replaceAll("&amp;", "&");
   return validateJsonLd(blocks, { origin, canonical: `${origin}${path}`, h1 });

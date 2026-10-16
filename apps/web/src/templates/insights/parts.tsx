@@ -1,6 +1,5 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { Icon } from "@vitalos/ui";
 import { isAllowedImage } from "../../features/content/markdown/render";
 import {
   insightsCopy,
@@ -17,14 +16,16 @@ import type {
 import { mediaOrigin } from "../../features/content/site-hosts";
 import { ClosingBand } from "../commercial/bands";
 import { PageHeroBand } from "../institutional/layout";
+import { CardArrow, cardFrame, cardLink, monoLabel } from "./card";
+
+// Re-exported for the pages that already import them from here.
+export { CardArrow, cardFrame, cardLink, monoLabel };
 
 /**
  * Building blocks of the Insights pages (brief 5.1 to 5.6) in the site's design (pages redesign,
  * 15 Oct 2026): the dark page hero, rounded cards with the round arrow, and the closing card.
  * Server components, design tokens only (no raw colours).
  */
-
-export const monoLabel = "font-mono text-eyebrow tracking-widest uppercase";
 
 /** A media-host image through next/image; nothing for any other host (never a broken image). */
 export function ContentImage({
@@ -90,26 +91,6 @@ export function InsightsHero({
     </PageHeroBand>
   );
 }
-
-/** The round arrow of a linked card, drawn as FeatureGrid draws it. Decorative. */
-export function CardArrow() {
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-flex size-10 shrink-0 items-center justify-center self-start rounded-full border border-tone-border text-tone-link transition-[translate,border-color,background-color,color] duration-(--duration-reveal) ease-(--ease-standard) group-hover:translate-x-1 group-hover:border-transparent group-hover:bg-tone-action group-hover:text-tone-action-text"
-    >
-      <Icon name="arrow-right" size={16} />
-    </span>
-  );
-}
-
-/** A linked card's frame: rounded with a hairline; lifts and turns blue on hover or focus. */
-export const cardFrame =
-  "group relative flex h-full min-w-0 flex-col gap-(--space-4) rounded-2xl border border-tone-border bg-tone-bg p-(--space-6) transition-[translate,border-color,box-shadow] duration-(--duration-reveal) ease-(--ease-standard) hover:-translate-y-1 hover:border-blue-600/60 hover:shadow-floating focus-within:border-blue-600/60";
-
-/** The title link of a card, stretched over the whole card. */
-export const cardLink =
-  "after:absolute after:inset-0 after:rounded-2xl hover:text-tone-link-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tone-focus";
 
 /** One grid item: a card with the cover, mono format tag, title, excerpt, mono meta and arrow. */
 export function PostCard({

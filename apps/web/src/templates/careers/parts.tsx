@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { closesLine, roleFactsLine, rolePathOf } from "../../features/content/careers/model";
 import type { Fact, RoleSummaryData } from "../../features/content/careers/model";
-import { CardArrow, monoLabel } from "../insights/parts";
+import { CardArrow, monoLabel } from "../insights/card";
 
 /**
  * Building blocks of the Careers pages (brief 6.1, 6.2, 6.5) in the site's design (pages

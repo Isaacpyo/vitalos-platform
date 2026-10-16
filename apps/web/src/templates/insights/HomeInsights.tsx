@@ -4,7 +4,32 @@ import type { PostSummary } from "../../features/content/insights/model";
 import { INSIGHTS_BASE } from "../../features/content/routes";
 import type { HomeData } from "../../features/content/schemas";
 import { Band } from "../commercial/bands";
-import { CardArrow, ContentImage, cardFrame, cardLink, monoLabel } from "./parts";
+import { isAllowedImage } from "../../features/content/markdown/render";
+import { mediaOrigin } from "../../features/content/site-hosts";
+import { CardArrow, cardFrame, cardLink, monoLabel } from "./card";
+
+/**
+ * The lead item's cover as a plain lazy image with its stored size (no layout shift). next/image
+ * is not used here: importing it would load its client code on the homepage even when the band is
+ * hidden (homepage JS budget).
+ */
+function HomeCover({
+  image,
+}: Readonly<{ image: { url: string; alt: string; width: number; height: number } }>) {
+  if (!isAllowedImage(image.url, mediaOrigin())) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- see above
+    <img
+      src={image.url}
+      alt={image.alt}
+      width={image.width}
+      height={image.height}
+      loading="lazy"
+      decoding="async"
+      className="aspect-video h-auto w-full rounded-xl object-cover"
+    />
+  );
+}
 
 /** Grid placement per item: the first spans 6 of 12 columns, the next two 3 each (brief 5.6). */
 export function homeItemSpan(index: number, count: number): string {
@@ -22,9 +47,7 @@ function HomeInsightItem({
   return (
     <li className={`min-w-0 ${span}`}>
       <article className={cardFrame}>
-        {lead && post.cover ? (
-          <ContentImage image={post.cover} sizes="(min-width: 1024px) 50vw, 100vw" />
-        ) : null}
+        {lead && post.cover ? <HomeCover image={post.cover} /> : null}
         <p className={`${monoLabel} m-0 text-tone-eyebrow`}>{post.format.label}</p>
         <h3 className={`m-0 text-tone-heading text-balance ${lead ? "text-h2" : "text-h3"}`}>
           <a href={postHref(post.slug)} className={cardLink}>
