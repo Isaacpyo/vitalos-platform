@@ -33,12 +33,13 @@ async function listeningApps() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const apps = await listeningApps();
   return pageMetadata({
     path: routes.podcast(),
     title: podcastPage.title,
     description: podcastPage.description,
-    noindex: apps.length === 0,
+    // Not indexed (and not in the sitemap) while the show links are placeholders: a short page
+    // whose links do not yet resolve should not be in search results.
+    noindex: true,
   });
 }
 

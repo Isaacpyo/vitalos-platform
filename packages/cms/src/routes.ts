@@ -229,5 +229,6 @@ export const routeManifest: readonly RouteManifestEntry[] = [
   { pattern: "/careers/[slug]", gate: "careers", sitemap: true },
   { pattern: "/contact", sitemap: true },
   { pattern: "/legal/[slug]", sitemap: true },
-  { pattern: "/podcast", sitemap: true },
+  // Not indexed while the show links are placeholders (owner direction, 16 Oct 2026).
+  { pattern: "/podcast", sitemap: false },
 ];
