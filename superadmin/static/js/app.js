@@ -559,6 +559,54 @@
     );
   });
 
+  // Bulk actions on list pages: row checkboxes, "select all on this page" and the action bar. Without
+  // JavaScript the bar stays visible and the form still posts; the server rejects an empty selection.
+  function bulkItems() {
+    return Array.prototype.slice.call(document.querySelectorAll("[data-bulk-item]"));
+  }
+
+  function syncBulk() {
+    var bar = document.querySelector("[data-bulk-bar]");
+    if (!bar) return;
+    var items = bulkItems();
+    var checked = items.filter(function (item) {
+      return item.checked;
+    }).length;
+    var all = document.querySelector("[data-bulk-all]");
+    if (all) {
+      all.checked = items.length > 0 && checked === items.length;
+      all.indeterminate = checked > 0 && checked < items.length;
+    }
+    var count = bar.querySelector("[data-bulk-count]");
+    if (count) count.textContent = checked ? checked + " selected" : "Select items to act on them";
+    bar.classList.toggle("hidden", checked === 0);
+  }
+
+  document.addEventListener("change", function (event) {
+    var target = event.target;
+    if (!target.matches) return;
+    if (target.matches("[data-bulk-all]")) {
+      bulkItems().forEach(function (item) {
+        item.checked = target.checked;
+      });
+      syncBulk();
+    } else if (target.matches("[data-bulk-item]")) {
+      syncBulk();
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest("[data-bulk-clear]")) return;
+    bulkItems().forEach(function (item) {
+      item.checked = false;
+    });
+    syncBulk();
+  });
+
+  // Back/forward restores checkbox state; recount on load and on show.
+  window.addEventListener("pageshow", syncBulk);
+  syncBulk();
+
   // Auto-dismiss server-rendered flash messages.
   window.setTimeout(function () {
     document.querySelectorAll("[data-autodismiss]").forEach(function (element) {

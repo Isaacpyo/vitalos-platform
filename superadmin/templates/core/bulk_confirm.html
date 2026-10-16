@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Confirm {{ bulk_action.label|lower }} · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="card mx-auto max-w-2xl p-6" data-testid="bulk-confirm">
+    <h1 class="text-xl font-semibold">{{ bulk_action.label }} {{ bulk_items|length }} {{ bulk_noun }}{{ bulk_items|length|pluralize }}?</h1>
+    <p class="muted mt-2 text-sm">{{ bulk_action.warning }} Each one is checked on its own, and any that cannot be {{ bulk_action.done }} are reported afterwards.</p>
+    <ul class="mt-4 divide-y divide-slate-100 rounded-md border border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
+      {% for pk, title, status in bulk_items %}
+        <li class="flex items-center justify-between gap-3 px-3 py-2"><span class="font-medium">{{ title }}</span><span class="mono-label muted">{{ status }}</span></li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="{{ bulk_url }}" class="mt-5 flex flex-wrap justify-end gap-2">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="{{ bulk_action.key }}">
+      <input type="hidden" name="confirmed" value="1">
+      <input type="hidden" name="qs" value="{{ bulk_qs }}">
+      {% for pk, title, status in bulk_items %}<input type="hidden" name="ids" value="{{ pk }}">{% endfor %}
+      <a class="btn btn-secondary" href="{{ bulk_cancel }}">Cancel</a>
+      <button type="submit" class="btn btn-primary" data-testid="bulk-confirm-apply">{{ bulk_action.label }}</button>
+    </form>
+  </div>
+{% endblock %}

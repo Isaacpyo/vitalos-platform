@@ -51,11 +51,13 @@
     <button type="submit" class="btn btn-secondary">Filter</button>
   </form>
 
+  {% if bulk_actions %}{% include "partials/bulk_bar.html" %}{% endif %}
   <div class="card mt-4 overflow-x-auto">
     <table class="table-base" data-testid="post-table">
       <caption class="sr-only">Insights posts</caption>
       <thead>
         <tr>
+          {% if bulk_actions %}<th scope="col" class="w-8"><input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-cobalt-600 focus:ring-2 focus:ring-cobalt-600/30 dark:border-slate-600 dark:bg-slate-800" aria-label="Select all on this page" data-bulk-all></th>{% endif %}
           <th scope="col">Title</th>
           <th scope="col">Format</th>
           <th scope="col">Author</th>
@@ -68,6 +70,7 @@
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         {% for row in rows %}
           <tr data-post="{{ row.post.pk }}">
+            {% if bulk_actions %}<td class="w-8"><input type="checkbox" form="bulk-form" name="ids" value="{{ row.post.pk }}" class="h-4 w-4 rounded border-slate-300 text-cobalt-600 focus:ring-2 focus:ring-cobalt-600/30 dark:border-slate-600 dark:bg-slate-800" aria-label="Select {{ row.post.title }}" data-bulk-item></td>{% endif %}
             <td class="min-w-64">
               <a href="{% url 'insights:post' row.post.pk %}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ row.post.title }}</a>
               {% if row.post.has_unpublished_changes %}<span class="mono-label ml-1 text-slate-500 dark:text-slate-400">· Unpublished changes</span>{% endif %}
@@ -95,7 +98,7 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="muted py-10 text-center" data-testid="post-empty">No posts match.{% if can_edit and tab == "all" and not query %} Start with New post.{% endif %}</td></tr>
+          <tr><td colspan="8" class="muted py-10 text-center" data-testid="post-empty">No posts match.{% if can_edit and tab == "all" and not query %} Start with New post.{% endif %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.root, name="root"),
     path("roles/", views.role_list, name="roles"),
     path("roles/new/", views.role_new, name="role_new"),
+    path("roles/bulk/", views.role_bulk, name="role_bulk"),
     path("roles/<uuid:pk>/", views.role_edit, name="role"),
     path("roles/<uuid:pk>/sync/", views.role_sync, name="role_sync"),
     path("roles/<uuid:pk>/actions/<slug:action>/", views.role_action, name="role_action"),
