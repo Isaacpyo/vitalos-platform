@@ -27,6 +27,7 @@ export function LabTypePage({ data }: Readonly<{ data: LabTypeData }>) {
               { name: navLabels.labs, path: routes.labs() },
               { name: label, path: routes.labType(type) },
             ]}
+            page={{ type: "CollectionPage" }}
           />
         }
         title={label}

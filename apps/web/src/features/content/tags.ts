@@ -57,7 +57,27 @@ export function isKnownTag(tag: string): boolean {
   return tag.length <= 200 && tagPattern.test(tag) && knownTagPatterns.some((p) => p.test(tag));
 }
 
+/**
+ * The sitemap children that carry Insights and Careers (ADR-043: `/sitemap.xml` is an index of
+ * `/sitemaps/{section}.xml`). Accepted as revalidate paths alongside the contract's patterns until
+ * `tags.json` lists them, and refreshed with the index whenever an event names `/sitemap.xml`.
+ */
+export const contentSitemapPaths = ["/sitemaps/insights.xml", "/sitemaps/careers.xml"] as const;
+
 /** A path the admin may ask the website to revalidate or warm: one of `pathPatterns`. */
 export function isKnownPath(path: string): boolean {
-  return path.length <= 200 && pathPatterns.some((pattern) => pattern.test(path));
+  return (
+    path.length <= 200 &&
+    (pathPatterns.some((pattern) => pattern.test(path)) ||
+      (contentSitemapPaths as readonly string[]).includes(path))
+  );
+}
+
+/** The paths of an event, with the Insights and Careers sitemap children wherever the index is. */
+export function withSitemapChildren(paths: readonly string[]): string[] {
+  const out = [...new Set(paths)];
+  if (out.includes("/sitemap.xml")) {
+    for (const child of contentSitemapPaths) if (!out.includes(child)) out.push(child);
+  }
+  return out;
 }

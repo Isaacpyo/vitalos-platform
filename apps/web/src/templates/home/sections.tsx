@@ -111,7 +111,7 @@ function HeroBackdrop() {
       <img
         src={heroBackdrop.src}
         srcSet={heroBackdrop.srcSet}
-        sizes="100vw"
+        sizes={heroBackdrop.sizes}
         width={heroBackdrop.width}
         height={heroBackdrop.height}
         alt=""

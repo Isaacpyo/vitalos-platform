@@ -25,7 +25,10 @@ export interface MediaSlotEntry {
   size: readonly [number, number];
   /** What the image should show. */
   brief: string;
-  /** Draft alt text, for owner review. */
+  /**
+   * Draft alt text, for owner review. In a per-item slot, `{name}` is replaced by the item's
+   * title (MediaSlot `itemName`), so each image says what it shows (docs/seo/AUDIT.md).
+   */
   alt: string;
   /** One image per item (for example per lab asset): the file is `{id}.{slug}`. */
   perItem?: boolean;
@@ -60,7 +63,7 @@ export const mediaSlots = [
     size: [1600, 900],
     brief:
       "A screenshot or diagram of the asset itself (framework page, harness output, assessment template). No decorative imagery.",
-    alt: "A view of the lab asset.",
+    alt: "A view of {name}.",
     perItem: true,
   },
   {
@@ -71,7 +74,7 @@ export const mediaSlots = [
     size: [1600, 900],
     brief:
       "A screenshot or photograph of the delivered work, used only with the client's written permission.",
-    alt: "The delivered work.",
+    alt: "The delivered work: {name}.",
     perItem: true,
   },
   {
@@ -82,7 +85,7 @@ export const mediaSlots = [
     size: [1600, 900],
     brief:
       "A cover that illustrates the article: a diagram, a screenshot or a real photograph. No stock or AI-generated imagery. Covers are uploaded in the Super Admin (Insights › Posts › Cover, ADR-039); an article without one shows no hero image.",
-    alt: "Cover image for the article.",
+    alt: "Cover image for {name}.",
     perItem: true,
   },
 ] as const satisfies readonly MediaSlotEntry[];

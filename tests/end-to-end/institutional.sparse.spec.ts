@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
+import { jsonLdTypes } from "../support/json-ld";
 
 /**
  * Institutional templates with sparse content (workstream G2b).

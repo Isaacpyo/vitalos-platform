@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeContentSitemap } from "./content-sitemap";
+import { mergeContentSitemap, openSectionsOnly } from "./content-sitemap";
 
 const site = "https://www.example.test";
 const base = [
@@ -42,5 +42,25 @@ describe("mergeContentSitemap", () => {
       `${site}/`,
       `${site}/what-we-do`,
     ]);
+  });
+});
+
+describe("openSectionsOnly", () => {
+  const paths = (value: ReturnType<typeof openSectionsOnly>) =>
+    value?.entries.map((entry) => entry.path);
+
+  it("keeps a section's entries only while it is open, and fails closed", () => {
+    expect(paths(openSectionsOnly(content, { insightsOpen: true, careersOpen: false }))).toEqual([
+      "/insights",
+      "/insights/example-post-1",
+      "/insights/../admin",
+    ]);
+    expect(paths(openSectionsOnly(content, { insightsOpen: false, careersOpen: true }))).toEqual([
+      "/careers/example-role",
+    ]);
+    expect(paths(openSectionsOnly(content, { insightsOpen: false, careersOpen: false }))).toEqual(
+      [],
+    );
+    expect(openSectionsOnly(null, { insightsOpen: true, careersOpen: true })).toBeNull();
   });
 });

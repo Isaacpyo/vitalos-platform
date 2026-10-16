@@ -1,6 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isKnownPath, isKnownTag, readNames, tagsContract, tagsForRead } from "./tags";
+import {
+  isKnownPath,
+  isKnownTag,
+  readNames,
+  tagsContract,
+  tagsForRead,
+  withSitemapChildren,
+} from "./tags";
 
 const raw = JSON.parse(
   readFileSync(
@@ -106,5 +113,24 @@ describe("tags contract", () => {
     ]) {
       expect(isKnownPath(path), path).toBe(false);
     }
+  });
+});
+
+describe("sitemap children (ADR-043)", () => {
+  it("accepts the Insights and Careers sitemap files as revalidate paths, nothing else there", () => {
+    expect(isKnownPath("/sitemaps/insights.xml")).toBe(true);
+    expect(isKnownPath("/sitemaps/careers.xml")).toBe(true);
+    expect(isKnownPath("/sitemaps/pages.xml")).toBe(false);
+    expect(isKnownPath("/sitemaps/other.xml")).toBe(false);
+  });
+
+  it("adds both children wherever the index is named, once", () => {
+    expect(withSitemapChildren(["/insights/a", "/sitemap.xml", "/sitemaps/careers.xml"])).toEqual([
+      "/insights/a",
+      "/sitemap.xml",
+      "/sitemaps/careers.xml",
+      "/sitemaps/insights.xml",
+    ]);
+    expect(withSitemapChildren(["/insights/a", "/insights/a"])).toEqual(["/insights/a"]);
   });
 });

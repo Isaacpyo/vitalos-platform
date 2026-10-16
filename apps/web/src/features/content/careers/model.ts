@@ -261,6 +261,7 @@ export function jobPostingJsonLd(
   return {
     "@context": "https://schema.org",
     "@type": "JobPosting",
+    "@id": `${new URL(rolePathOf(role.slug), input.siteUrl).toString()}#job`,
     title,
     description,
     datePosted,
@@ -269,7 +270,7 @@ export function jobPostingJsonLd(
     hiringOrganization: {
       "@type": "Organization",
       name,
-      sameAs: url,
+      url,
       ...(input.organization.logo ? { logo: input.organization.logo } : {}),
     },
     ...(remote

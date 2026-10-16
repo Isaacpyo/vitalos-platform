@@ -19,7 +19,16 @@ export default async function InsightsPage() {
       title={state.insights.heading}
       intro={state.insights.intro}
       view={buildIndexView(posts)}
-      before={<Breadcrumbs trail={[homeCrumb, { name: "Insights", path: INSIGHTS_BASE }]} />}
+      before={
+        <Breadcrumbs
+          trail={[homeCrumb, { name: "Insights", path: INSIGHTS_BASE }]}
+          page={{
+            type: "CollectionPage",
+            name: state.insights.heading,
+            description: state.insights.intro,
+          }}
+        />
+      }
     />
   );
 }

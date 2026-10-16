@@ -11,10 +11,10 @@ const issues = (rules: RedirectRule[]) => validateRedirects(rules, live).map((i)
 describe("seed redirect map", () => {
   it("holds exactly the four redirects named in the specification", () => {
     expect(seedRedirects).toEqual([
-      { source: "/services", destination: "/what-we-do", status: 301 },
-      { source: "/technologies", destination: "/labs", status: 301 },
-      { source: "/privacy", destination: "/legal/privacy", status: 301 },
-      { source: "/terms", destination: "/legal/terms", status: 301 },
+      { source: "/services", destination: "/what-we-do", status: 308 },
+      { source: "/technologies", destination: "/labs", status: 308 },
+      { source: "/privacy", destination: "/legal/privacy", status: 308 },
+      { source: "/terms", destination: "/legal/terms", status: 308 },
     ]);
   });
 
@@ -29,11 +29,11 @@ describe("seed redirect map", () => {
 
   it("is what next.config receives: redirects only, with their status codes", () => {
     expect(nextRedirects()).toEqual([
-      { source: "/services", destination: "/what-we-do", statusCode: 301 },
-      { source: "/technologies", destination: "/labs", statusCode: 301 },
-      { source: "/privacy", destination: "/legal/privacy", statusCode: 301 },
-      { source: "/terms", destination: "/legal/terms", statusCode: 301 },
-      { source: "/about/leadership", destination: "/about", statusCode: 301 },
+      { source: "/services", destination: "/what-we-do", statusCode: 308 },
+      { source: "/technologies", destination: "/labs", statusCode: 308 },
+      { source: "/privacy", destination: "/legal/privacy", statusCode: 308 },
+      { source: "/terms", destination: "/legal/terms", statusCode: 308 },
+      { source: "/about/leadership", destination: "/about", statusCode: 308 },
       { source: "/blog", destination: "/insights", statusCode: 308 },
       { source: "/blog/:path+", destination: "/insights/:path+", statusCode: 308 },
     ]);

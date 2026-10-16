@@ -3,7 +3,7 @@ import type { RateLimiter } from "@vitalos/security/rate-limit";
 import { RevalidateRequest } from "../schemas";
 import { pathAndQueryOf, verifyRequest } from "../signing";
 import type { SigningKey } from "../signing";
-import { isKnownPath, isKnownTag } from "../tags";
+import { isKnownPath, isKnownTag, withSitemapChildren } from "../tags";
 import { correlationIdFrom, json, rateLimited, readBodyWithLimit } from "./guards";
 
 /** Revalidation bodies are small: at most 64 tags and 64 paths of 200 characters. */
@@ -21,6 +21,11 @@ export interface RevalidateDeps {
   warm(paths: readonly string[]): void;
   /** Drops this instance's proxy lookup verdicts. */
   clearLookupVerdicts(): void;
+  /**
+   * Tells IndexNow engines that these page paths changed (ADR-043 decision 5), after the
+   * response. Absent, or a no-op, outside the canonical host of production or without a key.
+   */
+  notifyIndexNow?(paths: readonly string[]): void;
   logger?: Pick<Logger, "info" | "warn">;
   /** Unix seconds. */
   now?: () => number;
@@ -37,6 +42,9 @@ export interface RevalidateDeps {
  *   new version renders while the old one is still served.
  * - `remove`: `revalidateTag(tag, { expire: 0 })` and `revalidatePath(path)`, so removed content
  *   is never served again.
+ * - Insights and Careers page paths are then sent to IndexNow (`notifyIndexNow`, never blocking).
+ * - `/sitemap.xml` in the paths brings `/sitemaps/insights.xml` and `/sitemaps/careers.xml` with
+ *   it (both also carry the `sitemap` tag, so the tag alone already refreshes them).
  *
  * Replays are harmless (revalidation is idempotent) and bounded by the 300 s timestamp window.
  */
@@ -83,7 +91,8 @@ export async function handleRevalidateRequest(
   if (!event.paths.every(isKnownPath)) return json({ error: "unknown_path" }, 400, correlationId);
 
   const tags = [...new Set(event.tags)];
-  const paths = [...new Set(event.paths)];
+  // The sitemap index names its children (ADR-043): refresh and warm them with it.
+  const paths = withSitemapChildren(event.paths);
   if (event.kind === "publish") {
     // Pages are stale-while-revalidate ("max") and warmed. The sitemap read is expired at once:
     // the proxy lookup checks slugs against it, so a stale sitemap would answer a just-published
@@ -95,6 +104,8 @@ export async function handleRevalidateRequest(
     for (const path of paths) deps.revalidatePath(path);
   }
   deps.clearLookupVerdicts();
+  const pages = indexNowPaths(paths);
+  if (pages.length > 0) deps.notifyIndexNow?.(pages);
 
   deps.logger?.info("content.revalidated", {
     correlationId,
@@ -105,6 +116,21 @@ export async function handleRevalidateRequest(
     paths: paths.length,
   });
   return json({ revalidated: tags }, 200, correlationId);
+}
+
+/**
+ * The paths of an event worth an IndexNow ping: Insights and Careers pages (published, changed or
+ * removed alike). Feeds, sitemaps and the homepage are left out; the deploy workflow pings those.
+ */
+export function indexNowPaths(paths: readonly string[]): string[] {
+  return paths.filter(
+    (path) =>
+      (path === "/insights" ||
+        path.startsWith("/insights/") ||
+        path === "/careers" ||
+        path.startsWith("/careers/")) &&
+      !path.endsWith(".xml"),
+  );
 }
 
 /**

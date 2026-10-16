@@ -15,7 +15,14 @@ export default async function CareersPage() {
   const view = await loadCareersPage();
   return (
     <>
-      <Breadcrumbs trail={[homeCrumb, { name: "Careers", path: CAREERS_BASE }]} />
+      <Breadcrumbs
+        trail={[homeCrumb, { name: "Careers", path: CAREERS_BASE }]}
+        page={{
+          type: "CollectionPage",
+          name: view.page.copy.heading,
+          description: view.page.copy.intro,
+        }}
+      />
       <CareersTemplate view={view} />
     </>
   );

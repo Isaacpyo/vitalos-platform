@@ -200,3 +200,17 @@ Changes where shortening dropped a detail or reworded a commitment. Restore from
 - **/trust intro:** now a fragment ("How Vitalos approaches …, with controlled evidence for procurement where appropriate"); "publishes" and "provides" are implied. "Where appropriate" is kept.
 - **/contact intro:** "what you are trying to achieve" became "your goal".
 - **Not shortened:** the /careers and /work intros, the contact expectations and enquiry-route descriptions are already within the rules. Trust topic summaries and bodies are treated as policy text and are unchanged.
+
+## SEO titles and descriptions (feat/seo, 16 Oct 2026)
+
+Only `<title>` and meta descriptions changed; no visible copy changed. Each description is drawn from the page's own copy (summary, proposition, problem statement or scope) and is 120 to 155 characters; each title is at most 60 characters, topic first, brand last (docs/seo/KEYWORD-MAP.md). Where a description was already within the limits and on topic, it is unchanged.
+
+- **Homepage:** the title "Vitalos" became "Consulting, Engineering & Digital Transformation | Vitalos" (from the locked descriptor). The description is the locked proposition plus "consulting and engineering from strategy to production" (the brand line).
+- **Route pages:** What We Do, Solutions, Offers, Industries, Labs, About, How We Work, Trust Centre and Contact each have a topic title (for example "How We Work: Delivery Lifecycle & Quality Gates") and a longer description built from their intro. Contact's title is "Contact Us" instead of repeating "Talk to Vitalos | Vitalos".
+- **Practices:** titled by topic ("Technology Strategy Consulting", "Software Engineering Services", "AI & Data Consultancy", "Product, Service & UX Design", "Managed Application & Platform Services"), so the brand is not repeated. The h1 keeps the practice name.
+- **Solutions:** AI Transformation adds ": From Pilots to Production"; Application Modernisation becomes "Legacy Application Modernisation". The others keep their names. Descriptions draw on the problem statements.
+- **Offers:** most keep their names. Six change to name the topic: AI Opportunity & Readiness Assessment, Custom Digital Product Development, Refactor or Replace Legacy Software (the offer formerly titled like the solution), Systems Integration Services, Engineering Rescue for Failing Software, and Application Maintenance & Support (Managed Engineering & Application Care). Descriptions draw on the scope text.
+- **Industries:** "Health & Care Technology", "Retail & Commerce Technology", "Operations, Industry & Logistics Technology", "Engineering for Startups & Scale-ups"; descriptions from the summaries.
+- **Trust topics:** titles gain "| Trust Centre"; descriptions add the topic's summary sentence.
+- **Labs assets, legal pages (cookies, terms, accessibility), FAQ and the Labs research category:** descriptions lengthened from their own text. Titles are unchanged.
+- **Candidate privacy notice (merge with feat/insights-careers):** the description was 91 characters; it now also says when the application and CV are deleted, from the notice's own "How long we keep it" section (136 characters). Title unchanged.

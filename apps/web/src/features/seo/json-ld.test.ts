@@ -11,17 +11,28 @@ import {
 const ctx = { siteUrl: "https://www.example.invalid" };
 
 describe("organizationJsonLd", () => {
-  it("fabricates nothing from empty site settings: name and url only", () => {
+  it("fabricates nothing from empty site settings: brand facts only", () => {
     const node = organizationJsonLd({}, ctx);
-    expect(node).toEqual({
+    expect(node).toMatchObject({
       "@context": "https://schema.org",
       "@type": "Organization",
       "@id": "https://www.example.invalid/#organization",
       name: "Vitalos",
       url: "https://www.example.invalid/",
+      // The approved symbol, the locked proposition and the market from the About copy.
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.example.invalid/brand/vitalos-symbol-512.png",
+        width: 512,
+        height: 512,
+      },
+      description:
+        "We help ambitious organisations modernise operations, build digital products and adopt AI.",
+      areaServed: { "@type": "Country", name: "United Kingdom" },
     });
+    expect(node["knowsAbout"]).toContain("Software engineering");
     for (const invented of [
-      "logo",
+      "identifier",
       "sameAs",
       "address",
       "email",
@@ -44,11 +55,17 @@ describe("organizationJsonLd", () => {
           { label: "Bad", href: "javascript:alert(1)" },
         ],
         logo: { src: "/images/logo.svg", width: 120, height: 32 },
+        companyNumber: "00000000",
       },
       ctx,
     );
     expect(node).toMatchObject({
       legalName: "Example Legal Name Ltd",
+      identifier: {
+        "@type": "PropertyValue",
+        propertyID: "Companies House company number",
+        value: "00000000",
+      },
       email: "hello@example.invalid",
       sameAs: ["https://www.linkedin.com/company/example"],
       logo: { "@type": "ImageObject", url: "https://www.example.invalid/images/logo.svg" },
@@ -66,6 +83,7 @@ describe("organizationJsonLd", () => {
       ctx,
     );
     expect(node).not.toHaveProperty("logo");
+    expect(node).not.toHaveProperty("identifier");
     expect(node).not.toHaveProperty("legalName");
     expect(node).not.toHaveProperty("sameAs");
   });

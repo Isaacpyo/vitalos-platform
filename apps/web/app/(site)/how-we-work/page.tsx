@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { navLabels, routes } from "@vitalos/cms";
 import { JsonLd } from "../../../src/components/json-ld";
 import { loadRoutePage } from "../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../src/templates/commercial/seo";
 import {
   HowWeWorkTemplate,
   howWeWorkTrail,
@@ -21,7 +21,13 @@ export default async function HowWeWorkPage() {
   const page = await loadRoutePage("how-we-work");
   return (
     <>
-      <JsonLd data={breadcrumbNode(howWeWorkTrail())} />
+      <JsonLd
+        data={pageGraph({
+          trail: howWeWorkTrail(),
+          name: page?.heading ?? navLabels.howWeWork,
+          description: page?.intro,
+        })}
+      />
       <HowWeWorkTemplate page={page} />
     </>
   );

@@ -2,12 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brandName } from "@vitalos/cms";
 import { loadTopicPageN } from "../../features/content/insights/load";
-import {
-  gridHasCovers,
-  pagination,
-  topicHref,
-  topicPageHref,
-} from "../../features/content/insights/model";
+import { gridHasCovers, pagination, topicPageHref } from "../../features/content/insights/model";
 import { isSlug } from "../../features/content/readers";
 import { INSIGHTS_BASE } from "../../features/content/routes";
 import { Breadcrumbs } from "../institutional/breadcrumbs";
@@ -44,8 +39,10 @@ export async function renderTopicPage(slug: string, page: number) {
           trail={[
             { name: brandName, path: "/" },
             { name: "Insights", path: INSIGHTS_BASE },
-            { name: topic.topic.name, path: topicHref(slug) },
+            // The page's own URL (its canonical), so the WebPage node matches it.
+            { name: topic.topic.name, path: topicPageHref(slug, page) },
           ]}
+          page={{ type: "CollectionPage", description: topic.topic.description }}
         />
       }
       pagination={pagination(page, topic.posts.totalPages, (n) => topicPageHref(slug, n))}

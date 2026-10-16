@@ -101,10 +101,21 @@ test.describe("Topic, author, feed, sitemap and redirects", () => {
     expect(deep.headers()["location"]).toMatch(/\/insights\/example-post-1$/);
   });
 
-  test("the sitemap lists the admin's Insights URLs", async ({ request }) => {
-    const xml = await (await request.get("/sitemap.xml")).text();
-    expect(xml).toContain("/insights/example-post-1</loc>");
-    expect(xml).toContain("/insights/topics/example-topic</loc>");
+  test("the sitemap index lists the Insights and Careers children with the admin's URLs", async ({
+    request,
+  }) => {
+    // ADR-043: /sitemap.xml is an index of /sitemaps/{pages,insights,careers}.xml.
+    const index = await (await request.get("/sitemap.xml")).text();
+    expect(index).toContain("<sitemapindex");
+    expect(index).toContain("/sitemaps/insights.xml</loc>");
+    expect(index).toContain("/sitemaps/careers.xml</loc>");
+    const insights = await (await request.get("/sitemaps/insights.xml")).text();
+    expect(insights).toContain("/insights/example-post-1</loc>");
+    expect(insights).toContain("/insights/topics/example-topic</loc>");
+    const careers = await (await request.get("/sitemaps/careers.xml")).text();
+    expect(careers).toContain("/careers/example-role-fixture</loc>");
+    const pages = await (await request.get("/sitemaps/pages.xml")).text();
+    expect(pages).not.toMatch(/\/(insights|careers)[/<]/);
   });
 });
 

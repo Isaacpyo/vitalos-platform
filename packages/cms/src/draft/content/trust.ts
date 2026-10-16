@@ -62,7 +62,7 @@ function topic(
       topic: slug,
       title: trustTopicLabels[slug],
       summary,
-      seo: seo(trustTopicLabels[slug], description),
+      seo: seo(`${trustTopicLabels[slug]} | Trust Centre`, description),
       updatedAt: DRAFTED_ON,
       publicSummary: body,
       certifications: [],
@@ -76,7 +76,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "security",
     "Security is designed into how we work and what we deliver, not added at release.",
-    "The security standards Vitalos works to in its own operations and in the systems it delivers.",
+    "The security standards Vitalos works to in its own operations and in the systems it delivers: security designed into how we work, not added at release.",
     richText(
       "trust-security",
       standardsNote,
@@ -116,7 +116,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "privacy",
     "Personal data should be collected only when it is needed, and handled deliberately.",
-    "The data protection standards Vitalos works to on this website and in client delivery.",
+    "The data protection standards Vitalos works to on this website and in client delivery: personal data collected only when needed and handled deliberately.",
     richText(
       "trust-privacy",
       standardsNote,
@@ -148,7 +148,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "responsible-ai",
     "AI must solve a legitimate problem, stay accountable to a person and be evaluated before and after it goes live.",
-    "The Responsible AI principles Vitalos applies to the AI systems it designs, builds and operates.",
+    "The Responsible AI principles Vitalos applies to the AI it builds and runs: a legitimate problem, a person accountable, evaluation before and after launch.",
     richText(
       "trust-responsible-ai",
       h2("Principles"),
@@ -179,7 +179,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "accessibility",
     "This website is being built to WCAG 2.2 Level AA, and the services we deliver are checked against an agreed accessibility target.",
-    "Vitalos's accessibility commitment for this website and for the digital services it delivers.",
+    "Vitalos's accessibility commitment: this website is being built to WCAG 2.2 Level AA, and the services we deliver are checked against an agreed target.",
     trustAccessibilityBody,
     [
       cite(8, "24. Accessibility architecture"),
@@ -191,7 +191,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "resilience",
     "Recovery should be planned and tested in proportion to how critical a service is.",
-    "The continuity and recovery standards Vitalos works to for the live services it operates.",
+    "The continuity and recovery standards Vitalos works to for the live services it operates, with recovery planned and tested in proportion to criticality.",
     richText(
       "trust-resilience",
       standardsNote,
@@ -219,7 +219,7 @@ export const trustDrafts: readonly TrustDraft[] = [
   topic(
     "procurement",
     "Procurement and security questionnaires, and requests for controlled documents, have a dedicated route.",
-    "How to ask Vitalos procurement, security and assurance questions.",
+    "How to ask Vitalos procurement, security and assurance questions, send questionnaires and request controlled documents through a dedicated route.",
     richText(
       "trust-procurement",
       p(

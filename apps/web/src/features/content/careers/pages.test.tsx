@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFixtureContentSource } from "@vitalos/cms/fixtures";
 import { ContentNotFoundError, ContentUnavailableError } from "../client";
 import { createReaders } from "../readers";
+import { validateJsonLd } from "../../seo/json-ld-rules";
 
 /**
  * Route-level behaviour of the Careers pages against a fake admin (the contract fixtures):
@@ -54,6 +55,21 @@ vi.mock("../../seo/context", () => ({
   getSeoContext: () => ({ siteUrl: "https://www.example.test", indexable: true }),
 }));
 
+/** The page's JSON-LD blocks checked against the site's rules (features/seo/json-ld-rules.ts). */
+function jsonLdIssues(markup: string, path: string): string[] {
+  const origin = "https://www.example.test";
+  const blocks = [...markup.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(
+    (match) => JSON.parse(match[1] ?? "null") as unknown,
+  );
+  expect(blocks.length, "the page has structured data").toBeGreaterThan(0);
+  const h1 = /<h1[^>]*>(.*?)<\/h1>/s
+    .exec(markup)?.[1]
+    ?.replace(/<[^>]+>/g, "")
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&amp;", "&");
+  return validateJsonLd(blocks, { origin, canonical: `${origin}${path}`, h1 });
+}
+
 const pages = {
   index: () => import("../../../../app/(site)/careers/page"),
   role: () => import("../../../../app/(site)/careers/[slug]/page"),
@@ -83,6 +99,7 @@ const html = (node: unknown) => renderToStaticMarkup(node as React.ReactElement)
 describe("Careers pages when open", () => {
   it("renders the hero, how we work, the grouped roles and the closing band", async () => {
     const markup = html(await (await pages.index()).default());
+    expect(jsonLdIssues(markup, "/careers")).toEqual([]);
     expect(markup).toContain("Build what you advise");
     expect(markup).toContain('href="#open-roles"');
     expect(markup).toContain("01</span>");
@@ -128,6 +145,8 @@ describe("Careers pages when open", () => {
     expect(markup).toContain("Turn on JavaScript to upload your CV and apply.");
     expect(markup).toContain('"@type":"JobPosting"');
     expect(markup).toContain('"directApply":true');
+    // One graph: WebPage, BreadcrumbList and JobPosting, valid under the site's JSON-LD rules.
+    expect(jsonLdIssues(markup, "/careers/example-role-fixture")).toEqual([]);
   });
 
   it("does not offer the form while the privacy notice is not set", async () => {

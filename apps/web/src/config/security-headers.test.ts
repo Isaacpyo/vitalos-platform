@@ -14,12 +14,14 @@ const baseEnv: BuildEnv = {
   contentApiOrigin: undefined,
   relayEnabled: false,
   relayRealtimeOrigin: undefined,
+  siteVerification: { google: undefined, bing: undefined },
 };
 
 const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
   const rules = getSecurityHeaders({ ...baseEnv, ...env }, { isDev });
-  expect(rules).toHaveLength(1);
   expect(rules[0]!.source).toBe("/:path*");
+  expect(rules[0]!.has).toBeUndefined();
+  expect(rules[0]!.missing).toBeUndefined();
   return new Map(rules[0]!.headers.map((header) => [header.key, header.value]));
 };
 
@@ -40,9 +42,29 @@ describe("getSecurityHeaders", () => {
     );
   });
 
-  it("does not noindex production", () => {
+  it("does not noindex production on its canonical host", () => {
     expect(headersFor({}).has("X-Robots-Tag")).toBe(false);
   });
+
+  it("noindexes production on every other host, such as a vercel.app alias", () => {
+    const rules = getSecurityHeaders(baseEnv, { isDev: false });
+    expect(rules).toHaveLength(2);
+    expect(rules[1]).toEqual({
+      source: "/:path*",
+      missing: [{ type: "host", value: String.raw`www\.example\.invalid` }],
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    });
+    const host = rules[1]!.missing![0]!.value!;
+    expect(new RegExp(`^${host}$`).test("www.example.invalid")).toBe(true);
+    expect(new RegExp(`^${host}$`).test("wwwxexample.invalid")).toBe(false);
+  });
+
+  it.each(["local", "preview", "staging"] as const)(
+    "%s has one rule: everything is already noindex",
+    (deployEnv) => {
+      expect(getSecurityHeaders({ ...baseEnv, deployEnv, indexable: false })).toHaveLength(1);
+    },
+  );
 
   it("production CSP: no framing, no external connections, no Turnstile", () => {
     const csp = headersFor({}).get("Content-Security-Policy")!;

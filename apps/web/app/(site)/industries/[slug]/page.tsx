@@ -6,7 +6,7 @@ import {
   loadDocument,
   staticParams,
 } from "../../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../../src/templates/commercial/seo";
 import {
   IndustryTemplate,
   industryTrail,
@@ -37,7 +37,14 @@ export default async function IndustryPage({ params }: Props) {
   const { doc, gates } = await loadDetailPage("industry", slug);
   return (
     <>
-      <JsonLd data={breadcrumbNode(industryTrail(doc))} />
+      <JsonLd
+        data={pageGraph({
+          trail: industryTrail(doc),
+          name: doc.title,
+          description: doc.summary,
+          dateModified: doc.updatedAt,
+        })}
+      />
       <IndustryTemplate industry={doc} gates={gates} />
     </>
   );

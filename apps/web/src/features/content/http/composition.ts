@@ -2,12 +2,13 @@ import "server-only";
 import { draftMode } from "next/headers";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { after } from "next/server";
-import { getEnv } from "@vitalos/config";
+import { getEnv, getFeatures } from "@vitalos/config";
 import { createLogger } from "@vitalos/observability";
 import { clearProxyLookupVerdicts } from "../lookup/proxy-lookup";
 import { createSlugGuard } from "../lookup/slug-guard";
 import { renderMarkdown } from "../markdown/render";
 import { getContentClient, getContentReaders } from "../server";
+import { submitIndexNow } from "../../seo/indexnow";
 import { siteHosts } from "../site-hosts";
 import { MemoryRateLimiter } from "./guards";
 import type { EnterPreviewDeps, ExitPreviewDeps } from "./handle-preview";
@@ -49,6 +50,17 @@ export function revalidateDeps(): RevalidateDeps {
       }
     },
     clearLookupVerdicts: clearProxyLookupVerdicts,
+    notifyIndexNow: (paths) => {
+      const key = env.search.indexNowKey;
+      // Production on its canonical origin only (the key file is served nowhere else).
+      if (!key || !getFeatures().indexable) return;
+      const urls = paths.map((path) => new URL(path, env.siteUrl).toString());
+      try {
+        after(() => submitIndexNow({ siteUrl: env.siteUrl, key, urls }).catch(() => undefined));
+      } catch {
+        // Outside a request scope: skip; the deploy workflow's ping covers the sitemap later.
+      }
+    },
     logger: getLogger(),
   };
 }

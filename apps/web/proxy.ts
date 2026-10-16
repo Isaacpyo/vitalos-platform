@@ -4,6 +4,7 @@ import { REQUEST_ID_HEADER, correlationId } from "@vitalos/observability";
 import { contentProxyDecision, unavailableResponse } from "./src/features/content/proxy";
 import { UNMATCHED_PATH, isMissingDetailPath } from "./src/features/missing-documents";
 import { goneResponse, isGone } from "./src/features/redirects/gone";
+import { lowercasePath } from "./src/features/redirects/lowercase";
 
 /**
  * Proxy (formerly middleware). Assigns a correlation id to every request: a well-formed inbound
@@ -16,8 +17,9 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  * a running server. No per-request CSP nonce either (ADR-020): a nonce would force dynamic
  * rendering of every page.
  *
- * Retired paths (`status: 410` rules in the redirect map, ADR-018) answer 410 Gone here; 301/308
- * redirects are applied earlier by `next.config.ts`.
+ * Retired paths (`status: 410` rules in the redirect map, ADR-018) answer 410 Gone here; 308
+ * redirects are applied earlier by `next.config.ts`. A path with capital letters gets a 308 to its
+ * lowercase form (docs/seo/URL-RULES.md rule 1).
  *
  * A detail URL with no document behind it is rewritten onto an unmatched path (ADR-027). Next.js
  * server-renders the not-found page for an unmatched URL but not for a `notFound()` thrown by a
@@ -30,6 +32,15 @@ import { goneResponse, isGone } from "./src/features/redirects/gone";
  */
 export async function proxy(request: NextRequest) {
   const requestId = correlationId(request.headers);
+
+  const lowercase = lowercasePath(request.nextUrl.pathname);
+  if (lowercase !== null) {
+    const target = request.nextUrl.clone();
+    target.pathname = lowercase;
+    const moved = NextResponse.redirect(target, 308);
+    moved.headers.set(REQUEST_ID_HEADER, requestId);
+    return moved;
+  }
 
   if (isGone(request.nextUrl.pathname)) {
     const gone = goneResponse();

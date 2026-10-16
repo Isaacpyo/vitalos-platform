@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { isKnownPath } from "../content/tags";
-import type { SitemapData } from "../content/schemas";
+import type { SiteStateData, SitemapData } from "../content/schemas";
 
 /**
  * Merges the Super Admin's `sitemap` read (Insights and Careers, ADR-039) into the gate-aware
@@ -34,4 +34,22 @@ export function mergeContentSitemap(
     added.push({ url, ...(Number.isNaN(time) ? {} : { lastModified: new Date(time) }) });
   }
   return [...kept, ...added];
+}
+
+/**
+ * The admin's entries for open sections only. The admin already leaves closed sections out; this
+ * holds even when the two reads disagree for a moment, and a state that cannot be read counts as
+ * closed (fail closed). Pure.
+ */
+export function openSectionsOnly(
+  content: SitemapData | null,
+  state: Pick<SiteStateData, "insightsOpen" | "careersOpen">,
+): SitemapData | null {
+  if (!content) return null;
+  const open = (path: string) => {
+    if (path === "/insights" || path.startsWith("/insights/")) return state.insightsOpen;
+    if (path === "/careers" || path.startsWith("/careers/")) return state.careersOpen;
+    return false;
+  };
+  return { ...content, entries: content.entries.filter((entry) => open(entry.path)) };
 }

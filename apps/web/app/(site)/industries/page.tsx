@@ -4,7 +4,7 @@ import { navLabels, routes } from "@vitalos/cms";
 import { JsonLd } from "../../../src/components/json-ld";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
 import { loadRoutePage, requireIndexGate } from "../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../src/templates/commercial/seo";
 import {
   IndustryIndexTemplate,
   industriesTrail,
@@ -30,7 +30,14 @@ export default async function IndustriesPage() {
   if (!page && industries.length === 0) notFound();
   return (
     <>
-      <JsonLd data={breadcrumbNode(industriesTrail())} />
+      <JsonLd
+        data={pageGraph({
+          trail: industriesTrail(),
+          name: page?.heading ?? navLabels.industries,
+          description: page?.intro,
+          type: "CollectionPage",
+        })}
+      />
       <IndustryIndexTemplate page={page} industries={industries} />
     </>
   );

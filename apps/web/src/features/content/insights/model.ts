@@ -198,8 +198,9 @@ const isHttpsUrl = (value: string) => URL.canParse(value) && new URL(value).prot
 /**
  * `Article` structured data. Nothing is fabricated: without a named author and a published date
  * it is null; the image is the cover only when it is an https URL; the description is the SEO
- * description or the excerpt; the publisher is the site's Organization node (with its logo only
- * when site settings have one).
+ * description or the excerpt; the publisher is a reference to the site's Organization
+ * (`/#organization`, described in full on the homepage, docs/seo/DECISIONS.md 22). It joins the
+ * page's one JSON-LD graph with its WebPage and BreadcrumbList.
  */
 export function articleJsonLd(
   post: PostDetail,
@@ -220,9 +221,11 @@ export function articleJsonLd(
   const node: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `${url}#article`,
     headline: post.title,
     url,
-    mainEntityOfPage: url,
+    // The page's WebPage node in the same graph (features/seo/graph.ts).
+    mainEntityOfPage: { "@id": `${url}#webpage` },
     datePublished: post.publishedAt.iso,
     ...(modified && !Number.isNaN(Date.parse(modified)) ? { dateModified: modified } : {}),
     ...(description ? { description } : {}),

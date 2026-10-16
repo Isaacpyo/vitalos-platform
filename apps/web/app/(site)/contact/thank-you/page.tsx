@@ -4,6 +4,7 @@ import { Button, Container, PageHero, Section } from "@vitalos/ui";
 import { getContentSource } from "../../../../src/lib/cms/get-content-source";
 import { heroPhotograph } from "../../../../src/lib/view-mapping/hero-images";
 import { RichText } from "../../../../src/components/rich-text";
+import { TrackOnMount } from "../../../../src/components/analytics/track-on-mount";
 
 /** The receipt's title: the same words the form showed in place before this page existed. */
 const title = "Your enquiry has been received";
@@ -37,6 +38,8 @@ export default async function ThankYouPage({
   const reference = typeof ref === "string" && referencePattern.test(ref) ? ref.toUpperCase() : "";
   return (
     <main id="main" tabIndex={-1}>
+      {/* An accepted enquiry (no reference or form content is sent). */}
+      <TrackOnMount name="contact_submit" properties={{ outcome: "success", route: "/contact" }} />
       <PageHero
         tone="dark"
         size="title"

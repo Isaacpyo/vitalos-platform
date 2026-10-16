@@ -1,0 +1,31 @@
+{
+  "$comment": "Lighthouse lab budgets per template (docs/seo/AUDIT.md, DECISIONS 15). One URL stands for each template. Mobile emulation with simulated throttling, against a local production build. They guard against regressions; the Core Web Vitals targets (LCP <= 2.5 s, INP <= 200 ms, CLS <= 0.1 at p75) are field targets, measured by Speed Insights. Simulated LCP on a local server counts every early request against the LCP, so it reads about 1.5 s higher than applied throttling (2.1 s on 16 Oct 2026). TBT stands in for INP in the lab.",
+  "urls": {
+    "home": "/",
+    "section-index": "/what-we-do",
+    "practice": "/what-we-do/engineering",
+    "solution": "/solutions/application-modernisation",
+    "offer": "/offers/engineering-rescue",
+    "industry": "/industries/health-care",
+    "how-we-work": "/how-we-work",
+    "lab-asset": "/labs/research/production-ai-evaluation-harness",
+    "trust-topic": "/trust/security",
+    "faq": "/faq",
+    "contact": "/contact",
+    "legal": "/legal/privacy"
+  },
+  "default": {
+    "seo": 100,
+    "performance": 85,
+    "accessibility": 95,
+    "lcpMs": 4000,
+    "cls": 0.1,
+    "tbtMs": 300
+  },
+  "templates": {
+    "home": {
+      "lcpMs": 4500,
+      "$comment": "The homepage carries the hero motion and the most JavaScript (about 231 KB). Simulated LCP is 3.9 to 4.1 s; applied-throttling LCP is about 2.1 s (DECISIONS 15)."
+    }
+  }
+}

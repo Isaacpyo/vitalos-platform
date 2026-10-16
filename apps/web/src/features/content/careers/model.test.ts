@@ -148,6 +148,7 @@ describe("jobPostingJsonLd", () => {
     expect(jobPostingJsonLd(role, input)).toEqual({
       "@context": "https://schema.org",
       "@type": "JobPosting",
+      "@id": "https://www.example.test/careers/example-role-fixture#job",
       title: "Example role (fixture)",
       description: "<p>Example description.</p>",
       datePosted: "2026-10-12T09:00:00Z",
@@ -156,7 +157,7 @@ describe("jobPostingJsonLd", () => {
       hiringOrganization: {
         "@type": "Organization",
         name: "Vitalos",
-        sameAs: "https://www.example.test/",
+        url: "https://www.example.test/",
       },
       jobLocation: {
         "@type": "Place",

@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
+import { jsonLdNodes, jsonLdTypes } from "../support/json-ld";
 
 /**
  * Institutional templates (workstream G2b): About, FAQ, Trust Centre, Legal. Careers comes from
@@ -12,14 +13,6 @@ import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
  * by institutional.sparse.spec.ts. Runs on the desktop and 390px mobile projects, and every
  * template is also checked at 320px for reflow.
  */
-
-async function jsonLdNodes(page: Page): Promise<Record<string, unknown>[]> {
-  const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-  return scripts.flatMap((text) => {
-    const data: unknown = JSON.parse(text);
-    return (Array.isArray(data) ? data : [data]) as Record<string, unknown>[];
-  });
-}
 
 const fixtureTemplates: { name: string; path: string; ld: string[] }[] = [
   { name: "about", path: "/about", ld: ["BreadcrumbList"] },
@@ -57,7 +50,7 @@ test.describe("every institutional template", () => {
       expect(response?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
       await expect(page.locator("main#main")).toHaveCount(1);
-      const types = (await jsonLdNodes(page)).map((node) => node["@type"]);
+      const types = await jsonLdTypes(page);
       expect(types).toEqual(expect.arrayContaining(template.ld));
       if (isDraftRun && placeholderPages.test(template.path)) expect(types).toEqual([]);
       await expectNoA11yViolations(page);

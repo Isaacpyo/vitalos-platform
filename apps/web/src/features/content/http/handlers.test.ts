@@ -73,6 +73,7 @@ describe("POST /api/content/revalidate", () => {
       revalidatePath: vi.fn(),
       warm: vi.fn(),
       clearLookupVerdicts: vi.fn(),
+      notifyIndexNow: vi.fn(),
       now: () => now,
     };
     return { deps, call: (request: Request) => handleRevalidateRequest(request, deps) };
@@ -101,6 +102,34 @@ describe("POST /api/content/revalidate", () => {
     expect(deps.revalidateTag.mock.calls).toEqual(event.tags.map((tag) => [tag, { expire: 0 }]));
     expect(deps.revalidatePath.mock.calls).toEqual([["/insights/old"], ["/"]]);
     expect(deps.warm).not.toHaveBeenCalled();
+  });
+
+  it("refreshes the Insights and Careers sitemap children with the index (ADR-043)", async () => {
+    const { deps, call } = harness();
+    const body = JSON.stringify({ ...event, paths: ["/insights/example-post-1", "/sitemap.xml"] });
+    expect((await call(signedPost(path, body))).status).toBe(200);
+    expect(deps.warm).toHaveBeenCalledWith([
+      "/insights/example-post-1",
+      "/sitemap.xml",
+      "/sitemaps/insights.xml",
+      "/sitemaps/careers.xml",
+    ]);
+    const removed = JSON.stringify({ ...event, kind: "remove", paths: ["/sitemaps/careers.xml"] });
+    expect((await call(signedPost(path, removed))).status).toBe(200);
+    expect(deps.revalidatePath).toHaveBeenCalledWith("/sitemaps/careers.xml");
+  });
+
+  it("sends the changed Insights and Careers pages to IndexNow, never feeds or sitemaps", async () => {
+    const { deps, call } = harness();
+    const body = JSON.stringify({
+      ...event,
+      paths: ["/", "/insights", "/insights/example-post-1", "/insights/feed.xml", "/sitemap.xml"],
+    });
+    expect((await call(signedPost(path, body))).status).toBe(200);
+    expect(deps.notifyIndexNow).toHaveBeenCalledWith(["/insights", "/insights/example-post-1"]);
+    const removed = JSON.stringify({ ...event, kind: "remove", paths: ["/careers/old-role"] });
+    expect((await call(signedPost(path, removed))).status).toBe(200);
+    expect(deps.notifyIndexNow).toHaveBeenLastCalledWith(["/careers/old-role"]);
   });
 
   it.each([

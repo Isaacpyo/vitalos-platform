@@ -40,7 +40,7 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
   return (
     <PageMain>
       <PageHeroBand
-        media={<MediaSlot id="work.case-study" item={study.slug} priority />}
+        media={<MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />}
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}

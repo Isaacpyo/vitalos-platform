@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFixtureContentSource } from "@vitalos/cms/fixtures";
 import { ContentNotFoundError, ContentUnavailableError } from "../client";
 import { createReaders } from "../readers";
+import { validateJsonLd } from "../../seo/json-ld-rules";
 
 /**
  * Route-level behaviour of the Insights pages against a fake admin (the contract fixtures): closed
@@ -55,6 +56,21 @@ vi.mock("../../seo/context", () => ({
   getSeoContext: () => ({ siteUrl: "https://www.example.test", indexable: true }),
 }));
 
+/** The page's JSON-LD blocks checked against the site's rules (features/seo/json-ld-rules.ts). */
+function jsonLdIssues(markup: string, path: string): string[] {
+  const origin = "https://www.example.test";
+  const blocks = [...markup.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(
+    (match) => JSON.parse(match[1] ?? "null") as unknown,
+  );
+  expect(blocks.length, "the page has structured data").toBeGreaterThan(0);
+  const h1 = /<h1[^>]*>(.*?)<\/h1>/s
+    .exec(markup)?.[1]
+    ?.replace(/<[^>]+>/g, "")
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&amp;", "&");
+  return validateJsonLd(blocks, { origin, canonical: `${origin}${path}`, h1 });
+}
+
 const pages = {
   index: () => import("../../../../app/(site)/insights/page"),
   article: () => import("../../../../app/(site)/insights/[slug]/page"),
@@ -94,6 +110,8 @@ const html = (node: unknown) => renderToStaticMarkup(node as React.ReactElement)
 describe("Insights pages when open", () => {
   it("renders the index with its hero, featured row and grid", async () => {
     const markup = html(await (await pages.index()).default());
+    expect(jsonLdIssues(markup, "/insights")).toEqual([]);
+    expect(markup).toContain('"@type":"CollectionPage"');
     expect(markup).toContain("Engineering clarity from complexity");
     expect(markup).toContain('href="/insights/example-post-1"');
     expect(markup).toContain('aria-label="Formats"');
@@ -117,6 +135,9 @@ describe("Insights pages when open", () => {
     expect(markup).toContain('"@type":"Article"');
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain("PUBLISHED 12 OCT 2026 · UPDATED 14 OCT 2026 · 3 MIN READ");
+    // One graph: WebPage, BreadcrumbList and Article, valid under the site's JSON-LD rules.
+    expect(jsonLdIssues(markup, "/insights/example-post-1")).toEqual([]);
+    expect(markup).toContain('"publisher":{"@id":"https://www.example.test/#organization"}');
   });
 
   it("gives an article '{SEO title} | Vitalos Insights', article Open Graph and the canonical", async () => {

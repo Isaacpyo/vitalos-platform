@@ -553,8 +553,41 @@ describe("entries", () => {
       "relayEnabled",
       "relayRealtimeOrigin",
       "siteUrl",
+      "siteVerification",
       "turnstileEnabled",
     ]);
+  });
+
+  it("build entry carries the public search verification tokens and nothing else from search", () => {
+    const build = readBuildEnv({
+      ...production,
+      GOOGLE_SITE_VERIFICATION: "example-google-token",
+      BING_SITE_VERIFICATION: "EXAMPLEBINGTOKEN01",
+      INDEXNOW_KEY: "example-indexnow-key",
+    });
+    expect(build.siteVerification).toEqual({
+      google: "example-google-token",
+      bing: "EXAMPLEBINGTOKEN01",
+    });
+    expect(JSON.stringify(build)).not.toContain("example-indexnow-key");
+  });
+
+  it("rejects a whole meta tag where a verification token is expected", () => {
+    expect(() =>
+      readBuildEnv({
+        ...production,
+        GOOGLE_SITE_VERIFICATION: '<meta name="google-site-verification" content="x">',
+      }),
+    ).toThrow(EnvValidationError);
+  });
+
+  it("public entry defaults analytics to none and accepts vercel only", () => {
+    const base = { NEXT_PUBLIC_SITE_URL: "https://www.example.invalid" };
+    expect(readPublicEnv(base).analyticsProvider).toBe("none");
+    expect(
+      readPublicEnv({ ...base, NEXT_PUBLIC_ANALYTICS_PROVIDER: "vercel" }).analyticsProvider,
+    ).toBe("vercel");
+    expect(() => readPublicEnv({ ...base, NEXT_PUBLIC_ANALYTICS_PROVIDER: "ga4" })).toThrow();
   });
 
   it("build entry fails fast on invalid production config", () => {

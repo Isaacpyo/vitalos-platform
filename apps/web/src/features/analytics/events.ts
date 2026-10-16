@@ -6,8 +6,8 @@ import { z } from "zod";
  * restricted to non-personal identifiers (slugs, ids, enumerated outcomes). No free text, no
  * emails, names or message content, so no payload can leak personal data into a sink.
  *
- * No analytics provider is selected yet (owner decision, plan section 6); this file is the
- * contract any future provider adapter must implement.
+ * The provider is Vercel Web Analytics when `NEXT_PUBLIC_ANALYTICS_PROVIDER=vercel` (off by default,
+ * docs/seo/DECISIONS.md 23); this file is the contract every adapter implements.
  */
 const slug = z
   .string()
@@ -30,6 +30,10 @@ export const analyticsEventSchemas = {
   case_study_view: z.strictObject({ caseStudySlug: slug }),
   insight_to_offer_click: z.strictObject({ insightSlug: slug, offerSlug: slug }),
   lab_resource_click: z.strictObject({ labSlug: slug, resourceKind: slug }),
+  /** A role application was submitted (Careers, PR #46). */
+  application_submit: z.strictObject({ outcome, roleSlug: slug }),
+  /** An Insight was read: the reader reached the end of the article body (PR #46). */
+  insight_read: z.strictObject({ insightSlug: slug }),
 } as const;
 
 export type AnalyticsEventName = keyof typeof analyticsEventSchemas;
