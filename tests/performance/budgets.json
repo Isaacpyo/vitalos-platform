@@ -85,6 +85,9 @@
     },
     "/this-page-does-not-exist": {
       "maxJsGzipBytes": 197000
+    },
+    "/podcast": {
+      "maxJsGzipBytes": 210000
     }
   }
 }
