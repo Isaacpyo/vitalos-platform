@@ -42,7 +42,7 @@ test("opening a role puts it on /careers and the homepage within 5 s", async () 
   console.log("role open (ms):", JSON.stringify({ careersMs, homeMs, pageMs }));
   const elapsed = Math.max(careersMs, homeMs, pageMs);
   expect(elapsed).toBeLessThanOrEqual(TARGET_MS);
-  expect((await site("/sitemap.xml")).text).toContain(`/careers/${slug}<`);
+  expect((await site("/sitemaps/careers.xml")).text).toContain(`/careers/${slug}<`);
 });
 
 test("applying with a PDF: the admin shows the application, the CV download and an alert", async ({
@@ -101,7 +101,7 @@ test("closing the role: off the list and homepage, closed page, no JSON-LD or si
       return page.status === 200 && page.text.includes("This role closed on");
     },
     noJsonLd: async () => !(await site(`/careers/${slug}`)).text.includes('"@type":"JobPosting"'),
-    sitemap: async () => !(await site("/sitemap.xml")).text.includes(`/careers/${slug}<`),
+    sitemap: async () => !(await site("/sitemaps/careers.xml")).text.includes(`/careers/${slug}<`),
   };
   const results = await Promise.all(
     Object.entries(checks).map(async ([name, check]) => {

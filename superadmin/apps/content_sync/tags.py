@@ -99,7 +99,7 @@ def default_paths(
         paths = [f"/insights/{slug}" if slug else "", f"/insights/{old_slug}" if old_slug else ""]
         # The sitemap is listed so a publish warms it too (stale-while-revalidate otherwise serves
         # the old sitemap to the first request after a publish).
-        paths += ["/insights", "/", "/insights/feed.xml", "/sitemap.xml"]
+        paths += ["/insights", "/", "/insights/feed.xml", "/sitemap.xml", "/sitemaps/insights.xml"]
         paths += [f"/insights/authors/{value}" for value in author_slugs]
         paths += [f"/insights/topics/{value}" for value in topic_slugs]
     elif entity == "author":
@@ -116,11 +116,19 @@ def default_paths(
         paths += ["/insights"]
     elif entity == "role":
         paths = [f"/careers/{slug}" if slug else "", f"/careers/{old_slug}" if old_slug else ""]
-        paths += ["/careers", "/", "/sitemap.xml"]
+        paths += ["/careers", "/", "/sitemap.xml", "/sitemaps/careers.xml"]
     elif entity == "careers_settings":
         paths = ["/careers", "/"]
     elif entity == "home_section":
         paths = ["/"]
     else:  # site: opened, closed, resync
-        paths = ["/", "/insights", "/insights/feed.xml", "/careers", "/sitemap.xml"]
+        paths = [
+            "/",
+            "/insights",
+            "/insights/feed.xml",
+            "/careers",
+            "/sitemap.xml",
+            "/sitemaps/insights.xml",
+            "/sitemaps/careers.xml",
+        ]
     return clean_paths(paths)

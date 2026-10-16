@@ -175,7 +175,7 @@ test("unpublish: 404, and gone from the homepage, feed and sitemap", async () =>
   expect((await site("/")).text).toContain(title);
   // Publish events warm the sitemap (stale-while-revalidate would otherwise serve the old one).
   await until(
-    async () => (await site("/sitemap.xml")).text.includes(`/insights/${slug}<`),
+    async () => (await site("/sitemaps/insights.xml")).text.includes(`/insights/${slug}<`),
     Date.now(),
     10_000,
   );
@@ -186,7 +186,7 @@ test("unpublish: 404, and gone from the homepage, feed and sitemap", async () =>
         site(`/insights/${slug}`),
         site("/"),
         site("/insights/feed.xml"),
-        site("/sitemap.xml"),
+        site("/sitemaps/insights.xml"),
       ]);
       return (
         article.status === 404 &&
