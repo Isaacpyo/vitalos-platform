@@ -380,8 +380,9 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
   // The registered office address is not repeated on every page (owner decision, 12 Oct 2026);
   // it stays in the privacy notice, which identifies the controller. The contact email is not
   // repeated under the columns either (owner direction, 15 Oct 2026): Contact is in the menus.
+  // "© <year> <legal name>" (owner direction, 16 Oct 2026); the year is the build year.
   const identityLines = [
-    settings.legalName,
+    settings.legalName ? `© ${new Date().getFullYear()} ${settings.legalName}` : undefined,
     settings.companyNumber ? `Company number ${settings.companyNumber}` : undefined,
   ].filter((line): line is string => typeof line === "string" && line.trim() !== "");
 
@@ -431,7 +432,6 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
       ? {
           podcast: {
             heading: footerColumns.podcast,
-            intro: footerColumns.podcastIntro,
             links: podcastLinks,
           },
         }

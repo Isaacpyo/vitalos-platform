@@ -225,7 +225,7 @@ export function SiteFooter({
           ) : null}
         </Reveal>
         {identityLines.length > 0 || legalItems.length > 0 ? (
-          <div className="mt-(--space-8) flex flex-col gap-x-(--space-7) gap-y-(--space-4) border-t border-tone-border pt-(--space-6) md:flex-row md:items-center md:justify-between">
+          <div className="mt-(--space-8) flex flex-col items-center gap-x-(--space-7) gap-y-(--space-4) border-t border-tone-border pt-(--space-6) text-center md:flex-row md:items-center md:justify-between md:text-left">
             {identityLines.length > 0 ? (
               <div className="min-w-0">
                 {hasText(legalIdentity?.heading) ? (
@@ -245,7 +245,7 @@ export function SiteFooter({
             ) : null}
             {legalItems.length > 0 ? (
               <nav aria-label={legalNavLabel} className="min-w-0 md:ml-auto">
-                <ul className="m-0 flex list-none flex-wrap gap-x-(--space-5) p-0">
+                <ul className="m-0 flex list-none flex-wrap justify-center gap-x-(--space-5) p-0 md:justify-start">
                   {legalItems.map((link) => (
                     <li key={`${link.href}-${link.label}`}>
                       <a

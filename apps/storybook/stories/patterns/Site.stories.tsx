@@ -187,7 +187,7 @@ export const Footer: Story = {
 
 const podcast = {
   heading: "Podcast",
-  intro: "Listen to our podcast",
+
   links: [
     {
       platform: "spotify" as const,
