@@ -258,9 +258,10 @@ describe("footer model", () => {
       ...base,
       settings: { legalName: "Example Ltd", companyNumber: "123", registeredAddress: "1 Street" },
     });
-    expect(legalIdentity?.lines).toEqual(["Example Ltd", "Company number 123"]);
+    const year = new Date().getFullYear();
+    expect(legalIdentity?.lines).toEqual([`© ${year} Example Ltd`, "Company number 123"]);
     const partial = buildFooterModel({ ...base, settings: { legalName: "Example Ltd" } });
-    expect(partial.legalIdentity?.lines).toEqual(["Example Ltd"]);
+    expect(partial.legalIdentity?.lines).toEqual([`© ${year} Example Ltd`]);
   });
 
   it("puts the social profiles under the logo and no longer repeats the contact email", () => {
@@ -316,7 +317,7 @@ describe("footer model", () => {
       settings: { podcast: { spotifyUrl: "https://open.spotify.com/show/example-fixture" } },
     }).podcast;
     expect(spotifyOnly?.heading).toBe("Podcast");
-    expect(spotifyOnly?.intro).toBe("Listen to our podcast");
+    expect(spotifyOnly?.intro).toBeUndefined();
     expect(spotifyOnly?.links).toEqual([
       {
         platform: "spotify",

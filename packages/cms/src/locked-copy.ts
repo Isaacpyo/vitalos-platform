@@ -72,7 +72,6 @@ export const footerColumns = {
   company: "Company",
   trust: "Trust",
   podcast: "Podcast",
-  podcastIntro: "Listen to our podcast",
   spotify: "Spotify",
   applePodcastsName: "Apple Podcasts",
   listenOnSpotify: "Listen on Spotify",
