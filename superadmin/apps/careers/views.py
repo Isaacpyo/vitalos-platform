@@ -4,7 +4,7 @@ services.py, applications.py, alerts.py and intake.py; permissions in access.py.
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import BadRequest, PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -19,6 +19,8 @@ from apps.content_sync import render as renderer
 from apps.content_sync import services as content_services
 from apps.content_sync import status as sync_status
 from apps.content_sync.models import SiteSettings
+from apps.core import bulk
+from apps.core.bulk import BulkAction
 
 from . import access, alerts, applications, public, selectors, services
 from . import config as careers_config
@@ -103,6 +105,9 @@ def role_list(request):
         **_common(request, "roles"),
         "tab": tab,
         "tabs": [(key, label, counts[key]) for key, (label, _) in selectors.ROLE_TABS.items()],
+        "bulk_actions": list(BULK_ROLE_ACTIONS.values()) if access.can_publish_roles(request.user) else [],
+        "bulk_url": reverse("careers:role_bulk"),
+        "bulk_qs": request.GET.urlencode(),
         "rows": [
             {
                 "role": role,
@@ -180,6 +185,26 @@ def role_edit(request, pk):
     return render(request, "careers/role_edit.html", _role_context(request, role))
 
 
+def _apply_role_action(role: Role, action: str, user, request) -> str:
+    """Run one publish-type action through its service and return the success message. Shared by the
+    single-role action and the bulk action, so both take the same checks, audit and sync path."""
+    if action in ("open", "reopen"):
+        services.open_role(role, user, request=request)
+        return "The role is open." if action == "open" else "The role is open again."
+    if action == "publish":
+        services.publish_changes(role, user, request=request)
+        return "Changes published."
+    if action == "pause":
+        services.pause_role(role, user, request=request)
+        return "Paused. The role is hidden and takes no applications."
+    if action == "close":
+        if not services.close_role(role, user, request=request):
+            raise ValidationError("Only an open role can be closed.")
+        return "Closed. The role page shows that it has closed."
+    services.archive_role(role, user, request=request)
+    return "Archived."
+
+
 @role_required()
 @require_POST
 def role_action(request, pk, action):
@@ -192,22 +217,8 @@ def role_action(request, pk, action):
         raise Http404
     user = request.user
     try:
-        if action in ("open", "reopen"):
-            services.open_role(role, user, request=request)
-            message = "The role is open." if action == "open" else "The role is open again."
-        elif action == "publish":
-            services.publish_changes(role, user, request=request)
-            message = "Changes published."
-        elif action == "pause":
-            services.pause_role(role, user, request=request)
-            message = "Paused. The role is hidden and takes no applications."
-        elif action == "close":
-            if not services.close_role(role, user, request=request):
-                raise ValidationError("Only an open role can be closed.")
-            message = "Closed. The role page shows that it has closed."
-        elif action == "archive":
-            services.archive_role(role, user, request=request)
-            message = "Archived."
+        if action in PUBLISH_ACTIONS:
+            message = _apply_role_action(role, action, user, request)
         else:
             clone = services.duplicate_role(role, user, request=request)
             messages.success(request, "Duplicated. You are editing the copy.")
@@ -218,6 +229,59 @@ def role_action(request, pk, action):
         return redirect("careers:role", pk=role.pk)
     messages.success(request, message)
     return redirect("careers:role", pk=role.pk)
+
+
+# Bulk actions are the publish-type single actions; each changes the live website, so each confirms.
+BULK_ROLE_ACTIONS = {
+    action.key: action
+    for action in (
+        BulkAction("open", "Open", "opened", True, "Each role goes live on the website (open, or reopened)."),
+        BulkAction("publish", "Publish changes", "published", True, "Each open role's edits go live."),
+        BulkAction("pause", "Pause", "paused", True, "Each role is hidden and takes no applications."),
+        BulkAction("close", "Close", "closed", True, "Each role page says it has closed."),
+        BulkAction("archive", "Archive", "archived", True, "Each role leaves the website completely."),
+    )
+}
+
+
+def _bulk_back(request) -> HttpResponseRedirect:
+    query = bulk.return_query(request.POST)
+    return redirect(reverse("careers:roles") + (f"?{query}" if query else ""))
+
+
+@role_required()
+@require_POST
+def role_bulk(request):
+    _require(access.can_publish_roles(request.user))
+    action = BULK_ROLE_ACTIONS.get(request.POST.get("action", ""))
+    if action is None:
+        raise BadRequest("Unknown action.")
+    ids = bulk.selected_ids(request.POST)
+    if not ids:
+        messages.error(request, "Select at least one role first.")
+        return _bulk_back(request)
+    roles = bulk.load_items(Role, ids)
+    if action.confirm and request.POST.get("confirmed") != "1":
+        context = {
+            **_common(request, "roles"),
+            "bulk_action": action,
+            "bulk_noun": "role",
+            "bulk_url": reverse("careers:role_bulk"),
+            "bulk_items": [(role.pk, role.title, role.get_status_display()) for role in roles],
+            "bulk_qs": bulk.return_query(request.POST),
+            "bulk_cancel": reverse("careers:roles")
+            + (f"?{bulk.return_query(request.POST)}" if bulk.return_query(request.POST) else ""),
+        }
+        return render(request, "core/bulk_confirm.html", context)
+    user = request.user
+    result = bulk.run(
+        roles,
+        action,
+        lambda role: _apply_role_action(role, action.key, user, request),
+        lambda role: role.title,
+    )
+    bulk.report(request, result, action, "role")
+    return _bulk_back(request)
 
 
 @role_required()

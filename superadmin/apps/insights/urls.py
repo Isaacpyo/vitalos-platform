@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.root, name="root"),
     path("posts/", views.post_list, name="posts"),
     path("posts/new/", views.post_new, name="post_new"),
+    path("posts/bulk/", views.post_bulk, name="post_bulk"),
     path("posts/<uuid:pk>/", views.post_edit, name="post"),
     path("posts/<uuid:pk>/autosave/", views.post_autosave, name="post_autosave"),
     path("posts/<uuid:pk>/rail/", views.post_rail, name="post_rail"),

@@ -7,7 +7,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import BadRequest, PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -23,6 +23,8 @@ from apps.content_sync import services as content_services
 from apps.content_sync import status as sync_status
 from apps.content_sync.choices import Practice
 from apps.content_sync.models import MediaAsset, SiteSettings
+from apps.core import bulk
+from apps.core.bulk import BulkAction
 
 from . import access, public, selectors, services, taxonomy
 from .forms import (
@@ -134,6 +136,9 @@ def post_list(request):
         "authors": Author.objects.order_by("name"),
         "topics": Topic.objects.order_by("kind", "sort", "name"),
         "page": page,
+        "bulk_actions": _bulk_actions_for(request.user),
+        "bulk_url": reverse("insights:post_bulk"),
+        "bulk_qs": request.GET.urlencode(),
         "rows": [
             {
                 "post": post,
@@ -322,63 +327,146 @@ def _parse_local(value: str) -> datetime | None:
     return naive.replace(tzinfo=formatting.LONDON)
 
 
+def _authorise_post_action(post: Post, action: str, user) -> None:
+    """Raise PermissionDenied (or Http404 for an unknown action) unless ``user`` may run ``action``."""
+    if action in PUBLISH_ACTIONS:
+        _require(access.can_publish(user))
+    elif action == "archive":
+        public_now = post.status in (PostStatus.PUBLISHED, PostStatus.SCHEDULED)
+        _require(access.can_publish(user) if public_now else access.can_edit(user))
+    elif action in EDIT_ACTIONS:
+        _require(access.can_edit(user))
+    else:
+        raise Http404
+
+
+def _apply_post_action(post: Post, action: str, user, request) -> str:
+    """Run one workflow action through its service and return the success message. Shared by the
+    single-post action and the bulk action, so both take the same checks, audit and sync path."""
+    if action == "submit":
+        services.submit_for_review(post, user, request=request)
+        return "Submitted for review."
+    if action == "approve":
+        services.approve(post, user, request=request)
+        return "Approved."
+    if action == "return":
+        services.return_to_draft(post, user, request=request)
+        return "Returned to draft."
+    if action == "publish":
+        was_live = post.status == PostStatus.PUBLISHED
+        services.publish(post, user, request=request)
+        return "Changes published." if was_live else "Published."
+    if action == "schedule":
+        services.schedule(post, user, _parse_local(request.POST.get("publish_at", "")), request=request)
+        return "Scheduled."
+    if action == "unschedule":
+        services.unschedule(post, user, request=request)
+        return "Schedule cancelled. The post is approved."
+    if action == "unpublish":
+        services.unpublish(post, user, request=request)
+        return "Unpublished. The post is a draft again."
+    if action == "archive":
+        services.archive(post, user, request=request)
+        return "Archived."
+    services.restore(post, user, request=request)
+    return "Restored to draft."
+
+
 @role_required()
 @require_POST
 def post_action(request, pk, action):
     post = _post(pk)
-    if action in PUBLISH_ACTIONS:
-        _require(access.can_publish(request.user))
-    elif action == "archive":
-        public_now = post.status in (PostStatus.PUBLISHED, PostStatus.SCHEDULED)
-        _require(access.can_publish(request.user) if public_now else access.can_edit(request.user))
-    elif action in EDIT_ACTIONS:
-        _require(access.can_edit(request.user))
-    else:
-        raise Http404
+    _authorise_post_action(post, action, request.user)
     user = request.user
     try:
-        if action == "submit":
-            services.submit_for_review(post, user, request=request)
-            message = "Submitted for review."
-        elif action == "approve":
-            services.approve(post, user, request=request)
-            message = "Approved."
-        elif action == "return":
-            services.return_to_draft(post, user, request=request)
-            message = "Returned to draft."
-        elif action == "publish":
-            was_live = post.status == PostStatus.PUBLISHED
-            services.publish(post, user, request=request)
-            message = "Changes published." if was_live else "Published."
-        elif action == "schedule":
-            services.schedule(post, user, _parse_local(request.POST.get("publish_at", "")), request=request)
-            message = "Scheduled."
-        elif action == "unschedule":
-            services.unschedule(post, user, request=request)
-            message = "Schedule cancelled. The post is approved."
-        elif action == "unpublish":
-            services.unpublish(post, user, request=request)
-            message = "Unpublished. The post is a draft again."
-        elif action == "archive":
-            services.archive(post, user, request=request)
-            message = "Archived."
-        elif action == "restore":
-            services.restore(post, user, request=request)
-            message = "Restored to draft."
-        elif action == "duplicate":
+        if action == "duplicate":
             clone = services.duplicate(post, user, request=request)
             messages.success(request, "Duplicated. You are editing the copy.")
             return redirect("insights:post", pk=clone.pk)
-        else:  # delete
+        if action == "delete":
             services.delete(post, user, request=request)
             messages.success(request, "Deleted.")
             return redirect("insights:posts")
+        message = _apply_post_action(post, action, user, request)
     except ValidationError as exc:
         for text in exc.messages:
             messages.error(request, text)
         return redirect("insights:post", pk=post.pk)
     messages.success(request, message)
     return redirect("insights:post", pk=post.pk)
+
+
+# Bulk actions: the workflow actions that need no extra input (no schedule date), never duplicate or
+# delete. Those that change the live website confirm first.
+BULK_POST_ACTIONS = {
+    action.key: action
+    for action in (
+        BulkAction("submit", "Submit for review", "submitted for review"),
+        BulkAction("approve", "Approve", "approved"),
+        BulkAction("return", "Return to draft", "returned to draft"),
+        BulkAction(
+            "publish", "Publish", "published", True, "Each post goes live on the website, or its changes do."
+        ),
+        BulkAction("unschedule", "Cancel schedule", "unscheduled"),
+        BulkAction(
+            "unpublish", "Unpublish", "unpublished", True, "Each post is taken off the website straight away."
+        ),
+        BulkAction(
+            "archive", "Archive", "archived", True, "Each post is archived; live posts leave the website."
+        ),
+        BulkAction("restore", "Restore to draft", "restored to draft"),
+    )
+}
+
+
+def _bulk_back(request) -> HttpResponseRedirect:
+    query = bulk.return_query(request.POST)
+    return redirect(reverse("insights:posts") + (f"?{query}" if query else ""))
+
+
+def _bulk_actions_for(user) -> list:
+    if access.can_publish(user):
+        return list(BULK_POST_ACTIONS.values())
+    if access.can_edit(user):
+        return [a for a in BULK_POST_ACTIONS.values() if a.key not in PUBLISH_ACTIONS]
+    return []
+
+
+@role_required()
+@require_POST
+def post_bulk(request):
+    action = BULK_POST_ACTIONS.get(request.POST.get("action", ""))
+    if action is None:
+        raise BadRequest("Unknown action.")
+    _require(
+        access.can_publish(request.user) if action.key in PUBLISH_ACTIONS else access.can_edit(request.user)
+    )
+    ids = bulk.selected_ids(request.POST)
+    if not ids:
+        messages.error(request, "Select at least one post first.")
+        return _bulk_back(request)
+    posts = bulk.load_items(Post, ids)
+    if action.confirm and request.POST.get("confirmed") != "1":
+        query = bulk.return_query(request.POST)
+        context = {
+            **_common(request),
+            "bulk_action": action,
+            "bulk_noun": "post",
+            "bulk_url": reverse("insights:post_bulk"),
+            "bulk_items": [(post.pk, post.title, post.get_status_display()) for post in posts],
+            "bulk_qs": query,
+            "bulk_cancel": reverse("insights:posts") + (f"?{query}" if query else ""),
+        }
+        return render(request, "core/bulk_confirm.html", context)
+    user = request.user
+
+    def apply(post):
+        _authorise_post_action(post, action.key, user)
+        _apply_post_action(post, action.key, user, request)
+
+    result = bulk.run(posts, action, apply, lambda post: post.title)
+    bulk.report(request, result, action, "post")
+    return _bulk_back(request)
 
 
 @role_required()
