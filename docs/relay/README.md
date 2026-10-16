@@ -70,7 +70,7 @@ Each step is owner-gated where marked.
 4. **Load knowledge.** Run `pnpm relay:ingest` against production. Or set the repository variable `RELAY_INGEST_ENABLED=true` and the `RELAY_*` production-environment secrets so `.github/workflows/relay-knowledge.yml` re-indexes after content changes.
 5. **Set Vercel production env.** Everything under "Environments" above, with `RELAY_ENABLED` still `false`.
 6. **Set Super Admin env.** Set the Super Admin variables (Azure). Confirm the Relay tab loads.
-7. **Schedule jobs.** Store the Vault secrets `relay_cron_base_url` (`https://www.vitalos.co.uk`) and `relay_cron_secret` (= `CRON_SECRET`). Until they exist, the `pg_cron` jobs are no-ops.
+7. **Schedule jobs.** Store the Vault secrets `relay_cron_base_url` (`https://vitalos.co.uk`, the apex: `www` redirects with a 308, which `pg_net` does not follow) and `relay_cron_secret` (= `CRON_SECRET`). Until they exist, the `pg_cron` jobs are no-ops. The Super Admin's `RELAY_API_BASE_URL` is also the apex.
 8. **Owner approvals** (`PRIVACY.md`):
    - the privacy notice version that covers Relay, then set `RELAY_PRIVACY_NOTICE_VERSION`;
    - retention periods;

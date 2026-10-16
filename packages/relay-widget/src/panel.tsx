@@ -491,6 +491,11 @@ export function Panel(props: PanelProps) {
   useLayoutEffect(() => {
     const el = logRef.current;
     if (!el) return;
+    // The welcome screen starts at its heading: in the shorter floating panel it can overflow.
+    if (state.messages.length === 0 && !state.handoff.open) {
+      el.scrollTop = 0;
+      return;
+    }
     if (stickRef.current) el.scrollTop = el.scrollHeight;
     else setShowNewPill(true);
   }, [state.messages, state.handoff.open, state.personTyping]);
