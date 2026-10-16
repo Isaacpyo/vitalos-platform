@@ -1,6 +1,6 @@
 # SEO launch plan
 
-**Prepared, not executed.** Every step that changes the live site, DNS, Vercel domains, Search Console or Bing needs the owner (AGENTS.md stop list). The steps are in order; do not skip the checks between them.
+**Executed on 16 Oct 2026** (DECISIONS 30); §5 monitoring runs until mid-November. Originally prepared, not executed: Every step that changes the live site, DNS, Vercel domains, Search Console or Bing needs the owner (AGENTS.md stop list). The steps are in order; do not skip the checks between them.
 
 Context (AUDIT.md): `www.vitalos.co.uk` already serves this app and is crawlable, and the apex 308s to www. "Launch" here means three things: merging this branch, moving the canonical host from www to the apex (the brief's target), and telling the search engines.
 
