@@ -9,3 +9,6 @@ superadmin/
 
 # Vitalos Relay reference pack: supplied design files, kept byte-for-byte
 docs/relay/reference/
+
+# Owner-supplied prompts and reference zips, kept byte-for-byte
+Claude outputs/
