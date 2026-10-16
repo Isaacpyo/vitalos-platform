@@ -51,6 +51,10 @@ test.describe("Careers pages", () => {
       "",
     );
     expect(ld).toContain('"@type":"JobPosting"');
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    const image = await page.request.get(new URL(og ?? "", page.url()).pathname);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toContain("image/png");
   });
 
   test("a closed role keeps its page without a form, noindex", async ({ page }) => {

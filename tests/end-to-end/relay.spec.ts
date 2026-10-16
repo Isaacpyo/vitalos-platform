@@ -135,7 +135,8 @@ test.describe("Relay launcher and panel", () => {
     await composer.fill("Tell me about application modernisation and how it starts");
     await composer.press("Enter");
     const stop = page.getByRole("button", { name: "Stop generating" });
-    await expect(stop).toBeVisible();
+    // The first message also creates the conversation (Turnstile is fetched from Cloudflare).
+    await expect(stop).toBeVisible({ timeout: 20_000 });
     await stop.click();
     await expect(page.getByRole("button", { name: "Send message" })).toBeVisible();
   });

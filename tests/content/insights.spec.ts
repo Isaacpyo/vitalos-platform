@@ -63,6 +63,11 @@ test.describe("Insights article", () => {
     expect(jsonLd).toContain('"@type":"Article"');
     expect(jsonLd).toContain('"@type":"BreadcrumbList"');
     await expect(page.locator('meta[property="og:image"]')).toHaveCount(1);
+    // The shared OG template (ADR-043) renders the article's image.
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    const image = await page.request.get(new URL(og ?? "", page.url()).pathname);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toContain("image/png");
   });
 
   test("an old slug answers 308 and an unknown slug a server-rendered 404", async ({ request }) => {
