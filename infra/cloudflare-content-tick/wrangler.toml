@@ -2,7 +2,7 @@
 # No secrets here. Set these once, from this folder, with wrangler (it prompts for each value):
 #
 #   npx wrangler secret put TICK_URL      # https://www.vitalos.co.uk/api/content/cron/tick
-#   npx wrangler secret put CRON_SECRET   # same value as the website's CRON_SECRET (Vercel production)
+#   npx wrangler secret put TICK_SECRET   # same value as the website's CONTENT_TICK_SECRET (Vercel production)
 #
 # Deploy: npx wrangler deploy   (docs/content/README.md, "Scheduler")
 name = "vitalos-content-tick"

@@ -8,8 +8,8 @@ import { TickResponse } from "../schemas";
 import { correlationIdFrom, json, rateLimited } from "./guards";
 
 export interface TickDeps {
-  /** `CRON_SECRET`; unset means not configured (503). */
-  cronSecret: string | undefined;
+  /** Accepted bearers: `CRON_SECRET` (Vercel Cron) and `CONTENT_TICK_SECRET` (the Worker). None set: 503. */
+  secrets: readonly (string | undefined)[];
   limiter: RateLimiter;
   readers: Pick<ContentReaders, "siteState">;
   /** Null when the content API is not configured. */
@@ -29,8 +29,10 @@ export interface TickDeps {
  */
 export async function handleTickRequest(request: Request, deps: TickDeps): Promise<Response> {
   const correlationId = correlationIdFrom(request.headers);
-  if (!deps.cronSecret) return json({ error: "unavailable" }, 503, correlationId);
-  if (!bearerMatches(request.headers.get("authorization"), deps.cronSecret)) {
+  const secrets = deps.secrets.filter((secret): secret is string => Boolean(secret));
+  if (secrets.length === 0) return json({ error: "unavailable" }, 503, correlationId);
+  const authorization = request.headers.get("authorization");
+  if (!secrets.some((secret) => bearerMatches(authorization, secret))) {
     return json({ error: "unauthorized" }, 401, correlationId, { "www-authenticate": "Bearer" });
   }
   const limited = await rateLimited(deps.limiter, request.headers, "tick", correlationId);

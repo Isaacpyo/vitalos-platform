@@ -482,12 +482,13 @@ describe("GET /api/content/lookup", () => {
 
 describe("GET /api/content/cron/tick", () => {
   const cronSecret = "c".repeat(40);
+  const tickSecret = "t".repeat(40);
   const tick = { promoted: 1, closed: 2, delivered: 3, nextDueAt: null };
   const deps = (
     nextDueAt: string | null,
     options: { fail?: boolean; configured?: boolean } = {},
   ) => ({
-    cronSecret,
+    secrets: [cronSecret, tickSecret],
     limiter: new MemoryRateLimiter(),
     readers: {
       siteState: vi.fn(() =>
@@ -537,10 +538,24 @@ describe("GET /api/content/cron/tick", () => {
     expect(d.expireSiteState).toHaveBeenCalledTimes(1);
   });
 
-  it("401 for a wrong bearer, 503 without CRON_SECRET or when the admin is down", async () => {
+  it("accepts CRON_SECRET (Vercel Cron) and CONTENT_TICK_SECRET (the Worker)", async () => {
+    expect((await handleTickRequest(request(cronSecret), deps(null))).status).toBe(200);
+    expect((await handleTickRequest(request(tickSecret), deps(null))).status).toBe(200);
+    expect(
+      (
+        await handleTickRequest(request(tickSecret), {
+          ...deps(null),
+          secrets: [undefined, tickSecret],
+        })
+      ).status,
+    ).toBe(200);
+  });
+
+  it("401 for a wrong bearer, 503 without any secret or when the admin is down", async () => {
     expect((await handleTickRequest(request("wrong"), deps(null))).status).toBe(401);
     expect(
-      (await handleTickRequest(request(), { ...deps(null), cronSecret: undefined })).status,
+      (await handleTickRequest(request(), { ...deps(null), secrets: [undefined, undefined] }))
+        .status,
     ).toBe(503);
     expect((await handleTickRequest(request(), deps(null, { fail: true }))).status).toBe(503);
   });

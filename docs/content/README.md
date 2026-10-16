@@ -108,13 +108,13 @@ For the website-signed scopes (`read`, `submit`), step 1 is on the admin. For th
 
 ## The scheduler (ADR-042)
 
-The Cloudflare Worker in `infra/cloudflare-content-tick` calls `https://www.vitalos.co.uk/api/content/cron/tick` every minute with the website's `CRON_SECRET`. The website calls the admin only when its cached `nextDueAt` has passed, so idle minutes cost nothing on Azure.
+The Cloudflare Worker in `infra/cloudflare-content-tick` calls `https://www.vitalos.co.uk/api/content/cron/tick` every minute with the website's `CONTENT_TICK_SECRET` (the route also accepts `CRON_SECRET`, which Vercel Cron uses). The website calls the admin only when its cached `nextDueAt` has passed, so idle minutes cost nothing on Azure.
 
 **Deploy it** once the website change is live, from `infra/cloudflare-content-tick`:
 
 ```sh
 npx wrangler secret put TICK_URL      # https://www.vitalos.co.uk/api/content/cron/tick
-npx wrangler secret put CRON_SECRET   # the website's CRON_SECRET
+npx wrangler secret put TICK_SECRET   # the website's CONTENT_TICK_SECRET
 npx wrangler deploy
 ```
 

@@ -1,15 +1,15 @@
 // Vitalos content tick (ADR-042). A Cloudflare Worker cron trigger that calls the website's
-// `GET /api/content/cron/tick` every minute with the website's CRON_SECRET. The website decides
+// `GET /api/content/cron/tick` every minute with the website's CONTENT_TICK_SECRET. The website decides
 // whether anything is due and only then wakes the Super Admin, so idle minutes cost nothing.
 //
 // Secrets (wrangler secret put): TICK_URL (https://www.vitalos.co.uk/api/content/cron/tick),
-// CRON_SECRET (the website's CRON_SECRET). Never logged.
+// TICK_SECRET (the website's CONTENT_TICK_SECRET). Never logged.
 
 const TIMEOUT_MS = 10_000;
 
 /** Calls the tick URL once. Returns a small result object; never throws. */
 export async function tick(env, fetchImpl = fetch) {
-  if (!env.TICK_URL || !env.CRON_SECRET) return { ok: false, reason: "not-configured" };
+  if (!env.TICK_URL || !env.TICK_SECRET) return { ok: false, reason: "not-configured" };
   let url;
   try {
     url = new URL(env.TICK_URL);
@@ -23,7 +23,7 @@ export async function tick(env, fetchImpl = fetch) {
     const response = await fetchImpl(url.toString(), {
       method: "GET",
       headers: {
-        authorization: `Bearer ${env.CRON_SECRET}`,
+        authorization: `Bearer ${env.TICK_SECRET}`,
         "user-agent": "vitalos-content-tick/1.0",
       },
       signal: controller.signal,

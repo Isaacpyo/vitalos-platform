@@ -7,6 +7,7 @@
     "CAREERS_UPLOAD_HOST",
     "CONTENT_API_BASE_URL",
     "CONTENT_CACHE_TTL_SECONDS",
+    "CONTENT_TICK_SECRET",
     "CONTENT_MEDIA_HOST",
     "CONTENT_PREVIEW_SECRET",
     "CONTENT_READ_KEY_ID",
@@ -70,10 +71,23 @@
     "VITALOS_FIXTURE_SET"
   ],
   "tasks": {
-    "dev": { "cache": false, "persistent": true },
-    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**", "storybook-static/**"] },
-    "lint": { "dependsOn": ["^lint"] },
-    "typecheck": { "dependsOn": ["^typecheck"] },
-    "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] }
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "dist/**", "storybook-static/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    }
   }
 }

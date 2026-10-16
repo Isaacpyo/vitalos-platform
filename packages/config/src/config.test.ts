@@ -601,6 +601,7 @@ describe("content API (Insights and Careers)", () => {
       cacheTtlSeconds: 600,
       mediaOrigin: undefined,
       uploadOrigin: undefined,
+      tickSecret: undefined,
     });
     expect(deriveFeatures(env).content).toBe(false);
   });

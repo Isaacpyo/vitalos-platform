@@ -147,6 +147,8 @@ const rawSchema = z.object({
   CONTENT_RENDER_SECRET: keyList.optional(),
   CONTENT_PREVIEW_SECRET: keyList.optional(),
   CONTENT_CACHE_TTL_SECONDS: z.coerce.number().int().min(30).max(86_400).optional(),
+  // Bearer for /api/content/cron/tick from the Cloudflare Worker (ADR-042); CRON_SECRET also works.
+  CONTENT_TICK_SECRET: z.string().min(32).optional(),
   CONTENT_MEDIA_HOST: hostOrOrigin.optional(),
   CAREERS_UPLOAD_HOST: hostOrOrigin.optional(),
   // ---- Vitalos Relay (ADR-035 to ADR-038). Off unless RELAY_ENABLED=true. ----
@@ -276,6 +278,8 @@ export interface ContentEnv {
   mediaOrigin: string | undefined;
   /** CV upload origin (CSP connect-src). */
   uploadOrigin: string | undefined;
+  /** Bearer the Cloudflare Worker presents to the tick route (ADR-042), besides CRON_SECRET. */
+  tickSecret: string | undefined;
 }
 
 export const DEFAULT_CONTENT_CACHE_TTL_SECONDS = 600;
@@ -396,6 +400,7 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         cacheTtlSeconds: raw.CONTENT_CACHE_TTL_SECONDS ?? DEFAULT_CONTENT_CACHE_TTL_SECONDS,
         mediaOrigin: raw.CONTENT_MEDIA_HOST,
         uploadOrigin: raw.CAREERS_UPLOAD_HOST,
+        tickSecret: raw.CONTENT_TICK_SECRET,
       },
       relay: resolveRelay(raw, deployEnv, siteUrl ?? LOCAL_SITE_URL, supabaseConfigured),
     },

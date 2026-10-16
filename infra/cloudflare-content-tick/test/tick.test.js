@@ -4,7 +4,7 @@ import { tick } from "../src/index.js";
 
 const env = {
   TICK_URL: "https://www.example.test/api/content/cron/tick",
-  CRON_SECRET: "test-secret",
+  TICK_SECRET: "test-secret",
 };
 
 test("calls the tick URL with the bearer secret", async () => {

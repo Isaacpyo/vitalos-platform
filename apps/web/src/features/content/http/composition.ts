@@ -95,7 +95,7 @@ export function lookupDeps(): LookupDeps {
 
 export function tickDeps(): TickDeps {
   return {
-    cronSecret: getEnv().enquiry.cronSecret,
+    secrets: [getEnv().enquiry.cronSecret, getEnv().content.tickSecret],
     limiter,
     readers: getContentReaders(),
     client: getContentClient(),
