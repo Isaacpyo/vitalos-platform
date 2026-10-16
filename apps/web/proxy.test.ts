@@ -10,6 +10,20 @@ vi.mock("./src/features/missing-documents", () => ({
 const { proxy } = await import("./proxy");
 
 describe("proxy", () => {
+  it("redirects a path with capital letters to its lowercase form with a 308, query kept", async () => {
+    const response = await proxy(new NextRequest("http://localhost:3000/What-We-Do?intent=ai"));
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/what-we-do?intent=ai");
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("leaves lowercase paths, API routes and framework assets alone", async () => {
+    for (const path of ["/what-we-do", "/api/Health", "/_next/static/A.js"]) {
+      const response = await proxy(new NextRequest(`http://localhost:3000${path}`));
+      expect(response.status, path).not.toBe(308);
+    }
+  });
+
   it("assigns a request id when none is supplied", async () => {
     const response = await proxy(new NextRequest("http://localhost:3000/"));
     expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);

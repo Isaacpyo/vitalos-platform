@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { isDetailIndexable } from "@vitalos/cms";
 import type { GateKey, SeoView } from "@vitalos/cms";
 import { breadcrumbJsonLd } from "../../features/seo/json-ld";
+import { jsonLdGraph, serviceNode, webPageNode } from "../../features/seo/graph";
+import type { FaqItem, WebPageType } from "../../features/seo/graph";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 import { getSeoContext } from "../../features/seo/context";
 import { buildMetadata } from "../../features/seo/metadata";
@@ -38,4 +40,52 @@ export async function pageMetadata(input: PageSeoInput): Promise<Metadata> {
 /** BreadcrumbList for a trail (null for fewer than two steps). */
 export function breadcrumbNode(crumbs: readonly Crumb[]): JsonLdNode | null {
   return breadcrumbJsonLd(crumbsToJsonLd(crumbs), { siteUrl: getSeoContext().siteUrl });
+}
+
+export interface PageGraphInput {
+  /** The page's trail; the last step is the page itself. */
+  trail: readonly Crumb[];
+  /** The visible h1. */
+  name: string;
+  /** The visible lead or summary. */
+  description?: string | undefined;
+  type?: WebPageType | undefined;
+  /** Practice, solution and offer pages: the Service they describe (docs/seo/DECISIONS.md 22). */
+  serviceType?: string | undefined;
+  /** Questions and answers shown on the page. */
+  faq?: readonly FaqItem[] | undefined;
+  dateModified?: string | undefined;
+}
+
+/** One JSON-LD graph for a commercial page: WebPage, BreadcrumbList and, for services, Service. */
+export function pageGraph(input: PageGraphInput): JsonLdNode {
+  const ctx = { siteUrl: getSeoContext().siteUrl };
+  const path = input.trail.at(-1)?.path ?? "/";
+  return jsonLdGraph([
+    webPageNode(
+      {
+        path,
+        name: input.name,
+        description: input.description,
+        type: input.type,
+        breadcrumb: input.trail.length >= 2,
+        aboutService: input.serviceType !== undefined,
+        faq: input.faq,
+        dateModified: input.dateModified,
+      },
+      ctx,
+    ),
+    breadcrumbJsonLd(crumbsToJsonLd(input.trail), ctx),
+    input.serviceType !== undefined
+      ? serviceNode(
+          {
+            path,
+            name: input.name,
+            description: input.description,
+            serviceType: input.serviceType,
+          },
+          ctx,
+        )
+      : null,
+  ]);
 }

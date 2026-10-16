@@ -24,8 +24,8 @@ const consulting: PracticeDraft = {
   title: practiceDisplayName("Consulting"),
   summary: "Clarity, transformation choices, roadmaps and architecture before expensive execution.",
   seo: seo(
-    "Vitalos Consulting",
-    "Technology strategy, assessments, architecture and transformation roadmaps that end in decisions and implementable direction.",
+    "Technology Strategy Consulting",
+    "Technology strategy, assessments, architecture and transformation roadmaps. Every Vitalos Consulting engagement ends with a clear, ordered next step.",
   ),
   proposition:
     "Consulting helps you decide what should change and how technology, data and AI enable it. Every engagement ends with a clear next step, in order, with dependencies and a success measure.",
@@ -96,8 +96,8 @@ const engineering: PracticeDraft = {
   title: practiceDisplayName("Engineering"),
   summary: "Serious production software, modernisation, platforms, integration and reliability.",
   seo: seo(
-    "Vitalos Engineering",
-    "Production software, application modernisation, platforms, integration, cloud and reliability engineering.",
+    "Software Engineering Services",
+    "Vitalos Engineering designs, builds, integrates and modernises production software and platforms, with testing, security and operational handover built in.",
   ),
   proposition:
     "Engineering designs, builds, integrates, modernises and improves production software and platforms. Come directly with a clear need or from discovery; architecture, testing, security, documentation and operational handover are built in.",
@@ -181,8 +181,8 @@ const aiData: PracticeDraft = {
   title: practiceDisplayName("AI & Data"),
   summary: "AI and data from opportunity and foundations through production and managed operation.",
   seo: seo(
-    "Vitalos AI & Data",
-    "Find valuable AI opportunities, build the data foundations, prototype quickly, then engineer and operate production AI responsibly.",
+    "AI & Data Consultancy",
+    "Find valuable AI opportunities, build data foundations, prototype quickly, then engineer and run production AI responsibly, where outcomes are measurable.",
   ),
   proposition:
     "We help you find valuable AI opportunities, build data foundations, prototype quickly, and engineer and run production systems responsibly. We use AI where it creates measurable outcomes and can be governed.",
@@ -258,8 +258,8 @@ const experience: PracticeDraft = {
   title: practiceDisplayName("Experience"),
   summary: "Human-centred products, services, commerce and accessible digital experiences.",
   seo: seo(
-    "Vitalos Experience",
-    "Product discovery, research, service and UX design, design systems, commerce and accessible digital experiences connected to engineering.",
+    "Product, Service & UX Design",
+    "Product discovery, research, service and UX design, design systems and accessible digital experiences, connected to engineering so they can be delivered.",
   ),
   proposition:
     "Experience shapes how customers, employees and partners use digital services. It connects user needs, design and engineering so technology is useful, adopted and deliverable within real constraints.",
@@ -317,8 +317,8 @@ const managedServices: PracticeDraft = {
   summary:
     "Reliable operation, support and continuous improvement for systems Vitalos builds or responsibly inherits.",
   seo: seo(
-    "Vitalos Managed Services",
-    "Application care, managed engineering, platform operations, managed AI and data, for systems we build or responsibly take over.",
+    "Managed Application & Platform Services",
+    "Application care, managed engineering, platform operations and managed AI and data for live systems we build, or take over after a baseline assessment.",
   ),
   proposition:
     "Managed Services takes ongoing responsibility for live systems and keeps improving them. Systems others built are included only after an assessment sets a baseline we can responsibly support.",

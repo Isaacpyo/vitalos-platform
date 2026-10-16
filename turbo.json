@@ -2,6 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "agentGuidance": false,
   "globalEnv": [
+    "BING_SITE_VERIFICATION",
     "CRON_SECRET",
     "DEEPSEEK_API_KEY",
     "DEEPSEEK_BASE_URL",
@@ -12,6 +13,9 @@
     "ENQUIRY_IP_HASH_SALT",
     "ENQUIRY_NOTIFICATION_TO",
     "ENQUIRY_PRIVACY_NOTICE_VERSION",
+    "GOOGLE_SITE_VERIFICATION",
+    "INDEXNOW_KEY",
+    "NEXT_PUBLIC_ANALYTICS_PROVIDER",
     "NEXT_PUBLIC_MEDIA_LABELS",
     "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
@@ -59,10 +63,23 @@
     "VITALOS_FIXTURE_SET"
   ],
   "tasks": {
-    "dev": { "cache": false, "persistent": true },
-    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**", "storybook-static/**"] },
-    "lint": { "dependsOn": ["^lint"] },
-    "typecheck": { "dependsOn": ["^typecheck"] },
-    "test": { "dependsOn": ["^build"], "outputs": ["coverage/**"] }
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "dist/**", "storybook-static/**"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    }
   }
 }

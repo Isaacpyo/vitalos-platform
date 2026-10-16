@@ -28,7 +28,13 @@ import { labDrafts } from "./content/labs";
 import { legalDrafts } from "./content/legal";
 import { offerDrafts } from "./content/offers";
 import type { OfferDraft } from "./content/offers";
-import { homeHeadings, homeProvenance, routePageDrafts, settingsDraft } from "./content/pages";
+import {
+  homeHeadings,
+  homeProvenance,
+  homeSeo,
+  routePageDrafts,
+  settingsDraft,
+} from "./content/pages";
 import { practiceDrafts } from "./content/practices";
 import type { PracticeDraft } from "./content/practices";
 import { solutionDrafts } from "./content/solutions";
@@ -237,7 +243,7 @@ export function buildDraftContentSet(): DraftContentSet {
   const legalPages = legalDrafts.map((d) => d.view);
 
   const home: HomePageView = {
-    seo: { description: settingsDraft.view.defaultSeo?.description ?? "" },
+    seo: homeSeo,
     headings: homeHeadings,
     proof: [],
     // Stage 8 §8: the client-problem-led solutions; all six since the owner locked the sixth

@@ -6,7 +6,7 @@ import {
   loadDocument,
   staticParams,
 } from "../../../../src/templates/commercial/load";
-import { breadcrumbNode, pageMetadata } from "../../../../src/templates/commercial/seo";
+import { pageGraph, pageMetadata } from "../../../../src/templates/commercial/seo";
 import {
   PracticeTemplate,
   practiceTrail,
@@ -35,7 +35,15 @@ export default async function PracticePage({ params }: Props) {
   const { doc, gates } = await loadDetailPage("practice", slug);
   return (
     <>
-      <JsonLd data={breadcrumbNode(practiceTrail(doc))} />
+      <JsonLd
+        data={pageGraph({
+          trail: practiceTrail(doc),
+          name: doc.title,
+          description: doc.proposition,
+          serviceType: doc.title.replace(/^Vitaloss+/, ""),
+          dateModified: doc.updatedAt,
+        })}
+      />
       <PracticeTemplate practice={doc} gates={gates} />
     </>
   );

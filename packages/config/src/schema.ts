@@ -63,9 +63,18 @@ const relayModel = z
   });
 
 /** NEXT_PUBLIC_* variables: safe for browser bundles. Shared by `public.ts` and the full schema. */
+export const analyticsProviders = ["none", "vercel"] as const;
+export type AnalyticsProvider = (typeof analyticsProviders)[number];
+
 export const publicEnvShape = {
   NEXT_PUBLIC_SITE_URL: originUrl.optional(),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(10).optional(),
+  /**
+   * Cookieless analytics (docs/seo/DECISIONS.md 23). `none` (the default) loads nothing;
+   * `vercel` loads Vercel Web Analytics and Speed Insights. Switching it on is an owner decision:
+   * it needs the privacy notice update in docs/seo/REPORTING.md.
+   */
+  NEXT_PUBLIC_ANALYTICS_PROVIDER: z.enum(analyticsProviders).optional(),
 } as const;
 
 const rawSchema = z.object({
@@ -94,6 +103,22 @@ const rawSchema = z.object({
   // Sent by Vercel Cron as `Authorization: Bearer $CRON_SECRET`; accepted by the dispatch route.
   CRON_SECRET: z.string().min(32).optional(),
   ENABLE_HSTS: z.enum(["true", "false", "1", "0"]).optional(),
+  // ---- Search (docs/seo). Public values by design: the key file and the meta tags are served. ----
+  /** IndexNow key, served at /indexnow-key.txt and sent with each ping. Production only. */
+  INDEXNOW_KEY: z
+    .string()
+    .regex(/^[A-Za-z0-9-]{8,128}$/, "must be 8-128 letters, digits or dashes")
+    .optional(),
+  /** Google Search Console HTML-tag verification token (the content of the meta tag). */
+  GOOGLE_SITE_VERIFICATION: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{10,100}$/, "must be the token only, not the whole meta tag")
+    .optional(),
+  /** Bing Webmaster Tools verification token (msvalidate.01). */
+  BING_SITE_VERIFICATION: z
+    .string()
+    .regex(/^[A-Za-z0-9]{10,64}$/, "must be the token only, not the whole meta tag")
+    .optional(),
   // ---- Vitalos Relay (ADR-035 to ADR-038). Off unless RELAY_ENABLED=true. ----
   RELAY_ENABLED: booleanFlag,
   RELAY_STORE: z.enum(relayStores).optional(),
@@ -162,6 +187,12 @@ export interface Env {
     from: string | undefined;
   };
   enableHsts: boolean;
+  /** Search engine integration (docs/seo). */
+  search: {
+    indexNowKey: string | undefined;
+    googleSiteVerification: string | undefined;
+    bingSiteVerification: string | undefined;
+  };
   relay: RelayEnv;
 }
 
@@ -300,6 +331,11 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         from: raw.EMAIL_FROM,
       },
       enableHsts: raw.ENABLE_HSTS === "true" || raw.ENABLE_HSTS === "1",
+      search: {
+        indexNowKey: raw.INDEXNOW_KEY,
+        googleSiteVerification: raw.GOOGLE_SITE_VERIFICATION,
+        bingSiteVerification: raw.BING_SITE_VERIFICATION,
+      },
       relay: resolveRelay(raw, deployEnv, siteUrl ?? LOCAL_SITE_URL, supabaseConfigured),
     },
   };

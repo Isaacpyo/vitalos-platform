@@ -32,7 +32,10 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
       <PageHeroBand
         full
         crumbs={
-          <Breadcrumbs trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]} />
+          <Breadcrumbs
+            trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]}
+            page={{ type: "AboutPage", name: page?.heading, description: page?.intro }}
+          />
         }
         title={page?.heading ?? navLabels.about}
         lead={page?.intro}

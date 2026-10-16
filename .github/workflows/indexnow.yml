@@ -1,0 +1,43 @@
+name: IndexNow
+# After each successful Vercel production deployment, tell IndexNow (Bing and the other
+# participating engines) which sitemap URLs changed since the previous production deployment
+# (docs/seo/DECISIONS.md 14). Runs the workflow file from the default branch, checks out main, and
+# needs no secret: the IndexNow key is the public key file the site serves. Logs contain public
+# URLs only. Does nothing until INDEXNOW_KEY is set in Vercel production.
+on:
+  deployment_status:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+jobs:
+  ping:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production' &&
+      github.event.deployment.creator.login == 'vercel[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      deployments: read
+    env:
+      # The canonical origin. Set the repository variable SITE_URL when the host moves (LAUNCH.md).
+      SITE_URL: ${{ vars.SITE_URL || 'https://www.vitalos.co.uk' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { ref: main, sparse-checkout: "tooling/seo\napps/web/src/features/seo" }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 24 }
+      - name: Find the previous production deployment
+        id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CURRENT: ${{ github.event.deployment.id }}
+        run: |
+          since=$(gh api "repos/${{ github.repository }}/deployments?environment=Production&per_page=10" \
+            --jq "[.[] | select(.id != ${CURRENT} and .creator.login == \"vercel[bot]\")][0].created_at // empty")
+          echo "since=${since}" >> "$GITHUB_OUTPUT"
+      - name: Ping IndexNow with the URLs that changed
+        run: node --no-warnings tooling/seo/indexnow-deploy.mjs --site "$SITE_URL" ${{ steps.previous.outputs.since != '' && format('--since {0}', steps.previous.outputs.since) || '' }}
