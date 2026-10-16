@@ -5,7 +5,9 @@ import type { HomePageView, PublicationGates } from "@vitalos/cms";
 import { fullFixtureSet, sparseFixtureSet } from "@vitalos/cms/fixtures";
 import { HowWeWorkTemplate } from "./how-we-work/HowWeWorkTemplate";
 import { HomeTemplate } from "./home/HomeTemplate";
-import { homeBands } from "./home/sections";
+import { careersSection, homeBands } from "./home/sections";
+import { Home } from "../features/content/schemas";
+import contentHomeFixture from "../../../../contracts/content-api/v1/fixtures/home.json";
 import { IndustryTemplate } from "./industry/IndustryTemplate";
 import { OfferTemplate, engagementSummary } from "./offer/OfferTemplate";
 import { PracticeTemplate } from "./practice/PracticeTemplate";
@@ -30,15 +32,24 @@ const emptyHome: HomePageView = {
   insights: [],
 };
 
-const context = (home: HomePageView, gates: PublicationGates, howWeWorkIntro?: string) => ({
+const contentHome = Home.parse(contentHomeFixture);
+
+const context = (
+  home: HomePageView,
+  gates: PublicationGates,
+  howWeWorkIntro?: string,
+  content: typeof contentHome | null = null,
+) => ({
   home,
   gates,
   howWeWorkIntro,
+  content,
 });
 
 describe("homepage sections", () => {
-  it("has the thirteen Stage 8 sections: hero, eleven bands, final conversion", () => {
-    expect(homeBands).toHaveLength(homeSections.length - 2);
+  it("has the thirteen Stage 8 sections (hero, eleven bands, final conversion) and the Careers slot", () => {
+    expect(homeBands).toHaveLength(homeSections.length - 2 + 1);
+    expect(homeBands.indexOf(careersSection)).toBeGreaterThan(-1);
   });
 
   it("returns null from every band when the home page has no data", () => {
@@ -48,9 +59,59 @@ describe("homepage sections", () => {
   });
 
   it("renders every band from the full fixtures when the gates are open", () => {
-    const ctx = context(fullHome, openGates, "Example how-we-work intro");
+    const ctx = context(fullHome, openGates, "Example how-we-work intro", contentHome);
     const rendered = homeBands.map((band) => band(ctx, "light"));
     expect(rendered.every((node) => node !== null)).toBe(true);
+  });
+
+  it("renders the Careers section after Insights from the admin's home read", () => {
+    const markup = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={contentHome}
+      />,
+    );
+    expect(markup).toContain("All open roles");
+    expect(markup).toContain('href="/careers/example-role-fixture"');
+    expect(markup.indexOf("All insights")).toBeLessThan(markup.indexOf("All open roles"));
+    const none = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={{ insights: contentHome.insights, careers: null }}
+      />,
+    );
+    expect(none).not.toContain("All open roles");
+  });
+
+  it("renders the Insights section from the admin's home read, and omits it without one", () => {
+    const withContent = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={contentHome}
+      />,
+    );
+    expect(withContent).toContain("Engineering clarity from complexity");
+    expect(withContent).toContain('href="/insights/example-post-1"');
+    expect(withContent).toContain(">All insights");
+    const withoutContent = html(
+      <HomeTemplate home={fullHome} gates={openGates} howWeWorkIntro="intro" content={null} />,
+    );
+    expect(withoutContent).not.toContain("/insights/");
+    const empty = html(
+      <HomeTemplate
+        home={fullHome}
+        gates={openGates}
+        howWeWorkIntro="intro"
+        content={{ insights: null, careers: null }}
+      />,
+    );
+    expect(empty).not.toContain("All insights");
   });
 
   it("drops work, industries, labs and insights while their gates are closed, even with data", () => {
@@ -227,10 +288,10 @@ describe("offer template", () => {
 describe("industry template", () => {
   const [industry] = fullFixtureSet.documents.industry;
 
-  it("shows work and insights only through open gates", () => {
+  it("shows work only through open gates, and no CMS insights (Insights comes from the admin)", () => {
     const open = html(<IndustryTemplate industry={industry!} gates={openGates} />);
     expect(open).toContain(">Selected work</h2>");
-    expect(open).toContain(">Insights</h2>");
+    expect(open).not.toContain(">Insights</h2>");
     const closed = html(<IndustryTemplate industry={industry!} gates={closedGates} />);
     expect(closed).not.toContain(">Selected work</h2>");
     expect(closed).not.toContain(">Insights</h2>");

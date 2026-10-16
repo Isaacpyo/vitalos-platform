@@ -14,8 +14,22 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     "attachments": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+    "content_media": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+    "careers_cvs": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
 }
 ATTACHMENTS_STORAGE_ENABLED = True
+CONTENT_MEDIA_STORAGE_ENABLED = True
+CAREERS_CV_STORAGE_ENABLED = True
+CONTENT_MEDIA_PUBLIC_BASE_URL = "https://media.example.test"
+# No content keys or website targets unless a test sets them (a developer's .env must not leak in).
+CONTENT_WEB_TARGETS = []
+_UNSET = ""
+CONTENT_READ_CLIENT_KEYS = _UNSET
+CAREERS_SUBMIT_CLIENT_KEYS = _UNSET
+CONTENT_REVALIDATE_SECRET = _UNSET
+CONTENT_RENDER_SECRET = _UNSET
+CONTENT_PREVIEW_SECRET = _UNSET
+CONTENT_OPPORTUNISTIC_TICK = False
 LOGGING["handlers"]["console"]["formatter"] = "text"
 LOGGING["root"]["level"] = "WARNING"
 LOGGING["loggers"]["django"]["level"] = "ERROR"

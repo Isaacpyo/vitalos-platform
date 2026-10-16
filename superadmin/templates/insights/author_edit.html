@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{% if author %}{{ author.name }}{% else %}New author{% endif %} · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Insights / Author</p>
+  <h1 class="mt-1 text-2xl font-semibold">{% if author %}{{ author.name }}{% else %}New author{% endif %}</h1>
+  {% with section="authors" %}{% include "insights/_nav.html" %}{% endwith %}
+  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <form method="post" class="card p-5">
+      {% csrf_token %}
+      <fieldset {% if author and not can_edit_authors %}disabled{% endif %}>
+        <legend class="sr-only">Profile</legend>
+        {% include "partials/form_fields.html" %}
+        {% if author and public %}<p class="field-help mt-3">This author has published posts. Changing the slug keeps the old address working with a redirect.</p>{% endif %}
+        <div class="mt-4 flex gap-2">
+          <button type="submit" class="btn btn-primary">{% if author %}Save author{% else %}Add author{% endif %}</button>
+          <a href="{% url 'insights:authors' %}" class="btn btn-secondary">Back to authors</a>
+        </div>
+      </fieldset>
+    </form>
+    {% if author %}
+      <aside class="space-y-4" aria-label="Author status">
+        <section class="card p-4" aria-labelledby="confirm-heading">
+          <h2 id="confirm-heading" class="mono-label muted">Real person</h2>
+          {% if author.is_confirmed %}
+            <p class="mt-2 text-sm">This is a real person who has approved this profile.</p>
+            <p class="mono-label muted mt-1" data-testid="confirmed-by">{{ author.confirmed_real_by.email|default:"Unknown" }} · {{ author.confirmed_real_at|date:"j M Y, H:i" }}</p>
+            {% if can_confirm and not public %}
+              <form method="post" action="{% url 'insights:author_action' author.pk 'unconfirm' %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Withdraw confirmation</button></form>
+            {% endif %}
+          {% else %}
+            <p class="mt-2 text-sm">Posts by this author cannot be published until someone confirms they are a real person who has approved this profile.</p>
+            {% if can_confirm %}
+              <form method="post" action="{% url 'insights:author_action' author.pk 'confirm' %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-primary btn-sm" data-testid="confirm-author">This is a real person who has approved this profile</button></form>
+            {% endif %}
+          {% endif %}
+        </section>
+        <section class="card space-y-3 p-4" aria-labelledby="photo-heading">
+          <h2 id="photo-heading" class="mono-label muted">Photo</h2>
+          {% if author.avatar_path %}<img src="{{ avatar_url }}" alt="{{ author.name }}" width="{{ author.avatar_width }}" height="{{ author.avatar_height }}" class="h-24 w-24 border border-slate-200 object-cover dark:border-slate-800">{% endif %}
+          {% if can_edit_authors and media_enabled %}
+            <form method="post" action="{% url 'insights:author_action' author.pk 'photo' %}" enctype="multipart/form-data" class="space-y-2">
+              {% csrf_token %}
+              <label for="author-photo" class="field-label">Upload a square photo</label>
+              <input id="author-photo" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/avif" required class="block w-full text-sm">
+              <p class="field-help">The photo must already be square (for example 400 × 400 pixels): the admin does not crop images. JPEG, PNG, WebP or AVIF, 5 MB at most.</p>
+              <button type="submit" class="btn btn-secondary btn-sm">{% icon "upload" "h-4 w-4" %} Upload</button>
+            </form>
+            {% if author.avatar_path %}
+              <form method="post" action="{% url 'insights:author_action' author.pk 'remove_photo' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove photo</button></form>
+            {% endif %}
+          {% elif can_edit_authors %}
+            <p class="field-help">Image uploads need object storage (CONTENT_MEDIA_BUCKET).</p>
+          {% endif %}
+        </section>
+        <section class="card p-4" aria-labelledby="active-heading">
+          <h2 id="active-heading" class="mono-label muted">Status</h2>
+          <p class="mt-2 text-sm">{% if author.is_active %}Active.{% else %}Inactive: cannot be added to posts.{% endif %} {{ post_count }} post{{ post_count|pluralize }}.</p>
+          {% if can_edit_authors %}
+            {% if author.is_active %}
+              <form method="post" action="{% url 'insights:author_action' author.pk 'deactivate' %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" {% if public %}disabled aria-describedby="deactivate-note"{% endif %}>Deactivate</button></form>
+              {% if public %}<p id="deactivate-note" class="field-help">Reassign or archive their published posts before deactivating this author.</p>{% endif %}
+            {% else %}
+              <form method="post" action="{% url 'insights:author_action' author.pk 'activate' %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Activate</button></form>
+            {% endif %}
+          {% endif %}
+        </section>
+      </aside>
+    {% endif %}
+  </div>
+{% endblock %}

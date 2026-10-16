@@ -1,5 +1,5 @@
 import type { DocKind } from "@vitalos/cms";
-import { matchDetailRoute, routeKey } from "./detail-routes";
+import { families, matchDetailRoute, routeKey } from "./detail-routes";
 
 export interface MissingDocumentCheckerDeps {
   /** `ContentSource.listParams` of the PUBLISHED source. */
@@ -12,6 +12,8 @@ export interface MissingDocumentCheckerDeps {
   timeoutMs?: number;
   /** After a failed or timed-out read, how long before the next attempt (stale entry served). */
   failureTtlMs?: number;
+  /** The detail routes this checker answers for (default: every repo-content family). */
+  routes?: Parameters<typeof matchDetailRoute>[1];
   now?: () => number;
 }
 
@@ -109,7 +111,7 @@ export function createMissingDocumentChecker(deps: MissingDocumentCheckerDeps) {
 
   return {
     async isMissing(pathname: string): Promise<boolean> {
-      const route = matchDetailRoute(pathname);
+      const route = matchDetailRoute(pathname, deps.routes ?? families);
       if (!route) return false;
       const key = routeKey(route.fields, route.values);
       let entry = await load(route.kind);

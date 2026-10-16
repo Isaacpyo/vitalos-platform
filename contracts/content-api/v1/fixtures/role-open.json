@@ -1,0 +1,60 @@
+{
+  "id": "00000000-0000-4000-8000-0000000002a1",
+  "slug": "example-role-fixture",
+  "title": "Example role (fixture)",
+  "practice": {
+    "key": "engineering",
+    "label": "Engineering"
+  },
+  "level": {
+    "key": "l3_senior",
+    "label": "Senior"
+  },
+  "location": "Example City",
+  "workModel": {
+    "key": "hybrid",
+    "label": "Hybrid"
+  },
+  "employmentType": {
+    "key": "permanent_full_time",
+    "label": "Permanent"
+  },
+  "salary": {
+    "min": 10000,
+    "max": 20000,
+    "currency": "GBP",
+    "period": "year",
+    "label": "£10,000–£20,000 a year"
+  },
+  "closesAt": {
+    "iso": "2026-11-30T23:59:00Z",
+    "long": "30 November 2026",
+    "short": "30 Nov 2026"
+  },
+  "showOnHome": true,
+  "state": "open",
+  "summary": "Example summary for a fixture role. It is not a real vacancy.",
+  "sections": {
+    "about": "Example about text (fixture).",
+    "responsibilities": "- Example responsibility",
+    "requirements": "- Example requirement",
+    "niceToHave": "",
+    "process": "",
+    "equalOpportunities": ""
+  },
+  "sponsorship": null,
+  "apply": {
+    "mode": "form",
+    "externalUrl": null
+  },
+  "datePosted": {
+    "iso": "2026-10-12T09:00:00Z",
+    "long": "12 October 2026",
+    "short": "12 Oct 2026"
+  },
+  "lastModified": "2026-10-12T09:00:00Z",
+  "privacy": {
+    "noticeUrl": "/legal/privacy",
+    "noticeVersion": "2026-10"
+  }
+}

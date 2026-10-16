@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Topics · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Insights</p>
+  <h1 class="mt-1 text-2xl font-semibold">Topics and sectors</h1>
+  {% with section="topics" %}{% include "insights/_nav.html" %}{% endwith %}
+  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="card overflow-x-auto">
+      <table class="table-base" data-testid="topic-table">
+        <caption class="sr-only">Topics and sectors in display order</caption>
+        <thead><tr><th scope="col">Order</th><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Posts</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for row in rows %}
+            <tr>
+              <td class="whitespace-nowrap">
+                {% if can_edit_topics %}
+                  <form method="post" action="{% url 'insights:topic_action' row.topic.pk 'up' %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" aria-label="Move {{ row.topic.name }} up" {% if forloop.first %}disabled{% endif %}>{% icon "up" "h-4 w-4" %}</button></form>
+                  <form method="post" action="{% url 'insights:topic_action' row.topic.pk 'down' %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" aria-label="Move {{ row.topic.name }} down" {% if forloop.last %}disabled{% endif %}>{% icon "down" "h-4 w-4" %}</button></form>
+                {% else %}{{ forloop.counter }}{% endif %}
+              </td>
+              <td>
+                <a class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'insights:topic' row.topic.pk %}">{{ row.topic.name }}</a>{% if row.topic.is_seeded %} <span class="mono-label muted">· Approved seed</span>{% endif %}
+                <br><span class="muted font-mono text-xs">{{ row.topic.slug }}</span>
+              </td>
+              <td>{{ row.topic.get_kind_display }}</td>
+              <td class="tabular-nums">{{ row.used }}</td>
+              <td class="text-right">
+                {% if can_edit_topics and not row.used %}
+                  {% url 'insights:topic_action' row.topic.pk 'delete' as delete_url %}
+                  {% include "insights/_confirm.html" with label="Delete" target=row.topic.name question="Delete this topic?" confirm_label="Delete topic" url=delete_url %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if can_edit_topics %}
+      <form method="post" class="card h-fit p-5">
+        {% csrf_token %}
+        <h2 class="mb-3 font-semibold">Add a topic or sector</h2>
+        {% include "partials/form_fields.html" %}
+        <button type="submit" class="btn btn-primary mt-4">Add</button>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}

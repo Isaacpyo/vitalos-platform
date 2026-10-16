@@ -2,9 +2,15 @@
 
 from django.core.exceptions import ImproperlyConfigured
 
+from config import content_validation
+
 from .base import *  # noqa: F403
 from .base import (
     ATTACHMENTS_STORAGE,
+    CAREERS_CV_BUCKET,
+    CAREERS_CV_STORAGE,
+    CONTENT_MEDIA_BUCKET,
+    CONTENT_MEDIA_STORAGE,
     EMAIL_TRANSPORT,
     OBJECT_STORAGE_BUCKET,
     RELAY_ADMIN_API_SECRET,
@@ -66,9 +72,24 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     "attachments": ATTACHMENTS_STORAGE,
+    "content_media": CONTENT_MEDIA_STORAGE,
+    "careers_cvs": CAREERS_CV_STORAGE,
 }
 # Production keeps attachment bytes only in object storage; the container disk is not durable.
 ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET)
+# Same rule for post images and CVs: no bucket, no uploads (ADR-041: no CV upload tickets).
+CONTENT_MEDIA_STORAGE_ENABLED = bool(CONTENT_MEDIA_BUCKET)
+CAREERS_CV_STORAGE_ENABLED = bool(CAREERS_CV_BUCKET)
+
+# Insights and Careers keys, targets and the applicant IP salt (empty values leave the features off).
+_content_problems = content_validation.problems(
+    {
+        name: globals().get(name)
+        for name in (*content_validation.KEY_SETTINGS, "CONTENT_WEB_TARGETS", "CONTENT_IP_SALT")
+    }
+)
+if _content_problems:
+    raise ImproperlyConfigured(" ".join(_content_problems))
 
 if SENTRY_DSN:
     import sentry_sdk

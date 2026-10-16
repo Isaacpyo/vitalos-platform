@@ -1,0 +1,15 @@
+{
+  "eventId": "00000000-0000-4000-8000-0000000003e1",
+  "kind": "publish",
+  "tags": [
+    "insights",
+    "insights:list",
+    "insights:post:example-post-1",
+    "insights:author:example-author",
+    "insights:topic:example-topic",
+    "home",
+    "feed",
+    "sitemap"
+  ],
+  "paths": ["/insights/example-post-1"]
+}

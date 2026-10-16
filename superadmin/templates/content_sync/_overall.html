@@ -1,0 +1,6 @@
+{% load ui %}<a href="{% url 'content_sync:sync' %}" id="sync-overall" data-testid="sync-overall"
+   class="mono-label inline-flex min-h-6 items-center gap-2 rounded-md px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 {% if overall.state == 'failed' %}text-slate-900 dark:text-white{% elif overall.state == 'pending' %}text-slate-500 dark:text-slate-400{% else %}text-mineral-700 dark:text-mineral-300{% endif %}"
+   {% if overall.polling %}hx-get="{% url 'content_sync:overall' %}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {% if overall.state == "failed" %}{% icon "alert" "h-3.5 w-3.5" %}{% elif overall.state == "pending" %}{% include "content_sync/_loader.html" %}{% endif %}
+  <span>{{ overall.label }}</span>
+</a>

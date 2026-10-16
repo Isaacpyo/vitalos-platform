@@ -34,6 +34,12 @@
 #                    RELAY_ADMIN_API_SECRET, RELAY_WEBHOOK_SECRET
 #                    (Container Apps secrets, referenced with secretref:; an empty value never overwrites
 #                    a secret that is already stored). APP_BASE_URL is always https://<domain>.
+# Optional Insights and Careers settings (docs/DEPLOY.md, "Content (Insights and Careers)"), same rules:
+#   plain variables  CONTENT_WEB_TARGETS, CONTENT_MEDIA_BUCKET, CONTENT_MEDIA_PUBLIC_BASE_URL, CAREERS_CV_BUCKET,
+#                    CAREERS_CV_MAX_MB, CAREERS_EMAIL_FROM, CAREERS_CANDIDATE_EMAILS_ENABLED,
+#                    CONTENT_RELAY_SYNC_ENABLED, CONTENT_READ_RATE_LIMIT, CONTENT_OPPORTUNISTIC_TICK
+#   secrets          CONTENT_READ_CLIENT_KEYS, CAREERS_SUBMIT_CLIENT_KEYS, CONTENT_REVALIDATE_SECRET,
+#                    CONTENT_RENDER_SECRET, CONTENT_PREVIEW_SECRET, CONTENT_IP_SALT
 set -euo pipefail
 
 DRY_RUN=0
@@ -243,6 +249,9 @@ ENV_VARS+=("APP_BASE_URL=https://$DOMAIN")
 # without them leaves whatever the app already holds untouched (az keeps existing secrets and variables).
 for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_EMAIL \
   OBJECT_STORAGE_ENDPOINT OBJECT_STORAGE_BUCKET OBJECT_STORAGE_REGION RETENTION_ENFORCE \
+  CONTENT_WEB_TARGETS CONTENT_MEDIA_BUCKET CONTENT_MEDIA_PUBLIC_BASE_URL CAREERS_CV_BUCKET CAREERS_CV_MAX_MB \
+  CAREERS_EMAIL_FROM CAREERS_CANDIDATE_EMAILS_ENABLED CONTENT_RELAY_SYNC_ENABLED CONTENT_READ_RATE_LIMIT \
+  CONTENT_OPPORTUNISTIC_TICK \
   RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
@@ -261,6 +270,12 @@ add_optional_secret TURNSTILE_SECRET_KEY turnstile-secret-key
 add_optional_secret OBJECT_STORAGE_ACCESS_KEY_ID object-storage-access-key-id
 add_optional_secret OBJECT_STORAGE_SECRET_ACCESS_KEY object-storage-secret-access-key
 add_optional_secret SLACK_WEBHOOK_URL slack-webhook-url
+add_optional_secret CONTENT_READ_CLIENT_KEYS content-read-client-keys
+add_optional_secret CAREERS_SUBMIT_CLIENT_KEYS careers-submit-client-keys
+add_optional_secret CONTENT_REVALIDATE_SECRET content-revalidate-secret
+add_optional_secret CONTENT_RENDER_SECRET content-render-secret
+add_optional_secret CONTENT_PREVIEW_SECRET content-preview-secret
+add_optional_secret CONTENT_IP_SALT content-ip-salt
 add_optional_secret RELAY_ADMIN_API_SECRET relay-admin-api-secret
 add_optional_secret RELAY_WEBHOOK_SECRET relay-webhook-secret
 unset _name

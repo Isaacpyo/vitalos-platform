@@ -1,0 +1,9 @@
+{
+  "uploadId": "00000000-0000-4000-8000-0000000004a1",
+  "uploadUrl": "https://admin.example.test/api/careers/v1/uploads/00000000-0000-4000-8000-0000000004a1?token=example-token",
+  "method": "PUT",
+  "headers": {
+    "Content-Type": "application/pdf"
+  },
+  "expiresAt": "2026-10-12T09:10:00Z"
+}

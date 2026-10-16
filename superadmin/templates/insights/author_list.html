@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Authors · Insights · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div><p class="mono-label muted">Insights</p><h1 class="mt-1 text-2xl font-semibold">Authors</h1></div>
+    {% if can_edit_authors %}<a class="btn btn-primary" href="{% url 'insights:author_new' %}">{% icon "plus" "h-4 w-4" %} New author</a>{% endif %}
+  </div>
+  {% with section="authors" %}{% include "insights/_nav.html" %}{% endwith %}
+  <p class="muted mt-4 max-w-3xl text-sm">Every author must be a real person who has approved their profile. A post cannot be published until each of its authors is confirmed.</p>
+  <div class="card mt-4 overflow-x-auto">
+    <table class="table-base" data-testid="author-table">
+      <caption class="sr-only">Authors</caption>
+      <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Confirmed</th><th scope="col">Status</th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for row in rows %}
+          <tr>
+            <td><a class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'insights:author' row.author.pk %}">{{ row.author.name }}</a><br><span class="muted font-mono text-xs">/insights/authors/{{ row.author.slug }}</span></td>
+            <td>{{ row.author.role_title|default:"—" }}</td>
+            <td>
+              {% if row.author.is_confirmed %}
+                <span class="mono-label text-mineral-700 dark:text-mineral-300">Confirmed</span>
+                <span class="muted block text-xs">{{ row.author.confirmed_real_by.email }} · {{ row.author.confirmed_real_at|date:"j M Y" }}</span>
+              {% else %}<span class="mono-label muted">Not confirmed</span>{% endif %}
+            </td>
+            <td>
+              {% if not row.author.is_active %}<span class="mono-label muted">Inactive</span>
+              {% elif row.public %}<span class="mono-label text-mineral-700 dark:text-mineral-300">Published posts</span>
+              {% else %}<span class="mono-label">Active</span>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="muted py-10 text-center">No authors yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

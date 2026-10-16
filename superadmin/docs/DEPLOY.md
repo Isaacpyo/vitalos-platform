@@ -402,3 +402,76 @@ BOOTSTRAP_ADMIN_PASSWORD='<12+ chars>' python manage.py create_superadmin --emai
 python manage.py runserver                 # or: docker compose up --build (PostgreSQL 17)
 pytest                                     # SQLite; DATABASE_URL=postgres://… to match CI
 ```
+
+## 9. Content (Insights and Careers)
+
+Insights and Careers live in this app (ADR-039 to ADR-042). Both sections stay closed on the website until a super admin opens them in **Settings → Website content**; opening either in production is an owner decision. Every value below is optional: without them the admin works, the read API answers 503 (fail closed) and nothing is pushed to the website.
+
+### Variables and secrets
+
+`deploy/azure/deploy.sh` passes each one through when the deploy workflow provides a non-empty value (an empty value never overwrites what the app already holds). The deploy workflow must map them from the GitHub `production` environment (secrets for the secret rows).
+
+| Name | Kind | Container Apps secret | What |
+| ---- | ---- | --------------------- | ---- |
+| `CONTENT_WEB_TARGETS` | variable | | Website base URLs, comma-separated; the first is used for Preview and View on site |
+| `CONTENT_READ_CLIENT_KEYS` | secret | `content-read-client-keys` | `keyId:secret` list the website signs read-API and tick calls with |
+| `CAREERS_SUBMIT_CLIENT_KEYS` | secret | `careers-submit-client-keys` | `keyId:secret` list for upload tickets and applications |
+| `CONTENT_REVALIDATE_SECRET` | secret | `content-revalidate-secret` | `keyId:secret` the admin signs revalidation calls with |
+| `CONTENT_RENDER_SECRET` | secret | `content-render-secret` | `keyId:secret` the admin signs render (preview) calls with |
+| `CONTENT_PREVIEW_SECRET` | secret | `content-preview-secret` | `keyId:secret` for preview tokens |
+| `CONTENT_IP_SALT` | secret | `content-ip-salt` | Salt for hashing applicant IP addresses |
+| `CONTENT_MEDIA_BUCKET`, `CONTENT_MEDIA_PUBLIC_BASE_URL` | variables | | Public-read image bucket on the `OBJECT_STORAGE_*` endpoint, and its public host |
+| `CAREERS_CV_BUCKET` | variable | | Private CV bucket on the same endpoint. Without it production refuses CV uploads |
+| `CAREERS_CV_MAX_MB` | variable | | Default 10 |
+| `CAREERS_EMAIL_FROM` | variable | | Sender for careers alerts; empty uses `NOTIFY_FROM` |
+| `CAREERS_CANDIDATE_EMAILS_ENABLED` | variable | | `false`. Turning it on needs owner approval |
+| `CONTENT_RELAY_SYNC_ENABLED` | variable | | `false` (Relay is not built) |
+| `CONTENT_READ_RATE_LIMIT`, `CONTENT_OPPORTUNISTIC_TICK` | variables | | Defaults 600 a minute and `true` |
+
+Production refuses to start when a set value is weak (`config/content_validation.py`): every secret in a key list must be at least 32 characters with a key id matching `[a-z0-9-]{1,32}`, every `CONTENT_WEB_TARGETS` entry must be https, and `CONTENT_IP_SALT` (32+ characters) is required once `CAREERS_SUBMIT_CLIENT_KEYS` is set. Each key list is `keyId:secret[,keyId:secret...]`. To rotate with no downtime: add the new entry **after** the old one on the receiving side, deploy both apps, move the new entry **first** on the signing side, deploy, then remove the old entry everywhere. Never print the values; set them with `az containerapp secret set` or through the deploy workflow only.
+
+### Object storage (Cloudflare R2, free tier)
+
+- `CONTENT_MEDIA_BUCKET`: public read through a custom domain or the bucket's public URL, which becomes `CONTENT_MEDIA_PUBLIC_BASE_URL`. Keys are `content/{uuid}.{ext}`.
+- `CAREERS_CV_BUCKET`: **private**, no public access. The browser uploads straight to it with a pre-signed PUT, so it needs this CORS rule (website origins only, PUT only):
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://www.vitalos.co.uk", "https://vitalos.co.uk"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["Content-Type", "Content-Length"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 600
+  }
+]
+```
+
+Add preview origins only for the bucket a preview deployment uses. The access key in `OBJECT_STORAGE_*` needs object read and write on both buckets.
+
+### Content tick job (prepared; do not create without owner approval)
+
+The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention (a dry run until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-042). A per-minute Container Apps job would be:
+
+```sh
+RG=rg-vitalos-superadmin
+IMAGE="$(az containerapp show -n superadmin -g "$RG" --query 'properties.template.containers[0].image' -o tsv)"
+secret() { az containerapp secret show -n superadmin -g "$RG" --secret-name "$1" --query value -o tsv; }
+
+az containerapp job create -n superadmin-content-tick -g "$RG" --environment cae-vitalos-superadmin \
+  --trigger-type Schedule --cron-expression "* * * * *" \
+  --replica-timeout 120 --replica-retry-limit 0 --parallelism 1 --replica-completion-count 1 \
+  --image "$IMAGE" --cpu 0.25 --memory 0.5Gi \
+  --command python --args "manage.py" "content_tick" \
+  --secrets "django-secret-key=$(secret django-secret-key)" "database-url=$(secret database-url)" \
+            "content-revalidate-secret=$(secret content-revalidate-secret)" \
+  --env-vars DJANGO_SETTINGS_MODULE=config.settings.prod DJANGO_SECRET_KEY=secretref:django-secret-key \
+             DATABASE_URL=secretref:database-url CONTENT_REVALIDATE_SECRET=secretref:content-revalidate-secret \
+             CONTENT_WEB_TARGETS="<same as the app>" APP_ENVIRONMENT=production \
+             APP_BASE_URL=https://admin.vitalos.co.uk ALLOWED_HOSTS=admin.vitalos.co.uk \
+             CSRF_TRUSTED_ORIGINS=https://admin.vitalos.co.uk
+```
+
+Add the mail variables (`EMAIL_TRANSPORT`, `RESEND_API_KEY` as a `secretref:`) and the object storage ones if the job should send alerts and run retention. After each image deploy, update the job image.
+
+**Cost note.** Every minute is about 43,200 runs a month. At 0.25 vCPU and 0.5 GiB and roughly 15 seconds a run, that is about 160,000 vCPU-seconds and 320,000 GiB-seconds a month, nearly the whole free grant (180,000 vCPU-seconds and 360,000 GiB-seconds, shared with the app), and it keeps the free-tier database awake around the clock. It would exceed the grant together with the app, so it needs owner approval before it is created.

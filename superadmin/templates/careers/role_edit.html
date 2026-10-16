@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ role.title }} · Careers · Vitalos Super Admin{% endblock %}
+{% block main_width %}max-w-none{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block">Operate</li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li><a href="{% url 'careers:roles' %}" class="muted hover:underline">Careers</a></li>
+  <li class="muted" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">{{ role.title }}</li>
+{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Careers / Role</p>
+  <h1 class="mt-1 truncate text-2xl font-semibold">{{ role.title }}</h1>
+  {% include "careers/_nav.html" %}
+
+  {% if form.errors %}
+    <div class="mt-4 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200" role="alert">
+      <p class="font-medium">The role was not saved.</p>
+      <ul class="mt-1 list-disc pl-5">{% for field, errors in form.errors.items %}{% for error in errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <fieldset class="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]" {% if not can_edit %}disabled{% endif %}>
+    <legend class="sr-only">Edit role</legend>
+    <form method="post" action="{% url 'careers:role' role.pk %}" class="min-w-0 space-y-4" novalidate>
+      {% csrf_token %}{{ form.updated_at }}
+      <section class="card space-y-4 p-5" aria-labelledby="basics-heading">
+        <h2 id="basics-heading" class="font-semibold">Basics</h2>
+        <div><label for="{{ form.title.id_for_label }}" class="field-label">Title</label>{{ form.title }}</div>
+        <div><label for="{{ form.slug.id_for_label }}" class="field-label">Slug</label>{{ form.slug }}<p class="field-help">/careers/{{ role.slug }}{% if role.published_slug and role.published_slug != role.slug %} · the old address /careers/{{ role.published_slug }} will redirect once you publish{% endif %}</p></div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div><label for="{{ form.practice.id_for_label }}" class="field-label">Practice</label>{{ form.practice }}</div>
+          <div><label for="{{ form.level.id_for_label }}" class="field-label">Level</label>{{ form.level }}</div>
+        </div>
+        <label class="flex items-center gap-2 text-sm">{{ form.show_level }} {{ form.show_level.label }}</label>
+        <div><label for="{{ form.summary.id_for_label }}" class="field-label">Summary (220 characters at most)</label>{{ form.summary }}</div>
+      </section>
+
+      <section class="card space-y-4 p-5" aria-labelledby="location-heading">
+        <h2 id="location-heading" class="font-semibold">Location and work model</h2>
+        <div><label for="{{ form.location_text.id_for_label }}" class="field-label">Location</label>{{ form.location_text }}<p class="field-help">Free text, as candidates should read it. There is no default.</p></div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div><label for="{{ form.work_model.id_for_label }}" class="field-label">Work model</label>{{ form.work_model }}</div>
+          <div><label for="{{ form.employment_type.id_for_label }}" class="field-label">Employment type</label>{{ form.employment_type }}</div>
+          <div><label for="{{ form.sponsorship.id_for_label }}" class="field-label">Visa sponsorship</label>{{ form.sponsorship }}</div>
+        </div>
+      </section>
+
+      <section class="card space-y-4 p-5" aria-labelledby="salary-heading">
+        <h2 id="salary-heading" class="font-semibold">Salary</h2>
+        <label class="flex items-center gap-2 text-sm">{{ form.show_salary }} {{ form.show_salary.label }}</label>
+        {% if not role.show_salary %}<p class="field-help" role="note" data-testid="salary-note">Check whether salary information is required for this role.</p>{% endif %}
+        <div class="grid gap-4 sm:grid-cols-4">
+          <div><label for="{{ form.salary_min.id_for_label }}" class="field-label">Minimum</label>{{ form.salary_min }}</div>
+          <div><label for="{{ form.salary_max.id_for_label }}" class="field-label">Maximum</label>{{ form.salary_max }}</div>
+          <div><label for="{{ form.salary_currency.id_for_label }}" class="field-label">Currency</label>{{ form.salary_currency }}</div>
+          <div><label for="{{ form.salary_period.id_for_label }}" class="field-label">Per</label>{{ form.salary_period }}</div>
+        </div>
+      </section>
+
+      <section class="card space-y-4 p-5" aria-labelledby="description-heading">
+        <h2 id="description-heading" class="font-semibold">Description (Markdown)</h2>
+        <p class="field-help">Each section shows only when it is filled in. Use Preview to see it with the website's renderer.</p>
+        {% for field in form %}{% if field.name == "about_md" or field.name == "responsibilities_md" or field.name == "requirements_md" or field.name == "nice_to_have_md" or field.name == "process_md" %}
+          <div><label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>{{ field }}</div>
+        {% endif %}{% endfor %}
+      </section>
+
+      <section class="card space-y-4 p-5" aria-labelledby="apply-heading">
+        <h2 id="apply-heading" class="font-semibold">Application</h2>
+        <div><label for="{{ form.apply_mode.id_for_label }}" class="field-label">Applications</label>{{ form.apply_mode }}</div>
+        <div><label for="{{ form.external_apply_url.id_for_label }}" class="field-label">External application URL (https only)</label>{{ form.external_apply_url }}</div>
+        <div><label for="{{ form.hiring_manager.id_for_label }}" class="field-label">Hiring manager</label>{{ form.hiring_manager }}</div>
+      </section>
+
+      <section class="card space-y-4 p-5" aria-labelledby="dates-heading">
+        <h2 id="dates-heading" class="font-semibold">Dates and homepage</h2>
+        <div><label for="{{ form.closes_at.id_for_label }}" class="field-label">{{ form.closes_at.label }}</label>{{ form.closes_at }}<p class="field-help">The role closes on its own at this time. Leave empty for no closing date.</p></div>
+        <label class="flex items-center gap-2 text-sm">{{ form.show_on_home }} {{ form.show_on_home.label }}</label>
+        <div><label for="{{ form.sort.id_for_label }}" class="field-label">Sort order</label>{{ form.sort }}</div>
+      </section>
+
+      {% if can_edit %}
+        <div class="flex items-center gap-3">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <span class="field-help">Saving changes the working copy only. The website changes when you open the role or publish changes.</span>
+        </div>
+      {% endif %}
+    </form>
+
+    <aside class="min-w-0 space-y-4" aria-label="Role status">
+      <section class="card p-4" aria-labelledby="role-status-heading">
+        <h2 id="role-status-heading" class="mono-label muted">Status &amp; publishing</h2>
+        <p class="mono-label mt-2 {{ status_tone }}" data-testid="role-status">{{ status_label }}</p>
+        <div class="mt-1">{% url 'careers:role_sync' role.pk as sync_url %}{% include "content_sync/_item_status.html" with poll_url=sync_url %}</div>
+        {% if role.has_unpublished_changes %}<p class="mono-label mt-1">Unpublished changes</p>{% endif %}
+        <p class="muted mt-2 text-sm">{{ applications_count }} application{{ applications_count|pluralize }}.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {% if preview_ready %}<a class="btn btn-secondary btn-sm" href="{% url 'careers:role_site_preview' role.pk %}" target="_blank" rel="noopener">{% icon "globe" "h-4 w-4" %} Preview on website<span class="sr-only"> (opens in a new tab)</span></a>{% endif %}
+          {% if live_url %}<a class="btn btn-secondary btn-sm" href="{{ live_url }}" target="_blank" rel="noopener">View on site<span class="sr-only"> (opens in a new tab)</span></a>{% endif %}
+        </div>
+        {% if can_publish %}
+          <div class="mt-4 space-y-2">
+            {% if role.status == "draft" %}
+              <form method="post" action="{% url 'careers:role_action' role.pk 'open' %}">{% csrf_token %}<button type="submit" class="btn btn-primary w-full" {% if problems %}disabled aria-describedby="role-problems"{% endif %} data-testid="open-role">Open</button></form>
+            {% elif role.status == "open" %}
+              <form method="post" action="{% url 'careers:role_action' role.pk 'publish' %}">{% csrf_token %}<button type="submit" class="btn btn-primary w-full" {% if problems or not role.has_unpublished_changes %}disabled{% endif %}>Publish changes</button></form>
+              <form method="post" action="{% url 'careers:role_action' role.pk 'pause' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary w-full">Pause</button></form>
+              <div class="flex justify-end">{% url 'careers:role_action' role.pk 'close' as close_url %}{% include "insights/_confirm.html" with label="Close now" question="Close this role now? Its page will say it has closed, and it stops taking applications." confirm_label="Close role" url=close_url style="btn-secondary" %}</div>
+            {% elif role.status == "paused" or role.status == "closed" %}
+              <form method="post" action="{% url 'careers:role_action' role.pk 'reopen' %}">{% csrf_token %}<button type="submit" class="btn btn-primary w-full" {% if problems %}disabled aria-describedby="role-problems"{% endif %}>Reopen</button></form>
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if problems and role.status != "archived" %}
+          <div id="role-problems" class="mt-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-800" role="note" data-testid="role-problems">
+            <p class="font-medium">Before the role can open:</p>
+            <ul class="mt-1 list-disc space-y-1 pl-5">{% for problem in problems %}<li>{{ problem }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
+        <div class="mt-4 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+          {% if can_edit %}<form method="post" action="{% url 'careers:role_action' role.pk 'duplicate' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Duplicate</button></form>{% endif %}
+          {% if can_publish and role.status != "archived" %}{% url 'careers:role_action' role.pk 'archive' as archive_url %}{% include "insights/_confirm.html" with label="Archive" question="Archive this role? It leaves the website completely." confirm_label="Archive role" url=archive_url %}{% endif %}
+        </div>
+      </section>
+
+      <section class="card p-4" aria-labelledby="role-preview-heading">
+        <h2 id="role-preview-heading" class="mono-label muted">Preview</h2>
+        <p class="field-help">The saved description, rendered by the website's renderer.</p>
+        <button type="button" class="btn btn-secondary btn-sm mt-2" hx-get="{% url 'careers:role_preview_panel' role.pk %}" hx-target="#role-preview" hx-swap="innerHTML">Show preview</button>
+        <div id="role-preview" class="mt-3" aria-live="polite"></div>
+      </section>
+
+      <section class="card p-4" aria-labelledby="role-revisions-heading">
+        <h2 id="role-revisions-heading" class="mono-label muted">Revisions</h2>
+        {% if revisions %}
+          <ul class="mt-2 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+            {% for revision in revisions %}<li class="py-2">{{ revision.published_at|date:"j M Y, H:i" }} <span class="muted text-xs">· {{ revision.published_by.email|default:"System" }}</span></li>{% endfor %}
+          </ul>
+        {% else %}<p class="muted mt-2 text-sm">Not published yet.</p>{% endif %}
+      </section>
+    </aside>
+  </fieldset>
+{% endblock %}

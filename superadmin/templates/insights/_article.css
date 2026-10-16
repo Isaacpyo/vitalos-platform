@@ -1,0 +1,31 @@
+/* Mirrors the website's article typography (brief 5.2): Inter body, Manrope headings, JetBrains Mono
+   code. Flat colour and hairlines only. Shown inside a sandboxed frame with no scripts. */
+:root { color-scheme: light; --ink: #0b1320; --muted: #4a5568; --line: #d7dde6; --action: #2458e6; --midnight: #0b1320; }
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: #fff; color: var(--ink); font: 400 18px/30px Inter, ui-sans-serif, system-ui, sans-serif; }
+.article { max-width: 68ch; margin: 0 auto; padding: 32px 24px 64px; }
+.eyebrow { font: 600 11px/16px "JetBrains Mono", ui-monospace, monospace; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+h1 { font: 800 48px/52px Manrope, Inter, sans-serif; letter-spacing: -0.025em; margin: 0 0 16px; max-width: 22ch; }
+.dek { font-size: 20px; line-height: 30px; color: var(--muted); margin: 0 0 24px; }
+.cover { margin: 0 0 32px; }
+.cover img, .prose img { display: block; max-width: 100%; height: auto; border-radius: 0; }
+figcaption { font-size: 14px; line-height: 21px; color: var(--muted); margin-top: 8px; }
+.prose h2 { font: 700 28px/34px Manrope, Inter, sans-serif; margin: 48px 0 16px; }
+.prose h3 { font: 700 22px/28px Manrope, Inter, sans-serif; margin: 32px 0 12px; }
+.prose h4 { font: 700 18px/26px Manrope, Inter, sans-serif; margin: 24px 0 8px; }
+.prose p, .prose ul, .prose ol { margin: 0 0 24px; }
+.prose a { color: var(--action); text-decoration: underline; text-underline-offset: 2px; }
+.prose blockquote { font: 600 24px/32px Manrope, Inter, sans-serif; border-top: 1px solid var(--line); margin: 32px 0; padding: 24px 0 0; }
+.prose code { font: 400 0.875em/1 "JetBrains Mono", ui-monospace, monospace; background: #f5f7fa; padding: 2px 4px; }
+.prose pre { background: var(--midnight); color: #f5f7fa; font: 400 14px/22px "JetBrains Mono", ui-monospace, monospace; padding: 16px; overflow-x: auto; }
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 15px; line-height: 24px; }
+.prose th, .prose td { border-bottom: 1px solid var(--line); padding: 8px 12px; text-align: left; }
+.prose [role="region"] { overflow-x: auto; margin: 0 0 24px; }
+.prose figure { margin: 32px 0; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+.prose .footnotes, .prose section[data-footnotes] { border-top: 1px solid var(--line); margin-top: 48px; padding-top: 16px; font-size: 14px; line-height: 21px; }
+.prose .callout, .prose [data-callout] { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 16px 0; margin: 24px 0; }
+.sr-only, .prose .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) { body { font-size: 17px; line-height: 28px; } h1 { font-size: 36px; line-height: 40px; } }

@@ -21,6 +21,10 @@ export interface BuildCspInput {
   variant?: "enforced" | "strict";
   /** Emit `upgrade-insecure-requests` (not for plain-http local runs). */
   upgradeInsecureRequests?: boolean;
+  /** Extra origins for `img-src` (e.g. the content media host). Bare http(s) origins only. */
+  imgOrigins?: readonly string[];
+  /** Extra origins for `connect-src` (e.g. the CV upload host). Bare http(s) origins only. */
+  connectOrigins?: readonly string[];
   /**
    * Extra `connect-src` origins: the Relay realtime WebSocket (`wss://<project>.supabase.co`,
    * ADR-038). Bare ws(s)/http(s) origins only.
@@ -49,6 +53,8 @@ export function assertCspOrigin(value: string): string {
   return value;
 }
 
+const unique = (values: readonly string[]): string[] => [...new Set(values)];
+
 export function buildCsp(input: BuildCspInput): string {
   const strict = input.variant === "strict";
 
@@ -57,7 +63,14 @@ export function buildCsp(input: BuildCspInput): string {
   if (input.isDev) scriptSrc.push("'unsafe-eval'");
   if (input.turnstile) scriptSrc.push(TURNSTILE_ORIGIN);
 
-  const connectSrc = ["'self'", ...(input.connect ?? []).map(assertConnectOrigin)];
+  const connectSrc = [
+    "'self'",
+    ...unique([
+      ...(input.connectOrigins ?? []).map(assertCspOrigin),
+      ...(input.connect ?? []).map(assertConnectOrigin),
+    ]),
+  ];
+  const imgSrc = ["'self'", "data:", ...unique((input.imgOrigins ?? []).map(assertCspOrigin))];
 
   const frameAncestors = (input.frameAncestors ?? []).map(assertCspOrigin);
 
@@ -67,7 +80,7 @@ export function buildCsp(input: BuildCspInput): string {
     // styled-components and React style attributes need inline styles; styles carry no script
     // execution risk once script-src is locked down.
     ["style-src", ["'self'", "'unsafe-inline'"]],
-    ["img-src", ["'self'", "data:"]],
+    ["img-src", imgSrc],
     ["font-src", ["'self'"]],
     ["connect-src", connectSrc],
     ["frame-src", input.turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],

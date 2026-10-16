@@ -1,0 +1,24 @@
+{# A simple rendition of the homepage Careers section (brief 6.5) with the roles open now. #}
+<div class="border-t border-slate-200 bg-slate-50 p-5 text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100" data-testid="careers-home-preview">
+  {% if not preview.config.enabled %}
+    <p class="muted text-sm">The section is turned off, so the homepage does not show it.</p>
+  {% elif not preview.roles and preview.config.when_no_roles == "hide" %}
+    <p class="muted text-sm">No roles are open, so the homepage does not show the section.</p>
+  {% else %}
+    <div class="grid gap-4 sm:grid-cols-[2fr_3fr]">
+      <div>
+        <p class="mono-label muted">Careers</p>
+        <p class="mt-1 font-display text-2xl font-extrabold">{{ preview.config.heading }}</p>
+        <p class="muted mt-2 text-sm">{{ preview.config.intro }}</p>
+        <p class="mt-2 text-sm text-cobalt-600 dark:text-cobalt-300">{% if preview.roles %}All open roles{% else %}About careers{% endif %} →</p>
+      </div>
+      <ol class="divide-y divide-slate-200 dark:divide-slate-800">
+        {% for role in preview.roles %}
+          <li class="py-2"><p class="font-display font-bold">{{ role.title }}</p><p class="mono-label muted">{{ role.practice.label }}{% if role.level %} · {{ role.level.label }}{% endif %} · {{ role.workModel.label }} · {{ role.location }} · {{ role.employmentType.label }}</p>{% if role.salary %}<p class="text-sm">{{ role.salary.label }}</p>{% endif %}</li>
+        {% empty %}
+          <li class="py-2 text-sm">{{ preview.empty_state }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
+</div>

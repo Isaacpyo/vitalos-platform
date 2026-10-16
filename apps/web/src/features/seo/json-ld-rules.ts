@@ -39,6 +39,9 @@ const allowedTypes = new Set([
   "JobPosting",
   "Place",
   "PostalAddress",
+  // JobPosting baseSalary, only when the role shows its salary (Careers, ADR-039).
+  "MonetaryAmount",
+  "QuantitativeValue",
 ]);
 const forbiddenTypes = new Set([
   "Review",

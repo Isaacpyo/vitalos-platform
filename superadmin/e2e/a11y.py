@@ -45,6 +45,15 @@ PAGES = [
     "/system/health/",
     "/notifications/",
     "/notifications/attention/",
+    "/insights/posts/",
+    "/insights/authors/",
+    "/insights/topics/",
+    "/insights/settings/",
+    "/careers/roles/",
+    "/careers/applications/",
+    "/careers/settings/",
+    "/content/sync/",
+    "/settings/content/",
 ]
 # Relay (apps/relay). Ids are the fixed sample conversation and team answer in apps/relay/fake.py.
 RELAY_PAGES = [

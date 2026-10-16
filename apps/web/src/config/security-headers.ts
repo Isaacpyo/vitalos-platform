@@ -20,6 +20,8 @@ export interface SecurityHeaderOptions {
  * - The Relay realtime WebSocket origin only when Relay and its realtime key are configured.
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
+ * - The content media host (`CONTENT_MEDIA_HOST`) in `img-src` and the CV upload host
+ *   (`CAREERS_UPLOAD_HOST`) in `connect-src`, only when set (ADR-040, brief section 9).
  * - Production is indexable only on its canonical host (docs/seo/DECISIONS.md 9): a second rule
  *   sends `X-Robots-Tag: noindex, nofollow` for any other host, such as a `*.vercel.app` alias
  *   of the production deployment. It covers every path, static assets included.
@@ -34,6 +36,12 @@ export function getSecurityHeaders(
     isDev,
     turnstile: env.turnstileEnabled,
     upgradeInsecureRequests: env.deployEnv !== "local",
+    imgOrigins: env.contentMediaOrigin ? [env.contentMediaOrigin] : [],
+    // The browser uploads CVs straight to the ticket's host: the upload host, or the admin itself
+    // (the A9 fallback) when no upload host is configured.
+    connectOrigins: [env.careersUploadOrigin ?? env.contentApiOrigin].filter(
+      (origin): origin is string => Boolean(origin),
+    ),
     // Relay realtime pings (ADR-038): only when Relay is on and realtime is configured.
     connect: env.relayRealtimeOrigin ? [env.relayRealtimeOrigin] : [],
   };

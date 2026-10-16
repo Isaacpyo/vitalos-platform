@@ -21,7 +21,6 @@ import {
   Display,
   HeroVisual,
   LabShowcase,
-  ArticleRow,
   MotionPause,
   Lead,
   PracticeShowcase,
@@ -48,11 +47,13 @@ import type { DerivedStage } from "../../lib/view-mapping/stages";
 import {
   caseStudyMeta,
   labAssetPresentation,
-  toArticleRow,
   toProofStripItems,
   toRow,
 } from "../../lib/view-mapping/patterns";
 import { Band, RowList, itemLevel } from "../commercial/bands";
+import type { HomeData } from "../../features/content/schemas";
+import { HomeCareers } from "../careers/HomeCareers";
+import { HomeInsights } from "../insights/HomeInsights";
 
 /**
  * The thirteen homepage sections of Stage 8 section 8, in order. Each is a function of the home
@@ -68,6 +69,8 @@ export interface HomeContext {
   howWeWorkIntro?: string | undefined;
   /** The How We Work stages with their descriptions (`deriveStages`), for the lifecycle ring. */
   howWeWorkStages?: readonly DerivedStage[] | undefined;
+  /** The admin's homepage sections (Insights, Careers); null when unconfigured or unreadable. */
+  content?: HomeData | null | undefined;
 }
 
 type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | null;
@@ -341,29 +344,27 @@ export const labsSection: SectionRender = (context, tone) => {
   );
 };
 
-/** 11. Insights: only when the Insights gate is open; curated by the editors, not a feed. */
+/**
+ * 11. Insights, from the Super Admin's `home` read (brief 5.6, ADR-039): wired into the band the
+ * homepage already had. Absent when the admin returns no section (closed, disabled, nothing
+ * published) and when the read failed (the homepage never fails because of it). It takes the
+ * redesign's alternating band surface, so it never merges with the Labs band above it.
+ */
 export const insightsSection: SectionRender = (context, tone) => {
-  if (!context.gates.open.insights) return null;
-  const title = heading(context, "insights");
-  const rows = context.home.insights.flatMap((insight) => {
-    const row = toArticleRow(insight, { headingLevel: itemLevel(title) });
-    return row ? [row] : [];
-  });
-  if (rows.length === 0) return null;
-  return (
-    <Band
-      tone={tone}
-      heading={title}
-      eyebrow={navLabels.insights}
-      link={{ label: navLabels.insights, href: routes.insights() }}
-    >
-      <RowList>
-        {rows.map((row) => (
-          <ArticleRow key={row.href} {...row} />
-        ))}
-      </RowList>
-    </Band>
-  );
+  const section = context.content?.insights;
+  return section && section.items.length > 0 ? (
+    <HomeInsights section={section} tone={tone} />
+  ) : null;
+};
+
+/**
+ * 11b. Careers, from the admin's `home` read (brief 6.5), directly after Insights, on the next
+ * band surface. Absent when the admin returns no section (closed, disabled, or no roles and set
+ * to hide) and when the read failed.
+ */
+export const careersSection: SectionRender = (context, tone) => {
+  const section = context.content?.careers;
+  return section ? <HomeCareers section={section} tone={tone} /> : null;
 };
 
 /**
@@ -401,4 +402,5 @@ export const homeBands: readonly SectionRender[] = [
   industriesSection,
   labsSection,
   insightsSection,
+  careersSection,
 ];

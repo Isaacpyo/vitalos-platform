@@ -32,6 +32,10 @@ export interface PageMetadataInput {
     | undefined;
   /** Home page: use the title as is, without the `| Vitalos` template. */
   absoluteTitle?: boolean | undefined;
+  /** With `noindex`, still let crawlers follow links (filtered list views). Default false. */
+  follow?: boolean | undefined;
+  /** Path of an RSS feed to advertise with `<link rel="alternate">`. */
+  feed?: string | undefined;
 }
 
 const usableImage = (image: ImageView | undefined): ImageView | undefined =>
@@ -85,7 +89,14 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
   return {
     ...(title ? { title: absolute ? { absolute: title } : title } : {}),
     ...(description ? { description } : {}),
-    ...(url ? { alternates: { canonical: url } } : {}),
+    ...(url || input.feed
+      ? {
+          alternates: {
+            ...(url ? { canonical: url } : {}),
+            ...(input.feed ? { types: { "application/rss+xml": input.feed } } : {}),
+          },
+        }
+      : {}),
     openGraph: {
       type,
       ...(url ? { url } : {}),
@@ -104,7 +115,7 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
       ...(description ? { description } : {}),
       ...(images ? { images: images.map((image) => image.url) } : {}),
     },
-    ...(noindex ? { robots: { index: false, follow: false } } : {}),
+    ...(noindex ? { robots: { index: false, follow: Boolean(input.follow) } } : {}),
   };
 }
 

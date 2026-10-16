@@ -1,6 +1,7 @@
 /**
  * Route manifest for the quality suites (ADR-021). One entry per page TEMPLATE, using the
- * artificial fixture slugs from packages/cms/src/fixtures. `pattern` is the route family as it
+ * artificial fixture slugs from packages/cms/src/fixtures. Insights and Careers pages come from the
+ * Super Admin (ADR-039) and are swept by tests/content against a fake admin. `pattern` is the route family as it
  * appears in sitemap.xml, so a suite can prove that the manifest has not drifted from the site: a
  * new template appears in the sitemap, matches no pattern and fails `sitemap.http.spec.ts` until it
  * is added here (and therefore to the axe, reflow, focus and JavaScript-budget sweeps).
@@ -35,8 +36,6 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "how we work", path: "/how-we-work", pattern: "/how-we-work" },
   { name: "work index", path: "/work", pattern: "/work" },
   { name: "case study", path: "/work/example-case-study", pattern: "/work/:slug" },
-  { name: "insights index", path: "/insights", pattern: "/insights" },
-  { name: "article", path: "/insights/example-insight-1", pattern: "/insights/:slug" },
   { name: "person", path: "/people/example-person", pattern: "/people/:slug" },
   { name: "labs index", path: "/labs", pattern: "/labs" },
   { name: "labs category", path: "/labs/open-source", pattern: "/labs/:slug" },
@@ -49,8 +48,6 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "faq", path: "/faq", pattern: "/faq" },
   { name: "trust overview", path: "/trust", pattern: "/trust" },
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
-  { name: "careers", path: "/careers", pattern: "/careers" },
-  { name: "role", path: "/careers/example-role", pattern: "/careers/:slug" },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug" },
   { name: "contact", path: "/contact", pattern: "/contact" },
   // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026).
@@ -81,13 +78,6 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
     pattern: "/work/:slug",
     inSitemap: false,
   },
-  { name: "insights index", path: "/insights", pattern: "/insights", inSitemap: false },
-  {
-    name: "article",
-    path: "/insights/why-ai-pilots-stall-before-production",
-    pattern: "/insights/:slug",
-    inSitemap: false,
-  },
   { name: "person", path: "/people/alex-morgan", pattern: "/people/:slug", inSitemap: false },
   { name: "labs index", path: "/labs", pattern: "/labs" },
   { name: "labs category", path: "/labs/research", pattern: "/labs/:slug" },
@@ -100,13 +90,6 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "faq", path: "/faq", pattern: "/faq" },
   { name: "trust overview", path: "/trust", pattern: "/trust" },
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
-  { name: "careers", path: "/careers", pattern: "/careers", inSitemap: false },
-  {
-    name: "role",
-    path: "/careers/senior-engineer-technical-lead",
-    pattern: "/careers/:slug",
-    inSitemap: false,
-  },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
   { name: "contact", path: "/contact", pattern: "/contact" },
 ];

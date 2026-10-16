@@ -1,23 +1,34 @@
 import type { Metadata } from "next";
-import { navLabels, routes } from "@vitalos/cms";
-import { requireGateOpen } from "../../../src/features/publication-gates/gates";
-import { InsightsIndex } from "../../../src/templates/insights/InsightsIndex";
-import { loadInsightsIndex } from "../../../src/templates/insights/load";
-import { pageMetadata } from "../../../src/templates/institutional/metadata";
+import { buildIndexView } from "../../../src/features/content/insights/model";
+import { loadIndexPage } from "../../../src/features/content/insights/load";
+import { INSIGHTS_BASE } from "../../../src/features/content/routes";
+import { Breadcrumbs, homeCrumb } from "../../../src/templates/institutional/breadcrumbs";
+import { IndexTemplate } from "../../../src/templates/insights/IndexTemplate";
+import { insightsMetadata } from "../../../src/templates/insights/metadata";
 
+/** `/insights` (brief 5.1), behind `insights_open`. Static, refreshed by tags and the TTL. */
 export async function generateMetadata(): Promise<Metadata> {
-  await requireGateOpen("insights");
-  const { page } = await loadInsightsIndex();
-  return pageMetadata({
-    path: routes.insights(),
-    title: page?.heading ?? navLabels.insights,
-    seo: page?.seo,
-    noindex: page === null,
-  });
+  const { state } = await loadIndexPage(1);
+  return insightsMetadata({ path: INSIGHTS_BASE, title: "", description: state.insights.intro });
 }
 
 export default async function InsightsPage() {
-  // Below the publication gate there is no Insights section: 404, never a "coming soon" page.
-  await requireGateOpen("insights");
-  return <InsightsIndex data={await loadInsightsIndex()} />;
+  const { state, posts } = await loadIndexPage(1);
+  return (
+    <IndexTemplate
+      title={state.insights.heading}
+      intro={state.insights.intro}
+      view={buildIndexView(posts)}
+      before={
+        <Breadcrumbs
+          trail={[homeCrumb, { name: "Insights", path: INSIGHTS_BASE }]}
+          page={{
+            type: "CollectionPage",
+            name: state.insights.heading,
+            description: state.insights.intro,
+          }}
+        />
+      }
+    />
+  );
 }

@@ -1,0 +1,17 @@
+{% extends "settings/_shell.html" %}
+{% block settings_panel %}
+  <section class="card max-w-3xl p-5" aria-labelledby="site-heading">
+    <h2 id="site-heading" class="font-semibold">Insights and Careers on the website</h2>
+    <p class="muted mt-1 text-sm">While a section is closed its pages answer as they do today (not found), and it is left out of the homepage, the sitemap, the feed and the footer. Previews still work. Opening a section in production is an owner decision.</p>
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      {% include "partials/form_fields.html" %}
+      <button type="submit" class="btn btn-primary mt-4">Save</button>
+    </form>
+    <dl class="mt-6 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+      <div class="flex justify-between gap-4 py-2"><dt class="muted">Environment</dt><dd>{{ app_environment }}</dd></div>
+      <div class="flex justify-between gap-4 py-2"><dt class="muted">Website targets</dt><dd class="break-all text-right font-mono text-xs">{% for target in targets %}{{ target }}{% if not forloop.last %}<br>{% endif %}{% empty %}None configured{% endfor %}</dd></div>
+      <div class="flex justify-between gap-4 py-2"><dt class="muted">Last changed</dt><dd>{{ site.updated_at|date:"j M Y, H:i" }}{% if site.updated_by %} by {{ site.updated_by.email }}{% endif %}</dd></div>
+    </dl>
+  </section>
+{% endblock %}

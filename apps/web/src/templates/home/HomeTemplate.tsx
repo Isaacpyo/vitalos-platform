@@ -1,4 +1,5 @@
 import type { HomePageView, PublicationGates } from "@vitalos/cms";
+import type { HomeData } from "../../features/content/schemas";
 import type { DerivedStage } from "../../lib/view-mapping/stages";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { renderBands } from "../commercial/bands";
@@ -11,6 +12,8 @@ export interface HomeTemplateProps {
   howWeWorkIntro?: string | undefined;
   /** The How We Work stages with their descriptions, for the lifecycle ring. */
   howWeWorkStages?: readonly DerivedStage[] | undefined;
+  /** The admin's Insights and Careers sections; null leaves both out. */
+  content?: HomeData | null | undefined;
 }
 
 /**
@@ -23,8 +26,9 @@ export function HomeTemplate({
   gates,
   howWeWorkIntro,
   howWeWorkStages,
+  content,
 }: Readonly<HomeTemplateProps>) {
-  const context = home ? { home, gates, howWeWorkIntro, howWeWorkStages } : null;
+  const context = home ? { home, gates, howWeWorkIntro, howWeWorkStages, content } : null;
   return (
     <PageMain>
       <HeroSection />

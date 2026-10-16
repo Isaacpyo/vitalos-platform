@@ -110,7 +110,8 @@ test.describe("draft content source", () => {
   }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation").first();
-    for (const open of ["Industries", "Labs", "Work", "Insights"]) {
+    // Insights follows the Super Admin's site state (ADR-039): closed here.
+    for (const open of ["Industries", "Labs", "Work"]) {
       await expect(
         nav.getByRole("link", { name: open, exact: true, includeHidden: true }).first(),
       ).toBeAttached();
@@ -120,11 +121,7 @@ test.describe("draft content source", () => {
   for (const path of [
     "/work",
     "/work/connecting-field-and-warehouse-systems",
-    "/insights",
-    "/insights/why-ai-pilots-stall-before-production",
     "/people/alex-morgan",
-    "/careers",
-    "/careers/senior-engineer-technical-lead",
   ]) {
     test(`${path}: placeholder notice, noindex and no structured data`, async ({ page }) => {
       await page.goto(path);
@@ -141,12 +138,6 @@ test.describe("draft content source", () => {
       await page.goto(path);
       await expect(page.locator("[data-placeholder-notice]"), path).toHaveCount(0);
     }
-  });
-
-  test("the placeholder role applies through the careers contact route", async ({ page }) => {
-    await page.goto("/careers/senior-engineer-technical-lead");
-    await expect(page.locator('main a[href="/contact?intent=careers"]')).toHaveCount(1);
-    await expect(page.locator("main")).not.toContainText(/salary|£/i);
   });
 
   test("offers carry no prices", async ({ page }) => {

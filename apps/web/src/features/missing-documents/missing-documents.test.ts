@@ -10,9 +10,7 @@ describe("matchDetailRoute", () => {
       ["/offers/o", "offer", ["o"]],
       ["/industries/i", "industry", ["i"]],
       ["/work/c", "caseStudy", ["c"]],
-      ["/insights/a", "insight", ["a"]],
       ["/people/p", "person", ["p"]],
-      ["/careers/r", "job", ["r"]],
       ["/legal/privacy", "legalPage", ["privacy"]],
       ["/trust/security", "trustItem", ["security"]],
       ["/labs/open-source", "labAsset", ["open-source"]],
@@ -21,6 +19,12 @@ describe("matchDetailRoute", () => {
     for (const [path, kind, values] of cases) {
       expect(matchDetailRoute(path), path).toMatchObject({ kind, values });
     }
+  });
+
+  it("leaves Insights and Careers to the content lookup", () => {
+    expect(matchDetailRoute("/insights/a")).toBeNull();
+    expect(matchDetailRoute("/careers/r")).toBeNull();
+    expect(matchDetailRoute("/constructor/x")).toBeNull();
   });
 
   it("ignores index pages, static pages, API routes, assets and deeper paths", () => {

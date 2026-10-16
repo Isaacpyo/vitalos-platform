@@ -1,0 +1,12 @@
+<div data-testid="role-preview-panel" data-render="{% if available %}ok{% else %}unavailable{% endif %}">
+  {% if not sections %}
+    <p class="muted text-sm">Nothing to preview yet: the description sections are empty.</p>
+  {% elif not available %}
+    <p class="text-sm" role="status" data-testid="preview-unavailable">Preview unavailable. Your changes are saved.</p>
+  {% else %}
+    {% for item in sections %}{% for warning in item.result.warnings %}
+      <p class="text-sm {% if warning.blocking %}font-medium{% else %}muted{% endif %}"><span class="mono-label">{% if warning.blocking %}Blocks opening{% else %}Note{% endif %}</span> · {{ item.label }}: {{ warning.message }}</p>
+    {% endfor %}{% endfor %}
+    <iframe src="{{ frame_url }}" title="Role description preview" sandbox referrerpolicy="no-referrer" loading="lazy" class="mt-2 block h-[60vh] w-full border border-slate-200 bg-white dark:border-slate-800" data-testid="role-preview-frame"></iframe>
+  {% endif %}
+</div>

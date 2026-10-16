@@ -133,9 +133,10 @@ test.describe("focus is not obscured by the sticky header (WCAG 2.4.11)", () => 
   }
 
   // Template names resolved for the content source under test. Under the draft source the
-  // article and case-study templates do not exist (their gates are closed), so they drop out.
+  // case-study template does not exist (its gate is closed), so it drops out. Insights articles are
+  // swept by tests/content against a fake admin.
   const focusPages = [
-    ...templatePaths("home", "practice", "offer", "article", "case study"),
+    ...templatePaths("home", "practice", "offer", "case study"),
     "/trust/procurement",
     ...templatePaths("lab asset", "legal", "contact"),
   ];

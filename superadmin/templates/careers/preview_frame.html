@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Preview: {{ role.title }}</title>
+<style>
+@font-face { font-family: "Inter"; font-weight: 100 900; font-display: swap; src: url("{% static 'fonts/inter.woff2' %}") format("woff2"); }
+@font-face { font-family: "Manrope"; font-weight: 200 800; font-display: swap; src: url("{% static 'fonts/manrope.woff2' %}") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 100 800; font-display: swap; src: url("{% static 'fonts/jetbrains-mono.woff2' %}") format("woff2"); }
+{% include "insights/_article.css" %}
+</style>
+</head>
+<body>
+<main class="article">
+  <p class="eyebrow">Careers / {{ role.get_practice_display|default:"Role" }}</p>
+  <h1>{{ role.title }}</h1>
+  {% if role.summary %}<p class="dek">{{ role.summary }}</p>{% endif %}
+  {% for item in sections %}
+    <section class="prose">
+      <h2>{{ item.label }}</h2>
+      {% if item.result.available %}{{ item.result.html|safe }}{% else %}<p>Preview unavailable. Your changes are saved.</p>{% endif %}
+    </section>
+  {% endfor %}
+</main>
+</body>
+</html>

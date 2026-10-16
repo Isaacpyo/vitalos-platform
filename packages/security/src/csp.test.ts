@@ -78,4 +78,32 @@ describe("buildCsp", () => {
       buildCsp({ ...base, upgradeInsecureRequests: true }).endsWith("; upgrade-insecure-requests"),
     ).toBe(true);
   });
+
+  it("adds image and connect origins when given, and nothing otherwise", () => {
+    const csp = buildCsp({
+      ...base,
+      imgOrigins: ["https://media.example.com"],
+      connectOrigins: ["https://uploads.example.com", "https://uploads.example.com"],
+    });
+    expect(directive(csp, "img-src")).toBe("'self' data: https://media.example.com");
+    expect(directive(csp, "connect-src")).toBe("'self' https://uploads.example.com");
+    // Other directives are untouched: the media host never becomes a script or frame source.
+    expect(directive(csp, "script-src")).toBe("'self' 'unsafe-inline'");
+    expect(directive(csp, "default-src")).toBe("'self'");
+    expect(directive(buildCsp({ ...base, imgOrigins: [] }), "img-src")).toBe("'self' data:");
+  });
+
+  it("rejects injection through image and connect origins", () => {
+    for (const bad of [
+      "https://media.example.com; script-src *",
+      "https://a.com https://b.com",
+      "*",
+      "https://media.example.com/path",
+      "data:",
+      "javascript:alert(1)",
+    ]) {
+      expect(() => buildCsp({ ...base, imgOrigins: [bad] }), bad).toThrow();
+      expect(() => buildCsp({ ...base, connectOrigins: [bad] }), bad).toThrow();
+    }
+  });
 });

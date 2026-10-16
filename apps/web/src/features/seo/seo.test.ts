@@ -13,6 +13,28 @@ const production = { siteUrl: "https://www.example.invalid", indexable: true };
 const preview = { siteUrl: "https://preview.example.invalid", indexable: false };
 
 describe("composeMetadata", () => {
+  it("can keep follow on a noindex page and advertise a feed", () => {
+    const metadata = composeMetadata(
+      {
+        path: "/insights",
+        title: "Guides",
+        noindex: true,
+        follow: true,
+        feed: "/insights/feed.xml",
+      },
+      production,
+    );
+    expect(metadata.robots).toEqual({ index: false, follow: true });
+    expect(metadata.alternates).toEqual({
+      canonical: "https://www.example.invalid/insights",
+      types: { "application/rss+xml": "/insights/feed.xml" },
+    });
+    expect(composeMetadata({ path: "/x", noindex: true }, production).robots).toEqual({
+      index: false,
+      follow: false,
+    });
+  });
+
   it("builds canonical, Open Graph and Twitter metadata from the document SEO", () => {
     const metadata = composeMetadata(
       {

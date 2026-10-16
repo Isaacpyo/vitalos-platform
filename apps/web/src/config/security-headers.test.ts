@@ -9,6 +9,9 @@ const baseEnv: BuildEnv = {
   indexable: true,
   enableHsts: false,
   turnstileEnabled: false,
+  contentMediaOrigin: undefined,
+  careersUploadOrigin: undefined,
+  contentApiOrigin: undefined,
   relayEnabled: false,
   relayRealtimeOrigin: undefined,
   siteVerification: { google: undefined, bing: undefined },
@@ -104,5 +107,21 @@ describe("getSecurityHeaders", () => {
   it("allows unsafe-eval only under next dev", () => {
     expect(headersFor({}, true).get("Content-Security-Policy")).toContain("'unsafe-eval'");
     expect(headersFor({}).get("Content-Security-Policy")).not.toContain("unsafe-eval");
+  });
+
+  it("adds the content media host to img-src and the upload host to connect-src when set", () => {
+    const csp = headersFor({
+      contentMediaOrigin: "https://media.example.invalid",
+      careersUploadOrigin: "https://uploads.example.invalid",
+    }).get("Content-Security-Policy")!;
+    expect(csp).toContain("img-src 'self' data: https://media.example.invalid;");
+    expect(csp).toContain("connect-src 'self' https://uploads.example.invalid;");
+    expect(headersFor({}).get("Content-Security-Policy")).toContain("img-src 'self' data:;");
+    // Without an upload host the admin's own origin is the upload target (A9 fallback).
+    expect(
+      headersFor({ contentApiOrigin: "https://admin.example.invalid" }).get(
+        "Content-Security-Policy",
+      ),
+    ).toContain("connect-src 'self' https://admin.example.invalid;");
   });
 });

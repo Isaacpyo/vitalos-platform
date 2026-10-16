@@ -29,6 +29,7 @@ export type TrustTopic = (typeof trustTopics)[number];
 
 export const legalSlugs = [
   "privacy",
+  "candidate-privacy",
   "cookies",
   "terms",
   "acceptable-use",
