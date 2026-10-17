@@ -64,3 +64,18 @@ Code removed with them: `apps/web/src/lib/view-mapping/{hero-images,practice-ima
 ## Environment notes
 
 - C: filled up during the run; the worktree moved to `D:/Development/vitalos-ws1` (orchestrator instruction). D: is a USB disk shared by every workstream, and a plain install there advanced about one package a minute, so the install uses the default pnpm store on C: with the virtual store at `C:/Users/temit/vitalos-nm-ws1/.pnpm` (hard links into the existing store, so almost no space on C:). Source, build output and screenshots stay on D:.
+
+## Verification (17 Oct 2026)
+
+Run in a C: test checkout of this branch (orchestrator's C-TEST-CHECKOUT.md), source and screenshots on D:.
+
+- Typecheck: `packages/ui`, `apps/web`, `apps/storybook` clean.
+- Lint: `packages/ui`, `apps/web`, `apps/storybook` 0 errors (one pre-existing warning in `components.test.tsx`).
+- Unit tests: `@vitalos/ui` 22 files / 202 tests pass; `@vitalos/web` 71 files / 921 tests pass (1 skipped, pre-existing).
+- `check:raw-colours`, `check:turbo-env`, `content:types:check`, `check:boundaries`: pass. `format:check`: only the four run-level docs under `docs/review-2026-10-17/` (DECISIONS, FINDINGS, PLAN, RUN-PROMPT, not WS1 files) fail.
+- Production build (`next build`, Turbopack) passes with fixtures and with draft content.
+- Not run here: Playwright end-to-end and accessibility suites, Storybook a11y. They need the integration branch's server; the owner of the merge step should run `pnpm test:e2e` and `pnpm test:a11y`.
+
+## Screenshots
+
+`screenshots/` holds first-screen captures at 1440 and 390 of every family on the draft-content build (reduced motion), plus full pages of home, What We Do, How We Work and AI Transformation. `/insights` and `/careers` are 404 because those sections are closed in draft content, so the Insights and Careers families were checked in Storybook (`Patterns/Artwork`) and the template tests only. The contact capture timed out on `networkidle` (Turnstile) but the image is complete.
