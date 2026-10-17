@@ -121,7 +121,26 @@ Lighthouse could not be re-run against the preview, because the preview is behin
 
 ### Checks on the final integration branch
 
-_Filled in below under "Checks (final run)"._
+Run locally on the fully merged branch, 17 Oct.
+
+| Check                                                                                                          | Result                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `corepack pnpm check` (format, raw colours, turbo env, content types, lint, typecheck, unit tests, boundaries) | Pass: 25/25 tasks; web 976 passed, 1 skipped                                                                                                                                                             |
+| Super Admin pytest, ruff, `makemigrations --check`                                                             | 756 passed, 3 skipped; ruff clean; no missing migrations. The 2 `test_security.py` production-settings tests were deselected because they fail only on Windows (`WinError 10106`); CI runs them on Linux |
+| Playwright `test:e2e`, current nav                                                                             | 427 passed                                                                                                                                                                                               |
+| Playwright `test:a11y`, current nav                                                                            | 245 passed                                                                                                                                                                                               |
+| Playwright `test:e2e`, IA nav                                                                                  | 418 passed, 1 failed: a no-JS menu test that assumed the current header. Fixed to cover both variants; 25/25 on rerun in each                                                                            |
+| Playwright `test:a11y`, IA nav                                                                                 | 245 passed                                                                                                                                                                                               |
+| pgTAP (WS6, VM slot 2)                                                                                         | 142 passed                                                                                                                                                                                               |
+| Relay turn eval                                                                                                | 25/25                                                                                                                                                                                                    |
+
+Not run tonight:
+
+- Lighthouse against the preview (behind sign-in).
+- `tests/content` against a live admin; the WS3 and WS4 runs used the fake admin.
+- Storybook a11y and the visual suite. The visual suite is non-gating.
+
+Earlier full runs hit timeouts under machine load. Each passed on rerun on its own.
 
 ## Needs approval
 

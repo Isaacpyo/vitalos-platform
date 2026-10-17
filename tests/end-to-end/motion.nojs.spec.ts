@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { isDraftRun } from "../support/content-source";
+import { isIaRun } from "../support/nav-variant";
 
 /**
  * Runs in the `no-js` project (JavaScript disabled). The motion islands (ADR-024) must never be
@@ -88,8 +89,9 @@ test("the compact menu still opens and closes as a native disclosure", async ({ 
   await expect(nav).toBeHidden();
   await header.locator("summary", { hasText: "Menu" }).click();
   await expect(nav).toBeVisible();
-  // About sits in the Who We Are disclosure, itself a native <details>.
-  await nav.locator("summary", { hasText: "Who We Are" }).first().click();
+  // Current header: About sits in the Who We Are disclosure, itself a native <details>. IA header
+  // (ADR-045): About is a top-level link in the sheet.
+  if (!isIaRun) await nav.locator("summary", { hasText: "Who We Are" }).first().click();
   await expect(nav.getByRole("link", { name: "About", exact: true })).toBeVisible();
   await header.locator("summary", { hasText: "Menu" }).click();
   await expect(nav).toBeHidden();
