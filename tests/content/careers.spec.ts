@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { stubMedia } from "./support/media";
+import { PERSONAL_DATA, recordAnalytics, recordedEvents } from "../support/analytics";
 
 const ADMIN = `http://127.0.0.1:${Number(process.env.CONTENT_E2E_ADMIN_PORT ?? 8799)}`;
 const ROLE = "/careers/example-role-fixture";
@@ -109,6 +110,23 @@ test.describe("Application form", () => {
     await expect(page.getByText("Example hiring process (fixture).")).toBeVisible();
     // Focus moves to the success message.
     await expect(page.locator(":focus")).toContainText("Application received.");
+  });
+
+  test("records application_started and application_sent with the role slug only (C1)", async ({
+    page,
+  }) => {
+    await recordAnalytics(page);
+    await page.goto(ROLE);
+    await fillValid(page);
+    await page.getByRole("button", { name: "Send application" }).click();
+    await expect(page.getByRole("heading", { name: "Application received." })).toBeVisible();
+    const events = await recordedEvents(page);
+    const slug = ROLE.split("/").at(-1)!;
+    expect(events.filter((e) => e.name.startsWith("application_"))).toEqual([
+      { name: "application_started", properties: { roleSlug: slug } },
+      { name: "application_sent", properties: { roleSlug: slug } },
+    ]);
+    expect(JSON.stringify(events)).not.toMatch(PERSONAL_DATA);
   });
 
   test("can be completed with the keyboard alone", async ({ page }) => {
