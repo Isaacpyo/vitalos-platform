@@ -1,0 +1,42 @@
+# WS2 notes (Content and IA)
+
+Branch `review/ws2-content-ia`, worktree `D:/Development/vitalos-ws2` (moved from C: when C: filled; tests ran in a temporary C: checkout `ws2-run`). Copy log: [COPY-CHANGES.md](COPY-CHANGES.md). Decisions: [DECISIONS.md](DECISIONS.md). CTA table: [CTA-AUDIT.md](CTA-AUDIT.md). Investment bands: [../OFFERS-INVESTMENT-DRAFT.md](../OFFERS-INVESTMENT-DRAFT.md). ADR: [ADR-045](../../adr/ADR-045-nav-variants-and-site-flags.md).
+
+## What shipped
+
+| Finding | What | Where |
+|---|---|---|
+| B1 | Six practices: locked heading "Six practices, one firm"; `firmPracticeNames` / `labsPracticeName`; Vitalos Labs as the sixth entry (→ `/labs`, gate-aware) in the homepage, What We Do and About showcases, the mega-menu Practices column and the footer; About body counts; Organization `knowsAbout` gains the Labs topic; docs updated | `packages/cms/src/locked-copy.ts`, `apps/web/src/lib/view-mapping/showcase.ts`, `nav-model.ts`, `pages.ts`, `json-ld.ts` |
+| B2 | `NEXT_PUBLIC_NAV_VARIANT` = `current` \| `ia` (default `ia` on `VERCEL_ENV=preview`, else `current`); IA header, mega-menu, utility links, mobile sheet; active section per variant | `packages/config/src/schema.ts`, `packages/cms/src/navigation.ts`, `nav-model.ts`, `section-for-path.ts`, `active-section.tsx` |
+| B3 | "How we prove it" band (homepage below Practices, About): quality gates, Labs + maturity, Trust Centre, Insights when open; each line the first sentence of its page. No link or copy implying clients, case studies or a Work page was found outside the gated Work section (Work route page, Selected Work band and nav items are all behind the closed `work` gate) | `proof-approach.ts`, `proof-band.tsx`, `proof-load.ts` |
+| B4 | About rebuilt: narrative, six practices as cards + How We Work link, How we prove it, Founder (flag), Company facts (no address), Explore cards with one line each | `templates/about/*`, `packages/cms/src/repo/founder.ts`, media slot `about.founder` |
+| B5 | `PODCAST_ENABLED` (default false): no footer block, `/podcast` 404; already not in the sitemap | `nav-model.ts`, `app/(site)/podcast/page.tsx` |
+| B8 | Trust "What you can ask for"; `/.well-known/security.txt` (RFC 9116) linked from Security; procurement route already pre-fills `?intent=procurement` | `pages.ts`, `trust.ts`, `app/.well-known/security.txt/route.ts`, `features/security-txt/` |
+| B9 | Offer pages: "What happens next" steps (enquiry → the offer's scope → its next phase); "What you receive" already shown from `outputs`; no duration or price (no source). `offerNextSteps` and `engagementSummary` are the data for WS1's engagement-summary hero | `OfferTemplate.tsx` |
+| B10 | FAQ: FAQPage JSON-LD through `webPageNode({ faq })`; stable anchors `{solution}--{question}` that open on arrival; client-side filter (not rendered without JS); per-section Contact (topic-matched) and Ask Relay (when Relay is on) | `faq-groups.ts`, `FaqPage.tsx`, `FaqFilter.tsx`, `breadcrumbs.tsx` |
+| B11 | Contact "What happens next" as numbered steps from existing copy; no response-time promise; no address; intent pre-selection works and every CTA now uses it | `pages.ts` (`contactNextSteps`) |
+| B12 | 404 `<title>` "Page not found \| Vitalos"; main routes list (gate-aware); "Ask Relay where to find it" when Relay is on | `NotFoundContent.tsx`, both `not-found.tsx` |
+| B13 | CTA audit; fixed: content CTAs dropped their intent (all opened a blank form); offer CTAs now open the form on that offer | `hrefs.ts`, CTA-AUDIT.md |
+
+## Env var defaults (exact)
+
+- `NEXT_PUBLIC_NAV_VARIANT`: unset → `ia` when `VERCEL_ENV=preview`, otherwise `current`. Values `current` | `ia`; anything else fails validation.
+- `PODCAST_ENABLED`: unset → `false`. Values `true|false|1|0`.
+- `ABOUT_FOUNDER_ENABLED`: unset → `true` when `VERCEL_ENV=preview`, otherwise `false`.
+
+All three are server-read (`getEnv().site`), in `turbo.json` `globalEnv` and `.env.example`. Static pages bake the header at build time, so a change needs a rebuild (a redeploy on Vercel).
+
+## For the orchestrator / other workstreams
+
+- **WS1 (visual):** the Labs practice illustration key is `labs`: add `[labsPracticeName]: "labs"` to `slugByName` in `apps/web/src/lib/view-mapping/practice-images.ts` and ship `/images/practices/labs-{960,1672}.webp`. Until then the showcase shows the flask icon. New media slot `about.founder` (1:1, 800×800) registered in `media-slots.ts` (WS1 file; `IMAGE-SLOTS.md` regenerated). Offer hero data: `engagementSummary(offer)` and `offerNextSteps(offer)` in `OfferTemplate.tsx`.
+- **WS5 (SEO):** leftovers in its files: `apps/web/src/features/seo/llms-txt.ts:32` still says "Five practices (Consulting, Engineering, AI & Data, Experience and Managed Services)". `Person` on About should read `founderProfile` (`@vitalos/cms/repo`) and only when `getEnv().site.aboutFounderEnabled`. `/podcast` needs no sitemap change (`routeManifest` `sitemap: false`). `/.well-known/security.txt` is new; check the CSP/headers and the crawler policy treat it as a plain file.
+- **WS6 (Relay):** leftovers: `packages/relay-core/src/llm/prompts/system.ts:8,12,47` ("One firm, five practices", "Five solutions" — six since 15 Oct), its snapshot and `llm.test.ts:29,32`; `packages/relay-knowledge/content/company-overview.md:17`, `practices.md:11`, `solutions-offers-sectors.md:13` ("Five solutions"), `src/generated/repo-content.ts`, `src/knowledge.test.ts:23,28`; Master FAQ snapshot entries ABT-01 (line 23), WWD-12 ("How does Vitalos Labs relate to the five practices?", lines 1662, 3086-3089) — those are Notion-owned and need the owner; `docs/relay/DECISIONS.md:22`, `docs/relay/evals/REPORT.md:63` (the eval asserts "never six practices"), `docs/relay/reference/*`; `superadmin/apps/relay/fake.py:379`. Request: a documented way to open the panel from the page (for example a `vitalos:relay-open` event); WS2's `AskRelayButton` presses `button.relay-launcher` today.
+- **WS7 (admin):** `superadmin/apps/email_templates/seed/outreach.json:92` ("working across five practices").
+- **Touched outside scope (minimal):** `apps/web/src/features/seo/json-ld.ts` (one `knowsAbout` topic and a comment), `apps/web/src/content/media-slots.ts` + `docs/design/IMAGE-SLOTS.md` (new slot), `apps/web/src/templates/institutional/breadcrumbs.tsx` (passes `faq` to `webPageNode`), `packages/ui/src/patterns/commercial/rows.tsx` (comment), Playwright specs that assert the current header (skip in IA runs), `tests/support/nav-variant.ts` (new).
+
+## Follow-ups
+
+- The live Insight "Strategy that gets engineered" says "one of five areas" (six solutions since 15 Oct). Approval item: edit in the Super Admin.
+- Offer durations stay the category ("Short engagement"): no source states a duration. Investment bands: no source.
+- `founder.ts` copies the author profile; update it if the profile changes (or later read the profile from the content API).
+- PR #61 also edits `FaqPage.tsx` (sticky group titles). Expect a conflict in the group markup on rebase: keep #61's layout and re-add `id={group.id} data-faq-group` on the section wrapper, `id`/`data-faq-entry` on each `Disclosure`, and the per-section Contact / Ask Relay links. `contact/page.tsx` was deliberately not touched.

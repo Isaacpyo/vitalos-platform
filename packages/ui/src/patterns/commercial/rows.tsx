@@ -3,7 +3,7 @@ import { EditorialRow, type RowBaseProps } from "../_internal/EditorialRow";
 /** Matches PracticeSummary ({ title, summary }) plus the resolved `href`. */
 export type PracticeRowProps = RowBaseProps;
 
-/** One of the five practices as an editorial row: title, proposition, link. */
+/** One of the practices as an editorial row: title, proposition, link. */
 export function PracticeRow(props: PracticeRowProps) {
   return <EditorialRow kind="practice" {...props} />;
 }

@@ -2,7 +2,8 @@ import { brandName, practiceNames } from "@vitalos/cms";
 import type { PracticeShowcaseImage } from "@vitalos/ui";
 
 /**
- * Illustrations for the five practices on the homepage (owner-supplied, 15 Oct 2026;
+ * Illustrations for the practices on the homepage (the five practice pages; Vitalos Labs, the
+ * sixth, gets `labs` once its artwork exists: WS1, ADR-045) (owner-supplied, 15 Oct 2026;
  * docs/brand/asset-approval.md). Chosen here by the LOCKED practice names, like the icons, so
  * content carries no presentation; a practice without one (a new document, a fixture) gets none.
  * Served from apps/web/public as pre-sized WebP.
