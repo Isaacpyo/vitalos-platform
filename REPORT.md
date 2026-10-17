@@ -1,3 +1,25 @@
+# Report: product page template (17 Oct 2026)
+
+Branch `feat/products-template`. The owner asked for the Fauward page (vitalos.co.uk/products/fauward) to be the template for product pages, saved for future products.
+
+- **SOB Autofix now follows the Fauward page:**
+  - the hero with "Vitalos builds and operates SOB Autofix, …"
+  - the booking snapshot
+  - "What it does": six icon cards
+  - "How it works": the booking flow's seven steps, grouped into four, on the dark band
+  - "Built for": four tiles
+  - the closing card
+
+  Every item maps to the existing evidence (`docs/content/DISCOVERY-sob-autofix.md`, "The page in the product template"). Dropped from the page: At a glance, The problem, Engineering decisions, Outcome, and the homepage and quote captures with their slots and files.
+
+- **The template is saved and enforced:**
+  - `docs/content/PRODUCT-PAGE-TEMPLATE.md`: the bands, writing rules and a seven-step checklist for adding a product.
+  - Registry and template tests hold every product to the shape: three bands in order, item counts, four-word titles, ten-word lines, an icon for every card and tile, no figures, at most 180 words.
+  - `pnpm media:product-snapshot` captures and encodes a product's snapshot. It reproduced the SOB Autofix snapshot exactly.
+- **Simplified:** the unused `facts` and `screens` fields, their labels and the two extra image slots are gone; `sector` and `sections` are now required.
+
+---
+
 # Report: SOB Autofix under Products (17 Oct 2026)
 
 Branch `feat/products-sob-autofix`, based on `main` after #74 (Products and Fauward). Discovery: [docs/content/DISCOVERY-sob-autofix.md](docs/content/DISCOVERY-sob-autofix.md). Every claim on the page maps to a line in that note: a file and line in the SOB Autofix repository, or a quotation from the live site.

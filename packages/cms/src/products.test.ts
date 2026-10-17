@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { productBySlug, productPath, products } from "./products";
 import { isValidSlug } from "./routes";
 
+const words = (value: string) => value.trim().split(/\s+/).length;
+
 describe("products", () => {
   it("each product has a valid slug, an https site and a description that names it once", () => {
     for (const product of products) {
@@ -28,6 +30,56 @@ describe("products", () => {
   });
 });
 
+/**
+ * The product page template (docs/content/PRODUCT-PAGE-TEMPLATE.md), after the Fauward page:
+ * every product, including the next one, has the same three bands in the same layouts.
+ */
+describe("product page template", () => {
+  const shape = [
+    { heading: "What it does", layout: "cards", min: 3, max: 6 },
+    { heading: "How it works", layout: "steps", min: 3, max: 5 },
+    { heading: "Built for", layout: "tiles", min: 2, max: 4 },
+  ] as const;
+
+  it.each(products.map((product) => [product.name, product] as const))(
+    "%s has What it does (cards), How it works (steps) and Built for (tiles)",
+    (_name, product) => {
+      expect(product.sector.trim()).not.toBe("");
+      expect(product.navDescription).toBe("Built and operated by Vitalos");
+      expect(product.description).toMatch(
+        new RegExp(`^Vitalos builds and operates ${product.name}, `),
+      );
+      expect(product.sections.map((section) => [section.heading, section.layout])).toEqual(
+        shape.map((band) => [band.heading, band.layout]),
+      );
+      product.sections.forEach((section, index) => {
+        const band = shape[index]!;
+        const points = section.points ?? [];
+        expect(points.length, section.heading).toBeGreaterThanOrEqual(band.min);
+        expect(points.length, section.heading).toBeLessThanOrEqual(band.max);
+        for (const point of points) {
+          expect(words(point.title), point.title).toBeLessThanOrEqual(4);
+          expect(words(point.text), point.text).toBeLessThanOrEqual(10);
+        }
+        // Cards and tiles carry an icon, chosen by key (ProductsTemplates.tsx `pointIcons`).
+        if (band.layout !== "steps") {
+          const keys = points.map((point) => point.key);
+          expect(keys.every(Boolean), section.heading).toBe(true);
+          expect(new Set(keys).size, section.heading).toBe(keys.length);
+        }
+      });
+    },
+  );
+
+  it("repeats no prices, percentages or speed figures", () => {
+    for (const product of products) {
+      expect(JSON.stringify(product.sections), product.name).not.toMatch(
+        /£|\$|€|\d+\s?%|\d+\s?(min|ms|seconds?)\b|uplift/i,
+      );
+    }
+  });
+});
+
 describe("SOB Autofix", () => {
   const sob = productBySlug("sob-autofix")!;
 
@@ -35,64 +87,17 @@ describe("SOB Autofix", () => {
     expect(productPath(sob)).toBe("/products/sob-autofix");
     expect(sob.navLabel).toBe("SOB Autofix — workshop platform");
     expect(sob.url).toBe("https://sobautofix.com");
-    expect(sob.applicationCategory).toBe("BusinessApplication");
+    expect(sob.sector).toBe("Automotive services");
   });
 
   it("states only the verified claims (docs/content/DISCOVERY-sob-autofix.md)", () => {
     const text = JSON.stringify(sob);
-    // The seven steps, as the booking wizard names them.
-    expect(text).toContain("vehicle, service, problem, location, details, appointment and review");
+    // The booking wizard's seven steps, grouped into four on the page.
+    expect(text).toContain("Seven steps");
     // Claims the evidence does not support stay out: no mobile eligibility check, no email in
-    // Manage Booking, one area page, no outcome figures.
+    // Manage Booking, one area page.
     expect(text).not.toMatch(/eligib|postcode|radius/i);
-    expect(text).not.toMatch(/reference, registration and email/i);
+    expect(text).not.toMatch(/email/i);
     expect(text).not.toMatch(/area pages/i);
-    expect(text).not.toMatch(/\d+\s?%|uplift|increase/i);
-  });
-
-  it("has its facts and sections in the brief's order", () => {
-    expect(sob.facts?.map((fact) => fact.label)).toEqual([
-      "Live at",
-      "Sector",
-      "Scope",
-      "Stack",
-      "Live since",
-    ]);
-    expect(sob.sections?.map((section) => section.heading)).toEqual([
-      "The problem",
-      "What it does",
-      "Engineering decisions",
-      "Outcome",
-    ]);
-  });
-});
-
-describe("section layouts", () => {
-  const words = (value: string) => value.trim().split(/\s+/).length;
-
-  it("keeps cards, steps and tiles short: titles of four words or fewer, lines of ten", () => {
-    for (const product of products) {
-      for (const section of product.sections ?? []) {
-        if ((section.layout ?? "points") === "points") continue;
-        for (const point of section.points ?? []) {
-          expect(words(point.title), point.title).toBeLessThanOrEqual(4);
-          expect(words(point.text), point.text).toBeLessThanOrEqual(10);
-        }
-        const keys = (section.points ?? []).flatMap((point) => (point.key ? [point.key] : []));
-        expect(new Set(keys).size, section.heading).toBe(keys.length);
-      }
-    }
-  });
-
-  it("gives Fauward what it does, how it works and who it is for, without figures", () => {
-    const fauward = productBySlug("fauward")!;
-    expect(fauward.sector).toBe("Logistics");
-    expect(fauward.sections?.map((section) => [section.heading, section.layout])).toEqual([
-      ["What it does", "cards"],
-      ["How it works", "steps"],
-      ["Built for", "tiles"],
-    ]);
-    // fauward.com publishes prices and uptime figures; this page repeats none of them.
-    expect(JSON.stringify(fauward.sections)).not.toMatch(/£|\d+\s?%|\d+\s?min/);
   });
 });
