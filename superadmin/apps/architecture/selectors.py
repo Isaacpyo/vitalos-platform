@@ -9,6 +9,7 @@ from django.db.models import Count, Q
 
 from apps.accounts.roles import accessible_service_line_ids, has_any_role, is_superadmin
 from apps.core.models import Classification
+from apps.core.synthetic import exclude_synthetic, not_synthetic_project_q
 
 from .models import KPI, Company, Decision, KPIValue, Project, ServiceLine
 
@@ -41,7 +42,7 @@ def visibility_q(user, service_line_path: str | None, prefix: str = "") -> Q:
 def visible(queryset, user):
     model = queryset.model
     path = getattr(model, "service_line_path", None)
-    queryset = queryset.filter(visibility_q(user, path))
+    queryset = exclude_synthetic(queryset.filter(visibility_q(user, path)))
     if path == "service_lines":
         queryset = queryset.distinct()
     return queryset
@@ -78,7 +79,8 @@ def service_lines_for_home(user):
         .annotate(
             active_projects=Count(
                 "projects",
-                filter=Q(projects__status=Project.Status.ACTIVE, projects__is_archived=False),
+                filter=Q(projects__status=Project.Status.ACTIVE, projects__is_archived=False)
+                & not_synthetic_project_q("projects__"),
                 distinct=True,
             )
         )

@@ -4,7 +4,14 @@ from collections.abc import Iterable
 
 from django.utils import timezone
 
+from apps.core.synthetic import exclude_synthetic_text
+
 from .models import Notification
+
+
+def visible_notifications(user):
+    """A user's notifications without those about smoke-test records."""
+    return exclude_synthetic_text(Notification.objects.filter(recipient=user), "title", "body")
 
 
 def notify(recipients: Iterable, kind: str, title: str, body: str = "", url: str = "", exclude=None) -> int:
@@ -25,7 +32,7 @@ def notify(recipients: Iterable, kind: str, title: str, body: str = "", url: str
 def unread_count(user) -> int:
     if not user.is_authenticated:
         return 0
-    return Notification.objects.filter(recipient=user, read_at__isnull=True).count()
+    return visible_notifications(user).filter(read_at__isnull=True).count()
 
 
 def mark_read(user, notification_id: int) -> Notification | None:

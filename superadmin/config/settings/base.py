@@ -61,6 +61,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.core.synthetic.SyntheticVisibilityMiddleware",
     "django_otp.middleware.OTPMiddleware",
     "apps.accounts.middleware.OTPEnforcementMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
