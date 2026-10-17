@@ -34,7 +34,11 @@ describe("resolveContentLastModified (sitemap lastmod, C7)", () => {
 
   it("leaves the date out in a full clone that never touched the copy, or without git", () => {
     expect(resolveContentLastModified(fakeGit({ log: "", "rev-parse": "false" }))).toBeUndefined();
-    expect(resolveContentLastModified(fakeGit({ log: new Error("git: not found") }))).toBeUndefined();
-    expect(resolveContentLastModified(fakeGit({ log: "not a date" , "rev-parse": "false"}))).toBeUndefined();
+    expect(
+      resolveContentLastModified(fakeGit({ log: new Error("git: not found") })),
+    ).toBeUndefined();
+    expect(
+      resolveContentLastModified(fakeGit({ log: "not a date", "rev-parse": "false" })),
+    ).toBeUndefined();
   });
 });

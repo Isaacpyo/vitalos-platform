@@ -30,7 +30,10 @@ export function LabsIndex({ data }: Readonly<{ data: LabsIndexData }>) {
               type: "CollectionPage",
               name: page?.heading,
               description: page?.intro,
-              items: assets.map((a) => ({ name: a.title, path: routes.labAsset(a.labType, a.slug) })),
+              items: assets.map((a) => ({
+                name: a.title,
+                path: routes.labAsset(a.labType, a.slug),
+              })),
             }}
           />
         }

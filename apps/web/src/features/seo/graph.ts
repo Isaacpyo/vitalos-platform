@@ -21,11 +21,7 @@ import { seoSite } from "./site";
  */
 
 export type WebPageType =
-  | "WebPage"
-  | "CollectionPage"
-  | "AboutPage"
-  | "ContactPage"
-  | "ProfilePage";
+  "WebPage" | "CollectionPage" | "AboutPage" | "ContactPage" | "ProfilePage";
 
 const pageUrl = (ctx: JsonLdContext, path: string) => absoluteUrl(ctx.siteUrl, path);
 export const webPageId = (ctx: JsonLdContext, path: string) => `${pageUrl(ctx, path)}#webpage`;

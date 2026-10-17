@@ -228,7 +228,6 @@ describe("index and profile nodes (C11)", () => {
         { "@type": "ListItem", position: 1, name: "X", url: "https://elsewhere.invalid/x" },
       ],
     };
-    expect(validateJsonLd([bad], { origin }).join("
-")).toContain("is not on");
+    expect(validateJsonLd([bad], { origin }).join("\n")).toContain("is not on");
   });
 });

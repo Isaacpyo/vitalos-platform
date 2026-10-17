@@ -143,7 +143,11 @@ test.describe("no Content-Security-Policy violations (C4, ADR-047)", () => {
       const violations: string[] = [];
       page.on("console", (message) => {
         const text = message.text();
-        if (/Content Security Policy|Content-Security-Policy|Refused to (load|execute|frame|connect|apply)/i.test(text)) {
+        if (
+          /Content Security Policy|Content-Security-Policy|Refused to (load|execute|frame|connect|apply)/i.test(
+            text,
+          )
+        ) {
           violations.push(text.slice(0, 300));
         }
       });

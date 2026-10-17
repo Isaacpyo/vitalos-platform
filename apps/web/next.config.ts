@@ -28,9 +28,7 @@ const config: NextConfig = {
   env: {
     NEXT_PUBLIC_SITE_URL: buildEnv.siteUrl,
     VITALOS_CONTENT_LASTMOD:
-      process.env.VITALOS_CONTENT_LASTMOD ??
-      resolveContentLastModified(gitIn(process.cwd())) ??
-      "",
+      process.env.VITALOS_CONTENT_LASTMOD ?? resolveContentLastModified(gitIn(process.cwd())) ?? "",
   },
   // The enquiry form is the only Server Action. Its largest legitimate body is a 5000 character
   // goal (up to ~20 KB as UTF-8) plus short fields, so cap action bodies well below the 1 MB

@@ -26,7 +26,10 @@ export async function recordAnalytics(page: Page): Promise<void> {
       "click",
       (event) => {
         const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
-        if (link && new URL(link.getAttribute("href") ?? "", location.href).origin !== location.origin) {
+        if (
+          link &&
+          new URL(link.getAttribute("href") ?? "", location.href).origin !== location.origin
+        ) {
           event.preventDefault();
         }
       },

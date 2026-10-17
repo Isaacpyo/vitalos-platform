@@ -92,7 +92,11 @@ export function Wordmark({
     <span className="text-body-l font-semibold tracking-widest text-tone-heading">{text}</span>
   );
   const body = href ? (
-    <a href={href} aria-label={linkLabel} className="inline-flex min-h-11 items-center no-underline">
+    <a
+      href={href}
+      aria-label={linkLabel}
+      className="inline-flex min-h-11 items-center no-underline"
+    >
       {mark}
     </a>
   ) : (

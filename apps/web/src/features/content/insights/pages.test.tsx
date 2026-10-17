@@ -130,7 +130,9 @@ describe("Insights pages when open", () => {
   it("titles and describes the index, with the feed advertised", async () => {
     const metadata = await (await pages.index()).generateMetadata();
     expect(metadata.title).toEqual({ absolute: "Vitalos Insights" });
-    expect(metadata.alternates?.types).toEqual({ "application/rss+xml": "/insights/feed.xml" });
+    expect(metadata.alternates?.types).toEqual({
+      "application/rss+xml": [{ url: "/insights/feed.xml", title: "Vitalos Insights" }],
+    });
   });
 
   it("renders an article with its body, sources, editorial note, author and JSON-LD", async () => {

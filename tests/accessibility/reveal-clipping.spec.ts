@@ -26,8 +26,15 @@ async function clippedHeadings(page: Page): Promise<string[]> {
         const style = getComputedStyle(el);
         if (style.overflowX === "visible" && style.overflowY === "visible") continue;
         const box = el.getBoundingClientRect();
-        if (rect.top < box.top - 1 || rect.bottom > box.bottom + 1 || rect.left < box.left - 1 || rect.right > box.right + 1) {
-          problems.push(`"${name}" is cut by ${el.tagName.toLowerCase()}.${String(el.className).split(" ")[0]}`);
+        if (
+          rect.top < box.top - 1 ||
+          rect.bottom > box.bottom + 1 ||
+          rect.left < box.left - 1 ||
+          rect.right > box.right + 1
+        ) {
+          problems.push(
+            `"${name}" is cut by ${el.tagName.toLowerCase()}.${String(el.className).split(" ")[0]}`,
+          );
           break;
         }
       }

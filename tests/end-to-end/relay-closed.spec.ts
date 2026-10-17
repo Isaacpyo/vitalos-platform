@@ -20,7 +20,8 @@ test("C2 (fixed by WS6): a closed Relay has no panel, article or log in the DOM"
   const report = await page.evaluate(() => {
     const root = document.querySelector(".relay-root");
     const panel = document.getElementById("relay-panel");
-    const exposed = panel !== null && !panel.closest("[inert]") && panel.getAttribute("aria-hidden") !== "true";
+    const exposed =
+      panel !== null && !panel.closest("[inert]") && panel.getAttribute("aria-hidden") !== "true";
     return {
       articles: root?.querySelectorAll("article").length ?? 0,
       logs: root?.querySelectorAll('[role="log"]').length ?? 0,

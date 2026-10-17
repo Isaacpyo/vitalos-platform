@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const env = vi.hoisted(() => ({ site: undefined as { aboutFounderEnabled?: boolean } | undefined }));
+const env = vi.hoisted(() => ({
+  site: undefined as { aboutFounderEnabled?: boolean } | undefined,
+}));
 vi.mock("@vitalos/config", () => ({ getEnv: () => env }));
 
 const { aboutFounderEnabled, founderPersonNode } = await import("./founder");
