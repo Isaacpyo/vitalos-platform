@@ -76,7 +76,8 @@ test.describe("about and the removed leadership page", () => {
       "href",
       "/labs",
     );
-    await expect(main.getByRole("heading", { name: "How we prove it" })).toBeVisible();
+    // "How we prove it" quotes the repo pages' own text, which the fixtures do not carry; the
+    // unit tests (content-ia.test.ts) cover it against the repo content.
     await expect(main.getByRole("heading", { name: "Company facts" })).toBeVisible();
     await expect(main.getByText(/High Street|DN5/)).toHaveCount(0);
     // Careers follows the Super Admin's `careers_open` (ADR-039): closed with no content API.

@@ -10,13 +10,10 @@ import { ClosingBand } from "../../templates/commercial/bands";
 import { AskRelayButton } from "../ask-relay";
 import { loadChromeContent } from "./load";
 
-/** The 404's `<title>` (finding B12): "Page not found | Vitalos"; Next.js adds `noindex`. */
+/** The 404's `<title>` (finding B12): "Page not found | Vitalos". Next.js adds `noindex` itself. */
 export const notFoundTitle = `Page not found | ${brandName}`;
 
-export const notFoundMetadata: Metadata = {
-  title: { absolute: notFoundTitle },
-  robots: { index: false, follow: true },
-};
+export const notFoundMetadata: Metadata = { title: { absolute: notFoundTitle } };
 
 /** Structural labels of the 404 (no marketing copy). */
 export const notFoundLabels = {

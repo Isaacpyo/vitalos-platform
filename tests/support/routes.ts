@@ -50,8 +50,11 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug" },
   { name: "contact", path: "/contact", pattern: "/contact" },
-  // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026).
-  { name: "podcast", path: "/podcast", pattern: "/podcast", inSitemap: false },
+  // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026), and
+  // only while PODCAST_ENABLED is on (owner decision 3, ADR-045): otherwise it is a 404.
+  ...(process.env.PODCAST_ENABLED === "true"
+    ? [{ name: "podcast", path: "/podcast", pattern: "/podcast", inSitemap: false }]
+    : []),
 ];
 
 /**
