@@ -41,7 +41,7 @@ Production run: `superadmin-release` job execution `superadmin-release-b3m2xk0` 
 
 | eu-ai-act-digital-omnibus-uk-businesses | The EU AI Act after the Digital Omnibus: what UK businesses must do and by when | 2026-08-04 | create and publish | published | 16 | 0adb73c2-f6a9-4c69-a0c5-01ce83852f8c | EU AI Act |
 
-| nhs-federated-data-platform-business-case-lessons | �1.1bn in, �808m out: what the NHS Federated Data Platform teaches about data platform business cases | 2026-08-26 | create and publish | published | 17 | bf77877c-8780-42b0-9890-3c2a784eedba | NHS Federated Data Platform |
+| nhs-federated-data-platform-business-case-lessons | £1.1bn in, £808m out: what the NHS Federated Data Platform teaches about data platform business cases | 2026-08-26 | create and publish | published | 17 | bf77877c-8780-42b0-9890-3c2a784eedba | NHS Federated Data Platform |
 
 | disposable-software-short-lived-applications | Disposable software: when an application should only live for a year | 2026-09-22 | create and publish | published | 18 | d6269c5e-56f0-413a-997c-ca0fb8d9c4a9 | disposable software |
 
