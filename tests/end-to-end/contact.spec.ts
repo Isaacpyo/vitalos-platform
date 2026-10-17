@@ -210,6 +210,9 @@ test.describe("enquiry form", () => {
     // No response-time promise.
     const text = (await receipt.innerText()).toLowerCase();
     expect(text).not.toMatch(/within|hours|days|shortly|\bsoon\b/);
+    // The server action's redirect is a client navigation: the receipt's <title> streams in just
+    // after the URL changes, so wait for it before axe checks the document title.
+    await expect(page).toHaveTitle(/Your enquiry has been received/);
     await expectNoA11yViolations(page);
   });
 

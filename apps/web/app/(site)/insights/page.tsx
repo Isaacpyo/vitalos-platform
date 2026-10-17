@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { buildIndexView } from "../../../src/features/content/insights/model";
+import { buildIndexView, postHref } from "../../../src/features/content/insights/model";
 import { loadIndexPage } from "../../../src/features/content/insights/load";
 import { INSIGHTS_BASE } from "../../../src/features/content/routes";
 import { Breadcrumbs, homeCrumb } from "../../../src/templates/institutional/breadcrumbs";
@@ -14,11 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function InsightsPage() {
   const { state, posts } = await loadIndexPage(1);
+  const view = buildIndexView(posts);
+  // The posts on the page, featured first, as the CollectionPage's ItemList (C11).
+  const listed = [...(view.featured ? [view.featured] : []), ...view.items];
   return (
     <IndexTemplate
       title={state.insights.heading}
       intro={state.insights.intro}
-      view={buildIndexView(posts)}
+      view={view}
       before={
         <Breadcrumbs
           trail={[homeCrumb, { name: "Insights", path: INSIGHTS_BASE }]}
@@ -26,6 +29,7 @@ export default async function InsightsPage() {
             type: "CollectionPage",
             name: state.insights.heading,
             description: state.insights.intro,
+            items: listed.map((post) => ({ name: post.title, path: postHref(post.slug) })),
           }}
         />
       }

@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import { FeedResponse, PostDetail, PostPage } from "../schemas";
 import type { PostPageData } from "../schemas";
 import {
+  articleCta,
   articleDatesLine,
   articleJsonLd,
   buildIndexView,
   buildRss,
+  contactIntentFor,
   editorialNoteFor,
   formatTabs,
   gridHasCovers,
@@ -77,6 +79,21 @@ describe("index view", () => {
     expect(gridHasCovers([withId("0001", true), withId("0002", true)])).toBe(true);
     expect(gridHasCovers([withId("0001", true), withId("0002", false)])).toBe(false);
     expect(gridHasCovers([])).toBe(false);
+  });
+
+  it("shows the filters and the feed link only with more than one post", () => {
+    const many = buildIndexView(page);
+    expect(many.filters).toBe(true);
+    expect(many.feed).toBe("/insights/feed.xml");
+    const single: PostPageData = { ...page, items: [], total: 1, totalPages: 1 };
+    const one = buildIndexView(single);
+    expect(one.featured?.id).toBe(page.featured?.id);
+    expect(one.items).toHaveLength(0);
+    expect(one.filters).toBe(false);
+    expect(one.feed).toBeNull();
+    expect(one.empty).toBe(false);
+    // A format view keeps its tabs (the way back to All), whatever its own count.
+    expect(buildIndexView(single, { format: "guide" }).filters).toBe(true);
   });
 
   it("states the empty state only when nothing is published", () => {
@@ -271,5 +288,31 @@ describe("RSS", () => {
     const many = { items: Array.from({ length: 25 }, () => feed.items[0]!) };
     const xml = buildRss(many, { siteUrl: "https://www.example.test", description: "" });
     expect(xml.match(/<item>/g)).toHaveLength(20);
+  });
+});
+
+describe("article closing action", () => {
+  it("pre-selects the contact intent that matches the post's practice", () => {
+    expect(contactIntentFor({ key: "engineering", label: "Engineering" })).toBe("engineering");
+    expect(contactIntentFor({ key: "ai_data", label: "AI & Data" })).toBe("ai");
+    expect(contactIntentFor({ key: "managed_services", label: "Managed Services" })).toBe(
+      "managed-services",
+    );
+    expect(contactIntentFor({ key: "consulting", label: "Consulting" })).toBe("project");
+    expect(contactIntentFor(null)).toBe("project");
+  });
+
+  it("sends a plain /contact action to the matching intent and keeps any other link", () => {
+    expect(articleCta(detail)).toEqual({
+      label: "Talk to Vitalos",
+      href: "/contact?intent=engineering",
+    });
+    expect(articleCta({ ...detail, cta: { label: "", href: "" }, practice: null })).toEqual({
+      label: "Talk to Vitalos",
+      href: "/contact?intent=project",
+    });
+    expect(
+      articleCta({ ...detail, cta: { label: "See the offer", href: "/offers/example" } }),
+    ).toEqual({ label: "See the offer", href: "/offers/example" });
   });
 });

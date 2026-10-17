@@ -75,7 +75,8 @@ export const brandLogo = { src: "/brand/vitalos-symbol-512.png", width: 512, hei
 
 /**
  * What Vitalos knows about: its pillars (docs/seo/STRATEGY.md §4), named plainly. They summarise
- * the five practices; they are topics, not claims of expertise beyond the site's own copy.
+ * the six practices (Labs the sixth, ADR-045); they are topics, not claims of expertise beyond the
+ * site's own copy.
  */
 export const organizationKnowsAbout = [
   "Technology consulting",
@@ -86,6 +87,8 @@ export const organizationKnowsAbout = [
   "Data and analytics",
   "Product, service and UX design",
   "Managed application services",
+  // Vitalos Labs, the sixth practice: "focused experiments and prototypes" (published Insight).
+  "Technology research and prototyping",
 ] as const;
 
 export function organizationJsonLd(settings: SiteSettingsView, ctx: JsonLdContext): JsonLdNode {

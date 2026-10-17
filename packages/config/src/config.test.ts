@@ -810,3 +810,45 @@ describe("Vitalos Relay", () => {
     expect(JSON.stringify(result)).not.toContain("short-secret-value");
   });
 });
+
+describe("site presentation flags (ADR-045)", () => {
+  it("keeps production and local on the current navigation, no podcast and no Founder section", () => {
+    for (const source of [{}, { VERCEL_ENV: "production", ...explicitProductionChoices }]) {
+      expect(parseEnv(source).site).toEqual({
+        navVariant: "current",
+        podcastEnabled: false,
+        aboutFounderEnabled: false,
+      });
+    }
+  });
+
+  it("shows the IA navigation and the Founder section on Vercel previews when unset", () => {
+    const env = parseEnv({ VERCEL_ENV: "preview", ...explicitProductionChoices });
+    expect(env.site).toEqual({
+      navVariant: "ia",
+      podcastEnabled: false,
+      aboutFounderEnabled: true,
+    });
+  });
+
+  it("lets each variable override its default", () => {
+    const env = parseEnv({
+      VERCEL_ENV: "preview",
+      ...explicitProductionChoices,
+      NEXT_PUBLIC_NAV_VARIANT: "current",
+      PODCAST_ENABLED: "true",
+      ABOUT_FOUNDER_ENABLED: "false",
+    });
+    expect(env.site).toEqual({
+      navVariant: "current",
+      podcastEnabled: true,
+      aboutFounderEnabled: false,
+    });
+    expect(parseEnv({ NEXT_PUBLIC_NAV_VARIANT: "ia" }).site.navVariant).toBe("ia");
+  });
+
+  it("rejects an unknown navigation variant", () => {
+    expect(issuePaths({ NEXT_PUBLIC_NAV_VARIANT: "mega" })).toContain("NEXT_PUBLIC_NAV_VARIANT");
+    expect(issuePaths({ PODCAST_ENABLED: "yes" })).toContain("PODCAST_ENABLED");
+  });
+});

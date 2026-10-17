@@ -14,6 +14,7 @@ describe("buildCsp", () => {
     const csp = buildCsp(base);
     expect(directive(csp, "default-src")).toBe("'self'");
     expect(directive(csp, "script-src")).toBe("'self' 'unsafe-inline'");
+    expect(directive(csp, "script-src-attr")).toBe("'none'");
     expect(directive(csp, "object-src")).toBe("'none'");
     expect(directive(csp, "base-uri")).toBe("'self'");
     expect(directive(csp, "form-action")).toBe("'self'");

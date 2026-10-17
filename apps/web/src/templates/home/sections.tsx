@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   aiJourneyStages,
   ctas,
@@ -19,6 +19,7 @@ import {
   CaseStudyRow,
   Container,
   Display,
+  HeroArtwork,
   HeroVisual,
   LabShowcase,
   MotionPause,
@@ -35,11 +36,11 @@ import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import {
   industryShowcaseItems,
   lifecycleStages,
-  practiceShowcaseItems,
+  sixPracticeShowcaseItems,
   solutionShowcaseItems,
 } from "../../lib/view-mapping/showcase";
 import { IndustryBand, LifecycleBand } from "../commercial/dark-bands";
-import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 import { heroMotionPauseLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { typesWithAssets } from "../labs/map";
@@ -54,6 +55,8 @@ import { Band, RowList, itemLevel } from "../commercial/bands";
 import type { HomeData } from "../../features/content/schemas";
 import { HomeCareers } from "../careers/HomeCareers";
 import { HomeInsights } from "../insights/HomeInsights";
+import { ProofApproachBand } from "../commercial/proof-band";
+import type { ProofApproachItem } from "../../lib/view-mapping/proof-approach";
 
 /**
  * The thirteen homepage sections of Stage 8 section 8, in order. Each is a function of the home
@@ -71,6 +74,10 @@ export interface HomeContext {
   howWeWorkStages?: readonly DerivedStage[] | undefined;
   /** The admin's homepage sections (Insights, Careers); null when unconfigured or unreadable. */
   content?: HomeData | null | undefined;
+  /** Intro of the Labs route page: the line of Vitalos Labs, the sixth practice. */
+  labsIntro?: string | undefined;
+  /** "How we prove it" items (finding B3), below the practices. */
+  proof?: readonly ProofApproachItem[] | undefined;
 }
 
 type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | null;
@@ -93,53 +100,14 @@ function PropositionTitle() {
 }
 
 /**
- * The hero backdrop: the owner-supplied photograph (15 Oct 2026; docs/brand/asset-approval.md)
- * under a solid black overlay, so the copy reads as on a dark band. It drifts slowly and a few
- * points of light glint over the data centre (token CSS, "Ambient hero motion"). Decorative:
- * hidden from assistive technology. Served from apps/web/public as pre-sized WebP, so it skips
- * the image optimiser.
+ * The hero artwork (ADR-044): the Convergence at full scale, from the brand's graphic language, in
+ * place of the AI-generated cityscape photograph (finding A1; decision 4). It fills the right of
+ * the band from lg, behind the glass panel, clear of the copy; below lg it runs as a strip under
+ * the panel. The bands rise in once on load (motion-safe only). Decorative and hidden from
+ * assistive technology; a few kilobytes of server-rendered SVG, so the headline stays the
+ * largest paint.
  */
-const heroBackdrop = heroPhotograph;
-
-/** Black is not in the locked palette (--color-*: initial); the owner asked for it here. */
-const blackOverlay = "bg-[#000]/72"; // raw-colour-ok: owner-directed black overlay (15 Oct 2026)
-
-function HeroBackdrop() {
-  return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-      {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP with its own srcset */}
-      <img
-        src={heroBackdrop.src}
-        srcSet={heroBackdrop.srcSet}
-        sizes={heroBackdrop.sizes}
-        width={heroBackdrop.width}
-        height={heroBackdrop.height}
-        alt=""
-        fetchPriority="high"
-        decoding="async"
-        className="hv-drift size-full object-cover object-[70%_center]"
-      />
-      <div className={`absolute inset-0 ${blackOverlay}`} />
-      {heroGlints.map((glint, index) => (
-        <span
-          key={index}
-          className="hv-glint absolute size-1.5 rounded-full bg-white opacity-0 shadow-[0_0_14px_4px_var(--color-blue-600)] motion-reduce:hidden"
-          style={{ top: glint.top, left: glint.left, "--d": glint.delay } as CSSProperties}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Where the glints light up, over the right of the photograph, and when (staggered). */
-const heroGlints = [
-  { top: "24%", left: "64%", delay: "0s" },
-  { top: "41%", left: "81%", delay: "1.1s" },
-  { top: "63%", left: "72%", delay: "2.3s" },
-  { top: "31%", left: "91%", delay: "3.2s" },
-  { top: "74%", left: "88%", delay: "0.6s" },
-  { top: "52%", left: "57%", delay: "4s" },
-] as const;
+const homeArtwork = heroArtwork("home");
 
 /**
  * 1. Hero (the comp's split hero). Locked copy only: proposition as the h1, proposition
@@ -153,11 +121,16 @@ export function HeroSection(): ReactNode {
       tone="dark"
       spacing="default"
       data-motion-scope=""
-      // Starts under the clear header (SiteHeader `overlay`), so the photograph runs to the top.
+      // Starts under the clear header (SiteHeader `overlay`), so the band runs to the top.
       // Rounded bottom corners (owner direction, 15 Oct 2026) show against the band below.
       className="relative isolate -mt-(--size-header) overflow-hidden rounded-b-[1.75rem] pt-[calc(var(--section-default)+var(--size-header))] lg:rounded-b-[3rem]"
     >
-      <HeroBackdrop />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[44%] lg:block"
+      >
+        <HeroArtwork {...homeArtwork} animate className="size-full" />
+      </div>
       <MotionPause
         label={heroMotionPauseLabel}
         className="absolute right-(--space-4) bottom-(--space-4) z-10"
@@ -183,6 +156,12 @@ export function HeroSection(): ReactNode {
           className="w-full lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none mt-(--space-7) -mb-(--section-default) h-28 lg:hidden"
+      >
+        <HeroArtwork {...homeArtwork} crop="strip" className="size-full" />
+      </div>
     </Section>
   );
 }
@@ -235,14 +214,17 @@ export const strategyToProductionSection: SectionRender = (context) => {
 };
 
 /**
- * 5. Practices: the five, in the order the specs fix, as a showcase: a numbered list beside a
- * stage that shows the pointed or focused practice's illustration (owner direction, 15 Oct 2026).
+ * 5. Practices: the six, in the order the specs fix, Vitalos Labs last (owner decision 1, 17 Oct
+ * 2026), as a showcase: a numbered list beside a stage that shows the pointed or focused
+ * practice's illustration (owner direction, 15 Oct 2026).
  */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
-  const items = practiceShowcaseItems(orderByLockedNames(context.home.practices, practiceNames), {
-    headingLevel: itemLevel(title),
-  });
+  const items = sixPracticeShowcaseItems(
+    orderByLockedNames(context.home.practices, practiceNames),
+    { gates: context.gates, intro: context.labsIntro },
+    { headingLevel: itemLevel(title) },
+  );
   if (items.length === 0) return null;
   return (
     <Band
@@ -255,6 +237,15 @@ export const practicesSection: SectionRender = (context, tone) => {
     </Band>
   );
 };
+
+/**
+ * 5b. How we prove it (finding B3, 17 Oct 2026): the quality gates, Labs and its maturity labels,
+ * the Trust Centre and Insights, below the practices. Absent without items.
+ */
+export const proofSection: SectionRender = (context, tone) =>
+  context.proof && context.proof.length > 0 ? (
+    <ProofApproachBand items={context.proof} tone={tone} />
+  ) : null;
 
 /**
  * 7. Selected work: only when the Work gate is open (at least two verified case studies exist)
@@ -398,6 +389,7 @@ export const homeBands: readonly SectionRender[] = [
   problemsSection,
   strategyToProductionSection,
   practicesSection,
+  proofSection,
   selectedWorkSection,
   industriesSection,
   labsSection,

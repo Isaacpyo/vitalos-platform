@@ -311,7 +311,7 @@ def test_settings_and_canned_responses_need_superadmin(agent, lead):
         services.update_inbox_settings(
             sla_first_response_hours=0, signature="", retention_months=12, spam_retention_days=30, actor=agent
         )
-    canned = services.save_canned_response(title="Pricing", body_text="Our ratesâ€¦", actor=agent)
+    canned = services.save_canned_response(title="Pricing", body_text="Our rates…", actor=agent)
     services.save_canned_response(title="Pricing 2", body_text="Updated", actor=agent, pk=canned.pk)
     canned.refresh_from_db()
     assert canned.title == "Pricing 2"

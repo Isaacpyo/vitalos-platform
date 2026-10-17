@@ -10,6 +10,7 @@ import { PageMain } from "../institutional/page-main";
 import type { WorkIndexData } from "./load";
 import { caseStudyRowProps, workFilterDimensions, workFilterGroups } from "./map";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 const LIST_ID = "work-list";
 
@@ -26,6 +27,7 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
     <PageMain>
       <PageHeroBand
         full
+        artwork={heroArtwork("what-we-do", "work")}
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}

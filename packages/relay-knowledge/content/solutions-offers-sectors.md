@@ -10,7 +10,7 @@ review_date: 2027-01-15
 
 ## Solutions
 
-Five solutions describe the business problems we solve: AI Transformation; Business Process Modernisation; Digital Product Transformation; Application Modernisation; Data & Intelligence Transformation.
+Six solutions describe the business problems we solve: AI Transformation; Business Process Modernisation; Digital Product Transformation; Application Modernisation; Data & Intelligence Transformation; Technology Recovery & Reliability.
 
 ## Offers
 

@@ -1,5 +1,5 @@
 /**
- * The five practices (Stage 3 §4-8; Stage 8 §10). Names are locked copy (`practiceDisplayName`);
+ * The five practice pages (Stage 3 §4-8; Stage 8 §10); Labs, the sixth practice, is /labs. Names are locked copy (`practiceDisplayName`);
  * everything else is drafted from the cited sections and is pending owner approval.
  */
 import { practiceDisplayName } from "../../locked-copy";

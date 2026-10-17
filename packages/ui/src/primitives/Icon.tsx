@@ -124,6 +124,31 @@ const paths = {
   link: (
     <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66L11.5 6.8M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.46" />
   ),
+  // Added for the brand-system artwork (17 Oct 2026, ADR-044): the delivery lifecycle and the AI
+  // journey, on the same grid, stroke and caps. Never a brain, a chip or a robot.
+  filter: <path d="M4 5h16l-6 7.5V19l-4-2v-4.5L4 5Z" />,
+  ruler: (
+    <>
+      <path d="M4 4v16h16L4 4Z" />
+      <path d="M8 11.5V16h4.5L8 11.5Z" />
+    </>
+  ),
+  release: <path d="M4 14v6h16v-6M12 4v11M7.5 8.5 12 4l4.5 4.5" />,
+  cycle: <path d="M19.5 9A8 8 0 0 0 5 7.5M4.5 15A8 8 0 0 0 19 16.5M5 3.5v4h4M19 20.5v-4h-4" />,
+  stages: (
+    <>
+      <path d="M3 20h4.5v-4.5H12V11h4.5V6.5h1.25" />
+      <circle cx="19.5" cy="5.5" r="1.75" />
+    </>
+  ),
+  dataflow: (
+    <>
+      <circle cx="5" cy="6" r="2" />
+      <circle cx="5" cy="18" r="2" />
+      <circle cx="18.75" cy="12" r="2.25" />
+      <path d="m6.9 6.8 9.7 4.3M6.9 17.2l9.7-4.3M3 12h13.5" />
+    </>
+  ),
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;
@@ -133,7 +158,7 @@ export const iconNames = Object.keys(paths) as IconName[];
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "children"> {
   name: IconName;
   /** Rendered size in px (square). */
-  size?: 16 | 20 | 24 | 32;
+  size?: 16 | 20 | 24 | 32 | 48;
   /**
    * Accessible name. Omit for decorative icons (the default), which are hidden from assistive
    * technology; provide it only when the icon carries meaning that no adjacent text does.

@@ -24,6 +24,8 @@ ACTIONS = {
     "users.activated": "Reactivated a user",
     "users.deactivated": "Deactivated a user",
     "users.owner_set": "Set the primary owner",
+    "users.people_linked": "Linked team members and authors to users",
+    "notifications.smoke_purged": "Removed smoke-test leftovers",
     "enquiries.viewed": "Viewed an enquiry",
     "enquiries.received": "Received an enquiry message",
     "enquiries.replied": "Replied to an enquiry",

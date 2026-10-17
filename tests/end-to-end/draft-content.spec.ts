@@ -85,12 +85,14 @@ test.describe("draft content source", () => {
     for (const heading of [
       "Problems we solve",
       "From strategy to production",
-      "Five practices, one firm",
+      "Six practices, one firm",
       "Industries",
       "Vitalos Labs",
       "Have a problem worth solving?",
     ]) {
-      await expect(main.getByRole("heading", { name: heading, exact: true })).toBeVisible();
+      // "Vitalos Labs" is also the sixth practice and a "How we prove it" line (decision 1), so
+      // more than one heading can carry a name: the band's own heading is the first.
+      await expect(main.getByRole("heading", { name: heading, exact: true }).first()).toBeVisible();
     }
     // The home page stays free of placeholder content (no Selected Work or Insights), and the
     // Trust, Leadership and AI at the centre bands were removed (owner direction, 15 Oct 2026).
@@ -111,9 +113,11 @@ test.describe("draft content source", () => {
     await page.goto("/");
     const nav = page.getByRole("navigation").first();
     // Insights follows the Super Admin's site state (ADR-039): closed here.
-    for (const open of ["Industries", "Labs", "Work"]) {
+    // Below lg the header menu is mounted only when opened, so the first navigation is the footer,
+    // which lists Labs as the sixth practice, "Vitalos Labs" (decision 1).
+    for (const open of [/^Industries$/, /^(Vitalos )?Labs$/, /^Work$/]) {
       await expect(
-        nav.getByRole("link", { name: open, exact: true, includeHidden: true }).first(),
+        nav.getByRole("link", { name: open, includeHidden: true }).first(),
       ).toBeAttached();
     }
   });

@@ -10,6 +10,7 @@ import { deriveStages, stageAnchor } from "../../lib/view-mapping/stages";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { LifecycleBand, lifecycleHeading } from "../commercial/dark-bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface HowWeWorkTemplateProps {
   page: RoutePageView | null;
@@ -38,6 +39,7 @@ export function HowWeWorkTemplate({ page }: Readonly<HowWeWorkTemplateProps>) {
   return (
     <PageMain>
       <PageIntro
+        artwork={heroArtwork("about", "how-we-work")}
         crumbs={howWeWorkTrail()}
         title={page?.heading ?? navLabels.howWeWork}
         {...(page?.intro ? { lead: page.intro } : {})}

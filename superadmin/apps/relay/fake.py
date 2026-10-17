@@ -376,7 +376,7 @@ def _seed(now: datetime) -> dict:
             "type": "faq",
             "owner": "Founder",
             "reviewDate": None,
-            "bodyMd": "Five practices, with Labs separate.",
+            "bodyMd": "Six practices, Labs included.",
             "status": "published",
             "meta": {},
             "adminMeta": {},
@@ -633,11 +633,15 @@ class FakeRelayClient(AdminApiMixin):
             return {"admins": admins, "teamStatus": "online" if any(data["presence"].values()) else "offline"}
         if parts[0] == "knowledge":
             return self._knowledge(method, parts[1:], query, body)
+        if path == "/overview":
+            return self._overview()
         if path == "/insights":
             return {
                 "conversations": 128,
                 "aiResolved": 97,
-                "handoffRate": 0.14,
+                "handoffs": 18,
+                # A fraction between 0 and 1 (docs/relay/API.md): 18 / 128 = 0.141.
+                "handoffRate": 0.141,
                 "helpful": 61,
                 "notHelpful": 9,
                 "medianFirstReplySeconds": 260,
@@ -653,6 +657,21 @@ class FakeRelayClient(AdminApiMixin):
                 "tokensOut": 310000,
                 "cacheHitTokens": 820000,
                 "estCostUsd": 1.42,
+                "usageBySource": {
+                    "chat": {"tokensIn": 980000, "tokensOut": 250000, "requests": 214},
+                    "summary": {"tokensIn": 52000, "tokensOut": 6000, "requests": 18},
+                    "aborted": {"tokensIn": 8000, "tokensOut": 1000, "requests": 2},
+                    "test": {"tokensIn": 210000, "tokensOut": 53000, "requests": 45},
+                    "untagged": {"tokensIn": 0, "tokensOut": 0, "requests": 0},
+                },
+                "turns": {
+                    "count": 214,
+                    "tokensIn": 980000,
+                    "avgTokensIn": 4579,
+                    "p95TokensIn": 6420,
+                    "maxTokensIn": 7310,
+                },
+                "feedbackReasons": {"wrong": 3, "incomplete": 4, "didnt_understand": 1},
             }
         if path == "/settings":
             if method == "PUT":
@@ -702,6 +721,7 @@ class FakeRelayClient(AdminApiMixin):
             fields += ("externalId", "section", "readOnly", "notionUrl")
             synced = _iso(STATE.now - timedelta(minutes=10))
             return {
+                "sync": self._sync(),
                 "sources": {
                     "cms": {"count": 42, "syncedAt": synced},
                     "repo": {"count": 18, "syncedAt": synced},
@@ -718,6 +738,26 @@ class FakeRelayClient(AdminApiMixin):
             if len(parts) == 3 and parts[2] == "ignore":
                 data["gaps"] = [g for g in data["gaps"] if g["id"] != parts[1]]
                 return {}
+            if len(parts) == 3 and parts[2] == "suggest":
+                gap = next((g for g in data["gaps"] if g["id"] == parts[1]), None)
+                if gap is None:
+                    raise RelayError("not_found", 404)
+                document_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"relay-fake-gap-{gap['id']}"))
+                documents[document_id] = {
+                    **copy.deepcopy(documents[TEAM_ANSWER]),
+                    "id": document_id,
+                    "title": gap["question"],
+                    "url": "/how-we-work",
+                    "type": "faq",
+                    "status": "draft",
+                    "bodyMd": "Clients can start with consulting or come directly for engineering.",
+                    "updatedAt": self._now(),
+                    "updatedBy": self._me()["id"],
+                }
+                return {
+                    "documentId": document_id,
+                    "source": {"title": "How We Work", "url": "/how-we-work", "type": "page", "kind": "cms"},
+                }
             return {"gaps": data["gaps"]}
         if head == "test":
             question = body.get("question", "")
@@ -799,6 +839,34 @@ class FakeRelayClient(AdminApiMixin):
             if action != "reindex":
                 document["status"] = "published" if action == "publish" else "archived"
         return {"document": document}
+
+    def _sync(self):
+        """``sync`` block of GET /knowledge (docs/relay/API.md): last finished run per source."""
+        ages = {"cms": 0.5, "repo": 0.5, "faq": 0.2}
+
+        def entry(hours):
+            return {
+                "lastSyncAt": _iso(STATE.now - timedelta(hours=hours)),
+                "ageHours": hours,
+                "stale": hours > 24,
+                "errors": 0,
+            }
+
+        per = {source: entry(hours) for source, hours in ages.items()}
+        return {**per, "oldestAgeHours": max(ages.values()), "stale": False, "staleAfterHours": 24}
+
+    def _overview(self):
+        """GET /overview: the Relay counts for the Super Admin Overview (WS7 renders them)."""
+        data = STATE.data
+        return {
+            "awaitingConfirmation": 5,
+            "awaitingConfirmationFaq": 1,
+            "awaitingConfirmationRepo": 4,
+            "gapsThisWeek": len(data["gaps"]),
+            "waitingNow": sum(1 for c in data["conversations"].values() if c["status"] == "awaiting_human"),
+            "liveNow": sum(1 for c in data["conversations"].values() if c["status"] == "human"),
+            "sync": self._sync(),
+        }
 
     def _faq_run(self):
         started = STATE.now - timedelta(minutes=15)

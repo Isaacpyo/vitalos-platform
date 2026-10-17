@@ -32,7 +32,7 @@
     "format:check": "prettier --check .",
     "check:boundaries": "dependency-cruiser --config dependency-cruiser.cjs apps packages services workers",
     "check:raw-colours": "node tooling/scripts/check-raw-colours.mjs",
-    "media:slots": "node tooling/scripts/media-slots.mjs && prettier --write docs/design/IMAGE-SLOTS.md",
+    "media:slots": "node tooling/scripts/media-slots.mjs && prettier --write docs/design/IMAGE-SLOTS.md docs/review-2026-10-17/IMAGE-BRIEF.md",
     "check:bundle-secrets": "node tooling/scripts/check-client-bundle-secrets.mjs",
     "check:turbo-env": "node tooling/scripts/check-turbo-env.mjs",
     "check:security": "node tooling/scripts/check-secrets.mjs && corepack pnpm audit --audit-level high",

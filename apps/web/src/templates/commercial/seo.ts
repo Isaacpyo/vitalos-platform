@@ -4,7 +4,7 @@ import { isDetailIndexable } from "@vitalos/cms";
 import type { GateKey, SeoView } from "@vitalos/cms";
 import { breadcrumbJsonLd } from "../../features/seo/json-ld";
 import { jsonLdGraph, serviceNode, webPageNode } from "../../features/seo/graph";
-import type { FaqItem, WebPageType } from "../../features/seo/graph";
+import type { FaqItem, ListedItem, WebPageType } from "../../features/seo/graph";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 import { getSeoContext } from "../../features/seo/context";
 import { buildMetadata } from "../../features/seo/metadata";
@@ -55,6 +55,8 @@ export interface PageGraphInput {
   /** Questions and answers shown on the page. */
   faq?: readonly FaqItem[] | undefined;
   dateModified?: string | undefined;
+  /** Index pages: the items listed, in page order (ItemList, C11). */
+  items?: readonly ListedItem[] | undefined;
 }
 
 /** One JSON-LD graph for a commercial page: WebPage, BreadcrumbList and, for services, Service. */
@@ -72,6 +74,7 @@ export function pageGraph(input: PageGraphInput): JsonLdNode {
         aboutService: input.serviceType !== undefined,
         faq: input.faq,
         dateModified: input.dateModified,
+        items: input.items,
       },
       ctx,
     ),

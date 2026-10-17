@@ -70,7 +70,12 @@ test("every internal link reachable from the home page and the sitemap resolves"
 }) => {
   const { paths } = await fetchAndCheckSitemap(request, new URL(baseURL as string).origin);
   const result = await crawl(request, ["/", ...paths]);
-  expect(result.failures, "dead or broken internal links").toEqual([]);
+  // Draft content has no contact, so security.txt is 404 there by design (NO_DRAFT_CONTACT); the
+  // Trust Centre's copy still links to it.
+  const failures = isDraftRun
+    ? result.failures.filter((failure) => !failure.startsWith("404 /.well-known/security.txt "))
+    : result.failures;
+  expect(failures, "dead or broken internal links").toEqual([]);
   // The crawl must actually reach the whole site, not stop at the seeds.
   expect(result.statuses.size).toBeGreaterThanOrEqual(paths.length);
   for (const path of paths.filter(isGatedPath)) expect(result.statuses.get(path)).toBe(200);

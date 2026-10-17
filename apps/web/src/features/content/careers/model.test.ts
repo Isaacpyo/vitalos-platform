@@ -12,8 +12,11 @@ import {
   groupRoles,
   jobPostingJsonLd,
   privacyNoticeHref,
+  practicesLine,
   roleFacts,
   roleFactsLine,
+  splitProcess,
+  vitalosPractices,
 } from "./model";
 import type { RoleDetail as RoleDetailType } from "./model";
 
@@ -202,6 +205,17 @@ describe("jobPostingJsonLd", () => {
     expect(remote).not.toHaveProperty("jobLocation");
   });
 
+  it.each(["United Kingdom", "UK", "united kingdom"])(
+    "gives a country, not a locality, when an on-site or hybrid role says %s",
+    (location) => {
+      const node = jobPostingJsonLd({ ...role, location }, input)!;
+      expect(node["jobLocation"]).toEqual({
+        "@type": "Place",
+        address: { "@type": "PostalAddress", addressCountry: "GB" },
+      });
+    },
+  );
+
   it("has no baseSalary when the salary is hidden, no validThrough without a closing date", () => {
     const node = jobPostingJsonLd({ ...role, salary: null, closesAt: null }, input)!;
     expect(node).not.toHaveProperty("baseSalary");
@@ -214,5 +228,42 @@ describe("jobPostingJsonLd", () => {
       input,
     )!;
     expect(node).not.toHaveProperty("directApply");
+  });
+});
+
+describe("the role page's process block and About strip", () => {
+  const section = (key: string) => ({ key, heading: key, html: `<p>${key}</p>` });
+
+  it("splits the process out of the sections and keeps the order around it", () => {
+    const split = splitProcess(
+      ["about", "requirements", "process", "equalOpportunities"].map(section),
+    );
+    expect(split.body.map((s) => s.key)).toEqual(["about", "requirements"]);
+    expect(split.process?.key).toBe("process");
+    expect(split.after.map((s) => s.key)).toEqual(["equalOpportunities"]);
+  });
+
+  it("has no process block when the process is empty (the section is already left out)", () => {
+    const split = splitProcess(["about", "equalOpportunities"].map(section));
+    expect(split.process).toBeNull();
+    expect(split.body.map((s) => s.key)).toEqual(["about", "equalOpportunities"]);
+    expect(split.after).toEqual([]);
+  });
+
+  it("lists six practices with Labs once, whether or not the locked list includes it", () => {
+    expect(vitalosPractices()).toEqual([
+      "Consulting",
+      "Engineering",
+      "AI & Data",
+      "Experience",
+      "Managed Services",
+      "Labs",
+    ]);
+    expect(vitalosPractices(["Consulting", "Labs"], "Labs")).toEqual(["Consulting", "Labs"]);
+    expect(practicesLine()).toBe(
+      "Vitalos works through six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs.",
+    );
+    expect(practicesLine(["Consulting"])).toBe("Vitalos works through one practice: Consulting.");
+    expect(practicesLine([])).toBe("");
   });
 });

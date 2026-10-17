@@ -1,0 +1,38 @@
+# ADR-048 Relay: retrieval budget, small talk, typo tolerance and widget mounting
+
+Status: Accepted (engineering, 17 October 2026, review run WS6). Amends ADR-037 (file heading "ADR 033", retrieval) and ADR-038 (file heading "ADR 034", scheduled jobs). Production migration `20261017090000_relay_review.sql` waits for the owner (approval item).
+
+## Context
+
+The 17 October review found (docs/review-2026-10-17/FINDINGS.md):
+
+- **D1.** Relay Insights showed 509,640 input tokens for 4 conversations, about 127,000 each. Tracing the numbers showed that the token tiles are `relay.usage_daily`: every model call on the days in the period, whether or not a conversation still exists. The answer eval (`pnpm relay:eval --answers`, run against the production database from a preview on 15 October) and the load test create conversations, record usage and then delete the conversations; hand-off summaries record usage with no AI message. "Tokens per conversation" was therefore period usage, test traffic included, divided by the real conversations. The prompt itself had two leaks as well: `trimToBudget` always kept the first chunk whatever its size, and FAQ entries became single unbounded chunks.
+- **D2.** "Hello", "what are your soultions?", "getting started", "who is the founder of Vitalos?" and "so how can I modernise my system with this?" went unanswered.
+- **C2.** The panel stayed mounted (hidden) after the first open, answers were `<article>` landmarks inside `role="log"`, and a stored conversation was restored silently on the next visit.
+- **E1, D3–D6.** Hand-off rate double-scaled; staff shown by username; no scheduled website re-ingest; "TEAM OFFLINE" with no expectation; no thumbs-down reason.
+
+## Decision
+
+1. **Prompt budget per turn** (`relay-core/src/llm/budget.ts`, `PROMPT_BUDGET`): at most 8,000 estimated input tokens per model call. Sources: at most 6 chunks (never more than 8) and 2,400 tokens, each chunk cut to 450 tokens; a chunk that would overflow is skipped, not kept. History: 8 turns, 2,000 tokens, each turn cut to 600; small talk left out. `assemblePrompt` enforces the total last (oldest history first, then lowest-ranked sources). Estimates take the larger of 1.33 tokens a word and 4 characters a token. FAQ chunks are split like markdown chunks (300 words, 40 overlap).
+2. **Measurement.** Each AI message stores `meta.prompt_tokens_est`, `chunks_sent` and `history_turns` next to the provider's `tokens_in`; a `relay.turn` log line (no content) records both. Usage is tagged by source (`relay.usage_by_source`: `chat`, `summary`, `aborted`, `test`), with test traffic recognised by `utm_source=relay-eval|relay-load`, which both harnesses now send. Insights show input tokens per AI answer (count, average, p95, maximum from `relay.messages.tokens_in`) and usage by source, and label the old tiles "all model calls". `relay.usage_daily` stays the single counter for the daily cap.
+3. **Small talk** (`handoff/smalltalk.ts`): whole-message greetings, thanks, goodbyes and acknowledgements get a fixed reply (sourced from the Relay greeting) with no retrieval, no model call and no gap.
+4. **Typo tolerance** (`retrieval/spelling.ts`): query words not in the published vocabulary are corrected to the nearest known word (optimal string alignment distance; at least five letters, same first letter, one edit up to eight letters and two beyond, ties by frequency) before both rankings. The vocabulary comes from `RelayStore.kbVocabulary()`: `relay.kb_vocabulary()` (one jsonb object, cached ten minutes) in Postgres, computed in memory for tests. No extension. `pg_trgm` was considered and not needed. Short pronoun follow-ups of up to ten words are joined to the previous question.
+5. **Entries awaiting confirmation.** Repo knowledge (`packages/relay-knowledge/content/*.md`) gains `confirmation: needed`, which must go with `status: draft`: the entry is ingested but never retrieved until the owner approves it by setting `status: published` and removing the flag. Four entries were drafted this way (founder, solutions list, getting started, modernising a system), each only from approved sources. The Overview counts them with the Master FAQ's "Needs confirmation".
+6. **Suggested answer**: `POST /knowledge/gaps/:id/suggest` drafts a `team_answer` from the best-matching published chunk. Always a draft.
+7. **Hourly re-ingest** (amends ADR-038): pg_cron `relay-ingest` at :12 calls `/api/relay/cron/ingest`, which re-ingests the bundled website and repo knowledge by checksum and records a `kb_sync_runs` row per source (the CLI does too). The knowledge page shows the age of the last finished run and warns after 24 hours. Bundled content changes only on deploy, so the hourly run is mostly a heartbeat and embedding repair. It costs nothing: it uses the existing Vault-gated `relay.cron_call` and no Vercel cron.
+8. **Widget mounting** (C2): the panel is mounted only while open and unmounted on close; it is never in the initial HTML. Answers are `div role="group"` with a label inside the log, not `<article>`. A stored conversation is restored without asking only from an emailed resume link (`?relay=resume`) or when the visitor continued or started it earlier in the same tab session. Otherwise the panel offers "Continue previous conversation" or "Start new" and fetches nothing until the visitor chooses. While closed, a conversation a person joined is polled every 20 s for a count of new team replies (the unread badge).
+9. **Contract units.** `handoffRate` is a fraction between 0 and 1 in the admin API and webhook (docs/relay/API.md). Visitors see staff by first name only (`publicStaffName`); the Super Admin sends the display or full name, else "Vitalos team", never the email. While the team is offline the widget shows "Back Monday 09:00" (`nextOpening`, Relay Settings, Europe/London) and offers "Leave your email and we'll reply": the existing hand-off form, which stores the details on the conversation. No visitor email is sent. Thumbs-down asks one reason (`wrong`, `incomplete`, `didnt_understand`), stored in `relay.messages.feedback_reason`.
+10. **Analytics hook.** The widget dispatches `vitalos:relay` DOM events (`opened`, `question`, `handoff`; type only) instead of importing the website's `track()`.
+
+## Consequences
+
+- Eval: `pnpm relay:eval --turns` (and the CI test `relay-knowledge/src/eval/turns.test.ts`) asks 25 fixed questions through the visitor service with the memory store and mock model. Every question must retrieve an expected source, or offer a person when nothing published answers it, within the budget.
+- Until the migration is applied, the website falls back gracefully: the vocabulary is empty (no typo correction), usage is recorded untagged, and the new Insights fields read zero. The feedback-reason write needs the column, so **apply the migration before deploying the code** (AGENTS.md).
+- The Master FAQ snapshot still says "five practices" in some entries. It is synced from Notion and was not edited; the owner corrects those entries in Notion (ws6 NOTES lists them). Until then an FAQ source can contradict the system prompt's six practices.
+
+## Options
+
+- Raising the similarity threshold or cutting `matchCount` alone: rejected; it hides answers and does not explain the token figure.
+- `pg_trgm` similarity in SQL: workable, but a second mechanism for the memory store would still be needed. One vocabulary-based corrector serves both.
+- Keeping the panel mounted with `inert`: rejected; unmounting is simpler and keeps the closed DOM empty. The unread badge needs only a count.
+- A Vercel cron for ingest: rejected (ADR-038: daily only on this plan).

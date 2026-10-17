@@ -11,6 +11,7 @@ const items: IndustryShowcaseItem[] = [
     href: "https://example.invalid/one",
     summary: "Example summary one (fixture).",
     icon: "shield",
+    art: { family: "industries", seed: "one" },
   },
   {
     title: "Example industry two (fixture)",
@@ -39,6 +40,14 @@ describe("IndustryShowcase", () => {
     expect(open()).toEqual(["https://example.invalid/two"]);
     fireEvent.focus(screen.getByRole("link", { name: /one/ }));
     expect(open()).toEqual(["https://example.invalid/one"]);
+  });
+
+  it("draws the industry's artwork strip, decorative, with no photograph", () => {
+    const { container } = render(<IndustryShowcase items={items} />);
+    expect(container.querySelector("img")).toBeNull();
+    const art = container.querySelectorAll('[data-artwork="industries"]');
+    expect(art).toHaveLength(1);
+    expect(art[0]?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("renders nothing without industries", () => {

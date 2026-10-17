@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { footerColumns, podcastPage, routes, validatePodcast } from "@vitalos/cms";
+import { getEnv } from "@vitalos/config";
 import { Container, PageHero, Section, podcastMarkPaths } from "@vitalos/ui";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
-import { heroPhotograph } from "../../../src/lib/view-mapping/hero-images";
+import { heroArtwork } from "../../../src/lib/view-mapping/hero-artwork";
 import { pageMetadata } from "../../../src/templates/institutional/metadata";
 
-/** The listening apps with an owner-supplied, validated URL; none is ever invented. */
+/**
+ * The listening apps with an owner-supplied, validated URL; none is ever invented. None at all
+ * while PODCAST_ENABLED is off (owner decision 3, 17 Oct 2026: no episodes exist), so the page is
+ * a 404 and the footer has no podcast block; the code stays for when the show launches.
+ */
 async function listeningApps() {
+  if (!getEnv().site.podcastEnabled) return [];
   const { settings } = await (await getContentSource()).getSiteChrome();
   const urls = validatePodcast(settings.podcast);
   return [
@@ -56,7 +62,7 @@ export default async function PodcastPage() {
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("insights", "podcast")}
         eyebrow={footerColumns.podcast}
         title={podcastPage.title}
         lead={podcastPage.lead}

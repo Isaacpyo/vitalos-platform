@@ -13,7 +13,7 @@ import type {
   TrustOverviewView,
 } from "../../content/types";
 import type { RoutePageKey } from "../../routes";
-import { cta, h2, p, pLink, richText, seo, ul } from "../build";
+import { cta, h2, ol, p, pLink, richText, seo, ul } from "../build";
 import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
 
@@ -58,7 +58,7 @@ function headingFor(key: HomeSectionKey): string {
 }
 
 /**
- * Section headings. Five are the spec-quoted titles in locked copy. The others are the section
+ * Section headings. Five are the titles in locked copy. The others are the section
  * names Stage 11 §9 uses for items 7, 9 and 10 ("Industries", "Vitalos Labs", "Insights"); its
  * Trust and Leadership bands were removed from the homepage (owner direction, 15 Oct 2026). The
  * hero is locked copy and has no heading entry; the credibility strip has no quoted title and no
@@ -338,9 +338,10 @@ const about: RoutePageDraft = {
       p(
         "We help organisations decide what to change and where technology and AI create real value, then build it and keep improving it. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
       ),
-      h2("Five practices, one firm"),
+      // Six practices (owner decision 1, 17 Oct 2026): the five practice pages and Vitalos Labs.
+      h2("Six practices, one firm"),
       p(
-        "Our five practices share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like five departments.",
+        "Our six practices share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like six departments.",
       ),
       h2("Two ways to start"),
       p(
@@ -391,6 +392,15 @@ const trust: RoutePageDraft = {
       p(
         "Each topic shows its public summary, and only verified certifications will ever be listed. Procurement and security questions go through the procurement route; controlled documents are shared where they exist.",
       ),
+      // "What you can ask for" (finding B8, 17 Oct 2026): the requests the Procurement topic and the
+      // Master FAQ (CON-04, TRU-14, TRU-17, verified) already name; nothing new is offered.
+      h2("What you can ask for"),
+      ul(
+        "Answers to security and privacy questionnaires, reflecting what exists today.",
+        "Supplier onboarding information.",
+        "Controlled documents, shared under appropriate confidentiality where they exist.",
+        "A route for reporting a security vulnerability or concern.",
+      ),
     ),
     cta: cta("Ask a procurement question", "procurement"),
     seo: seo(
@@ -419,6 +429,17 @@ const careers: RoutePageDraft = {
   ),
 };
 
+/**
+ * What happens after an enquiry (findings B9, B11, 17 Oct 2026): this page's own sentences and the
+ * How We Work introduction's first sentence. Shown as the contact page's steps and reused by the
+ * offer pages. No response time is promised (Stage 8 §20).
+ */
+export const contactNextSteps = [
+  "Tell us your goal and we will help find the right starting point.",
+  "We read every enquiry and reply to arrange a conversation about the right starting point.",
+  "Start with consulting or come straight to engineering.",
+] as const;
+
 const contact: RoutePageDraft = {
   view: {
     key: "contact",
@@ -428,8 +449,11 @@ const contact: RoutePageDraft = {
       "Come to us for consulting, direct engineering, AI and data work or managed services. Tell us your goal and we will help find the right starting point.",
     expectations: richText(
       "route-contact-expectations",
+      // The steps (finding B11, 17 Oct 2026) are this page's own sentences and the How We Work
+      // introduction's first sentence; no response time is promised.
+      ol(...contactNextSteps),
       p(
-        "We read every enquiry and reply to arrange a conversation about the right starting point. There is no obligation, and you do not need to complete a procurement questionnaire first.",
+        "There is no obligation, and you do not need to complete a procurement questionnaire first.",
       ),
       pLink(
         "We use your details to respond to and qualify your enquiry, as described on the ",

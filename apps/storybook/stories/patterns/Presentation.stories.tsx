@@ -88,8 +88,10 @@ export const PageHeroDisplay: Story = {
 };
 
 export const PageHeroTitle: Story = {
-  name: "Page hero (content page, long title)",
-  render: () => <PageHero size="title" containerSize="content" title={text.longTitle} />,
+  name: "Page hero (light, reading page, long title)",
+  render: () => (
+    <PageHero size="title" artwork={{ family: "legal", seed: "example" }} title={text.longTitle} />
+  ),
 };
 
 export const PageHeroDark: Story = {
@@ -98,6 +100,7 @@ export const PageHeroDark: Story = {
     <div className="pt-(--size-header)">
       <PageHero
         tone="dark"
+        artwork={{ family: "what-we-do" }}
         eyebrow={text.label}
         title="Example page title (fixture)"
         lead={text.shortSummary}
@@ -118,6 +121,7 @@ export const PageHeroDarkCompactWithMedia: Story = {
       <PageHero
         tone="dark"
         size="title"
+        artwork={{ family: "industries", seed: "example" }}
         eyebrow={text.label}
         title="Example detail page (fixture)"
         lead={text.shortSummary}

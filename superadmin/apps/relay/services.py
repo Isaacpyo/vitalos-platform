@@ -190,6 +190,20 @@ def update_document(user, document_id, fields: dict, request=None) -> dict:
     return document
 
 
+def suggest_answer(user, gap_id, request=None) -> dict:
+    """Drafts a team answer for a gap from the best-matching page (always a draft, ADR-048)."""
+    _require_access(user)
+    data = get_client(user).suggest_answer(gap_id) or {}
+    _audit(
+        "relay.knowledge_suggested",
+        request,
+        DOCUMENT,
+        data.get("documentId") or gap_id,
+        "Drafted a suggested answer for a Relay gap",
+    )
+    return data
+
+
 def publish(user, document_id, request=None) -> dict:
     _require_manage(user)
     document = (get_client(user).publish(document_id) or {}).get("document") or {}

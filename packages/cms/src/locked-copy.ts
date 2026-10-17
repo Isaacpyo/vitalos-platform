@@ -87,7 +87,11 @@ export const podcastPage = {
   description: "The Vitalos podcast on Spotify and Apple Podcasts.",
 } as const;
 
-/** The five practices (names). Stage 8 §5, §6 (mega-menu), §9, §10 (the five practice pages). */
+/**
+ * The practices with a page under /what-we-do (names). Stage 8 §5, §6 (mega-menu), §9, §10. Vitalos
+ * has six practices (owner decision 1, 17 Oct 2026): these five and Labs (`labsPracticeName`),
+ * whose home is /labs. Use `firmPracticeNames` wherever the practices are counted or listed.
+ */
 export const practiceNames = [
   "Consulting",
   "Engineering",
@@ -96,8 +100,14 @@ export const practiceNames = [
   "Managed Services",
 ] as const;
 
-/** Display form: "Vitalos {practice}". Stage 8 §10 (The five practice pages). Labs is not a practice here. */
-export const practiceDisplayName = (name: (typeof practiceNames)[number]): string =>
+/** The sixth practice (owner decision 1, 17 Oct 2026). Its page is the Labs index, /labs. */
+export const labsPracticeName = "Labs";
+
+/** All six practices, in order: the five practice pages, then Labs (owner decision 1, 17 Oct 2026). */
+export const firmPracticeNames = [...practiceNames, labsPracticeName] as const;
+
+/** Display form: "Vitalos {practice}". Stage 8 §10; "Vitalos Labs" for the sixth. */
+export const practiceDisplayName = (name: (typeof firmPracticeNames)[number]): string =>
   `${brandName} ${name}`;
 
 /**
@@ -233,8 +243,11 @@ export const homeSections = [
   {
     key: "practices",
     structuralLabel: "Practices",
-    /** Stage 11 §9 mockup brief, item 4. */
-    visibleHeading: "Five practices, one firm",
+    /**
+     * Stage 11 §9 mockup brief, item 4 ("Five practices, one firm"), corrected to six by owner
+     * decision 1, 17 Oct 2026 (Labs is the sixth practice).
+     */
+    visibleHeading: "Six practices, one firm",
   },
   {
     key: "selectedWork",
@@ -274,6 +287,8 @@ export const lockedCopy = {
   megaMenuColumns,
   footerColumns,
   practiceNames,
+  labsPracticeName,
+  firmPracticeNames,
   solutionNames,
   offerNames,
   priorityOfferNames,

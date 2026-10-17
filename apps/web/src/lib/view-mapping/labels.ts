@@ -28,6 +28,7 @@ export const structuralLabels = {
   faqGroups: "Question groups",
   /** Closing links of the What We Do and Who We Are menu columns. */
   allSolutions: "All solutions",
+  allOffers: "All offers",
   allLabs: "All Labs",
   allIndustries: "All industries",
   /** The Support menu's column of enquiry topics. */
@@ -57,6 +58,9 @@ export const structuralLabels = {
   scope: "What Vitalos does",
   duration: "Typical duration",
   nextStep: "How this connects to the next phase",
+  /** Offer and contact pages: the steps after an enquiry (findings B9, B11). */
+  whatHappensNext: "What happens next",
+  nextPhase: "Next phase",
   outputs: "What you receive",
   requirements: "What we need from you",
   exclusions: "What this does not include",

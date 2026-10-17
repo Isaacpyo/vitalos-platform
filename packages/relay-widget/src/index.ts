@@ -4,3 +4,5 @@
  */
 export { RelayLauncher } from "./launcher";
 export type { RelayLauncherProps } from "./launcher";
+export { RELAY_EVENT } from "./events";
+export type { RelayEventDetail, RelayEventType } from "./events";

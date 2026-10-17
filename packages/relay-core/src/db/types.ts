@@ -1,6 +1,7 @@
 import type {
   Citation,
   ConversationStatus,
+  FeedbackReason,
   HandoffTrigger,
   NextStep,
   SenderType,
@@ -89,10 +90,15 @@ export interface MessageRecord {
   latencyMs: number | null;
   firstTokenMs: number | null;
   feedback: -1 | 1 | null;
+  /** Why an answer was not helpful, chosen with one tap after thumbs-down (finding D6). */
+  feedbackReason: FeedbackReason | null;
   feedbackAt: string | null;
   clientMessageId: string | null;
   createdAt: string;
 }
+
+export { FEEDBACK_REASONS } from "../contract";
+export type { FeedbackReason } from "../contract";
 
 export interface StoredCitation extends Citation {
   documentId: string;
@@ -242,6 +248,10 @@ export interface PresenceRecord {
   lastSeenAt: string;
 }
 
+/** What a model call was for (`relay.usage_by_source.source`). */
+export const USAGE_SOURCES = ["chat", "summary", "aborted", "test"] as const;
+export type UsageSource = (typeof USAGE_SOURCES)[number];
+
 export interface UsageRecord {
   day: string;
   requests: number;
@@ -291,10 +301,26 @@ export interface InsightsRow {
   medianFirstReplySeconds: number | null;
   waitingNow: number;
   topQuestions: { question: string; count: number }[];
+  /** All model calls on these days (`relay.usage_daily`): answers, summaries, evals, deleted chats. */
   tokensIn: number;
   tokensOut: number;
   cacheHitTokens: number;
   estCostUsd: number;
+  /** The same usage split by source; `untagged` is usage recorded before tagging existed. */
+  usageBySource: Record<
+    UsageSource | "untagged",
+    { tokensIn: number; tokensOut: number; requests: number }
+  >;
+  /** Per-turn input tokens of AI answers stored in the window (`relay.messages.tokens_in`). */
+  turns: {
+    count: number;
+    tokensIn: number;
+    avgTokensIn: number;
+    p95TokensIn: number;
+    maxTokensIn: number;
+  };
+  /** Thumbs-down reasons on AI answers in the window. */
+  feedbackReasons: Record<FeedbackReason, number>;
 }
 
 /**
@@ -355,6 +381,11 @@ export interface RelayStore {
   /** Source refs currently stored for a source (for archiving entries that disappeared). */
   listSourceRefs(source: KbSource): Promise<{ id: string; sourceRef: string; status: KbStatus }[]>;
   matchChunks(params: MatchParams): Promise<MatchedChunk[]>;
+  /**
+   * Words (lower case, three or more letters) of published chunks with their counts, for typo
+   * tolerance (`retrieval/spelling.ts`). Adapters may cache it for a few minutes.
+   */
+  kbVocabulary(): Promise<ReadonlyMap<string, number>>;
   /** Public FAQ questions placed on a page (START WITH). Published FAQ documents only. */
   faqQuestionsForPage(
     pagePath: string,
@@ -391,12 +422,17 @@ export interface RelayStore {
   listPresence(): Promise<PresenceRecord[]>;
   getSettingsConfig(): Promise<unknown>;
   putSettingsConfig(config: unknown, updatedBy: string | null): Promise<void>;
+  /**
+   * Adds one model call to the day's counters (daily cap and cost). `source` tags it, so Insights
+   * can tell visitor answers from summaries, aborted streams and test traffic (evals, load tests).
+   */
   addUsage(
     day: string,
     tokensIn: number,
     tokensOut: number,
     cacheHit: number,
     costUsd: number,
+    source?: UsageSource,
   ): Promise<UsageRecord>;
   getUsage(day: string): Promise<UsageRecord | null>;
   markCapNotified(day: string): Promise<boolean>;

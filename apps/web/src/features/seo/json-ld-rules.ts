@@ -26,6 +26,8 @@ const allowedTypes = new Set([
   "FAQPage",
   "ProfilePage",
   "BreadcrumbList",
+  // CollectionPage mainEntity: the items an index page lists (C11).
+  "ItemList",
   "ListItem",
   "Service",
   "Country",
@@ -75,6 +77,22 @@ const typeSchemas: Record<string, z.ZodType> = {
         message: "positions must run 1, 2, 3…",
       }),
   }),
+  ItemList: z.looseObject({
+    itemListElement: z
+      .array(
+        z.looseObject({
+          "@type": z.literal("ListItem"),
+          position: z.number().int().positive(),
+          name: text,
+          url,
+        }),
+      )
+      .min(1)
+      .refine((items) => items.every((item, index) => item.position === index + 1), {
+        message: "positions must run 1, 2, 3…",
+      }),
+  }),
+  Person: z.looseObject({ name: text }),
   Service: z.looseObject({ name: text, serviceType: text, provider: ref, url }),
   FAQPage: z.looseObject({
     mainEntity: z

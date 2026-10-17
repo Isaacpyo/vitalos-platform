@@ -2,6 +2,7 @@
 
 from datetime import date, datetime, time, timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
@@ -31,9 +32,10 @@ def _day_start(day: date) -> datetime:
 
 
 def filtered(filters: dict[str, str]):
-    queryset = exclude_synthetic_text(AuditEvent.objects.all(), "summary")
+    queryset = exclude_synthetic_text(AuditEvent.objects.select_related("actor"), "summary")
     if filters["actor"]:
-        queryset = queryset.filter(actor_email__icontains=filters["actor"])
+        term = filters["actor"]
+        queryset = queryset.filter(Q(actor_email__icontains=term) | Q(actor__full_name__icontains=term))
     if filters["action"]:
         queryset = queryset.filter(action=filters["action"])
     if filters["entity_type"]:
@@ -60,9 +62,17 @@ def action_label(action: str) -> str:
     return ACTIONS.get(action, action)
 
 
+def _actor_label(event: AuditEvent) -> str:
+    """ "Temitope Agbola (temitope.agbola@…)" when the actor is a user; the stored email otherwise."""
+    actor = event.actor if event.actor_id else None
+    if actor is not None and actor.full_name:
+        return f"{actor.display_label} ({event.actor_email or actor.email})"
+    return event.actor_email or "System"
+
+
 def sentence(event: AuditEvent) -> str:
     """ "admin@example.org — Changed a role — viewer@example.org: Viewer → ServiceLead"."""
-    parts = [event.actor_email or "System", action_label(event.action)]
+    parts = [_actor_label(event), action_label(event.action)]
     if event.summary:
         parts.append(event.summary)
     return " — ".join(parts)

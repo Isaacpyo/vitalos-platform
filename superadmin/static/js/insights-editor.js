@@ -1,5 +1,6 @@
 // Insights post editor: Markdown toolbar and shortcuts, autosave with conflict detection, Write /
-// Preview / Split, image paste and drop (alt text first), counters and the search-result preview.
+// Preview / Split, image paste and drop (alt text first), counters and the search-result preview,
+// word count and reading time, the ordered author list and the cover's drag-and-drop file control.
 // Loaded as an external file with the page's CSP nonce; it never evaluates HTML from the server.
 (function () {
   "use strict";
@@ -346,6 +347,197 @@
       }
     });
   }
+
+  // --- Word count and reading time ----------------------------------------------------------------
+  // The same rule as the website's reading time (apps/content_sync/formatting.py reading_minutes):
+  // words are runs of letters and digits (Latin, with accents), joined by an apostrophe or hyphen;
+  // minutes are words / 220, rounded up, at least 1.
+
+  var WORD_RE = /[0-9A-Za-zÀ-ɏ]+(?:['’-][0-9A-Za-zÀ-ɏ]+)*/g;
+  var WORDS_PER_MINUTE = 220;
+  var wordCountEl = document.querySelector("[data-word-count]");
+  var readingEl = document.querySelector("[data-reading]");
+
+  function updateWordCount() {
+    if (!body || !wordCountEl) return;
+    var words = (body.value.match(WORD_RE) || []).length;
+    var minutes = Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
+    wordCountEl.textContent = words.toLocaleString("en-GB") + (words === 1 ? " word · " : " words · ");
+    wordCountEl.hidden = false;
+    if (readingEl) readingEl.textContent = minutes + " min read";
+  }
+
+  if (body) {
+    updateWordCount();
+    body.addEventListener("input", updateWordCount);
+  }
+
+  // --- Authors: ticked authors first, in byline order ----------------------------------------------
+  // The browser submits ticked boxes in the order they appear, so the order on screen is the byline.
+
+  var picker = document.querySelector("[data-author-picker]");
+  if (picker) {
+    var list = picker.querySelector("[data-author-list]");
+    var announce = picker.querySelector("[data-author-status]");
+    var maxAuthors = parseInt(picker.getAttribute("data-max"), 10) || 4;
+
+    var authorItems = function () {
+      return Array.prototype.slice.call(list.querySelectorAll("[data-author-item]"));
+    };
+    var boxOf = function (item) {
+      return item.querySelector("input[type=checkbox]");
+    };
+    var nameOf = function (item) {
+      var name = item.querySelector("[data-author-name]");
+      return name ? name.textContent.trim() : "";
+    };
+    var ticked = function () {
+      return authorItems().filter(function (item) {
+        return boxOf(item).checked;
+      });
+    };
+    var say = function (text) {
+      if (announce) announce.textContent = text;
+    };
+
+    var refreshAuthors = function () {
+      var chosen = ticked();
+      authorItems().forEach(function (item) {
+        var box = boxOf(item);
+        var position = chosen.indexOf(item);
+        item.querySelector("[data-author-lead]").hidden = position !== 0;
+        var order = item.querySelector("[data-author-order]");
+        var movable = position >= 0 && chosen.length > 1;
+        order.classList.toggle("hidden", !movable);
+        order.classList.toggle("flex", movable);
+        item.querySelector('[data-author-move="up"]').disabled = position <= 0;
+        item.querySelector('[data-author-move="down"]').disabled = position < 0 || position === chosen.length - 1;
+        // At the limit, unticked authors cannot be added (the server checks this too).
+        box.disabled = !editable || (!box.checked && chosen.length >= maxAuthors);
+      });
+    };
+
+    list.addEventListener("change", function (event) {
+      var item = event.target.closest("[data-author-item]");
+      if (!item) return;
+      var others = ticked().filter(function (other) {
+        return other !== item;
+      });
+      // A newly ticked author joins the end of the byline; an unticked one leaves it.
+      var anchor = others.length ? others[others.length - 1].nextSibling : list.firstChild;
+      list.insertBefore(item, anchor);
+      say(boxOf(item).checked ? nameOf(item) + " added, position " + (others.length + 1) + "." : nameOf(item) + " removed.");
+      refreshAuthors();
+    });
+
+    list.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-author-move]");
+      if (!button || !editable) return;
+      var item = button.closest("[data-author-item]");
+      var chosen = ticked();
+      var position = chosen.indexOf(item);
+      var direction = button.getAttribute("data-author-move");
+      if (direction === "up" && position > 0) list.insertBefore(item, chosen[position - 1]);
+      if (direction === "down" && position >= 0 && position < chosen.length - 1) {
+        list.insertBefore(chosen[position + 1], item);
+      }
+      refreshAuthors();
+      var now = ticked().indexOf(item);
+      say(nameOf(item) + (now === 0 ? " is now the lead author." : ", position " + (now + 1) + "."));
+      var same = item.querySelector('[data-author-move="' + direction + '"]');
+      (same && !same.disabled ? same : boxOf(item)).focus();
+      markDirty();
+    });
+
+    refreshAuthors();
+  }
+
+  // --- Styled file control: drag and drop, and an inline preview ----------------------------------
+
+  function formatSize(bytes) {
+    return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(bytes / 1024)) + " KB";
+  }
+
+  document.querySelectorAll("[data-file-drop]").forEach(function (root) {
+    var zone = root.querySelector("[data-drop-zone]");
+    var input = root.querySelector("[data-file-input]");
+    var box = root.querySelector("[data-file-chosen-box]");
+    var preview = root.querySelector("[data-file-preview]");
+    var chosen = root.querySelector("[data-file-chosen]");
+    var error = root.querySelector("[data-file-error]");
+    var hint = root.querySelector("[data-drop-hint]");
+    var maxBytes = parseInt(root.getAttribute("data-max-bytes"), 10) || 0;
+    var accept = (input.getAttribute("accept") || "")
+      .split(",")
+      .map(function (type) {
+        return type.trim();
+      })
+      .filter(Boolean);
+    if (hint) hint.classList.remove("hidden");
+
+    function fail(message) {
+      error.textContent = message;
+      error.hidden = !message;
+    }
+
+    function show(file) {
+      fail("");
+      box.classList.add("hidden");
+      box.classList.remove("flex");
+      if (!file) return;
+      if (accept.length && accept.indexOf(file.type) < 0) {
+        input.value = "";
+        fail("Use a JPEG, PNG, WebP or AVIF image.");
+        return;
+      }
+      if (maxBytes && file.size > maxBytes) {
+        input.value = "";
+        fail("The image is " + formatSize(file.size) + "; the limit is " + formatSize(maxBytes) + ".");
+        return;
+      }
+      var label = file.name + " · " + formatSize(file.size);
+      chosen.textContent = label;
+      preview.onload = function () {
+        chosen.textContent = label + " · " + preview.naturalWidth + " × " + preview.naturalHeight;
+      };
+      var reader = new FileReader();
+      reader.addEventListener("load", function () {
+        preview.src = reader.result; // A data: URL (the CSP allows data: images, not blob:).
+      });
+      reader.readAsDataURL(file);
+      box.classList.remove("hidden");
+      box.classList.add("flex");
+    }
+
+    input.addEventListener("change", function () {
+      show(input.files && input.files[0]);
+    });
+    ["dragenter", "dragover"].forEach(function (name) {
+      zone.addEventListener(name, function (event) {
+        if (!event.dataTransfer || Array.prototype.indexOf.call(event.dataTransfer.types, "Files") < 0) return;
+        event.preventDefault();
+        zone.setAttribute("data-dragging", "");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (name) {
+      zone.addEventListener(name, function () {
+        zone.removeAttribute("data-dragging");
+      });
+    });
+    zone.addEventListener("drop", function (event) {
+      var files = event.dataTransfer && event.dataTransfer.files;
+      if (!files || !files.length) return;
+      event.preventDefault();
+      try {
+        var transfer = new DataTransfer();
+        transfer.items.add(files[0]);
+        input.files = transfer.files;
+      } catch (_) {
+        input.files = files;
+      }
+      show(input.files[0]);
+    });
+  });
 
   // --- Write / Preview / Split -------------------------------------------------------------------
 

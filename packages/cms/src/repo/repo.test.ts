@@ -90,7 +90,7 @@ describe("repo content hygiene", () => {
     expect(settings.securityEmail).toBeUndefined();
   });
 
-  it("serves the five practices and keeps the section index pages indexable", async () => {
+  it("serves the five practice pages (Labs, the sixth practice, is /labs) and keeps the section index pages indexable", async () => {
     const s = source();
     expect(await s.listSummaries("practice")).toHaveLength(5);
     expect((await s.getRoutePage("work"))?.seo.noindex).not.toBe(true);

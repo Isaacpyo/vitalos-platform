@@ -152,8 +152,15 @@ test.describe("crawler policy outside production (ADR-020)", () => {
   });
 });
 
-test.describe("security headers (ADR-020)", () => {
-  const paths = ["/", "/contact", "/work", "/this-page-does-not-exist", "/api/health"];
+test.describe("security headers (ADR-020, ADR-047)", () => {
+  const paths = [
+    "/",
+    "/contact",
+    "/work",
+    "/this-page-does-not-exist",
+    "/api/health",
+    "/manifest.webmanifest",
+  ];
 
   for (const path of paths) {
     test(`${path} carries CSP, nosniff, referrer-policy and permissions-policy`, async ({
@@ -180,8 +187,12 @@ test.describe("security headers (ADR-020)", () => {
       expect(directives.get("object-src")).toEqual(["'none'"]);
       expect(directives.get("base-uri")).toEqual(["'self'"]);
       expect(directives.get("form-action")).toEqual(["'self'"]);
-      // Nothing may frame the site.
+      // Nothing may frame the site, also for browsers that predate frame-ancestors (ADR-047).
       expect(directives.get("frame-ancestors")).toEqual(["'none'"]);
+      expect(headers["x-frame-options"]).toBe("DENY");
+      expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
+      // No inline event-handler attributes, even though inline <script> elements stay allowed.
+      expect(directives.get("script-src-attr")).toEqual(["'none'"]);
       // Production build: React's dev tooling needs no eval.
       expect(directives.get("script-src") ?? []).not.toContain("'unsafe-eval'");
       // Turnstile is configured (test keys), so its origin is allowed and nothing else is.

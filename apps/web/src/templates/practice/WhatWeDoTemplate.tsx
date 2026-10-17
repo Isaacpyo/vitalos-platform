@@ -1,4 +1,5 @@
 import {
+  closedGates,
   ctas,
   megaMenuColumns,
   navLabels,
@@ -7,7 +8,13 @@ import {
   routes,
   solutionNames,
 } from "@vitalos/cms";
-import type { OfferSummary, PracticeSummary, RoutePageView, SolutionSummary } from "@vitalos/cms";
+import type {
+  OfferSummary,
+  PracticeSummary,
+  PublicationGates,
+  RoutePageView,
+  SolutionSummary,
+} from "@vitalos/cms";
 import { Button, FeatureGrid, PracticeShowcase, SolutionShowcase } from "@vitalos/ui";
 import type { ProcessCycleStage } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
@@ -17,12 +24,13 @@ import { structuralLabels } from "../../lib/view-mapping/labels";
 import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import {
   offerFeatureItems,
-  practiceShowcaseItems,
+  sixPracticeShowcaseItems,
   solutionShowcaseItems,
 } from "../../lib/view-mapping/showcase";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { LifecycleBand, lifecycleHeading } from "../commercial/dark-bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface WhatWeDoTemplateProps {
   page: RoutePageView | null;
@@ -32,6 +40,9 @@ export interface WhatWeDoTemplateProps {
   /** The How We Work introduction and its nine stages, for the lifecycle band. */
   howWeWorkIntro?: string | undefined;
   howWeWorkStages?: readonly ProcessCycleStage[] | undefined;
+  /** Gates and the Labs page introduction, for Vitalos Labs as the sixth practice. */
+  gates?: PublicationGates | undefined;
+  labsIntro?: string | undefined;
 }
 
 export const whatWeDoTrail = () => trail({ label: navLabels.whatWeDo, path: routes.whatWeDo() });
@@ -53,8 +64,14 @@ export function WhatWeDoTemplate({
   offers,
   howWeWorkIntro,
   howWeWorkStages,
+  gates,
+  labsIntro,
 }: Readonly<WhatWeDoTemplateProps>) {
-  const practiceItems = practiceShowcaseItems(orderByLockedNames(practices, practiceNames));
+  const ordered = orderByLockedNames(practices, practiceNames);
+  const practiceItems = sixPracticeShowcaseItems(ordered, {
+    gates: gates ?? closedGates,
+    intro: labsIntro,
+  });
   const solutionItems = solutionShowcaseItems(orderByLockedNames(solutions, solutionNames));
   const offerItems = offerFeatureItems(orderByLockedNames(offers, offerNames));
   const primary = ctaToLink(page?.cta) ?? { label: ctas.primary, href: contactHref() };
@@ -62,6 +79,7 @@ export function WhatWeDoTemplate({
   return (
     <PageMain>
       <PageIntro
+        artwork={heroArtwork("what-we-do")}
         title={page?.heading ?? navLabels.whatWeDo}
         lead={page?.intro}
         actions={

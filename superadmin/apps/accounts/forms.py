@@ -49,9 +49,16 @@ class OTPTokenForm(StyledFormMixin, forms.Form):
 ROLE_CHOICES = [(role, f"{role} — {ROLE_DESCRIPTIONS[role]}") for role in ROLES]
 
 
+NAME_HELP = "The name people see on assignments, the audit trail and Relay, e.g. 'Temitope Agbola'."
+
+
+def _name_field() -> forms.CharField:
+    return forms.CharField(label="Full name", max_length=150, help_text=NAME_HELP)
+
+
 class UserCreateForm(StyledFormMixin, forms.Form):
     email = forms.EmailField()
-    full_name = forms.CharField(max_length=150, required=False)
+    full_name = _name_field()
     role = forms.ChoiceField(choices=ROLE_CHOICES, initial="Viewer")
     password = forms.CharField(
         label="Initial password",
@@ -78,7 +85,7 @@ class UserCreateForm(StyledFormMixin, forms.Form):
 
 
 class UserEditForm(StyledFormMixin, forms.Form):
-    full_name = forms.CharField(max_length=150, required=False)
+    full_name = _name_field()
     role = forms.ChoiceField(choices=[("", "No role (no access)"), *ROLE_CHOICES], required=False)
     is_active = forms.BooleanField(label="Active", required=False)
 
@@ -87,6 +94,23 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = get_user_model()
         fields = ["full_name"]
+        labels = {"full_name": "Full name"}
+        help_texts = {"full_name": NAME_HELP}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["full_name"].required = True
+
+    def clean_full_name(self):
+        name = " ".join(self.cleaned_data["full_name"].split())
+        if not name:
+            raise forms.ValidationError("Enter your name.")
+        return name
+
+    def save(self, commit=True):
+        # Saving the profile confirms the name, including one back-filled from the address.
+        self.instance.name_needs_review = False
+        return super().save(commit=commit)
 
 
 class ApiTokenForm(StyledFormMixin, forms.Form):

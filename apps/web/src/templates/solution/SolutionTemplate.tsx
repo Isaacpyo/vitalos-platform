@@ -5,10 +5,10 @@ import {
   CaseStudyRow,
   Disclosure,
   FeatureGrid,
+  LineDiagram,
   ProcessJourney,
   isNonEmpty,
 } from "@vitalos/ui";
-import { HeroImage } from "../../components/hero-image";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
@@ -16,7 +16,8 @@ import { iconFor } from "../../lib/view-mapping/icons";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { caseStudyMeta, toRows } from "../../lib/view-mapping/patterns";
 import { industryShowcaseItems, offerFeatureItems } from "../../lib/view-mapping/showcase";
-import { solutionImageFor } from "../../lib/view-mapping/solution-images";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
+import { solutionDiagramFor } from "../../lib/view-mapping/solution-diagrams";
 import { Band, ClosingBand, PageIntro, RowList, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { IndustryBand } from "../commercial/dark-bands";
@@ -35,7 +36,7 @@ export const solutionTrail = (solution: Pick<SolutionView, "title" | "slug">) =>
 
 /**
  * Solution page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
- * compact dark hero with the solution illustration; signals; business impact; approach; the
+ * compact dark hero with the solution's line diagram (ADR-044); signals; business impact; approach; the
  * typical journey on a dark band; offers and practices as icon cards; industries on the dark
  * aurora band; work as proof; common questions; the closing card. Empty sections are omitted.
  */
@@ -57,7 +58,7 @@ export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateP
     const [row] = toRows("caseStudy", [work], { meta: caseStudyMeta(work) });
     return row ? [row] : [];
   });
-  const image = solutionImageFor(solution.title);
+  const diagram = solutionDiagramFor(solution.title);
 
   return (
     <PageMain>
@@ -72,7 +73,14 @@ export function SolutionTemplate({ solution, gates }: Readonly<SolutionTemplateP
             {cta.label}
           </Button>
         }
-        media={image ? <HeroImage image={image} fit="contain" /> : undefined}
+        artwork={heroArtwork("what-we-do", solution.slug)}
+        media={
+          diagram ? (
+            <span className="ml-auto block aspect-square w-full max-w-[22rem] rounded-2xl border border-tone-border bg-tone-bg p-(--space-7)">
+              <LineDiagram name={diagram} className="size-full" />
+            </span>
+          ) : undefined
+        }
       />
       {renderBands(
         [

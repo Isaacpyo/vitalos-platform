@@ -12,8 +12,16 @@ import { COPY } from "../contract";
 import type { ConversationRecord, MessageRecord } from "../db/types";
 import { isExplicitHandoffRequest, normaliseQuestion } from "../handoff/intent";
 import { finaliseCitations, nextStepFor, publicCitations } from "../llm/citations";
+import { smallTalkKind, SMALL_TALK_REPLIES } from "../handoff/smalltalk";
+import {
+  PROMPT_BUDGET,
+  estimatePromptTokens,
+  estimateTokens,
+  truncateToTokens,
+} from "../llm/budget";
 import { MarkerGuard, stripMarkers } from "../llm/markers";
 import { buildUserMessage } from "../llm/prompts/context";
+import type { ContextInput } from "../llm/prompts/context";
 import { SUMMARY_SYSTEM_PROMPT, SYSTEM_PROMPT } from "../llm/prompts/system";
 import type { ChatTurn, Usage } from "../llm/provider";
 import { estimateCostUsd } from "../llm/provider";
@@ -22,10 +30,16 @@ import { retrieve } from "../retrieval/search";
 import type { chatBody, createConversationBody, feedbackBody, handoffBody } from "../schemas/api";
 import { parseStoredSettings } from "../schemas/settings";
 import type { RelaySettings } from "../schemas/settings";
-import { deviceLabel, teamStatus as computeTeamStatus, withinBusinessHours } from "../util/team";
+import {
+  deviceLabel,
+  nextOpening,
+  teamStatus as computeTeamStatus,
+  withinBusinessHours,
+} from "../util/team";
 import {
   hmacHex,
   initialsOf,
+  publicStaffName,
   randomToken,
   safeEqual,
   sha256Hex,
@@ -51,15 +65,15 @@ export const LIMITS = {
   messagesPerIpPer10Min: 20,
   messagesPerConversationPerDay: 60,
   aiTurnsPerConversation: 30,
-  historyTurns: 8,
-  historyTokens: 3000,
+  historyTurns: PROMPT_BUDGET.historyTurns,
+  historyTokens: PROMPT_BUDGET.historyTokens,
   typingPerConversationPer10s: 4,
 } as const;
 
 const AI_TURN_LIMIT_TEXT =
   "We've covered a lot here. A person from the team can pick this up from here.";
 
-const tokens = (text: string) => Math.ceil(text.split(/\s+/).filter(Boolean).length * 1.33);
+const tokens = estimateTokens;
 
 /** The visitor-facing API of Relay (section 5.2). Every method authenticates first. */
 export class VisitorService {
@@ -91,6 +105,7 @@ export class VisitorService {
       privacyUrl: this.ctx.config.privacyUrl,
       noticeVersion: this.ctx.config.privacyNoticeVersion,
       aiEnabled: settings.aiEnabled && this.ctx.config.aiEnabled,
+      nextOpening: team === "online" ? null : nextOpening(settings, this.ctx.deps.now()),
     };
   }
 
@@ -291,6 +306,15 @@ export class VisitorService {
       yield { event: "error", data: { code: "unavailable", message: COPY.unavailable } };
       return;
     }
+    // Greetings, thanks and goodbyes: a fixed reply, no retrieval, no model call, no gap.
+    const smallTalk = smallTalkKind(visitorMessage.body);
+    if (smallTalk) {
+      yield* this.cannedAnswer(conversation, aiMessageId, SMALL_TALK_REPLIES[smallTalk], {
+        handoff: false,
+        smallTalk,
+      });
+      return;
+    }
     const day = deps.now().toISOString().slice(0, 10);
     const cap = Math.min(settings.dailyTokenCap, this.ctx.config.dailyTokenCap);
     const usageToday = await deps.store.getUsage(day);
@@ -327,22 +351,17 @@ export class VisitorService {
     const sources = lowConfidence ? [] : retrieval.chunks;
     const team = await this.teamStatus(settings);
 
-    const messages: ChatTurn[] = [
-      ...historyTurns(earlier),
-      {
-        role: "user",
-        content: buildUserMessage({
-          pagePath,
-          // Visitor-supplied (document.title), so it is redacted like the question.
-          pageTitle: conversation.pageTitle ? redact(conversation.pageTitle) : null,
-          teamOnline: team === "online",
-          now: deps.now(),
-          confident: !lowConfidence,
-          sources,
-          question: redacted,
-        }),
-      },
-    ];
+    const messages = assemblePrompt(historyTurns(earlier), {
+      pagePath,
+      // Visitor-supplied (document.title), so it is redacted like the question.
+      pageTitle: conversation.pageTitle ? redact(conversation.pageTitle) : null,
+      teamOnline: team === "online",
+      now: deps.now(),
+      confident: !lowConfidence,
+      sources,
+      question: redacted,
+    });
+    const promptTokensEstimate = estimatePromptTokens(SYSTEM_PROMPT, messages);
 
     const started = Date.now();
     let firstTokenMs: number | null = null;
@@ -376,15 +395,20 @@ export class VisitorService {
         // estimate (about 4 characters a token) against the daily cap; aborting can't dodge it.
         if (firstTokenMs !== null) {
           const estimate: Usage = {
-            inputTokens: Math.ceil(
-              (SYSTEM_PROMPT.length + messages.reduce((n, m) => n + m.content.length, 0)) / 4,
-            ),
-            outputTokens: Math.ceil(guard.partial().length / 4),
+            inputTokens: promptTokensEstimate,
+            outputTokens: estimateTokens(guard.partial()),
             cacheHitTokens: 0,
           };
           const cost = estimateCostUsd(estimate, settings.model, deps.now());
           deps.defer(() =>
-            deps.store.addUsage(day, estimate.inputTokens, estimate.outputTokens, 0, cost),
+            deps.store.addUsage(
+              day,
+              estimate.inputTokens,
+              estimate.outputTokens,
+              0,
+              cost,
+              isTestTraffic(conversation) ? "test" : "aborted",
+            ),
           );
         }
         // Stopped by the visitor or failed: keep what was written, marked truncated.
@@ -437,7 +461,26 @@ export class VisitorService {
       cacheHitTokens: usage.cacheHitTokens,
       latencyMs,
       firstTokenMs,
-      meta: { low_confidence: lowConfidence, next_step: nextStep, sources_count: citations.length },
+      meta: {
+        low_confidence: lowConfidence,
+        next_step: nextStep,
+        sources_count: citations.length,
+        // Per-turn budget accounting (ADR-048): what was sent, estimated before the call.
+        prompt_tokens_est: promptTokensEstimate,
+        chunks_sent: sources.length,
+        history_turns: messages.length - 1,
+      },
+    });
+    // Per-turn token log (no content): compare the estimate with the provider's count.
+    deps.logger.info("relay.turn", {
+      conversationId: conversation.id,
+      tokensIn: usage.inputTokens,
+      tokensOut: usage.outputTokens,
+      cacheHitTokens: usage.cacheHitTokens,
+      promptTokensEstimate,
+      chunks: sources.length,
+      historyTurns: messages.length - 1,
+      lowConfidence,
     });
     await deps.store.updateConversation(conversation.id, {
       aiTurns: conversation.aiTurns + 1,
@@ -456,6 +499,7 @@ export class VisitorService {
         usage.outputTokens,
         usage.cacheHitTokens,
         estimateCostUsd(usage, settings.model, deps.now()),
+        isTestTraffic(conversation) ? "test" : "chat",
       );
       if (lowConfidence) {
         await deps.store.recordGap(normaliseQuestion(redacted), redacted, conversation.id);
@@ -489,7 +533,7 @@ export class VisitorService {
     conversation: ConversationRecord,
     messageId: string,
     text: string,
-    options: { handoff: boolean },
+    options: { handoff: boolean; smallTalk?: string },
   ): AsyncGenerator<ChatEvent> {
     await this.store.insertMessage({
       id: messageId,
@@ -497,7 +541,7 @@ export class VisitorService {
       senderType: "ai",
       body: text,
       handoffSuggested: options.handoff,
-      meta: { canned: true },
+      meta: { canned: true, ...(options.smallTalk ? { small_talk: options.smallTalk } : {}) },
     });
     yield { event: "delta", data: { text } };
     yield {
@@ -531,8 +575,19 @@ export class VisitorService {
       (message.senderType !== "ai" && !closingReview)
     )
       throw new RelayError("not_found");
+    // The one-tap reason after a thumbs-down (D6): stored on the same answer; the gap and the
+    // NOT_HELPFUL tag were recorded by the thumbs-down itself, so nothing is counted twice.
+    if (body.value === -1 && body.reason && message.feedback === -1 && !closingReview) {
+      await this.store.updateMessage(message.id, { feedbackReason: body.reason });
+      return { showHandoff: true };
+    }
     await this.store.updateMessage(message.id, {
       feedback: body.value,
+      // Only written when given, so the write works before the column's migration is applied;
+      // Insights count reasons on thumbs-down answers only, so a stale reason never shows.
+      ...(body.value === -1 && body.reason && !closingReview
+        ? { feedbackReason: body.reason }
+        : {}),
       feedbackAt: this.ctx.deps.now().toISOString(),
     });
     if (closingReview) {
@@ -648,6 +703,7 @@ export class VisitorService {
         .join("\n")
         .slice(-12_000);
       if (!transcript) return;
+      const conversation = await this.store.getConversation(conversationId);
       const result = await this.ctx.deps.llm.generateSummary({
         system: SUMMARY_SYSTEM_PROMPT,
         transcript,
@@ -662,6 +718,7 @@ export class VisitorService {
         result.usage.outputTokens,
         result.usage.cacheHitTokens,
         estimateCostUsd(result.usage, this.ctx.config.summaryModel, now),
+        conversation && isTestTraffic(conversation) ? "test" : "summary",
       );
       await this.store.updateConversation(conversationId, {
         summary: redact(result.output.summary).slice(0, 600),
@@ -689,19 +746,22 @@ export class VisitorService {
       lastVisitorSeenAt: this.ctx.deps.now().toISOString(),
     });
     const list = await this.store.listMessages(conversation.id, after ? { after } : {});
-    const team = await this.teamStatus();
+    const settings = await this.settings();
+    const team = await this.teamStatus(settings);
     return {
       messages: list.filter((m) => m.senderType !== "note").map(toVisitorMessage),
       status: conversation.status,
       person:
         conversation.status === "human" && conversation.assignedAdminName
           ? {
-              name: conversation.assignedAdminName,
+              // Visitors see a first name only, never a username or email (D3).
+              name: publicStaffName(conversation.assignedAdminName),
               initials:
                 conversation.assignedAdminInitials ?? initialsOf(conversation.assignedAdminName),
             }
           : null,
       teamStatus: team,
+      nextOpening: team === "online" ? null : nextOpening(settings, this.ctx.deps.now()),
       contact:
         conversation.contactName && conversation.contactEmail
           ? { name: conversation.contactName, email: conversation.contactEmail }
@@ -819,6 +879,18 @@ export class VisitorService {
 }
 
 // ---------------------------------------------------------------------------------------------
+/** utm_source values the eval and load harnesses send (`pnpm relay:eval --answers`, `relay:load`). */
+export const TEST_TRAFFIC_SOURCES = ["relay-eval", "relay-load"] as const;
+
+/**
+ * Test traffic: conversations started by the eval or load harness. Their usage is tagged "test"
+ * so Insights can show it apart from visitors (it still counts towards the daily cap). A visitor
+ * could set the same utm_source, which only moves their own usage into the test column.
+ */
+export function isTestTraffic(c: Pick<ConversationRecord, "utm">): boolean {
+  return (TEST_TRAFFIC_SOURCES as readonly string[]).includes(c.utm?.utm_source ?? "");
+}
+
 function safeReferrer(value: string): string | null {
   if (!URL.canParse(value)) return null;
   const u = new URL(value);
@@ -828,16 +900,22 @@ function safeReferrer(value: string): string | null {
 const stripCitationMarkers = (text: string) =>
   text.replace(/\[\d{1,2}\]/g, "").replace(/ +([.,;:])/g, "$1");
 
-/** Last 8 turns as plain text: visitor redacted, AI without citation markers, admins labelled. */
+/**
+ * Recent turns as plain text: visitor redacted, AI without citation markers, admins labelled. At
+ * most `historyTurns` turns and `historyTokens` tokens, each turn cut to `turnTokens` (ADR-048).
+ * Small talk is left out: it carries nothing the model needs.
+ */
 export function historyTurns(earlier: readonly MessageRecord[]): ChatTurn[] {
   const turns: ChatTurn[] = [];
+  const cap = (text: string) => truncateToTokens(text, PROMPT_BUDGET.turnTokens);
   for (const m of earlier) {
-    if (m.senderType === "visitor")
-      turns.push({ role: "user", content: m.bodyRedacted ?? redact(m.body) });
-    else if (m.senderType === "ai" && !m.meta.canned)
-      turns.push({ role: "assistant", content: stripCitationMarkers(m.body) });
+    if (m.senderType === "visitor") {
+      if (smallTalkKind(m.body)) continue;
+      turns.push({ role: "user", content: cap(m.bodyRedacted ?? redact(m.body)) });
+    } else if (m.senderType === "ai" && !m.meta.canned)
+      turns.push({ role: "assistant", content: cap(stripCitationMarkers(m.body)) });
     else if (m.senderType === "admin")
-      turns.push({ role: "assistant", content: `[Vitalos team] ${redact(m.body)}` });
+      turns.push({ role: "assistant", content: cap(`[Vitalos team] ${redact(m.body)}`) });
   }
   const recent = turns.slice(-LIMITS.historyTurns);
   let total = recent.reduce((s, t) => s + tokens(t.content), 0);
@@ -847,6 +925,30 @@ export function historyTurns(earlier: readonly MessageRecord[]): ChatTurn[] {
   // The first turn sent to the model must be the visitor's.
   while (recent[0]?.role === "assistant") recent.shift();
   return recent;
+}
+
+/**
+ * The messages of one model call: history, then the context/sources/question message. Enforces
+ * `PROMPT_BUDGET.total` with the system prompt counted: the oldest history goes first, then the
+ * lowest-ranked sources, so a turn can never exceed the budget whatever is stored.
+ */
+export function assemblePrompt(history: readonly ChatTurn[], context: ContextInput): ChatTurn[] {
+  let turns = [...history];
+  let sources = [...context.sources];
+  const build = (): ChatTurn[] => [
+    ...turns,
+    { role: "user", content: buildUserMessage({ ...context, sources }) },
+  ];
+  let messages = build();
+  while (estimatePromptTokens(SYSTEM_PROMPT, messages) > PROMPT_BUDGET.total) {
+    if (turns.length > 0) {
+      turns = turns.slice(1);
+      while (turns[0]?.role === "assistant") turns = turns.slice(1);
+    } else if (sources.length > 1) sources = sources.slice(0, -1);
+    else break;
+    messages = build();
+  }
+  return messages;
 }
 
 /** Merges consecutive turns from the same role (OpenAI-compatible APIs expect alternation). */
@@ -872,13 +974,14 @@ export function toVisitorMessage(m: MessageRecord): VisitorMessage {
         handoffSuggested: m.handoffSuggested,
         lowConfidence: Boolean(m.meta.low_confidence),
         feedback: m.feedback,
+        feedbackReason: m.feedbackReason ?? null,
         truncated: m.truncated,
       };
     case "admin":
       return {
         ...base,
         senderType: "admin",
-        adminName: m.adminName,
+        adminName: publicStaffName(m.adminName),
         adminInitials: m.adminInitials,
       };
     case "system": {
@@ -889,7 +992,7 @@ export function toVisitorMessage(m: MessageRecord): VisitorMessage {
         event: m.body as SystemEvent,
         ...(m.body === "closed" ? { feedback: m.feedback } : {}),
         meta: {
-          ...(meta.name ? { name: meta.name } : {}),
+          ...(meta.name ? { name: publicStaffName(meta.name) } : {}),
           ...(meta.email ? { email: meta.email } : {}),
           ...(meta.outOfHours ? { outOfHours: true } : {}),
         },

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import type { ArtworkSpec } from "@vitalos/ui";
 import { isAllowedImage } from "../../features/content/markdown/render";
 import {
   insightsCopy,
@@ -17,6 +18,7 @@ import { mediaOrigin } from "../../features/content/site-hosts";
 import { ClosingBand } from "../commercial/bands";
 import { PageHeroBand } from "../institutional/layout";
 import { CardArrow, cardFrame, cardLink, monoLabel } from "./card";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 // Re-exported for the pages that already import them from here.
 export { CardArrow, cardFrame, cardLink, monoLabel };
@@ -65,6 +67,8 @@ export function InsightsHero({
   actions,
   media,
   full = false,
+  artwork = heroArtwork("insights"),
+  tone = "dark",
   children,
 }: Readonly<{
   eyebrow?: string;
@@ -75,10 +79,16 @@ export function InsightsHero({
   actions?: ReactNode;
   media?: ReactNode;
   full?: boolean;
+  /** The family artwork (ADR-044); Insights by default. */
+  artwork?: ArtworkSpec;
+  /** `light`: the compact light hero of a reading page (an article, a role). */
+  tone?: "dark" | "light";
   children?: ReactNode;
 }>) {
   return (
     <PageHeroBand
+      artwork={artwork}
+      tone={tone}
       crumbs={crumbs}
       eyebrow={eyebrow}
       title={title}

@@ -1,3 +1,4 @@
+import { brandName, ctas, navLabels, practiceNames, propositionLong } from "@vitalos/cms";
 import type { CareersPageData, ClosedRoleData, RoleDetailData } from "../schemas";
 import type { z } from "zod";
 import type { RoleSummary } from "../schemas";
@@ -98,6 +99,58 @@ export function roleFacts(role: RoleDetail): Fact[] {
     ...(role.closesAt ? [{ label: "CLOSES", value: role.closesAt.long }] : []),
   ];
 }
+
+// ---------------------------------------------------------------------------------------------
+// The role page: the hiring-process block and the "About Vitalos" strip
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The role's sections split for the page: the hiring process gets its own block (shown only when
+ * the role or the careers setting has text, as before), the rest stay in order.
+ */
+export function splitProcess<T extends { key: string }>(
+  sections: readonly T[],
+): { body: T[]; process: T | null; after: T[] } {
+  const index = sections.findIndex((section) => section.key === "process");
+  if (index === -1) return { body: [...sections], process: null, after: [] };
+  return {
+    body: sections.slice(0, index),
+    process: sections[index] ?? null,
+    after: sections.slice(index + 1),
+  };
+}
+
+const countWords = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+
+/**
+ * The practices, from the locked names plus Labs (decision 1 of the 17 Oct 2026 review: six
+ * practices including Labs), each once, so the line stays right whether or not the locked list
+ * itself gains Labs.
+ */
+export function vitalosPractices(
+  names: readonly string[] = practiceNames,
+  labs: string = navLabels.labs,
+): string[] {
+  return [...new Set([...names, labs])];
+}
+
+/** "Vitalos works through six practices: Consulting, …, Managed Services and Labs." */
+export function practicesLine(names: readonly string[] = vitalosPractices()): string {
+  if (names.length === 0) return "";
+  const count = countWords[names.length] ?? String(names.length);
+  const list =
+    names.length === 1
+      ? (names[0] ?? "")
+      : `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
+  return `${brandName} works through ${count} practice${names.length === 1 ? "" : "s"}: ${list}.`;
+}
+
+export const aboutVitalos = {
+  heading: `${navLabels.about} ${brandName}`,
+  lead: propositionLong,
+  aboutLink: `${navLabels.about} ${brandName}`,
+  whatWeDoLink: ctas.secondary,
+} as const;
 
 // ---------------------------------------------------------------------------------------------
 // The careers page: groups and filters
@@ -229,6 +282,9 @@ const employmentTypes: Record<string, string> = {
   associate: "CONTRACTOR",
 };
 
+/** A role location that names the whole country rather than a place in it. */
+const ukCountry = /^(united kingdom|uk)$/i;
+
 const validDate = (iso: string | undefined) =>
   iso !== undefined && !Number.isNaN(Date.parse(iso)) ? iso : undefined;
 
@@ -281,7 +337,10 @@ export function jobPostingJsonLd(
       : {
           jobLocation: {
             "@type": "Place",
-            address: { "@type": "PostalAddress", addressLocality: locality },
+            // "United Kingdom" (or "UK") is a country, not a locality: say so (review B7).
+            address: ukCountry.test(locality)
+              ? { "@type": "PostalAddress", addressCountry: "GB" }
+              : { "@type": "PostalAddress", addressLocality: locality },
           },
         }),
     ...(role.salary

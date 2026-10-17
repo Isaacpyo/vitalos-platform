@@ -24,7 +24,8 @@ export function FaqNav({
       const line = window.innerHeight / 3;
       let current = sections[0]?.id ?? "";
       for (const section of sections) {
-        if (section.getBoundingClientRect().top <= line) current = section.id;
+        // Groups the FAQ filter has hidden have no box; they never become current.
+        if (!section.hidden && section.getBoundingClientRect().top <= line) current = section.id;
       }
       setActive(current);
     };

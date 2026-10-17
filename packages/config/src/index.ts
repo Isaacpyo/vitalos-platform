@@ -10,6 +10,7 @@ export {
   enquiryBackends,
   EnvValidationError,
   fixtureSets,
+  navVariants,
   parseEnv,
   safeParseEnv,
 } from "./schema";
@@ -24,6 +25,8 @@ export type {
   EnvSource,
   Features,
   FixtureSet,
+  NavVariant,
   ParseEnvResult,
   SigningKey,
+  SiteEnv,
 } from "./schema";

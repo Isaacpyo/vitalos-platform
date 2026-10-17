@@ -14,7 +14,7 @@ function authorised(request: Request, secret: string | undefined): boolean {
 /**
  * Scheduled jobs (ADR-038), called by pg_cron through pg_net with `CRON_SECRET`:
  * reminders (every 5 min), digest (hourly; sends at 08:45 London), faq-sync (every 15 min,
- * `?mode=full` nightly).
+ * `?mode=full` nightly), ingest (hourly: website and repo knowledge, ADR-048).
  */
 export async function handleCronRequest(
   request: Request,
@@ -29,6 +29,10 @@ export async function handleCronRequest(
         return json(await relay.cron.reminders());
       case "digest":
         return json(await relay.cron.digest());
+      case "ingest":
+        // Hourly re-ingest of the bundled website and repo knowledge (ADR-048, D4).
+        await relay.ready();
+        return json(await relay.admin.ingestBundled("relay:cron"));
       case "faq-sync": {
         const full = new URL(request.url).searchParams.get("mode") === "full";
         const run = await relay.faq.cron(full);

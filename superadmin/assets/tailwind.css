@@ -173,6 +173,39 @@
   .table-base td {
     @apply h-10 px-3 py-2 align-top;
   }
+  /* Row actions (E3): a sticky right-hand column with one primary action and a "More" menu, so the
+     actions stay reachable however wide the table is. The menu panel is fixed-positioned by app.js,
+     so the table's overflow-x-auto wrapper never clips it. */
+  .table-base .col-actions {
+    @apply sticky right-0 bg-white text-right whitespace-nowrap shadow-[-6px_0_6px_-6px_rgb(15_23_42/0.18)]
+      dark:bg-slate-900;
+  }
+  .table-base td.col-actions {
+    @apply z-[5];
+  }
+  /* A sticky cell is its own stacking context: lift the row whose menu is open above later rows. */
+  .table-base td.col-actions:has(details[open]) {
+    @apply z-30;
+  }
+  .row-menu-panel {
+    @apply fixed z-50 flex w-60 flex-col rounded-md border border-slate-200 bg-white p-1 text-left text-sm
+      whitespace-normal shadow-lg dark:border-slate-700 dark:bg-slate-900;
+  }
+  .row-menu-item {
+    @apply block w-full rounded px-2 py-1.5 text-left text-slate-700 hover:bg-slate-100 focus-visible:bg-slate-100
+      dark:text-slate-200 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800;
+  }
+  .row-menu-danger {
+    @apply text-rose-700 dark:text-rose-300;
+  }
+  /* Overview counts (ADR-049): each number is a link to the list it counts. Attention is shown by an
+     underline and weight as well as colour. */
+  .overview-count {
+    @apply text-xl font-semibold text-slate-900 tabular-nums hover:underline dark:text-white;
+  }
+  .overview-count-attention {
+    @apply text-amber-800 underline decoration-2 underline-offset-4 dark:text-amber-300;
+  }
   .tab {
     @apply rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100
       hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white;

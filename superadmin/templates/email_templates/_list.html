@@ -28,7 +28,7 @@
               data-status="{{ template.status }}">{{ template.get_status_display }}</span>
           </td>
           <td class="whitespace-nowrap"><time datetime="{{ template.updated_at|date:'c' }}">{{ template.updated_at|date:"j M Y, H:i" }}</time></td>
-          <td class="whitespace-nowrap">{% if template.updated_by %}{{ template.updated_by.email }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
+          <td class="whitespace-nowrap">{% if template.updated_by %}{{ template.updated_by|person }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
           <td class="whitespace-nowrap text-right">{% if template.status != "archived" %}<a class="btn btn-secondary btn-sm" href="{% url 'email_templates:use' template.pk %}" data-testid="use-template" aria-label="Use {{ template.name }}">{% icon "mail" "h-4 w-4" %} Use</a>{% endif %}</td>
         </tr>
       {% empty %}

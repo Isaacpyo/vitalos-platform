@@ -1,6 +1,6 @@
 # ADR 020 Security headers, Content-Security-Policy and non-production noindex
 
-Status: Accepted.
+Status: Accepted. Decisions 4 (HSTS), 5 to 7 (CSP) and the `X-Frame-Options` option amended by ADR-047 (17 Oct 2026); decision 10 (analytics) superseded by ADR-046.
 
 ## Context
 

@@ -3,7 +3,7 @@ import { ctas, navLabels, routes } from "@vitalos/cms";
 import { getEnv, getFeatures } from "@vitalos/config";
 import { Container, IconTile, PageHero, Section } from "@vitalos/ui";
 import { RichText } from "../../../src/components/rich-text";
-import { heroPhotograph } from "../../../src/lib/view-mapping/hero-images";
+import { heroArtwork } from "../../../src/lib/view-mapping/hero-artwork";
 import { buildMetadata } from "../../../src/features/seo/metadata";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
 import { submitEnquiryAction } from "../../../src/features/enquiries/server-action";
@@ -64,7 +64,7 @@ export default async function ContactPage({
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("contact")}
         eyebrow={navLabels.contact}
         title={page?.heading ?? ctas.primary}
         lead={page?.intro}

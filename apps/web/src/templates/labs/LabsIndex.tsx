@@ -9,6 +9,7 @@ import { labLabels, labTypeLabel, typesWithAssets } from "./map";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { Band, ClosingBand, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /**
  * Labs index (gated), in the homepage's design (pages redesign, 15 Oct 2026): the full dark hero;
@@ -23,10 +24,19 @@ export function LabsIndex({ data }: Readonly<{ data: LabsIndexData }>) {
     <PageMain>
       <PageHeroBand
         full
+        artwork={heroArtwork("labs")}
         crumbs={
           <Breadcrumbs
             trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]}
-            page={{ type: "CollectionPage", name: page?.heading, description: page?.intro }}
+            page={{
+              type: "CollectionPage",
+              name: page?.heading,
+              description: page?.intro,
+              items: assets.map((a) => ({
+                name: a.title,
+                path: routes.labAsset(a.labType, a.slug),
+              })),
+            }}
           />
         }
         title={page?.heading ?? navLabels.labs}

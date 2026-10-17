@@ -17,10 +17,29 @@ PERIODS = (7, 30, 90)
 
 
 def _percent(value) -> str:
+    """A fraction between 0 and 1 (the admin API unit, docs/relay/API.md) as a percentage."""
     try:
         return f"{float(value) * 100:.0f}%"
     except (TypeError, ValueError):
         return "–"
+
+
+def _tokens(value) -> str:
+    return f"{value:,}" if isinstance(value, int | float) else "–"
+
+
+USAGE_SOURCE_LABELS = (
+    ("chat", "Visitor answers"),
+    ("summary", "Hand-off summaries"),
+    ("aborted", "Stopped answers (estimated)"),
+    ("test", "Test traffic (evals and load tests)"),
+    ("untagged", "Not tagged (recorded before 17 Oct 2026)"),
+)
+REASON_LABELS = (
+    ("wrong", "It was wrong"),
+    ("incomplete", "It was incomplete"),
+    ("didnt_understand", "It didn't understand me"),
+)
 
 
 def _duration(seconds) -> str:
@@ -53,10 +72,25 @@ def insights(request):
                 ("Median time to first person reply", _duration(data.get("medianFirstReplySeconds"))),
                 ("Waiting now", f"{data.get('waitingNow', 0):,}"),
             ],
+            # Per-turn input tokens of visitor answers (ADR-048: target at most 8,000).
+            "turns": [
+                ("AI answers measured", _tokens((data.get("turns") or {}).get("count"))),
+                ("Average input tokens per answer", _tokens((data.get("turns") or {}).get("avgTokensIn"))),
+                ("95th percentile", _tokens((data.get("turns") or {}).get("p95TokensIn"))),
+                ("Largest", _tokens((data.get("turns") or {}).get("maxTokensIn"))),
+            ],
+            "usage_by_source": [
+                (label, _tokens(((data.get("usageBySource") or {}).get(key) or {}).get("tokensIn", 0)))
+                for key, label in USAGE_SOURCE_LABELS
+                if key != "untagged" or ((data.get("usageBySource") or {}).get(key) or {}).get("tokensIn")
+            ],
+            "reasons": [
+                (label, (data.get("feedbackReasons") or {}).get(key, 0)) for key, label in REASON_LABELS
+            ],
             "top_questions": data.get("topQuestions") or [],
             "top_gaps": data.get("topGaps") or [],
             "usage": [
-                ("Tokens in", f"{data.get('tokensIn', 0):,}"),
+                ("Tokens in (all model calls)", f"{data.get('tokensIn', 0):,}"),
                 ("Tokens out", f"{data.get('tokensOut', 0):,}"),
                 ("Cached input tokens", f"{data.get('cacheHitTokens', 0):,}"),
                 (

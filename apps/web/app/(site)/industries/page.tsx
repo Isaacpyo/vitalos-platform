@@ -36,6 +36,7 @@ export default async function IndustriesPage() {
           name: page?.heading ?? navLabels.industries,
           description: page?.intro,
           type: "CollectionPage",
+          items: industries.map((d) => ({ name: d.title, path: routes.industry(d.slug) })),
         })}
       />
       <IndustryIndexTemplate page={page} industries={industries} />

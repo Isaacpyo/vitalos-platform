@@ -9,6 +9,7 @@ import { PageMain } from "../institutional/page-main";
 import { renderBands } from "../commercial/bands";
 import { InsightsHero, TalkBand, monoLabel } from "../insights/parts";
 import { HtmlSection, RoleList } from "./parts";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** A careers band: a named region with the site's section heading, on the given surface. */
 function CareersBand({
@@ -151,6 +152,7 @@ export function CareersTemplate({
   return (
     <PageMain>
       <InsightsHero
+        artwork={heroArtwork("careers")}
         full
         eyebrow={careersCopy.eyebrow}
         title={copy.heading}

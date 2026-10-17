@@ -159,6 +159,36 @@ describe("Careers pages when open", () => {
     expect(jsonLdIssues(markup, "/careers/example-role-fixture")).toEqual([]);
   });
 
+  it("shows the hiring-process block only when there is process text, and the About strip", async () => {
+    const page = await pages.role();
+    const without = html(await page.default(params({ slug: "example-role-fixture" })));
+    // The fixture's process is empty (an empty careers setting): no block, no heading.
+    expect(without).not.toContain('id="role-process"');
+    expect(without).not.toContain("How we hire");
+    // The About strip: the locked proposition and the practices line, with Labs as the sixth.
+    expect(without).toContain('id="about-vitalos"');
+    expect(without).toContain(
+      "Vitalos works through six practices: Consulting, Engineering, AI &amp; Data, Experience, Managed Services and Labs.",
+    );
+    expect(without).toContain('href="/about"');
+    expect(without).toContain('href="/what-we-do"');
+
+    const role = structuredClone(fixture("role-open")) as {
+      sections: { process: string; equalOpportunities: string };
+    };
+    role.sections.process = "1. Example first step (fixture).\n2. Example second step (fixture).";
+    role.sections.equalOpportunities = "Example statement (fixture).";
+    admin.answers["/api/content/v1/careers/roles/example-role-fixture"] = role;
+    const withProcess = html(await page.default(params({ slug: "example-role-fixture" })));
+    expect(withProcess).toContain('aria-labelledby="role-process"');
+    expect(withProcess).toContain("How we hire");
+    expect(withProcess).toContain("Example second step (fixture).");
+    // The order holds: the process block sits before the equal-opportunities section.
+    expect(withProcess.indexOf("How we hire")).toBeLessThan(
+      withProcess.indexOf("Example statement (fixture)."),
+    );
+  });
+
   it("does not offer the form while the privacy notice is not set", async () => {
     const role = structuredClone(fixture("role-open")) as { privacy: { noticeUrl: string | null } };
     role.privacy.noticeUrl = null;

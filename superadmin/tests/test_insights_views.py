@@ -205,7 +205,9 @@ def _form_data(post, **changes):
         "slug": post.slug,
         "practice": post.practice,
         "updated_at": post.updated_at.isoformat(),
-        "author_1": str(post.author_links.first().author_id) if post.author_links.exists() else "",
+        "authors": [
+            str(pk) for pk in post.author_links.order_by("position").values_list("author_id", flat=True)
+        ],
     }
     data.update(changes)
     return data
@@ -505,7 +507,7 @@ def test_post_ids_from_the_client_are_checked(world, superadmin, client_for):
     missing = uuid.uuid4()
     assert client.get(reverse("insights:post", args=[missing])).status_code == 404
     other = make_post("Example other (fixture)", superadmin)
-    data = _form_data(world["draft"], related_1=str(world["draft"].pk), author_1=str(uuid.uuid4()))
+    data = _form_data(world["draft"], related_1=str(world["draft"].pk), authors=[str(uuid.uuid4())])
     response = client.post(reverse("insights:post_autosave", args=[world["draft"].pk]), data)
     assert response.status_code == 400  # unknown author id is not a valid choice
     data = _form_data(world["draft"], related_1=str(other.pk))

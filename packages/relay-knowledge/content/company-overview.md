@@ -14,7 +14,7 @@ We work in English and our website is vitalos.co.uk. The registered company is V
 
 ## How we are organised
 
-We work through five practices: Consulting, Engineering, AI & Data, Experience and Managed Services, with Vitalos Labs as a separate research and technical proof capability. Five solutions describe the business problems we solve across practices, and twelve offers are bounded engagements you can start with.
+We work through six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs, our research and technical proof practice. Six solutions describe the business problems we solve across practices, and twelve offers are bounded engagements you can start with.
 
 ## What we will not claim
 

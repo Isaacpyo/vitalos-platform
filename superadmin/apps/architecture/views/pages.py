@@ -2,13 +2,23 @@
 
 from datetime import datetime
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.accounts.roles import SUPERADMIN, has_service_access, is_superadmin, role_required
-from apps.core import overview
+from apps.accounts.roles import (
+    SUPERADMIN,
+    has_service_access,
+    is_superadmin,
+    primary_role,
+    role_label,
+    role_required,
+)
+from apps.core import morning, overview
 from apps.core.htmx import changed_response
 from apps.core.synthetic import exclude_synthetic, not_synthetic_project_q
 from apps.enquiries.selectors import can_access as can_access_enquiries
@@ -26,6 +36,12 @@ TABS = [
 ]
 
 
+def _module_enabled() -> None:
+    """ARCHITECTURE_MODULE_ENABLED=false: the Service lines and Architecture pages answer 404."""
+    if not settings.ARCHITECTURE_MODULE_ENABLED:
+        raise Http404("The architecture module is switched off.")
+
+
 def _show_archived(request) -> bool:
     return request.GET.get("archived") == "1"
 
@@ -38,21 +54,21 @@ def _partial(request, target: str) -> bool:
 @role_required()
 @require_GET
 def home(request):
+    """The morning Overview: what needs doing today across every module (ADR-049)."""
     user = request.user
-    context = {
-        "service_lines": selectors.service_lines_for_home(user),
-        "recent_activity": activity.feed(user, limit=8),
-        "show_enquiry_kpis": can_access_enquiries(user),
-    }
+    context = morning.build(user)
+    context["recent_activity"] = activity.feed(user, limit=8)
+    context["show_enquiry_kpis"] = can_access_enquiries(user)
     if context["show_enquiry_kpis"]:
         context["kpis"] = overview.enquiry_kpis()
-        context["attention_count"] = len(overview.needs_attention())
+        context["attention_count"] = len(context["attention"])
     return render(request, "architecture/home.html", context)
 
 
 @role_required()
 @require_GET
 def service_lines(request):
+    _module_enabled()
     context = {"service_lines": selectors.service_lines_for_home(request.user)}
     return render(request, "architecture/service_lines.html", context)
 
@@ -123,6 +139,7 @@ TAB_BUILDERS = {
 @role_required()
 @require_GET
 def service_dashboard(request, slug):
+    _module_enabled()
     user = request.user
     line = get_object_or_404(visible(ServiceLine.objects.select_related("owner"), user), slug=slug)
     tab = request.GET.get("tab", "overview")
@@ -152,6 +169,7 @@ def service_dashboard(request, slug):
 @role_required()
 @require_GET
 def architecture(request):
+    _module_enabled()
     user = request.user
     archived = _show_archived(request)
     lines = visible(ServiceLine.objects.select_related("owner"), user)
@@ -245,20 +263,38 @@ def activity_view(request):
 @role_required()
 @require_GET
 def team_overview(request):
-    """Company-wide team list (SuperAdmin manages membership)."""
-    members = (
-        visible(TeamMember.objects.all(), request.user)
-        .prefetch_related("service_lines")
-        .select_related("user")
-    )
-    if not _show_archived(request):
+    """Company-wide team: every person with an admin account, then team members without one.
+
+    One person is one user who may also be a team member (ADR-049), so the user list is the source
+    and the linked team member adds the role title and service lines.
+    """
+    user = request.user
+    archived = _show_archived(request)
+    members = visible(TeamMember.objects.all(), user).prefetch_related("service_lines").select_related("user")
+    if not archived:
         members = members.filter(is_archived=False)
+    members = list(members)
+    member_by_user = {member.user_id: member for member in members if member.user_id}
+    owned: dict[int, list] = {}
+    for line in ServiceLine.objects.filter(is_archived=False, owner__isnull=False).order_by("order"):
+        owned.setdefault(line.owner_id, []).append(line)
+    people = []
+    for account in get_user_model().objects.filter(is_active=True).order_by("full_name", "email"):
+        role = primary_role(account)
+        if role is None and not account.is_superuser:
+            continue
+        member = member_by_user.get(account.pk)
+        lines = list(member.service_lines.all()) if member else []
+        lines += [line for line in owned.get(account.pk, []) if line not in lines]
+        people.append({"user": account, "member": member, "role": role_label(account), "lines": lines})
+    unlinked = [member for member in members if not member.user_id]
     return render(
         request,
         "architecture/team.html",
         {
-            "members": members,
-            "show_archived": _show_archived(request),
-            "can_edit_team": is_superadmin(request.user),
+            "people": people,
+            "unlinked_members": unlinked,
+            "show_archived": archived,
+            "can_edit_team": is_superadmin(user),
         },
     )

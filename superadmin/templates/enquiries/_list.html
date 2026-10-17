@@ -26,7 +26,7 @@
             {% endif %}
             {% if e.source == "web_form" %}<span class="muted" title="Website form">{% icon "globe" "h-3.5 w-3.5" %}<span class="sr-only">Website form</span></span>{% endif %}
             <span class="ml-auto">
-              {% if e.assignee %}<span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100" title="Assigned to {{ e.assignee.email }}">{{ e.assignee|initials }}<span class="sr-only">Assigned to {{ e.assignee.email }}</span></span>
+              {% if e.assignee %}<span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100" title="Assigned to {{ e.assignee|person }}">{{ e.assignee|initials }}<span class="sr-only">Assigned to {{ e.assignee|person }}</span></span>
               {% else %}<span class="muted text-[11px]">Unassigned</span>{% endif %}
             </span>
           </div>

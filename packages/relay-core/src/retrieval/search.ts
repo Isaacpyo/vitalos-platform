@@ -1,5 +1,7 @@
 import type { MatchedChunk, RelayStore } from "../db/types";
+import { PROMPT_BUDGET, estimateTokens, truncateToTokens } from "../llm/budget";
 import type { Embedder } from "./embed";
+import { correctSpelling } from "./spelling";
 
 export interface RetrievalOptions {
   question: string;
@@ -16,6 +18,8 @@ export interface RetrievalOptions {
 
 export interface RetrievalResult {
   query: string;
+  /** Spelling corrections applied to the query (`[from, to]` pairs), for admins and evals. */
+  corrections: [string, string][];
   chunks: MatchedChunk[];
   confidence: number;
   confident: boolean;
@@ -30,7 +34,8 @@ const PRONOUNS = /\b(it|that|this|they|them|those|these|its|there|one|he|she)\b/
 /** Short follow-ups that lean on the previous question are searched together with it. */
 export function composeQuery(question: string, previous?: string | null): string {
   const words = question.trim().split(/\s+/).filter(Boolean);
-  if (previous && words.length < 8 && PRONOUNS.test(question))
+  // Up to ten words: "so how can I modernise my system with this?" is still a follow-up.
+  if (previous && words.length <= 10 && PRONOUNS.test(question))
     return `${previous.trim()} ${question.trim()}`;
   return question.trim();
 }
@@ -62,14 +67,30 @@ export function semanticConfidence(
   return Math.min(1, normalised + (ftsMatched ? 0.1 : 0));
 }
 
-function trimToBudget(chunks: MatchedChunk[], maxTokens: number): MatchedChunk[] {
+/** Estimated prompt tokens of one source as `buildUserMessage` renders it (label line + text). */
+export function chunkPromptTokens(c: MatchedChunk): number {
+  return estimateTokens(`[0] ${c.title} (${c.type}) ${c.url ?? ""}\n${c.heading}\n${c.content}`);
+}
+
+/**
+ * Keeps sources within the budget (ADR-048). Each chunk is first cut to `chunkTokens`, so no single
+ * chunk can take the whole budget; a chunk that would still overflow is skipped, not kept, and a
+ * smaller one after it may still fit. Rank order is preserved.
+ */
+export function trimToBudget(
+  chunks: readonly MatchedChunk[],
+  maxTokens: number,
+  chunkTokens: number = PROMPT_BUDGET.chunkTokens,
+): MatchedChunk[] {
   const out: MatchedChunk[] = [];
   let used = 0;
-  for (const c of chunks) {
-    const tokens = Math.ceil(
-      (c.content.split(/\s+/).length + c.heading.split(/\s+/).length) * 1.33,
-    );
-    if (out.length > 0 && used + tokens > maxTokens) break;
+  for (const original of chunks) {
+    const c =
+      chunkPromptTokens(original) > chunkTokens
+        ? { ...original, content: truncateToTokens(original.content, chunkTokens - 40) }
+        : original;
+    const tokens = chunkPromptTokens(c);
+    if (used + tokens > maxTokens) continue;
     out.push(c);
     used += tokens;
   }
@@ -100,7 +121,12 @@ export async function retrieve(
   embedder: Embedder,
   options: RetrievalOptions,
 ): Promise<RetrievalResult> {
-  const query = composeQuery(options.question, options.previousQuestion);
+  const composed = composeQuery(options.question, options.previousQuestion);
+  // Typo tolerance (ADR-048): words that are not in the published knowledge are corrected to the
+  // nearest known word ("soultions" -> "solutions") before both rankings run.
+  const vocabulary = await store.kbVocabulary();
+  const spelling = correctSpelling(composed, vocabulary);
+  const query = spelling.text;
   const embedding = embedder.enabled
     ? ((await embedder.embed([query], { timeoutMs: options.embedTimeoutMs ?? 800 }))?.[0] ?? null)
     : null;
@@ -108,13 +134,13 @@ export async function retrieve(
     queryText: query,
     embedding,
     // Over-fetch so diversify() can still return `matchCount` distinct documents.
-    matchCount: (options.matchCount ?? 6) * 2,
+    matchCount: (options.matchCount ?? PROMPT_BUDGET.maxChunks) * 2,
     pagePath: options.pagePath ?? null,
     pageBonus: options.pageBonus ?? 0.25,
   });
   const chunks = trimToBudget(
-    diversify(matched, options.matchCount ?? 6),
-    options.maxContextTokens ?? 2400,
+    diversify(matched, Math.min(8, options.matchCount ?? PROMPT_BUDGET.maxChunks)),
+    options.maxContextTokens ?? PROMPT_BUDGET.sourceTokens,
   );
   const top = chunks[0];
   const topSimilarity = chunks.reduce<number | null>(
@@ -128,6 +154,7 @@ export async function retrieve(
     : ftsConfidence(top?.ftsRank ?? null);
   return {
     query,
+    corrections: spelling.corrections,
     chunks,
     confidence,
     confident: chunks.length > 0 && confidence >= options.threshold,

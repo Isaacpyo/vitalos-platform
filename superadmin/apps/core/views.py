@@ -35,7 +35,9 @@ def palette_results(request):
 @role_required()
 @require_GET
 def help_page(request):
-    return render(request, "core/help.html")
+    from .guides import GUIDES
+
+    return render(request, "core/help.html", {"guides": GUIDES})
 
 
 @role_required()
