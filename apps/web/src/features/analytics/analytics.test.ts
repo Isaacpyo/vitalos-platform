@@ -16,6 +16,8 @@ describe("analytics taxonomy", () => {
         "insight_to_offer_click",
         "lab_resource_click",
         "offer_enquiry_submit",
+        // Links to a Vitalos product's own site (Products, 17 Oct 2026).
+        "outbound_click",
         "primary_cta_click",
         "trust_enquiry_submit",
       ].sort(),

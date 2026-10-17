@@ -34,6 +34,8 @@ export const analyticsEventSchemas = {
   application_submit: z.strictObject({ outcome, roleSlug: slug }),
   /** An Insight was read: the reader reached the end of the article body (PR #46). */
   insight_read: z.strictObject({ insightSlug: slug }),
+  /** A link to a Vitalos product's own site was followed; `destination` is the product slug. */
+  outbound_click: z.strictObject({ destination: slug, route }),
 } as const;
 
 export type AnalyticsEventName = keyof typeof analyticsEventSchemas;

@@ -52,6 +52,8 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "contact", path: "/contact", pattern: "/contact" },
   // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026).
   { name: "podcast", path: "/podcast", pattern: "/podcast", inSitemap: false },
+  { name: "products", path: "/products", pattern: "/products" },
+  { name: "product", path: "/products/fauward", pattern: "/products/:slug" },
 ];
 
 /**
@@ -92,6 +94,8 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "trust topic", path: "/trust/security", pattern: "/trust/:slug" },
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
   { name: "contact", path: "/contact", pattern: "/contact" },
+  { name: "products", path: "/products", pattern: "/products" },
+  { name: "product", path: "/products/fauward", pattern: "/products/:slug" },
 ];
 
 /** The templates of the content source under test (see tests/support/content-source.ts). */

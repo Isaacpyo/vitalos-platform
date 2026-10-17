@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { breadcrumbJsonLd, organizationJsonLd, webSiteJsonLd } from "./json-ld";
-import { homePageNode, jsonLdGraph, serviceNode, webPageNode } from "./graph";
+import { homePageNode, jsonLdGraph, serviceNode, softwareNode, webPageNode } from "./graph";
 import { validateJsonLd } from "./json-ld-rules";
 
 const ctx = { siteUrl: "https://www.example.invalid" };
@@ -128,5 +128,72 @@ describe("page graph", () => {
     expect(issues).toMatch(/@context/);
     expect(issues).toMatch(/used 2 times/);
     expect(issues).toMatch(/not on https:\/\/www.example.invalid/);
+  });
+});
+
+describe("product page graph", () => {
+  const path = "/products/example";
+  const graph = () =>
+    jsonLdGraph([
+      webPageNode(
+        {
+          path,
+          name: "Example",
+          description: "Example sentence.",
+          breadcrumb: true,
+          aboutSoftware: true,
+        },
+        ctx,
+      ),
+      breadcrumbJsonLd(
+        [
+          { name: "Home", path: "/" },
+          { name: "Products", path: "/products" },
+          { name: "Example", path },
+        ],
+        ctx,
+      ),
+      softwareNode(
+        {
+          path,
+          name: "Example",
+          description: "Example sentence.",
+          url: "https://product.example.invalid",
+          applicationCategory: "BusinessApplication",
+        },
+        ctx,
+      ),
+    ]);
+
+  it("describes the product as a SoftwareApplication the page is about, published by Vitalos", () => {
+    const nodes = (graph() as unknown as { "@graph": Record<string, unknown>[] })["@graph"];
+    const software = nodes.find((node) => node["@type"] === "SoftwareApplication");
+    expect(software).toEqual({
+      "@type": "SoftwareApplication",
+      "@id": `${origin}${path}#software`,
+      name: "Example",
+      description: "Example sentence.",
+      url: "https://product.example.invalid",
+      applicationCategory: "BusinessApplication",
+      publisher: { "@id": `${origin}/#organization` },
+      mainEntityOfPage: { "@id": `${origin}${path}#webpage` },
+    });
+    expect(nodes[0]?.["about"]).toEqual({ "@id": `${origin}${path}#software` });
+    for (const invented of ["offers", "aggregateRating", "review"]) {
+      expect(software).not.toHaveProperty(invented);
+    }
+  });
+
+  it("passes the page rules: the product's own https site is its only off-origin URL", () => {
+    expect(
+      validateJsonLd([graph()], { origin, canonical: `${origin}${path}`, h1: "Example" }),
+    ).toEqual([]);
+    const insecure = jsonLdGraph([
+      softwareNode(
+        { path, name: "Example", url: "http://product.example.invalid", applicationCategory: "X" },
+        ctx,
+      ),
+    ]);
+    expect(validateJsonLd([insecure], { origin }).join(" ")).toMatch(/SoftwareApplication: url/);
   });
 });

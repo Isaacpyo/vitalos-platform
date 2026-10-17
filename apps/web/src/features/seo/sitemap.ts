@@ -5,6 +5,8 @@ import {
   gateForKind,
   hrefForRoutePage,
   isSitemapEligible,
+  productPath,
+  products,
   routePageKeys,
   routes,
 } from "@vitalos/cms";
@@ -62,6 +64,9 @@ export function buildSitemap(input: SitemapInput): MetadataRoute.Sitemap {
     if (!isSitemapEligible(gateForRoutePage(key), input.gates)) continue;
     add(hrefForRoutePage(key));
   }
+
+  // Each product page, while its index is listed (the products live in @vitalos/cms, not the source).
+  if (input.routePages.has("products")) for (const product of products) add(productPath(product));
 
   if (input.hasFaq) add(routes.faq());
 

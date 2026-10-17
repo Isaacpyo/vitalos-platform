@@ -11,7 +11,8 @@ import { z } from "zod";
  *    SearchAction never appear (integrity rule; the sitelinks search box is retired);
  *  - `@id`s are unique on the page, and an `{ "@id" }` reference resolves on the page unless it is
  *    a site-level node (`/#organization`, `/#website`, described on the homepage);
- *  - URLs are absolute and on the canonical origin (images may be https elsewhere);
+ *  - URLs are absolute and on the canonical origin (images may be https elsewhere, and a
+ *    SoftwareApplication's `url` is the product's own https site);
  *  - the WebPage's `url` is the page's canonical, and its `name` is the visible h1;
  *  - every FAQ question is visible on the page.
  */
@@ -42,6 +43,8 @@ const allowedTypes = new Set([
   // JobPosting baseSalary, only when the role shows its salary (Careers, ADR-039).
   "MonetaryAmount",
   "QuantitativeValue",
+  // A product Vitalos builds and operates, on its page under /products (owner direction, 17 Oct 2026).
+  "SoftwareApplication",
 ]);
 const forbiddenTypes = new Set([
   "Review",
@@ -76,6 +79,13 @@ const typeSchemas: Record<string, z.ZodType> = {
       }),
   }),
   Service: z.looseObject({ name: text, serviceType: text, provider: ref, url }),
+  SoftwareApplication: z.looseObject({
+    "@id": text,
+    name: text,
+    url: z.url({ protocol: /^https$/ }),
+    applicationCategory: text,
+    publisher: ref,
+  }),
   FAQPage: z.looseObject({
     mainEntity: z
       .array(
@@ -208,8 +218,11 @@ export function validateJsonLd(blocks: readonly unknown[], page: JsonLdPageConte
   const visitUrls = (value: unknown, key = "") => {
     if (Array.isArray(value)) return value.forEach((v) => visitUrls(v, key));
     if (value && typeof value === "object") {
+      const software = typesOf(value as Node).includes("SoftwareApplication");
       for (const [k, v] of Object.entries(value as Node)) {
         if (k === "sameAs" || k === "logo" || k === "image") continue;
+        // The product's own site; its schema above requires https.
+        if (software && k === "url") continue;
         visitUrls(v, k);
       }
       return;

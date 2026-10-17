@@ -6,6 +6,7 @@ export * from "./content/source";
 export * from "./content/types";
 export * from "./locked-copy";
 export * from "./navigation";
+export * from "./products";
 export * from "./routes";
 
 import type { LabMaturity } from "./content/types";

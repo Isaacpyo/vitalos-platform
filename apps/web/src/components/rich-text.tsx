@@ -108,6 +108,43 @@ function Node({ node }: Readonly<{ node: RichTextNode }>) {
   }
 }
 
+const inlineLinkClasses =
+  "font-semibold text-tone-link underline underline-offset-4 transition-colors duration-(--duration-feedback) ease-(--ease-standard) hover:text-tone-link-hover";
+
+/**
+ * The paragraphs of a rich-text value as one run of inline text (no block elements), for a short
+ * line that sits inside a card. Links look like the design system's inline text link; anything other
+ * than paragraphs is ignored, so callers pass only paragraph blocks.
+ */
+export function InlineText({ value }: Readonly<{ value: RichTextValue | null | undefined }>) {
+  const paragraphs = normaliseRichText(value).filter((node) => node.type === "paragraph");
+  return paragraphs.map((node, index) => (
+    <span key={node.key}>
+      {index > 0 ? " " : null}
+      {node.children.map((child, childIndex) => {
+        let content: React.ReactNode = child.text;
+        if (child.code) content = <code>{content}</code>;
+        if (child.em) content = <em>{content}</em>;
+        if (child.strong) content = <strong>{content}</strong>;
+        if (!child.href) return <span key={childIndex}>{content}</span>;
+        const external = child.href.startsWith("https://");
+        // TextLink's inline look, but `inline` rather than its `inline-flex`, so the sentence
+        // reads, wraps and copies as one line of text.
+        return (
+          <a
+            key={childIndex}
+            href={child.href}
+            className={inlineLinkClasses}
+            {...(external ? { rel: "noopener noreferrer" } : {})}
+          >
+            {content}
+          </a>
+        );
+      })}
+    </span>
+  ));
+}
+
 /**
  * Renders a CMS rich-text field inside the design system's Prose (60 to 75 character measure,
  * styled headings, lists, links, quotes and code). Content never produces an h1: the page

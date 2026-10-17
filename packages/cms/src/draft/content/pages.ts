@@ -4,7 +4,15 @@
  * index headings are adapted from Stage 11 section titles or composed from the cited sections
  * (marked where they are defined). All are pending owner confirmation like everything else here.
  */
-import { brandName, ctas, homeSections, howWeWorkStages, propositionLong } from "../../locked-copy";
+import {
+  brandName,
+  ctas,
+  homeSections,
+  howWeWorkStages,
+  navLabels,
+  propositionLong,
+} from "../../locked-copy";
+import { productBySlug, productPath } from "../../products";
 import type { HomeSectionKey } from "../../locked-copy";
 import type {
   ContactPageView,
@@ -16,6 +24,11 @@ import type { RoutePageKey } from "../../routes";
 import { cta, h2, p, pLink, richText, seo, ul } from "../build";
 import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
+
+/** Fauward, linked from the About narrative. */
+const fauward = productBySlug("fauward")!;
+const [fauwardBefore = "", fauwardAfter = ""] = fauward.description.split(fauward.name);
+const fauwardSentence = { before: fauwardBefore, after: fauwardAfter };
 
 /* ---------- Home page SEO ---------- */
 
@@ -335,8 +348,13 @@ const about: RoutePageDraft = {
         "Technology now shapes how organisations operate, serve customers and compete, and AI accelerates the shift. Vitalos exists for the hard part: redesigning work, modernising systems, connecting data and carrying change safely into production.",
       ),
       h2("From strategy to production"),
-      p(
-        "We help organisations decide what to change and where technology and AI create real value, then build it and keep improving it. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
+      // The products sentence (owner direction, 17 Oct 2026) closes this paragraph, so the
+      // section stays one of the four cards; "Fauward" links to its page.
+      pLink(
+        `We help organisations decide what to change and where technology and AI create real value, then build it and keep improving it. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency. ${fauwardSentence.before}`,
+        fauward.name,
+        productPath(fauward),
+        fauwardSentence.after,
       ),
       h2("Five practices, one firm"),
       p(
@@ -491,6 +509,24 @@ const contact: RoutePageDraft = {
   ),
 };
 
+const productsPage: RoutePageDraft = {
+  view: {
+    key: "products",
+    heading: navLabels.products,
+    intro:
+      "Software Vitalos builds and operates, alongside its consulting and engineering work. Each product has its own site; these pages say what it is and where to find it.",
+    cta: cta(ctas.primary, "general"),
+    seo: seo(
+      "Products Built and Operated by Vitalos",
+      "Software Vitalos builds and operates alongside its consulting and engineering work: Fauward, a logistics SaaS platform, with a snapshot of its dashboard.",
+    ),
+  },
+  provenance: drafted(
+    [],
+    "Owner direction, 17 Oct 2026: one product, Fauward. No claims beyond its own site.",
+  ),
+};
+
 /** Route pages. */
 export const routePageDrafts: Partial<Record<RoutePageKey, RoutePageDraft>> = {
   "what-we-do": whatWeDo,
@@ -505,4 +541,5 @@ export const routePageDrafts: Partial<Record<RoutePageKey, RoutePageDraft>> = {
   trust,
   careers,
   contact,
+  products: productsPage,
 };

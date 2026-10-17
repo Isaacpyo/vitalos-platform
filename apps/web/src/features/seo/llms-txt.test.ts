@@ -32,3 +32,22 @@ describe("buildLlmsTxt", () => {
     expect(text).not.toContain("## Empty");
   });
 });
+
+describe("llms.txt products line", () => {
+  it("adds the About sentence for each product under the company description, once listed", () => {
+    const listed = buildLlmsTxt({
+      siteUrl: "https://www.example.invalid",
+      sitemapPaths: new Set(["/products/fauward"]),
+      sections: [],
+    });
+    expect(listed).toContain(
+      "Vitalos builds and operates Fauward, a logistics SaaS platform. https://www.example.invalid/products/fauward\n",
+    );
+    const unlisted = buildLlmsTxt({
+      siteUrl: "https://www.example.invalid",
+      sitemapPaths: new Set(),
+      sections: [],
+    });
+    expect(unlisted).not.toContain("Fauward");
+  });
+});

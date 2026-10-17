@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { isDetailIndexable } from "@vitalos/cms";
 import type { GateKey, SeoView } from "@vitalos/cms";
 import { breadcrumbJsonLd } from "../../features/seo/json-ld";
-import { jsonLdGraph, serviceNode, webPageNode } from "../../features/seo/graph";
-import type { FaqItem, WebPageType } from "../../features/seo/graph";
+import { jsonLdGraph, serviceNode, softwareNode, webPageNode } from "../../features/seo/graph";
+import type { FaqItem, SoftwareInput, WebPageType } from "../../features/seo/graph";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 import { getSeoContext } from "../../features/seo/context";
 import { buildMetadata } from "../../features/seo/metadata";
@@ -55,6 +55,8 @@ export interface PageGraphInput {
   /** Questions and answers shown on the page. */
   faq?: readonly FaqItem[] | undefined;
   dateModified?: string | undefined;
+  /** Product pages: the SoftwareApplication they describe. */
+  software?: Omit<SoftwareInput, "path"> | undefined;
 }
 
 /** One JSON-LD graph for a commercial page: WebPage, BreadcrumbList and, for services, Service. */
@@ -70,6 +72,7 @@ export function pageGraph(input: PageGraphInput): JsonLdNode {
         type: input.type,
         breadcrumb: input.trail.length >= 2,
         aboutService: input.serviceType !== undefined,
+        aboutSoftware: input.software !== undefined,
         faq: input.faq,
         dateModified: input.dateModified,
       },
@@ -86,6 +89,9 @@ export function pageGraph(input: PageGraphInput): JsonLdNode {
           },
           ctx,
         )
+      : null,
+    input.software !== undefined
+      ? softwareNode({ ...input.software, path, description: input.description }, ctx)
       : null,
   ]);
 }

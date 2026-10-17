@@ -1,8 +1,9 @@
 import type { RichText as RichTextValue } from "@vitalos/cms";
 import { FeatureGrid } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
-import { RichText } from "../../components/rich-text";
-import { isCardBody, splitBody } from "../../lib/view-mapping/body-sections";
+import { InlineText, RichText } from "../../components/rich-text";
+import { richTextToPlainText } from "../../lib/cms/rich-text";
+import { isCardBody, isCardSection, splitBody } from "../../lib/view-mapping/body-sections";
 import type { BodySection } from "../../lib/view-mapping/body-sections";
 import { Band, itemLevel } from "./bands";
 import type { BandFactory } from "./bands";
@@ -16,6 +17,16 @@ export interface BodyBandsOptions {
 }
 
 const columnsFor = (count: number): 2 | 3 => (count === 2 || count === 4 ? 2 : 3);
+
+/** A short headed section as a card: its title and its paragraphs, keeping any inline links. */
+const cardItem = (section: BodySection) =>
+  section.inlineLinks
+    ? {
+        title: section.title,
+        text: richTextToPlainText(section.blocks).trim(),
+        richText: <InlineText value={section.blocks} />,
+      }
+    : { title: section.title, text: section.paragraphs.join(" ") };
 
 /**
  * A page body as homepage-style bands (pages redesign, 15 Oct 2026). A body of short headed
@@ -40,10 +51,7 @@ export function bodyBands(
           <FeatureGrid
             headingLevel={level}
             columns={columnsFor(split.sections.length)}
-            items={split.sections.map((section) => ({
-              title: section.title,
-              text: section.paragraphs.join(" "),
-            }))}
+            items={split.sections.map(cardItem)}
           />
         </Band>
       ),
@@ -53,8 +61,8 @@ export function bodyBands(
   // With a structural heading (for example "Approach") the whole body is one band: the lead is
   // its description, short headed paragraphs are cards and each list sits under its own h3.
   if (heading) {
-    const cards = split.sections.filter((section) => !section.rich && section.items.length === 0);
-    const others = split.sections.filter((section) => section.rich || section.items.length > 0);
+    const cards = split.sections.filter(isCardSection);
+    const others = split.sections.filter((section) => !isCardSection(section));
     return [
       (tone) => (
         <Band tone={tone} heading={heading} eyebrow={eyebrow} intro={leadText}>
@@ -65,10 +73,7 @@ export function bodyBands(
             <FeatureGrid
               headingLevel={3}
               columns={columnsFor(cards.length)}
-              items={cards.map((section) => ({
-                title: section.title,
-                text: section.paragraphs.join(" "),
-              }))}
+              items={cards.map(cardItem)}
             />
           ) : null}
           {others.map((section, index) => (
@@ -102,7 +107,7 @@ export function bodyBands(
   const leadUsed = split.lead.rich || split.lead.items.length > 0;
   // Runs of two or more short headed paragraphs read as one band of cards (their headings are the
   // card titles, at h2); any other section is a band of its own.
-  const isPlain = (section: BodySection) => !section.rich && section.items.length === 0;
+  const isPlain = isCardSection;
   let index = 0;
   while (index < split.sections.length) {
     const start = index;
@@ -120,10 +125,7 @@ export function bodyBands(
           <FeatureGrid
             headingLevel={2}
             columns={columnsFor(run.length)}
-            items={run.map((section) => ({
-              title: section.title,
-              text: section.paragraphs.join(" "),
-            }))}
+            items={run.map(cardItem)}
           />
         </Band>
       ));

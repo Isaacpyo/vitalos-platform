@@ -3,7 +3,7 @@ import { routes } from "@vitalos/cms";
 /**
  * Which primary-navigation menu a path belongs to. Keys are the `key`s of `primaryNav` in
  * `@vitalos/cms`: What We Do owns the commercial layers and Labs; Who We Are owns About, How We
- * Work, Industries, Work and Insights; Support owns Contact and the FAQ. Pages outside the menus
+ * Work, Industries, Work, Insights and Products; Support owns Contact and the FAQ. Pages outside the menus
  * (home, trust, legal, careers) have no active section.
  */
 const sections: readonly { key: string; roots: readonly string[] }[] = [
@@ -19,6 +19,7 @@ const sections: readonly { key: string; roots: readonly string[] }[] = [
       routes.industries(),
       routes.work(),
       routes.insights(),
+      routes.products(),
     ],
   },
   { key: "support", roots: [routes.contact(), routes.faq()] },

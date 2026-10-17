@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RichTextBlock } from "@vitalos/cms";
-import { isCardBody, splitBody } from "./body-sections";
+import { isCardBody, isCardSection, splitBody } from "./body-sections";
 
 let key = 0;
 const block = (text: string, extra: Record<string, unknown> = {}): RichTextBlock => ({
@@ -39,6 +39,26 @@ describe("splitBody", () => {
       { _type: "figure", _key: "f" },
     ]);
     expect(sections.map((section) => section.rich)).toEqual([true, true]);
+  });
+
+  it("keeps a section of paragraphs with inline links a card, and nothing else", () => {
+    const link = { markDefs: [{ _key: "l", _type: "link", href: "/products/fauward" }] };
+    const { sections } = splitBody([
+      h2("Linked (fixture)"),
+      block("Plain (fixture)."),
+      block("See (fixture)", link),
+      h2("Linked then list (fixture)"),
+      block("See (fixture)", link),
+      li("Item (fixture)"),
+      h2("Figure then link (fixture)"),
+      { _type: "figure", _key: "f" },
+      block("See (fixture)", link),
+    ]);
+    expect(sections.map((section) => section.inlineLinks)).toEqual([true, true, false]);
+    expect(sections.map(isCardSection)).toEqual([true, false, false]);
+    // The linked paragraph stays out of `paragraphs`: callers render its blocks.
+    expect(sections[0]?.paragraphs).toEqual(["Plain (fixture)."]);
+    expect(isCardBody(splitBody([h2("A"), block("a.", link), h2("B"), block("b.")]))).toBe(true);
   });
 
   it("reads headed paragraphs only as a card body", () => {

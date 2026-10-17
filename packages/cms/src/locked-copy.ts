@@ -55,6 +55,9 @@ export const navLabels = {
   whoWeAre: "Who We Are",
   support: "Support",
   faq: "FAQ",
+  /** The Products section (owner direction, 17 Oct 2026). */
+  products: "Products",
+  allProducts: "All products",
 } as const;
 
 /** What We Do mega-menu column titles. Stage 8 §6 (What We Do mega-menu); Stage 9 §12 (Mega-menu). */

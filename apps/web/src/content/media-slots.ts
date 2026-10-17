@@ -14,7 +14,7 @@
  * This file has no imports, so `node` can load it directly (type stripping) for the doc script.
  */
 
-export type MediaRatio = "16:9" | "4:3" | "1:1" | "3:2";
+export type MediaRatio = "16:9" | "4:3" | "1:1" | "3:2" | "21:9" | "5:7";
 
 export interface MediaSlotEntry {
   id: string;
@@ -32,6 +32,11 @@ export interface MediaSlotEntry {
   alt: string;
   /** One image per item (for example per lab asset): the file is `{id}.{slug}`. */
   perItem?: boolean;
+  /**
+   * A second capture for phones (below 768px), when the wide image would be unreadable there:
+   * the file is `{file}.mobile`, at its own ratio and size.
+   */
+  mobile?: { ratio: MediaRatio; size: readonly [number, number] };
 }
 
 export const mediaSlots = [
@@ -78,9 +83,25 @@ export const mediaSlots = [
     alt: "Cover image for {name}.",
     perItem: true,
   },
+  {
+    id: "products.fauward.hero",
+    page: "/products/fauward (and its card on /products)",
+    section: "Snapshot",
+    ratio: "21:9",
+    size: [2030, 870],
+    brief:
+      "A screenshot of the dashboard on fauward.com, captured with Playwright at 1440 wide (2x), with the cookie banner dismissed. The phone version is the same dashboard captured at 390 wide.",
+    alt: "Fauward dashboard showing shipment operations",
+    mobile: { ratio: "5:7", size: [733, 1026] },
+  },
 ] as const satisfies readonly MediaSlotEntry[];
 
 export type MediaSlotId = (typeof mediaSlots)[number]["id"];
+
+/** True when `value` names a registered slot (for ids built from a slug, such as `products.{slug}.hero`). */
+export function isMediaSlotId(value: string): value is MediaSlotId {
+  return mediaSlots.some((slot) => slot.id === value);
+}
 
 /** The registry entry for an id. */
 export function mediaSlot(id: MediaSlotId): MediaSlotEntry {
@@ -98,8 +119,10 @@ export function renderImageSlotsDoc(): string {
       `\`${slot.id}${slot.perItem ? ".{slug}" : ""}\``,
       `\`${slot.page}\``,
       slot.section,
-      slot.ratio,
-      `${slot.size[0]} × ${slot.size[1]}`,
+      slot.mobile ? `${slot.ratio} (phones: ${slot.mobile.ratio})` : slot.ratio,
+      slot.mobile
+        ? `${slot.size[0]} × ${slot.size[1]} (phones: ${slot.mobile.size[0]} × ${slot.mobile.size[1]})`
+        : `${slot.size[0]} × ${slot.size[1]}`,
       cell(slot.brief),
       cell(slot.alt),
     ].join(" | "),
@@ -109,7 +132,7 @@ export function renderImageSlotsDoc(): string {
     "",
     "Generated from `apps/web/src/content/media-slots.ts` by `pnpm media:slots`. Do not edit by hand.",
     "",
-    "To add an image: save it as `apps/web/public/media/{id}.webp` (or `.avif`, `.jpg`, `.png`) at the recommended size; for a per-item slot, use `{id}.{slug}`, for example `labs.asset.production-ai-evaluation-harness.webp`.",
+    "To add an image: save it as `apps/web/public/media/{id}.webp` (or `.avif`, `.jpg`, `.png`) at the recommended size; for a per-item slot, use `{id}.{slug}`, for example `labs.asset.production-ai-evaluation-harness.webp`. A slot with a phone version also takes `{file}.mobile.{ext}`; add both `.avif` and `.webp` and the page offers each browser the best it supports.",
     "The slot shows it in place of the placeholder at the same ratio, so nothing shifts. Real photography, screenshots or diagrams only: no stock or AI-generated imagery.",
     "",
     "| Id | Page | Section | Ratio | Size (px) | Brief | Draft alt |",
