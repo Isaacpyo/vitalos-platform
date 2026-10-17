@@ -203,9 +203,10 @@ export const contactIntentFor = (practice: PostDetail["practice"]): ContactInten
  * link (the admin's default) and an empty one go to the contact form with the matching
  * intent pre-selected. Unsafe links are dropped later by `TalkBand` (safeCtaHref).
  */
-export function articleCta(
-  post: Pick<PostDetail, "cta" | "practice">,
-): { label: string; href: string } {
+export function articleCta(post: Pick<PostDetail, "cta" | "practice">): {
+  label: string;
+  href: string;
+} {
   const contact = routes.contact(contactIntentFor(post.practice));
   const label = post.cta.label.trim() || insightsCopy.talkToVitalos;
   const href = post.cta.href.trim();

@@ -97,7 +97,7 @@
     </form>
 
     {# Fields that join the form above with form="post-form"; under the editor so both columns are used. #}
-    <div class="grid min-w-0 content-start items-start gap-4 lg:grid-cols-2 xl:col-start-1">
+    <div class="order-last grid min-w-0 grid-cols-1 content-start items-start gap-4 lg:grid-cols-2 xl:order-none xl:col-start-1">
       <section class="card space-y-3 p-4" aria-labelledby="cta-heading">
         <h2 id="cta-heading" class="mono-label muted">Call to action</h2>
         <div><label for="{{ form.cta_label.id_for_label }}" class="field-label">Label</label>{{ form.cta_label }}</div>
