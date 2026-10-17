@@ -18,7 +18,7 @@
         hx-get="{% url 'audit:trail' %}" hx-trigger="change, keyup changed delay:300ms from:#f-actor" hx-target="#audit-results" hx-swap="outerHTML" hx-push-url="true"
         data-testid="audit-filters">
     <div class="lg:col-span-2">
-      <label class="field-label" for="f-actor">Actor (email)</label>
+      <label class="field-label" for="f-actor">Actor (name or email)</label>
       <input id="f-actor" name="actor" type="search" value="{{ filters.actor }}" autocomplete="off" class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
     </div>
     <div>

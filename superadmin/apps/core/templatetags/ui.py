@@ -233,6 +233,28 @@ def dictget(mapping, key):
 
 
 @register.filter
+def person(user_or_email) -> str:
+    """The display name for a user, or for an email address that belongs to a user (ADR-049).
+
+    An address with no account falls back to a name derived from it; empty input gives "".
+    """
+    from apps.accounts.models import User, name_from_email
+
+    if not user_or_email:
+        return ""
+    if isinstance(user_or_email, User):
+        return user_or_email.display_label
+    label = getattr(user_or_email, "display_label", None)
+    if label:
+        return label
+    address = str(user_or_email).strip()
+    if "@" not in address:
+        return address
+    user = User.objects.filter(email__iexact=address).only("full_name", "email").first()
+    return user.display_label if user else name_from_email(address) or address
+
+
+@register.filter
 def initials(user_or_email) -> str:
     """Two-letter avatar initials from a user (full name, else email) or an email address."""
     text = (

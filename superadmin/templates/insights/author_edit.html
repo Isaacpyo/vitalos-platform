@@ -24,7 +24,7 @@
           <h2 id="confirm-heading" class="mono-label muted">Real person</h2>
           {% if author.is_confirmed %}
             <p class="mt-2 text-sm">This is a real person who has approved this profile.</p>
-            <p class="mono-label muted mt-1" data-testid="confirmed-by">{{ author.confirmed_real_by.email|default:"Unknown" }} · {{ author.confirmed_real_at|date:"j M Y, H:i" }}</p>
+            <p class="mono-label muted mt-1" data-testid="confirmed-by">{{ author.confirmed_real_by|person|default:"Unknown" }} · {{ author.confirmed_real_at|date:"j M Y, H:i" }}</p>
             {% if can_confirm and not public %}
               <form method="post" action="{% url 'insights:author_action' author.pk 'unconfirm' %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Withdraw confirmation</button></form>
             {% endif %}

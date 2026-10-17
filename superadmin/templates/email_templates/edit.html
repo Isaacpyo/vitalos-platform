@@ -9,7 +9,7 @@
       {% if template %}
         <p class="muted mt-1 text-sm">
           <span class="font-mono">{{ template.key }}</span> · {{ template.get_category_display }} · {{ template.get_status_display }} · version {{ template.version }}
-          · last edited {{ template.updated_at|date:"j M Y, H:i" }}{% if template.updated_by %} by {{ template.updated_by.email }}{% endif %}
+          · last edited {{ template.updated_at|date:"j M Y, H:i" }}{% if template.updated_by %} by {{ template.updated_by|person }}{% endif %}
         </p>
       {% endif %}
     </div>

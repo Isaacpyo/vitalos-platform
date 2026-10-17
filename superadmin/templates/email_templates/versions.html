@@ -14,7 +14,7 @@
             <td>{{ version.note|default:"Edited" }}</td>
             <td class="max-w-xs truncate">{{ version.content.subject }}</td>
             <td class="whitespace-nowrap">{{ version.created_at|date:"j M Y, H:i" }}</td>
-            <td class="whitespace-nowrap">{% if version.created_by %}{{ version.created_by.email }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
+            <td class="whitespace-nowrap">{% if version.created_by %}{{ version.created_by|person }}{% else %}<span class="muted">Seed data</span>{% endif %}</td>
             <td class="text-right">
               {% if version.number != template.version %}
                 <form method="post" action="{% url 'email_templates:restore' template.pk version.number %}">

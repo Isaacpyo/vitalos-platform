@@ -6,7 +6,7 @@
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 class="text-2xl font-semibold">Team</h1>
-        <p class="muted mt-1 text-sm">Everyone across the service lines.</p>
+        <p class="muted mt-1 text-sm">Everyone with a Super Admin account, their role, service lines and last sign-in.</p>
       </div>
       <div class="flex items-center gap-3">
         <a class="muted text-sm hover:underline" href="?{% if not show_archived %}archived=1{% endif %}">{% if show_archived %}Hide archived{% else %}Show archived{% endif %}</a>
@@ -14,20 +14,40 @@
       </div>
     </div>
     <div class="card mt-6 overflow-x-auto">
-      <table class="table-base">
-        <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Service lines</th><th scope="col">Login</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <table class="table-base" data-testid="team-people">
+        <caption class="sr-only">People with a Super Admin account</caption>
+        <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Service lines</th><th scope="col">Last sign-in</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-          {% for member in members %}
-            <tr id="teammember-{{ member.pk }}" class="{% if member.is_archived %}opacity-60{% endif %}">
-              <td class="font-medium">{{ member.name }}<br><span class="muted text-xs font-normal">{{ member.email }}</span></td>
-              <td>{{ member.role_title|default:"—" }}</td>
-              <td><div class="flex flex-wrap gap-1">{% for line in member.service_lines.all %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>
-              <td>{{ member.user.email|default:"—" }}</td>
-              <td class="text-right">{% include "architecture/dashboard/_node_actions.html" with obj=member kind="teammember" child_kind="" can_edit=can_edit_team %}</td>
+          {% for row in people %}
+            <tr id="person-{{ row.user.pk }}">
+              <td class="font-medium">{{ row.user.display_label }}{% if row.user.name_needs_review %} <span class="{{ 'pending'|badge_class }}" title="Name taken from the email address">Name to confirm</span>{% endif %}<br><span class="muted text-xs font-normal">{{ row.user.email }}{% if row.member.role_title %} · {{ row.member.role_title }}{% endif %}</span></td>
+              <td class="whitespace-nowrap">{{ row.role }}</td>
+              <td><div class="flex flex-wrap gap-1">{% for line in row.lines %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>
+              <td class="whitespace-nowrap text-sm">{% if row.user.last_login %}<time datetime="{{ row.user.last_login|date:'c' }}">{{ row.user.last_login|date:"j M Y, H:i" }}</time>{% else %}<span class="muted">Never</span>{% endif %}</td>
+              <td class="text-right">{% if row.member %}{% include "architecture/dashboard/_node_actions.html" with obj=row.member kind="teammember" child_kind="" can_edit=can_edit_team %}{% endif %}</td>
             </tr>
           {% empty %}<tr><td colspan="5" class="muted py-6 text-center">No team members yet.</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
+    {% if unlinked_members %}
+      <h2 class="mt-8 font-semibold">Team members without an admin account</h2>
+      <p class="muted mt-1 text-sm">People recorded against a service line who do not sign in. Run <code>manage.py link_people</code> to link any whose email matches a user.</p>
+      <div class="card mt-3 overflow-x-auto">
+        <table class="table-base" data-testid="team-unlinked">
+          <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Service lines</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for member in unlinked_members %}
+              <tr id="teammember-{{ member.pk }}" class="{% if member.is_archived %}opacity-60{% endif %}">
+                <td class="font-medium">{{ member.name }}{% if member.is_archived %} <span class="{{ 'cancelled'|badge_class }}">Archived</span>{% endif %}<br><span class="muted text-xs font-normal">{{ member.email }}</span></td>
+                <td>{{ member.role_title|default:"—" }}</td>
+                <td><div class="flex flex-wrap gap-1">{% for line in member.service_lines.all %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>
+                <td class="text-right">{% include "architecture/dashboard/_node_actions.html" with obj=member kind="teammember" child_kind="" can_edit=can_edit_team %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}

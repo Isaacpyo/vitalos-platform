@@ -7,6 +7,17 @@ from django.db import models
 from django.utils import timezone
 
 
+def name_from_email(email: str) -> str:
+    """A readable starting name from an address: ``temitope.agbola@…`` becomes "Temitope Agbola".
+
+    Used to back-fill missing names (flagged ``name_needs_review``), never as a final answer.
+    """
+    local = (email or "").split("@")[0]
+    for separator in "._-+":
+        local = local.replace(separator, " ")
+    return " ".join(word.capitalize() for word in local.split())[:150]
+
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -14,6 +25,10 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError("An email address is required.")
         email = self.normalize_email(email).lower()
+        if not (extra_fields.get("full_name") or "").strip():
+            # Every person has a name to show; one derived from the address is flagged for review.
+            extra_fields["full_name"] = name_from_email(email)
+            extra_fields["name_needs_review"] = True
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -37,7 +52,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     """Application user. Email is the username; Microsoft Entra ID SSO arrives in Phase 2."""
 
     email = models.EmailField(unique=True)
+    # The person's display name, shown everywhere instead of the address (ADR-049). Required in every
+    # form; the column stays blank-able so the change is additive. ``name_needs_review`` marks a
+    # name derived from the email address until the person (or a super admin) confirms it.
     full_name = models.CharField(max_length=150, blank=True)
+    name_needs_review = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -62,17 +81,27 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
     def __str__(self):
-        return self.full_name or self.email
+        return self.display_label
 
     def save(self, *args, **kwargs):
         self.email = self.email.lower()
         super().save(*args, **kwargs)
 
+    @property
+    def display_label(self) -> str:
+        """The name to show people: the full name, else one derived from the email address."""
+        return (self.full_name or "").strip() or name_from_email(self.email) or self.email
+
+    @property
+    def first_name(self) -> str:
+        """First word of the display name (Relay's visitor-facing staff label uses it)."""
+        return self.display_label.split(" ")[0]
+
     def get_full_name(self):
-        return self.full_name or self.email
+        return self.display_label
 
     def get_short_name(self):
-        return (self.full_name or self.email).split(" ")[0]
+        return self.first_name
 
 
 class ApiTokenQuerySet(models.QuerySet):

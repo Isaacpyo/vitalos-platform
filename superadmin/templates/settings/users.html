@@ -11,11 +11,11 @@
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         {% for row in rows %}
           <tr>
-            <td><span class="font-medium">{{ row.user.get_full_name }}</span>{% if row.user.is_primary_owner %} <span class="{{ 'active'|badge_class }}">Primary owner</span>{% endif %}{% if row.user.full_name %}<br><span class="muted text-xs">{{ row.user.email }}</span>{% endif %}</td>
+            <td><span class="font-medium">{{ row.user.get_full_name }}</span>{% if row.user.is_primary_owner %} <span class="{{ 'active'|badge_class }}">Primary owner</span>{% endif %}{% if row.user.name_needs_review %} <span class="{{ 'pending'|badge_class }}" title="Name taken from the email address">Name to confirm</span>{% endif %}<br><span class="muted text-xs">{{ row.user.email }}</span></td>
             <td>{% if row.role %}<span class="{% if row.role == 'SuperAdmin' %}{{ 'confidential'|badge_class }}{% elif row.role == 'ServiceLead' %}{{ 'ADVISE'|badge_class }}{% else %}{{ 'slate'|badge_class }}{% endif %}">{{ row.role }}</span>{% else %}<span class="muted">No role</span>{% endif %}{% if row.user.is_superuser %} <span class="muted text-xs">(superuser)</span>{% endif %}</td>
             <td>{% if row.user.is_active %}Active{% else %}<span class="muted">Deactivated</span>{% endif %}</td>
             <td class="text-xs">{{ row.user.last_login|date:"j M Y H:i"|default:"Never" }}</td>
-            <td class="text-right"><button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'accounts:user_edit' row.user.pk %}" hx-target="#modal" aria-label="Edit {{ row.user.email }}">{% icon "edit" "h-4 w-4" %} Edit</button></td>
+            <td class="text-right"><button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'accounts:user_edit' row.user.pk %}" hx-target="#modal" aria-label="Edit {{ row.user|person }}">{% icon "edit" "h-4 w-4" %} Edit</button></td>
           </tr>
         {% endfor %}
       </tbody>

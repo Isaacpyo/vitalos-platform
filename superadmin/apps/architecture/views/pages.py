@@ -2,12 +2,20 @@
 
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET, require_POST
 
-from apps.accounts.roles import SUPERADMIN, has_service_access, is_superadmin, role_required
+from apps.accounts.roles import (
+    SUPERADMIN,
+    has_service_access,
+    is_superadmin,
+    primary_role,
+    role_label,
+    role_required,
+)
 from apps.core import overview
 from apps.core.htmx import changed_response
 from apps.enquiries.selectors import can_access as can_access_enquiries
@@ -238,20 +246,40 @@ def activity_view(request):
 @role_required()
 @require_GET
 def team_overview(request):
-    """Company-wide team list (SuperAdmin manages membership)."""
+    """Company-wide team: every person with an admin account, then team members without one.
+
+    One person is one user who may also be a team member (ADR-049), so the user list is the source
+    and the linked team member adds the role title and service lines.
+    """
+    user = request.user
+    archived = _show_archived(request)
     members = (
-        visible(TeamMember.objects.all(), request.user)
-        .prefetch_related("service_lines")
-        .select_related("user")
+        visible(TeamMember.objects.all(), user).prefetch_related("service_lines").select_related("user")
     )
-    if not _show_archived(request):
+    if not archived:
         members = members.filter(is_archived=False)
+    members = list(members)
+    member_by_user = {member.user_id: member for member in members if member.user_id}
+    owned: dict[int, list] = {}
+    for line in ServiceLine.objects.filter(is_archived=False, owner__isnull=False).order_by("order"):
+        owned.setdefault(line.owner_id, []).append(line)
+    people = []
+    for account in get_user_model().objects.filter(is_active=True).order_by("full_name", "email"):
+        role = primary_role(account)
+        if role is None and not account.is_superuser:
+            continue
+        member = member_by_user.get(account.pk)
+        lines = list(member.service_lines.all()) if member else []
+        lines += [line for line in owned.get(account.pk, []) if line not in lines]
+        people.append({"user": account, "member": member, "role": role_label(account), "lines": lines})
+    unlinked = [member for member in members if not member.user_id]
     return render(
         request,
         "architecture/team.html",
         {
-            "members": members,
-            "show_archived": _show_archived(request),
-            "can_edit_team": is_superadmin(request.user),
+            "people": people,
+            "unlinked_members": unlinked,
+            "show_archived": archived,
+            "can_edit_team": is_superadmin(user),
         },
     )
