@@ -21,6 +21,11 @@ interface ButtonOwnProps {
    * such as "Talk to Vitalos"; leave off form submits.
    */
   arrow?: boolean;
+  /**
+   * Shows an inline spinner before the label and marks the button busy. A `<button>` is also
+   * disabled while loading so it cannot be activated twice. Has no effect on link buttons.
+   */
+  loading?: boolean;
 }
 
 export type ButtonAsLinkProps = ButtonOwnProps &
@@ -67,7 +72,15 @@ const variants: Record<ButtonVariant, string> = {
  * states. There is no disabled link: unavailable navigation should not be published.
  */
 export function Button(props: ButtonProps) {
-  const { variant = "primary", size = "md", theme, arrow = false, className, ...rest } = props;
+  const {
+    variant = "primary",
+    size = "md",
+    theme,
+    arrow = false,
+    loading = false,
+    className,
+    ...rest
+  } = props;
   const classes = cx(
     base,
     variant !== "text" && sizes[size],
@@ -89,12 +102,42 @@ export function Button(props: ButtonProps) {
   const {
     type = "button",
     children,
+    disabled,
     ...button
   } = rest as Omit<ButtonAsButtonProps, keyof ButtonOwnProps | "className">;
   return (
-    <button type={type} data-tone={theme} className={classes} {...button}>
+    <button
+      type={type}
+      data-tone={theme}
+      className={classes}
+      {...button}
+      disabled={loading || disabled}
+      aria-busy={loading || undefined}
+    >
+      {loading ? <Spinner /> : null}
       {withArrow(children, arrow)}
     </button>
+  );
+}
+
+/**
+ * Decorative spinner (inline SVG, inherits the text colour). It rotates only when the visitor has
+ * not asked for reduced motion; otherwise the static partial ring still reads as "in progress".
+ */
+export function Spinner({ size = 16 }: Readonly<{ size?: number }>) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className="shrink-0 motion-safe:animate-spin"
+    >
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
   );
 }
 

@@ -5,6 +5,24 @@ import { Button } from "./Button";
 afterEach(cleanup);
 
 describe("Button", () => {
+  it("shows a decorative spinner, aria-busy and disabled while loading", () => {
+    render(<Button loading>Example action (fixture)</Button>);
+    const button = screen.getByRole("button", { name: "Example action (fixture)" });
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    const spinner = button.querySelector("svg");
+    expect(spinner?.getAttribute("aria-hidden")).toBe("true");
+    // Motion only when the visitor has not asked for reduced motion.
+    expect(spinner?.getAttribute("class")).toContain("motion-safe:animate-spin");
+  });
+
+  it("shows no spinner or busy state when not loading", () => {
+    render(<Button>Example action (fixture)</Button>);
+    const button = screen.getByRole("button");
+    expect(button.getAttribute("aria-busy")).toBeNull();
+    expect(button.querySelector("svg")).toBeNull();
+  });
+
   it("renders a plain anchor when href is given", () => {
     render(<Button href="/contact">Talk to Vitalos</Button>);
     const link = screen.getByRole("link", { name: "Talk to Vitalos" });

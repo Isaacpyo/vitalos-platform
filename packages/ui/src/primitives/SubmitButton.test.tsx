@@ -13,7 +13,7 @@ describe("SubmitButton", () => {
     );
     const button = screen.getByRole("button", { name: "Example submit (fixture)" });
     expect(button.getAttribute("type")).toBe("submit");
-    expect(button.getAttribute("aria-disabled")).toBeNull();
+    expect(button.hasAttribute("disabled")).toBe(false);
   });
 
   it("shows progress and blocks repeat submission while the form action is pending", async () => {
@@ -36,10 +36,9 @@ describe("SubmitButton", () => {
       return Promise.resolve();
     });
     const pending = screen.getByRole("button", { name: "Sending (fixture)" });
-    expect(pending.getAttribute("aria-disabled")).toBe("true");
     expect(pending.getAttribute("aria-busy")).toBe("true");
-    // Stays focusable while pending (aria-disabled, not disabled).
-    expect((pending as HTMLButtonElement).disabled).toBe(false);
+    expect((pending as HTMLButtonElement).disabled).toBe(true);
+    expect(pending.querySelector("svg[aria-hidden='true']")).not.toBeNull();
     expect(calls).toBe(1);
     await act(() => {
       finish();

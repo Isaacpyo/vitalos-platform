@@ -107,11 +107,20 @@ test.describe("Application form", () => {
       (r) => r.url().startsWith(`${ADMIN}/api/careers/v1/uploads/`) && r.method() === "PUT",
     );
     await page.getByRole("button", { name: "Send application" }).click();
+    // The submission opens a modal over the blurred page, with a spinner while it is in flight.
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
     await upload;
+    // Then it confirms; closing it hands focus to the confirmation on the page.
+    await expect(dialog.getByRole("heading", { name: "Application received." })).toBeVisible();
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toBeHidden();
     const success = page.getByRole("heading", { name: "Application received." });
     await expect(success).toBeVisible();
     await expect(
-      page.getByText("We've received your application for Example role (fixture)."),
+      page
+        .getByText("We've received your application for Example role (fixture).")
+        .locator("visible=true"),
     ).toBeVisible();
     await expect(page.getByText("Example hiring process (fixture).")).toBeVisible();
     // Focus moves to the success message.
@@ -137,6 +146,11 @@ test.describe("Application form", () => {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Send application" })).toBeFocused();
     await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("heading", { name: "Application received." })).toBeVisible();
+    // Escape dismisses the confirmation.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
     await expect(page.getByRole("heading", { name: "Application received." })).toBeVisible();
   });
 
@@ -182,6 +196,8 @@ test.describe("Application form", () => {
       await expect(page.locator("main").getByRole("alert")).toContainText(
         "This role is no longer accepting applications.",
       );
+      // The modal closes on failure and the inline message stays.
+      await expect(page.getByRole("dialog")).toBeHidden();
     } finally {
       await request.get(`${ADMIN}/__roles?open=example-role-closing`);
     }

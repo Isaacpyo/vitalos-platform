@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { ChangeEvent, DragEvent, FormEvent, ReactNode } from "react";
+import { Button, SubmissionDialog } from "@vitalos/ui";
 import { TurnstileWidget } from "../../components/contact/TurnstileWidget";
 import {
   COVER_NOTE_COUNTER_FROM,
@@ -113,9 +114,12 @@ export function ApplicationForm({
   const successRef = useRef<HTMLDivElement>(null);
   const focusAfterErrors = useRef(false);
 
+  const [confirmationClosed, setConfirmationClosed] = useState(false);
+
   useEffect(() => {
-    if (status === "sent") successRef.current?.focus();
-  }, [status]);
+    // While the confirmation dialog is open the page is inert; focus lands here once it closes.
+    if (status === "sent" && confirmationClosed) successRef.current?.focus();
+  }, [status, confirmationClosed]);
 
   useEffect(() => {
     if (!focusAfterErrors.current) return;
@@ -265,28 +269,43 @@ export function ApplicationForm({
     );
   }
 
+  const dialog = (
+    <SubmissionDialog
+      open={status === "sending" || (status === "sent" && !confirmationClosed)}
+      phase={status === "sent" ? "success" : "sending"}
+      sendingTitle="Sending your application�"
+      successTitle={formCopy.successTitle}
+      onClose={() => setConfirmationClosed(true)}
+    >
+      <p className="m-0">{formCopy.successBody(result?.roleTitle ?? roleTitle)}</p>
+    </SubmissionDialog>
+  );
+
   if (status === "sent" && result) {
     return (
-      <div
-        ref={successRef}
-        tabIndex={-1}
-        className="border-t-2 border-tone-action pt-(--space-5) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-tone-focus"
-      >
-        <h3 className="m-0 text-h2 text-tone-heading">
-          {formCopy.successTitle.slice(0, -1)}
-          <span className="text-tone-link">.</span>
-        </h3>
-        <p className="mt-(--space-4) text-body-l text-tone-text">
-          {formCopy.successBody(result.roleTitle)}
-        </p>
-        {result.processHtml ? (
-          <div
-            className="mt-(--space-4) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
-            // Sanitised by the site's one renderer on the server.
-            dangerouslySetInnerHTML={{ __html: result.processHtml }}
-          />
-        ) : null}
-      </div>
+      <>
+        {dialog}
+        <div
+          ref={successRef}
+          tabIndex={-1}
+          className="border-t-2 border-tone-action pt-(--space-5) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-tone-focus"
+        >
+          <h3 className="m-0 text-h2 text-tone-heading">
+            {formCopy.successTitle.slice(0, -1)}
+            <span className="text-tone-link">.</span>
+          </h3>
+          <p className="mt-(--space-4) text-body-l text-tone-text">
+            {formCopy.successBody(result.roleTitle)}
+          </p>
+          {result.processHtml ? (
+            <div
+              className="mt-(--space-4) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
+              // Sanitised by the site's one renderer on the server.
+              dangerouslySetInnerHTML={{ __html: result.processHtml }}
+            />
+          ) : null}
+        </div>
+      </>
     );
   }
 
@@ -342,6 +361,7 @@ export function ApplicationForm({
 
   return (
     <>
+      {dialog}
       <noscript>
         <p className="m-0 text-body-l text-tone-text">{formCopy.noScript}</p>
       </noscript>
@@ -543,13 +563,9 @@ export function ApplicationForm({
         ) : null}
 
         <div>
-          <button
-            type="submit"
-            disabled={status === "sending"}
-            className="inline-flex min-h-11 items-center bg-tone-action px-(--space-5) text-body font-semibold text-tone-action-text hover:bg-tone-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tone-focus disabled:opacity-70"
-          >
+          <Button type="submit" size="md" loading={status === "sending"}>
             {status === "sending" ? formCopy.sending : formCopy.submit}
-          </button>
+          </Button>
         </div>
       </form>
     </>
