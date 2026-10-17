@@ -46,16 +46,6 @@ export const mediaSlots = [
     alt: "The Vitalos team at work.",
   },
   {
-    id: "careers.hero",
-    page: "/careers",
-    section: "Hero",
-    ratio: "4:3",
-    size: [1600, 1200],
-    brief:
-      "A real photograph of the team or the working space, suitable for people considering a role.",
-    alt: "People at Vitalos working together.",
-  },
-  {
     id: "labs.asset",
     page: "/labs/[type]/[slug]",
     section: "Hero",
