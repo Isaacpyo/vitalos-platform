@@ -46,6 +46,16 @@ export const mediaSlots = [
     alt: "The Vitalos team at work.",
   },
   {
+    id: "about.founder",
+    page: "/about",
+    section: "Founder",
+    ratio: "1:1",
+    size: [800, 800],
+    brief:
+      "A real portrait photograph of Temitope Agbola, supplied or approved by him. Shown only while the Founder section is enabled.",
+    alt: "Temitope Agbola, founder of Vitalos.",
+  },
+  {
     id: "careers.hero",
     page: "/careers",
     section: "Hero",

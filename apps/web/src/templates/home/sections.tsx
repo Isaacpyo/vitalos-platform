@@ -35,7 +35,7 @@ import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import {
   industryShowcaseItems,
   lifecycleStages,
-  practiceShowcaseItems,
+  sixPracticeShowcaseItems,
   solutionShowcaseItems,
 } from "../../lib/view-mapping/showcase";
 import { IndustryBand, LifecycleBand } from "../commercial/dark-bands";
@@ -54,6 +54,8 @@ import { Band, RowList, itemLevel } from "../commercial/bands";
 import type { HomeData } from "../../features/content/schemas";
 import { HomeCareers } from "../careers/HomeCareers";
 import { HomeInsights } from "../insights/HomeInsights";
+import { ProofApproachBand } from "../commercial/proof-band";
+import type { ProofApproachItem } from "../../lib/view-mapping/proof-approach";
 
 /**
  * The thirteen homepage sections of Stage 8 section 8, in order. Each is a function of the home
@@ -71,6 +73,10 @@ export interface HomeContext {
   howWeWorkStages?: readonly DerivedStage[] | undefined;
   /** The admin's homepage sections (Insights, Careers); null when unconfigured or unreadable. */
   content?: HomeData | null | undefined;
+  /** Intro of the Labs route page: the line of Vitalos Labs, the sixth practice. */
+  labsIntro?: string | undefined;
+  /** "How we prove it" items (finding B3), below the practices. */
+  proof?: readonly ProofApproachItem[] | undefined;
 }
 
 type SectionRender = (context: HomeContext, tone: SectionTone) => ReactNode | null;
@@ -235,14 +241,17 @@ export const strategyToProductionSection: SectionRender = (context) => {
 };
 
 /**
- * 5. Practices: the five, in the order the specs fix, as a showcase: a numbered list beside a
- * stage that shows the pointed or focused practice's illustration (owner direction, 15 Oct 2026).
+ * 5. Practices: the six, in the order the specs fix, Vitalos Labs last (owner decision 1, 17 Oct
+ * 2026), as a showcase: a numbered list beside a stage that shows the pointed or focused
+ * practice's illustration (owner direction, 15 Oct 2026).
  */
 export const practicesSection: SectionRender = (context, tone) => {
   const title = heading(context, "practices");
-  const items = practiceShowcaseItems(orderByLockedNames(context.home.practices, practiceNames), {
-    headingLevel: itemLevel(title),
-  });
+  const items = sixPracticeShowcaseItems(
+    orderByLockedNames(context.home.practices, practiceNames),
+    { gates: context.gates, intro: context.labsIntro },
+    { headingLevel: itemLevel(title) },
+  );
   if (items.length === 0) return null;
   return (
     <Band
@@ -255,6 +264,15 @@ export const practicesSection: SectionRender = (context, tone) => {
     </Band>
   );
 };
+
+/**
+ * 5b. How we prove it (finding B3, 17 Oct 2026): the quality gates, Labs and its maturity labels,
+ * the Trust Centre and Insights, below the practices. Absent without items.
+ */
+export const proofSection: SectionRender = (context, tone) =>
+  context.proof && context.proof.length > 0 ? (
+    <ProofApproachBand items={context.proof} tone={tone} />
+  ) : null;
 
 /**
  * 7. Selected work: only when the Work gate is open (at least two verified case studies exist)
@@ -398,6 +416,7 @@ export const homeBands: readonly SectionRender[] = [
   problemsSection,
   strategyToProductionSection,
   practicesSection,
+  proofSection,
   selectedWorkSection,
   industriesSection,
   labsSection,

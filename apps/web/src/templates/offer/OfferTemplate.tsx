@@ -1,7 +1,8 @@
 import { ctas, megaMenuColumns, routes } from "@vitalos/cms";
 import type { OfferView } from "@vitalos/cms";
-import { Button, DefinitionList, FeatureGrid, Icon } from "@vitalos/ui";
-import type { DefinitionItem, IconName } from "@vitalos/ui";
+import { contactNextSteps } from "@vitalos/cms/repo";
+import { Button, DefinitionList, FeatureGrid, Icon, ProcessJourney } from "@vitalos/ui";
+import type { DefinitionItem, IconName, JourneyStage } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
@@ -39,6 +40,22 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
 }
 
 /**
+ * What happens next on an offer page (finding B9, 17 Oct 2026): the enquiry (the contact page's
+ * own sentence), the offer's own scope, then its next phase, each from existing copy. No duration
+ * or price is stated: none has an approved source (docs/review-2026-10-17/ws2/NOTES.md).
+ */
+export function offerNextSteps(offer: OfferView): JourneyStage[] {
+  const steps: { title: string; summary: string | undefined }[] = [
+    { title: ctas.primary, summary: contactNextSteps[1] },
+    { title: offer.title, summary: offer.scope },
+    { title: structuralLabels.nextPhase, summary: offer.nextStep },
+  ];
+  return steps.flatMap((step) =>
+    step.summary && step.summary.trim() !== "" ? [{ title: step.title, summary: step.summary }] : [],
+  );
+}
+
+/**
  * Offer page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
  * compact dark hero with the offer's mark, the engagement summary as a definition list, what the
  * client receives, what is required from them, what is not included (rows), and where the offer
@@ -46,11 +63,12 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
  * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
  */
 export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
-  const cta = ctaToLink(offer.cta) ?? {
+  const cta = ctaToLink(offer.cta, { offerSlug: offer.slug }) ?? {
     label: ctas.primary,
     href: contactHref("offer", offer.slug),
   };
   const summary = engagementSummary(offer);
+  const [firstStep, ...otherSteps] = offerNextSteps(offer);
   const duration = durationLabel(offer.durationCategory);
   const related = (kind: "solution" | "practice", items: OfferView["solutions"]) =>
     toRows(kind, items).map((row) => ({
@@ -92,6 +110,15 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
                 <DefinitionList
                   items={summary}
                   className="max-w-(--container-content) border-b border-tone-border"
+                />
+              </Band>
+            ) : null,
+          (tone) =>
+            firstStep ? (
+              <Band tone={tone} heading={structuralLabels.whatHappensNext} eyebrow={offer.title}>
+                <ProcessJourney
+                  stages={[firstStep, ...otherSteps]}
+                  aria-label={structuralLabels.whatHappensNext}
                 />
               </Band>
             ) : null,

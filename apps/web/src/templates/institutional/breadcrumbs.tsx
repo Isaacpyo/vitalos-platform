@@ -2,7 +2,7 @@ import { brandName, routes } from "@vitalos/cms";
 import { JsonLd } from "../../components/json-ld";
 import { breadcrumbJsonLd } from "../../features/seo/json-ld";
 import { jsonLdGraph, webPageNode } from "../../features/seo/graph";
-import type { WebPageType } from "../../features/seo/graph";
+import type { FaqItem, WebPageType } from "../../features/seo/graph";
 import { getSeoContext } from "../../features/seo/context";
 
 export interface Crumb {
@@ -32,6 +32,8 @@ export function Breadcrumbs({
         type?: WebPageType | undefined;
         name?: string | undefined;
         description?: string | undefined;
+        /** Questions and answers the page shows: adds FAQPage (the FAQ page, finding B10). */
+        faq?: readonly FaqItem[] | undefined;
       }
     | undefined;
   /** False on placeholder pages (ADR-025): no structured data. */ jsonLd?: boolean;
@@ -50,6 +52,7 @@ export function Breadcrumbs({
             name: page?.name ?? current.name,
             description: page?.description,
             type: page?.type,
+            faq: page?.faq,
             breadcrumb: true,
           },
           ctx,

@@ -1,4 +1,4 @@
-import { hrefForDocument, routes } from "@vitalos/cms";
+import { contactIntents, hrefForDocument, routes } from "@vitalos/cms";
 import type {
   ContactIntent,
   CtaView,
@@ -43,10 +43,23 @@ export function hrefForSummary<K extends DocKind>(kind: K, summary: SummaryFor<K
  * A CMS call to action as a pattern link. Only same-site paths and https URLs are kept
  * (`CtaView.href` is already resolved by the mapper; this is the second check at the boundary).
  */
-export function ctaToLink(cta: CtaView | undefined): PatternLink | undefined {
+export function ctaToLink(
+  cta: CtaView | undefined,
+  options: { offerSlug?: string | undefined } = {},
+): PatternLink | undefined {
   if (!cta || cta.label.trim() === "" || !isSafeLink(cta.href)) return undefined;
+  // A call to action to the contact page opens the form on its topic (finding B13, 17 Oct 2026):
+  // the content's intent was dropped before, so every "Discuss ..." link opened a blank form. On an
+  // offer page the form opens on that offer (`?intent=offer&offer={slug}`).
+  if (cta.href === routes.contact()) {
+    if (options.offerSlug) return { label: cta.label, href: contactHref("offer", options.offerSlug) };
+    if (isContactIntent(cta.intent)) return { label: cta.label, href: contactHref(cta.intent) };
+  }
   return { label: cta.label, href: cta.href };
 }
+
+const isContactIntent = (value: string | undefined): value is ContactIntent =>
+  value !== undefined && (contactIntents as readonly string[]).includes(value);
 
 /** Contact URL with the enquiry intent and, for an offer, the offer slug the form pre-selects. */
 export function contactHref(intent?: ContactIntent, offerSlug?: string): string {

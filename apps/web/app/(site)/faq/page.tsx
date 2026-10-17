@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { routes } from "@vitalos/cms";
 import { structuralSeo } from "@vitalos/cms/repo";
+import { getFeatures } from "@vitalos/config";
 import { structuralLabels } from "../../../src/lib/view-mapping/labels";
 import { FaqPage } from "../../../src/templates/faq/FaqPage";
 import { loadFaq } from "../../../src/templates/faq/load";
@@ -18,5 +19,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FaqRoute() {
-  return <FaqPage groups={await loadFaq()} />;
+  return <FaqPage groups={await loadFaq()} relayEnabled={getFeatures().relay} />;
 }

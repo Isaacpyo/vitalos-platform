@@ -1,14 +1,23 @@
 import { navLabels, routes } from "@vitalos/cms";
-import { FeatureGrid } from "@vitalos/ui";
+import { founderProfile } from "@vitalos/cms/repo";
+import { DefinitionList, FeatureGrid, TextLink } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
 import { MediaSlot } from "../../components/media-slot";
 import { Band, ClosingBand, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
+import { ProofApproachBand } from "../commercial/proof-band";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { AboutData } from "./load";
-import { aboutLinks, exploreHeading } from "./map";
+import {
+  aboutLabels,
+  aboutLinks,
+  companyFacts,
+  exploreHeading,
+  practicesHeading,
+  splitAtPracticesSection,
+} from "./map";
 
 /** Icons for the onward links, by key. */
 const linkIcons: Readonly<Record<string, IconName>> = {
@@ -18,15 +27,22 @@ const linkIcons: Readonly<Record<string, IconName>> = {
 };
 
 /**
- * About, in the homepage's design (pages redesign, 15 Oct 2026): the full dark hero with the
- * `about.hero` image slot; the narrative from the About route page as homepage bands (short
- * headed paragraphs as cards, lists as rows); the onward links as icon cards; the closing card.
- * The heading, introduction and narrative come from the CMS; the locked navigation label is the
- * only fallback heading; onward links use locked labels.
+ * About, in the homepage's design (pages redesign, 15 Oct 2026; rebuilt for finding B4, 17 Oct
+ * 2026): the full dark hero with the `about.hero` image slot; the narrative from the About route
+ * page as homepage bands, with its "Six practices, one firm" section shown as the six practices'
+ * linked cards and a link to How We Work; "How we prove it"; the Founder (behind
+ * ABOUT_FOUNDER_ENABLED, from the published author profile only); the company facts; the onward
+ * links as icon cards with one line each; the closing card. Nothing here is written for the page:
+ * the words are the route page's, the practices', the profile's and site settings'.
  */
 export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
   const { page, gates } = data;
-  const links = aboutLinks(gates);
+  const links = aboutLinks(gates, data.intros);
+  const { before, intro, after } = splitAtPracticesSection(page?.body);
+  const facts = companyFacts(data.settings);
+  const authorHref = gates.open.insights
+    ? `${routes.insights()}/authors/${founderProfile.authorSlug}`
+    : undefined;
   return (
     <PageMain>
       <PageHeroBand
@@ -43,7 +59,58 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
       />
       {renderBands(
         [
-          ...bodyBands(page?.body),
+          ...bodyBands(before),
+          (tone) =>
+            data.practices.length > 0 && practicesHeading ? (
+              <Band
+                tone={tone}
+                heading={practicesHeading}
+                intro={intro}
+                link={{ label: navLabels.howWeWork, href: routes.howWeWork() }}
+              >
+                <FeatureGrid
+                  items={data.practices.map((item) => ({
+                    title: item.title,
+                    href: item.href,
+                    ...(item.summary ? { text: item.summary } : {}),
+                    ...(item.icon ? { icon: item.icon } : {}),
+                  }))}
+                />
+              </Band>
+            ) : null,
+          ...bodyBands(after),
+          (tone) => <ProofApproachBand items={data.proof} tone={tone} />,
+          (tone) =>
+            data.founderEnabled ? (
+              <Band tone={tone} heading={aboutLabels.founder}>
+                <div className="grid items-start gap-(--space-7) md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+                  <MediaSlot id="about.founder" className="max-w-xs" />
+                  <div className="min-w-0">
+                    <h3 className="m-0 text-h3 text-tone-heading">{founderProfile.name}</h3>
+                    <p className="m-0 mt-(--space-1) text-small text-tone-muted">
+                      {founderProfile.role}
+                    </p>
+                    <p className="m-0 mt-(--space-4) max-w-(--container-prose) text-body-l text-pretty">
+                      {founderProfile.bio}
+                    </p>
+                    {authorHref ? (
+                      <p className="m-0 mt-(--space-4)">
+                        <TextLink href={authorHref}>{aboutLabels.authorProfile}</TextLink>
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </Band>
+            ) : null,
+          (tone) =>
+            facts.length > 0 ? (
+              <Band tone={tone} heading={aboutLabels.companyFacts}>
+                <DefinitionList
+                  items={facts}
+                  className="max-w-(--container-content) border-b border-tone-border"
+                />
+              </Band>
+            ) : null,
           (tone) =>
             links.length > 0 ? (
               <Band tone={tone} heading={exploreHeading}>
@@ -52,6 +119,7 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
                   items={links.map((link) => ({
                     title: link.label,
                     href: link.href,
+                    ...(link.description ? { text: link.description } : {}),
                     icon: linkIcons[link.key] ?? "link",
                   }))}
                 />
