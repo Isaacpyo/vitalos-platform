@@ -66,3 +66,33 @@ describe("SOB Autofix", () => {
     ]);
   });
 });
+
+describe("section layouts", () => {
+  const words = (value: string) => value.trim().split(/\s+/).length;
+
+  it("keeps cards, steps and tiles short: titles of four words or fewer, lines of ten", () => {
+    for (const product of products) {
+      for (const section of product.sections ?? []) {
+        if ((section.layout ?? "points") === "points") continue;
+        for (const point of section.points ?? []) {
+          expect(words(point.title), point.title).toBeLessThanOrEqual(4);
+          expect(words(point.text), point.text).toBeLessThanOrEqual(10);
+        }
+        const keys = (section.points ?? []).flatMap((point) => (point.key ? [point.key] : []));
+        expect(new Set(keys).size, section.heading).toBe(keys.length);
+      }
+    }
+  });
+
+  it("gives Fauward what it does, how it works and who it is for, without figures", () => {
+    const fauward = productBySlug("fauward")!;
+    expect(fauward.sector).toBe("Logistics");
+    expect(fauward.sections?.map((section) => [section.heading, section.layout])).toEqual([
+      ["What it does", "cards"],
+      ["How it works", "steps"],
+      ["Built for", "tiles"],
+    ]);
+    // fauward.com publishes prices and uptime figures; this page repeats none of them.
+    expect(JSON.stringify(fauward.sections)).not.toMatch(/£|\d+\s?%|\d+\s?min/);
+  });
+});

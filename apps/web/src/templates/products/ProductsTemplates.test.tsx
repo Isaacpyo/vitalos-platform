@@ -30,11 +30,42 @@ describe("product template", () => {
     expect(markup).not.toContain('target="_blank"');
   });
 
-  it("leaves a product without them as it was", () => {
+  it("shows only what a product has: Fauward has no facts or further screens", () => {
     const markup = html(<ProductTemplate product={fauward} />);
     expect(markup).not.toContain(">At a glance</h2>");
     expect(markup).not.toContain(">More of the site</h2>");
-    expect(markup).not.toContain("Products ·");
+    expect(markup).toContain("Products · Logistics");
+  });
+
+  it("lays Fauward's sections out as icon cards, numbered steps and tiles", () => {
+    const markup = html(<ProductTemplate product={fauward} />);
+    for (const heading of ["What it does", "How it works", "Built for"]) {
+      expect(markup).toContain(`>${heading}</h2>`);
+    }
+    // Cards and tiles: an h3 per point, each with its subject icon.
+    for (const title of ["Shipment operations", "Fauward Agent", "3PL providers"]) {
+      expect(markup).toContain(`>${title}</h3>`);
+    }
+    // Steps: one ordered list, numbered 01 to 04, named by its heading.
+    expect(markup).toMatch(/<ol[^>]*aria-label="How it works"/);
+    expect(markup).toContain(">04<");
+    expect(markup).not.toContain(">05<");
+    expect(markup.match(/<h1[\s>]/g)).toHaveLength(1);
+  });
+
+  it("keeps Fauward's page short: under 150 words of body copy", () => {
+    const words = [
+      fauward.description,
+      fauward.snapshotCaption,
+      ...(fauward.sections ?? []).flatMap((section) => [
+        section.heading,
+        ...(section.points ?? []).flatMap((point) => [point.title, point.text]),
+      ]),
+    ]
+      .join(" ")
+      .split(/\s+/)
+      .filter(Boolean);
+    expect(words.length).toBeLessThan(150);
   });
 
   it("keeps the page within 700 words of body copy", () => {

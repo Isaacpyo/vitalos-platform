@@ -1,7 +1,7 @@
 import { navLabels, productPath, routes } from "@vitalos/cms";
-import type { ProductSection, ProductView, RoutePageView } from "@vitalos/cms";
-import { Button, DefinitionList, Icon, RevealItem } from "@vitalos/ui";
-import type { SectionTone } from "@vitalos/ui";
+import type { ProductPoint, ProductSection, ProductView, RoutePageView } from "@vitalos/cms";
+import { Button, DefinitionList, FeatureGrid, Icon, ProcessJourney, RevealItem } from "@vitalos/ui";
+import type { IconName, ProcessJourneyProps, SectionTone } from "@vitalos/ui";
 import { MediaSlot } from "../../components/media-slot";
 import { isMediaSlotId } from "../../content/media-slots";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
@@ -61,6 +61,46 @@ function SectionPoints({ points }: Readonly<{ points: NonNullable<ProductSection
   );
 }
 
+/** Subject icons for section points, by the point's `key` (decorative: the title carries it). */
+const pointIcons: Readonly<Record<string, IconName>> = {
+  shipments: "workflow",
+  "white-label": "layers",
+  "field-app": "target",
+  finance: "document",
+  agent: "chip",
+  api: "code",
+  courier: "compass",
+  freight: "server",
+  "3pl": "users",
+  enterprise: "building",
+};
+
+const withIcon = (point: ProductPoint) => ({
+  title: point.title,
+  text: point.text,
+  ...(point.key && pointIcons[point.key] ? { icon: pointIcons[point.key] } : {}),
+});
+
+/** A section's points in its layout (ProductSection `layout`). */
+function SectionBody({ section }: Readonly<{ section: ProductSection }>) {
+  const points = section.points ?? [];
+  const [first, ...rest] = points;
+  if (!first) return null;
+  switch (section.layout ?? "points") {
+    case "cards":
+      return <FeatureGrid items={points.map(withIcon)} columns={3} headingLevel={3} />;
+    case "tiles":
+      return <FeatureGrid items={points.map(withIcon)} columns={4} headingLevel={3} />;
+    case "steps": {
+      const stage = (point: ProductPoint) => ({ title: point.title, summary: point.text });
+      const stages: ProcessJourneyProps["stages"] = [stage(first), ...rest.map(stage)];
+      return <ProcessJourney aria-label={section.heading} stages={stages} />;
+    }
+    case "points":
+      return <SectionPoints points={points} />;
+  }
+}
+
 /** The product's optional bands after the snapshot: facts, sections, then further screens. */
 function productBands(product: ProductView): BandFactory[] {
   const facts = product.facts ?? [];
@@ -80,10 +120,14 @@ function productBands(product: ProductView): BandFactory[] {
     ...(product.sections ?? []).map((section): BandFactory => {
       function sectionBand(tone: SectionTone) {
         return (
-          <Band tone={tone} heading={section.heading} eyebrow={product.name} intro={section.intro}>
-            {section.points && section.points.length > 0 ? (
-              <SectionPoints points={section.points} />
-            ) : null}
+          <Band
+            // Numbered steps sit on the dark tone, like the homepage lifecycle band.
+            tone={section.layout === "steps" ? "dark" : tone}
+            heading={section.heading}
+            eyebrow={product.name}
+            intro={section.intro}
+          >
+            <SectionBody section={section} />
           </Band>
         );
       }
