@@ -11,26 +11,26 @@ Brief: [RUN-PROMPT.md](RUN-PROMPT.md). Findings and status: [FINDINGS.md](FINDIN
 
 ## ADR numbers reserved
 
-| ADR | Topic | Owner |
-|---|---|---|
-| 044 | Brand-system hero artwork and page families | WS1 |
-| 045 | Navigation variants (`current` and `ia`) and feature flags for podcast and founder section | WS2 |
-| 046 | Cookie-free analytics | WS5 |
-| 047 | Content Security Policy and security headers | WS5 |
-| 048 | Relay retrieval budget, small talk and widget mounting (amends ADR-037) | WS6 |
-| 049 | Super Admin identity model and morning Overview | WS7 |
+| ADR | Topic                                                                                      | Owner |
+| --- | ------------------------------------------------------------------------------------------ | ----- |
+| 044 | Brand-system hero artwork and page families                                                | WS1   |
+| 045 | Navigation variants (`current` and `ia`) and feature flags for podcast and founder section | WS2   |
+| 046 | Cookie-free analytics                                                                      | WS5   |
+| 047 | Content Security Policy and security headers                                               | WS5   |
+| 048 | Relay retrieval budget, small talk and widget mounting (amends ADR-037)                    | WS6   |
+| 049 | Super Admin identity model and morning Overview                                            | WS7   |
 
 ## Shared-file ownership
 
-| Area | Owner | Others |
-|---|---|---|
-| `packages/cms/src/navigation.ts`, footer config, page copy in `packages/cms/src/repo` | WS2 | request changes through the orchestrator |
-| `PageHero`, `MediaSlot`, icon components, `apps/web/public` imagery, `media-slots.ts` | WS1 | — |
-| `apps/web` root layout, metadata, `next.config`/middleware, sitemap, CI workflows, Playwright/axe/Lighthouse config, `track()` helper | WS5 | others call `track()`; WS5 lands it first |
-| `packages/relay-*`, `apps/web/app/api/relay*`, `superadmin/apps/relay`, Relay migrations | WS6 | — |
-| Insights article/author/index components in `apps/web`; Insights editor form and templates in `superadmin/apps/insights` | WS3 | WS7 does not touch the Insights editor |
-| Careers role page and application form in `apps/web`; careers drafts | WS4 | — |
-| Everything else in `superadmin/` (settings, accounts, team, notifications, overview, help, API docs, tables) | WS7 | — |
+| Area                                                                                                                                  | Owner | Others                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- |
+| `packages/cms/src/navigation.ts`, footer config, page copy in `packages/cms/src/repo`                                                 | WS2   | request changes through the orchestrator  |
+| `PageHero`, `MediaSlot`, icon components, `apps/web/public` imagery, `media-slots.ts`                                                 | WS1   | —                                         |
+| `apps/web` root layout, metadata, `next.config`/middleware, sitemap, CI workflows, Playwright/axe/Lighthouse config, `track()` helper | WS5   | others call `track()`; WS5 lands it first |
+| `packages/relay-*`, `apps/web/app/api/relay*`, `superadmin/apps/relay`, Relay migrations                                              | WS6   | —                                         |
+| Insights article/author/index components in `apps/web`; Insights editor form and templates in `superadmin/apps/insights`              | WS3   | WS7 does not touch the Insights editor    |
+| Careers role page and application form in `apps/web`; careers drafts                                                                  | WS4   | —                                         |
+| Everything else in `superadmin/` (settings, accounts, team, notifications, overview, help, API docs, tables)                          | WS7   | —                                         |
 
 ## Approval gates (never executed tonight)
 

@@ -54,17 +54,21 @@ See `FINDINGS.md` for the full table (ids A1–F8, severity, owner, status). Det
 ### 3. Workstreams
 
 #### WS1 — Visual system and imagery
+
 Owns `apps/web` hero/section/icon/media components, `public/media`, brand artwork additions. Fixes A1–A9.
+
 - **Hero system.** Replace the single photo background with a brand-system hero: generative, deterministic SVG/CSS artwork from the brand's graphic language (architectural grid, convergence lines, cobalt-and-mineral strokes of the mark) parameterised per page family (home, What We Do family, Industries, About/How We Work, Labs, Insights, Careers, Trust, Contact, 404) so families are distinguishable. Keep the dark hero where the homepage uses it; introduce a light compact hero for detail pages (offers, articles, roles, legal). Keep the hero video on the homepage only, with the existing pause control, `preload="metadata"`, a poster frame, no autoplay under `prefers-reduced-motion` or Save-Data.
 - **Icons.** Retire glossy 3D icons. Draw missing icons as SVG components in the existing line-icon style. AI Transformation visual becomes an abstract diagram (assess → prototype → production → managed) in line style, never a brain, chip or robot. Lifecycle ring uses the line set.
 - **Photography.** Remove stock photos from Industries cards and sector heroes; use family artwork or a `MediaSlot` that renders nothing in production until a real image exists. Register every slot in `media-slots.ts` with a brief; generate `docs/review-2026-10-17/IMAGE-BRIEF.md` (every slot, ratio, size, what a real photograph should show, who could take it).
 - **Placeholders.** `MediaSlot` in production renders nothing and collapses layout when the file is missing, unless marked `reserve`. Preview/dev keep the labelled placeholder.
 - **Offer hero.** Replace icon-in-a-card with a compact "engagement summary" panel (duration, who it is for, what you get, next phase) from the offer's existing content.
 - **Turnstile** theme follows the site theme. **Motion:** audit reveals for clipping; all animation off under reduced motion.
-- *Done when:* no AI-generated or stock raster image remains in `apps/web/public` or any component (list removals); homepage diff shows only intended changes; each family has a distinct hero; axe clean on changed components; LCP on `/` and `/solutions/ai-transformation` holds or improves; screenshots at 1440 and 390 per family in `ws1/screenshots/`.
+- _Done when:_ no AI-generated or stock raster image remains in `apps/web/public` or any component (list removals); homepage diff shows only intended changes; each family has a distinct hero; axe clean on changed components; LCP on `/` and `/solutions/ai-transformation` holds or improves; screenshots at 1440 and 390 per family in `ws1/screenshots/`.
 
 #### WS2 — Content and IA
+
 Owns page content files, nav and footer config, `about`, `trust`, `faq`, `contact`, `404`, `podcast` routes, copy files. Fixes B1–B5, B8–B13.
+
 - **Six practices**: correct every count, list, footer column, mega-menu column, structured data and sentence. Labs as sixth entry linking to `/labs`. Log every change in `COPY-CHANGES.md` (page, before, after, source).
 - **IA nav variant**: `NEXT_PUBLIC_NAV_VARIANT` = `current` | `ia`. `ia`: What We Do (mega menu: Practices, Solutions, Offers, Industries, Labs columns), Industries, Work→Labs fallback, Insights, Labs, About; Trust Centre utility link; Talk to Vitalos CTA; mobile menu to match. `current` unchanged. Preview sets `ia`; production untouched.
 - **Proof approach**: no `/work` route. "How we prove it" section pattern (homepage below Practices and on `/about`) showing only true things: delivery lifecycle and quality gates, Labs assets with maturity labels, Trust Centre commitments, Insights. Audit and remove any link/copy implying case studies, clients or a Work page.
@@ -76,38 +80,46 @@ Owns page content files, nav and footer config, `about`, `trust`, `faq`, `contac
 - **Contact**: registered office (city/postcode line; full address only if marked public — note: owner removed the address from footer/JSON-LD on 12 Oct), "what happens next" steps, intent pre-selection from `?intent=` (no personal data in query string). Response-time promise stays generic.
 - **404**: `<title>Page not found | Vitalos</title>`, main routes list, "Ask Relay where to find it" if no search.
 - **CTA audit**: table of every CTA label → destination → what the visitor sees; fix mismatches.
-- *Done when:* no "five practices", "5 practices", "five areas" anywhere; no link returns 404; both nav variants pass axe and keyboard; `COPY-CHANGES.md` complete; schema valid on `/faq`, `/about`; `security.txt` valid.
+- _Done when:_ no "five practices", "5 practices", "five areas" anywhere; no link returns 404; both nav variants pass axe and keyboard; `COPY-CHANGES.md` complete; schema valid on `/faq`, `/about`; `security.txt` valid.
 
 #### WS3 — Insights content operations
+
 Owns Insights Django editor views/templates (coordinated with WS7) and article/author components in `apps/web`. Fixes B6, B14, part of F4.
+
 - **Import batch 2 as drafts** using the existing `import_insights_batch` command and article files. Every post **Draft**, author Temitope Agbola, topics/format from front matter, SEO title and description, editorial checks unticked. Idempotent on slug. Nothing published. If the files are not in the repo, leave the command ready for `docs/review-2026-10-17/insights-batch-2/`.
 - **Article presentation**: share links (copy, LinkedIn, X; no tracking), related posts (by shared topic, three, only when they exist), author block with `MediaSlot` photo and link to author page, "Updated {date}" when material-update flag set, reading time, "Talk to us" CTA pre-selecting intent.
 - **Index page**: topic filters, featured (pinned) post, RSS link when >1 post; correct for one post.
 - **Editor UX**: authors multi-select of confirmed authors; styled cover upload with drag-and-drop and preview; word count and reading time; media library if storage supports listing, otherwise follow-up.
-- *Done when:* 20 drafts import green (dry-run and real) against a test database; article page shows new blocks at 1440/390 without CLS regression; editor changes have Django tests.
+- _Done when:_ 20 drafts import green (dry-run and real) against a test database; article page shows new blocks at 1440/390 without CLS regression; editor changes have Django tests.
 
 #### WS4 — Careers content and hygiene
+
 Owns careers settings drafts and role/application presentation in `apps/web`. Fixes B7.
+
 - Draft Benefits, Default hiring process, Salary policy in `CAREERS-SETTINGS-DRAFT.md` from live Careers copy, How We Work, Master FAQ careers entries (CAR-02 verified; CAR-01 unconfirmed stays off), roles' existing text. Do not save to production.
 - Verify each open role's salary band, level, location, work model against its source; list any that look copied.
 - Review the 7 draft roles: one-line verdict each in `CAREERS-DRAFTS-REVIEW.md`.
 - Role page: hiring-process block (hidden until settings filled) and an "About Vitalos" strip reusing the six-practices line; application form: styled file control, inline validation, confirmation state that does not promise emails that are off.
-- *Done when:* drafts and review exist; no production Careers setting changed; role page and form pass axe at 390 and 1440.
+- _Done when:_ drafts and review exist; no production Careers setting changed; role page and form pass axe at 390 and 1440.
 
 #### WS5 — Measurement, SEO, headers, a11y, performance
+
 Owns `apps/web` layout/metadata/CSP/sitemap/analytics, Playwright + axe + Lighthouse config, CI. Fixes C1, C3–C11, verifies A8/A9 and C2.
+
 - **Analytics**: cookie-free, no personal data; events `enquiry_started`, `enquiry_sent`, `application_started`, `application_sent`, `relay_opened`, `relay_question`, `relay_handoff`, `cta_click` (label, page), `outbound_click`; typed `track()` helper for other workstreams; CSP updated; draft privacy-notice paragraph; behind `NEXT_PUBLIC_ANALYTICS_ENABLED`.
 - **Accessibility**: accessible names on every link/button; decorative images `aria-hidden` + empty alt; one `h1`; landmarks; focus visible; 200 % zoom; reduced motion. axe in Playwright for every public route, failing CI on violations.
 - **Headers**: nonce-based CSP where Next.js supports it, keep Turnstile and Supabase sources, `frame-ancestors 'none'`, `X-Frame-Options: DENY`, HSTS `max-age=63072000; includeSubDomains` (preload as approval item), `Cross-Origin-Opener-Policy: same-origin`. Record final policy in `DECISIONS.md`.
 - **Performance**: Lighthouse CI budgets (LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1, performance ≥ 90 mobile) on the route set; fix what the baseline shows. Before/after per route.
 - **Mobile**: Playwright pass of every public route at 390×844 with screenshots; fix overflow, tap targets < 44 px, mega menu, Relay launcher over footer, form controls.
 - **Sitemap/metadata**: real `lastmod`, site-wide RSS autodiscovery + footer feed link, `manifest.webmanifest`, `theme-color`, `apple-touch-icon.png`, `llms.txt` check, schema validation in CI for every JSON-LD type, `Person` on About (behind founder flag) and author page.
-- *Done when:* CI has axe, Lighthouse budgets, schema validation; every public route passes axe; budgets met; headers verified; analytics events fire in a Playwright test with the provider stubbed.
+- _Done when:_ CI has axe, Lighthouse budgets, schema validation; every public route passes axe; budgets met; headers verified; analytics events fire in a Playwright test with the provider stubbed.
 
 Baseline route set: `/`, `/what-we-do`, `/solutions/ai-transformation`, `/offers/ai-opportunity-assessment`, `/industries/health-care`, `/about`, `/insights/introducing-vitalos`, `/careers/senior-technology-consultant`, `/contact`, `/trust`, `/faq`.
 
 #### WS6 — Relay quality and cost
+
 Owns Relay in the admin and the widget package. Fixes D1–D6, C2, E1.
+
 - **Retrieval, not stuffing**: top-k chunks (k ≤ 8, token-capped) via existing index or a lexical fallback with typo tolerance; short conversation window; log tokens per turn. Target ≤ 8k input tokens per turn on a fixed 25-question set from the Master FAQ (including the five gap questions), asserting the expected source is cited.
 - **Gaps and small talk**: greeting/goodbye handling without lookup; spelling tolerance; new knowledge entries as **Needs confirmation** for founder, solutions list, getting started, "can you modernise my system". "Suggested answer" button per gap drafting an entry from the matching page.
 - **Display name**: widget shows `first_name · Vitalos`, never username or email.
@@ -116,10 +128,12 @@ Owns Relay in the admin and the widget package. Fixes D1–D6, C2, E1.
 - **Feedback**: thumbs-down asks one reason; reasons shown in Relay Insights.
 - **Widget DOM**: mount panel on open, unmount on close; restore only on "Continue previous conversation"; `inert` while closed if it must stay mounted.
 - **Hand-off rate**: fix + unit test (4 conversations, 1 hand-off → 25 %).
-- *Done when:* 25-question test passes ≤ 8k input tokens/turn; gap questions get a sourced answer or a correct hand-off; hand-off test passes; panel never in initial HTML.
+- _Done when:_ 25-question test passes ≤ 8k input tokens/turn; gap questions get a sourced answer or a correct hand-off; hand-off test passes; panel never in initial HTML.
 
 #### WS7 — Super admin bugs, identity, Overview, Architecture, Help
+
 Owns everything in the admin except Relay and the Insights editor files WS3 touches. Fixes E2–E9, F1–F3, F5–F8.
+
 - **Bugs**: E2 mojibake (fix + test); E3 table overflow (sticky actions or kebab menu; same on roles and applications tables); E5 enquiry SLA notifications (in-app and email via existing provider to assignee or all super admins when first-response target passes; nightly overdue digest; `--purge-smoke-test` on whatever created smoke-test notifications); E9 daily sending-domain check with result, Resend usage warning at 80 % with notification, attachment storage as a setup task with exact steps.
 - **Identity**: required `display_name` (migration back-fills from email local part, capitalised, flagged for review); `link_people --dry-run` links Team member and Insights author to user by email; names everywhere (assignees, "who hears about", audit trail, Relay); Team page lists users with role, service lines, last sign-in.
 - **Overview** (morning screen): Enquiries needing attention (overdue first), Relay (waiting, gaps this week, awaiting confirmation, last sync age), Careers (new applications, roles open, drafts), Insights (drafts, in review, next scheduled), Website sync, System health, Website analytics (provider API when `ANALYTICS_API_KEY` exists, else link-out). Service-line cards move to the Service lines page. Every count links to its list.
@@ -127,7 +141,7 @@ Owns everything in the admin except Relay and the Insights editor files WS3 touc
 - **Help**: three workflow guides (enquiries; Insights review and publish; applications and stages) and three Relay guides (confirm FAQ entry, answer a gap, take over a conversation), from the actual screens.
 - **Primary owner**: prepare steps and a management command for the approved option; execute nothing.
 - **Mobile**: 390×844 pass (sidebar drawer, tables, Relay inbox); fix what breaks.
-- *Done when:* Django tests cover each fix; `link_people --dry-run` matches correctly; Overview renders with real and empty data; screenshots at 1440 and 390 in `ws7/screenshots/`.
+- _Done when:_ Django tests cover each fix; `link_people --dry-run` matches correctly; Overview renders with real and empty data; screenshots at 1440 and 390 in `ws7/screenshots/`.
 
 ### 5. Quality bar
 
