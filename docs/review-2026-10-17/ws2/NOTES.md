@@ -40,3 +40,18 @@ All three are server-read (`getEnv().site`), in `turbo.json` `globalEnv` and `.e
 - Offer durations stay the category ("Short engagement"): no source states a duration. Investment bands: no source.
 - `founder.ts` copies the author profile; update it if the profile changes (or later read the profile from the content API).
 - PR #61 also edits `FaqPage.tsx` (sticky group titles). Expect a conflict in the group markup on rebase: keep #61's layout and re-add `id={group.id} data-faq-group` on the section wrapper, `id`/`data-faq-entry` on each `Disclosure`, and the per-section Contact / Ask Relay links. `contact/page.tsx` was deliberately not touched.
+
+## After merging the integration branch (WS1, WS3–WS7)
+
+- Kept WS1's visuals (hero artwork, `practiceArtworkFor`, light/dark hero tone via `heroToneForPath`) and WS2's data: Vitalos Labs uses the Labs artwork family; `practice-images.ts` is gone (WS1). The About hero uses WS1's `mediaSlotRenders`; the Founder band shows its photo slot only when the file exists. WS1's `about.founder` slot entry is the one kept (WS2's duplicate removed).
+- FAQPage: one only (WS5 and WS2 both passed `faq` through `Breadcrumbs`; merged to one).
+- Founder `Person` JSON-LD: WS5's `founderPersonNode` is wired on About as the AboutPage `mainEntity`, behind `ABOUT_FOUNDER_ENABLED`.
+- A9 (left by WS1): the compact menu sheet no longer animates `clip-path`; it only moves into place (`MobileNav.tsx`).
+
+## Check results (merged result, 17 Oct)
+
+- `corepack pnpm check`: format, raw colours, turbo env, content types, lint (14/14), typecheck, boundaries (no violations) pass. Unit tests: all packages pass; `@vitalos/web` 975/977 with two timing tests in files WS2 did not touch (`content/http/handlers.test.ts` rate limit, `lib/cms/content-source.test.ts` draft module, `content/lookup/lookup.test.ts`) failing only under parallel load on this machine; each passes when rerun on its own.
+- Playwright `test:e2e` + `test:a11y` (fixtures, current nav, Relay on): 669 passed, 131 skipped, 3 timeouts (homepage axe baseline, Relay reduced motion, the new 404 test), all three green on rerun (`--workers=1`/`2`).
+- IA nav run (`NEXT_PUBLIC_NAV_VARIANT=ia`, before the merge): nav-ia, journeys, motion, commercial, accessibility: 311 + 47 passed after fixes.
+- Crawl (`next build && next start`, every internal link from `/`): fixtures current 48 URLs, fixtures IA 44, repo content IA 75: 0 non-200 in each; repo content has no link to `/work` or `/podcast`.
+- Screenshots: `screenshots/repo-ia-*-1440.jpg` (repo content, IA nav). The 390 captures timed out on this machine (network-idle wait with Relay polling); the 390 layout is covered by the `mobile` Playwright project and axe.
