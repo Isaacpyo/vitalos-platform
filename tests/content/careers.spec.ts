@@ -81,10 +81,14 @@ test.describe("Careers pages", () => {
     expect(await missing.text()).toContain("<main");
   });
 
-  test("the homepage shows the Careers section after Insights", async ({ page }) => {
+  test("the homepage shows the Careers banner after Insights, without listing roles", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: "All open roles" })).toBeVisible();
-    await expect(page.locator(`main a[href="${ROLE}"]`)).toHaveCount(1);
+    await expect(
+      page.locator("main").getByRole("link", { name: "See open roles" }),
+    ).toHaveAttribute("href", "/careers");
+    await expect(page.locator(`main a[href="${ROLE}"]`)).toHaveCount(0);
     await expect(page.locator('footer a[href="/careers"]').first()).toBeAttached();
   });
 });

@@ -74,13 +74,36 @@ export default async function ContactPage({
           size="wide"
           className="grid gap-x-(--space-8) gap-y-(--space-7) lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
         >
-          {/* The ways to reach us first (reading and focus order), then the form. */}
-          <div className="min-w-0 lg:pt-(--space-5)">
+          {/* The form card starts at md: below it the Turnstile widget (300px fixed) needs the
+              full width to fit a 320px viewport (WCAG 1.4.10). The topic is a select in the form.
+              Raised like the homepage cards, and pulled up into the hero from lg. First in the reading
+              order on every screen; the right-hand column from lg. */}
+          <div
+            data-tone="muted"
+            className="relative z-10 min-w-0 text-tone-text md:rounded-2xl md:border md:border-tone-border md:bg-tone-bg md:p-(--space-7) md:shadow-floating lg:col-start-2 lg:row-start-1 lg:-mt-(--space-10)"
+          >
+            {form.available ? (
+              <EnquiryForm
+                action={submitEnquiryAction}
+                sourcePath={SOURCE_PATH}
+                privacyNoticeVersion={form.privacyNoticeVersion}
+                idempotencyKey={crypto.randomUUID()}
+                intentOptions={buildIntentOptions(page?.routes)}
+                prefill={prefill}
+                turnstileSiteKey={turnstileSiteKey}
+                contactEmail={settings.contactEmail}
+                successMessage={page?.successMessage}
+              />
+            ) : (
+              <ContactAlternative contactEmail={settings.contactEmail} />
+            )}
+          </div>
+          {/* The ways to reach us: after the form on small screens (owner direction, 16 and 17 Oct
+              2026), in the left column from lg. */}
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:pt-(--space-5)">
             <ul className="m-0 flex list-none flex-col gap-(--space-6) p-0">
-              {/* Email: in this column from lg; on smaller screens it follows the form (owner
-                  direction, 16 Oct 2026), see the copy after the form below. */}
               {settings.contactEmail ? (
-                <li className="hidden items-center gap-(--space-4) lg:flex">
+                <li className="flex items-center gap-(--space-4)">
                   <IconTile name="mail" />
                   <div className="min-w-0">
                     <p className="m-0 text-small text-tone-muted">Email</p>
@@ -104,43 +127,6 @@ export default async function ContactPage({
               ) : null}
             </ul>
           </div>
-          {/* The form card starts at md: below it the Turnstile widget (300px fixed) needs the
-              full width to fit a 320px viewport (WCAG 1.4.10). The topic is a select in the form.
-              Raised like the homepage cards, and pulled up into the hero from lg. */}
-          <div
-            data-tone="muted"
-            className="relative z-10 min-w-0 text-tone-text md:rounded-2xl md:border md:border-tone-border md:bg-tone-bg md:p-(--space-7) md:shadow-floating lg:-mt-(--space-10)"
-          >
-            {form.available ? (
-              <EnquiryForm
-                action={submitEnquiryAction}
-                sourcePath={SOURCE_PATH}
-                privacyNoticeVersion={form.privacyNoticeVersion}
-                idempotencyKey={crypto.randomUUID()}
-                intentOptions={buildIntentOptions(page?.routes)}
-                prefill={prefill}
-                turnstileSiteKey={turnstileSiteKey}
-                contactEmail={settings.contactEmail}
-                successMessage={page?.successMessage}
-              />
-            ) : (
-              <ContactAlternative contactEmail={settings.contactEmail} />
-            )}
-          </div>
-          {settings.contactEmail ? (
-            <div className="flex min-w-0 items-center gap-(--space-4) lg:hidden">
-              <IconTile name="mail" />
-              <div className="min-w-0">
-                <p className="m-0 text-small text-tone-muted">Email</p>
-                <a
-                  href={`mailto:${settings.contactEmail}`}
-                  className="text-body-l font-semibold text-tone-heading underline-offset-4 hover:underline"
-                >
-                  {settings.contactEmail}
-                </a>
-              </div>
-            </div>
-          ) : null}
         </Container>
       </Section>
     </main>
