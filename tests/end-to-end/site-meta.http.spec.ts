@@ -44,7 +44,8 @@ test.describe("RSS autodiscovery (C9)", () => {
   for (const path of ["/", "/what-we-do", "/contact", "/faq", "/this-page-does-not-exist"]) {
     test(`${path} advertises the Insights feed`, async ({ request }) => {
       const html = await (await request.get(path)).text();
-      const link = html.match(/<link rel="alternate" type="application\/rss\+xml"[^>]*>/)?.[0] ?? "";
+      const link =
+        html.match(/<link rel="alternate" type="application\/rss\+xml"[^>]*>/)?.[0] ?? "";
       expect(link).toContain('title="Vitalos Insights"');
       expect(link).toMatch(/href="[^"]*\/insights\/feed\.xml"/);
     });

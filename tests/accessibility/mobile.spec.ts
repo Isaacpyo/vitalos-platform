@@ -62,7 +62,13 @@ async function smallTargets(page: Page): Promise<Target[]> {
       // The skip link sits off-screen until it is focused.
       if (el.classList.contains("skip-link")) return true;
       // Content of a closed <details> keeps a layout box but is not rendered (content-visibility).
-      if (!el.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true, visibilityProperty: true })) {
+      if (
+        !el.checkVisibility({
+          contentVisibilityAuto: true,
+          opacityProperty: true,
+          visibilityProperty: true,
+        })
+      ) {
         return true;
       }
       const style = getComputedStyle(el);
