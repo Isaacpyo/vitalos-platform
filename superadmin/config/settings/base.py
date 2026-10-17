@@ -308,13 +308,28 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
+
+def _origin(url: str) -> str:
+    """The scheme://host[:port] of an https (or, locally, http) URL, else ""."""
+    from urllib.parse import urlsplit
+
+    parts = urlsplit(url or "")
+    if parts.scheme not in ("https", "http") or not parts.netloc or "@" in parts.netloc:
+        return ""
+    return f"{parts.scheme}://{parts.netloc}"
+
+
+# Insights cover previews and media come from the public media host (CONTENT_MEDIA_PUBLIC_BASE_URL),
+# which is another origin in production; allow images from that origin only.
+CONTENT_MEDIA_ORIGIN = _origin(CONTENT_MEDIA_PUBLIC_BASE_URL)
+
 # Strict CSP: no inline script or style without the per-request nonce.
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": [NONE],
         "script-src": [SELF, NONCE],
         "style-src": [SELF, NONCE],
-        "img-src": [SELF, "data:"],
+        "img-src": [SELF, "data:", *([CONTENT_MEDIA_ORIGIN] if CONTENT_MEDIA_ORIGIN else [])],
         "font-src": [SELF],
         "connect-src": [SELF],
         "manifest-src": [SELF],
@@ -344,7 +359,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Vitalos Super Admin API",
     "DESCRIPTION": "Read-only API over the Vitalos company architecture. "
-    "Authenticate with `Authorization: Bearer <token>` using a token from Settings â†’ API tokens.",
+    "Authenticate with `Authorization: Bearer <token>` using a token from Settings → API tokens.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["apps.api.permissions.HasAnyRole"],
@@ -357,6 +372,16 @@ SPECTACULAR_SETTINGS = {
         "ProjectStatusEnum": "apps.architecture.models.Project.Status",
     },
 }
+
+# Morning Overview and module switches (ADR-049).
+# ARCHITECTURE_MODULE_ENABLED=false hides Service lines, Architecture and their filters (decision is
+# one toggle; the data and URLs stay). Website analytics: a link-out card to ANALYTICS_DASHBOARD_URL;
+# a numbers panel appears only when ANALYTICS_PROVIDER names an adapter with a read API and
+# ANALYTICS_API_KEY is set (apps/core/analytics.py). Vercel Web Analytics has no public read API.
+ARCHITECTURE_MODULE_ENABLED = env.bool("ARCHITECTURE_MODULE_ENABLED", default=True)
+ANALYTICS_PROVIDER = env("ANALYTICS_PROVIDER", default="vercel").strip().lower()
+ANALYTICS_API_KEY = env("ANALYTICS_API_KEY", default="")
+ANALYTICS_DASHBOARD_URL = env("ANALYTICS_DASHBOARD_URL", default="").strip()
 
 SIMPLE_HISTORY_REVERT_DISABLED = True
 SIMPLE_HISTORY_HISTORY_CHANGE_REASON_USE_TEXT_FIELD = True

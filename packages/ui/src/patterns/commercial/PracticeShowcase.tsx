@@ -13,14 +13,7 @@ import { cx } from "../../primitives/_internal/cx";
 import { Icon, type IconName } from "../../primitives/Icon";
 import { IconTile } from "../../primitives/IconTile";
 import type { ItemHeadingLevel } from "../_internal/types";
-
-/** A pre-sized illustration: `srcSet` with width descriptors, intrinsic size for the ratio. */
-export interface PracticeShowcaseImage {
-  src: string;
-  srcSet?: string | undefined;
-  width: number;
-  height: number;
-}
+import { HeroArtwork, type ArtworkSpec } from "../artwork/HeroArtwork";
 
 export interface PracticeShowcaseItem {
   title: string;
@@ -28,10 +21,11 @@ export interface PracticeShowcaseItem {
   summary?: string | undefined;
   icon?: IconName | undefined;
   /**
-   * Decorative illustration of the practice (its title is the visible label). Without one the
-   * stage shows the practice's icon on a tint, and the compact layout shows no picture.
+   * The practice's brand-system artwork (ADR-044): its family and seed, so each practice draws its
+   * own variant. Decorative (its title is the visible label). Without one the stage shows the
+   * practice's icon on a tint, and the compact layout shows no picture.
    */
-  image?: PracticeShowcaseImage | undefined;
+  art?: ArtworkSpec | undefined;
 }
 
 export interface PracticeShowcaseProps {
@@ -49,15 +43,16 @@ const TILT = 4;
 /**
  * The practices as a numbered list beside a large illustration stage (owner direction, 15 Oct
  * 2026). Pointing at or focusing a practice makes it active: a bar grows beside it, its summary
- * eases open (the others close, from lg), and its illustration cross-fades in with a short zoom and a blur that clears, under a glass label with
- * the practice and its number. The stage leans a few degrees towards the pointer.
+ * eases open (the others close, from lg), and its artwork (ADR-044) cross-fades in with a short
+ * zoom, under a label with the practice and its number. The stage leans a few degrees towards the
+ * pointer.
  *
  * Nothing moves on its own: every change follows the visitor's pointer or focus, so no pause
  * control is needed (WCAG 2.2.2). The server HTML (and the page without JavaScript) shows the
- * first practice active with its illustration; under reduced motion the stage does not tilt and
- * the illustrations only cross-fade. Below lg there is no stage: each practice shows its own
- * illustration under its text. Text is never faded (ADR-024 decision 4); the label wipes in.
- * Illustrations are decorative (`alt=""`): the titles are the links' names.
+ * first practice active with its artwork; under reduced motion the stage does not tilt and the
+ * artwork only switches. Below lg there is no stage: each practice shows a strip of its own
+ * artwork under its text. Text is never faded or clipped (ADR-044); the label rises in. The
+ * artwork is decorative: the titles are the links' names.
  */
 export function PracticeShowcase(props: PracticeShowcaseProps) {
   return (
@@ -165,19 +160,12 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
                       : "text-tone-muted lg:-translate-x-1 group-hover:translate-x-0",
                   )}
                 />
-                {item.image ? (
-                  <span className="col-span-3 mt-(--space-4) block overflow-hidden rounded-lg border border-tone-border lg:hidden">
-                    <img
-                      src={item.image.src}
-                      {...(item.image.srcSet ? { srcSet: item.image.srcSet } : {})}
-                      sizes="100vw"
-                      width={item.image.width}
-                      height={item.image.height}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="block aspect-video h-auto w-full object-cover"
-                    />
+                {item.art ? (
+                  <span
+                    aria-hidden="true"
+                    className="col-span-3 mt-(--space-4) block overflow-hidden rounded-lg border border-tone-border bg-tone-bg lg:hidden"
+                  >
+                    <HeroArtwork {...item.art} crop="strip" className="aspect-[3/1] w-full" />
                   </span>
                 ) : null}
               </a>
@@ -195,17 +183,17 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
           onPointerMove={onStageMove}
           onPointerLeave={onStageLeave}
           {...(motionAllowed ? { style: { rotateX, rotateY } } : {})}
-          className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-tone-border bg-cloud-50 shadow-floating [transform-style:preserve-3d]"
+          className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-tone-border bg-tone-bg shadow-floating [transform-style:preserve-3d]"
         >
           {items.map((item, index) => {
             const on = index === active;
             // CSS transitions on classes, not Motion: no inline styles in the server HTML, and
             // the global reduced-motion rule makes the change instant.
             const look = cx(
-              "absolute inset-0 transition-[opacity,scale,filter] duration-(--duration-diagram) ease-(--ease-emphasis)",
-              on ? "scale-100 opacity-100 blur-none" : "scale-[1.06] opacity-0 blur-sm",
+              "absolute inset-0 transition-[opacity,scale] duration-(--duration-diagram) ease-(--ease-emphasis)",
+              on ? "scale-100 opacity-100" : "scale-[1.04] opacity-0",
             );
-            if (!item.image) {
+            if (!item.art) {
               return (
                 <div
                   key={item.href}
@@ -219,24 +207,15 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
               );
             }
             return (
-              <img
-                key={item.href}
-                src={item.image.src}
-                {...(item.image.srcSet ? { srcSet: item.image.srcSet } : {})}
-                sizes="(min-width: 1024px) 56vw, 100vw"
-                width={item.image.width}
-                height={item.image.height}
-                alt=""
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding="async"
-                className={cx(look, "size-full object-cover")}
-              />
+              <div key={item.href} className={look}>
+                <HeroArtwork {...item.art} crop="strip" className="size-full" />
+              </div>
             );
           })}
           <m.div
             key={active}
-            initial={motionAllowed ? { y: 16, clipPath: "inset(0 100% 0 0 round 0.75rem)" } : false}
-            animate={{ y: 0, clipPath: "inset(0 0% 0 0 round 0.75rem)" }}
+            initial={motionAllowed ? { y: 16 } : false}
+            animate={{ y: 0 }}
             transition={{ duration: SECONDS.entrance + 0.1, ease: EASE_EMPHASIS, delay: 0.08 }}
             className="absolute bottom-(--space-5) left-(--space-5) flex items-center gap-(--space-3) rounded-xl border border-white/70 bg-white/80 py-(--space-3) pr-(--space-5) pl-(--space-3) shadow-(--shadow-floating) backdrop-blur-md"
           >

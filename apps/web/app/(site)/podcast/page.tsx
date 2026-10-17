@@ -4,7 +4,7 @@ import { footerColumns, podcastPage, routes, validatePodcast } from "@vitalos/cm
 import { getEnv } from "@vitalos/config";
 import { Container, PageHero, Section, podcastMarkPaths } from "@vitalos/ui";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
-import { heroPhotograph } from "../../../src/lib/view-mapping/hero-images";
+import { heroArtwork } from "../../../src/lib/view-mapping/hero-artwork";
 import { pageMetadata } from "../../../src/templates/institutional/metadata";
 
 /**
@@ -62,7 +62,7 @@ export default async function PodcastPage() {
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("insights", "podcast")}
         eyebrow={footerColumns.podcast}
         title={podcastPage.title}
         lead={podcastPage.lead}

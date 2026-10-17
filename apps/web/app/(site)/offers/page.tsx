@@ -28,6 +28,7 @@ export default async function OffersPage() {
           name: page?.heading ?? structuralLabels.offers,
           description: page?.intro,
           type: "CollectionPage",
+          items: offers.map((d) => ({ name: d.title, path: routes.offer(d.slug) })),
         })}
       />
       <OfferIndexTemplate page={page} offers={offers} />

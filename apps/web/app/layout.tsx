@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { colors } from "@vitalos/design-tokens";
 import { geistMono } from "../src/config/fonts";
 import { GeistSans } from "geist/font/sans";
 import { descriptor, brandName } from "@vitalos/cms";
@@ -6,6 +7,7 @@ import { readBuildEnv } from "@vitalos/config/build";
 import { readPublicEnv } from "@vitalos/config/public";
 import { RelayLauncher } from "@vitalos/relay-widget";
 import { seoSite } from "../src/features/seo/site";
+import { siteFeed } from "../src/features/seo/metadata";
 import { SiteAnalytics } from "../src/components/analytics/site-analytics";
 import "./globals.css";
 
@@ -22,6 +24,9 @@ export const metadata: Metadata = {
   },
   title: { default: brandName, template: seoSite.titleTemplate },
   description: descriptor,
+  // RSS autodiscovery on every page (C9). Pages that set their own `alternates` repeat it through
+  // `composeMetadata`, because a page's `alternates` replaces the layout's.
+  alternates: { types: siteFeed },
   // Defaults for pages outside the (site) group, such as the root 404. Every site page has its own
   // generated image (opengraph-image.tsx), which takes precedence (docs/seo/DECISIONS.md 21).
   openGraph: {
@@ -32,6 +37,9 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image" },
 };
+
+/** Browser UI colour (C8): the midnight ground of the header and heroes. */
+export const viewport: Viewport = { themeColor: colors.midnight950 };
 
 /*
  * Fonts: Geist Sans and Geist Mono from the installed `geist` package (self-hosted by next/font,

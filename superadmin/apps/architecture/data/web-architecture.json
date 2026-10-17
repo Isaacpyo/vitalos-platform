@@ -1,0 +1,364 @@
+{
+  "source": "packages/cms/src/repo (repo content set)",
+  "practices": [
+    {
+      "slug": "consulting",
+      "title": "Vitalos Consulting",
+      "summary": "Clarity, transformation choices, roadmaps and architecture before expensive execution.",
+      "path": "/what-we-do/consulting",
+      "order": 0,
+      "solutions": [
+        "ai-transformation",
+        "business-process-modernisation",
+        "digital-product-transformation",
+        "application-modernisation",
+        "data-intelligence-transformation",
+        "technology-recovery-reliability"
+      ]
+    },
+    {
+      "slug": "engineering",
+      "title": "Vitalos Engineering",
+      "summary": "Serious production software, modernisation, platforms, integration and reliability.",
+      "path": "/what-we-do/engineering",
+      "order": 1,
+      "solutions": [
+        "ai-transformation",
+        "business-process-modernisation",
+        "digital-product-transformation",
+        "application-modernisation",
+        "data-intelligence-transformation",
+        "technology-recovery-reliability"
+      ]
+    },
+    {
+      "slug": "ai-data",
+      "title": "Vitalos AI & Data",
+      "summary": "AI and data from opportunity and foundations through production and managed operation.",
+      "path": "/what-we-do/ai-data",
+      "order": 2,
+      "solutions": [
+        "ai-transformation",
+        "business-process-modernisation",
+        "data-intelligence-transformation"
+      ]
+    },
+    {
+      "slug": "experience",
+      "title": "Vitalos Experience",
+      "summary": "Human-centred products, services, commerce and accessible digital experiences.",
+      "path": "/what-we-do/experience",
+      "order": 3,
+      "solutions": [
+        "business-process-modernisation",
+        "digital-product-transformation"
+      ]
+    },
+    {
+      "slug": "managed-services",
+      "title": "Vitalos Managed Services",
+      "summary": "Reliable operation, support and continuous improvement for systems Vitalos builds or responsibly inherits.",
+      "path": "/what-we-do/managed-services",
+      "order": 4,
+      "solutions": [
+        "ai-transformation",
+        "application-modernisation",
+        "technology-recovery-reliability"
+      ]
+    },
+    {
+      "slug": "labs",
+      "title": "Vitalos Labs",
+      "summary": "Vitalos Labs explores emerging technology, builds reference architectures and tests ideas before they become client capabilities or products. Labs is technical proof, not client work.",
+      "path": "/labs",
+      "order": 5,
+      "solutions": []
+    }
+  ],
+  "solutions": [
+    {
+      "slug": "ai-transformation",
+      "title": "AI Transformation",
+      "summary": "Turn AI ambition into operational value.",
+      "path": "/solutions/ai-transformation",
+      "order": 0,
+      "practices": [
+        "consulting",
+        "ai-data",
+        "engineering",
+        "managed-services"
+      ],
+      "offers": [
+        "ai-opportunity-assessment",
+        "ai-prototype-sprint"
+      ]
+    },
+    {
+      "slug": "business-process-modernisation",
+      "title": "Business Process Modernisation",
+      "summary": "Redesign the work, then automate and integrate it.",
+      "path": "/solutions/business-process-modernisation",
+      "order": 1,
+      "practices": [
+        "consulting",
+        "engineering",
+        "ai-data",
+        "experience"
+      ],
+      "offers": [
+        "digital-transformation-discovery",
+        "systems-integration",
+        "business-process-automation"
+      ]
+    },
+    {
+      "slug": "digital-product-transformation",
+      "title": "Digital Product Transformation",
+      "summary": "Discover, design, engineer, launch and improve a digital product.",
+      "path": "/solutions/digital-product-transformation",
+      "order": 2,
+      "practices": [
+        "experience",
+        "engineering",
+        "consulting"
+      ],
+      "offers": [
+        "custom-digital-product",
+        "customer-experience-transformation",
+        "product-discovery"
+      ]
+    },
+    {
+      "slug": "application-modernisation",
+      "title": "Application Modernisation",
+      "summary": "Modernise in controlled stages towards a platform you can keep changing.",
+      "path": "/solutions/application-modernisation",
+      "order": 3,
+      "practices": [
+        "consulting",
+        "engineering",
+        "managed-services"
+      ],
+      "offers": [
+        "technology-health-assessment",
+        "application-modernisation",
+        "managed-engineering-application-care"
+      ]
+    },
+    {
+      "slug": "data-intelligence-transformation",
+      "title": "Data & Intelligence Transformation",
+      "summary": "Build the foundation, then the intelligence on top of it.",
+      "path": "/solutions/data-intelligence-transformation",
+      "order": 4,
+      "practices": [
+        "ai-data",
+        "consulting",
+        "engineering"
+      ],
+      "offers": [
+        "data-bi-modernisation"
+      ]
+    },
+    {
+      "slug": "technology-recovery-reliability",
+      "title": "Technology Recovery & Reliability",
+      "summary": "Triage a critical platform, establish a known baseline, stabilise and remediate, then operate it.",
+      "path": "/solutions/technology-recovery-reliability",
+      "order": 5,
+      "practices": [
+        "engineering",
+        "managed-services",
+        "consulting"
+      ],
+      "offers": [
+        "technology-health-assessment",
+        "engineering-rescue",
+        "managed-engineering-application-care"
+      ]
+    }
+  ],
+  "offers": [
+    {
+      "slug": "digital-transformation-discovery",
+      "title": "Digital Transformation Discovery",
+      "summary": "Turn an ambiguous need to modernise into a coherent, prioritised plan: current state, future state and roadmap.",
+      "path": "/offers/digital-transformation-discovery",
+      "order": 0,
+      "solutions": [
+        "business-process-modernisation"
+      ],
+      "practices": [
+        "consulting"
+      ]
+    },
+    {
+      "slug": "technology-health-assessment",
+      "title": "Technology Health Assessment",
+      "summary": "Find out what is wrong, risky or holding a platform back, and what to fix first.",
+      "path": "/offers/technology-health-assessment",
+      "order": 1,
+      "solutions": [
+        "application-modernisation",
+        "technology-recovery-reliability"
+      ],
+      "practices": [
+        "consulting",
+        "engineering"
+      ]
+    },
+    {
+      "slug": "ai-opportunity-assessment",
+      "title": "AI Opportunity Assessment",
+      "summary": "Find the AI opportunities worth building: viable use cases ranked by value, feasibility, data readiness and risk.",
+      "path": "/offers/ai-opportunity-assessment",
+      "order": 2,
+      "solutions": [
+        "ai-transformation"
+      ],
+      "practices": [
+        "consulting",
+        "ai-data"
+      ]
+    },
+    {
+      "slug": "ai-prototype-sprint",
+      "title": "AI Prototype Sprint",
+      "summary": "Test the highest-value AI hypothesis quickly, with real workflows and data where appropriate, and decide on evidence.",
+      "path": "/offers/ai-prototype-sprint",
+      "order": 3,
+      "solutions": [
+        "ai-transformation"
+      ],
+      "practices": [
+        "engineering",
+        "ai-data"
+      ]
+    },
+    {
+      "slug": "custom-digital-product",
+      "title": "Custom Digital Product",
+      "summary": "Build a new product, portal, workflow platform or application, designed around measurable user and business outcomes.",
+      "path": "/offers/custom-digital-product",
+      "order": 4,
+      "solutions": [
+        "digital-product-transformation"
+      ],
+      "practices": [
+        "engineering",
+        "experience"
+      ]
+    },
+    {
+      "slug": "application-modernisation",
+      "title": "Application Modernisation",
+      "summary": "Modernise, replace or progressively refactor ageing software to reduce technical constraint and restore the ability to change.",
+      "path": "/offers/application-modernisation",
+      "order": 5,
+      "solutions": [
+        "application-modernisation"
+      ],
+      "practices": [
+        "consulting",
+        "engineering"
+      ]
+    },
+    {
+      "slug": "systems-integration",
+      "title": "Systems Integration",
+      "summary": "Connect disconnected platforms, services and data flows so information moves reliably and manual handoffs disappear.",
+      "path": "/offers/systems-integration",
+      "order": 6,
+      "solutions": [
+        "business-process-modernisation"
+      ],
+      "practices": [
+        "engineering"
+      ]
+    },
+    {
+      "slug": "business-process-automation",
+      "title": "Business Process Automation",
+      "summary": "Redesign and automate repeatable operations, combining workflow, integration and AI.",
+      "path": "/offers/business-process-automation",
+      "order": 7,
+      "solutions": [
+        "business-process-modernisation"
+      ],
+      "practices": [
+        "consulting",
+        "engineering",
+        "ai-data"
+      ]
+    },
+    {
+      "slug": "data-bi-modernisation",
+      "title": "Data & BI Modernisation",
+      "summary": "Create a usable data foundation and the reporting and decision systems built on it.",
+      "path": "/offers/data-bi-modernisation",
+      "order": 8,
+      "solutions": [
+        "data-intelligence-transformation"
+      ],
+      "practices": [
+        "ai-data"
+      ]
+    },
+    {
+      "slug": "customer-experience-transformation",
+      "title": "Customer Experience Transformation",
+      "summary": "Improve the end-to-end customer digital journey, connected to the processes and systems behind it.",
+      "path": "/offers/customer-experience-transformation",
+      "order": 9,
+      "solutions": [
+        "digital-product-transformation"
+      ],
+      "practices": [
+        "engineering",
+        "experience"
+      ]
+    },
+    {
+      "slug": "engineering-rescue",
+      "title": "Engineering Rescue",
+      "summary": "Stabilise or complete a slow, unstable, unfinished or poorly engineered product, starting from a known baseline.",
+      "path": "/offers/engineering-rescue",
+      "order": 10,
+      "solutions": [
+        "technology-recovery-reliability"
+      ],
+      "practices": [
+        "engineering"
+      ]
+    },
+    {
+      "slug": "managed-engineering-application-care",
+      "title": "Managed Engineering & Application Care",
+      "summary": "Ongoing ownership and improvement of live applications: maintenance, fixes, updates, incident support and retained engineering capacity.",
+      "path": "/offers/managed-engineering-application-care",
+      "order": 11,
+      "solutions": [
+        "application-modernisation",
+        "technology-recovery-reliability"
+      ],
+      "practices": [
+        "engineering",
+        "managed-services"
+      ]
+    },
+    {
+      "slug": "product-discovery",
+      "title": "Product Discovery",
+      "summary": "Define a new product before major engineering investment: validated problem, users, journeys, scope and backlog.",
+      "path": "/offers/product-discovery",
+      "order": 12,
+      "solutions": [
+        "digital-product-transformation"
+      ],
+      "practices": [
+        "consulting",
+        "experience"
+      ]
+    }
+  ]
+}

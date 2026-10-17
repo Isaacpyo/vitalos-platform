@@ -30,6 +30,7 @@ import {
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { LifecycleBand, lifecycleHeading } from "../commercial/dark-bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface WhatWeDoTemplateProps {
   page: RoutePageView | null;
@@ -78,6 +79,7 @@ export function WhatWeDoTemplate({
   return (
     <PageMain>
       <PageIntro
+        artwork={heroArtwork("what-we-do")}
         title={page?.heading ?? navLabels.whatWeDo}
         lead={page?.intro}
         actions={

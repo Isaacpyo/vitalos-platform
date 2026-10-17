@@ -46,7 +46,12 @@ async function conversation(n: number): Promise<void> {
   const created = await fetch(`${base}/api/relay/conversations`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ turnstileToken: "XXXX.DUMMY.TOKEN.XXXX", pageUrl: `${base}/` }),
+    // utm_source tags this usage as test traffic in Relay Insights (ADR-048).
+    body: JSON.stringify({
+      turnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
+      pageUrl: `${base}/`,
+      utm: { utm_source: "relay-load" },
+    }),
   });
   if (created.status !== 201) return fail(`create ${created.status}`);
   const { conversationId, visitorToken } = (await created.json()) as {

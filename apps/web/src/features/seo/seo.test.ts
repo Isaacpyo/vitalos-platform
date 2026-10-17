@@ -27,11 +27,18 @@ describe("composeMetadata", () => {
     expect(metadata.robots).toEqual({ index: false, follow: true });
     expect(metadata.alternates).toEqual({
       canonical: "https://www.example.invalid/insights",
-      types: { "application/rss+xml": "/insights/feed.xml" },
+      types: { "application/rss+xml": [{ url: "/insights/feed.xml", title: "Vitalos Insights" }] },
     });
     expect(composeMetadata({ path: "/x", noindex: true }, production).robots).toEqual({
       index: false,
       follow: false,
+    });
+  });
+
+  it("advertises the Insights feed on every page (C9)", () => {
+    const metadata = composeMetadata({ path: "/what-we-do", title: "What we do" }, production);
+    expect(metadata.alternates?.types).toEqual({
+      "application/rss+xml": [{ url: "/insights/feed.xml", title: "Vitalos Insights" }],
     });
   });
 
@@ -88,7 +95,7 @@ describe("composeMetadata", () => {
   it("omits canonical and og:url for paths that would leave the site", () => {
     for (const path of ["//evil.invalid", "https://evil.invalid/x", "/\\evil", "about"]) {
       const metadata = composeMetadata({ path, title: "X" }, production);
-      expect(metadata.alternates).toBeUndefined();
+      expect(metadata.alternates?.canonical).toBeUndefined();
       expect(metadata.openGraph).not.toHaveProperty("url");
     }
   });
@@ -340,6 +347,41 @@ describe("buildSitemap", () => {
     expect(sitemap.find((e) => e.url.endsWith("/what-we-do/consulting"))?.lastModified).toEqual(
       new Date("2026-02-01T00:00:00Z"),
     );
+  });
+
+  it("dates the homepage, top-level pages and FAQ from the repo copy's git date (C7)", () => {
+    const pagesLastModified = new Date("2026-10-16T18:00:00Z");
+    const sitemap = buildSitemap({
+      siteUrl,
+      gates: openGates,
+      hasHome: true,
+      routePages: all,
+      hasFaq: true,
+      entries,
+      pagesLastModified,
+    });
+    for (const path of ["/", "/what-we-do", "/about", "/contact", "/faq"]) {
+      const entry = sitemap.find((e) => new URL(e.url).pathname === path);
+      expect(entry?.lastModified, path).toEqual(pagesLastModified);
+    }
+    // Documents keep their own dates.
+    expect(sitemap.find((e) => e.url.endsWith("/what-we-do/consulting"))?.lastModified).toEqual(
+      new Date("2026-02-01T00:00:00Z"),
+    );
+  });
+
+  it("keeps the newest date when a path is listed twice", () => {
+    const sitemap = buildSitemap({
+      siteUrl,
+      gates: openGates,
+      hasHome: false,
+      routePages: new Set<RoutePageKey>(["labs"]),
+      entries: [{ path: "/labs", kind: "route", lastModified: "2026-10-17T00:00:00Z" }],
+      pagesLastModified: new Date("2026-10-01T00:00:00Z"),
+    });
+    expect(sitemap).toEqual([
+      { url: "https://www.example.invalid/labs", lastModified: new Date("2026-10-17T00:00:00Z") },
+    ]);
   });
 
   it("leaves out gated sections and their documents while gates are closed", () => {

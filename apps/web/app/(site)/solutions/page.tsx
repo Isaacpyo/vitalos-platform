@@ -34,6 +34,7 @@ export default async function SolutionsPage() {
           name: page?.heading ?? structuralLabels.solutions,
           description: page?.intro,
           type: "CollectionPage",
+          items: solutions.map((d) => ({ name: d.title, path: routes.solution(d.slug) })),
         })}
       />
       <SolutionIndexTemplate page={page} solutions={solutions} />

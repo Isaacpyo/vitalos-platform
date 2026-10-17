@@ -31,6 +31,7 @@ urlpatterns = [
     path("knowledge/preview/", knowledge.preview, name="knowledge_preview"),
     path("knowledge/reindex-all/", knowledge.reindex_all, name="reindex_all"),
     path("knowledge/faq/sync/", knowledge.faq_sync, name="faq_sync"),
+    path("knowledge/gaps/<uuid:gap_id>/suggest/", knowledge.suggest_answer, name="gap_suggest"),
     path("knowledge/<uuid:document_id>/", knowledge.knowledge_edit, name="knowledge_edit"),
     path("knowledge/<uuid:document_id>/publish/", knowledge.knowledge_publish, name="knowledge_publish"),
     path("knowledge/<uuid:document_id>/archive/", knowledge.knowledge_archive, name="knowledge_archive"),

@@ -1,6 +1,6 @@
 import type { Embedder } from "../retrieval/embed";
 import type { KbSource, RelayStore } from "../db/types";
-import { chunkMarkdown, embeddingInput, estimateTokens } from "./chunk";
+import { chunkMarkdown, embeddingInput, estimateTokens, splitLongText } from "./chunk";
 import type { KnowledgeEntry } from "./types";
 
 export interface IngestResult {
@@ -28,7 +28,15 @@ export interface IngestOptions {
 export function chunksFor(
   entry: KnowledgeEntry,
 ): { heading: string; content: string; embeddingText: string; tokenCount: number }[] {
-  if (entry.chunks) return entry.chunks.map(withTokens);
+  // Supplied chunks (FAQ entries: one each) are capped like markdown chunks, so a long answer can
+  // never become one unbounded source in the prompt (ADR-048).
+  if (entry.chunks)
+    return entry.chunks.flatMap((c) => {
+      const parts = splitLongText(c.content);
+      return parts.length === 1
+        ? [withTokens(c)]
+        : parts.map((content) => withTokens({ heading: c.heading, content }));
+    });
   return chunkMarkdown(entry.title, entry.bodyMd).map((c) => ({
     heading: c.heading,
     content: c.content,

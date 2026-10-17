@@ -29,7 +29,7 @@ export function buildLlmsTxt(input: {
     "",
     `> ${propositionLong}`,
     "",
-    `${brandName}: ${descriptor}. UK first, international by design. Five practices (Consulting, Engineering, AI & Data, Experience and Managed Services) share one delivery lifecycle, from strategy to production. Contact: ${absoluteUrl(input.siteUrl, routes.contact())}`,
+    `${brandName}: ${descriptor}. UK first, international by design. Six practices (Consulting, Engineering, AI & Data, Experience, Managed Services and Labs) share one delivery lifecycle, from strategy to production. Contact: ${absoluteUrl(input.siteUrl, routes.contact())}`,
   ];
   for (const section of input.sections) {
     const links = section.links.filter((link) => input.sitemapPaths.has(link.path));

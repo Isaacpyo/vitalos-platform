@@ -296,7 +296,7 @@ def assign(enquiry, assignee, actor, request=None) -> None:
             actor=actor,
             entity=enquiry,
             entity_id=enquiry.ref,
-            summary=f"{enquiry.ref} assigned to {assignee.email if assignee else 'nobody'}",
+            summary=f"{enquiry.ref} assigned to {assignee.display_label if assignee else 'nobody'}",
             previous=getattr(previous, "email", None),
             assignee=getattr(assignee, "email", None),
         )

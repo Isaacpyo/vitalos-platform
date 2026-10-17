@@ -13,11 +13,14 @@ const byName: Readonly<Record<string, IconName>> = {
   // Practices (Stage 8 section 5).
   [practiceNames[0]]: "compass",
   [practiceNames[1]]: "code",
-  [practiceNames[2]]: "chip",
+  // AI & Data and AI Transformation: never a chip, a brain or a robot (brand book; ADR-044).
+  [practiceNames[2]]: "dataflow",
   [practiceNames[3]]: "window",
   [practiceNames[4]]: "server",
+  // Labs, the sixth area beside the five practices (run decision 1).
+  Labs: "flask",
   // Solutions (Stage 8 section 11).
-  [solutionNames[0]]: "chip",
+  [solutionNames[0]]: "stages",
   [solutionNames[1]]: "workflow",
   [solutionNames[2]]: "layers",
   [solutionNames[3]]: "code",

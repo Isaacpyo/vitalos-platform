@@ -1,0 +1,11 @@
+{# A destructive action inside a row "More" menu: the confirmation opens in place, inside the menu. #}
+<details class="row-menu-confirm">
+  <summary class="row-menu-item row-menu-danger cursor-pointer list-none" aria-label="{{ label }}{% if target %} {{ target }}{% endif %}">{{ label }}</summary>
+  <div class="px-2 pb-2 pt-1" role="group" aria-label="Confirm {{ label|lower }}">
+    <p class="text-xs">{{ question }}</p>
+    <form method="post" action="{{ url }}" class="mt-2 flex justify-end">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger btn-sm">{{ confirm_label }}</button>
+    </form>
+  </div>
+</details>

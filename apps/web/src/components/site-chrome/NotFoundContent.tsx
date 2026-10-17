@@ -4,7 +4,7 @@ import type { NavItem, PublicationGates } from "@vitalos/cms";
 import { getFeatures } from "@vitalos/config";
 import { Button, Container, FeatureGrid, PageHero, Section } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
-import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { ClosingBand } from "../../templates/commercial/bands";
 import { AskRelayButton } from "../ask-relay";
@@ -71,7 +71,7 @@ export async function NotFoundContent() {
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("not-found")}
         title="Page not found"
         lead="This page does not exist or is no longer available."
         actions={

@@ -10,6 +10,7 @@ import { evidenceRequestLink, topicRowProps } from "./map";
 import { contactHref } from "../../lib/view-mapping/hrefs";
 import { Band, ClosingBand, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** Icons for the topic cards, by topic. */
 const topicIcons: Readonly<Record<TrustTopic, IconName>> = {
@@ -35,6 +36,7 @@ export function TrustOverview({ data }: Readonly<{ data: TrustOverviewData }>) {
     <PageMain>
       <PageHeroBand
         full
+        artwork={heroArtwork("trust")}
         crumbs={
           <Breadcrumbs
             trail={[homeCrumb, { name: navLabels.trustCentre, path: routes.trust() }]}

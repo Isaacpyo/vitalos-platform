@@ -1,5 +1,13 @@
-import type { FeedResponseData, PostDetailData, PostPageData, PostSummaryData } from "../schemas";
-import { INSIGHTS_BASE } from "../routes";
+import { routes } from "@vitalos/cms";
+import type { ContactIntent } from "@vitalos/cms";
+import type {
+  FeedResponseData,
+  PostDetailData,
+  PostPageData,
+  PostSummaryData,
+  practices,
+} from "../schemas";
+import { INSIGHTS_BASE, INSIGHTS_FEED_PATH } from "../routes";
 
 /**
  * Pure view models for the Insights pages (brief 5.1 to 5.3). No framework imports: the pages and
@@ -29,13 +37,14 @@ export const insightsCopy = {
   moreFrom: (firstName: string) => `More from ${firstName}`,
   titleSuffix: "Vitalos Insights",
   feedTitle: "Vitalos Insights",
+  feedLink: "RSS feed",
   talkToVitalos: "Talk to Vitalos",
 } as const;
 
 export const postHref = (slug: string): string => `${INSIGHTS_BASE}/${slug}`;
 export const authorHref = (slug: string): string => `${INSIGHTS_BASE}/authors/${slug}`;
 export const topicHref = (slug: string): string => `${INSIGHTS_BASE}/topics/${slug}`;
-export const FEED_PATH = `${INSIGHTS_BASE}/feed.xml`;
+export const FEED_PATH = INSIGHTS_FEED_PATH;
 export const topicPageHref = (slug: string, page: number): string =>
   page > 1 ? `${topicHref(slug)}/page/${page}` : topicHref(slug);
 
@@ -135,6 +144,13 @@ export interface IndexView {
   pagination: Pagination | null;
   tabs: FormatTab[];
   topics: TopicLink[];
+  /**
+   * Format tabs, topic links and the feed link need more than one published post: with a single
+   * post they would only lead back to it.
+   */
+  filters: boolean;
+  /** The RSS feed's path, shown as a link when there is more than one post. */
+  feed: string | null;
   empty: boolean;
 }
 
@@ -160,8 +176,44 @@ export function buildIndexView(
     ),
     tabs: formatTabs(data.formats, options.format),
     topics: topicLinks(data.topics),
+    filters: data.total > 1 || Boolean(options.format),
+    feed: data.total > 1 ? FEED_PATH : null,
     empty: data.total === 0 && featured === null && items.length === 0,
   };
+}
+
+/**
+ * The enquiry intent an article's closing action pre-selects on /contact, from the post's
+ * practice: the practices with an intent of their own use it, everything else is a new project.
+ */
+const PRACTICE_INTENTS: Record<(typeof practices)[number], ContactIntent> = {
+  consulting: "project",
+  engineering: "engineering",
+  ai_data: "ai",
+  experience: "project",
+  managed_services: "managed-services",
+  labs: "project",
+};
+
+export const contactIntentFor = (practice: PostDetail["practice"]): ContactIntent =>
+  practice ? PRACTICE_INTENTS[practice.key] : "project";
+
+/**
+ * The article's closing action: the post's own call to action, except that a plain `/contact`
+ * link (the admin's default) and an empty one go to the contact form with the matching
+ * intent pre-selected. Unsafe links are dropped later by `TalkBand` (safeCtaHref).
+ */
+export function articleCta(post: Pick<PostDetail, "cta" | "practice">): {
+  label: string;
+  href: string;
+} {
+  const contact = routes.contact(contactIntentFor(post.practice));
+  const label = post.cta.label.trim() || insightsCopy.talkToVitalos;
+  const href = post.cta.href.trim();
+  if (href === "" || href === routes.contact() || href === `${routes.contact()}/`) {
+    return { label, href: contact };
+  }
+  return { label, href };
 }
 
 /** First name for "More from {first name}" when the author detail is not available. */

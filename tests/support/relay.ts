@@ -45,9 +45,13 @@ export async function adminCall(
 
 export const newId = () => randomUUID();
 
-/** Opens the panel from the launcher and waits for the welcome screen. */
-export async function openRelay(page: Page) {
-  const launcher = page.getByRole("button", { name: /Open chat with Relay/ });
+/**
+ * Opens the panel from the launcher and waits for the welcome screen (or, with
+ * `expectWelcome: false`, only for the panel: a returning visitor sees "Continue previous
+ * conversation" first, ADR-048).
+ */
+export async function openRelay(page: Page, options: { expectWelcome?: boolean } = {}) {
+  const launcher = page.getByRole("button", { name: /^Ask Vitalos/ });
   const panel = page.locator("#relay-panel");
   // A click that lands before hydration does nothing: retry until the panel is open. Check the
   // panel, not the launcher: once a modal panel opens the launcher leaves the accessibility tree.
@@ -55,6 +59,7 @@ export async function openRelay(page: Page) {
     if (!(await panel.isVisible())) await launcher.click({ timeout: 2000 });
     await expect(panel).toBeVisible({ timeout: 2000 });
   }).toPass({ timeout: 20_000 });
+  if (options.expectWelcome === false) return;
   await expect(page.getByText("Ask Vitalos.")).toBeVisible({ timeout: 10_000 });
 }
 

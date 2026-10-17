@@ -8,12 +8,15 @@ import {
   careersCopy,
   privacyNoticeHref,
   roleFacts,
+  splitProcess,
 } from "../../features/content/careers/model";
 import type { JsonLdNode } from "../../features/seo/json-ld";
 import { PageMain } from "../institutional/page-main";
+import { safeEmail } from "../trust/map";
 import { InsightsHero, monoLabel } from "../insights/parts";
 import { ApplicationForm } from "./ApplicationForm";
-import { FactsGrid, HtmlSection } from "./parts";
+import { AboutVitalosStrip, FactsGrid, HtmlSection, ProcessBlock } from "./parts";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** The apply action for the hero and the end of the page; an external site says so. */
 function ApplyButton({
@@ -43,12 +46,15 @@ export function RoleTemplate({
   view,
   url,
   jsonLd,
+  contactEmail,
   turnstileSiteKey,
 }: Readonly<{
   view: RolePageView;
   /** The role's canonical URL, for the Share menu. */
   url: string;
   jsonLd: readonly (JsonLdNode | Record<string, unknown> | null)[];
+  /** The site's contact address (site settings), for the confirmation's withdrawal line. */
+  contactEmail?: string | undefined;
   turnstileSiteKey?: string | undefined;
 }>) {
   if (view.kind === "closed") {
@@ -56,6 +62,8 @@ export function RoleTemplate({
     return (
       <PageMain>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("careers", role.slug)}
           eyebrow={role.practice.label}
           title={role.title}
           intro={careersCopy.closedText(role.closedAt.long)}
@@ -76,6 +84,7 @@ export function RoleTemplate({
   }
 
   const { role, sections } = view;
+  const { body, process, after } = splitProcess(sections);
   const apply = applyLink(role);
   const privacy = privacyNoticeHref(role.privacy.noticeUrl);
 
@@ -84,10 +93,12 @@ export function RoleTemplate({
       <JsonLd data={jsonLd as JsonLdNode[]} />
       <article aria-label={role.title}>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("careers", role.slug)}
           eyebrow={role.practice.label}
           title={role.title}
           intro={role.summary}
-          actions={apply ? <ApplyButton apply={apply} onDark /> : undefined}
+          actions={apply ? <ApplyButton apply={apply} /> : undefined}
         >
           <FactsGrid facts={roleFacts(role)} />
           {apply?.external ? (
@@ -100,7 +111,18 @@ export function RoleTemplate({
         <Section as="div" tone="light" spacing="default">
           {/* The band's own padding is the gap above the first section (no extra margin). */}
           <Container size="wide" className="[&>section:first-child]:mt-0">
-            {sections.map((section) => (
+            {body.map((section) => (
+              <HtmlSection
+                key={section.key}
+                id={`role-${section.key}`}
+                heading={section.heading}
+                html={section.html}
+              />
+            ))}
+            {process ? (
+              <ProcessBlock id="role-process" heading={process.heading} html={process.html} />
+            ) : null}
+            {after.map((section) => (
               <HtmlSection
                 key={section.key}
                 id={`role-${section.key}`}
@@ -123,6 +145,7 @@ export function RoleTemplate({
                     roleSlug={role.slug}
                     roleTitle={role.title}
                     privacyNoticeUrl={privacy}
+                    contactEmail={safeEmail(contactEmail)}
                     turnstileSiteKey={turnstileSiteKey}
                   />
                 ) : (
@@ -138,6 +161,8 @@ export function RoleTemplate({
             <div className="mt-(--space-7)">
               <ShareMenu url={url} title={role.title} menuLabel={careersCopy.shareMenu} />
             </div>
+
+            <AboutVitalosStrip />
           </Container>
         </Section>
       </article>

@@ -4,6 +4,7 @@ import { JsonLd } from "../../components/json-ld";
 import { ShareMenu } from "../../components/share-menu";
 import type { ArticlePageData } from "../../features/content/insights/load";
 import {
+  articleCta,
   articleDatesLine,
   authorHref,
   editorialNoteFor,
@@ -21,6 +22,7 @@ import { articleBodyClass } from "./body-styles";
 import { CodeCopyButtons } from "./copy-buttons";
 import { ContentImage, InsightsHero, PostGrid, TalkBand, monoLabel } from "./parts";
 import type { JsonLdNode } from "../../features/seo/json-ld";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 const BODY_ID = "article-body";
 
@@ -173,6 +175,8 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
       <JsonLd data={jsonLd as JsonLdNode[]} />
       <article aria-label={post.title}>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("insights", post.slug)}
           eyebrow={post.format.label}
           title={post.title}
           media={hasCover(post) ? <ArticleCover post={post} /> : undefined}
@@ -231,7 +235,12 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
                             <AuthorAvatar author={author} size="lg" />
                             <div>
                               <p className="m-0 text-body-l font-semibold text-tone-heading">
-                                {author.name}
+                                <a
+                                  href={authorHref(author.slug)}
+                                  className="text-tone-heading underline-offset-4 hover:underline"
+                                >
+                                  {author.name}
+                                </a>
                               </p>
                               <p className="m-0 text-small text-tone-muted">{author.roleTitle}</p>
                             </div>
@@ -281,7 +290,7 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
         </Band>
       ) : null}
 
-      <TalkBand cta={post.cta} />
+      <TalkBand cta={articleCta(post)} />
     </PageMain>
   );
 }

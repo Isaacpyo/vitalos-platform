@@ -32,8 +32,10 @@ export const formCopy = {
   cv: "CV",
   cvHint: "PDF or Word, up to 10 MB.",
   cvChoose: "Choose a file",
+  cvReplace: "Choose a different file",
   cvDrop: "or drag and drop it here",
   cvRemove: "Remove",
+  cvChosen: (name: string) => `${name} chosen.`,
   coverNote: "Cover note",
   rightToWork: "Do you have the right to work in the UK?",
   noticePeriod: "Notice period",
@@ -47,6 +49,18 @@ export const formCopy = {
   errorSummary: "There is a problem",
   successTitle: "Application received.",
   successBody: (roleTitle: string) => `We've received your application for ${roleTitle}.`,
+  // What happens next (review 17 Oct 2026, B7). Candidate emails are off
+  // (CAREERS_CANDIDATE_EMAILS_ENABLED) and the website cannot tell, so nothing here promises an
+  // email. Each line is from approved copy: the live equal-opportunities statement and the
+  // candidate privacy notice (packages/cms/src/repo/legal.ts, approved 16 Oct 2026).
+  nextHeading: "What happens next",
+  nextAssess:
+    "We assess every application on the skills, experience and potential it shows for the role.",
+  nextContactBefore:
+    "We use your application to assess it and to contact you about it, as described in the ",
+  nextContactAfter: ".",
+  withdrawBefore: "You can withdraw your application at any time and we will delete it. Email ",
+  withdrawAfter: ".",
   remaining: (left: number) =>
     left === 1 ? "1 character remaining" : `${left} characters remaining`,
 } as const;

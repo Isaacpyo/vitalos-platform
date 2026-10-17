@@ -69,14 +69,18 @@ def test_dry_run_validates_everything_and_writes_nothing(superadmin, batch):
     assert not Author.objects.filter(slug="vitalos").exists()
     for slug in SLUGS:
         assert f"| {slug} |" in output
-    assert "create and publish" in output
+    # Drafts are the default; publishing is only ever explicit.
+    assert "create draft: 3" in output and "create and publish" not in output
+    assert "Dry run (--status draft)" in output
+    assert "create and publish: 3" in run(batch, "--status", "published")
+    assert counts() == before
     assert "example keyword two" in output
     assert "Dry run (use --apply to write): 3 posts" in output
     assert not (batch / "IMPORT-REPORT.md").exists()
 
 
 def test_apply_publishes_each_post_through_the_workflow_as_the_given_user(superadmin, batch):
-    output = run(batch, "--apply")
+    output = run(batch, "--apply", "--status", "published")
     author = Author.objects.get(slug="vitalos")
     assert author.kind == AuthorKind.ORGANISATION
     assert (author.name, author.role_title, author.is_active) == ("Vitalos", "Vitalos Insights", True)
@@ -129,15 +133,15 @@ def test_apply_publishes_each_post_through_the_workflow_as_the_given_user(supera
 
 
 def test_rerun_without_changes_changes_nothing(superadmin, batch):
-    run(batch, "--apply")
+    run(batch, "--apply", "--status", "published")
     before = counts()
-    output = run(batch, "--apply")
+    output = run(batch, "--apply", "--status", "published")
     assert counts() == before
     assert "unchanged: 3" in output
 
 
 def test_rerun_after_an_edit_publishes_only_that_post(superadmin, batch):
-    run(batch, "--apply")
+    run(batch, "--apply", "--status", "published")
     path = batch / "02-example-second-post.md"
     path.write_text(
         path.read_text(encoding="utf-8").replace(
@@ -146,7 +150,7 @@ def test_rerun_after_an_edit_publishes_only_that_post(superadmin, batch):
         encoding="utf-8",
     )
     before = counts()
-    output = run(batch, "--apply")
+    output = run(batch, "--apply", "--status", "published")
     assert "publish changes: 1" in output and "unchanged: 2" in output
     post = Post.objects.get(slug="example-second-post")
     assert post.revisions.count() == 2
@@ -208,7 +212,7 @@ def test_publishing_fails_closed_when_the_renderer_is_unreachable(superadmin, ba
     )
     before = counts()
     with pytest.raises(CommandError, match="renderer is unreachable"):
-        run(batch, "--apply")
+        run(batch, "--apply", "--status", "published")
     assert counts() == before
     # A dry run still checks everything else, and says the bodies were not rendered.
     assert "bodies were not rendered" in run(batch)
@@ -235,9 +239,89 @@ def test_draft_status_creates_working_copies_only(superadmin, batch):
     assert PostRevision.objects.count() == 0
     assert not SyncEvent.objects.filter(entity="post").exists()
     # Publishing the same folder later takes the drafts through review to published.
-    output = run(batch, "--apply")
+    output = run(batch, "--apply", "--status", "published")
     assert "publish: 3" in output
     assert Post.objects.filter(status=PostStatus.PUBLISHED).count() == 3
+
+
+def test_default_apply_imports_drafts_only_and_reruns_change_nothing(superadmin, batch):
+    output = run(batch, "--apply")
+    assert "Imported: 3 posts, status draft (create draft: 3)" in output
+    posts = Post.objects.all()
+    assert posts.count() == 3
+    assert {post.status for post in posts} == {PostStatus.DRAFT}
+    # Nothing approved, ticked, published or announced to the website.
+    assert EditorialCheck.objects.count() == 0
+    assert PostRevision.objects.count() == 0
+    assert not SyncEvent.objects.filter(entity="post").exists()
+    assert not AuditEvent.objects.filter(action="insights.post_published").exists()
+    author = Author.objects.get(slug="vitalos")
+    assert author.kind == AuthorKind.ORGANISATION and not author.is_confirmed
+    second = Post.objects.get(slug="example-second-post")
+    assert (second.seo_title, second.format) == ("Example second post SEO title", "guide")
+    assert second.seo_description and second.excerpt
+    assert sorted(t.slug for t in second.topics.all()) == [
+        "data",
+        "digital-transformation",
+        "growth-and-technology",
+        "retail-commerce-and-consumer",
+    ]
+    assert services.author_ids(second) == [str(author.pk)]
+    batch_row = AuditEvent.objects.get(action="insights.batch_imported")
+    assert batch_row.metadata["status"] == "draft"
+
+    before = counts()
+    again = run(batch, "--apply")
+    assert counts() == before
+    assert "unchanged: 3" in again
+    assert Post.objects.filter(status=PostStatus.DRAFT).count() == 3
+
+
+def test_author_option_uses_an_existing_person_author(superadmin, batch):
+    from .content_helpers import make_author
+
+    person = make_author("Example Person", confirmed=False, slug="example-person")
+    output = run(batch, "--apply", "--author", "example-person")
+    assert "Example Person, person author `example-person`" in output
+    assert "not yet confirmed" in output
+    for post in Post.objects.all():
+        assert post.status == PostStatus.DRAFT
+        assert services.author_ids(post) == [str(person.pk)]
+    # No organisation author is created, and the person is not confirmed by the import.
+    assert not Author.objects.filter(slug="vitalos").exists()
+    person.refresh_from_db()
+    assert not person.is_confirmed
+    # Matching by the linked dashboard user's email gives the same author: nothing changes.
+    person.admin_user = superadmin
+    person.save(update_fields=["admin_user"])
+    assert "unchanged: 3" in run(batch, "--apply", "--author", superadmin.email)
+
+
+@pytest.mark.parametrize(
+    "setup, args, problem",
+    [
+        (None, ("--author", "nobody-here"), "there is no author 'nobody-here'"),
+        ("organisation", ("--author", "example-org"), "is an organisation author, not a person"),
+        ("inactive", ("--author", "example-person"), "Example Person is inactive"),
+        ("unconfirmed", ("--author", "example-person", "--status", "published"), "is not confirmed"),
+    ],
+)
+def test_author_option_refuses_unusable_authors(superadmin, batch, setup, args, problem):
+    from .content_helpers import make_author
+
+    if setup == "organisation":
+        make_author("Example Org", slug="example-org")
+        Author.objects.filter(slug="example-org").update(kind=AuthorKind.ORGANISATION)
+    elif setup in ("inactive", "unconfirmed"):
+        person = make_author("Example Person", confirmed=setup == "inactive", slug="example-person")
+        if setup == "inactive":
+            person.is_active = False
+            person.save(update_fields=["is_active"])
+    before = counts()
+    with pytest.raises(CommandError) as raised:
+        run(batch, "--apply", *args)
+    assert problem in str(raised.value)
+    assert counts() == before
 
 
 def test_links_to_an_already_published_post_are_accepted(superadmin, batch):
@@ -257,20 +341,22 @@ def test_links_to_an_already_published_post_are_accepted(superadmin, batch):
         ),
         encoding="utf-8",
     )
-    assert "create and publish: 3" in run(batch)
+    assert "create and publish: 3" in run(batch, "--status", "published")
 
 
 def test_unknown_user_or_one_who_cannot_publish_is_refused(superadmin, viewer, batch):
     with pytest.raises(CommandError, match="No active admin user"):
         run(batch, user="nobody@example.test")
     with pytest.raises(CommandError, match="may not publish"):
+        run(batch, "--status", "published", user=viewer.email)
+    with pytest.raises(CommandError, match="may not edit"):
         run(batch, user=viewer.email)
 
 
 def test_backdated_dates_appear_in_the_read_api_feed_and_sitemap(superadmin, batch, settings):
     configure(settings, targets=())
     open_site()
-    run(batch, "--apply")
+    run(batch, "--apply", "--status", "published")
     client = Client()
     contract = Contract()
 
@@ -330,6 +416,7 @@ def test_the_real_batch_validates(superadmin):
     items = importing.load(REAL_BATCH)
     assert len(items) == 20
     assert importing.plan(items, PostStatus.PUBLISHED) == []
+    assert importing.plan(items, PostStatus.DRAFT) == []
     assert items[0].slug == "agent-washing-how-to-spot-a-real-ai-agent"
     assert items[-1].slug == "cyber-security-and-resilience-bill-managed-service-providers"
     assert sum(item.featured for item in items) == 1
@@ -343,3 +430,27 @@ def test_the_vendored_batch_matches_the_docs_copy():
     assert names == sorted(path.name for path in REAL_BATCH.glob("*.md") if path.name != "IMPORT-REPORT.md")
     for name in names:
         assert (DOCS_BATCH / name).read_bytes() == (REAL_BATCH / name).read_bytes(), name
+
+
+def test_the_real_batch_imports_as_twenty_drafts_and_reruns_change_nothing(superadmin, tmp_path):
+    """Batch 2 as the run imports it: 20 drafts, nothing published, no check ticked, idempotent."""
+    report = tmp_path / "IMPORT-REPORT.md"
+    dry = run(REAL_BATCH, "--report", str(report))
+    assert "Dry run (use --apply to write): 20 posts, status draft (create draft: 20)" in dry
+    assert Post.objects.count() == 0 and not report.exists()
+
+    first = run(REAL_BATCH, "--apply", "--report", str(report))
+    assert "Imported: 20 posts, status draft (create draft: 20)" in first
+    assert Post.objects.filter(status=PostStatus.DRAFT).count() == 20
+    assert Post.objects.exclude(status=PostStatus.DRAFT).count() == 0
+    assert Post.objects.filter(first_published_at__isnull=False).count() == 0
+    assert EditorialCheck.objects.count() == 0 and PostRevision.objects.count() == 0
+    assert not SyncEvent.objects.filter(entity="post").exists()
+    for post in Post.objects.all():
+        assert post.seo_title and post.seo_description and post.excerpt
+        assert post.topic_links.exists() and post.author_links.count() == 1
+
+    before = counts()
+    second = run(REAL_BATCH, "--apply", "--report", str(report))
+    assert "Imported: 20 posts, status draft (unchanged: 20)" in second
+    assert counts() == before

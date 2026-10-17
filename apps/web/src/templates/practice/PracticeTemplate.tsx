@@ -1,13 +1,12 @@
 import { ctas, megaMenuColumns, navLabels, routes } from "@vitalos/cms";
 import type { PracticeView, PublicationGates } from "@vitalos/cms";
 import { Button, CaseStudyRow, FeatureGrid, SolutionShowcase } from "@vitalos/ui";
-import { HeroImage } from "../../components/hero-image";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { caseStudyMeta, toRows } from "../../lib/view-mapping/patterns";
-import { practiceImageFor } from "../../lib/view-mapping/practice-images";
+import { practiceArtworkFor } from "../../lib/view-mapping/practice-artwork";
 import {
   industryShowcaseItems,
   offerFeatureItems,
@@ -32,7 +31,7 @@ export const practiceTrail = (practice: Pick<PracticeView, "title" | "slug">) =>
 
 /**
  * Practice page (Stage 9 section 21) in the homepage's design (pages redesign, 15 Oct 2026): the
- * compact dark hero with the practice illustration; problems and capabilities as rows; the
+ * compact dark hero with the practice's artwork (ADR-044); problems and capabilities as rows; the
  * practice's own account of how it helps as cards; related solutions as the showcase; offers as
  * icon cards; industries on the dark aurora band; work as proof; the closing card. One
  * template for all five practices; variation comes from content. A section without content is
@@ -48,7 +47,6 @@ export function PracticeTemplate({ practice, gates }: Readonly<PracticeTemplateP
     const [row] = toRows("caseStudy", [work], { meta: caseStudyMeta(work) });
     return row ? [row] : [];
   });
-  const image = practiceImageFor(practice.title);
 
   return (
     <PageMain>
@@ -63,7 +61,7 @@ export function PracticeTemplate({ practice, gates }: Readonly<PracticeTemplateP
             {cta.label}
           </Button>
         }
-        media={image ? <HeroImage image={image} /> : undefined}
+        artwork={practiceArtworkFor(practice.title)}
       />
       {renderBands(
         [

@@ -205,6 +205,18 @@ export async function handleAdminRequest(
     ) {
       return json({ data: await a.ignoreGap(uuid.parse(action)) });
     }
+    if (
+      head === "knowledge" &&
+      id === "gaps" &&
+      action &&
+      request.method === "POST" &&
+      path[3] === "suggest"
+    ) {
+      // Drafts a team answer from the best-matching page (always a draft; ADR-048).
+      return json({ data: await a.suggestAnswer(uuid.parse(action), admin) });
+    }
+    if (head === "overview" && !id && request.method === "GET")
+      return json({ data: await a.overview() });
     if (head === "knowledge" && id && uuid.safeParse(id).success) {
       const docId = uuid.parse(id);
       if (request.method === "GET" && !action) return json({ data: await a.knowledgeGet(docId) });

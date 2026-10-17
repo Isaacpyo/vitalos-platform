@@ -13,7 +13,7 @@ export {
 
 // Section layout (ADR-023, from the owner comp)
 export { SectionHeading, type SectionHeadingProps } from "./layout/SectionHeading";
-export { PageHero, type PageHeroBackdrop, type PageHeroProps } from "./layout/PageHero";
+export { PageHero, type PageHeroProps } from "./layout/PageHero";
 export { HeroVisual, type HeroVisualProps } from "./media/HeroVisual";
 export {
   MediaPlaceholder,
@@ -62,20 +62,30 @@ export {
 export { RelatedContentRail, type RelatedContentRailProps } from "./commercial/RelatedContentRail";
 export {
   PracticeShowcase,
-  type PracticeShowcaseImage,
   type PracticeShowcaseItem,
   type PracticeShowcaseProps,
 } from "./commercial/PracticeShowcase";
 export {
   IndustryShowcase,
-  type IndustryShowcaseImage,
   type IndustryShowcaseItem,
   type IndustryShowcaseProps,
 } from "./commercial/IndustryShowcase";
 export { AuroraBackdrop, type AuroraBackdropProps } from "./media/AuroraBackdrop";
 export {
+  HeroArtwork,
+  artworkFamilies,
+  type ArtworkFamily,
+  type ArtworkSpec,
+  type HeroArtworkProps,
+} from "./artwork/HeroArtwork";
+export {
+  LineDiagram,
+  lineDiagramNames,
+  type LineDiagramName,
+  type LineDiagramProps,
+} from "./artwork/LineDiagram";
+export {
   SolutionShowcase,
-  type SolutionShowcaseImage,
   type SolutionShowcaseItem,
   type SolutionShowcaseProps,
 } from "./commercial/SolutionShowcase";

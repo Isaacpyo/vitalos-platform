@@ -41,10 +41,23 @@ export function IndexTemplate({
           <p className="m-0 text-body-l text-tone-text">{insightsCopy.empty}</p>
         ) : (
           <>
-            <div className="mb-(--space-7) flex flex-wrap items-start justify-between gap-(--space-5)">
-              <FormatTabs tabs={view.tabs} />
-              <TopicLinks topics={view.topics} />
-            </div>
+            {view.filters ? (
+              <div className="mb-(--space-7) flex flex-wrap items-start justify-between gap-(--space-5)">
+                <FormatTabs tabs={view.tabs} />
+                <div className="flex flex-wrap items-center gap-(--space-5)">
+                  <TopicLinks topics={view.topics} />
+                  {view.feed ? (
+                    <a
+                      href={view.feed}
+                      type="application/rss+xml"
+                      className="text-body text-tone-link underline underline-offset-4"
+                    >
+                      {insightsCopy.feedLink}
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             {view.featured ? (
               <div className="mb-(--space-7)">
                 <FeaturedPost post={view.featured} />

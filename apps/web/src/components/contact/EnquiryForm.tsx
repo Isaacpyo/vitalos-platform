@@ -159,6 +159,7 @@ export function EnquiryFormView({
     <form
       id={FORM_ID}
       action={formAction}
+      data-analytics-form="enquiry"
       noValidate
       tabIndex={-1}
       className="flex flex-col gap-(--space-6) outline-none"

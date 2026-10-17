@@ -1,6 +1,6 @@
 # ADR 033 Relay retrieval: hybrid Postgres full-text and pgvector
 
-Status: Accepted (engineering, 15 October 2026).
+Status: Accepted (engineering, 15 October 2026). Amended by [ADR-048](ADR-048-relay-retrieval-budget-small-talk-widget.md) (17 Oct 2026): per-turn prompt budget, capped chunks (FAQ entries split like markdown), typo tolerance, small talk without retrieval.
 
 ## Context
 
@@ -16,7 +16,7 @@ Relay must answer only from published Vitalos knowledge, cite it, and say when i
 
    Only `published` documents are searched.
 
-2. Chunks are at most about 300 words, with about 40 words of overlap, and keep their heading path. Each FAQ entry is one chunk.
+2. Chunks are at most about 300 words, with about 40 words of overlap, and keep their heading path. Each FAQ entry is one chunk (split into 300-word windows if longer, ADR-048).
 3. Embeddings come from **gte-small** (384 dimensions, normalised), served by the Supabase Edge Function `relay-embed`. It verifies the JWT and also requires the shared secret `x-relay-embed-secret`. DeepSeek has no embeddings API.
 4. `relay.match_chunks(query_text, query_embedding, match_count, rrf_k, page_path)` fuses two rankings by reciprocal rank fusion: a `websearch_to_tsquery` full-text ranking and an inner-product vector ranking. Documents placed on the visitor's current page get a small bonus. With no embedding, it ranks on full text only.
 5. Confidence:

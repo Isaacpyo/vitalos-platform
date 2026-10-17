@@ -1,4 +1,5 @@
 {% extends "settings/_shell.html" %}
+{% load ui %}
 {% block settings_panel %}
   <section class="card max-w-3xl p-5" aria-labelledby="site-heading">
     <h2 id="site-heading" class="font-semibold">Insights and Careers on the website</h2>
@@ -11,7 +12,7 @@
     <dl class="mt-6 divide-y divide-slate-200 text-sm dark:divide-slate-800">
       <div class="flex justify-between gap-4 py-2"><dt class="muted">Environment</dt><dd>{{ app_environment }}</dd></div>
       <div class="flex justify-between gap-4 py-2"><dt class="muted">Website targets</dt><dd class="break-all text-right font-mono text-xs">{% for target in targets %}{{ target }}{% if not forloop.last %}<br>{% endif %}{% empty %}None configured{% endfor %}</dd></div>
-      <div class="flex justify-between gap-4 py-2"><dt class="muted">Last changed</dt><dd>{{ site.updated_at|date:"j M Y, H:i" }}{% if site.updated_by %} by {{ site.updated_by.email }}{% endif %}</dd></div>
+      <div class="flex justify-between gap-4 py-2"><dt class="muted">Last changed</dt><dd>{{ site.updated_at|date:"j M Y, H:i" }}{% if site.updated_by %} by {{ site.updated_by|person }}{% endif %}</dd></div>
     </dl>
   </section>
 {% endblock %}

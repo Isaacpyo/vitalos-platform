@@ -41,14 +41,14 @@ describe("FeatureGrid", () => {
 });
 
 describe("PageHero dark", () => {
-  it("renders one h1, the lead, the media and a decorative backdrop", () => {
+  it("renders one h1, the lead, the media and decorative artwork, with no photograph", () => {
     const { container } = render(
       <PageHero
         tone="dark"
         title="Example page (fixture)"
         eyebrow="Example eyebrow (fixture)"
         lead="Example lead (fixture)."
-        backdrop={{ src: "/images/hero/x.webp", width: 1672, height: 941 }}
+        artwork={{ family: "what-we-do", seed: "example" }}
         media={<p>Example media (fixture)</p>}
       />,
     );
@@ -56,8 +56,10 @@ describe("PageHero dark", () => {
     expect(screen.getByText("Example lead (fixture).")).toBeTruthy();
     expect(screen.getByText("Example media (fixture)")).toBeTruthy();
     expect(container.querySelector('[data-tone="dark"]')).not.toBeNull();
-    const img = container.querySelector("img");
-    expect(img?.getAttribute("alt")).toBe("");
-    expect(img?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(container.querySelector("img")).toBeNull();
+    const art = container.querySelectorAll('[data-artwork="what-we-do"]');
+    // One drawing beside the copy from lg, one strip under it below lg; both decorative.
+    expect(art).toHaveLength(2);
+    for (const svg of art) expect(svg.getAttribute("aria-hidden")).toBe("true");
   });
 });

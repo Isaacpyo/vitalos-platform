@@ -26,7 +26,7 @@
           <th scope="col">Applications</th>
           <th scope="col">Sync</th>
           <th scope="col">Updated</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
+          <th scope="col" class="col-actions"><span class="sr-only">Actions</span></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -43,9 +43,18 @@
             <td class="whitespace-nowrap tabular-nums">{% if row.role.apply_mode == "external" %}<span class="muted">External</span>{% else %}{{ row.role.applications_new }} / {{ row.role.applications_total }}{% endif %}</td>
             <td class="whitespace-nowrap">{% include "content_sync/_item_status.html" with sync=row.sync poll_url="" %}</td>
             <td class="whitespace-nowrap"><time datetime="{{ row.role.updated_at|date:'c' }}">{{ row.role.updated_at|date:"j M Y, H:i" }}</time></td>
-            <td class="whitespace-nowrap text-right">
-              <a class="btn btn-ghost btn-sm" href="{% url 'careers:role' row.role.pk %}" aria-label="Edit {{ row.role.title }}">Edit</a>
-              {% if row.live_url %}<a class="btn btn-ghost btn-sm" href="{{ row.live_url }}" target="_blank" rel="noopener" aria-label="View {{ row.role.title }} on the website (opens in a new tab)">View on site</a>{% endif %}
+            <td class="col-actions">
+              <div class="flex items-center justify-end gap-1">
+                <a class="btn btn-ghost btn-sm" href="{% url 'careers:role' row.role.pk %}" aria-label="Edit {{ row.role.title }}">{% icon "edit" "h-4 w-4" %}<span>Edit</span></a>
+                {% if row.live_url %}
+                  <details class="row-menu" data-menu data-row-menu>
+                    <summary class="btn btn-ghost btn-sm cursor-pointer list-none" aria-label="More actions for {{ row.role.title }}" data-testid="row-menu">{% icon "more" "h-4 w-4" %}</summary>
+                    <div class="row-menu-panel" role="group" aria-label="More actions for {{ row.role.title }}">
+                      <a class="row-menu-item" href="{{ row.live_url }}" target="_blank" rel="noopener">View on site<span class="sr-only"> (opens in a new tab)</span></a>
+                    </div>
+                  </details>
+                {% endif %}
+              </div>
             </td>
           </tr>
         {% empty %}

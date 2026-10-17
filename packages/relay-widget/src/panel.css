@@ -297,8 +297,36 @@
   font-size: 15px;
   line-height: 24px;
 }
+/* "Continue previous conversation" / "Start new" (ADR-048, C2): nothing is fetched before a choice. */
+.relay-resume {
+  padding: 28px 24px 32px;
+  background: var(--relay-midnight);
+  color: var(--relay-off-white);
+}
+.relay-resume .relay-hero-title {
+  margin-top: 8px;
+}
+.relay-resume-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+}
+.relay-resume .relay-text-button--ink {
+  color: var(--relay-off-white);
+}
 .relay-start {
   padding: 24px 24px 8px;
+}
+/* Out of hours (D5): "The team is offline. Back Monday 09:00." under "Leave your email". */
+.relay-start-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--relay-ink-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
 }
 .relay-start-list {
   list-style: none;
@@ -597,6 +625,44 @@ a.relay-source:hover .relay-source-title {
   border: 0;
   background: transparent;
   color: var(--relay-ink-muted);
+}
+/* Thumbs-down reason (D6): one tap, then the offer of a person. */
+.relay-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.relay-reasons .relay-feedback-label {
+  margin: 0;
+}
+.relay-reason-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.relay-reason {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--relay-line-strong);
+  border-radius: 2px;
+  background: var(--relay-surface-200);
+  color: var(--relay-ink);
+  font: 500 14px/20px var(--relay-font-text);
+  cursor: pointer;
+}
+.relay-reason:hover {
+  border-color: var(--relay-ink);
+}
+.relay-panel--mobile .relay-reason {
+  min-height: 44px;
+}
+/* Staff name in normal case ("Temitope · Vitalos", D3), beside the mono "RELAY · AI" label. */
+.relay-meta-who--person {
+  font-family: var(--relay-font-text);
+  font-size: 13px;
+  line-height: 16px;
 }
 .relay-panel--mobile .relay-feedback-button {
   width: 44px;

@@ -35,7 +35,17 @@ describe("buildSecurityHeaders", () => {
       expect(permissions).toContain("camera=()");
       expect(permissions).toContain("microphone=()");
       expect(permissions).toContain("geolocation=()");
+      expect(find(headers, "X-Frame-Options")).toBe("DENY");
+      expect(find(headers, "Cross-Origin-Opener-Policy")).toBe("same-origin");
     }
+  });
+
+  it("never asks for HSTS preloading (an owner decision, ADR-047)", () => {
+    const hsts = find(
+      buildSecurityHeaders({ deployEnv: "production", enableHsts: true }),
+      "Strict-Transport-Security",
+    );
+    expect(hsts).not.toContain("preload");
   });
 
   it("sends HSTS only when enabled and never for local", () => {
@@ -50,7 +60,7 @@ describe("buildSecurityHeaders", () => {
         buildSecurityHeaders({ deployEnv: "production", enableHsts: true }),
         "Strict-Transport-Security",
       ),
-    ).toBe("max-age=31536000");
+    ).toBe("max-age=63072000; includeSubDomains");
     expect(
       find(
         buildSecurityHeaders({ deployEnv: "local", enableHsts: true }),

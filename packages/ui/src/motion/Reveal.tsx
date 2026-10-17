@@ -37,9 +37,12 @@ export interface RevealProps {
 /** Phases: `static` renders no motion styles at all (server HTML, reduced motion, above the fold). */
 type Phase = "static" | "hidden" | "shown";
 
-/** The clip extends 1rem past the box so focus outlines and the card hover lift are never cut. */
-const OPEN_CLIP = "inset(-1rem -1rem -1rem -1rem)";
-const SHUT_CLIP = "inset(-1rem -1rem 100% -1rem)";
+/*
+ * Entrances move content and never clip or fade it (17 Oct 2026, finding A9; ADR-044 amends
+ * ADR-024 decision 4). The earlier wipe clipped headings while they rose, so a band caught
+ * mid-entrance (a slow scroll, a full-page capture) showed a half-cut title. Content is drawn whole
+ * in every frame; it only rises a few pixels into place.
+ */
 
 const entrance = (delay: number): Transition => ({
   duration: SECONDS.entrance,
@@ -49,14 +52,8 @@ const entrance = (delay: number): Transition => ({
 
 const selfVariants = (delay: number): Variants => ({
   static: {},
-  hidden: { y: 24, clipPath: SHUT_CLIP, transition: { duration: 0 } },
-  shown: {
-    y: 0,
-    clipPath: OPEN_CLIP,
-    transition: entrance(delay),
-    // Drop the clip once the entrance is over, so nothing (a hover lift, a focus ring) is cut.
-    transitionEnd: { clipPath: "none" },
-  },
+  hidden: { y: 24, transition: { duration: 0 } },
+  shown: { y: 0, transition: entrance(delay) },
 });
 
 const groupVariants = (step: number, delay: number): Variants => ({
@@ -73,8 +70,8 @@ const groupVariants = (step: number, delay: number): Variants => ({
  * - The server HTML and the hydrated markup carry no motion styles at all (`static`), so the
  *   content is complete and visible without JavaScript, and nothing is ever at opacity 0.
  * - After hydration, and only when motion is allowed, an element that starts below the fold is
- *   lowered by 24px and clipped (it is off screen, so nobody sees it hide). When it scrolls into
- *   view it rises while the clip wipes it in, once. Anything on or above the screen is left alone.
+ *   lowered by 24px (it is off screen, so nobody sees it move). When it scrolls into view it rises
+ *   into place, once. It is never clipped. Anything on or above the screen is left alone.
  * - No opacity is animated: text is drawn at full colour in every frame, so automated contrast
  *   checks that scroll content into view never sample a half-faded state (ADR-023).
  *
@@ -254,13 +251,8 @@ export interface RevealItemProps extends PassThrough {
 const itemVariants: Record<RevealItemEffect, Variants> = {
   rise: {
     static: {},
-    hidden: { y: 16, clipPath: SHUT_CLIP, transition: { duration: 0 } },
-    shown: {
-      y: 0,
-      clipPath: OPEN_CLIP,
-      transition: { duration: SECONDS.entrance, ease: EASE_EMPHASIS },
-      transitionEnd: { clipPath: "none" },
-    },
+    hidden: { y: 16, transition: { duration: 0 } },
+    shown: { y: 0, transition: { duration: SECONDS.entrance, ease: EASE_EMPHASIS } },
   },
   pop: {
     static: {},

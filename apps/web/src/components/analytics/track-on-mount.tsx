@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { AnalyticsEventName, AnalyticsEventProperties } from "../../features/analytics/events";
-import { vercelAnalyticsSink } from "../../features/analytics/vercel-sink";
+import { track } from "../../features/analytics/track";
 
 /**
  * Records one analytics event when the page mounts, for example an accepted enquiry on the
@@ -13,7 +13,7 @@ export function TrackOnMount<E extends AnalyticsEventName>({
   properties,
 }: Readonly<{ name: E; properties: AnalyticsEventProperties<E> }>) {
   useEffect(() => {
-    vercelAnalyticsSink.track(name, properties);
+    track(name, properties);
     // Once per page view: the event and its properties are fixed for the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

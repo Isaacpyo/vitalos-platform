@@ -7,6 +7,7 @@
  * come from the CMS summaries. Gated items (Industries, Work, Insights, Labs, Careers) appear
  * only when their gate is open, so no navigation link leads to a closed section.
  */
+import { INSIGHTS_FEED_PATH } from "../../features/content/routes";
 import {
   aiJourneyStages,
   brandName,
@@ -505,6 +506,10 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
   const legalLinks = [
     ...summaryLinks(content.legalPages, (item) => hrefForSummary("legalPage", item)),
     { label: footerColumns.sitemap, href: routes.sitemap() },
+    // The Insights RSS feed, while Insights is listed (C9, WS5 review 17 Oct 2026).
+    ...(gatedSection("insights").length > 0
+      ? [{ label: "RSS feed", href: INSIGHTS_FEED_PATH }]
+      : []),
   ];
 
   const social = socialOf(settings);

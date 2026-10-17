@@ -81,7 +81,9 @@ export function Button(props: ButtonProps) {
       keyof ButtonOwnProps | "className"
     >;
     return (
-      <a href={href} data-tone={theme} className={classes} {...anchor}>
+      // `data-cta` marks the link as a call to action for the site's delegated analytics listener
+      // (apps/web SiteAnalytics, ADR-046); it carries no data.
+      <a href={href} data-tone={theme} data-cta="" className={classes} {...anchor}>
         {withArrow(children, arrow)}
       </a>
     );

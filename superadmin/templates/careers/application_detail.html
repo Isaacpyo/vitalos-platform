@@ -50,7 +50,7 @@
       <section class="card p-5" aria-labelledby="notes-heading">
         <h2 id="notes-heading" class="font-semibold">Internal notes</h2>
         <ul class="mt-2 space-y-3 text-sm">
-          {% for note in notes %}<li><p class="whitespace-pre-wrap">{{ note.body }}</p><p class="mono-label muted mt-1">{{ note.admin.email|default:"Unknown" }} · {{ note.created_at|date:"j M Y, H:i" }}</p></li>{% empty %}<li class="muted">No notes yet.</li>{% endfor %}
+          {% for note in notes %}<li><p class="whitespace-pre-wrap">{{ note.body }}</p><p class="mono-label muted mt-1">{{ note.admin|person|default:"Unknown" }} · {{ note.created_at|date:"j M Y, H:i" }}</p></li>{% empty %}<li class="muted">No notes yet.</li>{% endfor %}
         </ul>
         <form method="post" action="{% url 'careers:application_action' application.pk 'note' %}" class="mt-4">
           {% csrf_token %}<input type="hidden" name="q" value="{{ query }}">
@@ -76,7 +76,7 @@
           <label for="assignee" class="sr-only">Reviewer</label>
           <select id="assignee" name="assignee" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
             <option value="">No reviewer</option>
-            {% for user in reviewers %}<option value="{{ user.pk }}" {% if user.pk == application.assigned_admin_id %}selected{% endif %}>{{ user.email }}</option>{% endfor %}
+            {% for user in reviewers %}<option value="{{ user.pk }}" {% if user.pk == application.assigned_admin_id %}selected{% endif %}>{{ user|person }}</option>{% endfor %}
           </select>
           <button type="submit" class="btn btn-secondary btn-sm">Assign</button>
         </form>
@@ -99,7 +99,7 @@
         <h2 id="timeline-heading" class="mono-label muted">Timeline</h2>
         <ol class="mt-2 space-y-2 text-sm">
           {% for event in timeline %}
-            <li><span class="font-medium">{{ event.get_type_display }}</span>{% if event.meta.to %}: {{ event.meta.to }}{% endif %}{% if event.meta.kind %}: {{ event.meta.kind }}{% endif %}<span class="mono-label muted block">{{ event.actor_admin.email|default:"System" }} · {{ event.at|date:"j M Y, H:i" }}</span></li>
+            <li><span class="font-medium">{{ event.get_type_display }}</span>{% if event.meta.to %}: {{ event.meta.to }}{% endif %}{% if event.meta.kind %}: {{ event.meta.kind }}{% endif %}<span class="mono-label muted block">{{ event.actor_admin|person|default:"System" }} · {{ event.at|date:"j M Y, H:i" }}</span></li>
           {% empty %}<li class="muted">Nothing yet.</li>{% endfor %}
           <li><span class="font-medium">Received</span><span class="mono-label muted block">{{ application.created_at|date:"j M Y, H:i" }}</span></li>
         </ol>

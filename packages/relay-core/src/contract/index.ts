@@ -10,6 +10,24 @@ export type HandoffTrigger =
 export type SourceType = "OFFER" | "SOLUTION" | "PRACTICE" | "INDUSTRY" | "PAGE" | "GUIDE" | "FAQ";
 export type TeamStatus = "online" | "offline";
 
+/** Thumbs-down reasons (finding D6), asked with one tap after "Not helpful". */
+export const FEEDBACK_REASONS = ["wrong", "incomplete", "didnt_understand"] as const;
+export type FeedbackReason = (typeof FEEDBACK_REASONS)[number];
+export const FEEDBACK_REASON_LABELS: Record<FeedbackReason, string> = {
+  wrong: "It was wrong",
+  incomplete: "It was incomplete",
+  didnt_understand: "It didn't understand me",
+};
+
+/**
+ * When the team is next in working hours (Relay Settings, Europe/London), for "Back Monday 09:00"
+ * while the team is offline. `label` is ready to show; null when no working days are set.
+ */
+export interface NextOpening {
+  at: string;
+  label: string;
+}
+
 export interface Citation {
   n: number;
   title: string;
@@ -35,6 +53,7 @@ export interface VisitorMessage {
   handoffSuggested?: boolean;
   lowConfidence?: boolean;
   feedback?: -1 | 1 | null;
+  feedbackReason?: FeedbackReason | null;
   truncated?: boolean;
   /** Admin messages */
   adminName?: string | null;
@@ -58,6 +77,8 @@ export interface WidgetSettings {
   privacyUrl: string;
   noticeVersion: string;
   aiEnabled: boolean;
+  /** Next start of working hours; null while the team is online or when none is set. */
+  nextOpening?: NextOpening | null;
 }
 
 export interface CreateConversationRequest {
@@ -107,12 +128,14 @@ export interface MessagesResponse {
   person: { name: string; initials: string } | null;
   teamStatus: TeamStatus;
   contact: { name: string; email: string } | null;
+  nextOpening?: NextOpening | null;
 }
 
 export interface FeedbackRequest {
   conversationId: string;
   messageId: string;
   value: 1 | -1;
+  reason?: FeedbackReason;
 }
 
 export interface HandoffRequest {

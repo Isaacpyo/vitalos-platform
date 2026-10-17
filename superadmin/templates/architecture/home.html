@@ -3,49 +3,102 @@
 {% block title %}Overview · Vitalos Super Admin{% endblock %}
 {% block content %}
   <h1 class="font-display text-2xl font-semibold">Overview</h1>
+  <p class="muted mt-1 text-sm">What needs doing today, {{ today|date:"l j F" }}. Every number opens the list it counts.</p>
 
+  {% if user.name_needs_review %}
+    <a href="{% url 'accounts:account' %}" class="mt-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 hover:underline dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100" data-testid="name-review-link">
+      {% icon "user" "h-4 w-4" %} Check your name: we filled it in from your email address.
+    </a>
+  {% endif %}
 
   {% if show_enquiry_kpis %}
-    <section class="mt-6" aria-labelledby="kpi-heading">
-      <h2 id="kpi-heading" class="sr-only">Enquiry measures</h2>
-      {% if attention_count %}
-        <a href="{% url 'notifications:attention' %}" class="mb-4 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 hover:underline dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100" data-testid="attention-link">
-          {% icon "alert" "h-4 w-4" %} {{ attention_count }} enquir{{ attention_count|pluralize:"y needs,ies need" }} attention
-        </a>
+    <section class="card mt-6 p-5" aria-labelledby="attention-heading" data-testid="overview-attention">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="attention-heading" class="font-semibold">Enquiries needing attention</h2>
+        <a href="{% url 'notifications:attention' %}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300" data-testid="attention-link">{{ attention_count }} enquir{{ attention_count|pluralize:"y needs,ies need" }} attention</a>
+      </div>
+      {% if attention %}
+        <ul class="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+          {% for item in attention %}
+            <li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+              <a href="{{ item.enquiry.get_absolute_url }}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ item.enquiry.ref }} · {{ item.enquiry.subject|default:"(no subject)"|truncatechars:70 }}</a>
+              <span class="inline-flex items-center gap-1 text-xs font-medium {% if item.state == 'overdue' %}text-rose-700 dark:text-rose-300{% elif item.state == 'due_soon' %}text-amber-800 dark:text-amber-300{% else %}muted{% endif %}">{% if item.state == 'overdue' %}{% icon "alert" "h-3.5 w-3.5" %}{% else %}{% icon "clock" "h-3.5 w-3.5" %}{% endif %}{{ item.label }}</span>
+              <span class="muted ml-auto text-xs">{% if item.enquiry.assignee %}{{ item.enquiry.assignee|person }}{% else %}Unassigned{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted mt-3 text-sm" data-testid="attention-empty">Nothing overdue, due soon or unassigned for over a working day.</p>
       {% endif %}
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="kpi-grid">
+    </section>
+  {% endif %}
+
+  <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-testid="overview-sections">
+    {% for section in sections %}
+      <section class="card flex flex-col p-5" aria-labelledby="section-{{ section.key }}" data-section="{{ section.key }}">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="section-{{ section.key }}" class="font-semibold">{{ section.title }}</h2>
+          <a href="{{ section.url }}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300" aria-label="Open {{ section.title }}">Open</a>
+        </div>
+        {% if section.error %}
+          <p class="mt-3 flex items-center gap-2 text-sm text-amber-900 dark:text-amber-200" data-testid="section-error-{{ section.key }}">{% icon "alert" "h-4 w-4 shrink-0" %}{{ section.error }}</p>
+        {% else %}
+          <dl class="mt-3 grid grid-cols-2 gap-3">
+            {% for count in section.counts %}
+              <div>
+                <dt class="muted text-xs">{{ count.label }}</dt>
+                <dd><a href="{{ count.url }}" class="overview-count {% if count.tone == 'attention' %}overview-count-attention{% endif %}" data-count="{{ section.key }}-{{ count.key }}">{{ count.value }}</a>{% if count.note %}<span class="muted block text-xs">{{ count.note }}</span>{% endif %}</dd>
+              </div>
+            {% endfor %}
+          </dl>
+        {% endif %}
+      </section>
+    {% endfor %}
+
+    <section class="card flex flex-col p-5" aria-labelledby="section-health" data-section="health">
+      <div class="flex items-center justify-between gap-2">
+        <h2 id="section-health" class="font-semibold">System health</h2>
+        <a href="{{ health.url }}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300" aria-label="Open System health">Open</a>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">{% include "partials/health_status.html" with status=health.status %}<span>{{ health.note }}</span></div>
+      {% if health.counts %}
+        <ul class="mt-3 space-y-1 text-sm" data-testid="health-problems">
+          {% for count in health.counts %}<li><a href="{{ count.url }}" class="hover:underline"><span class="font-medium">{{ count.label }}:</span> {{ count.value }}</a></li>{% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+
+    <section class="card flex flex-col p-5" aria-labelledby="section-analytics" data-section="analytics">
+      <h2 id="section-analytics" class="font-semibold">Website analytics</h2>
+      <p class="muted mt-1 text-xs">{{ analytics.provider_label }}{% if analytics.period %} · {{ analytics.period }}{% endif %}</p>
+      {% if analytics.metrics %}
+        <dl class="mt-3 grid grid-cols-2 gap-3" data-testid="analytics-metrics">
+          {% for metric in analytics.metrics %}<div><dt class="muted text-xs">{{ metric.label }}</dt><dd class="text-lg font-semibold tabular-nums">{{ metric.value }}</dd></div>{% endfor %}
+        </dl>
+      {% endif %}
+      {% if analytics.note %}<p class="mt-3 text-sm">{{ analytics.note }}</p>{% endif %}
+      {% if analytics.dashboard_url %}
+        <a href="{{ analytics.dashboard_url }}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm mt-3 self-start" data-testid="analytics-link">Open the analytics dashboard<span class="sr-only"> (opens in a new tab)</span></a>
+      {% else %}
+        <p class="muted mt-3 text-xs" data-testid="analytics-setup">Set ANALYTICS_DASHBOARD_URL to link the dashboard from here.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  {% if show_enquiry_kpis %}
+    <section class="mt-8" aria-labelledby="kpi-heading">
+      <h2 id="kpi-heading" class="font-semibold">Enquiries this week</h2>
+      <div class="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="kpi-grid">
         {% for kpi in kpis %}{% include "partials/kpi_card.html" %}{% endfor %}
       </div>
     </section>
-
   {% endif %}
 
-
-  <div class="mt-10 flex items-end justify-between gap-4">
-    <div>
-      <h2 class="font-display text-xl font-semibold">Service lines</h2>
-      <p class="muted text-sm">Practices → Solutions → Offers, owned line by line.</p>
+  <section class="card mt-8 p-5" aria-labelledby="activity-heading">
+    <div class="flex items-center justify-between">
+      <h2 id="activity-heading" class="font-semibold">Recent activity</h2>
+      <a href="{% url 'architecture:activity' %}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300">View all</a>
     </div>
-    {% if is_superadmin %}<a href="{% url 'architecture:architecture' %}" class="btn btn-secondary">{% icon "tree" "h-4 w-4" %} Manage architecture</a>{% endif %}
-  </div>
-  {% include "architecture/_service_line_grid.html" %}
-
-  <section class="mt-10 grid gap-6 lg:grid-cols-3">
-    <div class="card p-5 lg:col-span-2">
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold">Recent activity</h2>
-        <a href="{% url 'architecture:activity' %}" class="text-sm text-vitalos-blue hover:underline dark:text-cobalt-300">View all</a>
-      </div>
-      {% include "activity/_widget.html" with entries=recent_activity %}
-    </div>
-    <div class="card p-5 text-sm">
-      <h2 class="font-semibold">Governance</h2>
-      <ul class="muted mt-3 space-y-2">
-        <li>Classifications: Public · Internal · Confidential · Restricted.</li>
-        <li>Records are archived, never deleted, and every change is in the activity history.</li>
-        <li>Identity source of truth: Microsoft Entra ID (single sign-on in Phase 2).</li>
-        <li>Engineering source of truth: GitHub.</li>
-      </ul>
-    </div>
+    {% include "activity/_widget.html" with entries=recent_activity %}
   </section>
 {% endblock %}

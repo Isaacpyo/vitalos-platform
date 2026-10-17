@@ -2,11 +2,10 @@ import { ctas, megaMenuColumns, navLabels, routes } from "@vitalos/cms";
 import type { IndustryView, PublicationGates } from "@vitalos/cms";
 import { Button, CaseStudyRow, FeatureGrid, SolutionShowcase } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
-import { HeroImage } from "../../components/hero-image";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
-import { industryImageFor } from "../../lib/view-mapping/industry-images";
+import { industryArtworkFor } from "../../lib/view-mapping/industry-artwork";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { caseStudyMeta, toRows } from "../../lib/view-mapping/patterns";
 import { offerFeatureItems, solutionShowcaseItems } from "../../lib/view-mapping/showcase";
@@ -25,7 +24,7 @@ export const industryTrail = (industry: Pick<IndustryView, "title" | "slug">) =>
 
 /**
  * Industry page (Stage 9 section 23) in the homepage's design (pages redesign, 15 Oct 2026): the
- * compact dark hero with the sector photograph; sector realities and considerations as rows;
+ * compact dark hero with the sector's artwork (ADR-044); sector realities and considerations as rows;
  * priority problems as cards; AI opportunities as cards on a dark band; related solutions as the
  * showcase and offers as icon cards; work (only when its gate is open); the closing card.
  * Insights live in the content admin and are not linked from industry pages.
@@ -38,7 +37,6 @@ export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateP
     const [row] = toRows("caseStudy", [work], { meta: caseStudyMeta(work) });
     return row ? [row] : [];
   });
-  const image = industryImageFor(industry.title);
   const items = (texts: readonly string[], icon?: IconName) =>
     texts.map((text) => ({ text, ...(icon ? { icon } : {}) }));
 
@@ -55,7 +53,7 @@ export function IndustryTemplate({ industry, gates }: Readonly<IndustryTemplateP
             {cta.label}
           </Button>
         }
-        media={image ? <HeroImage image={image} /> : undefined}
+        artwork={industryArtworkFor(industry.title)}
       />
       {renderBands(
         [

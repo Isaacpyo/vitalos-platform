@@ -29,6 +29,12 @@ export interface WordmarkProps extends Omit<ComponentPropsWithoutRef<"span">, "c
   text?: string;
   /** Wrap in a plain anchor, for example the header home link. */
   href?: string;
+  /**
+   * Accessible name of the link when `href` is given (WCAG 2.4.4). Default "Vitalos home": the
+   * images inside the link are then decorative, so a screen reader hears one clear name instead
+   * of the letters of the wordmark.
+   */
+  linkLabel?: string;
 }
 
 /**
@@ -47,6 +53,7 @@ export function Wordmark({
   compactLogo,
   text = "VITALOS",
   href,
+  linkLabel = "Vitalos home",
   className,
   ...props
 }: WordmarkProps) {
@@ -55,7 +62,8 @@ export function Wordmark({
       src={asset.src}
       width={asset.width}
       height={asset.height}
-      alt={asset.alt ?? text}
+      // Inside a named link the image is decorative; on its own it names the brand.
+      alt={href ? "" : (asset.alt ?? text)}
       className={classes}
     />
   );
@@ -84,7 +92,11 @@ export function Wordmark({
     <span className="text-body-l font-semibold tracking-widest text-tone-heading">{text}</span>
   );
   const body = href ? (
-    <a href={href} className="inline-flex min-h-11 items-center no-underline">
+    <a
+      href={href}
+      aria-label={linkLabel}
+      className="inline-flex min-h-11 items-center no-underline"
+    >
       {mark}
     </a>
   ) : (

@@ -82,7 +82,7 @@
                     aria-label="{{ item.label }}: {{ item.text }}" data-check="{{ item.key }}">{% if item.done %}{% icon "check" "h-3.5 w-3.5" %}{% endif %}</button>
             <span class="text-sm">
               {{ item.text }}
-              {% if item.done %}<span class="mono-label muted block">{{ item.check.checked_by.email|default:"Unknown" }} · {{ item.check.checked_at|date:"j M Y, H:i" }}</span>{% endif %}
+              {% if item.done %}<span class="mono-label muted block">{{ item.check.checked_by|person|default:"Unknown" }} · {{ item.check.checked_at|date:"j M Y, H:i" }}</span>{% endif %}
               {% if item.key == "authors" and authors_problem %}<span class="field-error block">{{ authors_problem }}</span>{% endif %}
             </span>
           </form>

@@ -38,6 +38,12 @@ export interface SitemapInput {
   hasFaq?: boolean | undefined;
   /** Document and route entries from `ContentSource.getSitemapEntries()`. */
   entries: readonly SitemapEntry[];
+  /**
+   * When the repo-authored page copy last changed (`VITALOS_CONTENT_LASTMOD`, resolved from git at
+   * build, `config/content-lastmod.ts`). Dates the homepage, the top-level pages and the FAQ,
+   * which have no document date of their own (C7).
+   */
+  pagesLastModified?: Date | undefined;
 }
 
 const cleanPath = (path: string) =>
@@ -51,19 +57,30 @@ const asDate = (value: string | undefined): Date | undefined => {
 
 export function buildSitemap(input: SitemapInput): MetadataRoute.Sitemap {
   const seen = new Map<string, { lastModified?: Date | undefined }>();
+  // A path listed twice keeps its first position and its newest date.
   const add = (path: string, lastModified?: Date) => {
-    if (!seen.has(path)) seen.set(path, { lastModified });
+    const previous = seen.get(path);
+    if (!previous) {
+      seen.set(path, { lastModified });
+    } else if (
+      lastModified &&
+      (!previous.lastModified || lastModified.getTime() > previous.lastModified.getTime())
+    ) {
+      previous.lastModified = lastModified;
+    }
   };
 
-  if (input.hasHome) add(routes.home());
+  const pagesDate = input.pagesLastModified;
+  if (input.hasHome) add(routes.home(), pagesDate);
 
   for (const key of routePageKeys) {
     if (!input.routePages.has(key)) continue;
     if (!isSitemapEligible(gateForRoutePage(key), input.gates)) continue;
-    add(hrefForRoutePage(key));
+    add(hrefForRoutePage(key), pagesDate);
   }
 
-  if (input.hasFaq) add(routes.faq());
+  // The FAQ repeats the solution pages' questions, which live in the same repo copy.
+  if (input.hasFaq) add(routes.faq(), pagesDate);
 
   for (const entry of input.entries) {
     if (!cleanPath(entry.path) || manifestEntryForPath(entry.path) === undefined) continue;
@@ -101,5 +118,6 @@ export async function loadSitemap(
       pages.filter(([, page]) => page !== null && page.seo.noindex !== true).map(([key]) => key),
     ),
     entries,
+    pagesLastModified: asDate(process.env.VITALOS_CONTENT_LASTMOD),
   });
 }

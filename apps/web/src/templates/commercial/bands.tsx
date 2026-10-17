@@ -10,10 +10,15 @@ import {
   SectionHeading,
   TerminalCTA,
 } from "@vitalos/ui";
-import type { PatternLink, RevealItemProps, SectionSpacing, SectionTone } from "@vitalos/ui";
+import type {
+  ArtworkSpec,
+  PatternLink,
+  RevealItemProps,
+  SectionSpacing,
+  SectionTone,
+} from "@vitalos/ui";
 import { ctas, homeSections, routes } from "@vitalos/cms";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
-import { heroPhotograph } from "../../lib/view-mapping/hero-images";
 import { contactHref } from "../../lib/view-mapping/hrefs";
 
 /** The homepage's closing heading (locked copy), closing every page. */
@@ -40,14 +45,19 @@ export interface PageIntroProps {
   children?: ReactNode;
   /** The compact hero of a detail page (smaller title, shorter band); top-level pages omit it. */
   compact?: boolean | undefined;
-  /** Media beside the copy from lg: the page's illustration, photograph or MediaSlot. */
+  /** Media beside the copy from lg: a line diagram, a summary panel or a MediaSlot. */
   media?: ReactNode;
+  /** The page family's artwork and the item's variant (ADR-044). */
+  artwork: ArtworkSpec;
+  /** `light`: the compact light hero of a reading page (an offer). Default `dark`. */
+  tone?: "dark" | "light" | undefined;
 }
 
 /**
  * First band of a page: the homepage hero's language (pages redesign, 15 Oct 2026). A dark band
- * under the clear header with the hero photograph, rounded bottom corners, the eyebrow, h1, lead
- * and actions, and optional media on the right. The page has no other h1.
+ * under the clear header with the family's brand-system artwork (ADR-044), rounded bottom
+ * corners, the eyebrow, h1, lead and actions, and optional media on the right; or, for a reading
+ * page, the light compact hero. The page has no other h1.
  */
 export function PageIntro({
   eyebrow,
@@ -57,12 +67,14 @@ export function PageIntro({
   children,
   compact,
   media,
+  artwork,
+  tone = "dark",
 }: PageIntroProps) {
   return (
     <PageHero
-      tone="dark"
-      backdrop={heroPhotograph}
-      size={compact ? "title" : "display"}
+      tone={tone}
+      artwork={artwork}
+      size={compact || tone === "light" ? "title" : "display"}
       title={title}
       eyebrow={eyebrow}
       lead={lead}

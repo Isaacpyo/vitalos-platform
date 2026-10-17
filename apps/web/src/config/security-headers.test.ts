@@ -93,7 +93,7 @@ describe("getSecurityHeaders", () => {
 
   it("emits HSTS only when enabled", () => {
     expect(headersFor({ enableHsts: true }).get("Strict-Transport-Security")).toBe(
-      "max-age=31536000",
+      "max-age=63072000; includeSubDomains",
     );
     expect(headersFor({}).has("Strict-Transport-Security")).toBe(false);
   });
@@ -102,6 +102,14 @@ describe("getSecurityHeaders", () => {
     const headers = headersFor({});
     expect(headers.get("Content-Security-Policy")).toContain("script-src 'self' 'unsafe-inline'");
     expect(headers.has("Content-Security-Policy-Report-Only")).toBe(false);
+  });
+
+  it("refuses framing twice and isolates the browsing context (ADR-047)", () => {
+    const headers = headersFor({});
+    expect(headers.get("Content-Security-Policy")).toContain("frame-ancestors 'none'");
+    expect(headers.get("Content-Security-Policy")).toContain("script-src-attr 'none'");
+    expect(headers.get("X-Frame-Options")).toBe("DENY");
+    expect(headers.get("Cross-Origin-Opener-Policy")).toBe("same-origin");
   });
 
   it("allows unsafe-eval only under next dev", () => {
