@@ -70,7 +70,8 @@ def test_overview_with_real_data_links_every_count(superadmin, seeded, client_fo
     relay_section = _section(context, "relay")
     assert not relay_section.error
     assert _count(relay_section, "waiting").value >= 1
-    assert _count(relay_section, "awaiting").value == 4  # the fake's Master FAQ strip
+    # GET /overview (ADR-048): Master FAQ entries plus drafted repo entries awaiting confirmation
+    assert _count(relay_section, "awaiting").value == 5
     assert _count(relay_section, "waiting").url == reverse("relay:inbox") + "?tab=needs"
     for section in context["sections"]:
         for count in section.counts:

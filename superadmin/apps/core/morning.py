@@ -106,11 +106,31 @@ def _age(moment: datetime | None, now: datetime) -> str:
 def relay_numbers(user) -> dict:
     """Waiting conversations, open gaps (7 days), FAQ entries awaiting confirmation and the oldest
     source sync, from the website's Relay admin API. Raises ``RelayError``."""
-    from apps.relay.client import HttpRelayClient, get_client
+    from apps.relay.client import HttpRelayClient, RelayError, get_client
 
     client = get_client(user)
     if isinstance(client, HttpRelayClient):
         client.timeout = RELAY_TIMEOUT_SECONDS  # the Overview must not wait 8 s for one card
+    try:
+        # One call (ADR-048): counts plus the last finished sync run per source.
+        data = client.overview() or {}
+    except RelayError as error:
+        if error.code != "not_found":
+            raise
+        data = None  # an older website without GET /overview
+    if data is not None:
+        oldest_hours = (data.get("sync") or {}).get("oldestAgeHours")
+        oldest = (
+            (timezone.now() - timedelta(hours=float(oldest_hours))).isoformat()
+            if oldest_hours is not None
+            else None
+        )
+        return {
+            "waiting": int(data.get("waitingNow") or 0),
+            "gaps": int(data.get("gapsThisWeek") or 0),
+            "awaiting": int(data.get("awaitingConfirmation") or 0),
+            "oldest_sync": oldest,
+        }
     inbox = client.inbox("needs") or {}
     gaps = (client.gaps(7) or {}).get("gaps") or []
     sources = (client.knowledge(source="faq") or {}).get("sources") or {}

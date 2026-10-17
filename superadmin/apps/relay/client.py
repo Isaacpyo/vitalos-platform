@@ -74,10 +74,11 @@ def staff_name(user) -> str:
     word of this name ("Temitope · Vitalos"), so a username such as "temitope.agbola" must not
     reach it.
     """
-    # ``display_label`` (WS7: full name, or a name derived from the email) and ``display_name``
-    # are read when the account model has them; anything that still looks like an address or a
-    # username (``@``, dots, underscores) is never sent.
-    for field in ("display_label", "display_name", "full_name"):
+    # Only names a person entered (or confirmed) are read. ``User.display_label`` is skipped on
+    # purpose: with an empty full name it derives a name from the email, which D3 rules out.
+    # Anything that still looks like an address or a username (``@``, dots, underscores) is
+    # never sent.
+    for field in ("display_name", "full_name"):
         value = " ".join(str(getattr(user, field, "") or "").split())
         if value and not any(ch in value for ch in "@._"):
             return value[:120]
