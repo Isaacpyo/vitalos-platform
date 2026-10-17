@@ -43,6 +43,13 @@ function sections(title: string, body: string): Section[] {
   return out;
 }
 
+/** Splits text longer than MAX_WORDS into overlapping windows (one window when it fits). */
+export function splitLongText(text: string): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  // Short text keeps its line breaks; only long text is re-flowed into windows.
+  return words.length <= MAX_WORDS ? [text] : windows(words);
+}
+
 function windows(words: string[]): string[] {
   if (words.length <= MAX_WORDS) return [words.join(" ")];
   const out: string[] = [];

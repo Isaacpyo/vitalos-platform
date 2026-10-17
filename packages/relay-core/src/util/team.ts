@@ -23,6 +23,65 @@ export function withinBusinessHours(settings: RelaySettings, now: Date): boolean
   return h.days.includes(day) && hhmm >= h.start && hhmm < h.end;
 }
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Calendar date, weekday and time of an instant in Europe/London. */
+function londonParts(at: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(at);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return {
+    y: Number(get("year")),
+    m: Number(get("month")),
+    d: Number(get("day")),
+    weekday: WEEKDAYS.indexOf(get("weekday")),
+    hh: Number(get("hour") === "24" ? "0" : get("hour")),
+    mm: Number(get("minute")),
+  };
+}
+
+/** The instant of a London wall-clock time (handles GMT and BST). */
+function londonInstant(y: number, m: number, d: number, hh: number, mm: number): Date {
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  const seen = londonParts(new Date(guess));
+  const offsetMin = (Date.UTC(seen.y, seen.m - 1, seen.d, seen.hh, seen.mm) - guess) / 60_000;
+  return new Date(guess - offsetMin * 60_000);
+}
+
+/**
+ * The next start of working hours after `now` (Relay Settings, Europe/London), for the visitor's
+ * "Back Monday 09:00" (finding D5). Null inside working hours or when no working day is set.
+ * Labels: "today 09:00", "tomorrow 09:00", else the weekday ("Monday 09:00").
+ */
+export function nextOpening(
+  settings: RelaySettings,
+  now: Date,
+): { at: string; label: string } | null {
+  const h = settings.businessHours;
+  if (h.days.length === 0 || withinBusinessHours(settings, now)) return null;
+  const [startH, startM] = h.start.split(":").map(Number) as [number, number];
+  const today = londonParts(now);
+  for (let offset = 0; offset <= 7; offset++) {
+    // Noon UTC on the London date `offset` days ahead: safely the same calendar day in London.
+    const noon = new Date(Date.UTC(today.y, today.m - 1, today.d + offset, 12));
+    const day = londonParts(noon);
+    if (!h.days.includes(day.weekday)) continue;
+    const at = londonInstant(day.y, day.m, day.d, startH, startM);
+    if (at.getTime() <= now.getTime()) continue;
+    const when = offset === 0 ? "today" : offset === 1 ? "tomorrow" : WEEKDAYS[day.weekday];
+    return { at: at.toISOString(), label: `${when} ${h.start}` };
+  }
+  return null;
+}
+
 export const PRESENCE_WINDOW_MS = 2 * 60 * 1000;
 
 /**

@@ -1,5 +1,7 @@
 /**
  * pnpm relay:eval --retrieval [--json out.json]   retrieval eval (no model calls, no cost)
+ * pnpm relay:eval --turns [--approve-pending]        turn budget eval: 25 questions, memory store,
+ *                                                    mock model, no environment (ADR-048)
  * pnpm relay:eval --answers [--base url]            answer eval through a running website's
  *                                                    visitor API (eval-answers.ts); spends a
  *                                                    little DeepSeek credit on a DeepSeek server
@@ -34,6 +36,23 @@ const opt = (f: string) => {
 if (has("answers")) {
   await import("./eval-answers");
   process.exit(process.exitCode ?? 0);
+}
+
+// Turn budget (ADR-048): memory store + mock model, no environment needed (also a CI test).
+if (has("turns")) {
+  const { runTurnsEval } = await import("../eval/turns");
+  const run = await runTurnsEval({ approvePending: has("approve-pending") });
+  for (const r of run.results)
+    console.log(
+      `${r.pass ? "pass" : "FAIL"}  ${String(r.promptTokens).padStart(5)} tok  ${r.id.padEnd(24)} ${r.reason}`,
+    );
+  const passed = run.results.filter((r) => r.pass).length;
+  console.log(
+    `\nTurns: ${passed}/${run.results.length} pass; input tokens per model call: avg ${run.avgTokens}, p95 ${run.p95Tokens}, max ${run.maxTokens} (budget 8000)`,
+  );
+  const out = opt("json");
+  if (out) writeFileSync(out, JSON.stringify(run, null, 2));
+  process.exit(passed === run.results.length ? 0 : 1);
 }
 
 const url = process.env.SUPABASE_URL;

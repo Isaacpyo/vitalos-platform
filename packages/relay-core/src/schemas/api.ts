@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LIMITS, isSafeSiteLink } from "../contract";
+import { FEEDBACK_REASONS, LIMITS, isSafeSiteLink } from "../contract";
 
 /** Strips control and bidi-override characters and trims; keeps newlines and tabs. */
 export function cleanText(value: string): string {
@@ -59,6 +59,8 @@ export const feedbackBody = z.object({
   conversationId: uuid,
   messageId: uuid,
   value: z.union([z.literal(1), z.literal(-1)]),
+  /** Thumbs-down only: why, chosen with one tap (finding D6). */
+  reason: z.enum(FEEDBACK_REASONS).optional(),
 });
 
 export const handoffBody = z.object({

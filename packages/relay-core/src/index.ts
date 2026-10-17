@@ -18,12 +18,15 @@ export type {
 export {
   VisitorService,
   LIMITS as VISITOR_LIMITS,
+  assemblePrompt,
   historyTurns,
+  isTestTraffic,
   mergeTurns,
   toVisitorMessage,
+  TEST_TRAFFIC_SOURCES,
 } from "./services/visitor";
 export type { ChatResult, RequestMeta } from "./services/visitor";
-export { AdminService, adminMessage } from "./services/admin";
+export { AdminService, adminMessage, handoffRate, SYNC_STALE_HOURS } from "./services/admin";
 export type { BundledEntriesLoader, FaqRunSummary, FaqStatus, FaqSyncPort } from "./services/admin";
 export { FaqSyncService } from "./services/faq-sync";
 export type { SnapshotPort } from "./services/faq-sync";
@@ -36,7 +39,13 @@ export type * from "./db/types";
 
 export { DeepSeekProvider } from "./llm/deepseek";
 export { MockProvider, mockAnswer } from "./llm/mock";
-export type { LlmProvider, StreamEvent, Usage } from "./llm/provider";
+export type { ChatTurn, LlmProvider, StreamAnswerInput, StreamEvent, Usage } from "./llm/provider";
+export {
+  PROMPT_BUDGET,
+  estimatePromptTokens,
+  estimateTokens as estimatePromptTextTokens,
+  truncateToTokens,
+} from "./llm/budget";
 export { estimateCostUsd, isPeak } from "./llm/provider";
 export { SYSTEM_PROMPT, PRACTICES_FACT } from "./llm/prompts/system";
 export { HANDOFF_MARKER, MarkerGuard, stripMarkers } from "./llm/markers";
@@ -44,10 +53,13 @@ export { finaliseCitations } from "./llm/citations";
 
 export { HttpEmbedder, nullEmbedder } from "./retrieval/embed";
 export type { Embedder } from "./retrieval/embed";
-export { retrieve } from "./retrieval/search";
+export { retrieve, trimToBudget } from "./retrieval/search";
+export { buildVocabulary, correctSpelling, editDistance, nearestWord } from "./retrieval/spelling";
 
 export { redact } from "./redact/redact";
 export { isExplicitHandoffRequest, normaliseQuestion } from "./handoff/intent";
+export { smallTalkKind, SMALL_TALK_REPLIES } from "./handoff/smalltalk";
+export type { SmallTalkKind } from "./handoff/smalltalk";
 
 export { SupabaseBroadcaster, MemoryBroadcaster, adminTopic } from "./realtime/broadcast";
 export type { Broadcaster } from "./realtime/broadcast";
@@ -66,5 +78,5 @@ export {
   DEFAULT_GREETING,
 } from "./schemas/settings";
 export type { RelaySettings } from "./schemas/settings";
-export { teamStatus, withinBusinessHours, deviceLabel } from "./util/team";
-export { visitorLabel, initialsOf } from "./util/tokens";
+export { teamStatus, withinBusinessHours, deviceLabel, nextOpening } from "./util/team";
+export { visitorLabel, initialsOf, publicStaffName, STAFF_FALLBACK_NAME } from "./util/tokens";

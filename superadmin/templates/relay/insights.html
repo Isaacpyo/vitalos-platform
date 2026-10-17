@@ -26,7 +26,7 @@
         {% endfor %}
       </dl>
 
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="grid gap-6 lg:grid-cols-3">
         <section aria-labelledby="ins-questions" class="relay-panel">
           <h3 id="ins-questions" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Top questions</h3>
           <table class="w-full border-collapse text-sm">
@@ -53,7 +53,43 @@
             </tbody>
           </table>
         </section>
+        <section aria-labelledby="ins-reasons" class="relay-panel">
+          <h3 id="ins-reasons" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Why answers were not helpful</h3>
+          <table class="w-full border-collapse text-sm" data-testid="relay-reasons">
+            <thead class="sr-only"><tr><th scope="col">Reason</th><th scope="col">Times chosen</th></tr></thead>
+            <tbody>
+              {% for label, count in reasons %}
+                <tr class="border-b border-line last:border-b-0 dark:border-slate-800"><td class="px-4 py-2.5">{{ label }}</td><td class="tabular px-4 py-2.5 text-right">{{ count }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
       </div>
+
+      <section aria-labelledby="ins-turns" class="relay-panel">
+        <h3 id="ins-turns" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Input tokens per AI answer</h3>
+        <p class="relay-muted px-4 pt-3 text-[13px]">From stored answers in this period. Target: at most 8,000 input tokens per answer.</p>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" data-testid="relay-turns">
+          {% for label, value in turns %}
+            <div class="border-line p-4 sm:border-r dark:border-slate-800">
+              <dt class="relay-mono relay-muted">{{ label }}</dt>
+              <dd class="mt-1.5 font-display text-[22px] font-bold tabular">{{ value }}</dd>
+            </div>
+          {% endfor %}
+        </dl>
+      </section>
+
+      <section aria-labelledby="ins-sources" class="relay-panel">
+        <h3 id="ins-sources" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Input tokens by source</h3>
+        <table class="w-full border-collapse text-sm" data-testid="relay-usage-sources">
+          <thead class="sr-only"><tr><th scope="col">Source</th><th scope="col">Input tokens</th></tr></thead>
+          <tbody>
+            {% for label, value in usage_by_source %}
+              <tr class="border-b border-line last:border-b-0 dark:border-slate-800"><th scope="row" class="px-4 py-2.5 text-left font-normal">{{ label }}</th><td class="tabular px-4 py-2.5 text-right">{{ value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
 
       <section aria-labelledby="ins-usage" class="relay-panel">
         <h3 id="ins-usage" class="relay-mono relay-muted border-b border-line px-4 py-3 dark:border-slate-800">Tokens and estimated cost</h3>

@@ -10,6 +10,7 @@ import { ingestEntries } from "../knowledge/ingest";
 import type { IngestResult } from "../knowledge/ingest";
 import type { KnowledgeEntry } from "../knowledge/types";
 import { checksumOf } from "../knowledge/checksum";
+import { isSafeSiteLink } from "../contract";
 import { publicCitations } from "../llm/citations";
 import { redact } from "../redact/redact";
 import { retrieve } from "../retrieval/search";
@@ -17,7 +18,7 @@ import type { AdminIdentity, knowledgeDraftBody } from "../schemas/api";
 import { parseStoredSettings, relaySettingsSchema } from "../schemas/settings";
 import type { RelaySettings } from "../schemas/settings";
 import { teamStatus as computeTeamStatus } from "../util/team";
-import { firstName, initialsOf, sha256Hex, visitorLabel } from "../util/tokens";
+import { initialsOf, publicStaffName, sha256Hex, visitorLabel } from "../util/tokens";
 import type { RelayContext } from "./context";
 import { RelayError } from "./context";
 import type { z } from "zod";
@@ -65,6 +66,20 @@ export interface FaqStatus {
 }
 
 const TAB_LIMIT = 50;
+
+/** A knowledge source whose last sync is older than this is shown with a warning. */
+export const SYNC_STALE_HOURS = 24;
+
+/**
+ * Hand-off rate as a FRACTION between 0 and 1, rounded to three places (0.25 means 25 %).
+ * The admin API contract (docs/relay/API.md) fixes the unit; the Super Admin formats it as a
+ * percentage. Hand-offs requested in the window for older conversations can outnumber the new
+ * conversations, so the rate is capped at 1 (finding E1).
+ */
+export function handoffRate(handoffs: number, conversations: number): number {
+  if (!conversations || conversations <= 0) return 0;
+  return Math.round(Math.min(1, handoffs / conversations) * 1000) / 1000;
+}
 
 function pagePathOf(c: ConversationRecord): string | null {
   if (!c.pageUrl || !URL.canParse(c.pageUrl)) return null;
@@ -459,7 +474,7 @@ export class AdminService {
     const c = await this.require(id);
     if (!(await this.store.hitRateLimit(`atyping:${id}`, 10, 5))) return {};
     await this.ctx.deps.broadcaster.visitor(c.channelKey, "typing", {
-      name: firstName(admin.name),
+      name: publicStaffName(admin.name),
     });
     return {};
   }
@@ -581,9 +596,10 @@ export class AdminService {
     section?: string;
     q?: string;
   }) {
-    const [items, faq] = await Promise.all([
+    const [items, faq, sync] = await Promise.all([
       this.store.listDocuments(filter),
       this.ports.faq.status(),
+      this.syncStatus(),
     ]);
     const all =
       filter.source || filter.status || filter.section || filter.q
@@ -599,6 +615,9 @@ export class AdminService {
     };
     const faqDocs = all.filter((d) => d.source === "faq");
     return {
+      // Last finished sync run per source (age, stale after 24 h): `syncedAt` below is the last
+      // time content CHANGED, which can be days old for unchanged content.
+      sync,
       sources: {
         cms: stat("cms"),
         repo: stat("repo"),
@@ -885,9 +904,7 @@ export class AdminService {
       days,
       conversations: row.conversations,
       aiResolved: row.aiResolved,
-      handoffRate: row.conversations
-        ? Math.round((row.handoffs / row.conversations) * 1000) / 10
-        : 0,
+      handoffRate: handoffRate(row.handoffs, row.conversations),
       handoffs: row.handoffs,
       helpful: row.helpful,
       notHelpful: row.notHelpful,
@@ -895,10 +912,176 @@ export class AdminService {
       waitingNow: row.waitingNow,
       topQuestions: row.topQuestions,
       topGaps: gaps.slice(0, 10).map((g) => ({ question: g.exampleQuestion, count: g.count })),
+      // All model calls on these days (usage_daily): answers, summaries, evals, deleted chats.
       tokensIn: row.tokensIn,
       tokensOut: row.tokensOut,
       cacheHitTokens: row.cacheHitTokens,
       estCostUsd: Math.round(row.estCostUsd * 10_000) / 10_000,
+      // Per-turn input tokens of stored AI answers (ADR-048): the number to watch for cost.
+      // The same usage by source: visitor answers ("chat"), hand-off summaries, aborted streams,
+      // test traffic (eval and load harnesses) and "untagged" (recorded before 17 Oct 2026).
+      usageBySource: row.usageBySource,
+      turns: row.turns,
+      feedbackReasons: row.feedbackReasons,
+    };
+  }
+
+  /**
+   * Counts for the Super Admin Overview (WS7 renders them): FAQ entries awaiting confirmation,
+   * open gaps asked in the last 7 days, conversations waiting for a person, and the age of the
+   * last knowledge sync per source (stale after 24 hours).
+   */
+  async overview() {
+    const now = this.now();
+    const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
+    const [faq, gaps, counts, sync, repo] = await Promise.all([
+      this.ports.faq.status(),
+      this.store.listGaps(weekAgo),
+      this.store.inboxCounts(),
+      this.syncStatus(),
+      this.store.listAdminMetaForSource("repo"),
+    ]);
+    const repoPending = repo.filter(
+      (d) => d.status === "draft" && d.adminMeta.needs_confirmation === true,
+    ).length;
+    return {
+      // Master FAQ entries marked Needs confirmation in Notion, plus repo entries drafted for
+      // the owner (`confirmation: needed`).
+      awaitingConfirmation: faq.needsConfirmation.length + repoPending,
+      awaitingConfirmationFaq: faq.needsConfirmation.length,
+      awaitingConfirmationRepo: repoPending,
+      gapsThisWeek: gaps.filter((g) => g.status === "open").length,
+      waitingNow: counts.needs,
+      liveNow: counts.live,
+      sync,
+    };
+  }
+
+  /** Last finished sync run per knowledge source, with its age; `stale` after 24 hours. */
+  async syncStatus() {
+    const now = this.now().getTime();
+    const sources = ["cms", "repo", "faq"] as const;
+    const runs = await Promise.all(sources.map((s) => this.store.lastSyncRuns(s, 5)));
+    const per = Object.fromEntries(
+      sources.map((source, i) => {
+        const last = (runs[i] ?? []).find((r) => r.finishedAt);
+        const ageHours = last?.finishedAt
+          ? Math.round(((now - Date.parse(last.finishedAt)) / 3_600_000) * 10) / 10
+          : null;
+        return [
+          source,
+          {
+            lastSyncAt: last?.finishedAt ?? null,
+            ageHours,
+            stale: ageHours === null || ageHours > SYNC_STALE_HOURS,
+            errors: last?.errors.length ?? 0,
+          },
+        ];
+      }),
+    ) as Record<
+      (typeof sources)[number],
+      { lastSyncAt: string | null; ageHours: number | null; stale: boolean; errors: number }
+    >;
+    const ages = Object.values(per).map((p) => p.ageHours);
+    const oldest = ages.some((a) => a === null) ? null : Math.max(...(ages as number[]));
+    return {
+      ...per,
+      oldestAgeHours: oldest,
+      stale: Object.values(per).some((p) => p.stale),
+      staleAfterHours: SYNC_STALE_HOURS,
+    };
+  }
+
+  /**
+   * Scheduled re-ingest of the bundled website and repo knowledge (ADR-048, finding D4): runs
+   * hourly from pg_cron, re-chunks only what changed (checksums) and records one sync run per
+   * source, so the knowledge page can show a true "last synced" age.
+   */
+  async ingestBundled(actor: string) {
+    const startedAt = this.now().toISOString();
+    const faq = await this.ports.faq.status();
+    const entries = (
+      await this.ports.bundledEntries({ includeFaqSnapshot: faq.mode === "snapshot" })
+    ).filter((e) => e.source === "cms" || e.source === "repo");
+    const out: Record<"cms" | "repo", IngestResult> = {} as Record<"cms" | "repo", IngestResult>;
+    for (const source of ["cms", "repo"] as const) {
+      const run = await this.store.startSyncRun(source, "full");
+      const result = await ingestEntries(
+        this.store,
+        this.ctx.deps.embedder,
+        entries.filter((e) => e.source === source),
+        { archiveMissingFor: [source], repairEmbeddings: true, updatedBy: actor },
+      );
+      await this.store.finishSyncRun({
+        ...run,
+        startedAt: run.startedAt || startedAt,
+        finishedAt: this.now().toISOString(),
+        added: result.added,
+        updated: result.updated,
+        archived: result.archived,
+        errors: result.errors.slice(0, 20),
+      });
+      out[source] = result;
+    }
+    return {
+      cms: { added: out.cms.added, updated: out.cms.updated, archived: out.cms.archived },
+      repo: { added: out.repo.added, updated: out.repo.updated, archived: out.repo.archived },
+      errors: out.cms.errors.length + out.repo.errors.length,
+    };
+  }
+
+  /**
+   * "Suggested answer" for a gap (finding D2): drafts a team answer from the best-matching
+   * published page or FAQ entry. Always a DRAFT: a person edits and publishes it.
+   */
+  async suggestAnswer(gapId: string, admin: AdminIdentity) {
+    const gap = (await this.store.listGaps(new Date(0).toISOString())).find((g) => g.id === gapId);
+    if (!gap) throw new RelayError("not_found");
+    const settings = await this.settings();
+    const result = await retrieve(this.store, this.ctx.deps.embedder, {
+      question: gap.exampleQuestion,
+      simFloor: this.ctx.config.simFloor,
+      threshold: settings.confidenceThreshold,
+      embedTimeoutMs: 5000,
+      matchCount: 3,
+    });
+    const best = result.chunks.find((c) => c.source !== "team_answer") ?? result.chunks[0];
+    if (!best)
+      throw new RelayError("invalid", "No published page matches this question. Write the answer.");
+    const title = gap.exampleQuestion.replace(/\s+/g, " ").slice(0, 200);
+    const body = best.content.trim();
+    const url = best.url && isSafeSiteLink(best.url) ? best.url : null;
+    const sourceRef = `team:gap:${sha256Hex(gap.id).slice(0, 24)}`;
+    // Never demote an answer someone already published from this gap.
+    const existing = await this.store.getDocumentBySourceRef(sourceRef);
+    if (existing && existing.status !== "draft")
+      return {
+        documentId: existing.id,
+        source: { title: best.title, url, type: best.type, kind: best.source },
+      };
+    const { document } = await this.store.upsertDocument({
+      source: "team_answer",
+      sourceRef,
+      externalId: null,
+      title,
+      url,
+      type: "faq",
+      bodyMd: body,
+      checksum: checksumOf({ title, body, url }),
+      status: "draft",
+      owner: admin.name,
+      reviewDate: null,
+      updatedBy: admin.name,
+      meta: url ? { page_placements: [url] } : {},
+      adminMeta: {
+        suggested_from: best.documentId,
+        suggested_from_title: best.title,
+        gap_id: gap.id,
+      },
+    });
+    return {
+      documentId: document.id,
+      source: { title: best.title, url, type: best.type, kind: best.source },
     };
   }
 

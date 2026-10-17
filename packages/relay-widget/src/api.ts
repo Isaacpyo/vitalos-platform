@@ -5,6 +5,7 @@ import type {
   CreateConversationRequest,
   CreateConversationResponse,
   ErrorCode,
+  FeedbackReason,
   HandoffRequest,
   HandoffTrigger,
   MessagesResponse,
@@ -65,11 +66,17 @@ export const api = {
       { token },
     ),
 
-  feedback: (conversationId: string, messageId: string, value: 1 | -1, token: string) =>
+  feedback: (
+    conversationId: string,
+    messageId: string,
+    value: 1 | -1,
+    token: string,
+    reason?: FeedbackReason,
+  ) =>
     request<{ showHandoff: boolean }>("/feedback", {
       method: "POST",
       token,
-      body: JSON.stringify({ conversationId, messageId, value }),
+      body: JSON.stringify({ conversationId, messageId, value, ...(reason ? { reason } : {}) }),
     }),
 
   handoff: (body: HandoffRequest, token: string) =>

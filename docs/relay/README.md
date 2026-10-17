@@ -88,18 +88,24 @@ Each step is owner-gated where marked.
   3. `RELAY_ENABLED=false` and redeploy. The launcher disappears and the routes answer 404. Stored conversations are kept.
 - **Cost:**
   - Settings → daily token cap. Insights shows tokens and estimated cost per day.
-  - The `usage_daily` table holds per-day totals.
+  - The `usage_daily` table holds per-day totals of **every** model call (the cap counter). `usage_by_source` splits them into `chat`, `summary`, `aborted` and `test` (ADR-048).
+  - Watch **Input tokens per AI answer** in Insights (average, p95, maximum from stored answers). The budget is 8,000 per answer (`PROMPT_BUDGET` in `relay-core/src/llm/budget.ts`); `pnpm relay:eval --turns` proves it on 25 fixed questions.
+  - Eval and load runs tag themselves with `utm_source=relay-eval|relay-load`, so their tokens appear as "Test traffic" and not as visitor usage.
   - DeepSeek's off-peak pricing applies outside 01:00–04:00 and 06:00–10:00 UTC on weekdays.
 - **Re-indexing:**
   - Seed and website content: `pnpm relay:ingest` (`--dry-run` to preview; `--force` to re-embed everything).
   - Master FAQ: `pnpm relay:faq-sync` (`--full` to reconcile) or the Sync now button.
   - Each document also has a Reindex button in Knowledge.
   - The `relay-faq-sync` cron runs every 15 minutes, plus a nightly full run.
+  - The `relay-ingest` cron re-ingests the website and repo knowledge every hour at :12 (ADR-048). Knowledge shows the age of the last run per source and warns after 24 hours.
 - **Master FAQ gate:**
   - In production, FAQ entries stay draft while the Notion hub page's Status is Draft (`RELAY_FAQ_REQUIRE_HUB_ACTIVE`).
   - Needs confirmation and Held views list what is waiting.
   - To rebuild the snapshot after Notion changes: `pnpm --filter @vitalos/relay-knowledge faq-snapshot`, then commit.
-- **Evals:** `pnpm relay:eval --retrieval` after any knowledge or retrieval change. `pnpm relay:eval --answers --base <url>` after prompt or model changes. Targets are in `evals/REPORT.md`.
+- **Entries awaiting confirmation (repo):** files in `packages/relay-knowledge/content/` with `confirmation: needed` are drafts: ingested, never retrieved. To approve one, set `status: published`, delete the `confirmation` line, run `pnpm --filter @vitalos/relay-knowledge build-content` and merge. The Overview counts them with the Master FAQ's Needs confirmation.
+- **Suggested answer:** each gap in Knowledge has "Suggested answer", which drafts a team answer from the best-matching page and opens the editor. It never publishes.
+- **Analytics:** the widget dispatches `vitalos:relay` window events (`opened`, `question`, `handoff`; no content). The site maps them to its analytics provider.
+- **Evals:** `pnpm relay:eval --turns` (no environment; also a CI test) after any prompt, retrieval or knowledge change. `pnpm relay:eval --retrieval` after any knowledge or retrieval change. `pnpm relay:eval --answers --base <url>` after prompt or model changes. Targets are in `evals/REPORT.md`.
 - **Retention:**
   - Dry run: `select * from relay.purge_expired(true);`. It reports the counts it would delete.
   - Schedule it only after the owner confirms the periods (decision 20).

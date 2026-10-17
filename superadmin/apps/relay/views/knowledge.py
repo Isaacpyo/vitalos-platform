@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .. import markdown, presenters, services
@@ -44,26 +45,49 @@ def _entry(item: dict) -> dict:
     }
 
 
-def _source_strip(sources: dict) -> list[dict]:
-    def synced(value):
-        moment = presenters.parse_time(value)
-        return f"synced {presenters.long_age(moment)} ago" if moment else "not synced yet"
+SYNC_STALE_HOURS = 24
 
+
+def sync_age(run: dict | None, fallback=None) -> dict:
+    """Last sync of one source: ``{"detail": "synced 3 h ago", "stale": bool}``.
+
+    ``run`` is the website's ``sync`` entry (last finished sync run, docs/relay/API.md). Older
+    websites send only ``syncedAt`` (the last time content changed), used as the fallback. A
+    source not synced in the last 24 hours is flagged so the page can warn (finding D4).
+    """
+    run = run or {}
+    moment = presenters.parse_time(run.get("lastSyncAt") or fallback)
+    if moment is None:
+        return {"detail": "not synced yet", "stale": True}
+    hours = run.get("ageHours")
+    if not isinstance(hours, int | float):
+        hours = (timezone.now() - moment).total_seconds() / 3600
+    stale = bool(run.get("stale")) if "stale" in run else hours > SYNC_STALE_HOURS
+    return {"detail": f"synced {presenters.long_age(moment)} ago", "stale": stale}
+
+
+def _source_strip(sources: dict, sync: dict | None = None) -> list[dict]:
+    sync = sync or {}
     cms = sources.get("cms") or {}
     repo = sources.get("repo") or {}
     team = sources.get("team_answer") or {}
     faq = sources.get("faq") or {}
-    faq_when = "using snapshot" if faq.get("mode") == "snapshot" else synced(faq.get("syncedAt"))
+    cms_age = sync_age(sync.get("cms"), cms.get("syncedAt"))
+    repo_age = sync_age(sync.get("repo"), repo.get("syncedAt"))
+    faq_age = sync_age(sync.get("faq"), faq.get("syncedAt"))
+    faq_when = "using snapshot" if faq.get("mode") == "snapshot" else faq_age["detail"]
     return [
         {
             "label": "WEBSITE · CMS",
             "value": f"{cms.get('count', 0)} pages",
-            "detail": synced(cms.get("syncedAt")),
+            "detail": cms_age["detail"],
+            "stale": cms_age["stale"],
         },
         {
             "label": "RELAY KNOWLEDGE · REPO",
             "value": f"{repo.get('count', 0)} entries",
-            "detail": synced(repo.get("syncedAt")),
+            "detail": repo_age["detail"],
+            "stale": repo_age["stale"],
         },
         {
             "label": "TEAM ANSWERS",
@@ -74,6 +98,7 @@ def _source_strip(sources: dict) -> list[dict]:
             "label": "MASTER FAQ · NOTION",
             "value": f"{faq.get('verified', 0)} live",
             "detail": f"{faq.get('awaiting', 0)} awaiting confirmation · {faq_when}",
+            "stale": faq.get("mode") != "snapshot" and faq_age["stale"],
         },
     ]
 
@@ -107,7 +132,7 @@ def knowledge(request):
         )
         context.update(
             {
-                "strip": _source_strip(data.get("sources") or {}),
+                "strip": _source_strip(data.get("sources") or {}, data.get("sync")),
                 "items": items,
                 "sections": sections,
                 "gaps": (client.gaps(30) or {}).get("gaps") or [],
@@ -293,6 +318,28 @@ def reindex_all(request):
         return toast(HttpResponse(status=204), message)
     messages.success(request, message)
     return HttpResponseRedirect(reverse("relay:knowledge"))
+
+
+@relay_view()
+@require_POST
+def suggest_answer(request, gap_id):
+    """ "Suggested answer" on a gap: a draft team answer from the best-matching page, opened in
+    the editor for a person to check, edit and publish (ADR-048)."""
+    try:
+        data = services.suggest_answer(request.user, str(gap_id), request=request)
+    except RelayError as error:
+        if is_htmx(request):
+            return error_response(request, error)
+        messages.error(request, error.user_message)
+        return HttpResponseRedirect(reverse("relay:knowledge"))
+    source = (data.get("source") or {}).get("title") or "the best-matching page"
+    messages.success(request, f"Draft answer suggested from {source}. Check and edit it before publishing.")
+    target = reverse("relay:knowledge_edit", args=[str(data["documentId"])])
+    if is_htmx(request):
+        response = HttpResponse(status=204)
+        response["HX-Redirect"] = target
+        return response
+    return HttpResponseRedirect(target)
 
 
 @relay_view(manage=True)

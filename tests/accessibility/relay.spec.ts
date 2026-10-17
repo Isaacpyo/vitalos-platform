@@ -25,6 +25,25 @@ test("answer with sources and feedback has no axe violations", async ({ page }) 
   await expectNoA11yViolations(page, { include: ["#relay-panel"] });
 });
 
+test("thumbs-down reasons and the returning-visitor choice have no axe violations", async ({
+  page,
+  context,
+}) => {
+  test.slow();
+  await page.goto("/");
+  await openRelay(page);
+  await ask(page, "Can you rescue a failing software project?");
+  await page.locator(".relay-answer").last().getByRole("button", { name: "Not helpful" }).click();
+  await expect(page.getByText("What went wrong?")).toBeVisible();
+  await expectNoA11yViolations(page, { include: ["#relay-panel"] });
+  const next = await context.newPage();
+  await next.goto("/");
+  await openRelay(next, { expectWelcome: false });
+  await expect(next.getByRole("button", { name: "Continue previous conversation" })).toBeVisible();
+  await expectNoA11yViolations(next, { include: ["#relay-panel"] });
+  await next.close();
+});
+
 test("hand-off card, with and without errors, has no axe violations", async ({ page }) => {
   await page.goto("/");
   await openRelay(page);

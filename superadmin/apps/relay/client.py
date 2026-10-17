@@ -64,16 +64,40 @@ class RelayError(Exception):
         return ERROR_MESSAGES.get(self.code, ERROR_MESSAGES["unavailable"])
 
 
+STAFF_FALLBACK_NAME = "Vitalos team"
+
+
+def staff_name(user) -> str:
+    """The person's name for Relay: their display name or full name, else "Vitalos team".
+
+    Never the email address or its local part (finding D3): the website shows visitors the first
+    word of this name ("Temitope · Vitalos"), so a username such as "temitope.agbola" must not
+    reach it.
+    """
+    # ``display_label`` (WS7: full name, or a name derived from the email) and ``display_name``
+    # are read when the account model has them; anything that still looks like an address or a
+    # username (``@``, dots, underscores) is never sent.
+    for field in ("display_label", "display_name", "full_name"):
+        value = " ".join(str(getattr(user, field, "") or "").split())
+        if value and not any(ch in value for ch in "@._"):
+            return value[:120]
+    return STAFF_FALLBACK_NAME
+
+
 def _initials(user) -> str:
-    name = (user.full_name or user.email.split("@")[0]).replace(".", " ").split()
-    return "".join(part[0] for part in name[:2]).upper()[:4] or "?"
+    name = staff_name(user)
+    if name == STAFF_FALLBACK_NAME:
+        return "VT"
+    parts = name.split()
+    letters = [parts[0][0], parts[-1][0]] if len(parts) > 1 else list(parts[0][:2])
+    return "".join(letters).upper()[:4] or "VT"
 
 
 def admin_identity(user) -> dict[str, str]:
     """The ``X-Relay-Admin`` identity: ``{"id": "sa:<pk>", name, initials, email, role}``."""
     return {
         "id": f"sa:{user.pk}",
-        "name": (user.full_name or user.email.split("@")[0])[:120],
+        "name": staff_name(user),
         "initials": _initials(user),
         "email": user.email,
         "role": "SuperAdmin" if is_superadmin(user) else "ServiceLead",
@@ -125,11 +149,13 @@ class RelayClient(Protocol):
     def reindex_all(self) -> dict: ...
     def gaps(self, days: int = 30) -> dict: ...
     def ignore_gap(self, gap_id: str) -> dict: ...
+    def suggest_answer(self, gap_id: str) -> dict: ...
     def test_retrieval(self, question: str, page_path: str = "") -> dict: ...
     def faq(self) -> dict: ...
     def faq_sync(self, full: bool = False) -> dict: ...
-    # Insights, settings, email log
+    # Insights, Overview counts, settings, email log
     def insights(self, days: int = 30) -> dict: ...
+    def overview(self) -> dict: ...
     def get_settings(self) -> dict: ...
     def put_settings(self, relay_settings: dict) -> dict: ...
     def email_log(self) -> dict: ...
@@ -226,6 +252,9 @@ class AdminApiMixin:
     def ignore_gap(self, gap_id):
         return self._call("POST", f"/knowledge/gaps/{_id(gap_id)}/ignore", body={})
 
+    def suggest_answer(self, gap_id):
+        return self._call("POST", f"/knowledge/gaps/{_id(gap_id)}/suggest", body={})
+
     def test_retrieval(self, question, page_path=""):
         body = {"question": question}
         if page_path:
@@ -240,6 +269,9 @@ class AdminApiMixin:
 
     def insights(self, days=30):
         return self._call("GET", "/insights", {"days": str(int(days))})
+
+    def overview(self):
+        return self._call("GET", "/overview")
 
     def get_settings(self):
         return self._call("GET", "/settings")

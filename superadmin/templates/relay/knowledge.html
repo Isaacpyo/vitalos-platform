@@ -24,6 +24,7 @@
             <p class="relay-mono relay-muted">{{ source.label }}</p>
             <p class="mt-1.5 font-display text-[22px] font-bold">{{ source.value }}</p>
             <p class="relay-muted text-[13px]">{{ source.detail }}</p>
+            {% if source.stale %}<p class="mt-1 text-[13px] font-semibold text-amber-900 dark:text-amber-100" data-testid="relay-sync-stale">Not synced in the last 24 hours</p>{% endif %}
           </div>
         {% endfor %}
       </div>
@@ -85,6 +86,11 @@
                     <span class="break-words">{{ gap.question }}</span>
                     <span class="flex flex-wrap gap-x-4 gap-y-1">
                       <a href="{% url 'relay:knowledge_new' %}?question={{ gap.question|urlencode }}" class="relay-link text-[13px]">Answer</a>
+                      {% if gap.id %}
+                        <form method="post" action="{% url 'relay:gap_suggest' gap.id %}" class="inline">
+                          {% csrf_token %}<button type="submit" class="relay-link text-[13px]">Suggested answer<span class="sr-only"> for “{{ gap.question }}” (creates a draft)</span></button>
+                        </form>
+                      {% endif %}
                       <a href="{{ notion_faq_url }}" target="_blank" rel="noopener noreferrer" class="relay-link text-[13px]">Add to Master FAQ<span class="sr-only"> (opens Notion in a new tab)</span></a>
                     </span>
                   </span>

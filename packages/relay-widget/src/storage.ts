@@ -61,3 +61,19 @@ export const rememberOpen = (open: boolean) =>
         : window.sessionStorage.removeItem(OPEN_KEY),
     undefined,
   );
+
+/**
+ * The conversation the visitor chose to continue (or started) in this tab session. Opening the
+ * panel restores a stored conversation silently only when it is this one; otherwise the visitor
+ * chooses "Continue previous conversation" or "Start new" first (finding C2).
+ */
+const CHOSEN_KEY = "vitalos.relay.chosen";
+export const chosenConversation = () => safe(() => window.sessionStorage.getItem(CHOSEN_KEY), null);
+export const rememberChosen = (conversationId: string | null) =>
+  safe(
+    () =>
+      conversationId
+        ? window.sessionStorage.setItem(CHOSEN_KEY, conversationId)
+        : window.sessionStorage.removeItem(CHOSEN_KEY),
+    undefined,
+  );

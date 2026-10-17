@@ -28,7 +28,9 @@ import type {
   SyncRunRecord,
   UpsertKbDocument,
   UsageRecord,
+  UsageSource,
 } from "./types";
+import { USAGE_SOURCES } from "./types";
 
 /**
  * Database failure. Carries only a SQLSTATE or fixed label, never the driver message: constraint
@@ -90,6 +92,7 @@ function mapMessage(row: Row): MessageRecord {
     ...r,
     confidence: numberOrNull(row.confidence),
     feedback: (row.feedback as -1 | 1 | null) ?? null,
+    feedbackReason: (row.feedback_reason as MessageRecord["feedbackReason"] | undefined) ?? null,
     meta: (row.meta as Record<string, unknown>) ?? {},
     citations: (row.citations as MessageRecord["citations"]) ?? [],
   };
@@ -478,6 +481,27 @@ export class SupabaseRelayStore implements RelayStore {
     }));
   }
 
+  private vocabulary: { at: number; words: ReadonlyMap<string, number> } | null = null;
+
+  /**
+   * `relay.kb_vocabulary()` (one jsonb object, so no row limit applies), cached for ten minutes
+   * per server instance. A missing function (migration not yet applied) or an error disables typo
+   * tolerance rather than failing the answer.
+   */
+  async kbVocabulary(): Promise<ReadonlyMap<string, number>> {
+    const now = Date.now();
+    if (this.vocabulary && now - this.vocabulary.at < 600_000) return this.vocabulary.words;
+    let words: ReadonlyMap<string, number>;
+    try {
+      const data = check(await this.db.rpc("kb_vocabulary")) as Record<string, number> | null;
+      words = new Map(Object.entries(data ?? {}).map(([w, n]) => [w, Number(n)]));
+    } catch {
+      words = new Map();
+    }
+    this.vocabulary = { at: now, words };
+    return words;
+  }
+
   async faqQuestionsForPage(pagePath: string, limit: number) {
     const rows = check(
       await this.db
@@ -650,16 +674,20 @@ export class SupabaseRelayStore implements RelayStore {
     tokensOut: number,
     cacheHit: number,
     costUsd: number,
+    source: UsageSource = "chat",
   ): Promise<UsageRecord> {
-    const row = check(
-      await this.db.rpc("add_usage", {
-        p_day: day,
-        p_tokens_in: tokensIn,
-        p_tokens_out: tokensOut,
-        p_cache_hit: cacheHit,
-        p_cost: costUsd,
-      }),
-    ) as Row;
+    const args = {
+      p_day: day,
+      p_tokens_in: tokensIn,
+      p_tokens_out: tokensOut,
+      p_cache_hit: cacheHit,
+      p_cost: costUsd,
+    };
+    // add_usage_tagged (20261017090000_relay_review.sql) also counts by source. Until that
+    // migration is applied the call falls back to the untagged counter, so the cap keeps working.
+    const tagged = await this.db.rpc("add_usage_tagged", { ...args, p_source: source });
+    if (!tagged.error) return this.mapUsage(tagged.data as Row);
+    const row = check(await this.db.rpc("add_usage", args)) as Row;
     return this.mapUsage(row);
   }
 
@@ -767,6 +795,32 @@ export class SupabaseRelayStore implements RelayStore {
       tokensOut: Number(data.tokensOut),
       cacheHitTokens: Number(data.cacheHitTokens),
       estCostUsd: Number(data.estCostUsd),
+      // Added by 20261017090000_relay_review.sql; zero until that migration is applied.
+      usageBySource: Object.fromEntries(
+        [...USAGE_SOURCES, "untagged" as const].map((s) => {
+          const v = ((data.usageBySource as Row | undefined)?.[s] as Row | undefined) ?? {};
+          return [
+            s,
+            {
+              tokensIn: Number(v.tokensIn ?? 0),
+              tokensOut: Number(v.tokensOut ?? 0),
+              requests: Number(v.requests ?? 0),
+            },
+          ];
+        }),
+      ) as InsightsRow["usageBySource"],
+      turns: {
+        count: Number((data.turns as Row | undefined)?.count ?? 0),
+        tokensIn: Number((data.turns as Row | undefined)?.tokensIn ?? 0),
+        avgTokensIn: Math.round(Number((data.turns as Row | undefined)?.avgTokensIn ?? 0)),
+        p95TokensIn: Math.round(Number((data.turns as Row | undefined)?.p95TokensIn ?? 0)),
+        maxTokensIn: Number((data.turns as Row | undefined)?.maxTokensIn ?? 0),
+      },
+      feedbackReasons: {
+        wrong: Number((data.feedbackReasons as Row | undefined)?.wrong ?? 0),
+        incomplete: Number((data.feedbackReasons as Row | undefined)?.incomplete ?? 0),
+        didnt_understand: Number((data.feedbackReasons as Row | undefined)?.didnt_understand ?? 0),
+      },
     };
   }
 

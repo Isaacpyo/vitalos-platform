@@ -14,12 +14,15 @@ export {
 } from "./faq";
 export type { FaqSnapshot } from "./faq";
 export { parseFrontmatter, repoEntries } from "./repo";
+export type { RepoEntriesOptions } from "./repo";
 
 export interface AllEntriesOptions {
   /** Production with RELAY_FAQ_REQUIRE_HUB_ACTIVE: FAQ entries stay draft until the hub is Active. */
   requireHubActive: boolean;
   /** Skip the FAQ snapshot (when the live Notion sync owns the FAQ source). */
   includeFaqSnapshot?: boolean;
+  /** Evals only: repo entries awaiting confirmation count as published (see repoEntries). */
+  approvePending?: boolean;
 }
 
 /** Every bundled knowledge entry: repo seed, website content and the Master FAQ snapshot. */
@@ -29,7 +32,7 @@ export async function allBundledEntries(
   const publicPaths = await listPublicPaths();
   const routeExists = (path: string) => publicPaths.has(path);
   const entries = [
-    ...repoEntries(routeExists),
+    ...repoEntries(routeExists, { approvePending: options.approvePending ?? false }),
     ...(await cmsEntries()),
     ...(options.includeFaqSnapshot === false
       ? []
