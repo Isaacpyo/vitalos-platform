@@ -275,6 +275,17 @@ describe("offer template", () => {
     expect(markup).toContain("/contact?intent=offer&amp;offer=example-offer");
   });
 
+  it("opens on the light hero with an engagement panel from the offer's own fields (A7)", () => {
+    const markup = html(<OfferTemplate offer={offer!} />);
+    expect(markup).toContain('data-hero="light"');
+    expect(markup).toMatch(/<aside[^>]*aria-label="Engagement summary"/);
+    expect(markup).toContain('data-artwork="what-we-do"');
+    expect(markup).not.toContain("<img");
+    // The panel carries who it is for and the duration; the band below does not repeat them.
+    expect(markup.split("Who this is for").length - 1).toBe(1);
+    expect(markup.split("Typical duration").length - 1).toBe(1);
+  });
+
   it("leaves out summary rows the offer does not have", () => {
     const summary = engagementSummary({ ...offer!, trigger: " ", durationCategory: "" });
     expect(summary.map((item) => item.term)).toEqual([

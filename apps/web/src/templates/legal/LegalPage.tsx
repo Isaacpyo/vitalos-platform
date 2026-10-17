@@ -8,12 +8,15 @@ import { PageMain } from "../institutional/page-main";
 import { hasRichText } from "../institutional/rich";
 import { legalFacts } from "./map";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** A legal page: the CMS title, version and effective date, and the CMS body. Nothing is written here. */
 export function LegalPage({ page }: Readonly<{ page: LegalPageView }>) {
   return (
     <PageMain>
       <PageHeroBand
+        tone="light"
+        artwork={heroArtwork("legal", page.slug)}
         size="prose"
         crumbs={
           <Breadcrumbs trail={[homeCrumb, { name: page.title, path: routes.legal(page.slug) }]} />

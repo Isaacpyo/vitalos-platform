@@ -12,14 +12,7 @@ import { cx } from "../../primitives/_internal/cx";
 import { Icon, type IconName } from "../../primitives/Icon";
 import { IconTile } from "../../primitives/IconTile";
 import type { ItemHeadingLevel } from "../_internal/types";
-
-/** A square illustration on a transparent background; `srcSet` with width descriptors. */
-export interface SolutionShowcaseImage {
-  src: string;
-  srcSet?: string | undefined;
-  width: number;
-  height: number;
-}
+import { LineDiagram, type LineDiagramName } from "../artwork/LineDiagram";
 
 export interface SolutionShowcaseItem {
   title: string;
@@ -27,10 +20,10 @@ export interface SolutionShowcaseItem {
   summary?: string | undefined;
   icon?: IconName | undefined;
   /**
-   * Decorative illustration (the title is the visible label): beside the text in the panel, and
-   * as a thumbnail in the compact layout. Without one the panel shows the icon.
+   * Decorative line diagram (the title is the visible label) beside the text in the panel
+   * (ADR-044). Without one the panel shows the icon.
    */
-  image?: SolutionShowcaseImage | undefined;
+  diagram?: LineDiagramName | undefined;
 }
 
 export interface SolutionShowcaseProps {
@@ -44,11 +37,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 /**
  * The solutions as a numbered list of titles on the left and, from lg, a dark panel on the right
- * that presents the pointed or focused solution: its number, title and summary beside its
- * illustration (or its icon, without one) (owner direction, 15 Oct 2026). The text wipes up into
- * place on each change (moved and clipped, never faded: ADR-024 decision 4); the illustration
- * swaps with a short zoom and turn (CSS transitions on classes, so no inline styles and instant
- * under reduced motion); a progress bar marks which solution is active, and a glow drifts to it.
+ * that presents the pointed or focused solution: its number, title and summary beside its line
+ * diagram (or its icon, without one) (owner direction, 15 Oct 2026; diagrams ADR-044). The text
+ * rises into place on each change (moved only, never clipped or faded: ADR-044 amends ADR-024
+ * decision 4); the diagram cross-fades (CSS transitions on classes, so no inline styles and
+ * instant under reduced motion); a progress bar marks which solution is active.
  *
  * The list rows are the links; the panel repeats them visually, so it is hidden from assistive
  * technology and holds nothing focusable. Nothing moves on its own. The server HTML (and the page
@@ -69,8 +62,7 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
   const Heading = `h${headingLevel}` as const;
   const current = items[active] ?? items[0];
   if (!current) return null;
-  const share = items.length > 1 ? active / (items.length - 1) : 0;
-  const withImages = items.some((item) => item.image);
+  const withDiagrams = items.some((item) => item.diagram);
 
   return (
     <div
@@ -104,24 +96,12 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
                   )}
                 />
                 <span aria-hidden="true" className="contents">
-                  {item.image ? (
-                    <img
-                      src={item.image.src}
-                      {...(item.image.srcSet ? { srcSet: item.image.srcSet } : {})}
-                      sizes="4rem"
-                      width={item.image.width}
-                      height={item.image.height}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="size-16 object-contain lg:hidden"
-                    />
-                  ) : null}
+                  {item.icon ? <IconTile name={item.icon} size="sm" className="lg:hidden" /> : null}
                   <span
                     className={cx(
                       "pt-1 text-small font-semibold tabular-nums transition-colors duration-(--duration-reveal) lg:pt-0",
                       on ? "text-tone-link" : "text-tone-muted",
-                      item.image && "hidden lg:inline",
+                      item.icon && "hidden lg:inline",
                     )}
                   >
                     {pad(index + 1)}
@@ -165,16 +145,13 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
         data-solution-panel=""
         className={cx(
           "relative isolate hidden min-h-[24rem] overflow-hidden rounded-2xl bg-tone-bg p-(--space-8) text-tone-text",
-          withImages
+          withDiagrams
             ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-x-(--space-6)"
             : "lg:flex lg:flex-col",
         )}
       >
-        <span className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_1px_1px,color-mix(in_srgb,var(--color-white)_7%,transparent)_1px,transparent_0)] bg-[length:22px_22px]" />
-        <span
-          className="absolute -top-28 -z-10 size-96 rounded-full bg-blue-600/25 blur-3xl transition-[left] duration-(--duration-diagram) ease-(--ease-emphasis)"
-          style={{ left: `calc(${share * 100}% - 12rem)` }}
-        />
+        {/* The 12-column grid as hairlines (brand graphic language; no glow). */}
+        <span className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,var(--color-midnight-800)_1px,transparent_1px)] bg-[length:calc(100%/12)_100%]" />
         <div className="flex min-w-0 flex-1 flex-col self-stretch">
           <m.div
             key={active}
@@ -183,11 +160,11 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
             transition={{ duration: SECONDS.entrance + 0.15, ease: EASE_EMPHASIS }}
             className="flex flex-1 flex-col justify-center"
           >
-            {current.icon && !current.image ? <IconTile name={current.icon} size="lg" /> : null}
+            {current.icon && !current.diagram ? <IconTile name={current.icon} size="lg" /> : null}
             <p
               className={cx(
                 "m-0 text-eyebrow text-tone-eyebrow uppercase tabular-nums",
-                current.icon && !current.image && "mt-(--space-6)",
+                current.icon && !current.diagram && "mt-(--space-6)",
               )}
             >
               {pad(active + 1)} / {pad(items.length)}
@@ -195,7 +172,7 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
             <p
               className={cx(
                 "m-0 mt-(--space-2) font-semibold text-balance text-tone-heading",
-                withImages ? "text-h3" : "text-h2",
+                withDiagrams ? "text-h3" : "text-h2",
               )}
             >
               {current.title}
@@ -218,31 +195,22 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
             ))}
           </div>
         </div>
-        {withImages ? (
-          <div className="relative aspect-square w-full self-center">
+        {withDiagrams ? (
+          <div className="relative aspect-square w-full max-w-[22rem] self-center justify-self-center">
             {items.map((item, index) => {
               const on = index === active;
               const look = cx(
-                "absolute inset-0 size-full object-contain drop-shadow-[0_24px_48px_color-mix(in_srgb,var(--color-blue-600)_35%,transparent)]",
-                "transition-[opacity,scale,rotate] duration-(--duration-diagram) ease-(--ease-emphasis)",
-                on ? "scale-100 rotate-0 opacity-100" : "scale-90 -rotate-6 opacity-0",
+                "absolute inset-0 flex size-full items-center justify-center",
+                "transition-[opacity,translate] duration-(--duration-diagram) ease-(--ease-emphasis)",
+                on ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
               );
-              return item.image ? (
-                <img
-                  key={item.href}
-                  src={item.image.src}
-                  {...(item.image.srcSet ? { srcSet: item.image.srcSet } : {})}
-                  sizes="(min-width: 1024px) 24rem, 50vw"
-                  width={item.image.width}
-                  height={item.image.height}
-                  alt=""
-                  loading={index === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  className={look}
-                />
-              ) : (
-                <span key={item.href} className={cx(look, "flex items-center justify-center")}>
-                  {item.icon ? <IconTile name={item.icon} size="lg" /> : null}
+              return (
+                <span key={item.href} className={look}>
+                  {item.diagram ? (
+                    <LineDiagram name={item.diagram} className="size-full" />
+                  ) : item.icon ? (
+                    <IconTile name={item.icon} size="lg" />
+                  ) : null}
                 </span>
               );
             })}

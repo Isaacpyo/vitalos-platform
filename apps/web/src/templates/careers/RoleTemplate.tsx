@@ -14,6 +14,7 @@ import { PageMain } from "../institutional/page-main";
 import { InsightsHero, monoLabel } from "../insights/parts";
 import { ApplicationForm } from "./ApplicationForm";
 import { FactsGrid, HtmlSection } from "./parts";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** The apply action for the hero and the end of the page; an external site says so. */
 function ApplyButton({
@@ -56,6 +57,8 @@ export function RoleTemplate({
     return (
       <PageMain>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("careers", role.slug)}
           eyebrow={role.practice.label}
           title={role.title}
           intro={careersCopy.closedText(role.closedAt.long)}
@@ -84,10 +87,12 @@ export function RoleTemplate({
       <JsonLd data={jsonLd as JsonLdNode[]} />
       <article aria-label={role.title}>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("careers", role.slug)}
           eyebrow={role.practice.label}
           title={role.title}
           intro={role.summary}
-          actions={apply ? <ApplyButton apply={apply} onDark /> : undefined}
+          actions={apply ? <ApplyButton apply={apply} /> : undefined}
         >
           <FactsGrid facts={roleFacts(role)} />
           {apply?.external ? (

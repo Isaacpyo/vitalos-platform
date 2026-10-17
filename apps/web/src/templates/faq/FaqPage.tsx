@@ -7,6 +7,7 @@ import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout"
 import { PageMain } from "../institutional/page-main";
 import type { FaqGroup } from "./load";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export const faqTrail = (): Crumb[] => [homeCrumb, { name: navLabels.faq, path: routes.faq() }];
 
@@ -22,6 +23,7 @@ export function FaqPage({ groups }: Readonly<{ groups: readonly FaqGroup[] }>) {
     <PageMain>
       <PageHeroBand
         full
+        artwork={heroArtwork("contact", "faq")}
         crumbs={
           <Breadcrumbs
             trail={faqTrail()}

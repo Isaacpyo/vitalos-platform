@@ -1,0 +1,25 @@
+# WS1 decisions
+
+Decisions taken by the WS1 agent (visual system and imagery), with the reason. Architecture is in ADR-044.
+
+| # | Decision | Reason |
+|---|---|---|
+| 1 | No hero video work. | There is no hero video anywhere in `apps/web` or `packages/ui` (DISCOVERY.md); the brief's video bullet does not apply. |
+| 2 | Artwork is drawn in code (`HeroArtwork`, `LineDiagram` in `packages/ui/src/patterns/artwork/`), not exported as SVG files. | One drawing serves the dark and the light tone through the tone tokens, each item gets its own variant without a file per item, and the raw-colour check covers it. No new dependency. |
+| 3 | Families: home; What We Do (also practices, solutions, offers, Work); Industries; About (also How We Work; profile pages keep their own `PersonHero`); Labs; Insights (also the podcast page); Careers; Trust; Contact (also FAQ and the thank-you page); 404; Legal. | The brief's list, with each remaining route put in the family its menu and content belong to. |
+| 4 | Item variants are seeded by the item's slug (the locked name's slug for practices and industries). | Deterministic on server and client, stable across deploys, and different for every item. |
+| 5 | Light compact hero on: `/offers/[slug]`, `/insights/[slug]`, `/careers/[slug]`, `/legal/[slug]`, `/trust/[topic]`. Practice, solution, industry, lab and work detail pages stay dark (compact) with their item artwork. | The brief names offers, articles, roles and legal; Trust topics are policy text like legal pages. The family landing pages carry showcases and stay in the homepage's dark language, distinguished by artwork. |
+| 6 | The header's clear `overlay` is decided by the same route list (`heroToneForPath`), in `components/active-section.tsx`. | A light hero under a clear (white-text) header would be unreadable, and deciding by path keeps the server HTML right on first paint. |
+| 7 | Below lg the dark hero shows a 7rem strip of the artwork under the copy; the light hero shows none below md. | The artwork must never sit behind text (contrast, and the brand's "keep copy off the bands"). |
+| 8 | The homepage hero keeps its glass step panel and pause switch; only the photograph (and its glints) is replaced. The art sits in the right 44% of the band from lg so the bands stay clear of the headline. | "Homepage diff shows only intended changes." |
+| 9 | Lifecycle discs: line icons on a midnight disc that fills cobalt when active; the glow ring and drop-shadow are removed. | Brand book: flat colour and hairlines, no glows. |
+| 10 | AI Transformation icon `chip` → new `stages`; AI & Data icon `chip` → new `dataflow`. | Brand book forbids chip and circuit imagery; the brief forbids chip for AI Transformation. |
+| 11 | The solutions panel's drifting blue glow is replaced by a 12-column hairline grid. | Brand book: no glows. The panel is otherwise unchanged. |
+| 12 | Reveal entrances rise only (no clip-path), as do the showcase panels and the ring centre. The mobile menu sheet's clip is left alone. | A9: text caught mid-wipe looked clipped. The menu sheet is a panel opening, not text entering, and belongs to WS2/WS5's nav work. |
+| 13 | Turnstile theme comes from the nearest `data-tone` scope (`dark` only in a dark scope). | The site has no dark mode (docs/design/DECISIONS.md 2); `auto` followed the OS and drew a dark widget in the light form. |
+| 14 | `MediaSlot` returns nothing in production when its file is missing; `mediaSlotRenders` lets hero callers drop the media column. A `reserve` flag exists for slots that must keep a frame; none uses it yet. | A5, and the layout closes up instead of leaving an empty column. |
+| 15 | Two slots pre-registered for other workstreams: `about.founder` (WS2 founder section) and `insights.author` (WS3 author photo). Every slot now has a `source` (who could supply it). | So WS2 and WS3 do not need to edit the registry, and the image brief can say who could take each photograph. |
+| 16 | `pnpm media:slots` also writes `docs/review-2026-10-17/IMAGE-BRIEF.md`. | One registry, two documents; no hand-edited copy to drift. |
+| 17 | The offer hero panel shows duration, who it is for, the first three outputs and the next-phase line; the summary band below drops those three terms (it keeps trigger and scope). | A7 asks for those four facts from existing fields; repeating them in the band would say the same thing twice on one screen. |
+| 18 | `apps/web/app/assets/` (the owner's original rasters, 31 files) is left in place; nothing imports it. | The brief says leave the sources for the owner. |
+| 19 | The unused `hv-drift` and `hv-glint` keyframes stay in the generated token CSS. | Removing them is a token-generator change with no visible effect; listed as a follow-up. |

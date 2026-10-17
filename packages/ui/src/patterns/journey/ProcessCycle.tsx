@@ -10,13 +10,14 @@ import {
   useMotionAllowed,
 } from "../../motion/_internal/island";
 import { cx } from "../../primitives/_internal/cx";
+import { Icon, type IconName } from "../../primitives/Icon";
 
 export interface ProcessCycleStage {
   title: string;
   /** Shown in the centre of the ring while the stage is active. */
   summary?: string | undefined;
-  /** A round, transparent illustration of the stage (decorative; the title is the label). */
-  image?: { src: string; width: number; height: number } | undefined;
+  /** The stage's line icon (decorative; the title is the label). ADR-044. */
+  icon?: IconName | undefined;
 }
 
 export interface ProcessCycleProps {
@@ -33,10 +34,11 @@ const NODE = 15;
 
 /**
  * A delivery lifecycle as a ring of stages (owner direction, 15 Oct 2026), for a dark band.
- * Each stage is a disc on the ring with its name under it (no numbers; the order reads clockwise
+ * Each stage is a disc on the ring carrying its line icon (the site's icon set, ADR-044), with its
+ * name under it (no numbers; the order reads clockwise
  * from the top). The discs are buttons that select a stage (pointer, focus or click), not links
  * (owner direction, 15 Oct 2026); each carries its summary as its description for assistive
- * technology. Pointing at or focusing a stage makes it active: its disc lifts with a glow ring, the arc
+ * technology. Pointing at or focusing a stage makes it active: its disc lifts and fills with cobalt, the arc
  * fills from the first stage round to it, and the centre presents its name and summary
  * (the centre repeats the buttons' names and descriptions visually, so it is hidden from
  * assistive technology).
@@ -122,7 +124,7 @@ function ProcessCycleInner({ stages, label, className }: ProcessCycleProps) {
           strokeLinecap="round"
           pathLength={100}
           strokeDasharray={`${held ? 0 : Math.max(progress, 0.01)} 100`}
-          className="text-blue-600 transition-[stroke-dasharray] duration-(--duration-diagram) ease-(--ease-emphasis) [filter:drop-shadow(0_0_1.2px_rgb(36_87_255))]"
+          className="text-blue-600 transition-[stroke-dasharray] duration-(--duration-diagram) ease-(--ease-emphasis)"
         />
       </svg>
 
@@ -178,23 +180,15 @@ function ProcessCycleInner({ stages, label, className }: ProcessCycleProps) {
               >
                 <span
                   className={cx(
-                    "block size-full overflow-hidden rounded-full bg-white",
-                    "transition-[scale,box-shadow] duration-(--duration-reveal) ease-(--ease-emphasis)",
+                    "flex size-full items-center justify-center rounded-full border",
+                    "transition-[scale,background-color,border-color,color] duration-(--duration-reveal) ease-(--ease-emphasis)",
                     on
-                      ? "scale-110 shadow-[0_0_0_3px_var(--color-blue-600),0_0_32px_rgb(36_87_255/0.7)]"
-                      : "shadow-[0_0_0_1px_rgb(255_255_255/0.25)] group-hover:scale-105",
+                      ? "scale-110 border-blue-600 bg-blue-600 text-white"
+                      : "border-slate-700 bg-midnight-800 text-tone-heading group-hover:scale-105 group-hover:border-blue-600",
                   )}
                 >
-                  {stage.image ? (
-                    <img
-                      src={stage.image.src}
-                      width={stage.image.width}
-                      height={stage.image.height}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="block size-full object-cover"
-                    />
+                  {stage.icon ? (
+                    <Icon name={stage.icon} size={32} className="size-[45%]" />
                   ) : null}
                 </span>
                 <span

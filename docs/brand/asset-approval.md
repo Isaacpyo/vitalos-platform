@@ -46,6 +46,8 @@ above are produced, when SVGs should replace them.
 
 ## Homepage hero photograph (owner direction, 15 Oct 2026)
 
+**Retired 17 Oct 2026** (review run decision 4, ADR-044): the files are deleted from `apps/web/public/images/` and nothing on the site uses them. Kept below as the record of what was approved and why it was withdrawn.
+
 The owner supplied `Futuristic Cloud Infrastructure at Sunrise.png` (1672x941) and directed that it
 be the homepage hero background under a solid black overlay. It is served as WebP at 1672 and 960 px
 wide from `apps/web/public/images/hero/`, under a 72% black overlay (darkened from 60% on the same day), with the hero copy on the dark
@@ -53,6 +55,8 @@ tone. This record covers that one placement only. Other imagery still needs the 
 rights-cleared handoff described above.
 
 ## Practice illustrations (owner direction, 15 Oct 2026)
+
+**Retired 17 Oct 2026** (review run decision 4, ADR-044): the files are deleted from `apps/web/public/images/` and nothing on the site uses them. Kept below as the record of what was approved and why it was withdrawn.
 
 The owner supplied five illustrations (`ChatGPT Image Oct 15, 2026, …-1.png` to `-5.png`, each
 1672x941) for the homepage "Five practices, one firm" section. They are served as WebP at 1672
@@ -64,6 +68,8 @@ a model, then charts), 2 Experience (mobile and web screens, accessibility, comm
 Services (dashboards, security, support, cloud). This record covers that section only.
 
 ## Solution illustrations (owner direction, 15 Oct 2026)
+
+**Retired 17 Oct 2026** (review run decision 4, ADR-044): the files are deleted from `apps/web/public/images/` and nothing on the site uses them. Kept below as the record of what was approved and why it was withdrawn.
 
 The owner supplied six square illustrations on transparent backgrounds (`ChatGPT Image Oct 15,
 2026, 11_51_…-1.png` to `-5.png` and `Reliable Uptime Recovery Icon.png`, each 1254x1254) for the
@@ -78,6 +84,8 @@ Reliability (a server, a health monitor, a shield and recovery arrows).
 
 ## Delivery lifecycle discs (owner direction, 15 Oct 2026)
 
+**Retired 17 Oct 2026** (review run decision 4, ADR-044): the files are deleted from `apps/web/public/images/` and nothing on the site uses them. Kept below as the record of what was approved and why it was withdrawn.
+
 The owner supplied `Blue Circular Workflow Cycle.png` (1254x1254) for the homepage "From strategy
 to production" band and asked for its white background to be removed. Its nine discs already run
 clockwise from the top in the locked stage order (Qualify, Discover, Define, Design, Engineer,
@@ -88,6 +96,8 @@ background survives) and saved as a 192 px transparent WebP in
 
 ## Industry photographs (owner direction, 15 Oct 2026)
 
+**Retired 17 Oct 2026** (review run decision 4, ADR-044): the files are deleted from `apps/web/public/images/` and nothing on the site uses them. Kept below as the record of what was approved and why it was withdrawn.
+
 The owner supplied four photographs (`ChatGPT Image Oct 15, 2026, 01_28_16 PM-1.png` to
 `01_28_18 PM-4.png`, each 1448x1086, AI-generated scenes of people at work) for the homepage
 Industries panels. In order they show a clinical team (Health & Care), a store checkout (Retail,
@@ -97,3 +107,25 @@ dashboard (Growth & Technology). They are served as WebP at 1200 and 640 px wide
 (`apps/web/src/lib/view-mapping/industry-images.ts`), as decorative backgrounds under a midnight
 gradient. They illustrate the sectors only; they are not clients or case studies and must not be
 captioned or used as if they were.
+
+## Brand-system artwork (17 Oct 2026, ADR-044)
+
+Run decision 4 retired every AI-generated image above (the hero photograph, the practice and
+solution illustrations, the lifecycle discs and the industry photographs). In their place the site
+draws its own artwork in code from the approved graphic language (the 12-column grid, the
+Convergence, nodes and paths, the annotation layer), with design tokens only:
+
+- `HeroArtwork` (`packages/ui/src/patterns/artwork/HeroArtwork.tsx`): one composition per page
+  family (home, What We Do, Industries, About and How We Work, Labs, Insights, Careers, Trust,
+  Contact, 404, Legal), with a deterministic variant per item.
+- `LineDiagram`: the six solution diagrams, in the icon set's line style. AI Transformation is
+  the AI journey as an abstract staircase.
+- `Icon`: new line icons for the lifecycle stages and the AI journey.
+
+These are not image assets and need no rights clearance. Removed files are listed in
+`docs/review-2026-10-17/ws1/NOTES.md`. The owner's original rasters remain in
+`apps/web/app/assets/` (imported by nothing); deleting them is the owner's call.
+
+Real photography is still welcome where it would help, through the registered image slots
+(`docs/design/IMAGE-SLOTS.md`, commissioning brief `docs/review-2026-10-17/IMAGE-BRIEF.md`): real,
+rights-cleared images only, with the agreement of anyone shown.

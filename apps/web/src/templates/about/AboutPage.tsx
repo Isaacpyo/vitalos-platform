@@ -9,6 +9,7 @@ import { PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { AboutData } from "./load";
 import { aboutLinks, exploreHeading } from "./map";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /** Icons for the onward links, by key. */
 const linkIcons: Readonly<Record<string, IconName>> = {
@@ -31,6 +32,7 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
     <PageMain>
       <PageHeroBand
         full
+        artwork={heroArtwork("about")}
         crumbs={
           <Breadcrumbs
             trail={[homeCrumb, { name: navLabels.about, path: routes.about() }]}

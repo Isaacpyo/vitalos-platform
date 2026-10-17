@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ctas, routes } from "@vitalos/cms";
 import { Button, Container, PageHero, Section } from "@vitalos/ui";
 import { getContentSource } from "../../../../src/lib/cms/get-content-source";
-import { heroPhotograph } from "../../../../src/lib/view-mapping/hero-images";
+import { heroArtwork } from "../../../../src/lib/view-mapping/hero-artwork";
 import { RichText } from "../../../../src/components/rich-text";
 import { TrackOnMount } from "../../../../src/components/analytics/track-on-mount";
 
@@ -43,7 +43,7 @@ export default async function ThankYouPage({
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("contact", "thank-you")}
         eyebrow={ctas.primary}
         title={title}
         lead={page?.successMessage}

@@ -5,6 +5,7 @@ import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { industryShowcaseItems } from "../../lib/view-mapping/showcase";
 import { IndustryBand } from "../commercial/dark-bands";
 import { IndexLayout } from "../commercial/IndexLayout";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface IndustryIndexTemplateProps {
   page: RoutePageView | null;
@@ -25,6 +26,7 @@ export function IndustryIndexTemplate({ page, industries }: Readonly<IndustryInd
   });
   return (
     <IndexLayout
+      artwork={heroArtwork("industries")}
       crumbs={industriesTrail()}
       title={page?.heading ?? navLabels.industries}
       lead={page?.intro}

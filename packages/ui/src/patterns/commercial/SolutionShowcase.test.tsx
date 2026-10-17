@@ -48,28 +48,22 @@ describe("SolutionShowcase", () => {
     ).toEqual(["https://example.invalid/three"]);
   });
 
-  it("shows each solution's illustration in the panel and as a compact thumbnail", () => {
-    const image = (name: string) => ({
-      src: `/example/${name}-800.webp`,
-      srcSet: `/example/${name}-480.webp 480w, /example/${name}-800.webp 800w`,
-      width: 800,
-      height: 800,
-    });
-    const withImages = [
-      { ...items[0]!, image: image("one") },
-      { ...items[1]!, image: image("two") },
+  it("shows each solution's line diagram in the panel, never a raster image", () => {
+    const withDiagrams = [
+      { ...items[0]!, diagram: "ai-journey" as const },
+      { ...items[1]!, diagram: "process" as const },
       items[2]!,
     ];
-    const { container } = render(<SolutionShowcase items={withImages} />);
+    const { container } = render(<SolutionShowcase items={withDiagrams} />);
+    expect(container.querySelector("img")).toBeNull();
     const panel = container.querySelector("[data-solution-panel]");
-    const stage = panel?.querySelectorAll("img") ?? [];
-    expect(stage).toHaveLength(2);
-    for (const img of stage) expect(img.getAttribute("alt")).toBe("");
-    // The solution without an illustration keeps its place in the panel (its icon, if any).
+    const diagrams = panel?.querySelectorAll("[data-diagram]") ?? [];
+    expect([...diagrams].map((d) => d.getAttribute("data-diagram"))).toEqual([
+      "ai-journey",
+      "process",
+    ]);
+    // The solution without a diagram keeps its place in the panel (its icon, if any).
     expect(panel?.querySelectorAll(".aspect-square > *")).toHaveLength(3);
-    const thumbs = container.querySelectorAll("ol img");
-    expect(thumbs).toHaveLength(2);
-    for (const img of thumbs) expect(img.getAttribute("alt")).toBe("");
   });
 
   it("renders nothing without solutions", () => {

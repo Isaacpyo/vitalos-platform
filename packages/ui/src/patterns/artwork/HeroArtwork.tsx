@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "../../primitives/_internal/cx";
-import { convergence, pick, polyline, rise30, rise60, seeded } from "./geometry";
+import { convergence, pick, polyline, rise30, seeded } from "./geometry";
 
 /**
  * The page families of the public site (ADR-044). Each family has its own composition, so a

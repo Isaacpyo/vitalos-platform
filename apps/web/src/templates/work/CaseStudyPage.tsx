@@ -23,6 +23,7 @@ import {
 } from "./map";
 import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /**
  * Case study detail. Outcome-led: the title and summary lead, proof (sourced, verified metrics) is
@@ -40,6 +41,7 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
   return (
     <PageMain>
       <PageHeroBand
+        artwork={heroArtwork("what-we-do", study.slug)}
         media={
           mediaSlotRenders("work.case-study", study.slug) ? (
             <MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />

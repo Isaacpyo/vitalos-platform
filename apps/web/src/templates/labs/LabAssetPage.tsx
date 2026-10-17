@@ -11,6 +11,7 @@ import type { LabAssetData } from "./load";
 import { isIsNotItems, labLabels, labTypeLabel, maturityLabel, resourceLinks } from "./map";
 import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /**
  * Lab asset page. The maturity badge sits directly under the title so it is the first thing read
@@ -37,6 +38,7 @@ export function LabAssetPage({ data }: Readonly<{ data: LabAssetData }>) {
   return (
     <PageMain>
       <PageHeroBand
+        artwork={heroArtwork("labs", asset.slug)}
         media={
           mediaSlotRenders("labs.asset", asset.slug) ? (
             <MediaSlot id="labs.asset" item={asset.slug} itemName={asset.title} priority />

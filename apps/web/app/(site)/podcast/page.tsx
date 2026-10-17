@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { footerColumns, podcastPage, routes, validatePodcast } from "@vitalos/cms";
 import { Container, PageHero, Section, podcastMarkPaths } from "@vitalos/ui";
 import { getContentSource } from "../../../src/lib/cms/get-content-source";
-import { heroPhotograph } from "../../../src/lib/view-mapping/hero-images";
+import { heroArtwork } from "../../../src/lib/view-mapping/hero-artwork";
 import { pageMetadata } from "../../../src/templates/institutional/metadata";
 
 /** The listening apps with an owner-supplied, validated URL; none is ever invented. */
@@ -56,7 +56,7 @@ export default async function PodcastPage() {
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("insights", "podcast")}
         eyebrow={footerColumns.podcast}
         title={podcastPage.title}
         lead={podcastPage.lead}

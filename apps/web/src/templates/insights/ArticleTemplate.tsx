@@ -21,6 +21,7 @@ import { articleBodyClass } from "./body-styles";
 import { CodeCopyButtons } from "./copy-buttons";
 import { ContentImage, InsightsHero, PostGrid, TalkBand, monoLabel } from "./parts";
 import type { JsonLdNode } from "../../features/seo/json-ld";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 const BODY_ID = "article-body";
 
@@ -173,6 +174,8 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
       <JsonLd data={jsonLd as JsonLdNode[]} />
       <article aria-label={post.title}>
         <InsightsHero
+          tone="light"
+          artwork={heroArtwork("insights", post.slug)}
           eyebrow={post.format.label}
           title={post.title}
           media={hasCover(post) ? <ArticleCover post={post} /> : undefined}
