@@ -26,7 +26,9 @@ export function securityTxtExpiry(now: Date): Date {
 export function buildSecurityTxt({ siteUrl, contactEmail, now }: SecurityTxtInput): string | null {
   const email = contactEmail?.trim();
   if (!email) return null;
-  const expires = securityTxtExpiry(now).toISOString().replace(/\.\d{3}Z$/, ".000Z");
+  const expires = securityTxtExpiry(now)
+    .toISOString()
+    .replace(/\.\d{3}Z$/, ".000Z");
   return [
     `Contact: mailto:${email}`,
     `Expires: ${expires}`,

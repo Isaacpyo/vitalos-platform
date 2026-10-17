@@ -51,7 +51,9 @@ export function offerNextSteps(offer: OfferView): JourneyStage[] {
     { title: structuralLabels.nextPhase, summary: offer.nextStep },
   ];
   return steps.flatMap((step) =>
-    step.summary && step.summary.trim() !== "" ? [{ title: step.title, summary: step.summary }] : [],
+    step.summary && step.summary.trim() !== ""
+      ? [{ title: step.title, summary: step.summary }]
+      : [],
   );
 }
 

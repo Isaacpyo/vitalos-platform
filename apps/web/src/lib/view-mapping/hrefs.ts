@@ -52,7 +52,8 @@ export function ctaToLink(
   // the content's intent was dropped before, so every "Discuss ..." link opened a blank form. On an
   // offer page the form opens on that offer (`?intent=offer&offer={slug}`).
   if (cta.href === routes.contact()) {
-    if (options.offerSlug) return { label: cta.label, href: contactHref("offer", options.offerSlug) };
+    if (options.offerSlug)
+      return { label: cta.label, href: contactHref("offer", options.offerSlug) };
     if (isContactIntent(cta.intent)) return { label: cta.label, href: contactHref(cta.intent) };
   }
   return { label: cta.label, href: cta.href };

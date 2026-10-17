@@ -5,7 +5,8 @@ import type { HomePageView, PublicationGates } from "@vitalos/cms";
 import { fullFixtureSet, sparseFixtureSet } from "@vitalos/cms/fixtures";
 import { HowWeWorkTemplate } from "./how-we-work/HowWeWorkTemplate";
 import { HomeTemplate } from "./home/HomeTemplate";
-import { careersSection, homeBands } from "./home/sections";
+import { careersSection, homeBands, practicesSection, proofSection } from "./home/sections";
+import type { ProofApproachItem } from "../lib/view-mapping/proof-approach";
 import { Home } from "../features/content/schemas";
 import contentHomeFixture from "../../../../contracts/content-api/v1/fixtures/home.json";
 import { IndustryTemplate } from "./industry/IndustryTemplate";
@@ -39,17 +40,50 @@ const context = (
   gates: PublicationGates,
   howWeWorkIntro?: string,
   content: typeof contentHome | null = null,
+  proof: readonly ProofApproachItem[] = [],
 ) => ({
   home,
   gates,
   howWeWorkIntro,
   content,
+  proof,
+  labsIntro: "Vitalos Labs explores emerging technology (fixture). Second sentence.",
 });
 
+/** One "How we prove it" item (the full fixture homepage renders the band). */
+const proofFixture: ProofApproachItem[] = [
+  {
+    key: "quality-gates",
+    title: "Quality gates",
+    text: "Example gate sentence (fixture).",
+    href: "/how-we-work",
+    icon: "check",
+  },
+];
+
 describe("homepage sections", () => {
-  it("has the thirteen Stage 8 sections (hero, eleven bands, final conversion) and the Careers slot", () => {
-    expect(homeBands).toHaveLength(homeSections.length - 2 + 1);
+  it("has the thirteen Stage 8 sections (hero, eleven bands, final conversion), the Careers slot and How we prove it", () => {
+    expect(homeBands).toHaveLength(homeSections.length - 2 + 2);
     expect(homeBands.indexOf(careersSection)).toBeGreaterThan(-1);
+    // How we prove it sits directly below the practices (finding B3).
+    expect(homeBands.indexOf(proofSection)).toBe(homeBands.indexOf(practicesSection) + 1);
+  });
+
+  it("lists Vitalos Labs as the sixth practice, linking to /labs, while the Labs gate is open", () => {
+    const markup = html(<>{practicesSection(context(fullHome, openGates, "intro"), "light")}</>);
+    expect(markup).toContain('href="/labs"');
+    expect(markup).toContain("Vitalos Labs");
+    expect(markup).toContain("Vitalos Labs explores emerging technology (fixture).");
+    expect(markup).not.toContain("Second sentence.");
+    const closed = html(
+      <>
+        {practicesSection(
+          context(fullHome, { ...openGates, open: { ...openGates.open, labs: false } }, "intro"),
+          "light",
+        )}
+      </>,
+    );
+    expect(closed).not.toContain('href="/labs"');
   });
 
   it("returns null from every band when the home page has no data", () => {
@@ -59,7 +93,13 @@ describe("homepage sections", () => {
   });
 
   it("renders every band from the full fixtures when the gates are open", () => {
-    const ctx = context(fullHome, openGates, "Example how-we-work intro", contentHome);
+    const ctx = context(
+      fullHome,
+      openGates,
+      "Example how-we-work intro",
+      contentHome,
+      proofFixture,
+    );
     const rendered = homeBands.map((band) => band(ctx, "light"));
     expect(rendered.every((node) => node !== null)).toBe(true);
   });
@@ -132,7 +172,9 @@ describe("homepage sections", () => {
   it("renders no heading for a section whose heading is not authored", () => {
     const markup = html(<HomeTemplate home={sparseHome} gates={closedGates} />);
     expect(count(markup, /<section/g)).toBe(0);
-    expect(markup).not.toMatch(/Problems we solve|Five practices, one firm/);
+    expect(markup).not.toMatch(
+      /Problems we solve|Six practices, one firm|Five practices, one firm/,
+    );
   });
 
   it("renders only the locked hero when there is no home document", () => {

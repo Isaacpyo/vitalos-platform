@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Button } from "@vitalos/ui";
 
 /** The Relay launcher's button (`@vitalos/relay-widget` launcher.tsx). */
 const LAUNCHER = "button.relay-launcher";
+
+const noSubscription = () => () => undefined;
+const launcherPresent = () => document.querySelector(LAUNCHER) !== null;
 
 /**
  * Opens the Relay assistant from a page (the 404 and the FAQ; findings B10 and B12). Render it only
@@ -13,10 +16,7 @@ const LAUNCHER = "button.relay-launcher";
  * it presses the launcher, which loads and opens the panel as usual.
  */
 export function AskRelayButton({ label }: Readonly<{ label: string }>) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    setReady(document.querySelector(LAUNCHER) !== null);
-  }, []);
+  const ready = useSyncExternalStore(noSubscription, launcherPresent, () => false);
   if (!ready) return null;
   return (
     <Button

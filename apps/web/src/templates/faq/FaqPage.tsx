@@ -64,29 +64,29 @@ export function FaqPage({
           {groups.map((group, index) => (
             // Stable section anchor (the solution slug) and the filter's group marker.
             <div key={group.href} id={group.id} data-faq-group="">
-            <ContentSection id={groupId(index)} heading={group.title}>
-              <div className="grid max-w-(--container-content) gap-(--space-3)">
-                {group.entries.map((entry, entryIndex) => (
-                  <Disclosure
-                    key={`${entry.question}-${entryIndex}`}
-                    id={entry.id}
-                    data-faq-entry=""
-                    summary={entry.question}
-                  >
-                    <p className="m-0 max-w-(--container-prose) text-pretty">{entry.answer}</p>
-                  </Disclosure>
-                ))}
-              </div>
-              <p className="m-0 mt-(--space-4) flex flex-wrap items-center gap-x-(--space-5) gap-y-(--space-2)">
-                <TextLink href={group.href}>{group.title}</TextLink>
-                {/* Still a question? Per section: the contact form on the matching topic, and
+              <ContentSection id={groupId(index)} heading={group.title}>
+                <div className="grid max-w-(--container-content) gap-(--space-3)">
+                  {group.entries.map((entry, entryIndex) => (
+                    <Disclosure
+                      key={`${entry.question}-${entryIndex}`}
+                      id={entry.id}
+                      data-faq-entry=""
+                      summary={entry.question}
+                    >
+                      <p className="m-0 max-w-(--container-prose) text-pretty">{entry.answer}</p>
+                    </Disclosure>
+                  ))}
+                </div>
+                <p className="m-0 mt-(--space-4) flex flex-wrap items-center gap-x-(--space-5) gap-y-(--space-2)">
+                  <TextLink href={group.href}>{group.title}</TextLink>
+                  {/* Still a question? Per section: the contact form on the matching topic, and
                     Relay where it is enabled (finding B10). */}
-                <TextLink href={routes.contact(faqContactIntent(group.title))}>
-                  {navLabels.contact}
-                </TextLink>
-                {relayEnabled ? <AskRelayButton label={faqLabels.askRelay} /> : null}
-              </p>
-            </ContentSection>
+                  <TextLink href={routes.contact(faqContactIntent(group.title))}>
+                    {navLabels.contact}
+                  </TextLink>
+                  {relayEnabled ? <AskRelayButton label={faqLabels.askRelay} /> : null}
+                </p>
+              </ContentSection>
             </div>
           ))}
         </Stack>

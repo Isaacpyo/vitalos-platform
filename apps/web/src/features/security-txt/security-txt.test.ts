@@ -29,6 +29,8 @@ describe("security.txt (RFC 9116)", () => {
 
   it("publishes nothing without a contact address", () => {
     expect(buildSecurityTxt({ siteUrl: "https://x.invalid", contactEmail: " ", now })).toBeNull();
-    expect(buildSecurityTxt({ siteUrl: "https://x.invalid", contactEmail: undefined, now })).toBeNull();
+    expect(
+      buildSecurityTxt({ siteUrl: "https://x.invalid", contactEmail: undefined, now }),
+    ).toBeNull();
   });
 });

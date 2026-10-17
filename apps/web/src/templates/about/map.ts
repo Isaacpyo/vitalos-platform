@@ -24,7 +24,9 @@ export const practicesHeading =
   homeSections.find((section) => section.key === "practices")?.visibleHeading ?? "";
 
 /** The onward pages' introductions, by About link key. */
-export type ExploreIntros = Partial<Record<"how-we-work" | "trust" | "careers", string | undefined>>;
+export type ExploreIntros = Partial<
+  Record<"how-we-work" | "trust" | "careers", string | undefined>
+>;
 
 export interface AboutLink extends NavItem {
   /** One line: the first sentence of the linked page's own introduction. */

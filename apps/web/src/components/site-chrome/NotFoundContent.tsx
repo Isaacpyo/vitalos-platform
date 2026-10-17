@@ -27,7 +27,12 @@ export const notFoundLabels = {
 /** The main routes a lost visitor most likely wanted, in navigation order; gated ones when open. */
 const mainRoutes: readonly (NavItem & { icon: IconName })[] = [
   { key: "what-we-do", label: navLabels.whatWeDo, href: routes.whatWeDo(), icon: "layers" },
-  { key: "solutions", label: structuralLabels.solutions, href: routes.solutions(), icon: "workflow" },
+  {
+    key: "solutions",
+    label: structuralLabels.solutions,
+    href: routes.solutions(),
+    icon: "workflow",
+  },
   { key: "offers", label: structuralLabels.offers, href: routes.offers(), icon: "document" },
   {
     key: "industries",

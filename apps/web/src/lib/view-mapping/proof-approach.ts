@@ -1,4 +1,10 @@
-import { labMaturityLabels, labsPracticeName, navLabels, practiceDisplayName, routes } from "@vitalos/cms";
+import {
+  labMaturityLabels,
+  labsPracticeName,
+  navLabels,
+  practiceDisplayName,
+  routes,
+} from "@vitalos/cms";
 import type { LabAssetSummary, PublicationGates, RichText } from "@vitalos/cms";
 import type { IconName } from "@vitalos/ui";
 import { splitBody } from "./body-sections";

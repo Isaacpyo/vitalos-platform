@@ -338,7 +338,8 @@ describe("header model, ia variant (ADR-045)", () => {
   });
 
   it("leaves the current variant unchanged when the variant is omitted or current", () => {
-    const { navVariant: _ignored, ...withoutVariant } = content;
+    const withoutVariant: ChromeContent = { ...content };
+    delete withoutVariant.navVariant;
     const omitted = buildHeaderModel(withoutVariant);
     const current = buildHeaderModel({ ...content, navVariant: "current" });
     expect(current).toEqual(omitted);

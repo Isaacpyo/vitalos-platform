@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 
 export interface FaqFilterLabels {
   label: string;
@@ -9,12 +9,33 @@ export interface FaqFilterLabels {
   none: string;
 }
 
+const noSubscription = () => () => undefined;
+const onClient = () => true;
+const onServer = () => false;
+
 /** Opens the question a link points at (`/faq#{id}`): a closed `<details>` hides its answer. */
 function openFromHash(container: HTMLElement | null) {
   const id = decodeURIComponent(window.location.hash.slice(1));
   if (!id || !container) return;
   const target = document.getElementById(id);
   if (target instanceof HTMLDetailsElement && container.contains(target)) target.open = true;
+}
+
+/** Hides the questions that do not contain every word typed, and the groups left empty. */
+function applyFilter(container: HTMLElement, query: string): { shown: number; total: number } {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const entries = Array.from(container.querySelectorAll<HTMLElement>("[data-faq-entry]"));
+  let shown = 0;
+  for (const entry of entries) {
+    const text = (entry.textContent ?? "").toLowerCase();
+    const match = words.every((word) => text.includes(word));
+    entry.hidden = !match;
+    if (match) shown += 1;
+  }
+  for (const group of container.querySelectorAll<HTMLElement>("[data-faq-group]")) {
+    group.hidden = group.querySelector("[data-faq-entry]:not([hidden])") === null;
+  }
+  return { shown, total: entries.length };
 }
 
 /**
@@ -29,12 +50,11 @@ export function FaqFilter({
   labels,
 }: Readonly<{ targetId: string; labels: FaqFilterLabels }>) {
   const inputId = useId();
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useSyncExternalStore(noSubscription, onClient, onServer);
   const [query, setQuery] = useState("");
-  const [counts, setCounts] = useState<{ shown: number; total: number } | null>(null);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
-    setMounted(true);
     const container = document.getElementById(targetId);
     openFromHash(container);
     const onHash = () => openFromHash(container);
@@ -42,26 +62,21 @@ export function FaqFilter({
     return () => window.removeEventListener("hashchange", onHash);
   }, [targetId]);
 
-  useEffect(() => {
-    if (!mounted) return;
+  const onChange = (value: string) => {
+    setQuery(value);
     const container = document.getElementById(targetId);
     if (!container) return;
-    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-    const entries = Array.from(container.querySelectorAll<HTMLElement>("[data-faq-entry]"));
-    let shown = 0;
-    for (const entry of entries) {
-      const text = (entry.textContent ?? "").toLowerCase();
-      const match = words.every((word) => text.includes(word));
-      entry.hidden = !match;
-      if (match) shown += 1;
-    }
-    for (const group of container.querySelectorAll<HTMLElement>("[data-faq-group]")) {
-      group.hidden = group.querySelector("[data-faq-entry]:not([hidden])") === null;
-    }
-    setCounts(words.length > 0 ? { shown, total: entries.length } : null);
-  }, [mounted, query, targetId]);
+    const { shown, total } = applyFilter(container, value);
+    setStatus(
+      value.trim() === ""
+        ? ""
+        : shown === 0
+          ? labels.none
+          : labels.count.replace("{shown}", String(shown)).replace("{total}", String(total)),
+    );
+  };
 
-  if (!mounted) return null;
+  if (!hydrated) return null;
   return (
     <div role="search" className="grid max-w-(--container-content) gap-(--space-2)">
       <label htmlFor={inputId} className="text-small font-semibold text-tone-heading">
@@ -71,18 +86,12 @@ export function FaqFilter({
         id={inputId}
         type="search"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         autoComplete="off"
         className="min-h-11 w-full rounded-lg border border-tone-border bg-tone-bg px-(--space-4) text-body text-tone-text focus-visible:outline-2 focus-visible:outline-offset-2"
       />
       <p role="status" aria-live="polite" className="m-0 min-h-6 text-small text-tone-muted">
-        {counts
-          ? counts.shown === 0
-            ? labels.none
-            : labels.count
-                .replace("{shown}", String(counts.shown))
-                .replace("{total}", String(counts.total))
-          : ""}
+        {status}
       </p>
     </div>
   );
