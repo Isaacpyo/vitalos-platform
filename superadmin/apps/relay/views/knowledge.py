@@ -5,9 +5,9 @@ from __future__ import annotations
 
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
-from django.utils import timezone
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .. import markdown, presenters, services
@@ -323,7 +323,7 @@ def reindex_all(request):
 @relay_view()
 @require_POST
 def suggest_answer(request, gap_id):
-    """"Suggested answer" on a gap: a draft team answer from the best-matching page, opened in
+    """ "Suggested answer" on a gap: a draft team answer from the best-matching page, opened in
     the editor for a person to check, edit and publish (ADR-048)."""
     try:
         data = services.suggest_answer(request.user, str(gap_id), request=request)

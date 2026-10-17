@@ -4,6 +4,7 @@ and Overview counts (D4), suggested answers (D2), per-turn tokens and thumbs-dow
 import re
 from datetime import timedelta
 
+import pytest
 from django.utils import timezone
 
 from apps.audit.models import AuditEvent
@@ -12,7 +13,6 @@ from apps.relay.client import admin_identity, get_client, staff_name
 from apps.relay.fake import GAP_ISO
 from apps.relay.views import knowledge as knowledge_views
 from apps.relay.views import pages
-
 
 # --- E1: hand-off rate ----------------------------------------------------------------------------
 
@@ -37,9 +37,14 @@ def test_insights_tile_shows_25_percent_for_one_handoff_in_four(client_for, supe
     assert "2500%" not in body
 
 
+@pytest.mark.django_db
 def test_digest_handoff_rate_is_a_percentage_of_a_fraction():
     email = emails.digest(
-        {"waitingNow": 0, "yesterday": {"conversations": 4, "handoffs": 1, "handoffRate": 0.25}, "openGaps": 0}
+        {
+            "waitingNow": 0,
+            "yesterday": {"conversations": 4, "handoffs": 1, "handoffRate": 0.25},
+            "openGaps": 0,
+        }
     )
     rendered = repr(email.document)
     assert "25%" in rendered and "2500%" not in rendered
@@ -85,8 +90,12 @@ def test_knowledge_page_warns_when_a_sync_is_stale(client_for, superadmin, relay
 
     def stale(self):
         data = real(self)
-        data["cms"] = {**data["cms"], "ageHours": 31, "stale": True,
-                       "lastSyncAt": (timezone.now() - timedelta(hours=31)).isoformat()}
+        data["cms"] = {
+            **data["cms"],
+            "ageHours": 31,
+            "stale": True,
+            "lastSyncAt": (timezone.now() - timedelta(hours=31)).isoformat(),
+        }
         return data
 
     body = client_for(superadmin).get("/relay/knowledge/").content.decode()
