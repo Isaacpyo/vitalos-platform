@@ -51,6 +51,7 @@ export const routePageKeys = [
   "trust",
   "careers",
   "contact",
+  "products",
 ] as const;
 export type RoutePageKey = (typeof routePageKeys)[number];
 
@@ -123,6 +124,9 @@ export const routes = {
   contactThankYou: (reference?: string) =>
     reference ? `/contact/thank-you?ref=${seg(reference)}` : "/contact/thank-you",
   legal: (slug: LegalSlug) => `/legal/${slug}`,
+  /** Products Vitalos builds and operates (owner direction, 17 Oct 2026). */
+  products: () => "/products",
+  product: (slug: string) => `/products/${seg(slug)}`,
   /** The podcast page: where the footer's Spotify and Apple links lead (owner direction, 16 Oct 2026). */
   podcast: () => "/podcast",
   sitemap: () => "/sitemap.xml",
@@ -151,6 +155,7 @@ const routePageHref: Record<RoutePageKey, () => string> = {
   trust: routes.trust,
   careers: routes.careers,
   contact: () => routes.contact(),
+  products: routes.products,
 };
 
 export function hrefForRoutePage(key: RoutePageKey): string {
@@ -230,6 +235,8 @@ export const routeManifest: readonly RouteManifestEntry[] = [
   { pattern: "/careers/[slug]", gate: "careers", sitemap: true },
   { pattern: "/contact", sitemap: true },
   { pattern: "/legal/[slug]", sitemap: true },
+  { pattern: "/products", sitemap: true },
+  { pattern: "/products/[slug]", sitemap: true },
   // Not indexed while the show links are placeholders (owner direction, 16 Oct 2026).
   { pattern: "/podcast", sitemap: false },
 ];

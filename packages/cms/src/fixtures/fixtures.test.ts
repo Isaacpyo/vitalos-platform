@@ -71,7 +71,7 @@ describe("fixture set contents", () => {
     expect(docs.job.some((job) => job.status === "closed")).toBe(true);
     expect(docs.trustItem).toHaveLength(8);
     expect(docs.legalPage).toHaveLength(4);
-    expect(Object.keys(fullFixtureSet.routePages)).toHaveLength(12);
+    expect(Object.keys(fullFixtureSet.routePages)).toHaveLength(13);
   });
 
   it("sparse leaves optional content out", () => {
