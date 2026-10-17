@@ -376,7 +376,7 @@ def _seed(now: datetime) -> dict:
             "type": "faq",
             "owner": "Founder",
             "reviewDate": None,
-            "bodyMd": "Five practices, with Labs separate.",
+            "bodyMd": "Six practices, Labs included.",
             "status": "published",
             "meta": {},
             "adminMeta": {},
