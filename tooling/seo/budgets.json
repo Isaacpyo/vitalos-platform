@@ -12,7 +12,9 @@
     "trust-topic": "/trust/security",
     "faq": "/faq",
     "contact": "/contact",
-    "legal": "/legal/privacy"
+    "legal": "/legal/privacy",
+    "products": "/products",
+    "product": "/products/sob-autofix"
   },
   "default": {
     "seo": 100,

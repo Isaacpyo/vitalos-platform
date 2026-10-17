@@ -1,0 +1,69 @@
+# Discovery: SOB Autofix product page
+
+Evidence for every claim on `/products/sob-autofix`. Sources:
+
+- **Code:** the SOB Autofix repository (`Isaacpyo/sobautofix`, checked out locally as `~/sobautofix` at `666ceb1`, 17 Oct 2026). Paths are relative to that repository.
+- **Live site:** what sobautofix.com showed on 17 Oct 2026, quoted verbatim.
+
+A claim goes on the page only if it has a line here. Claims that failed or only partly passed are listed at the end, with the reason they are cut or narrowed.
+
+## Claims used on the page
+
+| # | Page claim | Evidence |
+|---|---|---|
+| 1 | Booking is vehicle-first, in seven steps: Vehicle, Service, Problem, Location, Details, Appointment, Review | `src/components/booking/booking-wizard.tsx:82` (`steps = ["Vehicle", "Service", "Problem", "Location", "Details", "Appointment", "Review"]`); `tests/e2e/booking.spec.ts:126` ("Step 1 of 7: Vehicle"); live `/book` |
+| 2 | GB registration lookup; if lookup is unavailable, the customer enters the vehicle details and carries on | `src/lib/vehicle/configured-provider.ts:9-18` (Vehicle Data Global, DVLA VES option); `booking-wizard.tsx:234-265, 815, 858`; `booking.spec.ts:134`; live `/book`: "If lookup is unavailable, you can enter the essentials yourself." |
+| 3 | The customer picks the work and describes the problem before choosing a time | `booking-wizard.tsx:83-91, 153-169, 614-617`; live `/book`: "Tell us about the vehicle and the work first, then choose a live appointment time" |
+| 4 | Workshop or mobile, depending on the service | `src/lib/bookings/services.ts:15,77` (`location_mode` workshop / mobile / both); `booking-wizard.tsx:988, 1008-1021` |
+| 5 | Live appointment times come from the workshop's calendar (Cal.com), fetched on the server | `src/lib/scheduling/provider.ts`; `/api/bookings/slots`; `docs/calcom-booking-setup.md` |
+| 6 | The server re-checks the time at submit; a taken time returns the customer to choose another; a repeated submission cannot create a second booking | `src/lib/bookings/repository.ts:262-272` (slot re-fetch); `slot_unavailable` → HTTP 409 "Choose another time"; `supabase/migrations/202608110006_calcom_booking_rework.sql:248-249, 439-445` (idempotency key, `pg_advisory_xact_lock`, unique index) |
+| 7 | Guest booking, no account | `booking-wizard.tsx:658`; `src/app/book/page.tsx:25`; live `/book`: "Guest booking — no account needed" |
+| 8 | Manage Booking: booking reference and registration, short-lived signed access, reschedule or cancel | `src/lib/bookings/schema.ts:4-7`; `repository.ts:221-230`; `src/lib/bookings/access-token.ts:18` (15 min); `src/components/booking/manage-booking.tsx:172-178`; random references `calcom_booking_rework.sql:43-60` |
+| 9 | Get a Quote request flow, vehicle first | `src/app/get-a-quote/page.tsx` |
+| 10 | The registration stays out of page addresses and analytics | Lookup is a POST body (`booking-wizard.tsx:217-221`); vehicle held in `sessionStorage` (`src/components/vehicle/vehicle-context.tsx:7,24-43`); analytics strips registration, vehicle, email, phone, postcode, description, problem (`src/lib/analytics/events.ts:16-20`, tested in `src/__tests__/analytics.test.ts`); Sentry drops query strings, cookies and headers (`sentry.server.config.ts`); live site: "Your registration stays out of page addresses and analytics." |
+| 11 | Consent: essential only by default; analytics and live chat load only with permission | `src/components/privacy/consent-manager.tsx` (categories `analytics`, `functional`; GA4 and Web Vitals gated on analytics, tawk.to gated on functional); live banner: "Accept optional cookies" / "Essential only" |
+| 12 | 14 published service pages in three groups (diagnostics, repairs and maintenance, mobile and specialist) | `src/config/site.ts`; live homepage service list |
+| 13 | The service catalogue is structured data, edited by staff, and drives both the pages and the booking choices | `src/config/service-catalogue.ts` → `booking_service_types`; Admin → Service catalogue; `content_entries` with revisions |
+| 14 | A Doncaster service-area page and a coverage map | `/areas`, `/areas/doncaster`; `src/components/marketing/home-coverage-map.tsx` |
+| 15 | News and advice with an RSS feed; cars-for-sale listings | `/news`, `/news/[slug]`, `/news/feed.xml`, `/advice`; `/cars-for-sale`, `/cars-for-sale/[slug]` (Admin → Inventory) |
+| 16 | Google reviews shown only after staff approval | `docs/google-reviews-carousel.md`; Admin → Reviews |
+| 17 | WhatsApp and click-to-call | `src/components/layout/floating-whatsapp.tsx`; `tel:` links in header, footer, contact, booking |
+| 18 | Staff admin: bookings, enquiries with email threads, stock, reviews, content, invoicing | `/admin` (bookings, enquiries, inventory, invoices with PDF/export/email/payments, media, news, reviews, service catalogue); `workers/enquiry-email` (replies to `reply.sobautofix.com` thread into the admin) |
+| 19 | Admin sign-in supports two-factor authentication with recovery codes | `docs/admin-mfa-recovery.md` (TOTP, 10 recovery codes, trusted devices) |
+| 20 | Budgets enforced in CI: Lighthouse performance ≥ 0.90, accessibility ≥ 0.95, SEO 1.00, LCP ≤ 2.5 s, CLS ≤ 0.1; axe checks on booking and key pages | `lighthouserc.json`; `tests/e2e/booking.spec.ts:130`; `tests/e2e/marketing.spec.ts:135-159` |
+| 21 | A content test blocks services the workshop does not offer (MOT, tyres) | `src/__tests__/content-guard.test.ts`; `src/lib/content-guard.ts` |
+| 22 | Stack: Next.js, React, Supabase (Postgres, Storage, admin Auth), Vercel, Cloudflare Workers, Cal.com, Resend, Sentry | `package.json` (next ^16, react ^19.2, @supabase/*, resend, @sentry/nextjs); `vercel.json`; `workers/*/wrangler.jsonc` |
+| 23 | Live since August 2026 | First commit 2026-08-09 ("Initial SOB Autofix Phase 1 implementation"); "Configure production infrastructure and release gates" 2026-08-09; `docs/vehicle-data-global-api-key-vercel.md` (committed 2026-08-26) describes production live at sobautofix.com |
+| 24 | Vitalos developed it | `src/components/layout/footer.tsx:80-81` "Developed by Vitalos Technologies" → vitalos.co.uk; all 91 commits by the Vitalos founder |
+
+## Unverified, partly verified, or cut
+
+- **"Built and operated by Vitalos".** "Built" is evidenced (24). "Operated" comes from the owner's brief; the repository can't prove it. Kept as an owner statement. **Temitope to confirm.**
+- **Mobile eligibility.** There is no postcode or radius check: mobile availability is set per service and confirmed by hand. The page says "depending on the service", not "eligibility checked".
+- **Manage Booking asks for email.** False. The README says reference + registration + email; the code asks for reference + registration only. Not claimed.
+- **Coverage-area pages (plural).** Only Doncaster is built; other towns are CMS entries, and none are seeded. The page says "a service-area page", singular.
+- **Database-level clash prevention.** There is no exclusion constraint on times: clashes are prevented by Cal.com plus the submit-time re-check. The page describes the re-check only.
+- **A test that page URLs never contain a registration.** None exists. The claim rests on the POST body, `sessionStorage` and the analytics sanitiser.
+- **What the site replaced.** Nothing in the repository says. The Outcome section states only what shipped. **Temitope to supply, or leave it out.**
+- **Outcome figures** (bookings, conversion, speed). None are claimed.
+- **Exact go-live date.** Only the month is evidenced (23).
+- **Hero line "Professional Diagnostics. Not Guesswork."** It appears in the repository's description and metadata, but the live homepage hero reads "Professional Diagnostics, and Repair." Not quoted.
+
+## Possibly off in production
+
+These are not claimed, or are claimed only as capabilities:
+
+- Online booking is enabled per service; unmapped services can't be booked online.
+- Admin MFA is optional until the policy flag is switched on.
+- GA4, chat, Sentry and lookup each switch off if their environment variables are missing.
+
+## On the Vitalos side
+
+What was found in this repository, and reused:
+
+- **Products source.** `packages/cms/src/products.ts` (PR #74) feeds the Who We Are Products column, the footer, both pages, the sitemap, llms.txt and the `SoftwareApplication` markup. SOB Autofix is a second entry there, so all of these pick it up. The About sentence reads Fauward by slug and is unchanged.
+- **Template.** `apps/web/src/templates/products/ProductsTemplates.tsx` had a compact hero, a snapshot and the closing card. It now also renders the optional `sector` (in the eyebrow), `facts` (an "At a glance" `DefinitionList`, as on offer pages), `sections` (headed bands of h3 points) and `screens` (further `products.{slug}.{key}` slots). Fauward sets none of these and renders as before.
+- **Images.** These go through `MediaSlot` and `content/media-slots.ts`: three slots, each with a phone version, as AVIF and WebP at full and half width.
+- **Analytics.** There is no `cta_click` helper, so the card and menu item fire nothing new. `outbound_click` fires on "Open sobautofix.com". The listener used to import the products list into the client bundle; it now reads `data-product` from the link.
+- **JSON-LD.** WebPage `about` the SoftwareApplication (`url` https://sobautofix.com, `applicationCategory` BusinessApplication, published by the Organization), plus a BreadcrumbList. **Not added:** an Organization `brand` or `owns` list. In schema.org, `owns` takes a Product or OwnershipInfo and `brand` takes a Brand or Organization; a SoftwareApplication is neither, so the link stays `publisher` (as for Fauward).
+- **Sitemap `lastmod`.** Product pages have no content date; the sitemap lists them like the other route pages.
