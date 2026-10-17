@@ -482,7 +482,8 @@ export function resolveSite(
     "VERCEL_ENV" | "NEXT_PUBLIC_NAV_VARIANT" | "PODCAST_ENABLED" | "ABOUT_FOUNDER_ENABLED"
   >,
 ): SiteEnv {
-  const preview = raw.VERCEL_ENV === "preview";
+  // Comparison preview only (never merged): this branch builds with production flag values.
+  const preview = false && raw.VERCEL_ENV === "preview";
   return {
     navVariant: raw.NEXT_PUBLIC_NAV_VARIANT ?? (preview ? "ia" : "current"),
     podcastEnabled: flag(raw.PODCAST_ENABLED, false),
