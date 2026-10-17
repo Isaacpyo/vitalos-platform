@@ -53,3 +53,7 @@ Owner changes the minimum content bars or the information architecture; a conten
 ## Status update (10 Oct 2026)
 
 The last consequence ("until the content workstreams land, the homepage renders locked copy only and links to routes that are not yet built") no longer holds: every route in the manifest is built (G1, H, G2a, G2b, with C2 supplying queries, mappers and fixtures). The homepage builds its sections from the content source and renders each one only when data exists; with the empty source it still shows locked copy only. No decision in this ADR is changed.
+
+## Status update (17 Oct 2026): Products
+
+`/products` (route-page key `products`) and `/products/[slug]` join the manifest, both in the sitemap and ungated. Products are not a content-source document kind: they live in `packages/cms/src/products.ts`, so `/products/[slug]` is statically generated from that list (`dynamicParams = false`; any other slug is a 404). The sitemap lists each product page while the Products route page exists (`buildSitemap`). See the ADR-031 amendment of the same date.

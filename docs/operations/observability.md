@@ -44,7 +44,7 @@ Application code depends on the `ErrorReporter` interface (`captureException(err
 
 ## Analytics events (Stage 10 §22)
 
-`contact_submit`, `offer_enquiry_submit`, `trust_enquiry_submit`, `primary_cta_click`, `case_study_view`, `insight_to_offer_click`, `lab_resource_click`. Properties are limited to route, slugs, CTA ids and enumerated outcomes; events or properties outside the taxonomy are dropped. No analytics provider, script or consent banner exists yet (owner decision). The logger sink makes events visible in logs for development.
+`contact_submit`, `offer_enquiry_submit`, `trust_enquiry_submit`, `primary_cta_click`, `case_study_view`, `insight_to_offer_click`, `lab_resource_click`, `application_submit`, `insight_read`, and `outbound_click` (a link to a Vitalos product's own site, such as fauward.com: `destination` is the product slug). Properties are limited to route, slugs, CTA ids and enumerated outcomes; events or properties outside the taxonomy are dropped. No analytics provider, script or consent banner exists yet (owner decision). The logger sink makes events visible in logs for development.
 
 ## Not yet decided or built
 

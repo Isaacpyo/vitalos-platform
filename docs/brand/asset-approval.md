@@ -97,3 +97,7 @@ dashboard (Growth & Technology). They are served as WebP at 1200 and 640 px wide
 (`apps/web/src/lib/view-mapping/industry-images.ts`), as decorative backgrounds under a midnight
 gradient. They illustrate the sectors only; they are not clients or case studies and must not be
 captioned or used as if they were.
+
+## Fauward snapshot (owner direction, 17 Oct 2026)
+
+The owner asked for a real snapshot of fauward.com (a Vitalos product) for the Products pages. The dashboard illustration in the fauward.com hero was captured with Playwright on 17 Oct 2026, at 1440x900 and 390x844 (device scale 2). The cookie banner was dismissed with "Essential only" and the chat launcher was hidden. Nothing else was changed. The images were cropped to the slot ratios (21:9, and 5:7 for phones), trimming about 9 px of edge, and saved as AVIF and WebP at full and half width as `apps/web/public/media/products.fauward.hero[.mobile][@1x].{avif,webp}` (slot `products.fauward.hero`). The figures in the illustration (shipments, drivers, revenue, SLA) are the sample data fauward.com itself shows. They are not Vitalos or client results and must not be quoted as such. Recapture when the fauward.com hero changes.
