@@ -6,7 +6,7 @@ Declare incident owner, preserve evidence, restore the recorded previous deploym
 
 - Content: site content ships in the deployment (ADR-028), so rolling back the deployment rolls the content back too.
 - Database: enquiries and outbox rows already written stay. Migrations so far are additive; do not drop columns or functions during an incident. After a rollback, check the outbox (`docs/runbooks/enquiry-delivery-failure.md`) so no stored enquiry goes unseen.
-- DNS: restore the recorded Cloudflare values. HSTS, if it was enabled, makes browsers insist on https for the host for the configured period (`max-age=31536000`), so a rollback target must serve valid TLS.
+- DNS: restore the recorded Cloudflare values. HSTS, if it was enabled, makes browsers insist on https for the host for the configured period (`max-age=63072000; includeSubDomains`, ADR-047, so every subdomain too), so a rollback target must serve valid TLS.
 - Redirects: they ship with the deployment (`docs/seo/REDIRECTS.md`); rolling back the deployment rolls them back.
 
 ## Pausing risky writes

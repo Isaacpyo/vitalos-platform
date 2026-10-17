@@ -3,7 +3,9 @@
  *
  * Header-based (not nonce-based): a per-request nonce would force every page to render
  * dynamically and defeat static rendering and CDN caching, so the enforced policy keeps
- * `'unsafe-inline'` for scripts (Next.js emits inline bootstrap/flight scripts). A stricter
+ * `'unsafe-inline'` for script elements (Next.js emits inline bootstrap/flight scripts) and
+ * forbids inline event-handler attributes (`script-src-attr 'none'`). Re-evaluated for Next.js
+ * 16 in ADR-047. A stricter
  * `strict` variant without `'unsafe-inline'` is built for `Content-Security-Policy-Report-Only`
  * so violations are observable before the enforced policy is tightened.
  *
@@ -77,6 +79,9 @@ export function buildCsp(input: BuildCspInput): string {
   const directives: Array<[string, readonly string[]]> = [
     ["default-src", ["'self'"]],
     ["script-src", scriptSrc],
+    // No inline event-handler attributes (`onclick="…"`), even though inline <script> elements
+    // must stay allowed for Next.js's static pages (ADR-047). React never renders them.
+    ["script-src-attr", ["'none'"]],
     // styled-components and React style attributes need inline styles; styles carry no script
     // execution risk once script-src is locked down.
     ["style-src", ["'self'", "'unsafe-inline'"]],

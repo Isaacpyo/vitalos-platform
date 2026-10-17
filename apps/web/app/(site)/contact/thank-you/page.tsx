@@ -39,7 +39,7 @@ export default async function ThankYouPage({
   return (
     <main id="main" tabIndex={-1}>
       {/* An accepted enquiry (no reference or form content is sent). */}
-      <TrackOnMount name="contact_submit" properties={{ outcome: "success", route: "/contact" }} />
+      <TrackOnMount name="enquiry_sent" properties={{ page: routes.contact() }} />
       <PageHero
         tone="dark"
         size="title"

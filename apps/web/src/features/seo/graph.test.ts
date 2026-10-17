@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { breadcrumbJsonLd, organizationJsonLd, webSiteJsonLd } from "./json-ld";
-import { homePageNode, jsonLdGraph, serviceNode, webPageNode } from "./graph";
+import { homePageNode, jsonLdGraph, personNode, serviceNode, webPageNode } from "./graph";
 import { validateJsonLd } from "./json-ld-rules";
 
 const ctx = { siteUrl: "https://www.example.invalid" };
@@ -128,5 +128,106 @@ describe("page graph", () => {
     expect(issues).toMatch(/@context/);
     expect(issues).toMatch(/used 2 times/);
     expect(issues).toMatch(/not on https:\/\/www.example.invalid/);
+  });
+});
+
+describe("index and profile nodes (C11)", () => {
+  const crumbs = (path: string, name: string) =>
+    breadcrumbJsonLd(
+      [
+        { name: "Home", path: "/" },
+        { name, path },
+      ],
+      ctx,
+    );
+
+  it("gives a CollectionPage an ItemList of what it lists, and the rules accept it", () => {
+    const graph = jsonLdGraph([
+      webPageNode(
+        {
+          path: "/solutions",
+          name: "Solutions",
+          type: "CollectionPage",
+          breadcrumb: true,
+          items: [
+            { name: "Example A", path: "/solutions/a" },
+            { name: " ", path: "/solutions/blank" },
+            { name: "Example B", path: "/solutions/b" },
+          ],
+        },
+        ctx,
+      ),
+      crumbs("/solutions", "Solutions"),
+    ]) as unknown as { "@graph": Record<string, unknown>[] };
+    expect(graph["@graph"][0]!["mainEntity"]).toEqual({
+      "@type": "ItemList",
+      numberOfItems: 2,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Example A",
+          url: "https://www.example.invalid/solutions/a",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Example B",
+          url: "https://www.example.invalid/solutions/b",
+        },
+      ],
+    });
+    expect(validateJsonLd([graph], { origin, h1: "Solutions" })).toEqual([]);
+  });
+
+  it("an empty index has no ItemList", () => {
+    const node = webPageNode({ path: "/offers", name: "Offers", items: [] }, ctx);
+    expect(node).not.toHaveProperty("mainEntity");
+  });
+
+  it("describes an author as a Person who works for the Organization", () => {
+    const person = personNode(
+      {
+        name: "Example Author",
+        path: "/insights/authors/example-author",
+        jobTitle: "Founder",
+        sameAs: ["https://www.linkedin.com/in/example", "javascript:alert(1)"],
+      },
+      ctx,
+    );
+    expect(person).toEqual({
+      "@type": "Person",
+      "@id": "https://www.example.invalid/insights/authors/example-author#person",
+      name: "Example Author",
+      url: "https://www.example.invalid/insights/authors/example-author",
+      jobTitle: "Founder",
+      worksFor: { "@id": "https://www.example.invalid/#organization" },
+      sameAs: ["https://www.linkedin.com/in/example"],
+    });
+    const graph = jsonLdGraph([
+      webPageNode(
+        {
+          path: "/insights/authors/example-author",
+          name: "Example Author",
+          type: "ProfilePage",
+          breadcrumb: true,
+          mainEntity: person,
+        },
+        ctx,
+      ),
+      crumbs("/insights/authors/example-author", "Example Author"),
+    ]);
+    expect(validateJsonLd([graph], { origin, h1: "Example Author" })).toEqual([]);
+  });
+
+  it("rejects an ItemList whose items are not on the site", () => {
+    const bad = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "X", url: "https://elsewhere.invalid/x" },
+      ],
+    };
+    expect(validateJsonLd([bad], { origin }).join("\n")).toContain("is not on");
   });
 });

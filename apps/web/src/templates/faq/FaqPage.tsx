@@ -25,7 +25,12 @@ export function FaqPage({ groups }: Readonly<{ groups: readonly FaqGroup[] }>) {
         crumbs={
           <Breadcrumbs
             trail={faqTrail()}
-            page={{ type: "CollectionPage", name: structuralLabels.faq }}
+            page={{
+              type: "CollectionPage",
+              name: structuralLabels.faq,
+              // FAQPage on /faq (C11): the questions and answers shown below, verbatim.
+              faq: groups.flatMap((group) => group.entries),
+            }}
           />
         }
         title={structuralLabels.faq}

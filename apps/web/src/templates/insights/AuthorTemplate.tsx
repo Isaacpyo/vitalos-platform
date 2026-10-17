@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { brandName } from "@vitalos/cms";
 import { loadAuthorPage } from "../../features/content/insights/load";
-import { authorHref, gridHasCovers } from "../../features/content/insights/model";
+import {
+  authorHref,
+  gridHasCovers,
+  isOrganisationAuthor,
+} from "../../features/content/insights/model";
+import { personNode } from "../../features/seo/graph";
+import { getSeoContext } from "../../features/seo/context";
 import { isSlug } from "../../features/content/readers";
 import { INSIGHTS_BASE } from "../../features/content/routes";
 import { Breadcrumbs } from "../institutional/breadcrumbs";
@@ -41,6 +47,24 @@ export async function renderAuthorPage(slug: string) {
             { name: "Insights", path: INSIGHTS_BASE },
             { name: author.author.name, path: authorHref(author.author.slug) },
           ]}
+          page={{
+            type: "ProfilePage",
+            // Person on the author page (C11): the name, role and LinkedIn link shown here. An
+            // organisation author (the Vitalos team) is the Organization, not a Person.
+            ...(isOrganisationAuthor(author.author)
+              ? {}
+              : {
+                  mainEntity: personNode(
+                    {
+                      name: author.author.name,
+                      path: authorHref(author.author.slug),
+                      jobTitle: author.author.roleTitle,
+                      sameAs: author.author.linkedinUrl ? [author.author.linkedinUrl] : [],
+                    },
+                    { siteUrl: getSeoContext().siteUrl },
+                  ),
+                }),
+          }}
         />
       }
     >

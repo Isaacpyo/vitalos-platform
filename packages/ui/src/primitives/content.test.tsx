@@ -134,10 +134,24 @@ describe("Wordmark", () => {
     expect(bySrc("/mark.png")).toMatch(/(^| )hidden( |$)/);
   });
 
-  it("links home with a plain anchor when href is given", () => {
+  it("links home with a plain anchor named 'Vitalos home' when href is given", () => {
     render(<Wordmark href="/" />);
-    const link = screen.getByRole("link", { name: "VITALOS" });
+    const link = screen.getByRole("link", { name: "Vitalos home" });
     expect(link.tagName).toBe("A");
+  });
+
+  it("makes the logo images decorative inside the named home link (C3)", () => {
+    render(
+      <Wordmark
+        href="/"
+        logo={{ src: "/light.png", width: 940, height: 160 }}
+        compactLogo={{ src: "/mark.png", width: 184, height: 128 }}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Vitalos home" })).toBeTruthy();
+    for (const img of Array.from(document.querySelectorAll("img"))) {
+      expect(img.getAttribute("alt")).toBe("");
+    }
   });
 });
 

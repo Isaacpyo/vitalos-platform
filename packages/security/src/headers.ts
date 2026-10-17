@@ -7,6 +7,10 @@
  * - HSTS only when explicitly enabled (ENABLE_HSTS) after domain validation; never emitted for
  *   the `local` env so a developer's localhost is not pinned to https.
  * - CSP comes from `buildCsp` and is passed in, so this module stays free of policy details.
+ * - Framing is refused twice: CSP `frame-ancestors 'none'` and, for browsers that predate it,
+ *   `X-Frame-Options: DENY` (ADR-047).
+ * - `Cross-Origin-Opener-Policy: same-origin` keeps other sites' windows out of this browsing
+ *   context group (no `window.opener` across origins).
  */
 export type SecurityDeployEnv = "local" | "preview" | "staging" | "production";
 
@@ -25,8 +29,11 @@ export interface BuildSecurityHeadersInput {
 }
 
 export const ROBOTS_NOINDEX = "noindex, nofollow";
-/** One year. No `includeSubDomains` or `preload`: those are separate, irreversible decisions. */
-export const HSTS_VALUE = "max-age=31536000";
+/**
+ * Two years, every subdomain (ADR-047). No `preload`: submitting to the browser preload list is a
+ * separate, hard-to-reverse decision for the owner (an approval item).
+ */
+export const HSTS_VALUE = "max-age=63072000; includeSubDomains";
 export const PERMISSIONS_POLICY = [
   "accelerometer=()",
   "bluetooth=()",
@@ -48,6 +55,8 @@ export function buildSecurityHeaders(input: BuildSecurityHeadersInput): Security
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "Permissions-Policy", value: PERMISSIONS_POLICY },
+    { key: "X-Frame-Options", value: "DENY" },
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   ];
 
   if (input.csp) headers.push({ key: "Content-Security-Policy", value: input.csp });

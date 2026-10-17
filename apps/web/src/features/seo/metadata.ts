@@ -3,6 +3,7 @@ import { brandName } from "@vitalos/cms";
 import type { ImageView, SeoView } from "@vitalos/cms";
 import { isSafeRelativeRedirect } from "@vitalos/security/url";
 import { isSameOriginImage } from "../../lib/cms/images";
+import { INSIGHTS_FEED_PATH } from "../content/routes";
 import { getSeoContext } from "./context";
 import { sanitiseSeo } from "./seo-block";
 import type { SeoContext } from "./context";
@@ -34,9 +35,18 @@ export interface PageMetadataInput {
   absoluteTitle?: boolean | undefined;
   /** With `noindex`, still let crawlers follow links (filtered list views). Default false. */
   follow?: boolean | undefined;
-  /** Path of an RSS feed to advertise with `<link rel="alternate">`. */
+  /** Path of an RSS feed to advertise instead of the site feed (`siteFeed`). */
   feed?: string | undefined;
 }
+
+/**
+ * The Insights RSS feed, advertised on every page (C9) with `<link rel="alternate">`. The feed
+ * answers 404 while the Insights section is closed; a reader that follows the link then finds
+ * nothing, which does no harm.
+ */
+export const siteFeed = {
+  "application/rss+xml": [{ url: INSIGHTS_FEED_PATH, title: `${brandName} Insights` }],
+};
 
 const usableImage = (image: ImageView | undefined): ImageView | undefined =>
   image && !image.decorative && image.alt.trim() !== "" && isSameOriginImage(image.url)
@@ -89,14 +99,13 @@ export function composeMetadata(input: PageMetadataInput, context: SeoContext): 
   return {
     ...(title ? { title: absolute ? { absolute: title } : title } : {}),
     ...(description ? { description } : {}),
-    ...(url || input.feed
-      ? {
-          alternates: {
-            ...(url ? { canonical: url } : {}),
-            ...(input.feed ? { types: { "application/rss+xml": input.feed } } : {}),
-          },
-        }
-      : {}),
+    alternates: {
+      ...(url ? { canonical: url } : {}),
+      types:
+        input.feed && input.feed !== INSIGHTS_FEED_PATH
+          ? { "application/rss+xml": input.feed }
+          : siteFeed,
+    },
     openGraph: {
       type,
       ...(url ? { url } : {}),

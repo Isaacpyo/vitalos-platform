@@ -7,7 +7,7 @@ import type {
   PostSummaryData,
   practices,
 } from "../schemas";
-import { INSIGHTS_BASE } from "../routes";
+import { INSIGHTS_BASE, INSIGHTS_FEED_PATH } from "../routes";
 
 /**
  * Pure view models for the Insights pages (brief 5.1 to 5.3). No framework imports: the pages and
@@ -44,7 +44,7 @@ export const insightsCopy = {
 export const postHref = (slug: string): string => `${INSIGHTS_BASE}/${slug}`;
 export const authorHref = (slug: string): string => `${INSIGHTS_BASE}/authors/${slug}`;
 export const topicHref = (slug: string): string => `${INSIGHTS_BASE}/topics/${slug}`;
-export const FEED_PATH = `${INSIGHTS_BASE}/feed.xml`;
+export const FEED_PATH = INSIGHTS_FEED_PATH;
 export const topicPageHref = (slug: string, page: number): string =>
   page > 1 ? `${topicHref(slug)}/page/${page}` : topicHref(slug);
 

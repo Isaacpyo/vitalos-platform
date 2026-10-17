@@ -42,9 +42,9 @@ Rules for callers:
 
 Application code depends on the `ErrorReporter` interface (`captureException(error, { correlationId, source, attributes })`). Today the console implementation writes `error.captured` records. A Sentry adapter will implement the same interface and be selected in `instrumentation.ts`; it is blocked on the owner supplying a DSN. Until then the platform runs without a third-party error provider. The adapter must apply the same redaction before sending.
 
-## Analytics events (Stage 10 §22)
+## Analytics events (ADR-046)
 
-`contact_submit`, `offer_enquiry_submit`, `trust_enquiry_submit`, `primary_cta_click`, `case_study_view`, `insight_to_offer_click`, `lab_resource_click`. Properties are limited to route, slugs, CTA ids and enumerated outcomes; events or properties outside the taxonomy are dropped. No analytics provider, script or consent banner exists yet (owner decision). The logger sink makes events visible in logs for development.
+`enquiry_started`, `enquiry_sent`, `application_started`, `application_sent`, `relay_opened`, `relay_question`, `relay_handoff`, `cta_click` (label, page), `outbound_click` (host, page), plus the content events `case_study_view`, `insight_to_offer_click`, `lab_resource_click` and `insight_read`. Properties are limited to slugs, paths without query strings and host names. Events or properties outside the taxonomy are dropped by the validating sink on the server and rejected at compile time in the browser. Browser code calls `track()` (`apps/web/src/features/analytics/track.ts`); `SiteAnalytics` records CTA, outbound, form-start and Relay events through delegated listeners. The provider is Vercel Web Analytics with Speed Insights, cookieless and same-origin, switched by `NEXT_PUBLIC_ANALYTICS_PROVIDER=vercel` (on in production since 16 Oct 2026). On the Hobby plan, Vercel drops custom events; page views and Core Web Vitals are recorded.
 
 ## Not yet decided or built
 
