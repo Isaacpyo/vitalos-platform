@@ -344,7 +344,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Vitalos Super Admin API",
     "DESCRIPTION": "Read-only API over the Vitalos company architecture. "
-    "Authenticate with `Authorization: Bearer <token>` using a token from Settings â†’ API tokens.",
+    "Authenticate with `Authorization: Bearer <token>` using a token from Settings → API tokens.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SERVE_PERMISSIONS": ["apps.api.permissions.HasAnyRole"],
