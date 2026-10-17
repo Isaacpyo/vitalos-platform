@@ -697,6 +697,7 @@ def author_edit(request, pk):
     author = get_object_or_404(Author, pk=pk)
     initial = {
         "name": author.name,
+        "kind": author.kind,
         "slug": author.slug,
         "role_title": author.role_title,
         "bio_md": author.bio_md,
@@ -890,6 +891,7 @@ def settings_page(request):
             "heading": site.insights_heading,
             "intro": site.insights_intro,
             "editorial_note": site.insights_editorial_note,
+            "organisation_editorial_note": site.insights_organisation_editorial_note,
         },
     )
     if action:

@@ -201,7 +201,12 @@ def is_live(post: Post, now=None) -> bool:
     )
 
 
-def _audit_edit(post: Post, actor, request) -> None:
+def _via(via: str) -> dict:
+    """Audit metadata for a change made by a tool rather than the editor (``via="import_insights_batch"``)."""
+    return {"via": via} if via else {}
+
+
+def _audit_edit(post: Post, actor, request, via: str = "") -> None:
     """Working-copy saves are audited at most once per ten minutes per post and editor."""
     since = timezone.now() - EDIT_AUDIT_INTERVAL
     recent = AuditEvent.objects.filter(
@@ -213,13 +218,15 @@ def _audit_edit(post: Post, actor, request) -> None:
     if actor is not None:
         recent = recent.filter(actor=actor)
     if not recent.exists():
-        record("insights.post_edited", request=request, actor=actor, entity=post, summary=post.title)
+        record(
+            "insights.post_edited", request=request, actor=actor, entity=post, summary=post.title, **_via(via)
+        )
 
 
 # --- Creating and editing ------------------------------------------------------------------------
 
 
-def create_post(*, title: str, format: str, actor, request=None) -> Post:
+def create_post(*, title: str, format: str, actor, request=None, via: str = "") -> Post:
     title = (title or "").strip()
     if not title:
         raise ValidationError({"title": "Enter a title."})
@@ -233,7 +240,14 @@ def create_post(*, title: str, format: str, actor, request=None) -> Post:
             created_by=actor,
             updated_by=actor,
         )
-        record("insights.post_created", request=request, actor=actor, entity=post, summary=post.title)
+        record(
+            "insights.post_created",
+            request=request,
+            actor=actor,
+            entity=post,
+            summary=post.title,
+            **_via(via),
+        )
     return post
 
 
@@ -325,8 +339,15 @@ def save_working_copy(
     actor=None,
     expected_updated_at=None,
     request=None,
+    excerpt: str | None = None,
+    via: str = "",
 ) -> Post:
-    """Save the editor's working copy (autosave and Save). Never touches the published snapshot."""
+    """Save the editor's working copy (autosave and Save). Never touches the published snapshot.
+
+    The editor has no excerpt field, so the summary is derived (``derive_excerpt``). An import of
+    approved posts may pass the author's own ``excerpt`` instead (at most 220 characters)."""
+    if excerpt is not None and len(excerpt) > EXCERPT_LIMIT:
+        raise ValidationError({"excerpt": "The excerpt must be 220 characters or fewer."})
     errors = validate_working(post, data)
     if errors:
         raise ValidationError(errors)
@@ -338,7 +359,11 @@ def save_working_copy(
             if name in data:
                 setattr(current, name, data[name])
         current.title = current.title.strip()[:200]
-        current.excerpt = derive_excerpt(current.seo_description, current.body_md)
+        current.excerpt = (
+            excerpt.strip()
+            if excerpt is not None
+            else derive_excerpt(current.seo_description, current.body_md)
+        )
         author_list = _clean_ids(authors, Author, limit=MAX_AUTHORS)
         topic_list = _clean_ids(topics, Topic, limit=50)
         related_list = _clean_ids(related, Post, limit=MAX_RELATED, exclude=current.pk)
@@ -350,7 +375,7 @@ def save_working_copy(
             bool(current.published_hash) and revision_hash(current) != current.published_hash
         )
         current.save()
-        _audit_edit(current, actor, request)
+        _audit_edit(current, actor, request, via)
     return current
 
 
@@ -436,7 +461,8 @@ def authors_problem(post: Post) -> str:
     return ""
 
 
-def tick_check(post: Post, key: str, actor, *, request=None) -> EditorialCheck:
+def tick_check(post: Post, key: str, actor, *, request=None, note: str = "", via: str = "") -> EditorialCheck:
+    """Tick one check for the current revision hash. ``note`` is kept on the audit row."""
     if key not in CheckKey.values:
         raise ValidationError("Unknown check.")
     if key == CheckKey.AUTHORS and (problem := authors_problem(post)):
@@ -454,6 +480,8 @@ def tick_check(post: Post, key: str, actor, *, request=None) -> EditorialCheck:
             summary=CheckKey(key).label,
             check=key,
             revision_hash=current_hash,
+            **({"note": note[:300]} if note else {}),
+            **_via(via),
         )
     return check
 
@@ -569,9 +597,17 @@ def _move_slug(post: Post, old_slug: str) -> None:
         SlugRedirect.objects.update_or_create(entity="post", from_slug=old_slug, defaults={"to_id": post.pk})
 
 
-def publish(post: Post, actor, *, request=None) -> Post:
-    """Publish an approved (or scheduled) post now, or publish the changes of a published one."""
+def publish(post: Post, actor, *, request=None, published_at=None, via: str = "") -> Post:
+    """Publish an approved (or scheduled) post now, or publish the changes of a published one.
+
+    ``published_at`` is for importing work that was already published elsewhere (``import_insights_batch``):
+    the post goes live now, but its dates (first and last published, ``publish_at``, the revision's
+    ``published_at`` and the snapshot's ``lastModified``) are that moment instead of now. It must not be
+    in the future; scheduling is ``schedule``."""
     now = timezone.now()
+    if published_at is not None and published_at > now:
+        raise ValidationError("A backdated publish date cannot be in the future. Schedule the post instead.")
+    moment = published_at or now
     rendered = _render_body(post)
     with transaction.atomic():
         current = Post.objects.select_for_update().get(pk=post.pk)
@@ -583,27 +619,28 @@ def publish(post: Post, actor, *, request=None) -> Post:
         old_slug = current.published_slug
         updated_at = current.public_updated_at
         if current.material_update and current.first_published_at:
-            updated_at = now
-        published_at = current.first_published_at or now
+            updated_at = moment
+        first_published = moment if published_at is not None else (current.first_published_at or now)
         detail, summary = _build_snapshot(
-            current, published_at=published_at, updated_at=updated_at, last_modified=now, now=now
+            current, published_at=first_published, updated_at=updated_at, last_modified=moment, now=now
         )
         current_hash = revision_hash(current)
+        note = "Changes published" if was_published else "Published"
         revision = PostRevision.objects.create(
             post=current,
             snapshot=detail,
             body_hash=body_hash(current),
             revision_hash=current_hash,
             published_by=actor,
-            published_at=now,
-            note="Changes published" if was_published else "Published",
+            published_at=moment,
+            note=f"{note} (backdated import)" if published_at is not None else note,
         )
         current.status = PostStatus.PUBLISHED
-        current.first_published_at = published_at
-        current.last_published_at = now
+        current.first_published_at = first_published
+        current.last_published_at = moment
         current.public_updated_at = updated_at
         current.material_update = False
-        current.publish_at = None
+        current.publish_at = published_at
         current.published_snapshot = detail
         current.published_summary = summary
         current.published_hash = current_hash
@@ -644,6 +681,8 @@ def publish(post: Post, actor, *, request=None) -> Post:
             summary=current.title,
             revision=revision.pk,
             revision_hash=current_hash,
+            **({"published_at": formatting.iso(published_at)} if published_at is not None else {}),
+            **_via(via),
         )
     return current
 
@@ -830,18 +869,18 @@ def archive(post: Post, actor, *, request=None) -> Post:
     )
 
 
-def _transition(post: Post, actor, *, allowed, target, audit, message, request=None) -> Post:
+def _transition(post: Post, actor, *, allowed, target, audit, message, request=None, via: str = "") -> Post:
     with transaction.atomic():
         current = Post.objects.select_for_update().get(pk=post.pk)
         if current.status not in allowed:
             raise ValidationError(message)
         current.status = target
         current.save(update_fields=["status"])
-        record(audit, request=request, actor=actor, entity=current, summary=current.title)
+        record(audit, request=request, actor=actor, entity=current, summary=current.title, **_via(via))
     return current
 
 
-def submit_for_review(post: Post, actor, *, request=None) -> Post:
+def submit_for_review(post: Post, actor, *, request=None, via: str = "") -> Post:
     return _transition(
         post,
         actor,
@@ -850,10 +889,11 @@ def submit_for_review(post: Post, actor, *, request=None) -> Post:
         audit="insights.post_submitted",
         message="Only a draft can be submitted for review.",
         request=request,
+        via=via,
     )
 
 
-def approve(post: Post, actor, *, request=None) -> Post:
+def approve(post: Post, actor, *, request=None, via: str = "") -> Post:
     return _transition(
         post,
         actor,
@@ -862,6 +902,7 @@ def approve(post: Post, actor, *, request=None) -> Post:
         audit="insights.post_approved",
         message="Only a post in review can be approved.",
         request=request,
+        via=via,
     )
 
 

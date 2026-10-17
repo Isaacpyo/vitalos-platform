@@ -167,6 +167,23 @@ export function buildIndexView(
 /** First name for "More from {first name}" when the author detail is not available. */
 export const firstNameOf = (name: string): string => name.trim().split(/\s+/)[0] ?? name;
 
+/** True for an organisation author (the Vitalos team); an author without a kind is a person. */
+export const isOrganisationAuthor = (author: { kind?: "person" | "organisation" | undefined }) =>
+  author.kind === "organisation";
+
+/**
+ * The note at the end of an article: the organisation note when every author is an organisation
+ * and that note is set, otherwise the approved note for posts by people.
+ */
+export function editorialNoteFor(
+  post: Pick<PostDetail, "authors">,
+  copy: { editorialNote: string; organisationEditorialNote?: string | undefined },
+): string {
+  const organisationOnly = post.authors.length > 0 && post.authors.every(isOrganisationAuthor);
+  const organisationNote = copy.organisationEditorialNote?.trim();
+  return organisationOnly && organisationNote ? organisationNote : copy.editorialNote;
+}
+
 /** A table of contents is shown only for three or more h2s (brief 5.2). */
 export const showsToc = (toc: readonly { depth: number }[]): boolean =>
   toc.filter((entry) => entry.depth === 2).length >= 3;
@@ -193,7 +210,7 @@ const isHttpsUrl = (value: string) => URL.canParse(value) && new URL(value).prot
 
 /**
  * `Article` structured data. Nothing is fabricated: without a named author and a published date
- * it is null; the image is the cover only when it is an https URL; the description is the SEO
+ * it is null; an organisation author is an `Organization`, a person a `Person`; the image is the cover only when it is an https URL; the description is the SEO
  * description or the excerpt; the publisher is a reference to the site's Organization
  * (`/#organization`, described in full on the homepage, docs/seo/DECISIONS.md 22). It joins the
  * page's one JSON-LD graph with its WebPage and BreadcrumbList.
@@ -203,13 +220,18 @@ export function articleJsonLd(
   ctx: { siteUrl: string },
   publisher: Record<string, unknown>,
 ): Record<string, unknown> | null {
+  // An organisation author (the Vitalos team) is the Organization itself, at the site's root.
   const authors = post.authors
     .filter((author) => author.name.trim() !== "")
-    .map((author) => ({
-      "@type": "Person",
-      name: author.name,
-      url: absolute(ctx.siteUrl, authorHref(author.slug)),
-    }));
+    .map((author) =>
+      isOrganisationAuthor(author)
+        ? { "@type": "Organization", name: author.name, url: absolute(ctx.siteUrl, "/") }
+        : {
+            "@type": "Person",
+            name: author.name,
+            url: absolute(ctx.siteUrl, authorHref(author.slug)),
+          },
+    );
   if (authors.length === 0 || Number.isNaN(Date.parse(post.publishedAt.iso))) return null;
   const url = absolute(ctx.siteUrl, postHref(post.slug));
   const description = (post.seo.description || post.excerpt).trim();

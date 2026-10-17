@@ -66,11 +66,21 @@ def retry_event(event: SyncEvent, actor, *, request=None) -> bool:
 
 
 def update_insights_copy(
-    *, heading: str, intro: str, editorial_note: str, actor, request=None
+    *,
+    heading: str,
+    intro: str,
+    editorial_note: str,
+    organisation_editorial_note: str | None = None,
+    actor,
+    request=None,
 ) -> SiteSettings:
     errors = {}
     values = {"heading": heading.strip(), "intro": intro.strip(), "editorial_note": editorial_note.strip()}
-    for name, limit in (("heading", 200), ("intro", 500), ("editorial_note", 1000)):
+    limits = [("heading", 200), ("intro", 500), ("editorial_note", 1000)]
+    if organisation_editorial_note is not None:
+        values["organisation_editorial_note"] = organisation_editorial_note.strip()
+        limits.append(("organisation_editorial_note", 1000))
+    for name, limit in limits:
         if not values[name]:
             errors[name] = "Enter a value."
         elif len(values[name]) > limit:
@@ -82,6 +92,8 @@ def update_insights_copy(
         site.insights_heading = values["heading"]
         site.insights_intro = values["intro"]
         site.insights_editorial_note = values["editorial_note"]
+        if "organisation_editorial_note" in values:
+            site.insights_organisation_editorial_note = values["organisation_editorial_note"]
         site.updated_at = timezone.now()
         site.updated_by = actor
         site.save()

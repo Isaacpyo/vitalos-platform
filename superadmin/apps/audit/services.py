@@ -72,6 +72,7 @@ ACTIONS = {
     "insights.topic_updated": "Edited a topic",
     "insights.topic_reordered": "Reordered topics",
     "insights.topic_deleted": "Deleted a topic",
+    "insights.batch_imported": "Imported a batch of Insights",
     "careers.role_created": "Created a role",
     "careers.role_edited": "Edited a role",
     "careers.role_opened": "Opened a role",

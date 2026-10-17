@@ -11,7 +11,7 @@ from apps.audit.services import record
 from apps.content_sync import formatting, media, sync
 from apps.content_sync.models import MediaAsset, SlugRedirect
 
-from .models import Author, Post, PostStatus, Topic, TopicKind
+from .models import Author, AuthorKind, Post, PostStatus, Topic, TopicKind
 
 PUBLIC = (PostStatus.PUBLISHED, PostStatus.SCHEDULED)
 
@@ -65,6 +65,10 @@ def _author_errors(author: Author | None, data: dict) -> dict:
         errors["slug"] = problem
     if problem := linkedin_problem(data.get("linkedin_url") or ""):
         errors["linkedin_url"] = problem
+    if "kind" in data and data["kind"] not in AuthorKind.values:
+        errors["kind"] = "Choose person or organisation."
+    elif author is not None and data.get("kind", author.kind) != author.kind and author_is_public(author):
+        errors["kind"] = "Archive or reassign this author's published posts before changing the kind."
     return errors
 
 
@@ -75,6 +79,7 @@ def create_author(data: dict, *, actor, request=None) -> Author:
     with transaction.atomic():
         author = Author.objects.create(
             name=data["name"].strip()[:120],
+            kind=data.get("kind") or AuthorKind.PERSON,
             slug=_unique(Author, data.get("slug") or data["name"]),
             role_title=(data.get("role_title") or "").strip()[:120],
             bio_md=data.get("bio_md") or "",
@@ -95,6 +100,11 @@ def update_author(author: Author, data: dict, *, actor, request=None) -> Author:
         current = Author.objects.select_for_update().get(pk=author.pk)
         old_slug = current.slug
         current.name = data["name"].strip()[:120]
+        if data.get("kind") and data["kind"] != current.kind:
+            # A confirmation means something different for a person and an organisation: confirm again.
+            current.kind = data["kind"]
+            current.confirmed_real_by = None
+            current.confirmed_real_at = None
         current.slug = data.get("slug") or current.slug
         current.role_title = (data.get("role_title") or "").strip()[:120]
         current.bio_md = data.get("bio_md") or ""
@@ -177,7 +187,11 @@ def confirm_author(author: Author, *, actor, request=None) -> Author:
             request=request,
             actor=actor,
             entity=current,
-            summary=f"{current.name} confirmed as a real person who approved the profile",
+            summary=(
+                f"{current.name} approved as an organisation author"
+                if current.is_organisation
+                else f"{current.name} confirmed as a real person who approved the profile"
+            ),
         )
     return current
 

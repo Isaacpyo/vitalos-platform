@@ -68,6 +68,8 @@ export default async function ArticleRoute({ params }: Readonly<{ params: Promis
                 description: data.post.excerpt,
                 breadcrumb: true,
                 dateModified: data.post.updatedAt?.iso ?? data.post.publishedAt.iso,
+                // The body's "Frequently asked questions" section (visible on the page) as FAQPage.
+                faq: data.body.faq,
               },
               ctx,
             ),

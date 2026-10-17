@@ -79,6 +79,8 @@ class SiteSettings(models.Model):
     insights_heading = models.CharField(max_length=200, blank=True)
     insights_intro = models.CharField(max_length=500, blank=True)
     insights_editorial_note = models.CharField(max_length=1000, blank=True)
+    # Shown instead of the note above on posts whose only author is an organisation.
+    insights_organisation_editorial_note = models.CharField(max_length=1000, blank=True)
     updated_at = models.DateTimeField(default=timezone.now)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -99,6 +101,7 @@ class SiteSettings(models.Model):
                 "insights_heading": copy.INSIGHTS_HEADING,
                 "insights_intro": copy.INSIGHTS_INTRO,
                 "insights_editorial_note": copy.EDITORIAL_NOTE,
+                "insights_organisation_editorial_note": copy.ORGANISATION_EDITORIAL_NOTE,
             },
         )
         return obj

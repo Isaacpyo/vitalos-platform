@@ -155,6 +155,41 @@ describe("renderMarkdown: XSS corpus", () => {
   });
 });
 
+describe("renderMarkdown: FAQ", () => {
+  const body = [
+    "Intro paragraph.",
+    "## Frequently asked questions",
+    "### How many companies have deployed AI agents?",
+    "Gartner found **17%** have, with [more planning](https://example.test/a) to.",
+    "### Why do projects fail?",
+    "Costs grow.",
+    "",
+    "- Scope is too broad.",
+    "### A question without an answer?",
+    "## Sources",
+    "1. [A source](https://example.test/source)",
+    "### Not a question",
+    "Outside the section.",
+  ].join("\n\n");
+
+  it("reads the h3 questions and their answers as plain text, up to the next h2", async () => {
+    const result = await render(body);
+    expect(result.faq).toEqual([
+      {
+        question: "How many companies have deployed AI agents?",
+        answer: "Gartner found 17% have, with more planning to.",
+      },
+      { question: "Why do projects fail?", answer: "Costs grow. Scope is too broad." },
+    ]);
+    expect(RenderResponse.parse(result).faq).toHaveLength(2);
+  });
+
+  it("is empty without the heading, and outside the post context", async () => {
+    expect((await render("## Questions\n\n### Is this one?\n\nNo.")).faq).toEqual([]);
+    expect((await render(body, { context: "role" })).faq).toEqual([]);
+  });
+});
+
 describe("renderMarkdown: features", () => {
   it("matches the contract's render fixture HTML", async () => {
     const request = JSON.parse(
@@ -173,6 +208,7 @@ describe("renderMarkdown: features", () => {
     expect(result.toc).toEqual([{ id: "example-heading", text: "Example heading", depth: 2 }]);
     expect(result.footnotes).toBe(0);
     expect(result.warnings).toEqual([]);
+    expect(result.faq).toEqual([]);
   });
 
   it("gives headings stable, de-duplicated ids and builds a TOC from h2 to h4", async () => {

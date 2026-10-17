@@ -9,6 +9,11 @@ EDITORIAL_NOTE = (
     "Every substantive Vitalos Insight has a named human author who is accountable for its accuracy "
     "and judgement. Claims, citations and figures are checked before anything is published."
 )
+# For posts whose only author is an organisation (the Vitalos team). Awaiting the owner's confirmation.
+ORGANISATION_EDITORIAL_NOTE = (
+    "Vitalos Insights are written and reviewed by the Vitalos team, who are accountable for their accuracy "
+    "and judgement. Claims, citations and figures are checked before anything is published."
+)
 CAREERS_HEADING = "Build what you advise."
 CAREERS_INTRO = (
     "Vitalos offers consequential technology work, close to the problem, where you build what you "

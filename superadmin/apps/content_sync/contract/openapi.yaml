@@ -188,6 +188,12 @@ components:
         id: { $ref: "#/components/schemas/Uuid" }
         slug: { $ref: "#/components/schemas/Slug" }
         name: { type: string, maxLength: 120 }
+        kind:
+          type: string
+          enum: [person, organisation]
+          description: >-
+            An organisation author (the Vitalos team) is shown with the Vitalos symbol instead of a photo
+            or initials, and is an Organization in structured data. Absent means person.
         roleTitle: { type: string, maxLength: 120 }
         initials: { type: string, maxLength: 3 }
         avatar:
@@ -360,6 +366,10 @@ components:
         heading: { type: string, maxLength: 200 }
         intro: { type: string, maxLength: 500 }
         editorialNote: { type: string, maxLength: 1000 }
+        organisationEditorialNote:
+          type: string
+          maxLength: 1000
+          description: Shown instead of editorialNote on posts whose only author is an organisation.
 
     SalaryValue:
       type: object
@@ -690,6 +700,19 @@ components:
         warnings:
           type: array
           items: { $ref: "#/components/schemas/RenderWarning" }
+        faq:
+          description: >-
+            Questions under a level 2 "Frequently asked questions" heading (each a level 3 heading) with
+            their answers as plain text, for FAQPage structured data. Empty when the body has no such section.
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required: [question, answer]
+            properties:
+              question: { type: string, maxLength: 300 }
+              answer: { type: string, maxLength: 5000 }
 
     UploadTicketRequest:
       type: object

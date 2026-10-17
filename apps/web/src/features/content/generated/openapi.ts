@@ -398,6 +398,11 @@ export interface components {
       id: components["schemas"]["Uuid"];
       slug: components["schemas"]["Slug"];
       name: string;
+      /**
+       * @description An organisation author (the Vitalos team) is shown with the Vitalos symbol instead of a photo or initials, and is an Organization in structured data. Absent means person.
+       * @enum {string}
+       */
+      kind?: "person" | "organisation";
       roleTitle: string;
       initials: string;
       avatar: components["schemas"]["Image"] | null;
@@ -478,6 +483,8 @@ export interface components {
       heading: string;
       intro: string;
       editorialNote: string;
+      /** @description Shown instead of editorialNote on posts whose only author is an organisation. */
+      organisationEditorialNote?: string;
     };
     SalaryValue: {
       min: number;
@@ -644,6 +651,11 @@ export interface components {
       }[];
       footnotes: number;
       warnings: components["schemas"]["RenderWarning"][];
+      /** @description Questions under a level 2 "Frequently asked questions" heading (each a level 3 heading) with their answers as plain text, for FAQPage structured data. Empty when the body has no such section. */
+      faq?: {
+        question: string;
+        answer: string;
+      }[];
     };
     UploadTicketRequest: {
       roleSlug: components["schemas"]["Slug"];

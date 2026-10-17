@@ -14,5 +14,11 @@
       "message": "An image has no alt text.",
       "blocking": true
     }
+  ],
+  "faq": [
+    {
+      "question": "Example question?",
+      "answer": "Example answer."
+    }
   ]
 }

@@ -58,7 +58,7 @@ function harness(
       }),
     },
     renderProcess: (markdown) =>
-      Promise.resolve({ html: `<p>${markdown}</p>`, toc: [], footnotes: 0, warnings: [] }),
+      Promise.resolve({ html: `<p>${markdown}</p>`, toc: [], footnotes: 0, warnings: [], faq: [] }),
     logger: {
       info: (...args: unknown[]) => lines.push(args),
       warn: (...args: unknown[]) => lines.push(args),

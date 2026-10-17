@@ -137,6 +137,7 @@ def site_state(request):
                 "heading": site.insights_heading,
                 "intro": site.insights_intro,
                 "editorialNote": site.insights_editorial_note,
+                "organisationEditorialNote": site.insights_organisation_editorial_note,
             },
             "nextDueAt": formatting.iso(tick.next_due_at()),
         }

@@ -270,6 +270,7 @@ describe("POST /api/content/render", () => {
       toc: [{ id: "example-heading", text: "Example heading", depth: 2 }],
       footnotes: 0,
       warnings: [],
+      faq: [],
     });
   });
 

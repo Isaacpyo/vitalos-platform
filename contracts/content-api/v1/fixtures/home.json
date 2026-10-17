@@ -19,6 +19,7 @@
             "id": "00000000-0000-4000-8000-0000000000a1",
             "slug": "example-author",
             "name": "Example Author",
+            "kind": "person",
             "roleTitle": "Example role title",
             "initials": "EA",
             "avatar": null
@@ -62,6 +63,7 @@
             "id": "00000000-0000-4000-8000-0000000000a1",
             "slug": "example-author",
             "name": "Example Author",
+            "kind": "person",
             "roleTitle": "Example role title",
             "initials": "EA",
             "avatar": null
@@ -105,6 +107,7 @@
             "id": "00000000-0000-4000-8000-0000000000a1",
             "slug": "example-author",
             "name": "Example Author",
+            "kind": "person",
             "roleTitle": "Example role title",
             "initials": "EA",
             "avatar": null

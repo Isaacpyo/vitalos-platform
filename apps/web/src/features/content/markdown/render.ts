@@ -46,11 +46,18 @@ export interface TocEntry {
   depth: 2 | 3 | 4;
 }
 
+export interface FaqEntry {
+  question: string;
+  answer: string;
+}
+
 export interface RenderResult {
   html: string;
   toc: TocEntry[];
   footnotes: number;
   warnings: RenderWarning[];
+  /** The body's "Frequently asked questions" section, for FAQPage structured data (post context). */
+  faq: FaqEntry[];
 }
 
 export interface RenderOptions {
@@ -393,6 +400,45 @@ async function shapeCode(tree: HastRoot, highlight: boolean): Promise<void> {
   }
 }
 
+const FAQ_HEADING = "frequently asked questions";
+const MAX_FAQ = 50;
+const MAX_QUESTION = 300;
+const MAX_ANSWER = 5000;
+
+const plain = (node: Element) => hastToString(node).replace(/\s+/g, " ").trim();
+
+/**
+ * The questions of a level 2 "Frequently asked questions" section: each level 3 heading is a
+ * question, and the text of the blocks after it (up to the next h3 or h2) is its answer. Only the
+ * top level of the body is read, so a heading inside a callout or the footnotes never counts.
+ */
+function extractFaq(tree: HastRoot): FaqEntry[] {
+  const blocks = tree.children.filter((child): child is Element => isElement(child));
+  const start = blocks.findIndex(
+    (node) => node.tagName === "h2" && plain(node).toLowerCase() === FAQ_HEADING,
+  );
+  if (start === -1) return [];
+  const faq: { question: string; parts: string[] }[] = [];
+  for (const node of blocks.slice(start + 1)) {
+    if (node.tagName === "h2" || node.tagName === "section") break;
+    if (node.tagName === "h3") {
+      faq.push({ question: plain(node), parts: [] });
+      continue;
+    }
+    const current = faq.at(-1);
+    const value = plain(node);
+    if (current && value) current.parts.push(value);
+  }
+  return faq
+    .map((item) => ({ question: item.question, answer: item.parts.join(" ") }))
+    .filter((item) => item.question !== "" && item.answer !== "")
+    .slice(0, MAX_FAQ)
+    .map((item) => ({
+      question: item.question.slice(0, MAX_QUESTION),
+      answer: item.answer.slice(0, MAX_ANSWER),
+    }));
+}
+
 function countFootnotes(tree: HastRoot): number {
   let count = 0;
   visit(tree, "element", (node) => {
@@ -445,5 +491,6 @@ export async function renderMarkdown(
     toc,
     footnotes: countFootnotes(hast),
     warnings: warnings.list,
+    faq: options.context === "post" ? extractFaq(hast) : [],
   };
 }

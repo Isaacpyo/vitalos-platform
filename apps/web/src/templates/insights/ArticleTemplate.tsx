@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Container, Section } from "@vitalos/ui";
 import { JsonLd } from "../../components/json-ld";
 import { ShareMenu } from "../../components/share-menu";
@@ -5,7 +6,9 @@ import type { ArticlePageData } from "../../features/content/insights/load";
 import {
   articleDatesLine,
   authorHref,
+  editorialNoteFor,
   insightsCopy,
+  isOrganisationAuthor,
   postHref,
   showsToc,
 } from "../../features/content/insights/model";
@@ -45,15 +48,38 @@ function TocList({ toc }: Readonly<{ toc: Toc }>) {
   );
 }
 
-/** An author's photo, or their initials when there is none (decorative: the name is beside it). */
+const SYMBOL = { src: "/brand/vitalos-symbol.png", width: 128, height: 128 } as const;
+
+/**
+ * An author's photo, or their initials when there is none; an organisation author (the Vitalos
+ * team) shows the Vitalos symbol in a square. Decorative: the name is beside it.
+ */
 function AuthorAvatar({
   author,
   size = "sm",
 }: Readonly<{
-  author: Pick<PostDetail["authors"][number], "avatar" | "initials">;
+  author: Pick<PostDetail["authors"][number], "avatar" | "initials" | "kind">;
   size?: "sm" | "lg";
 }>) {
   const box = size === "lg" ? "size-14 text-body" : "size-10 text-small";
+  if (isOrganisationAuthor(author)) {
+    return (
+      <span
+        aria-hidden="true"
+        data-author-symbol=""
+        className={`flex ${box} shrink-0 items-center justify-center rounded-md border border-tone-border bg-white p-(--space-2)`}
+      >
+        <Image
+          src={SYMBOL.src}
+          alt=""
+          width={SYMBOL.width}
+          height={SYMBOL.height}
+          sizes={size === "lg" ? "56px" : "40px"}
+          className="h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
   if (author.avatar) {
     return (
       <ContentImage
@@ -140,6 +166,7 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
   const { post, body, authors, state } = data;
   const toc = showsToc(body.toc) ? body.toc : [];
   const related = post.related.filter((item) => item.slug !== post.slug).slice(0, 3);
+  const editorialNote = editorialNoteFor(post, state.insights);
 
   return (
     <PageMain>
@@ -180,9 +207,9 @@ export function ArticleTemplate({ data, url, jsonLd }: Readonly<ArticleTemplateP
                   copiedLabel={insightsCopy.codeCopied}
                 />
 
-                {state.insights.editorialNote ? (
+                {editorialNote ? (
                   <p className="mt-(--space-8) max-w-[68ch] border-y border-tone-border py-(--space-4) text-small text-tone-muted">
-                    {state.insights.editorialNote}
+                    {editorialNote}
                   </p>
                 ) : null}
 
