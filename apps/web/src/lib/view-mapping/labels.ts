@@ -27,6 +27,7 @@ export const structuralLabels = {
   faq: "Frequently asked questions",
   /** Closing links of the What We Do and Who We Are menu columns. */
   allSolutions: "All solutions",
+  allOffers: "All offers",
   allLabs: "All Labs",
   allIndustries: "All industries",
   /** The Support menu's column of enquiry topics. */

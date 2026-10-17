@@ -86,6 +86,14 @@ const keyList = z.string().transform((value, ctx): SigningKey[] => {
   }
   return keys;
 });
+/**
+ * Header navigation variants (ADR-045). `current`: the three menus of ADR-031 (production).
+ * `ia`: the locked information architecture (What We Do, Industries, Work, Insights, Labs, About,
+ * the Trust Centre and Contact as utility links), built for review on previews.
+ */
+export const navVariants = ["current", "ia"] as const;
+export type NavVariant = (typeof navVariants)[number];
+
 export const relayStores = ["supabase", "memory"] as const;
 export const relayProviders = ["deepseek", "mock"] as const;
 
@@ -217,6 +225,13 @@ const rawSchema = z.object({
   RELAY_FAQ_SYNC_ENABLED: booleanFlag,
   RELAY_FAQ_REQUIRE_HUB_ACTIVE: booleanFlag,
   RELAY_FAQ_WRITEBACK_ENABLED: booleanFlag,
+  // ---- Site presentation flags (ADR-045). Server-read; each default is set in resolveSite. ----
+  /** `current` | `ia`. Unset: `ia` on Vercel previews, `current` everywhere else. */
+  NEXT_PUBLIC_NAV_VARIANT: z.enum(navVariants).optional(),
+  /** The podcast page and footer block. Unset: off (no episodes exist; owner decision 3). */
+  PODCAST_ENABLED: booleanFlag,
+  /** The About page's Founder section. Unset: on for Vercel previews, off everywhere else. */
+  ABOUT_FOUNDER_ENABLED: booleanFlag,
 });
 
 export const envKeys: readonly string[] = Object.keys(rawSchema.shape);
@@ -252,6 +267,15 @@ export interface Env {
     bingSiteVerification: string | undefined;
   };
   relay: RelayEnv;
+  /** Site presentation flags (ADR-045). */
+  site: SiteEnv;
+}
+
+/** Presentation switches for the public site (ADR-045). None holds a secret. */
+export interface SiteEnv {
+  navVariant: NavVariant;
+  podcastEnabled: boolean;
+  aboutFounderEnabled: boolean;
 }
 
 export interface RelayEnv {
@@ -439,12 +463,32 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         bingSiteVerification: raw.BING_SITE_VERIFICATION,
       },
       relay: resolveRelay(raw, deployEnv, siteUrl ?? LOCAL_SITE_URL, supabaseConfigured),
+      site: resolveSite(raw),
     },
   };
 }
 
 const flag = (value: string | undefined, fallback: boolean) =>
   value === undefined ? fallback : value === "true" || value === "1";
+
+/**
+ * Site presentation defaults (ADR-045). Vercel previews (`VERCEL_ENV=preview`) show the review
+ * state (IA navigation, Founder section) without any project setting; production and every
+ * other environment keep the current site unless a variable says otherwise.
+ */
+export function resolveSite(
+  raw: Pick<
+    Raw,
+    "VERCEL_ENV" | "NEXT_PUBLIC_NAV_VARIANT" | "PODCAST_ENABLED" | "ABOUT_FOUNDER_ENABLED"
+  >,
+): SiteEnv {
+  const preview = raw.VERCEL_ENV === "preview";
+  return {
+    navVariant: raw.NEXT_PUBLIC_NAV_VARIANT ?? (preview ? "ia" : "current"),
+    podcastEnabled: flag(raw.PODCAST_ENABLED, false),
+    aboutFounderEnabled: flag(raw.ABOUT_FOUNDER_ENABLED, preview),
+  };
+}
 
 function resolveRelay(
   raw: Raw,

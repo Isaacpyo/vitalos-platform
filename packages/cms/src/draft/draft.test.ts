@@ -278,7 +278,7 @@ describe("content hygiene", () => {
 });
 
 describe("document shapes", () => {
-  it("five practices with 4-6 problems, 6-10 capabilities, a body and solutions", () => {
+  it("five practice pages (Labs, the sixth practice, is /labs) with 4-6 problems, 6-10 capabilities, a body and solutions", () => {
     expect(set.documents.practice).toHaveLength(5);
     for (const practice of set.documents.practice) {
       expect(practice.problems.length).toBeGreaterThanOrEqual(4);

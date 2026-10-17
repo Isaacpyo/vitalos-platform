@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { SiteHeader } from "@vitalos/ui";
 import type { SiteHeaderProps } from "@vitalos/ui";
+import type { NavVariant } from "@vitalos/config";
 import { activeSectionForPath } from "./site-chrome/section-for-path";
 
 /**
@@ -15,10 +16,11 @@ import { activeSectionForPath } from "./site-chrome/section-for-path";
  * page's dark hero until the page scrolls (`overlay`; each hero starts under the bar; pages
  * redesign, 15 Oct 2026).
  */
-export function ActiveSectionHeader(
-  props: Readonly<Omit<SiteHeaderProps, "activeSection" | "overlay">>,
-) {
+export function ActiveSectionHeader({
+  navVariant = "current",
+  ...props
+}: Readonly<Omit<SiteHeaderProps, "activeSection" | "overlay"> & { navVariant?: NavVariant }>) {
   const pathname = usePathname();
-  const activeSection = activeSectionForPath(pathname);
+  const activeSection = activeSectionForPath(pathname, navVariant);
   return <SiteHeader {...props} {...(activeSection ? { activeSection } : {})} overlay />;
 }

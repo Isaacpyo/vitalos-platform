@@ -15,12 +15,18 @@ import {
   filterNavByGates,
   footerColumns,
   footerNav,
+  iaHeaderNav,
+  iaUtilityNav,
   industryNames,
   labTypeLabels,
+  labsPracticeName,
   megaMenuColumns,
   navLabels,
+  offerNames,
+  practiceDisplayName,
   practiceNames,
   primaryNav,
+  priorityOfferNames,
   proposition,
   propositionLong,
   routes,
@@ -45,6 +51,7 @@ import type {
   SolutionSummary,
   TrustTopicSummary,
 } from "@vitalos/cms";
+import type { NavVariant } from "@vitalos/config";
 import type {
   FooterColumn,
   FooterPodcastLink,
@@ -77,12 +84,29 @@ export interface ChromeContent {
   labAssets: readonly LabAssetSummary[];
   trustTopics: readonly TrustTopicSummary[];
   legalPages: readonly LegalPageSummary[];
+  /** Header navigation variant (ADR-045). Omitted: `current`, the production header. */
+  navVariant?: NavVariant | undefined;
+  /** The podcast footer block (`PODCAST_ENABLED`, owner decision 3). Omitted: off. */
+  podcastEnabled?: boolean | undefined;
 }
 
 export type HeaderModel = Pick<
   SiteHeaderProps,
-  "items" | "social" | "cta" | "logo" | "logoOnDark" | "compactLogo" | "wordmarkText" | "homeHref"
-> & { items: readonly SiteNavItem[]; cta: PatternLink };
+  | "items"
+  | "utility"
+  | "social"
+  | "cta"
+  | "logo"
+  | "logoOnDark"
+  | "compactLogo"
+  | "wordmarkText"
+  | "homeHref"
+> & {
+  items: readonly SiteNavItem[];
+  cta: PatternLink;
+  /** Which variant built the items, so the current section is matched to the right keys. */
+  navVariant: NavVariant;
+};
 
 export type FooterModel = Pick<
   SiteFooterProps,
@@ -137,6 +161,26 @@ function summaryLinks<T extends { title: string }>(
   });
 }
 
+/** "Vitalos Labs", the sixth practice (owner decision 1, 17 Oct 2026), listed with the others. */
+export const labsPracticeTitle = practiceDisplayName(labsPracticeName);
+
+/**
+ * The six practices as menu links: the five practice pages with their icons, then Vitalos Labs
+ * (its page is the Labs index), while the Labs gate is open so nothing links to a 404.
+ */
+function practiceLinks(content: ChromeContent): SiteNavLink[] {
+  const practices = orderByLockedNames(content.practices, practiceNames).flatMap((item) => {
+    const href = hrefForSummary("practice", item);
+    return href ? [{ label: item.title, href, icon: iconFor("practice", item.title) }] : [];
+  });
+  return content.gates.open.labs
+    ? [
+        ...practices,
+        { label: labsPracticeTitle, href: routes.labs(), icon: iconFor("lab", labsPracticeTitle) },
+      ]
+    : practices;
+}
+
 /**
  * The What We Do mega-menu: Practices (with their icon), Solutions and Labs, each closed by a link
  * to its index, and a card with the AI journey (Stage 8 section 6, changed by owner direction on
@@ -144,18 +188,7 @@ function summaryLinks<T extends { title: string }>(
  * removed; the offers stay reachable from the What We Do page and the footer).
  */
 export function buildWhatWeDoColumns(content: ChromeContent): MegaMenuColumn[] {
-  const practices = orderByLockedNames(content.practices, practiceNames).flatMap((item) => {
-    const href = hrefForSummary("practice", item);
-    return href
-      ? [
-          {
-            label: item.title,
-            href,
-            icon: iconFor("practice", item.title),
-          },
-        ]
-      : [];
-  });
+  const practices = practiceLinks(content);
   const solutions = summaryLinks(orderByLockedNames(content.solutions, solutionNames), (item) =>
     hrefForSummary("solution", item),
   );
@@ -294,6 +327,55 @@ export function buildSupportColumns(content: ChromeContent): MegaMenuColumn[] {
   ];
 }
 
+/**
+ * The `ia` What We Do mega-menu (ADR-045; Stage 8 §6): Practices (the six), Solutions, Offers (the
+ * priority offers), Industries (while their gate is open) and Labs (the lab types with assets),
+ * each closed by a link to its index. No feature card: five columns fill the panel from 1024px.
+ */
+export function buildIaWhatWeDoColumns(content: ChromeContent): MegaMenuColumn[] {
+  const current = buildWhatWeDoColumns(content);
+  const column = (key: string) => current.find((entry) => entry.key === key);
+  const priority = new Set<string>(priorityOfferNames);
+  const offers = summaryLinks(
+    orderByLockedNames(content.offers, offerNames).filter((offer) => priority.has(offer.title)),
+    (item) => hrefForSummary("offer", item),
+  );
+  const industries = buildWhoWeAreColumns(content).find((entry) => entry.key === "industries");
+  const columns: (MegaMenuColumn | undefined)[] = [
+    column("practices"),
+    column("solutions"),
+    {
+      key: "offers",
+      heading: structuralLabels.offers,
+      href: routes.offers(),
+      links: offers,
+      more: { label: structuralLabels.allOffers, href: routes.offers() },
+    },
+    industries,
+    column("labs"),
+  ];
+  return columns.filter(
+    (entry): entry is MegaMenuColumn => entry !== undefined && entry.links.length > 0,
+  );
+}
+
+/**
+ * The `ia` header (ADR-045): What We Do with its mega-menu, then Industries, Work (Labs while Work
+ * is closed), Insights, Labs and About as plain links, with the Trust Centre and Contact as utility
+ * links and the same primary action. The compact menu sheet shows the same items.
+ */
+function buildIaHeaderItems(content: ChromeContent): {
+  items: SiteNavItem[];
+  utility: SiteNavLink[];
+} {
+  const columns = buildIaWhatWeDoColumns(content);
+  const items = iaHeaderNav(content.gates).map((item): SiteNavItem => {
+    const base = { key: item.key, label: item.label, href: item.href };
+    return item.key === "what-we-do" && columns.length > 0 ? { ...base, menu: { columns } } : base;
+  });
+  return { items, utility: iaUtilityNav.map(link) };
+}
+
 /** The social profiles in site settings that have a name and an address. */
 function socialOf(settings: SiteSettingsView) {
   return (settings.social ?? []).filter(
@@ -303,6 +385,19 @@ function socialOf(settings: SiteSettingsView) {
 
 export function buildHeaderModel(content: ChromeContent): HeaderModel {
   const { gates } = content;
+  const social = socialOf(content.settings);
+  const shared = {
+    cta: { label: ctaNav.label, href: ctaNav.href },
+    homeHref: routes.home(),
+    wordmarkText,
+    logo: content.settings.logo ?? colourLogo,
+    logoOnDark: whiteLogo,
+    compactLogo: markLogo,
+    ...(social.length > 0 ? { social } : {}),
+  };
+  if (content.navVariant === "ia") {
+    return { ...buildIaHeaderItems(content), ...shared, navVariant: "ia" };
+  }
   const menus: Record<string, SiteNavMenu | undefined> = {
     "what-we-do": { columns: buildWhatWeDoColumns(content), feature: whatWeDoFeature },
     "who-we-are": { columns: buildWhoWeAreColumns(content), feature: whoWeAreFeature },
@@ -315,17 +410,7 @@ export function buildHeaderModel(content: ChromeContent): HeaderModel {
       ? { ...base, menu }
       : base;
   });
-  const social = socialOf(content.settings);
-  return {
-    items,
-    cta: { label: ctaNav.label, href: ctaNav.href },
-    homeHref: routes.home(),
-    wordmarkText,
-    logo: content.settings.logo ?? colourLogo,
-    logoOnDark: whiteLogo,
-    compactLogo: markLogo,
-    ...(social.length > 0 ? { social } : {}),
-  };
+  return { items, ...shared, navVariant: "current" };
 }
 
 export function buildFooterModel(content: ChromeContent): FooterModel {
@@ -337,9 +422,8 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
     {
       key: "what-we-do",
       heading: footerColumns.whatWeDo,
-      links: summaryLinks(orderByLockedNames(content.practices, practiceNames), (item) =>
-        hrefForSummary("practice", item),
-      ),
+      // The six practices; Vitalos Labs is the sixth (owner decision 1, 17 Oct 2026).
+      links: practiceLinks(content).map(({ label, href }) => ({ label, href })),
     },
     {
       key: "explore",
@@ -355,7 +439,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
         ...gatedSection("industries"),
         ...gatedSection("work"),
         ...gatedSection("insights"),
-        ...gatedSection("labs"),
+        // Labs is listed once, as the sixth practice in the column above.
       ],
     },
     {
@@ -388,7 +472,8 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
 
   // Podcast links show only when owner-supplied, validated URLs exist (none is ever invented). They
   // lead to the podcast page, which opens each app (owner direction, 16 Oct 2026).
-  const podcastUrls = validatePodcast(settings.podcast);
+  // Off unless PODCAST_ENABLED (owner decision 3, 17 Oct 2026: no episodes exist yet).
+  const podcastUrls = content.podcastEnabled ? validatePodcast(settings.podcast) : undefined;
   const podcastLinks: FooterPodcastLink[] = [
     ...(podcastUrls?.spotifyUrl
       ? [

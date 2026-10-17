@@ -58,7 +58,7 @@ function headingFor(key: HomeSectionKey): string {
 }
 
 /**
- * Section headings. Five are the spec-quoted titles in locked copy. The others are the section
+ * Section headings. Five are the titles in locked copy. The others are the section
  * names Stage 11 §9 uses for items 7, 9 and 10 ("Industries", "Vitalos Labs", "Insights"); its
  * Trust and Leadership bands were removed from the homepage (owner direction, 15 Oct 2026). The
  * hero is locked copy and has no heading entry; the credibility strip has no quoted title and no
@@ -338,9 +338,10 @@ const about: RoutePageDraft = {
       p(
         "We help organisations decide what to change and where technology and AI create real value, then build it and keep improving it. That is why Vitalos is neither a strategy-only consultancy nor a build-to-spec agency.",
       ),
-      h2("Five practices, one firm"),
+      // Six practices (owner decision 1, 17 Oct 2026): the five practice pages and Vitalos Labs.
+      h2("Six practices, one firm"),
       p(
-        "Our five practices share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like five departments.",
+        "Our six practices share one delivery lifecycle, one accountability model and one quality philosophy. One engagement never feels like six departments.",
       ),
       h2("Two ways to start"),
       p(
