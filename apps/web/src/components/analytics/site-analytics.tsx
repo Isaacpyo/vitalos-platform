@@ -97,6 +97,8 @@ export function SiteAnalytics() {
     document.addEventListener("focusin", onFormStart, { capture: true });
     document.addEventListener("input", onFormStart, { capture: true });
     window.addEventListener(RELAY_EVENT, onRelay);
+    // Tells tests (and anyone debugging) that the listeners are attached. Carries no data.
+    document.documentElement.dataset.analytics = "ready";
     return () => {
       document.removeEventListener("click", onClick, { capture: true });
       document.removeEventListener("focusin", onFormStart, { capture: true });

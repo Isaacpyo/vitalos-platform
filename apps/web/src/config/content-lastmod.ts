@@ -11,10 +11,12 @@ import { execFileSync } from "node:child_process";
  * date is left out: no `<lastmod>` is better than an invented one, and a build time would claim
  * a change on every deploy.
  */
+// `:(top)` makes each pathspec relative to the repository root, whatever the working directory
+// (`next build` runs in apps/web).
 export const CONTENT_PATHS = [
-  "packages/cms/src/draft/content",
-  "packages/cms/src/repo",
-  "packages/cms/src/locked-copy.ts",
+  ":(top)packages/cms/src/draft/content",
+  ":(top)packages/cms/src/repo",
+  ":(top)packages/cms/src/locked-copy.ts",
 ] as const;
 
 export type GitRunner = (args: readonly string[]) => string;

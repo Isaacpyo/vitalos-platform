@@ -59,6 +59,12 @@ async function smallTargets(page: Page): Promise<Target[]> {
     };
     const hidden = (el: Element) => {
       if (el.closest('[aria-hidden="true"], [hidden], [inert]')) return true;
+      // The skip link sits off-screen until it is focused.
+      if (el.classList.contains("skip-link")) return true;
+      // Content of a closed <details> keeps a layout box but is not rendered (content-visibility).
+      if (!el.checkVisibility({ contentVisibilityAuto: true, opacityProperty: true, visibilityProperty: true })) {
+        return true;
+      }
       const style = getComputedStyle(el);
       if (style.visibility === "hidden" || style.display === "none") return true;
       const rect = el.getBoundingClientRect();
@@ -155,7 +161,9 @@ test.describe("no Content-Security-Policy violations (C4, ADR-047)", () => {
         if (/Content Security Policy/i.test(error.message)) violations.push(error.message);
       });
       await page.goto(entry.path);
-      await page.waitForLoadState("networkidle");
+      // Not "networkidle": the Turnstile widget keeps a connection open on forms.
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(500);
       if (process.env.WS5_SCREENSHOTS === "1" && testInfo.project.name === "chromium") {
         mkdirSync(screenshotDir, { recursive: true });
         const file = `${entry.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-1440.jpg`;

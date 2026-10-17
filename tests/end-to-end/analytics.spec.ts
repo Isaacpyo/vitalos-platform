@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { PERSONAL_DATA, recordAnalytics, recordedEvents } from "../support/analytics";
+import {
+  PERSONAL_DATA,
+  analyticsReady,
+  recordAnalytics,
+  recordedEvents,
+} from "../support/analytics";
 
 /**
  * Analytics events fire with the provider stubbed (C1, ADR-046). The listeners are delegated, so
@@ -15,6 +20,7 @@ test("a click on the header's Talk to Vitalos records cta_click with label and p
   page,
 }) => {
   await page.goto("/what-we-do");
+  await analyticsReady(page);
   // Stay on the page so the recorded event can be read (the listener runs before navigation).
   await page.evaluate(() =>
     document.addEventListener("click", (event) => event.preventDefault(), { once: true }),
@@ -28,13 +34,15 @@ test("a click on the header's Talk to Vitalos records cta_click with label and p
 
 test("a link to another site records outbound_click with its host only", async ({ page }) => {
   await page.goto("/");
+  await analyticsReady(page);
   await page.evaluate(() => {
     const link = document.createElement("a");
     link.href = "https://www.example.com/some/path?ref=campaign";
     link.textContent = "Example outbound link";
     document.querySelector("main")?.append(link);
   });
-  await page.getByRole("link", { name: "Example outbound link" }).click();
+  // A DOM click: the injected link sits under the footer's overlap, and placement is not the point.
+  await page.getByRole("link", { name: "Example outbound link" }).dispatchEvent("click");
   expect(await recordedEvents(page)).toContainEqual({
     name: "outbound_click",
     properties: { host: "www.example.com", page: "/" },
@@ -45,12 +53,14 @@ test("the enquiry form records enquiry_started once, and the receipt records enq
   page,
 }) => {
   await page.goto("/contact");
+  await analyticsReady(page);
   await page.getByLabel("Name").fill("Example Visitor");
   await page.getByLabel("Organisation").fill("Example Organisation");
   const started = (await recordedEvents(page)).filter((e) => e.name === "enquiry_started");
   expect(started).toEqual([{ name: "enquiry_started", properties: { page: "/contact" } }]);
 
   await page.goto("/contact/thank-you");
+  await analyticsReady(page);
   await expect
     .poll(async () => recordedEvents(page))
     .toContainEqual({ name: "enquiry_sent", properties: { page: "/contact" } });
@@ -60,6 +70,7 @@ test("Relay's vitalos:relay events become relay_opened, relay_question and relay
   page,
 }) => {
   await page.goto("/faq");
+  await analyticsReady(page);
   await page.evaluate(() => {
     for (const type of ["opened", "question", "handoff", "unknown"]) {
       window.dispatchEvent(new CustomEvent("vitalos:relay", { detail: { type } }));
@@ -74,6 +85,7 @@ test("Relay's vitalos:relay events become relay_opened, relay_question and relay
 
 test("no event carries personal data or a query string", async ({ page }) => {
   await page.goto("/contact?intent=example&utm_source=example");
+  await analyticsReady(page);
   await page.getByLabel("Name").fill("Example Applicant");
   await page.getByLabel("Work email").fill("applicant@example.test");
   const events = await recordedEvents(page);

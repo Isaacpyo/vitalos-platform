@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { stubMedia } from "./support/media";
-import { PERSONAL_DATA, recordAnalytics, recordedEvents } from "../support/analytics";
+import {
+  PERSONAL_DATA,
+  analyticsReady,
+  recordAnalytics,
+  recordedEvents,
+} from "../support/analytics";
 
 const ADMIN = `http://127.0.0.1:${Number(process.env.CONTENT_E2E_ADMIN_PORT ?? 8799)}`;
 const ROLE = "/careers/example-role-fixture";
@@ -117,6 +122,7 @@ test.describe("Application form", () => {
   }) => {
     await recordAnalytics(page);
     await page.goto(ROLE);
+    await analyticsReady(page);
     await fillValid(page);
     await page.getByRole("button", { name: "Send application" }).click();
     await expect(page.getByRole("heading", { name: "Application received." })).toBeVisible();

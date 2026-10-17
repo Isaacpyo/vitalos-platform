@@ -38,6 +38,11 @@ export async function recordAnalytics(page: Page): Promise<void> {
   });
 }
 
+/** Waits until `SiteAnalytics` has attached its listeners (after hydration). */
+export async function analyticsReady(page: Page): Promise<void> {
+  await page.locator('html[data-analytics="ready"]').waitFor({ state: "attached" });
+}
+
 export async function recordedEvents(page: Page): Promise<RecordedEvent[]> {
   return page.evaluate(
     () => (window as unknown as { __analytics: RecordedEvent[] }).__analytics ?? [],

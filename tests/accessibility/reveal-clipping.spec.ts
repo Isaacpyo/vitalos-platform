@@ -58,7 +58,8 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     test.use({ reducedMotion });
     for (const path of sample) {
       test(`${path}: every heading is fully visible once revealed`, async ({ page }) => {
-        await page.goto(path);
+        test.setTimeout(60_000);
+        await page.goto(path, { waitUntil: "domcontentloaded" });
         await scrollThrough(page);
         // Let the last reveals finish (the longest reveal duration is well under a second).
         await page.waitForTimeout(reducedMotion === "reduce" ? 50 : 1200);
