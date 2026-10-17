@@ -30,7 +30,7 @@
   <div class="card mt-2 overflow-x-auto">
     <table class="table-base" data-testid="application-table">
       <caption class="sr-only">Applications</caption>
-      <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Stage</th><th scope="col">Received</th><th scope="col">Right to work</th><th scope="col">Flags</th></tr></thead>
+      <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Stage</th><th scope="col">Received</th><th scope="col">Right to work</th><th scope="col">Flags</th><th scope="col" class="col-actions"><span class="sr-only">Actions</span></th></tr></thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         {% for row in rows %}
           {% with item=row.application %}
@@ -41,10 +41,11 @@
               <td class="whitespace-nowrap"><span class="mono-label" title="{{ item.created_at|date:'j M Y, H:i' }}">{{ row.received }}</span></td>
               <td>{{ item.get_right_to_work_display }}</td>
               <td>{% if item.duplicate_of_id %}<span class="mono-label">Duplicate</span>{% endif %}{% if item.retention_flagged_at %} <span class="mono-label">Retention: handle manually</span>{% endif %}</td>
+              <td class="col-actions"><a class="btn btn-ghost btn-sm" href="{% url 'careers:application' item.pk %}?{{ querystring }}" aria-label="Review {{ item.name }}">Review</a></td>
             </tr>
           {% endwith %}
         {% empty %}
-          <tr><td colspan="6" class="muted py-10 text-center">No applications here.</td></tr>
+          <tr><td colspan="7" class="muted py-10 text-center">No applications here.</td></tr>
         {% endfor %}
       </tbody>
     </table>
