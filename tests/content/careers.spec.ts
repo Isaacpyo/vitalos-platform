@@ -60,6 +60,17 @@ test.describe("Careers pages", () => {
     const image = await page.request.get(new URL(og ?? "", page.url()).pathname);
     expect(image.status()).toBe(200);
     expect(image.headers()["content-type"]).toContain("image/png");
+    // The About strip ends the role: the six practices, with links to About and What We Do.
+    const about = page.getByRole("region", { name: "About Vitalos" });
+    await expect(about).toContainText(
+      "Vitalos works through six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs.",
+    );
+    await expect(about.getByRole("link", { name: "About Vitalos" })).toHaveAttribute(
+      "href",
+      "/about",
+    );
+    // The fixture's hiring process is empty, so there is no process block.
+    await expect(page.getByRole("heading", { name: "How we hire" })).toHaveCount(0);
   });
 
   test("a closed role keeps its page without a form, noindex", async ({ page }) => {
@@ -107,6 +118,14 @@ test.describe("Application form", () => {
       page.getByText("We've received your application for Example role (fixture)."),
     ).toBeVisible();
     await expect(page.getByText("Example hiring process (fixture).")).toBeVisible();
+    // What happens next, without promising an email (candidate emails are off).
+    await expect(page.getByRole("heading", { name: "What happens next" })).toBeVisible();
+    await expect(
+      page.getByText(
+        "We assess every application on the skills, experience and potential it shows for the role.",
+      ),
+    ).toBeVisible();
+    await expect(page.locator("main")).not.toContainText(/confirmation email|we will email you/i);
     // Focus moves to the success message.
     await expect(page.locator(":focus")).toContainText("Application received.");
   });
@@ -150,7 +169,28 @@ test.describe("Application form", () => {
     await expect(page.getByLabel("Full name")).toBeFocused();
     await expect(page.getByLabel("Full name")).toHaveAttribute("aria-invalid", "true");
     const describedBy = await page.getByLabel("Full name").getAttribute("aria-describedby");
-    await expect(page.locator(`#${describedBy}`)).toHaveText("Enter your name");
+    // The shared Field's error line: a visually hidden "Error:" and the message.
+    await expect(page.locator(`#${describedBy}`)).toHaveText("Error: Enter your name");
+  });
+
+  test("checks an answer when you leave the field and clears the error once fixed", async ({
+    page,
+  }) => {
+    await page.goto(ROLE);
+    const email = page.getByLabel("Email");
+    // Tabbing through an empty required field says nothing yet.
+    await page.getByLabel("Full name").focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Full name")).not.toHaveAttribute("aria-invalid", "true");
+    await email.fill("not-an-address");
+    await email.blur();
+    await expect(email).toHaveAttribute("aria-invalid", "true");
+    const describedBy = await email.getAttribute("aria-describedby");
+    await expect(page.locator(`#${describedBy}`)).toHaveText("Error: Enter a valid email address");
+    await email.fill("applicant@example.test");
+    await expect(email).not.toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText("Enter a valid email address")).toHaveCount(0);
   });
 
   test("refuses an oversize or wrong-type CV before uploading", async ({ page }) => {
