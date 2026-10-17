@@ -819,9 +819,7 @@ export class SupabaseRelayStore implements RelayStore {
       feedbackReasons: {
         wrong: Number((data.feedbackReasons as Row | undefined)?.wrong ?? 0),
         incomplete: Number((data.feedbackReasons as Row | undefined)?.incomplete ?? 0),
-        didnt_understand: Number(
-          (data.feedbackReasons as Row | undefined)?.didnt_understand ?? 0,
-        ),
+        didnt_understand: Number((data.feedbackReasons as Row | undefined)?.didnt_understand ?? 0),
       },
     };
   }

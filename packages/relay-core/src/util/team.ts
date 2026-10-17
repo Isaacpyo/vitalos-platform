@@ -52,8 +52,7 @@ function londonParts(at: Date) {
 function londonInstant(y: number, m: number, d: number, hh: number, mm: number): Date {
   const guess = Date.UTC(y, m - 1, d, hh, mm);
   const seen = londonParts(new Date(guess));
-  const offsetMin =
-    (Date.UTC(seen.y, seen.m - 1, seen.d, seen.hh, seen.mm) - guess) / 60_000;
+  const offsetMin = (Date.UTC(seen.y, seen.m - 1, seen.d, seen.hh, seen.mm) - guess) / 60_000;
   return new Date(guess - offsetMin * 60_000);
 }
 

@@ -49,7 +49,5 @@ export function truncateToTokens(text: string, maxTokens: number): string {
 /** Estimated input tokens of one model call (system prompt plus every message). */
 export function estimatePromptTokens(system: string, messages: readonly ChatTurn[]): number {
   // About four tokens of framing per message (role markers) in OpenAI-compatible chat formats.
-  return (
-    estimateTokens(system) + messages.reduce((n, m) => n + estimateTokens(m.content) + 4, 0)
-  );
+  return estimateTokens(system) + messages.reduce((n, m) => n + estimateTokens(m.content) + 4, 0);
 }

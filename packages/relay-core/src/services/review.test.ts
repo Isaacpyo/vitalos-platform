@@ -91,11 +91,19 @@ async function setup(now?: () => Date) {
     ),
   ]);
   const visitor = new VisitorService(t.ctx);
-  const admin = new AdminService(t.ctx, { bundledEntries: () => Promise.resolve([]), faq: FAQ_STATUS });
+  const admin = new AdminService(t.ctx, {
+    bundledEntries: () => Promise.resolve([]),
+    faq: FAQ_STATUS,
+  });
   const created = await visitor.createConversation({ pageUrl: "http://localhost:3000/" }, META);
   const ask = async (text: string) => {
     const r = await visitor.chat(
-      { conversationId: created.conversationId, clientMessageId: crypto.randomUUID(), text, pageUrl: "http://localhost:3000/" },
+      {
+        conversationId: created.conversationId,
+        clientMessageId: crypto.randomUUID(),
+        text,
+        pageUrl: "http://localhost:3000/",
+      },
       created.visitorToken,
       META,
       new AbortController().signal,
@@ -119,7 +127,10 @@ describe("E1 hand-off rate", () => {
   it("insights report 0.25 for four conversations with one hand-off", async () => {
     const t = memoryContext();
     const visitor = new VisitorService(t.ctx);
-    const admin = new AdminService(t.ctx, { bundledEntries: () => Promise.resolve([]), faq: FAQ_STATUS });
+    const admin = new AdminService(t.ctx, {
+      bundledEntries: () => Promise.resolve([]),
+      faq: FAQ_STATUS,
+    });
     const convs = [];
     for (let i = 0; i < 4; i++)
       convs.push(await visitor.createConversation({ pageUrl: "http://localhost:3000/" }, META));
@@ -163,13 +174,24 @@ describe("D1 prompt budget", () => {
   it("cuts an oversized first chunk instead of keeping it whole, and keeps the total", () => {
     const kept = trimToBudget([chunk("huge", 5000), chunk("a", 100), chunk("b", 100)], 2400);
     expect(kept.map((c) => c.chunkId)).toEqual(["huge", "a", "b"]);
-    for (const c of kept) expect(estimateTokens(c.content)).toBeLessThanOrEqual(PROMPT_BUDGET.chunkTokens);
+    for (const c of kept)
+      expect(estimateTokens(c.content)).toBeLessThanOrEqual(PROMPT_BUDGET.chunkTokens);
     const total = kept.reduce((n, c) => n + estimateTokens(`${c.heading}\n${c.content}`), 0);
     expect(total).toBeLessThanOrEqual(2400);
   });
 
   it("skips a chunk that would overflow and still fits a smaller one after it", () => {
-    const kept = trimToBudget([chunk("a", 300), chunk("b", 300), chunk("c", 300), chunk("d", 300), chunk("e", 300), chunk("f", 20)], 1500);
+    const kept = trimToBudget(
+      [
+        chunk("a", 300),
+        chunk("b", 300),
+        chunk("c", 300),
+        chunk("d", 300),
+        chunk("e", 300),
+        chunk("f", 20),
+      ],
+      1500,
+    );
     expect(kept.at(-1)?.chunkId).toBe("f");
   });
 
@@ -207,7 +229,9 @@ describe("D1 prompt budget", () => {
     const t = await setup();
     await t.ask("What solutions do you have?");
     await t.settle();
-    const ai = (await t.store.listMessages(t.created.conversationId)).find((m) => m.senderType === "ai");
+    const ai = (await t.store.listMessages(t.created.conversationId)).find(
+      (m) => m.senderType === "ai",
+    );
     expect(typeof ai?.meta.prompt_tokens_est).toBe("number");
     expect(ai?.meta.prompt_tokens_est as number).toBeLessThanOrEqual(PROMPT_BUDGET.total);
     const test = await t.visitor.createConversation(
@@ -215,7 +239,12 @@ describe("D1 prompt budget", () => {
       META,
     );
     const r = await t.visitor.chat(
-      { conversationId: test.conversationId, clientMessageId: crypto.randomUUID(), text: "Application modernisation?", pageUrl: "http://localhost:3000/" },
+      {
+        conversationId: test.conversationId,
+        clientMessageId: crypto.randomUUID(),
+        text: "Application modernisation?",
+        pageUrl: "http://localhost:3000/",
+      },
       test.visitorToken,
       META,
       new AbortController().signal,
@@ -252,7 +281,11 @@ describe("D2 small talk and typo tolerance", () => {
   });
 
   it("corrects a misspelt word to the knowledge vocabulary", () => {
-    const vocab = buildVocabulary(["Our solutions", "Six solutions describe problems", "modernise"]);
+    const vocab = buildVocabulary([
+      "Our solutions",
+      "Six solutions describe problems",
+      "modernise",
+    ]);
     expect(correctSpelling("what are your soultions?", vocab)).toEqual({
       text: "what are your solutions?",
       corrections: [["soultions", "solutions"]],
@@ -275,12 +308,18 @@ describe("D2 small talk and typo tolerance", () => {
         "so how can I modernise my system with this?",
         "What is the Application Modernisation offer?",
       ),
-    ).toBe("What is the Application Modernisation offer? so how can I modernise my system with this?");
+    ).toBe(
+      "What is the Application Modernisation offer? so how can I modernise my system with this?",
+    );
   });
 
   it("drafts a suggested answer from the best-matching page, never published", async () => {
     const t = await setup();
-    await t.store.recordGap("can you modernise legacy systems", "Can you modernise legacy systems?", null);
+    await t.store.recordGap(
+      "can you modernise legacy systems",
+      "Can you modernise legacy systems?",
+      null,
+    );
     const gap = (await t.store.listGaps(new Date(0).toISOString()))[0];
     const out = await t.admin.suggestAnswer(gap?.id ?? "", {
       id: "sa:1",
@@ -355,7 +394,9 @@ describe("D5 next opening", () => {
     // Tuesday 19:00 -> tomorrow 09:00.
     expect(nextOpening(settings, new Date("2026-10-20T18:00:00Z"))?.label).toBe("tomorrow 09:00");
     // After the clocks go back (GMT): 09:00 London is 09:00 UTC.
-    expect(nextOpening(settings, new Date("2026-10-30T18:00:00Z"))?.at).toBe("2026-11-02T09:00:00.000Z");
+    expect(nextOpening(settings, new Date("2026-10-30T18:00:00Z"))?.at).toBe(
+      "2026-11-02T09:00:00.000Z",
+    );
     // Inside working hours: none.
     expect(nextOpening(settings, new Date("2026-10-20T10:00:00Z"))).toBeNull();
   });
@@ -373,11 +414,17 @@ describe("D6 thumbs-down reason", () => {
     const t = await setup();
     await t.ask("Do you offer quantum computing?");
     await t.settle();
-    const ai = (await t.store.listMessages(t.created.conversationId)).find((m) => m.senderType === "ai");
+    const ai = (await t.store.listMessages(t.created.conversationId)).find(
+      (m) => m.senderType === "ai",
+    );
     const ref = { conversationId: t.created.conversationId, messageId: ai?.id ?? "" };
-    expect(await t.visitor.feedback({ ...ref, value: -1 }, t.created.visitorToken)).toEqual({ showHandoff: true });
+    expect(await t.visitor.feedback({ ...ref, value: -1 }, t.created.visitorToken)).toEqual({
+      showHandoff: true,
+    });
     const gapsAfterThumb = (await t.store.listGaps(new Date(0).toISOString()))[0]?.count ?? 0;
-    expect(await t.visitor.feedback({ ...ref, value: -1, reason: "incomplete" }, t.created.visitorToken)).toEqual({ showHandoff: true });
+    expect(
+      await t.visitor.feedback({ ...ref, value: -1, reason: "incomplete" }, t.created.visitorToken),
+    ).toEqual({ showHandoff: true });
     const stored = await t.store.getMessage(ref.messageId);
     expect(stored?.feedbackReason).toBe("incomplete");
     expect((await t.store.listGaps(new Date(0).toISOString()))[0]?.count ?? 0).toBe(gapsAfterThumb);

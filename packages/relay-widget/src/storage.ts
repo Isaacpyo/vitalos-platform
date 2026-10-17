@@ -68,8 +68,7 @@ export const rememberOpen = (open: boolean) =>
  * chooses "Continue previous conversation" or "Start new" first (finding C2).
  */
 const CHOSEN_KEY = "vitalos.relay.chosen";
-export const chosenConversation = () =>
-  safe(() => window.sessionStorage.getItem(CHOSEN_KEY), null);
+export const chosenConversation = () => safe(() => window.sessionStorage.getItem(CHOSEN_KEY), null);
 export const rememberChosen = (conversationId: string | null) =>
   safe(
     () =>

@@ -86,7 +86,9 @@ const archiveMissingFor: KbSource[] = [
 ];
 const started = Date.now();
 // One sync run per bundled source, so the admin knowledge page shows when it last ran (D4).
-const runs = await Promise.all((["cms", "repo"] as const).map((s) => store.startSyncRun(s, "full")));
+const runs = await Promise.all(
+  (["cms", "repo"] as const).map((s) => store.startSyncRun(s, "full")),
+);
 const result = await ingestEntries(store, embedder, entries, {
   archiveMissingFor,
   force: args.has("--force"),

@@ -28,7 +28,8 @@ describe("repo seed content", () => {
     expect(practices).toContain(
       "six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs",
     );
-    for (const { text } of repoContentFiles) expect(text).not.toMatch(/\bfive (practices|solutions)\b/i);
+    for (const { text } of repoContentFiles)
+      expect(text).not.toMatch(/\bfive (practices|solutions)\b/i);
   });
 
   it("entries awaiting confirmation stay drafts until the owner approves them", () => {

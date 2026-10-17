@@ -47,8 +47,7 @@ export const STAFF_FALLBACK_NAME = "Vitalos team";
 export function publicStaffName(name: string | null | undefined): string {
   const first = firstName(name);
   if (!first || first === "Vitalos") return STAFF_FALLBACK_NAME;
-  if (/[@._\d]/.test(first) || !/^[\p{L}][\p{L}'-]{0,39}$/u.test(first))
-    return STAFF_FALLBACK_NAME;
+  if (/[@._\d]/.test(first) || !/^[\p{L}][\p{L}'-]{0,39}$/u.test(first)) return STAFF_FALLBACK_NAME;
   // A name typed in one case ("temitope", "TEMITOPE") is shown in normal case.
   return first === first.toLowerCase() || first === first.toUpperCase()
     ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()

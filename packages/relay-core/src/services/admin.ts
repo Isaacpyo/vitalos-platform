@@ -983,9 +983,7 @@ export class AdminService {
       { lastSyncAt: string | null; ageHours: number | null; stale: boolean; errors: number }
     >;
     const ages = Object.values(per).map((p) => p.ageHours);
-    const oldest = ages.some((a) => a === null)
-      ? null
-      : Math.max(...(ages as number[]));
+    const oldest = ages.some((a) => a === null) ? null : Math.max(...(ages as number[]));
     return {
       ...per,
       oldestAgeHours: oldest,

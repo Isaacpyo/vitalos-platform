@@ -18,9 +18,7 @@ export interface RelayEventDetail {
 
 export function emitRelayEvent(type: RelayEventType): void {
   try {
-    window.dispatchEvent(
-      new CustomEvent<RelayEventDetail>(RELAY_EVENT, { detail: { type } }),
-    );
+    window.dispatchEvent(new CustomEvent<RelayEventDetail>(RELAY_EVENT, { detail: { type } }));
   } catch {
     // Old browsers without CustomEvent: analytics are optional.
   }

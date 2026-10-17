@@ -13,7 +13,12 @@ import type { ConversationRecord, MessageRecord } from "../db/types";
 import { isExplicitHandoffRequest, normaliseQuestion } from "../handoff/intent";
 import { finaliseCitations, nextStepFor, publicCitations } from "../llm/citations";
 import { smallTalkKind, SMALL_TALK_REPLIES } from "../handoff/smalltalk";
-import { PROMPT_BUDGET, estimatePromptTokens, estimateTokens, truncateToTokens } from "../llm/budget";
+import {
+  PROMPT_BUDGET,
+  estimatePromptTokens,
+  estimateTokens,
+  truncateToTokens,
+} from "../llm/budget";
 import { MarkerGuard, stripMarkers } from "../llm/markers";
 import { buildUserMessage } from "../llm/prompts/context";
 import type { ContextInput } from "../llm/prompts/context";
@@ -580,7 +585,9 @@ export class VisitorService {
       feedback: body.value,
       // Only written when given, so the write works before the column's migration is applied;
       // Insights count reasons on thumbs-down answers only, so a stale reason never shows.
-      ...(body.value === -1 && body.reason && !closingReview ? { feedbackReason: body.reason } : {}),
+      ...(body.value === -1 && body.reason && !closingReview
+        ? { feedbackReason: body.reason }
+        : {}),
       feedbackAt: this.ctx.deps.now().toISOString(),
     });
     if (closingReview) {

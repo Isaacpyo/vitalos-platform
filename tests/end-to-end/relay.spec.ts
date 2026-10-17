@@ -33,7 +33,12 @@ test.describe("Relay launcher and panel", () => {
     await openRelay(page);
     await ask(page, "Can you rescue a failing software project?");
     await expect(page.locator("#relay-panel article")).toHaveCount(0);
-    await expect(page.getByRole("log").getByRole("group", { name: /Relay · AI/ }).last()).toBeVisible();
+    await expect(
+      page
+        .getByRole("log")
+        .getByRole("group", { name: /Relay · AI/ })
+        .last(),
+    ).toBeVisible();
   });
 
   test("a stored conversation is restored only after Continue previous conversation", async ({
@@ -52,7 +57,9 @@ test.describe("Relay launcher and panel", () => {
     await next.goto("/about");
     await expect(next.locator("#relay-panel")).toHaveCount(0);
     await openRelay(next, { expectWelcome: false });
-    await expect(next.getByRole("button", { name: "Continue previous conversation" })).toBeVisible();
+    await expect(
+      next.getByRole("button", { name: "Continue previous conversation" }),
+    ).toBeVisible();
     await expect(next.locator(".relay-visitor")).toHaveCount(0);
     expect(fetched).toEqual([]);
     await next.getByRole("button", { name: "Continue previous conversation" }).click();
@@ -66,7 +73,9 @@ test.describe("Relay launcher and panel", () => {
     await page.goto("/");
     await openRelay(page);
     await ask(page, "Hello");
-    await expect(page.locator(".relay-answer").last()).toContainText("I'm Relay, the Vitalos AI assistant");
+    await expect(page.locator(".relay-answer").last()).toContainText(
+      "I'm Relay, the Vitalos AI assistant",
+    );
   });
 
   test("no Relay request is made before the visitor interacts", async ({ page }) => {

@@ -845,7 +845,10 @@ export class MemoryRelayStore implements RelayStore {
       estCostUsd: usage.reduce((s, u) => s + u.estCostUsd, 0),
       usageBySource: (() => {
         const out = Object.fromEntries(
-          [...USAGE_SOURCES, "untagged"].map((s) => [s, { tokensIn: 0, tokensOut: 0, requests: 0 }]),
+          [...USAGE_SOURCES, "untagged"].map((s) => [
+            s,
+            { tokensIn: 0, tokensOut: 0, requests: 0 },
+          ]),
         ) as InsightsRow["usageBySource"];
         for (const [key, v] of this.usageBySource) {
           const [day, source] = key.split("|") as [string, UsageSource];
@@ -867,7 +870,9 @@ export class MemoryRelayStore implements RelayStore {
           tokensIn: total,
           avgTokensIn: measured.length ? Math.round(total / measured.length) : 0,
           p95TokensIn: measured.length
-            ? (measured[Math.min(measured.length - 1, Math.ceil(0.95 * measured.length) - 1)] as number)
+            ? (measured[
+                Math.min(measured.length - 1, Math.ceil(0.95 * measured.length) - 1)
+              ] as number)
             : 0,
           maxTokensIn: measured.length ? (measured.at(-1) as number) : 0,
         };

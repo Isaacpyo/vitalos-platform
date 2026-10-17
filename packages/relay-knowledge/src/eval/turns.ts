@@ -17,12 +17,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VisitorService } from "@vitalos/relay-core";
-import type {
-  ChatEvent,
-  LlmProvider,
-  MatchedChunk,
-  StreamAnswerInput,
-} from "@vitalos/relay-core";
+import type { ChatEvent, LlmProvider, MatchedChunk, StreamAnswerInput } from "@vitalos/relay-core";
 import { ingestEntries, nullEmbedder } from "@vitalos/relay-core/knowledge";
 import { memoryContext } from "@vitalos/relay-core/testing";
 import { allBundledEntries } from "../index";
@@ -165,7 +160,12 @@ export async function runTurnsEval(
     );
     const ask = async (text: string) => {
       const res = await visitor.chat(
-        { conversationId: conv.conversationId, clientMessageId: crypto.randomUUID(), text, pageUrl },
+        {
+          conversationId: conv.conversationId,
+          clientMessageId: crypto.randomUUID(),
+          text,
+          pageUrl,
+        },
         conv.visitorToken,
         meta,
         new AbortController().signal,
@@ -182,8 +182,7 @@ export async function runTurnsEval(
     const promptTokens = own.reduce((m, x) => Math.max(m, x.tokens), 0);
     const handoff = Boolean(done?.handoffSuggested);
     const lowConfidence = Boolean(done?.lowConfidence);
-    const expect =
-      !options.approvePending && c.pending ? c.pending : (c.expect ?? []);
+    const expect = !options.approvePending && c.pending ? c.pending : (c.expect ?? []);
     let pass: boolean;
     let reason: string;
     if (c.smallTalk) {
@@ -224,7 +223,9 @@ export async function runTurnsEval(
   return {
     results,
     maxTokens: sorted.at(-1) ?? 0,
-    avgTokens: measured.length ? Math.round(measured.reduce((a, b) => a + b, 0) / measured.length) : 0,
+    avgTokens: measured.length
+      ? Math.round(measured.reduce((a, b) => a + b, 0) / measured.length)
+      : 0,
     p95Tokens: sorted.length
       ? (sorted[Math.min(sorted.length - 1, Math.ceil(0.95 * sorted.length) - 1)] as number)
       : 0,

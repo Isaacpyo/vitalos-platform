@@ -91,7 +91,18 @@ const PHRASES: Record<SmallTalkKind, string[]> = {
 };
 
 /** Words that may surround small talk without changing it ("hi there", "thanks Relay"). */
-const FILLER = new Set(["there", "relay", "vitalos", "team", "all", "again", "so", "much", "and", "then"]);
+const FILLER = new Set([
+  "there",
+  "relay",
+  "vitalos",
+  "team",
+  "all",
+  "again",
+  "so",
+  "much",
+  "and",
+  "then",
+]);
 
 /** Fixed replies. Sources: the Relay greeting (Settings default) and the widget copy. */
 export const SMALL_TALK_REPLIES: Record<SmallTalkKind, string> = {

@@ -307,7 +307,10 @@ export interface InsightsRow {
   cacheHitTokens: number;
   estCostUsd: number;
   /** The same usage split by source; `untagged` is usage recorded before tagging existed. */
-  usageBySource: Record<UsageSource | "untagged", { tokensIn: number; tokensOut: number; requests: number }>;
+  usageBySource: Record<
+    UsageSource | "untagged",
+    { tokensIn: number; tokensOut: number; requests: number }
+  >;
   /** Per-turn input tokens of AI answers stored in the window (`relay.messages.tokens_in`). */
   turns: {
     count: number;
