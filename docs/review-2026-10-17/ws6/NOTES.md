@@ -19,7 +19,46 @@ Branch `review/ws6-relay`, worktree `D:/Development/vitalos-ws6` (moved from C:,
 
 ### Tokens per turn on the 25-question set (memory store, mock model)
 
-See "Check results" below for the before/after table.
+`pnpm relay:eval --turns`. "Before" ran the same harness against the relay code at `9e37e21`; tokens are input tokens of the one model call, estimated from exactly what was sent. With the mock model and memory store the prompt was already about 2.5k tokens per turn, which confirms that the 127k figure was not prompt size. Embeddings are off in this harness (full text only).
+
+| Question               | Before: tokens | Before | After: tokens | After |
+| ---------------------- | -------------: | ------ | ------------: | ----- |
+| abt-01                 |           2735 | FAIL   |          2662 | pass  |
+| abt-12                 |           2717 | pass   |          2702 | pass  |
+| ai-03                  |           2424 | pass   |          2421 | pass  |
+| ai-08                  |           2522 | pass   |          2495 | pass  |
+| con-04                 |           2742 | pass   |          2720 | pass  |
+| del-03                 |           2630 | pass   |          2665 | pass  |
+| eng-05                 |           2352 | pass   |          2349 | pass  |
+| eng-16                 |           2290 | pass   |          2287 | pass  |
+| hq-08                  |           2356 | pass   |          2495 | pass  |
+| ind-01                 |           2778 | pass   |          2714 | pass  |
+| ind-16                 |           2757 | pass   |          2754 | pass  |
+| lab-01                 |           2754 | pass   |          2740 | pass  |
+| ms-08                  |           2573 | pass   |          2580 | pass  |
+| off-04                 |           2142 | pass   |          1896 | pass  |
+| off-10                 |           2140 | pass   |          2137 | pass  |
+| off-16                 |           2238 | pass   |          2166 | pass  |
+| sol-01                 |           2818 | pass   |          2590 | pass  |
+| sol-09                 |           2150 | pass   |          2147 | pass  |
+| tru-04                 |           2697 | pass   |          2694 | pass  |
+| wwd-01                 |           2461 | pass   |          2585 | pass  |
+| gap-hello              |           1147 | FAIL   |             0 | pass  |
+| gap-founder            |           2757 | pass   |          2654 | pass  |
+| gap-solutions-typo     |           1152 | FAIL   |          2523 | pass  |
+| gap-getting-started    |           2415 | pass   |          2463 | pass  |
+| gap-modernise-followup |           2471 | pass   |          2346 | pass  |
+
+Before: 22/25 pass, avg 2,409 / p95 2,778 / max 2,818. After: 25/25 pass (also 25/25 with the drafted entries approved), avg 2,491 / p95 2,740 / max 2,754, budget 8,000. "Hello" now makes no model call (0 tokens).
+
+## Check results (17 Oct)
+
+- relay-core vitest: 11 files, 119 tests pass (including `services/review.test.ts`). relay-knowledge: 14 pass (including the turn eval in both modes). relay-widget: 10 pass (including `launcher.test.tsx`).
+- tsc and eslint are clean for relay-core, relay-knowledge, relay-widget and `@vitalos/web`. One existing warning in `apps/web` `components.test.tsx` is not from WS6.
+- Playwright, chromium + mobile: `tests/end-to-end/relay.spec.ts`, `tests/accessibility/relay.spec.ts` and WS5's `tests/end-to-end/relay-closed.spec.ts` (copied in from `review/ws5-measurement` for the run, not committed here) all pass: 46 tests. An earlier single-project run had 4 axe-spec timeouts while the cold server started. They passed on the rerun.
+- pgTAP on VM slot 2 (released): 5 files, 142 tests pass, including `005_relay_review.sql`.
+- Django: 703 pass. `tests/test_security.py` has 2 failures that only occur on this laptop: the production-settings subprocess fails with `WinError 10106`, a Windows socket provider error, before any assertion. They are unrelated to WS6 and pass in CI on Linux. ruff check and format are clean, and `makemigrations --check` reports no changes.
+- WCAG 2.5.3: the launcher's accessible name is "Ask Vitalos. Open chat with Relay, the Vitalos assistant", which starts with the visible text. `aria-controls` is set only while the panel is mounted.
 
 ## Master FAQ entries that still say "five practices" (owner to correct in Notion)
 
@@ -38,7 +77,7 @@ After the Notion edits, run the FAQ sync (or `pnpm --filter @vitalos/relay-knowl
 
 ## For WS5 and the orchestrator
 
-- Analytics: listen for `window` `vitalos:relay` events. `detail.type` is `relay_opened`, `relay_question` or `relay_handoff`, and nothing else is in `detail`. Exported as `RELAY_EVENT` from `@vitalos/relay-widget`. Not wired to `track()` (WS5 owns that).
+- Analytics: listen for `window` `vitalos:relay` events. `detail.type` is `opened`, `question` or `handoff`, and nothing else is in `detail`. Exported as `RELAY_EVENT` from `@vitalos/relay-widget`. Not wired to `track()` (WS5 owns that).
 
 ## For WS7
 

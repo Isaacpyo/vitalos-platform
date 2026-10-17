@@ -108,7 +108,7 @@ describe("Relay launcher and panel mounting (C2)", () => {
     });
     fireEvent.click(openButton());
     await waitFor(() => expect(container.querySelector("#relay-panel")).not.toBeNull());
-    expect(events).toEqual(["relay_opened"]);
+    expect(events).toEqual(["opened"]);
     expect(container.querySelector("article")).toBeNull();
     expect(container.querySelector("button[aria-controls='relay-panel']")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Close chat" }));

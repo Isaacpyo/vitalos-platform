@@ -616,7 +616,7 @@ export function Panel(props: PanelProps) {
           messages: [],
         };
       }
-      emitRelayEvent("relay_question");
+      emitRelayEvent("question");
       dispatch({ type: "patch", patch: { notice: null } });
       setText("");
       stickRef.current = true;
@@ -788,7 +788,7 @@ export function Panel(props: PanelProps) {
         },
       });
       persist({ ...conv, personJoined: true });
-      emitRelayEvent("relay_handoff");
+      emitRelayEvent("handoff");
       await refresh(conv);
       setAnnounce("Request sent. The team has been told.");
     } catch (error) {

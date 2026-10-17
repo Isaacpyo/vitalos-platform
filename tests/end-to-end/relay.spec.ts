@@ -8,7 +8,7 @@ test.describe("Relay launcher and panel", () => {
   test("launcher opens the panel; Esc closes it and returns focus", async ({ page }) => {
     await page.goto("/");
     const launcher = page.getByRole("button", {
-      name: "Ask Vitalos, the Vitalos assistant",
+      name: "Ask Vitalos. Open chat with Relay, the Vitalos assistant",
     });
     await expect(launcher).toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");

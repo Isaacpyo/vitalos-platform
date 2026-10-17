@@ -94,7 +94,7 @@ Times are ISO-8601 UTC. Ids are uuids. `displayName` = contact name, or `Visitor
 - `POST /api/relay/feedback` accepts an optional `reason: 'wrong'|'incomplete'|'didnt_understand'` with `value: -1`. Sent a second time with a reason, it only stores the reason (no second gap).
 - `GET /api/relay/suggestions`, `POST /api/relay/conversations` (`settings`) and `GET /api/relay/conversations/:id/messages` carry `nextOpening: {at, label}|null`: the next start of working hours (Relay Settings, Europe/London) while the team is offline, for "Back Monday 09:00".
 - Greetings, thanks, goodbyes and bare acknowledgements get a fixed reply (`meta.small_talk`), with no retrieval, model call or gap.
-- The widget dispatches `window` events `vitalos:relay` with `detail: {type: 'relay_opened'|'relay_question'|'relay_handoff'}` (no content, names or ids), for the site's analytics.
+- The widget dispatches `window` events `vitalos:relay` with `detail: {type: 'opened'|'question'|'handoff'}` (no content, names or ids), for the site's analytics.
 
 ## Scheduled jobs
 

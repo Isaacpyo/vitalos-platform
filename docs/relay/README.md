@@ -104,7 +104,7 @@ Each step is owner-gated where marked.
   - To rebuild the snapshot after Notion changes: `pnpm --filter @vitalos/relay-knowledge faq-snapshot`, then commit.
 - **Entries awaiting confirmation (repo):** files in `packages/relay-knowledge/content/` with `confirmation: needed` are drafts: ingested, never retrieved. To approve one, set `status: published`, delete the `confirmation` line, run `pnpm --filter @vitalos/relay-knowledge build-content` and merge. The Overview counts them with the Master FAQ's Needs confirmation.
 - **Suggested answer:** each gap in Knowledge has "Suggested answer", which drafts a team answer from the best-matching page and opens the editor. It never publishes.
-- **Analytics:** the widget dispatches `vitalos:relay` window events (`relay_opened`, `relay_question`, `relay_handoff`; no content). The site maps them to its analytics provider.
+- **Analytics:** the widget dispatches `vitalos:relay` window events (`opened`, `question`, `handoff`; no content). The site maps them to its analytics provider.
 - **Evals:** `pnpm relay:eval --turns` (no environment; also a CI test) after any prompt, retrieval or knowledge change. `pnpm relay:eval --retrieval` after any knowledge or retrieval change. `pnpm relay:eval --answers --base <url>` after prompt or model changes. Targets are in `evals/REPORT.md`.
 - **Retention:**
   - Dry run: `select * from relay.purge_expired(true);`. It reports the counts it would delete.

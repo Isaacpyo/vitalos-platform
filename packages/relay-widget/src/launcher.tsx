@@ -55,7 +55,7 @@ export function RelayLauncher(props: RelayLauncherProps) {
       setResume(explicitResume);
       void ensurePanel().then(() => {
         setOpen(true);
-        emitRelayEvent("relay_opened");
+        emitRelayEvent("opened");
       });
     }
   }, [ensurePanel]);
@@ -99,7 +99,7 @@ export function RelayLauncher(props: RelayLauncherProps) {
       markSeen();
       setSeen(true);
       setUnread(0);
-      emitRelayEvent("relay_opened");
+      emitRelayEvent("opened");
     }
   };
 
@@ -114,8 +114,8 @@ export function RelayLauncher(props: RelayLauncherProps) {
   // WCAG 2.5.3 Label in Name: the accessible name starts with the visible text "Ask Vitalos".
   const label =
     unread > 0
-      ? `Ask Vitalos: ${unread} new ${unread === 1 ? "reply" : "replies"} from the Vitalos team`
-      : "Ask Vitalos, the Vitalos assistant";
+      ? `Ask Vitalos. Open chat with Relay: ${unread} new ${unread === 1 ? "reply" : "replies"} from the Vitalos team`
+      : "Ask Vitalos. Open chat with Relay, the Vitalos assistant";
 
   return (
     <div className={`relay-root ${props.fontClassName ?? ""}`}>
