@@ -1,5 +1,7 @@
 """The content tick (ADR-042): promote due scheduled posts, close expired roles, deliver pending sync
-events and held-back application alerts, and once a day run retention and purge orphaned uploads.
+events and held-back application alerts, raise overdue-enquiry and email-allowance alerts and move the
+enquiry email outbox (ADR-049), and once a day run retention, purge orphaned uploads, queue the
+overdue-enquiry digest and check the sending domain.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed
 ``POST /api/content/v1/tick`` and opportunistically, at most once a minute, in a background thread.
@@ -66,6 +68,7 @@ def run(now=None) -> dict:
         alerts.flush(now)  # application alert emails held back by the 10-minute window
     except Exception:  # noqa: BLE001 - mail must never stop the tick
         logger.exception("Careers alert flush failed")
+    enquiries = run_enquiry_alerts(now)
     state = TickState.load()
     daily = {}
     if _daily_due(state, now):
@@ -87,18 +90,46 @@ def run(now=None) -> dict:
         "nextDueAt": formatting.iso(next_due_at(now)),
     }
     TickState.objects.filter(pk=state.pk).update(
-        last_finished_at=timezone.now(), last_result={**result, **daily}
+        last_finished_at=timezone.now(), last_result={**result, **enquiries, **daily}
     )
     if promoted or closed or delivered:
         logger.info("Content tick", extra={"promoted": promoted, "closed": closed, "delivered": delivered})
     return result
 
 
-def run_daily(now) -> dict:
-    """Retention and the upload purge, each on its own: one failing never skips the other."""
-    from apps.careers import services as careers_services
+def run_enquiry_alerts(now) -> dict:
+    """Overdue-enquiry alerts, then the enquiry email outbox (instants and the 08:00 digest)."""
+    from apps.core import email_usage
+    from apps.enquiries import notifications, overdue
 
-    steps = {"retention": careers_services.run_retention, "orphans": careers_services.purge_orphan_uploads}
+    result = {}
+    steps = {
+        "overdue": overdue.notify_overdue,
+        "enquiryEmails": notifications.flush,
+        "enquiryDigests": notifications.send_digests,
+        "emailWarning": email_usage.warn_if_near_limit,
+    }
+    for name, step in steps.items():
+        try:
+            result[name] = step(now)
+        except Exception:  # noqa: BLE001 - mail must never stop the tick
+            logger.exception("Enquiry alert step failed", extra={"step": name})
+            result[name] = "error"
+    return result
+
+
+def run_daily(now) -> dict:
+    """Retention, the upload purge, the overdue digest and the sending-domain check, each on its own:
+    one failing never skips the others."""
+    from apps.careers import services as careers_services
+    from apps.enquiries import domain, overdue
+
+    steps = {
+        "retention": careers_services.run_retention,
+        "orphans": careers_services.purge_orphan_uploads,
+        "overdueDigest": overdue.queue_overdue_digest,
+        "sendingDomain": domain.check_sending_domain,
+    }
     result = {}
     for name, step in steps.items():
         try:

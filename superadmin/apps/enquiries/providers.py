@@ -25,6 +25,7 @@ SIGNATURE_TOLERANCE_SECONDS = 300
 MAX_INBOUND_BYTES = ingest_module.MAX_RAW_BYTES
 MAX_WEBHOOK_BYTES = 1024 * 1024
 RESEND_RECEIVING_URL = "https://api.resend.com/emails/receiving/{email_id}"
+RESEND_DOMAINS_URL = "https://api.resend.com/domains"
 USER_AGENT = "vitalos-superadmin/1.0"
 HTTP_TIMEOUT = 15
 
@@ -194,6 +195,39 @@ class ResendOutbound:
 
     def send(self, message) -> int:
         return message.send(fail_silently=False)
+
+    def domain_status(self, domain: str) -> str:
+        """Resend's verification status for ``domain`` ("verified", "pending", "failed", ...).
+
+        "missing" when the account has no such domain. Raises ``DomainCheckError`` when the API cannot
+        be asked (no key, a sending-only key, or a network or HTTP error).
+        """
+        if not settings.RESEND_API_KEY:
+            raise DomainCheckError("no API key")
+        try:
+            body = _http_get(
+                RESEND_DOMAINS_URL,
+                headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
+                limit=MAX_WEBHOOK_BYTES,
+            )
+        except urllib.error.HTTPError as exc:
+            if exc.code in (401, 403):
+                raise DomainCheckError("sending-only API key") from exc
+            raise DomainCheckError(f"HTTP {exc.code}") from exc
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
+            raise DomainCheckError("not reachable") from exc
+        try:
+            rows = json.loads(body).get("data") or []
+        except (ValueError, AttributeError) as exc:
+            raise DomainCheckError("unexpected answer") from exc
+        for row in rows:
+            if str(row.get("name", "")).lower() == domain.lower():
+                return str(row.get("status") or "unknown")[:40]
+        return "missing"
+
+
+class DomainCheckError(Exception):
+    """The sending-domain status could not be read."""
 
 
 class MicrosoftGraphProvider:

@@ -28,7 +28,7 @@
             {% for token in tokens %}
               <tr>
                 <td class="font-medium">{{ token.name }}</td>
-                {% if is_superadmin %}<td class="text-xs">{{ token.user.email }}</td>{% endif %}
+                {% if is_superadmin %}<td class="text-xs">{{ token.user|person }}</td>{% endif %}
                 <td><code class="text-xs">vsa_{{ token.prefix }}…</code></td>
                 <td class="text-xs">{{ token.last_used_at|date:"j M Y H:i"|default:"Never" }}</td>
                 <td class="text-xs">{{ token.expires_at|date:"j M Y"|default:"Never" }}</td>

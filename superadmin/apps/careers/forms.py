@@ -134,7 +134,11 @@ class NoteForm(StyledFormMixin, forms.Form):
 
 def recipient_choices():
     users = get_user_model().objects.filter(is_active=True).order_by("email")
-    return [(str(user.pk), user.email) for user in users if access.can_view_applications(user)]
+    return [
+        (str(user.pk), f"{user.display_label} ({user.email})")
+        for user in users
+        if access.can_view_applications(user)
+    ]
 
 
 class CareersSettingsForm(StyledFormMixin, forms.Form):

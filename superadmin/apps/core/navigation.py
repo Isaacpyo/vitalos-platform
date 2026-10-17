@@ -39,6 +39,14 @@ class NavItem:
 
 GROUPS = ("Operate", "Organisation", "System")
 
+
+def architecture_enabled(user=None) -> bool:
+    """ARCHITECTURE_MODULE_ENABLED: Service lines and Architecture (the company structure module)."""
+    from django.conf import settings
+
+    return settings.ARCHITECTURE_MODULE_ENABLED
+
+
 NAV_ITEMS = (
     NavItem("overview", "Overview", "architecture:home", "layout-dashboard", "Operate", ("/",), exact=True),
     NavItem(
@@ -104,10 +112,17 @@ NAV_ITEMS = (
         "layers",
         "Organisation",
         ("/service-lines", "/s/"),
+        permission="apps.core.navigation.architecture_enabled",
     ),
     NavItem("team", "Team", "architecture:team", "users", "Organisation", ("/team",)),
     NavItem(
-        "architecture", "Architecture", "architecture:architecture", "network", "System", ("/architecture",)
+        "architecture",
+        "Architecture",
+        "architecture:architecture",
+        "network",
+        "System",
+        ("/architecture",),
+        permission="apps.core.navigation.architecture_enabled",
     ),
     NavItem("health", "System health", "core:health", "heart-pulse", "System", ("/system/health",)),
     NavItem("content_sync", "Website sync", "content_sync:sync", "globe", "System", ("/content",)),

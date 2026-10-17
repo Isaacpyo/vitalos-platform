@@ -306,21 +306,23 @@ def user_edit(request, pk):
             with transaction.atomic():
                 services.set_role(target, data["role"] or None, request.user, request=request)
                 services.set_active(target, data["is_active"], request.user, request=request)
-                if target.full_name != data["full_name"]:
-                    target.full_name = data["full_name"]
-                    target.save(update_fields=["full_name"])
+                name = " ".join(data["full_name"].split())
+                if target.full_name != name or target.name_needs_review:
+                    target.full_name = name
+                    target.name_needs_review = False
+                    target.save(update_fields=["full_name", "name_needs_review"])
         except ValidationError as exc:
             form.add_error(None, exc)
         else:
             return close_modal_response(
-                request, reverse("accounts:settings_users"), f"{target.email} updated."
+                request, reverse("accounts:settings_users"), f"{target.display_label} updated."
             )
     return render(
         request,
         "partials/form_modal.html",
         {
             "form": form,
-            "title": f"Edit {target.email}",
+            "title": f"Edit {target.display_label}",
             "action": reverse("accounts:user_edit", args=[target.pk]),
             "submit": "Save",
         },

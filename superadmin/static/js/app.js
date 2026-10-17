@@ -369,6 +369,53 @@
     showToast(event.detail && event.detail.message);
   });
 
+  // Row "More" menus (E3): place the panel next to its button in viewport coordinates, flipping
+  // above when there is no room below, so scrolling table wrappers never clip it.
+  function placeRowMenu(menu) {
+    var button = menu.querySelector("summary");
+    var panel = menu.querySelector(".row-menu-panel");
+    if (!button || !panel) return;
+    var rect = button.getBoundingClientRect();
+    panel.style.right = Math.max(window.innerWidth - rect.right, 8) + "px";
+    panel.style.top = rect.bottom + 4 + "px";
+    var height = panel.offsetHeight;
+    if (rect.bottom + 4 + height > window.innerHeight && rect.top - 4 - height > 0) {
+      panel.style.top = rect.top - 4 - height + "px";
+    }
+  }
+  function closeRowMenus(except) {
+    document.querySelectorAll("details[open][data-row-menu]").forEach(function (menu) {
+      if (menu !== except) menu.removeAttribute("open");
+    });
+  }
+  document.addEventListener(
+    "toggle",
+    function (event) {
+      var menu = event.target;
+      if (!menu.matches || !menu.matches("details[data-row-menu]")) {
+        if (menu.closest && menu.closest("details[data-row-menu]")) placeRowMenu(menu.closest("details[data-row-menu]"));
+        return;
+      }
+      if (menu.open) {
+        closeRowMenus(menu);
+        placeRowMenu(menu);
+      }
+    },
+    true
+  );
+  window.addEventListener("resize", function () {
+    closeRowMenus(null);
+  });
+  document.addEventListener(
+    "scroll",
+    function (event) {
+      var target = event.target;
+      if (target && target.closest && target.closest(".row-menu-panel")) return;
+      closeRowMenus(null);
+    },
+    true
+  );
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       closeModal();

@@ -40,6 +40,7 @@ def app_context(request):
         "nav_crumb": navigation.crumb_label(navigation.active_item(path)) if show_chrome else "",
         "csp_nonce": getattr(request, "csp_nonce", ""),
         "app_environment": settings.APP_ENVIRONMENT,
+        "architecture_enabled": settings.ARCHITECTURE_MODULE_ENABLED,
         "is_superadmin": authenticated and is_superadmin(user),
         "has_role": authenticated and has_any_role(user),
         "user_role": primary_role(user) if authenticated else None,

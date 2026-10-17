@@ -64,7 +64,7 @@
           <th scope="col">Status</th>
           <th scope="col">Sync</th>
           <th scope="col">Updated</th>
-          <th scope="col"><span class="sr-only">Actions</span></th>
+          <th scope="col" class="col-actions"><span class="sr-only">Actions</span></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -81,20 +81,27 @@
             <td class="whitespace-nowrap"><span class="mono-label {{ row.tone }}">{{ row.status }}</span></td>
             <td class="whitespace-nowrap">{% include "content_sync/_item_status.html" with sync=row.sync poll_url="" %}</td>
             <td class="whitespace-nowrap"><time datetime="{{ row.post.updated_at|date:'c' }}">{{ row.post.updated_at|date:"j M Y, H:i" }}</time></td>
-            <td class="whitespace-nowrap text-right">
-              <a class="btn btn-ghost btn-sm" href="{% url 'insights:post' row.post.pk %}" aria-label="Edit {{ row.post.title }}">{% icon "edit" "h-4 w-4" %}<span>Edit</span></a>
-              <a class="btn btn-ghost btn-sm" href="{% url 'insights:post_site_preview' row.post.pk %}" target="_blank" rel="noopener" aria-label="Preview {{ row.post.title }} on the website (opens in a new tab)">Preview</a>
-              {% if row.live_url %}<a class="btn btn-ghost btn-sm" href="{{ row.live_url }}" target="_blank" rel="noopener" aria-label="View {{ row.post.title }} on the website (opens in a new tab)">View on site</a>{% endif %}
-              {% if can_edit %}
-                <form method="post" action="{% url 'insights:post_action' row.post.pk 'duplicate' %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" aria-label="Duplicate {{ row.post.title }}">Duplicate</button></form>
-              {% endif %}
-              {% if row.post.status != "archived" %}
-                {% if row.post.status == "published" or row.post.status == "scheduled" %}
-                  {% if can_publish %}{% url 'insights:post_action' row.post.pk 'archive' as archive_url %}{% include "insights/_confirm.html" with label="Archive" target=row.post.title question="Archive this post? It is taken off the website straight away." confirm_label="Archive post" url=archive_url %}{% endif %}
-                {% elif can_edit %}
-                  {% url 'insights:post_action' row.post.pk 'archive' as archive_url %}{% include "insights/_confirm.html" with label="Archive" target=row.post.title question="Archive this post?" confirm_label="Archive post" url=archive_url %}
-                {% endif %}
-              {% endif %}
+            <td class="col-actions">
+              <div class="flex items-center justify-end gap-1">
+                <a class="btn btn-ghost btn-sm" href="{% url 'insights:post' row.post.pk %}" aria-label="Edit {{ row.post.title }}">{% icon "edit" "h-4 w-4" %}<span>Edit</span></a>
+                <details class="row-menu" data-menu data-row-menu>
+                  <summary class="btn btn-ghost btn-sm cursor-pointer list-none" aria-label="More actions for {{ row.post.title }}" data-testid="row-menu">{% icon "more" "h-4 w-4" %}</summary>
+                  <div class="row-menu-panel" role="group" aria-label="More actions for {{ row.post.title }}">
+                    <a class="row-menu-item" href="{% url 'insights:post_site_preview' row.post.pk %}" target="_blank" rel="noopener">Preview on the website<span class="sr-only"> (opens in a new tab)</span></a>
+                    {% if row.live_url %}<a class="row-menu-item" href="{{ row.live_url }}" target="_blank" rel="noopener">View on site<span class="sr-only"> (opens in a new tab)</span></a>{% endif %}
+                    {% if can_edit %}
+                      <form method="post" action="{% url 'insights:post_action' row.post.pk 'duplicate' %}">{% csrf_token %}<button type="submit" class="row-menu-item">Duplicate</button></form>
+                    {% endif %}
+                    {% if row.post.status != "archived" %}
+                      {% if row.post.status == "published" or row.post.status == "scheduled" %}
+                        {% if can_publish %}{% url 'insights:post_action' row.post.pk 'archive' as archive_url %}{% include "partials/row_menu_confirm.html" with label="Archive" target=row.post.title question="Archive this post? It is taken off the website straight away." confirm_label="Archive post" url=archive_url %}{% endif %}
+                      {% elif can_edit %}
+                        {% url 'insights:post_action' row.post.pk 'archive' as archive_url %}{% include "partials/row_menu_confirm.html" with label="Archive" target=row.post.title question="Archive this post?" confirm_label="Archive post" url=archive_url %}
+                      {% endif %}
+                    {% endif %}
+                  </div>
+                </details>
+              </div>
             </td>
           </tr>
         {% empty %}

@@ -7,11 +7,13 @@
       <p class="muted mt-1 text-sm">Every change to the architecture, from the audit history.</p>
     </div>
     <form method="get" class="flex flex-wrap gap-2" hx-get="{% url 'architecture:activity' %}" hx-trigger="change" hx-target="#activity-list" hx-swap="outerHTML" hx-push-url="true">
+      {% if architecture_enabled %}
       <label class="sr-only" for="filter-line">Service line</label>
       <select id="filter-line" name="service_line" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
         <option value="">All service lines</option>
         {% for line in lines %}<option value="{{ line.slug }}" {% if selected_line and selected_line.pk == line.pk %}selected{% endif %}>{{ line.name }}</option>{% endfor %}
       </select>
+      {% endif %}
       <label class="sr-only" for="filter-model">Record type</label>
       <select id="filter-model" name="model" class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900">
         <option value="">All record types</option>

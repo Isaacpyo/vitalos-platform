@@ -225,7 +225,7 @@ def assign(request, ref):
         else:
             assignee = None
         services.assign(enquiry, assignee, request.user, request=request)
-        return f"Assigned to {assignee.email}." if assignee else "Unassigned."
+        return f"Assigned to {assignee.display_label}." if assignee else "Unassigned."
 
     return _post_action(request, ref, apply)
 

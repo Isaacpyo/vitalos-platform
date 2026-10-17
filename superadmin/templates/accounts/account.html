@@ -6,6 +6,9 @@
   <div class="mt-6 grid gap-6 lg:grid-cols-2">
     <section class="card p-6">
       <h2 class="mb-4 font-semibold">Profile</h2>
+      {% if user.name_needs_review %}
+        <p class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200" data-testid="name-review-nudge">We filled in your name from your email address. Check it and save, so colleagues and Relay visitors see the right name.</p>
+      {% endif %}
       <form method="post" novalidate>
         {% csrf_token %}<input type="hidden" name="action" value="profile">
         {% include "partials/form_fields.html" with form=profile_form %}

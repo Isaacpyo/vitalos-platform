@@ -43,7 +43,7 @@
           <ul class="grid gap-3 p-4 text-sm md:grid-cols-2">
             {% for practice in line.practices.all %}
               <li>
-                <a href="{{ practice.get_absolute_url }}" class="font-medium hover:underline">{{ practice.name }}</a> <span class="{{ practice.status|badge_class }}">{{ practice.get_status_display }}</span>
+                <a href="{{ practice.get_absolute_url }}" class="font-medium hover:underline">{{ practice.name }}</a> <span class="{{ practice.status|badge_class }}">{{ practice.get_status_display }}</span>{% if practice.public_url %} <a href="{{ practice.public_url }}" target="_blank" rel="noopener" class="muted text-xs hover:underline">On the website<span class="sr-only"> (opens in a new tab)</span></a>{% endif %}
                 <ul class="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3 dark:border-slate-700">
                   {% for solution in practice.solutions.all %}
                     <li>{{ solution.name }}{% if solution.offers.all %}<span class="muted"> — {% for offer in solution.offers.all %}{{ offer.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}</li>

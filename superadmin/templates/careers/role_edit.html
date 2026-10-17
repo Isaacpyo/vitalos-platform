@@ -136,7 +136,7 @@
         <h2 id="role-revisions-heading" class="mono-label muted">Revisions</h2>
         {% if revisions %}
           <ul class="mt-2 divide-y divide-slate-200 text-sm dark:divide-slate-800">
-            {% for revision in revisions %}<li class="py-2">{{ revision.published_at|date:"j M Y, H:i" }} <span class="muted text-xs">· {{ revision.published_by.email|default:"System" }}</span></li>{% endfor %}
+            {% for revision in revisions %}<li class="py-2">{{ revision.published_at|date:"j M Y, H:i" }} <span class="muted text-xs">· {{ revision.published_by|person|default:"System" }}</span></li>{% endfor %}
           </ul>
         {% else %}<p class="muted mt-2 text-sm">Not published yet.</p>{% endif %}
       </section>
