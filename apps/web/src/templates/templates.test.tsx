@@ -64,7 +64,7 @@ describe("homepage sections", () => {
     expect(rendered.every((node) => node !== null)).toBe(true);
   });
 
-  it("renders the Careers section after Insights from the admin's home read", () => {
+  it("renders the Careers banner after Insights from the admin's home read, without listing roles", () => {
     const markup = html(
       <HomeTemplate
         home={fullHome}
@@ -73,9 +73,10 @@ describe("homepage sections", () => {
         content={contentHome}
       />,
     );
-    expect(markup).toContain("All open roles");
-    expect(markup).toContain('href="/careers/example-role-fixture"');
-    expect(markup.indexOf("All insights")).toBeLessThan(markup.indexOf("All open roles"));
+    // A banner (owner decision, 17 Oct 2026): the heading and one button, no role rows.
+    expect(markup).toContain("See open roles");
+    expect(markup).not.toContain('href="/careers/example-role-fixture"');
+    expect(markup.indexOf("All insights")).toBeLessThan(markup.indexOf("See open roles"));
     const none = html(
       <HomeTemplate
         home={fullHome}
@@ -84,7 +85,7 @@ describe("homepage sections", () => {
         content={{ insights: contentHome.insights, careers: null }}
       />,
     );
-    expect(none).not.toContain("All open roles");
+    expect(none).not.toContain("See open roles");
   });
 
   it("renders the Insights section from the admin's home read, and omits it without one", () => {
