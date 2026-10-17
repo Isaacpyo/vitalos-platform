@@ -69,9 +69,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .relay-panel--open,
-  .relay-panel--desktop.relay-panel--open,
-  .relay-panel--tablet.relay-panel--open {
+  .relay-panel--open {
     animation: relay-fade-in 120ms linear;
   }
   .relay-caret,
@@ -97,6 +95,12 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .relay-panel--desktop.relay-panel--open,
+  .relay-panel--tablet.relay-panel--open {
+    animation: relay-fade-in 120ms linear;
   }
 }
 /* Mobile: exactly the visible screen (visual viewport height, set in panel.tsx), never wider

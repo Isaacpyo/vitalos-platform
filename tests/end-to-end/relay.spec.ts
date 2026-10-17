@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, adminCall, ask, newId, openRelay } from "../support/relay";
+import { ADMIN, adminCall, ask, newId, openHandoffFromMenu, openRelay } from "../support/relay";
 
 // Vitalos Relay visitor journeys (docs/relay, Phase 2-4 acceptance). The e2e server runs Relay with
 // the in-memory store and the deterministic mock model, so answers are stable and offline.
@@ -15,8 +15,8 @@ test.describe("Relay launcher and panel", () => {
     await launcher.click();
     await expect(page.getByText("Ask Vitalos.")).toBeVisible();
     await expect(page.getByLabel("Message Relay")).toBeFocused();
-    await expect(page.locator("#relay-panel").getByText("START WITH")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Talk to a person" }).first()).toBeVisible();
+    await expect(page.getByRole("region", { name: "Suggested questions" })).toBeVisible();
+    await expect(page.locator(".relay-subtitle")).toHaveText("AI assistant");
     await page.keyboard.press("Escape");
     await expect(page.locator("#relay-panel")).toBeHidden();
     await expect(launcher).toBeFocused();
@@ -54,7 +54,7 @@ test.describe("Relay launcher and panel", () => {
   test("hand-off form validates, then sends the request", async ({ page }) => {
     await page.goto("/");
     await openRelay(page);
-    await page.getByRole("button", { name: "Talk to a person" }).first().click();
+    await openHandoffFromMenu(page);
     await page.getByRole("button", { name: "Connect me to a person" }).click();
     await expect(page.getByText("Enter your name")).toBeVisible();
     await expect(page.getByText("Enter a valid email address")).toBeVisible();
@@ -181,7 +181,7 @@ test.describe("Relay hand-off with a person (two parties)", () => {
     // Join: the visitor sees the person and the AI pauses.
     expect((await adminCall(request, "POST", `/conversations/${id}/join`)).status).toBe(200);
     await expect(page.getByRole("heading", { name: ADMIN.name })).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("VITALOS · A PERSON, NOT AI")).toBeVisible();
+    await expect(page.locator(".relay-subtitle")).toHaveText(/Team online\s*·\s*A person, not AI/);
     await expect(page.getByText(/TEMITOPE AGBOLA JOINED/)).toBeVisible();
     await expect(page.getByText("RELAY AI IS PAUSED WHILE YOU CHAT WITH THE TEAM")).toBeVisible();
 

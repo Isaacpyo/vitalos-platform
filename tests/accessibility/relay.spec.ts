@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
-import { ask, openRelay } from "../support/relay";
+import { ask, openHandoffFromMenu, openRelay } from "../support/relay";
 
 // Vitalos Relay: WCAG 2.2 AA (axe) on every panel state, in the desktop and 390px projects.
 
@@ -28,7 +28,7 @@ test("answer with sources and feedback has no axe violations", async ({ page }) 
 test("hand-off card, with and without errors, has no axe violations", async ({ page }) => {
   await page.goto("/");
   await openRelay(page);
-  await page.getByRole("button", { name: "Talk to a person" }).first().click();
+  await openHandoffFromMenu(page);
   await expectNoA11yViolations(page, { include: ["#relay-panel"] });
   await page.getByRole("button", { name: "Connect me to a person" }).click();
   await expect(page.getByText("Enter your name")).toBeVisible();
