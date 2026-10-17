@@ -274,7 +274,8 @@ describe("hand-off and admin flow", () => {
     expect(reply.emailed).toBe(false); // visitor emails are off by default
     const seen = await visitor.messages(created.conversationId, created.visitorToken);
     expect(seen.status).toBe("human");
-    expect(seen.person).toEqual({ name: "Temitope Agbola", initials: "TA" });
+    // Visitors see the first name only (D3, ADR-048).
+    expect(seen.person).toEqual({ name: "Temitope", initials: "TA" });
     expect(seen.messages.filter((m) => m.senderType === "system").map((m) => m.event)).toEqual([
       "handoff_requested",
       "admin_joined",
@@ -283,7 +284,7 @@ describe("hand-off and admin flow", () => {
     expect(seen.messages.at(-1)).toMatchObject({
       senderType: "admin",
       body: "Yes. I'll send some times over.",
-      adminName: "Temitope Agbola",
+      adminName: "Temitope",
     });
 
     await admin.note(created.conversationId, ADMIN, "Internal: follow up Friday");

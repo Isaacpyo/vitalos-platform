@@ -19,7 +19,7 @@
 {"id":"tru-04","q":"Will Vitalos sign a data processing agreement?","expect":["TRU-04"]}
 {"id":"wwd-01","q":"How are Vitalos services organised?","expect":["WWD-01"]}
 {"id":"gap-hello","q":"Hello","smallTalk":true}
-{"id":"gap-founder","q":"who is the founder of Vitalos?","expect":["founder"],"pending":"handoff"}
+{"id":"gap-founder","q":"who is the founder of Vitalos?","expect":["founder","ABT-02"],"pending":["ABT-02"]}
 {"id":"gap-solutions-typo","q":"what are your soultions?","expect":["solutions-list","solutions-offers-sectors","SOL-01","url:/solutions"],"pending":["solutions-offers-sectors","SOL-01","url:/solutions"]}
 {"id":"gap-getting-started","q":"getting started","expect":["getting-started","how-engagements-start","url:/how-we-work"],"pending":["how-engagements-start","url:/how-we-work"]}
 {"id":"gap-modernise-followup","before":["What is the Application Modernisation offer, and who is it for?"],"q":"so how can I modernise my system with this?","expect":["modernise-my-system","OFF-16","SOL-09","url:/solutions/application-modernisation","url:/offers/application-modernisation"],"pending":["OFF-16","SOL-09","url:/solutions/application-modernisation","url:/offers/application-modernisation"]}

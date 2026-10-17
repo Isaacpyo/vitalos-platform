@@ -25,7 +25,9 @@ describe("Relay turn eval (docs/relay/evals/turns.jsonl)", () => {
     const run = await runTurnsEval({ approvePending: true });
     const failed = run.results.filter((r) => !r.pass).map((r) => `${r.id}: ${r.reason}`);
     expect(failed).toEqual([]);
-    expect(run.results.find((r) => r.id === "gap-founder")?.retrieved).toContain("founder");
+    expect(run.results.find((r) => r.id === "gap-founder")?.retrieved).toEqual(
+      expect.arrayContaining(["founder"]),
+    );
     expect(run.maxTokens).toBeLessThanOrEqual(8_000);
   }, 60_000);
 });

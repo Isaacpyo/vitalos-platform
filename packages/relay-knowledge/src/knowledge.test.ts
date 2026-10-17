@@ -28,7 +28,7 @@ describe("repo seed content", () => {
     expect(practices).toContain(
       "six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs",
     );
-    for (const { text } of repoContentFiles) expect(text).not.toMatch(/five (practices|solutions)/i);
+    for (const { text } of repoContentFiles) expect(text).not.toMatch(/\bfive (practices|solutions)\b/i);
   });
 
   it("entries awaiting confirmation stay drafts until the owner approves them", () => {
@@ -44,14 +44,7 @@ describe("repo seed content", () => {
     for (const p of pending) expect(p.data.status).toBe("draft");
     expect(() =>
       parseFrontmatter(
-        "---
-id: x
-title: X
-type: guide
-status: published
-confirmation: needed
----
-Text",
+        "---\nid: x\ntitle: X\ntype: guide\nstatus: published\nconfirmation: needed\n---\nText",
         "x.md",
       ),
     ).toThrow(/must be a draft/);

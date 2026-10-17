@@ -72,11 +72,14 @@ def staff_name(user) -> str:
 
     Never the email address or its local part (finding D3): the website shows visitors the first
     word of this name ("Temitope · Vitalos"), so a username such as "temitope.agbola" must not
-    reach it. ``display_name`` is read when the account model has it (WS7, ADR-049).
+    reach it.
     """
-    for field in ("display_name", "full_name"):
+    # ``display_label`` (WS7: full name, or a name derived from the email) and ``display_name``
+    # are read when the account model has them; anything that still looks like an address or a
+    # username (``@``, dots, underscores) is never sent.
+    for field in ("display_label", "display_name", "full_name"):
         value = " ".join(str(getattr(user, field, "") or "").split())
-        if value and "@" not in value:
+        if value and not any(ch in value for ch in "@._"):
             return value[:120]
     return STAFF_FALLBACK_NAME
 

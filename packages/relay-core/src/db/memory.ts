@@ -464,6 +464,16 @@ export class MemoryRelayStore implements RelayStore {
           if (heading.includes(t)) score += 0.2;
           if (body.includes(t)) score += 0.1;
         }
+        // The visitor asked exactly this heading (an FAQ question): rank it first, as the
+        // embedding ranking does in Postgres for an exact question.
+        const headingTerms = new Set(heading);
+        if (
+          score > 0 &&
+          headingTerms.size > 0 &&
+          headingTerms.size === qTerms.size &&
+          [...qTerms].every((t) => headingTerms.has(t))
+        )
+          score += 0.5;
         return { c, score };
       })
       .filter((x) => x.score > 0)

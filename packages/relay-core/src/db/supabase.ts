@@ -491,7 +491,7 @@ export class SupabaseRelayStore implements RelayStore {
   async kbVocabulary(): Promise<ReadonlyMap<string, number>> {
     const now = Date.now();
     if (this.vocabulary && now - this.vocabulary.at < 600_000) return this.vocabulary.words;
-    let words: ReadonlyMap<string, number> = new Map();
+    let words: ReadonlyMap<string, number>;
     try {
       const data = check(await this.db.rpc("kb_vocabulary")) as Record<string, number> | null;
       words = new Map(Object.entries(data ?? {}).map(([w, n]) => [w, Number(n)]));

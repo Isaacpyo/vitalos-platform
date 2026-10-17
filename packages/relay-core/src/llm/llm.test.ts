@@ -32,7 +32,7 @@ describe("system prompt", () => {
       "One firm, six practices: Consulting; Engineering; AI & Data; Experience; Managed Services; Labs (research and technical proof).",
     );
     expect(SYSTEM_PROMPT).toContain("Six solutions:");
-    expect(SYSTEM_PROMPT).not.toMatch(/five (practices|solutions)/i);
+    expect(SYSTEM_PROMPT).not.toMatch(/\bfive (practices|solutions)\b/i);
     expect(SYSTEM_PROMPT).toContain("SOURCES marked (FAQ) are approved answers.");
     expect(SYSTEM_PROMPT).not.toMatch(/deepseek-chat|deepseek-reasoner/);
   });

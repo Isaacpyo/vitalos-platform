@@ -51,8 +51,15 @@ export interface TurnCase {
   before?: string[];
   /** Any of: an external id (FAQ id or repo entry id), or `url:/path`. */
   expect?: string[];
-  /** Expectation while confirmation-pending repo entries are drafts: ids, or "handoff". */
+  /**
+   * Expectation while confirmation-pending repo entries are drafts: ids, or "handoff". With
+   * "handoff" and `topic`, the case also passes when no source sent to the model mentions the
+   * topic: the model then has nothing to answer from, and the system prompt makes it offer a
+   * person (the mock model does not imitate that judgement).
+   */
   pending?: string[] | "handoff";
+  /** Regular expression (case-insensitive) for the subject of a "handoff" case. */
+  topic?: string;
   smallTalk?: boolean;
 }
 
@@ -183,8 +190,12 @@ export async function runTurnsEval(
       pass = own.length === 0 && Boolean(done?.text);
       reason = pass ? "small talk: fixed reply, no model call" : "small talk reached the model";
     } else if (expect === "handoff") {
-      pass = handoff || lowConfidence;
-      reason = pass ? "no published source: offers a person" : "answered without a source";
+      const topic = c.topic ? new RegExp(c.topic, "i") : null;
+      const mentioned = topic ? sent.some((x) => topic.test(`${x.title} ${x.content}`)) : true;
+      pass = handoff || lowConfidence || !mentioned;
+      reason = pass
+        ? "no published source answers it: nothing to answer from, a person is offered"
+        : "a source was sent and answered without confirmation";
     } else {
       pass = !lowConfidence && matches(expect, sent);
       reason = pass

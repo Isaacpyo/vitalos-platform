@@ -184,10 +184,10 @@ describe("D1 prompt budget", () => {
     for (const p of parts) expect(p.content.split(" ").length).toBeLessThanOrEqual(300);
   });
 
-  it("never sends more than 8,000 tokens, however long the history", async () => {
+  it("never sends more than 8,000 tokens, however long the history", () => {
     const big = Array.from({ length: 1500 }, () => "context").join(" ");
     const history = Array.from({ length: 20 }, (_, i) => ({
-      role: (i % 2 ? "assistant" : "user") as "user" | "assistant",
+      role: i % 2 ? ("assistant" as const) : ("user" as const),
       content: big,
     }));
     const messages = assemblePrompt(history, {
