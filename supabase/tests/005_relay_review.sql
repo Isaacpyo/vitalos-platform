@@ -1,6 +1,6 @@
 -- Relay review fixes (20261017090000_relay_review.sql, ADR-048).
 begin;
-select plan(14);
+select plan(19);
 
 -- D6: thumbs-down reason column
 select has_column('relay', 'messages', 'feedback_reason', 'messages.feedback_reason exists');
@@ -40,6 +40,16 @@ select ok(not (relay.kb_vocabulary() ? 'an'), 'vocabulary skips words shorter th
 select ok(not has_function_privilege('anon', 'relay.kb_vocabulary()', 'execute'), 'anon cannot call kb_vocabulary');
 select ok(not has_function_privilege('authenticated', 'relay.insights(timestamptz)', 'execute'),
   'authenticated cannot call insights');
+
+-- D1: usage tagged by source; the daily cap counter still sees every call
+select lives_ok($$select relay.add_usage_tagged(current_date, 1000, 100, 0, 0.001, 'chat')$$, 'tagged usage is recorded');
+select lives_ok($$select relay.add_usage_tagged(current_date, 9000, 200, 0, 0.002, 'test')$$, 'test traffic is recorded');
+select is((select tokens_in from relay.usage_daily where day = current_date) >= 10000, true,
+  'usage_daily (daily cap) counts every tagged call');
+select is(((relay.insights(now() - interval '1 day')) -> 'usageBySource' -> 'test' ->> 'tokensIn')::int, 9000,
+  'insights show test traffic separately');
+select throws_ok($$select relay.add_usage_tagged(current_date, 1, 1, 0, 0, 'other')$$, '23514', null,
+  'an unknown usage source is rejected');
 
 -- D4: hourly ingest schedule
 select is((select schedule from cron.job where jobname = 'relay-ingest'), '12 * * * *',

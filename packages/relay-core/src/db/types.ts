@@ -248,6 +248,10 @@ export interface PresenceRecord {
   lastSeenAt: string;
 }
 
+/** What a model call was for (`relay.usage_by_source.source`). */
+export const USAGE_SOURCES = ["chat", "summary", "aborted", "test"] as const;
+export type UsageSource = (typeof USAGE_SOURCES)[number];
+
 export interface UsageRecord {
   day: string;
   requests: number;
@@ -302,8 +306,16 @@ export interface InsightsRow {
   tokensOut: number;
   cacheHitTokens: number;
   estCostUsd: number;
+  /** The same usage split by source; `untagged` is usage recorded before tagging existed. */
+  usageBySource: Record<UsageSource | "untagged", { tokensIn: number; tokensOut: number; requests: number }>;
   /** Per-turn input tokens of AI answers stored in the window (`relay.messages.tokens_in`). */
-  turns: { count: number; tokensIn: number; avgTokensIn: number; maxTokensIn: number };
+  turns: {
+    count: number;
+    tokensIn: number;
+    avgTokensIn: number;
+    p95TokensIn: number;
+    maxTokensIn: number;
+  };
   /** Thumbs-down reasons on AI answers in the window. */
   feedbackReasons: Record<FeedbackReason, number>;
 }
@@ -407,12 +419,17 @@ export interface RelayStore {
   listPresence(): Promise<PresenceRecord[]>;
   getSettingsConfig(): Promise<unknown>;
   putSettingsConfig(config: unknown, updatedBy: string | null): Promise<void>;
+  /**
+   * Adds one model call to the day's counters (daily cap and cost). `source` tags it, so Insights
+   * can tell visitor answers from summaries, aborted streams and test traffic (evals, load tests).
+   */
   addUsage(
     day: string,
     tokensIn: number,
     tokensOut: number,
     cacheHit: number,
     costUsd: number,
+    source?: UsageSource,
   ): Promise<UsageRecord>;
   getUsage(day: string): Promise<UsageRecord | null>;
   markCapNotified(day: string): Promise<boolean>;

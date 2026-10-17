@@ -396,7 +396,14 @@ export class VisitorService {
           };
           const cost = estimateCostUsd(estimate, settings.model, deps.now());
           deps.defer(() =>
-            deps.store.addUsage(day, estimate.inputTokens, estimate.outputTokens, 0, cost),
+            deps.store.addUsage(
+              day,
+              estimate.inputTokens,
+              estimate.outputTokens,
+              0,
+              cost,
+              isTestTraffic(conversation) ? "test" : "aborted",
+            ),
           );
         }
         // Stopped by the visitor or failed: keep what was written, marked truncated.
@@ -487,6 +494,7 @@ export class VisitorService {
         usage.outputTokens,
         usage.cacheHitTokens,
         estimateCostUsd(usage, settings.model, deps.now()),
+        isTestTraffic(conversation) ? "test" : "chat",
       );
       if (lowConfidence) {
         await deps.store.recordGap(normaliseQuestion(redacted), redacted, conversation.id);
@@ -686,6 +694,7 @@ export class VisitorService {
         .join("\n")
         .slice(-12_000);
       if (!transcript) return;
+      const conversation = await this.store.getConversation(conversationId);
       const result = await this.ctx.deps.llm.generateSummary({
         system: SUMMARY_SYSTEM_PROMPT,
         transcript,
@@ -700,6 +709,7 @@ export class VisitorService {
         result.usage.outputTokens,
         result.usage.cacheHitTokens,
         estimateCostUsd(result.usage, this.ctx.config.summaryModel, now),
+        conversation && isTestTraffic(conversation) ? "test" : "summary",
       );
       await this.store.updateConversation(conversationId, {
         summary: redact(result.output.summary).slice(0, 600),
@@ -860,6 +870,18 @@ export class VisitorService {
 }
 
 // ---------------------------------------------------------------------------------------------
+/** utm_source values the eval and load harnesses send (`pnpm relay:eval --answers`, `relay:load`). */
+export const TEST_TRAFFIC_SOURCES = ["relay-eval", "relay-load"] as const;
+
+/**
+ * Test traffic: conversations started by the eval or load harness. Their usage is tagged "test"
+ * so Insights can show it apart from visitors (it still counts towards the daily cap). A visitor
+ * could set the same utm_source, which only moves their own usage into the test column.
+ */
+export function isTestTraffic(c: Pick<ConversationRecord, "utm">): boolean {
+  return (TEST_TRAFFIC_SOURCES as readonly string[]).includes(c.utm?.utm_source ?? "");
+}
+
 function safeReferrer(value: string): string | null {
   if (!URL.canParse(value)) return null;
   const u = new URL(value);

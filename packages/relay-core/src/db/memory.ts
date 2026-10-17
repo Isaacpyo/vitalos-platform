@@ -1,6 +1,6 @@
 import type { ConversationStatus } from "../contract";
 import { buildVocabulary } from "../retrieval/spelling";
-import { FEEDBACK_REASONS } from "./types";
+import { FEEDBACK_REASONS, USAGE_SOURCES } from "./types";
 import type {
   ConversationPatch,
   ConversationRecord,
@@ -28,6 +28,7 @@ import type {
   SyncRunRecord,
   UpsertKbDocument,
   UsageRecord,
+  UsageSource,
 } from "./types";
 
 interface StoredChunk extends KbChunkInput {
@@ -78,6 +79,8 @@ export class MemoryRelayStore implements RelayStore {
   presence = new Map<string, PresenceRecord>();
   settings: unknown = {};
   usage = new Map<string, UsageRecord>();
+  /** `${day}|${source}` -> counters (relay.usage_by_source). */
+  usageBySource = new Map<string, { tokensIn: number; tokensOut: number; requests: number }>();
   limits = new Map<string, number>();
   auditLog: {
     actorAdminId: string | null;
@@ -681,7 +684,15 @@ export class MemoryRelayStore implements RelayStore {
     tokensOut: number,
     cacheHit: number,
     costUsd: number,
+    source: UsageSource = "chat",
   ): Promise<UsageRecord> {
+    const key = `${day}|${source}`;
+    const tagged = this.usageBySource.get(key) ?? { tokensIn: 0, tokensOut: 0, requests: 0 };
+    this.usageBySource.set(key, {
+      tokensIn: tagged.tokensIn + tokensIn,
+      tokensOut: tagged.tokensOut + tokensOut,
+      requests: tagged.requests + 1,
+    });
     const u = this.usage.get(day) ?? {
       day,
       requests: 0,
@@ -822,16 +833,33 @@ export class MemoryRelayStore implements RelayStore {
       tokensOut: usage.reduce((s, u) => s + u.tokensOut, 0),
       cacheHitTokens: usage.reduce((s, u) => s + u.cacheHitTokens, 0),
       estCostUsd: usage.reduce((s, u) => s + u.estCostUsd, 0),
+      usageBySource: (() => {
+        const out = Object.fromEntries(
+          [...USAGE_SOURCES, "untagged"].map((s) => [s, { tokensIn: 0, tokensOut: 0, requests: 0 }]),
+        ) as InsightsRow["usageBySource"];
+        for (const [key, v] of this.usageBySource) {
+          const [day, source] = key.split("|") as [string, UsageSource];
+          if (day < sinceDay) continue;
+          out[source].tokensIn += v.tokensIn;
+          out[source].tokensOut += v.tokensOut;
+          out[source].requests += v.requests;
+        }
+        return out;
+      })(),
       turns: (() => {
         const measured = msgs
           .filter((m) => m.senderType === "ai" && typeof m.tokensIn === "number")
-          .map((m) => m.tokensIn as number);
+          .map((m) => m.tokensIn as number)
+          .sort((a, b) => a - b);
         const total = measured.reduce((s, n) => s + n, 0);
         return {
           count: measured.length,
           tokensIn: total,
           avgTokensIn: measured.length ? Math.round(total / measured.length) : 0,
-          maxTokensIn: measured.length ? Math.max(...measured) : 0,
+          p95TokensIn: measured.length
+            ? (measured[Math.min(measured.length - 1, Math.ceil(0.95 * measured.length) - 1)] as number)
+            : 0,
+          maxTokensIn: measured.length ? (measured.at(-1) as number) : 0,
         };
       })(),
       feedbackReasons: Object.fromEntries(

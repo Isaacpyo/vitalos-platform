@@ -11,11 +11,19 @@ import {
   useState,
 } from "react";
 import type { FormEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
-import { COPY, LIMITS, isSafeSiteLink } from "@vitalos/relay-core/contract";
+import {
+  COPY,
+  FEEDBACK_REASONS,
+  FEEDBACK_REASON_LABELS,
+  LIMITS,
+  isSafeSiteLink,
+} from "@vitalos/relay-core/contract";
 import type {
   Citation,
   ConversationStatus,
+  FeedbackReason,
   HandoffTrigger,
+  NextOpening,
   NextStep,
   TeamStatus,
   VisitorMessage,
@@ -25,12 +33,21 @@ import { api, RelayApiError, streamChat } from "./api";
 import { Convergence, Icon, StopSquare } from "./icons";
 import { Markdown } from "./markdown";
 import { RealtimeChannel } from "./realtime";
-import { clearConversation, loadConversation, saveConversation } from "./storage";
+import { emitRelayEvent } from "./events";
+import {
+  chosenConversation,
+  clearConversation,
+  loadConversation,
+  rememberChosen,
+  saveConversation,
+} from "./storage";
 import type { StoredConversation } from "./storage";
 import { getTurnstileToken } from "./turnstile";
 
 export interface PanelProps {
   open: boolean;
+  /** Opened from an emailed resume link (`?relay=resume`): restore without asking. */
+  resume?: boolean;
   onClose: (returnFocus: boolean) => void;
   onUnread: (count: number) => void;
   turnstileSiteKey?: string | undefined;
@@ -47,6 +64,8 @@ interface UiMessage extends VisitorMessage {
   streaming?: boolean;
   failed?: boolean;
   noted?: boolean;
+  /** Thumbs-down given: ask why with one tap (D6). */
+  askReason?: boolean;
 }
 
 type Notice =
@@ -69,6 +88,10 @@ interface HandoffForm {
 
 interface State {
   conv: StoredConversation | null;
+  /** A stored conversation the visitor has not chosen to continue yet (C2): not fetched. */
+  pendingStored: StoredConversation | null;
+  /** Next start of working hours while the team is offline (D5). */
+  nextOpening: NextOpening | null;
   messages: UiMessage[];
   status: ConversationStatus;
   person: { name: string; initials: string } | null;
@@ -95,6 +118,8 @@ const DEFAULT_SUGGESTIONS = [
 
 const initial: State = {
   conv: null,
+  pendingStored: null,
+  nextOpening: null,
   messages: [],
   status: "ai",
   person: null,
@@ -180,6 +205,7 @@ function reducer(state: State, action: Action): State {
         greeting: state.greeting,
         suggestions: state.suggestions,
         team: state.team,
+        nextOpening: state.nextOpening,
         noticeVersion: state.noticeVersion,
       };
   }
@@ -290,14 +316,22 @@ export function Panel(props: PanelProps) {
             personJoined: true,
           };
           saveConversation(conv);
+          rememberChosen(conv.conversationId);
         } catch {
           // An expired or used link simply opens a fresh panel.
         }
       }
       const stored = loadConversation();
       if (stored && !cancelled) {
-        dispatch({ type: "patch", patch: { conv: stored } });
-        await refresh(stored, true);
+        // Restore only what the visitor chose (C2): an emailed resume link, or the conversation
+        // continued or started earlier in this tab session. Otherwise ask first, fetch nothing.
+        if (props.resume || chosenConversation() === stored.conversationId) {
+          rememberChosen(stored.conversationId);
+          dispatch({ type: "patch", patch: { conv: stored } });
+          await refresh(stored, true);
+        } else {
+          dispatch({ type: "patch", patch: { pendingStored: stored } });
+        }
       }
     })();
     api
@@ -310,6 +344,7 @@ export function Panel(props: PanelProps) {
             suggestions: s.questions.length ? s.questions : DEFAULT_SUGGESTIONS,
             greeting: s.greeting,
             team: s.teamStatus,
+            nextOpening: s.nextOpening ?? null,
             noticeVersion: s.noticeVersion,
             outOfHoursText: s.outOfHoursText,
           },
@@ -342,6 +377,7 @@ export function Panel(props: PanelProps) {
             status: res.status,
             person: res.person,
             team: res.teamStatus,
+            nextOpening: res.nextOpening ?? null,
             contact: res.contact,
           },
         });
@@ -398,7 +434,15 @@ export function Panel(props: PanelProps) {
     return () => clearInterval(timer);
   }, [state.conv, watching, props.open, realtimeUp, refresh]);
 
-  useEffect(() => () => channelRef.current?.close(), []);
+  useEffect(
+    () => () => {
+      channelRef.current?.close();
+      // Unmounted on close (C2): everything shown so far counts as read for the unread badge.
+      const conv = stateRef.current.conv;
+      if (conv) saveConversation({ ...conv, readUntil: new Date().toISOString() });
+    },
+    [],
+  );
 
   // --- Turnstile: start when the panel opens so a token is ready before the first message ------
   const turnstileRef2 = useRef<{ token: Promise<string | undefined>; at: number } | null>(null);
@@ -524,10 +568,13 @@ export function Panel(props: PanelProps) {
       readUntil: new Date().toISOString(),
     };
     persist(conv);
+    rememberChosen(conv.conversationId);
     dispatch({
       type: "patch",
       patch: {
+        pendingStored: null,
         team: res.settings.teamStatus,
+        nextOpening: res.settings.nextOpening ?? null,
         noticeVersion: res.settings.noticeVersion,
         outOfHoursText: res.settings.outOfHoursText,
       },
@@ -556,11 +603,20 @@ export function Panel(props: PanelProps) {
         dispatch({ type: "patch", patch: { notice: { kind: "tooLong" } } });
         return;
       }
-      if (stateRef.current.status === "closed") {
+      if (stateRef.current.status === "closed" || stateRef.current.pendingStored) {
+        // Typing while "Continue previous conversation" is on offer starts a new one.
         clearConversation();
+        rememberChosen(null);
         dispatch({ type: "reset" });
-        stateRef.current = { ...stateRef.current, conv: null, status: "ai", messages: [] };
+        stateRef.current = {
+          ...stateRef.current,
+          conv: null,
+          pendingStored: null,
+          status: "ai",
+          messages: [],
+        };
       }
+      emitRelayEvent("relay_question");
       dispatch({ type: "patch", patch: { notice: null } });
       setText("");
       stickRef.current = true;
@@ -732,6 +788,7 @@ export function Panel(props: PanelProps) {
         },
       });
       persist({ ...conv, personJoined: true });
+      emitRelayEvent("relay_handoff");
       await refresh(conv);
       setAnnounce("Request sent. The team has been told.");
     } catch (error) {
@@ -748,13 +805,47 @@ export function Panel(props: PanelProps) {
   const feedback = async (m: UiMessage, value: 1 | -1) => {
     const conv = stateRef.current.conv;
     if (!conv) return;
-    dispatch({ type: "update", id: m.id, patch: { feedback: value, noted: true } });
+    // On an AI answer a thumbs-down first asks why, with one tap (D6); the hand-off card follows.
+    const askReason = value === -1 && m.senderType === "ai";
+    dispatch({
+      type: "update",
+      id: m.id,
+      patch: { feedback: value, noted: true, askReason, feedbackReason: null },
+    });
     try {
       const res = await api.feedback(conv.conversationId, m.id, value, conv.visitorToken);
-      if (res.showHandoff && stateRef.current.status === "ai") openHandoff("not_helpful");
+      if (res.showHandoff && !askReason && stateRef.current.status === "ai")
+        openHandoff("not_helpful");
     } catch {
-      dispatch({ type: "update", id: m.id, patch: { noted: false } });
+      dispatch({ type: "update", id: m.id, patch: { noted: false, askReason: false } });
     }
+  };
+
+  /** The one-tap reason after a thumbs-down (or "Skip"), then the offer of a person. */
+  const chooseReason = async (m: UiMessage, reason: FeedbackReason | null) => {
+    const conv = stateRef.current.conv;
+    dispatch({
+      type: "update",
+      id: m.id,
+      patch: { askReason: false, ...(reason ? { feedbackReason: reason } : {}) },
+    });
+    if (conv && reason) {
+      try {
+        await api.feedback(conv.conversationId, m.id, -1, conv.visitorToken, reason);
+      } catch {
+        // The thumbs-down itself is already stored; the reason is optional.
+      }
+    }
+    if (stateRef.current.status === "ai") openHandoff("not_helpful");
+  };
+
+  const continuePrevious = async () => {
+    const stored = stateRef.current.pendingStored;
+    if (!stored) return;
+    rememberChosen(stored.conversationId);
+    dispatch({ type: "patch", patch: { conv: stored, pendingStored: null } });
+    await refresh(stored, true);
+    composerRef.current?.focus();
   };
 
   const onType = (value: string) => {
@@ -775,6 +866,7 @@ export function Panel(props: PanelProps) {
     channelRef.current?.close();
     channelRef.current = null;
     clearConversation();
+    rememberChosen(null);
     dispatch({ type: "reset" });
     composerRef.current?.focus();
   };
@@ -793,6 +885,7 @@ export function Panel(props: PanelProps) {
     channelRef.current?.close();
     channelRef.current = null;
     clearConversation();
+    rememberChosen(null);
     dispatch({ type: "reset" });
     dispatch({ type: "patch", patch: { notice: { kind: "deleted" } } });
   };
@@ -826,6 +919,7 @@ export function Panel(props: PanelProps) {
       ? "Ask about services or your project"
       : "Reply to Relay";
   const teamOnline = state.team === "online";
+  const offlineLabel = !teamOnline && state.nextOpening ? state.nextOpening.label : null;
 
   const items = useMemo(() => {
     const out: ReactNode[] = [];
@@ -843,6 +937,7 @@ export function Panel(props: PanelProps) {
           contactEmail={state.contact?.email ?? null}
           outOfHoursText={state.outOfHoursText}
           onFeedback={(msg, value) => void feedback(msg, value)}
+          onReason={(msg, reason) => void chooseReason(msg, reason)}
           onCopy={(msg) => void copyAnswer(msg)}
           onTalk={() => openHandoff("low_confidence")}
           onNextStepHandoff={() => openHandoff("explicit_request")}
@@ -863,7 +958,6 @@ export function Panel(props: PanelProps) {
         className={`relay-panel relay-panel--${mode}${props.open ? " relay-panel--open" : ""}`}
         {...(modal ? { role: "dialog", "aria-modal": true } : { role: "region" })}
         aria-labelledby={titleId}
-        hidden={!props.open}
         onKeyDown={onKeyDown}
       >
         <header className="relay-header">
@@ -888,7 +982,11 @@ export function Panel(props: PanelProps) {
                 <>
                   AI ASSISTANT ·{" "}
                   <span className={teamOnline ? "relay-online" : undefined}>
-                    {teamOnline ? "TEAM ONLINE" : "TEAM OFFLINE"}
+                    {teamOnline
+                      ? "TEAM ONLINE"
+                      : offlineLabel
+                        ? `TEAM BACK ${offlineLabel.toUpperCase()}`
+                        : "TEAM OFFLINE"}
                   </span>
                 </>
               )}
@@ -955,7 +1053,33 @@ export function Panel(props: PanelProps) {
         </header>
 
         <div ref={logRef} className="relay-body" onScroll={onScroll}>
-          {welcome && (
+          {welcome && state.pendingStored && (
+            <section className="relay-resume" aria-labelledby="relay-resume-title">
+              <h3 id="relay-resume-title" className="relay-hero-title">
+                Welcome back<span className="relay-stop">.</span>
+              </h3>
+              <p className="relay-hero-text">
+                You have a previous conversation with Relay on this device.
+              </p>
+              <div className="relay-resume-actions">
+                <button
+                  type="button"
+                  className="relay-button relay-button--block"
+                  onClick={() => void continuePrevious()}
+                >
+                  Continue previous conversation
+                </button>
+                <button
+                  type="button"
+                  className="relay-text-button relay-text-button--ink"
+                  onClick={newConversation}
+                >
+                  Start new
+                </button>
+              </div>
+            </section>
+          )}
+          {welcome && !state.pendingStored && (
             <>
               <section className="relay-hero" aria-label="Welcome">
                 <Convergence />
@@ -991,7 +1115,18 @@ export function Panel(props: PanelProps) {
                       onClick={() => openHandoff("explicit_request")}
                     >
                       <span className="relay-ring" aria-hidden="true" />
-                      <span className="relay-start-question">Talk to a person</span>
+                      <span className="relay-start-question">
+                        {offlineLabel ? (
+                          <>
+                            Leave your email and we&apos;ll reply
+                            <span className="relay-start-note">
+                              The team is offline. Back {offlineLabel}.
+                            </span>
+                          </>
+                        ) : (
+                          "Talk to a person"
+                        )}
+                      </span>
                       <Icon name="chevron" size={18} />
                     </button>
                   </li>
@@ -1022,6 +1157,7 @@ export function Panel(props: PanelProps) {
               {state.handoff.open && (
                 <HandoffCard
                   form={state.handoff}
+                  offlineLabel={offlineLabel}
                   privacyUrl={props.privacyUrl}
                   onChange={(patch) => dispatch({ type: "handoff", patch })}
                   onSubmit={(e) => void submitHandoff(e)}
@@ -1184,6 +1320,7 @@ function MessageView(props: {
   contactEmail: string | null;
   outOfHoursText: string;
   onFeedback: (m: UiMessage, v: 1 | -1) => void;
+  onReason: (m: UiMessage, reason: FeedbackReason | null) => void;
   onCopy: (m: UiMessage) => void;
   onTalk: () => void;
   onNextStepHandoff: () => void;
@@ -1263,12 +1400,21 @@ function MessageView(props: {
   const person = m.senderType === "admin";
   const anchor = (n: number) =>
     m.citations?.some((c) => c.n === n) ? `#relay-src-${m.id}-${n}` : null;
+  // Staff appear by first name in normal case, never a username or email (D3); the server already
+  // sends a first name or "Vitalos team".
+  const who = person ? personLabel(m.adminName) : "Relay · AI";
+  // A group inside the log, not an <article> landmark (C2).
   return (
-    <article className="relay-answer" aria-busy={m.streaming ? true : undefined}>
+    <div
+      className="relay-answer"
+      role="group"
+      aria-label={`${who}, ${time(m.createdAt)}`}
+      aria-busy={m.streaming ? true : undefined}
+    >
       <p className="relay-meta">
         <span className={`relay-dot${person ? " relay-dot--person" : ""}`} aria-hidden="true" />
-        <span className="relay-mono relay-meta-who">
-          {person ? `${(m.adminName ?? "Vitalos").toUpperCase()} · VITALOS` : "RELAY · AI"}
+        <span className={`relay-meta-who${person ? " relay-meta-who--person" : " relay-mono"}`}>
+          {person ? who : "RELAY · AI"}
         </span>
         {m.streaming ? (
           <>
@@ -1326,7 +1472,7 @@ function MessageView(props: {
             >
               <Icon name="thumbDown" size={18} />
             </button>
-            {m.noted && <span className="relay-mono relay-muted">NOTED</span>}
+            {m.noted && !m.askReason && <span className="relay-mono relay-muted">NOTED</span>}
             <button
               type="button"
               className="relay-copy-button"
@@ -1336,9 +1482,55 @@ function MessageView(props: {
               <Icon name="copy" size={18} />
             </button>
           </div>
+          {m.askReason && <ReasonPicker m={m} onReason={props.onReason} />}
         </>
       )}
-    </article>
+    </div>
+  );
+}
+
+/** "First name · Vitalos", or "Vitalos team" when no name is known. */
+function personLabel(name: string | null | undefined): string {
+  const first = firstName(name ?? "");
+  return !first || first === "Vitalos" ? "Vitalos team" : `${first} · Vitalos`;
+}
+
+/** One tap after "Not helpful": why it missed (D6). Focus moves to the first choice. */
+function ReasonPicker(props: {
+  m: UiMessage;
+  onReason: (m: UiMessage, reason: FeedbackReason | null) => void;
+}) {
+  const firstRef = useRef<HTMLButtonElement>(null);
+  const labelId = useId();
+  useEffect(() => {
+    firstRef.current?.focus();
+  }, []);
+  return (
+    <div className="relay-reasons" role="group" aria-labelledby={labelId}>
+      <p id={labelId} className="relay-feedback-label">
+        What went wrong?
+      </p>
+      <div className="relay-reason-list">
+        {FEEDBACK_REASONS.map((reason, i) => (
+          <button
+            key={reason}
+            ref={i === 0 ? firstRef : undefined}
+            type="button"
+            className="relay-reason"
+            onClick={() => props.onReason(props.m, reason)}
+          >
+            {FEEDBACK_REASON_LABELS[reason]}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="relay-text-button relay-text-button--ink"
+          onClick={() => props.onReason(props.m, null)}
+        >
+          Skip
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1445,6 +1637,8 @@ function NoticeView(props: {
 
 function HandoffCard(props: {
   form: HandoffForm;
+  /** Out of hours: "Back Monday 09:00" (D5). The details are stored on the conversation. */
+  offlineLabel: string | null;
   privacyUrl: string;
   onChange: (patch: Partial<HandoffForm>) => void;
   onSubmit: (e: FormEvent) => void;
@@ -1462,12 +1656,17 @@ function HandoffCard(props: {
         TALK TO A PERSON
       </p>
       <h3 id="relay-handoff-title" className="relay-handoff-title">
-        {form.trigger === "not_helpful" ? "Sorry that didn't answer it" : "Talk to a person"}
+        {form.trigger === "not_helpful"
+          ? "Sorry that didn't answer it"
+          : props.offlineLabel
+            ? "Leave your email"
+            : "Talk to a person"}
         <span className="relay-stop">.</span>
       </h3>
       <p className="relay-handoff-text">
-        A Vitalos specialist can pick this up here, with this conversation in front of them. Leave
-        your details so we can reply by email if you step away.
+        {props.offlineLabel
+          ? `The team is offline right now and back ${props.offlineLabel}. Leave your details and we'll reply by email.`
+          : "A Vitalos specialist can pick this up here, with this conversation in front of them. Leave your details so we can reply by email if you step away."}
       </p>
       <form className="relay-handoff-form" onSubmit={props.onSubmit} noValidate>
         <div className="relay-field">

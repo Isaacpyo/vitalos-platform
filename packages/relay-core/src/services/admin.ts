@@ -918,6 +918,9 @@ export class AdminService {
       cacheHitTokens: row.cacheHitTokens,
       estCostUsd: Math.round(row.estCostUsd * 10_000) / 10_000,
       // Per-turn input tokens of stored AI answers (ADR-048): the number to watch for cost.
+      // The same usage by source: visitor answers ("chat"), hand-off summaries, aborted streams,
+      // test traffic (eval and load harnesses) and "untagged" (recorded before 17 Oct 2026).
+      usageBySource: row.usageBySource,
       turns: row.turns,
       feedbackReasons: row.feedbackReasons,
     };
@@ -931,14 +934,22 @@ export class AdminService {
   async overview() {
     const now = this.now();
     const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
-    const [faq, gaps, counts, sync] = await Promise.all([
+    const [faq, gaps, counts, sync, repo] = await Promise.all([
       this.ports.faq.status(),
       this.store.listGaps(weekAgo),
       this.store.inboxCounts(),
       this.syncStatus(),
+      this.store.listAdminMetaForSource("repo"),
     ]);
+    const repoPending = repo.filter(
+      (d) => d.status === "draft" && d.adminMeta.needs_confirmation === true,
+    ).length;
     return {
-      awaitingConfirmation: faq.needsConfirmation.length,
+      // Master FAQ entries marked Needs confirmation in Notion, plus repo entries drafted for
+      // the owner (`confirmation: needed`).
+      awaitingConfirmation: faq.needsConfirmation.length + repoPending,
+      awaitingConfirmationFaq: faq.needsConfirmation.length,
+      awaitingConfirmationRepo: repoPending,
       gapsThisWeek: gaps.filter((g) => g.status === "open").length,
       waitingNow: counts.needs,
       liveNow: counts.live,

@@ -1,5 +1,6 @@
 -- Relay review fixes, 17 October 2026 (ADR-048). Additive only: one nullable column, one new
--- function, one replaced read-only function (same signature, more keys) and one new schedule.
+-- table, two new functions, one replaced read-only function (same signature, more keys) and
+-- one new schedule.
 -- Nothing is dropped, renamed or narrowed.
 
 -- D6: why a visitor marked an answer "Not helpful" (one tap after thumbs-down).
@@ -33,6 +34,57 @@ $$;
 
 revoke all on function relay.kb_vocabulary() from public, anon, authenticated;
 grant execute on function relay.kb_vocabulary() to service_role;
+
+-- D1: usage by source. relay.usage_daily stays the single counter for the daily cap; this
+-- table splits the same calls by what they were for, so Insights can show visitor answers apart
+-- from summaries, aborted streams and test traffic (evals and load tests delete their
+-- conversations, so their tokens used to inflate "tokens per conversation").
+create table if not exists relay.usage_by_source (
+  day date not null,
+  source text not null check (source in ('chat', 'summary', 'aborted', 'test')),
+  requests integer not null default 0,
+  tokens_in bigint not null default 0,
+  tokens_out bigint not null default 0,
+  cache_hit_tokens bigint not null default 0,
+  est_cost_usd numeric(12, 6) not null default 0,
+  primary key (day, source)
+);
+alter table relay.usage_by_source enable row level security;
+revoke all on table relay.usage_by_source from public, anon, authenticated;
+grant select, insert, update, delete on table relay.usage_by_source to service_role;
+comment on table relay.usage_by_source is
+  'Model usage per day and source (chat, summary, aborted, test). Counts only; no content.';
+
+create or replace function relay.add_usage_tagged(
+  p_day date, p_tokens_in bigint, p_tokens_out bigint, p_cache_hit bigint, p_cost numeric,
+  p_source text
+)
+returns relay.usage_daily
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_row relay.usage_daily;
+begin
+  insert into relay.usage_by_source as u
+    (day, source, requests, tokens_in, tokens_out, cache_hit_tokens, est_cost_usd)
+  values (p_day, p_source, 1, p_tokens_in, p_tokens_out, p_cache_hit, p_cost)
+  on conflict (day, source) do update set
+    requests = u.requests + 1,
+    tokens_in = u.tokens_in + excluded.tokens_in,
+    tokens_out = u.tokens_out + excluded.tokens_out,
+    cache_hit_tokens = u.cache_hit_tokens + excluded.cache_hit_tokens,
+    est_cost_usd = u.est_cost_usd + excluded.est_cost_usd;
+  select * into v_row from relay.add_usage(p_day, p_tokens_in, p_tokens_out, p_cache_hit, p_cost);
+  return v_row;
+end;
+$$;
+
+revoke all on function relay.add_usage_tagged(date, bigint, bigint, bigint, numeric, text)
+  from public, anon, authenticated;
+grant execute on function relay.add_usage_tagged(date, bigint, bigint, bigint, numeric, text)
+  to service_role;
 
 -- D1 / D6: Insights gain per-turn input tokens (from stored AI answers, so evals and deleted
 -- conversations no longer distort the per-conversation picture) and thumbs-down reasons.
@@ -76,9 +128,20 @@ as $$
   ),
   turns as (
     select count(*) as n, coalesce(sum(m.tokens_in), 0) as ti,
-           coalesce(round(avg(m.tokens_in)), 0) as avg_ti, coalesce(max(m.tokens_in), 0) as max_ti
+           coalesce(round(avg(m.tokens_in)), 0) as avg_ti,
+           coalesce(round(percentile_cont(0.95) within group (order by m.tokens_in)), 0) as p95_ti,
+           coalesce(max(m.tokens_in), 0) as max_ti
     from relay.messages m
     where m.created_at >= p_since and m.sender_type = 'ai' and m.tokens_in is not null
+  ),
+  by_source as (
+    select s.source, sum(s.tokens_in) as ti, sum(s.tokens_out) as tout, sum(s.requests) as n
+    from relay.usage_by_source s where s.day >= p_since::date
+    group by s.source
+  ),
+  tagged as (
+    select coalesce(sum(ti), 0) as ti, coalesce(sum(tout), 0) as tout, coalesce(sum(n), 0) as n
+    from by_source
   ),
   reasons as (
     select
@@ -108,8 +171,18 @@ as $$
     'tokensOut', (select tout from usage),
     'cacheHitTokens', (select ch from usage),
     'estCostUsd', (select cost from usage),
+    'usageBySource', (
+      select coalesce(jsonb_object_agg(b.source, jsonb_build_object(
+               'tokensIn', b.ti, 'tokensOut', b.tout, 'requests', b.n)), '{}'::jsonb)
+      from by_source b
+    ) || jsonb_build_object('untagged', jsonb_build_object(
+           'tokensIn', greatest(0, (select ti from usage) - (select ti from tagged)),
+           'tokensOut', greatest(0, (select tout from usage) - (select tout from tagged)),
+           'requests', greatest(0, (select coalesce(sum(requests), 0) from relay.usage_daily
+                                    where day >= p_since::date) - (select n from tagged)))),
     'turns', (select jsonb_build_object(
-        'count', n, 'tokensIn', ti, 'avgTokensIn', avg_ti, 'maxTokensIn', max_ti) from turns),
+        'count', n, 'tokensIn', ti, 'avgTokensIn', avg_ti, 'p95TokensIn', p95_ti,
+        'maxTokensIn', max_ti) from turns),
     'feedbackReasons', (select jsonb_build_object(
         'wrong', wrong, 'incomplete', incomplete, 'didnt_understand', didnt_understand) from reasons)
   );

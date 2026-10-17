@@ -28,7 +28,9 @@ import type {
   SyncRunRecord,
   UpsertKbDocument,
   UsageRecord,
+  UsageSource,
 } from "./types";
+import { USAGE_SOURCES } from "./types";
 
 /**
  * Database failure. Carries only a SQLSTATE or fixed label, never the driver message: constraint
@@ -672,16 +674,20 @@ export class SupabaseRelayStore implements RelayStore {
     tokensOut: number,
     cacheHit: number,
     costUsd: number,
+    source: UsageSource = "chat",
   ): Promise<UsageRecord> {
-    const row = check(
-      await this.db.rpc("add_usage", {
-        p_day: day,
-        p_tokens_in: tokensIn,
-        p_tokens_out: tokensOut,
-        p_cache_hit: cacheHit,
-        p_cost: costUsd,
-      }),
-    ) as Row;
+    const args = {
+      p_day: day,
+      p_tokens_in: tokensIn,
+      p_tokens_out: tokensOut,
+      p_cache_hit: cacheHit,
+      p_cost: costUsd,
+    };
+    // add_usage_tagged (20261017090000_relay_review.sql) also counts by source. Until that
+    // migration is applied the call falls back to the untagged counter, so the cap keeps working.
+    const tagged = await this.db.rpc("add_usage_tagged", { ...args, p_source: source });
+    if (!tagged.error) return this.mapUsage(tagged.data as Row);
+    const row = check(await this.db.rpc("add_usage", args)) as Row;
     return this.mapUsage(row);
   }
 
@@ -790,10 +796,24 @@ export class SupabaseRelayStore implements RelayStore {
       cacheHitTokens: Number(data.cacheHitTokens),
       estCostUsd: Number(data.estCostUsd),
       // Added by 20261017090000_relay_review.sql; zero until that migration is applied.
+      usageBySource: Object.fromEntries(
+        [...USAGE_SOURCES, "untagged" as const].map((s) => {
+          const v = ((data.usageBySource as Row | undefined)?.[s] as Row | undefined) ?? {};
+          return [
+            s,
+            {
+              tokensIn: Number(v.tokensIn ?? 0),
+              tokensOut: Number(v.tokensOut ?? 0),
+              requests: Number(v.requests ?? 0),
+            },
+          ];
+        }),
+      ) as InsightsRow["usageBySource"],
       turns: {
         count: Number((data.turns as Row | undefined)?.count ?? 0),
         tokensIn: Number((data.turns as Row | undefined)?.tokensIn ?? 0),
         avgTokensIn: Math.round(Number((data.turns as Row | undefined)?.avgTokensIn ?? 0)),
+        p95TokensIn: Math.round(Number((data.turns as Row | undefined)?.p95TokensIn ?? 0)),
         maxTokensIn: Number((data.turns as Row | undefined)?.maxTokensIn ?? 0),
       },
       feedbackReasons: {

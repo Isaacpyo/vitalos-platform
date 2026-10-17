@@ -21,7 +21,8 @@ A visitor waiting for a person, and staff watching the inbox, both need updates 
 4. **Scheduled jobs run in Supabase** (`pg_cron` + `pg_net`), calling the website's `/api/relay/cron/*` routes with `CRON_SECRET` read from Supabase Vault:
    - reminders every 5 minutes;
    - digest check hourly (it sends at 08:45 Europe/London on working days);
-   - FAQ sync every 15 minutes, plus a nightly full run.
+   - FAQ sync every 15 minutes, plus a nightly full run;
+   - website and repo knowledge re-ingest hourly (added by ADR-048, 17 Oct 2026).
 
    Retention is a SQL function, scheduled nightly once the owner confirms the periods.
 

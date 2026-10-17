@@ -1,0 +1,25 @@
+{"id":"abt-01","q":"What does Vitalos do?","expect":["ABT-01"]}
+{"id":"abt-12","q":"Is Vitalos an AI company?","expect":["ABT-12"]}
+{"id":"ai-03","q":"Does a successful AI prototype mean it is ready for production?","expect":["AI-03"]}
+{"id":"ai-08","q":"How do you deal with AI hallucinations and wrong answers?","expect":["AI-08"]}
+{"id":"con-04","q":"How can our procurement or security team contact Vitalos?","expect":["CON-04"]}
+{"id":"del-03","q":"How will we know how our project is going?","expect":["DEL-03"]}
+{"id":"eng-05","q":"Do you publish a rate card or prices?","expect":["ENG-05"]}
+{"id":"eng-16","q":"How do you handle changes to scope?","expect":["ENG-16"]}
+{"id":"hq-08","q":"Aren't you just another web or AI agency?","expect":["HQ-08"]}
+{"id":"ind-01","q":"Which industries does Vitalos focus on?","expect":["IND-01"]}
+{"id":"ind-16","q":"Does Vitalos work with startups and scale-ups?","expect":["IND-16"]}
+{"id":"lab-01","q":"What is Vitalos Labs?","expect":["LAB-01"]}
+{"id":"ms-08","q":"Is a managed service just ticket handling?","expect":["MS-08"]}
+{"id":"off-04","q":"What is a Technology Health Assessment, and who is it for?","expect":["OFF-04"]}
+{"id":"off-10","q":"What is an AI Prototype Sprint, and who is it for?","expect":["OFF-10"]}
+{"id":"off-16","q":"What is the Application Modernisation offer, and who is it for?","expect":["OFF-16"]}
+{"id":"sol-01","q":"Which Vitalos solution fits our problem?","expect":["SOL-01"]}
+{"id":"sol-09","q":"Do we have to replace our legacy system all at once?","expect":["SOL-09"]}
+{"id":"tru-04","q":"Will Vitalos sign a data processing agreement?","expect":["TRU-04"]}
+{"id":"wwd-01","q":"How are Vitalos services organised?","expect":["WWD-01"]}
+{"id":"gap-hello","q":"Hello","smallTalk":true}
+{"id":"gap-founder","q":"who is the founder of Vitalos?","expect":["founder"],"pending":"handoff"}
+{"id":"gap-solutions-typo","q":"what are your soultions?","expect":["solutions-list","solutions-offers-sectors","SOL-01","url:/solutions"],"pending":["solutions-offers-sectors","SOL-01","url:/solutions"]}
+{"id":"gap-getting-started","q":"getting started","expect":["getting-started","how-engagements-start","url:/how-we-work"],"pending":["how-engagements-start","url:/how-we-work"]}
+{"id":"gap-modernise-followup","before":["What is the Application Modernisation offer, and who is it for?"],"q":"so how can I modernise my system with this?","expect":["modernise-my-system","OFF-16","SOL-09","url:/solutions/application-modernisation","url:/offers/application-modernisation"],"pending":["OFF-16","SOL-09","url:/solutions/application-modernisation","url:/offers/application-modernisation"]}

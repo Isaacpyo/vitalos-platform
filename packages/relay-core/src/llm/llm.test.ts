@@ -26,11 +26,13 @@ const chunk = (n: number, over: Partial<MatchedChunk> = {}): MatchedChunk => ({
 });
 
 describe("system prompt", () => {
-  it("is byte-stable (snapshot) and carries five practices with Labs separate, no banned words", () => {
+  it("is byte-stable (snapshot) and carries six practices with Labs the sixth, no banned words", () => {
     expect(SYSTEM_PROMPT).toMatchSnapshot();
     expect(SYSTEM_PROMPT).toContain(
-      "One firm, five practices: Consulting; Engineering; AI & Data; Experience; Managed Services. Vitalos Labs is a separate research and technical proof capability, not a practice.",
+      "One firm, six practices: Consulting; Engineering; AI & Data; Experience; Managed Services; Labs (research and technical proof).",
     );
+    expect(SYSTEM_PROMPT).toContain("Six solutions:");
+    expect(SYSTEM_PROMPT).not.toMatch(/five (practices|solutions)/i);
     expect(SYSTEM_PROMPT).toContain("SOURCES marked (FAQ) are approved answers.");
     expect(SYSTEM_PROMPT).not.toMatch(/deepseek-chat|deepseek-reasoner/);
   });

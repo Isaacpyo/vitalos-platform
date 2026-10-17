@@ -20,13 +20,41 @@ describe("repo seed content", () => {
     expect(actual).toBe(expected);
   });
 
-  it("every entry has valid frontmatter and states five practices with Labs separate", () => {
+  it("every entry has valid frontmatter and states six practices with Labs the sixth", () => {
     for (const { file, text } of repoContentFiles)
       expect(() => parseFrontmatter(text, file)).not.toThrow();
     const practices = repoContentFiles.find((f) => f.file === "practices.md")?.text ?? "";
+    // Owner decision 1, 17 Oct 2026 review (docs/review-2026-10-17/DECISIONS.md).
     expect(practices).toContain(
-      "five practices: Consulting, Engineering, AI & Data, Experience and Managed Services",
+      "six practices: Consulting, Engineering, AI & Data, Experience, Managed Services and Labs",
     );
+    for (const { text } of repoContentFiles) expect(text).not.toMatch(/five (practices|solutions)/i);
+  });
+
+  it("entries awaiting confirmation stay drafts until the owner approves them", () => {
+    const pending = repoContentFiles
+      .map(({ file, text }) => parseFrontmatter(text, file))
+      .filter((p) => p.data.confirmation === "needed");
+    expect(pending.map((p) => p.data.id).sort()).toEqual([
+      "founder",
+      "getting-started",
+      "modernise-my-system",
+      "solutions-list",
+    ]);
+    for (const p of pending) expect(p.data.status).toBe("draft");
+    expect(() =>
+      parseFrontmatter(
+        "---
+id: x
+title: X
+type: guide
+status: published
+confirmation: needed
+---
+Text",
+        "x.md",
+      ),
+    ).toThrow(/must be a draft/);
   });
 
   it("rejects TODO in a published entry", () => {
