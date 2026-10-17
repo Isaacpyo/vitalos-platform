@@ -44,11 +44,24 @@ export interface ProductFact {
   value: string;
 }
 
-/** A headed band: an introduction, then optional headed points (an h3 and a paragraph each). */
+/**
+ * A headed band: an introduction, then optional headed points. `layout` sets how the points show:
+ * `points` (default) as headed paragraphs between hairlines; `cards` as icon cards; `steps` as a
+ * numbered sequence; `tiles` as a row of short icon cards. Cards, steps and tiles suit short
+ * points (a title of four words or fewer and a line of ten).
+ */
 export interface ProductSection {
   heading: string;
   intro?: string;
-  points?: readonly { title: string; text: string }[];
+  layout?: "points" | "cards" | "steps" | "tiles";
+  points?: readonly ProductPoint[];
+}
+
+/** One point of a section. `key` is stable: the web app picks the point's icon by it. */
+export interface ProductPoint {
+  key?: string;
+  title: string;
+  text: string;
 }
 
 export interface ProductScreen {
@@ -69,14 +82,74 @@ export const products: readonly ProductView[] = [
     url: "https://fauward.com",
     urlLabel: "Open fauward.com",
     viewLabel: "View Fauward",
-    snapshotCaption:
-      "The Fauward dashboard as fauward.com shows it, with sample data: shipments today, active drivers, month-to-date revenue and SLA score; each shipment's status, driver and ETA; and a live feed of customer notifications, proofs of delivery and invoices.",
+    snapshotCaption: "The Fauward dashboard as fauward.com shows it, with sample data.",
     applicationCategory: "BusinessApplication",
     seo: {
       title: "Fauward: Logistics SaaS Platform",
       description:
-        "Fauward is the logistics SaaS platform Vitalos builds and operates. See a snapshot of its dashboard, then open fauward.com to find out more.",
+        "Fauward is the white-label logistics platform Vitalos builds and operates: shipments, branded tracking, a field app, invoicing and an operations agent.",
     },
+    sector: "Logistics",
+    // From fauward.com (17 Oct 2026): its services, its eight-step shipment workflow (in four
+    // steps here) and the businesses it names. No prices, uptime or speed figures.
+    sections: [
+      {
+        heading: "What it does",
+        layout: "cards",
+        points: [
+          {
+            key: "shipments",
+            title: "Shipment operations",
+            text: "Booking to proof of delivery, in one lifecycle.",
+          },
+          {
+            key: "white-label",
+            title: "White-label portal",
+            text: "Your domain, colours and logo. Tracking with no login.",
+          },
+          {
+            key: "field-app",
+            title: "Fauward Go",
+            text: "Offline-first field app: QR scans, photos, signatures.",
+          },
+          {
+            key: "finance",
+            title: "Finance & invoicing",
+            text: "Invoices raised on delivery, payments reconciled.",
+          },
+          {
+            key: "agent",
+            title: "Fauward Agent",
+            text: "Flags SLA risks and suggests actions. Dispatchers approve.",
+          },
+          {
+            key: "api",
+            title: "API & integrations",
+            text: "REST API, webhooks and carrier integrations.",
+          },
+        ],
+      },
+      {
+        heading: "How it works",
+        layout: "steps",
+        points: [
+          { title: "Book and assign", text: "Each booking goes to an operator." },
+          { title: "Collect and track", text: "Live GPS. Customers kept updated." },
+          { title: "Deliver with proof", text: "Photo, signature or one-time code." },
+          { title: "Invoice and reconcile", text: "Invoiced on delivery, then paid." },
+        ],
+      },
+      {
+        heading: "Built for",
+        layout: "tiles",
+        points: [
+          { key: "courier", title: "Courier start-ups", text: "Launch under your own brand." },
+          { key: "freight", title: "Freight operators", text: "Many depots, one source of truth." },
+          { key: "3pl", title: "3PL providers", text: "A branded portal for each client." },
+          { key: "enterprise", title: "Enterprise fleets", text: "SSO, audit logs and support." },
+        ],
+      },
+    ],
   },
   // Every claim maps to a line in docs/content/DISCOVERY-sob-autofix.md (the SOB Autofix
   // repository and the live site, 17 Oct 2026). No outcome figures: none are evidenced.
