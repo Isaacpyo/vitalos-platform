@@ -1,7 +1,7 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { FeatureGrid } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
-import { MediaSlot } from "../../components/media-slot";
+import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import { Band, ClosingBand, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
@@ -39,7 +39,7 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
         }
         title={page?.heading ?? navLabels.about}
         lead={page?.intro}
-        media={<MediaSlot id="about.hero" priority />}
+        media={mediaSlotRenders("about.hero") ? <MediaSlot id="about.hero" priority /> : undefined}
       />
       {renderBands(
         [

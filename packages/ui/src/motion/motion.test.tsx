@@ -253,6 +253,22 @@ describe("Reveal (Motion)", () => {
   });
 });
 
+describe("Reveal never clips (finding A9)", () => {
+  it("holds a below-the-fold element lowered but whole, and shows it with no clip", async () => {
+    stubMotion(false);
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({ top: 5000, bottom: 5100 } as DOMRect);
+    render(<Reveal>Problems we solve (fixture)</Reveal>);
+    const element = await screen.findByText("Problems we solve (fixture)");
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(element.getAttribute("style") ?? "").not.toMatch(/clip-path|opacity/);
+    rect.mockRestore();
+  });
+});
+
 describe("Parallax", () => {
   async function scrollTo(y: number) {
     await act(async () => {

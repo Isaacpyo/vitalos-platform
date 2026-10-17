@@ -132,8 +132,8 @@ function ProcessCycleInner({ stages, label, className }: ProcessCycleProps) {
       >
         <m.div
           key={active}
-          initial={motionAllowed ? { y: 14, clipPath: "inset(0 0 100% 0)" } : false}
-          animate={{ y: 0, clipPath: "inset(0 0 0% 0)" }}
+          initial={motionAllowed ? { y: 14 } : false}
+          animate={{ y: 0 }}
           transition={{ duration: SECONDS.entrance + 0.1, ease: EASE_EMPHASIS }}
           className="min-w-0"
         >

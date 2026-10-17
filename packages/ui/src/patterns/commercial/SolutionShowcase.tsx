@@ -178,8 +178,8 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
         <div className="flex min-w-0 flex-1 flex-col self-stretch">
           <m.div
             key={active}
-            initial={motionAllowed ? { y: 20, clipPath: "inset(0 0 100% 0)" } : false}
-            animate={{ y: 0, clipPath: "inset(0 0 0% 0)" }}
+            initial={motionAllowed ? { y: 20 } : false}
+            animate={{ y: 0 }}
             transition={{ duration: SECONDS.entrance + 0.15, ease: EASE_EMPHASIS }}
             className="flex flex-1 flex-col justify-center"
           >

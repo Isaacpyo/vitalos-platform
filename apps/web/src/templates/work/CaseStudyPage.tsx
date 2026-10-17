@@ -21,7 +21,7 @@ import {
   verifiedMetrics,
   workLabels,
 } from "./map";
-import { MediaSlot } from "../../components/media-slot";
+import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import { ClosingBand } from "../commercial/bands";
 
 /**
@@ -40,7 +40,11 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
   return (
     <PageMain>
       <PageHeroBand
-        media={<MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />}
+        media={
+          mediaSlotRenders("work.case-study", study.slug) ? (
+            <MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />
+          ) : undefined
+        }
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}

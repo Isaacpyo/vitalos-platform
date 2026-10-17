@@ -235,8 +235,8 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
           })}
           <m.div
             key={active}
-            initial={motionAllowed ? { y: 16, clipPath: "inset(0 100% 0 0 round 0.75rem)" } : false}
-            animate={{ y: 0, clipPath: "inset(0 0% 0 0 round 0.75rem)" }}
+            initial={motionAllowed ? { y: 16 } : false}
+            animate={{ y: 0 }}
             transition={{ duration: SECONDS.entrance + 0.1, ease: EASE_EMPHASIS, delay: 0.08 }}
             className="absolute bottom-(--space-5) left-(--space-5) flex items-center gap-(--space-3) rounded-xl border border-white/70 bg-white/80 py-(--space-3) pr-(--space-5) pl-(--space-3) shadow-(--shadow-floating) backdrop-blur-md"
           >

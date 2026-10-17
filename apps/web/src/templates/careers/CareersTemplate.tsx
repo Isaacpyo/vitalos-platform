@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { routes } from "@vitalos/cms";
 import { Button, Container, Section, SectionHeading } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
-import { MediaSlot } from "../../components/media-slot";
+import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import type { CareersPageView } from "../../features/content/careers/load";
 import { careersCopy, filterGroups, groupRoles } from "../../features/content/careers/model";
 import type { CareersFilter } from "../../features/content/careers/model";
@@ -188,7 +188,7 @@ export function CareersTemplate({
         eyebrow={careersCopy.eyebrow}
         title={copy.heading}
         intro={copy.intro}
-        media={<MediaSlot id="careers.hero" priority />}
+        media={mediaSlotRenders("careers.hero") ? <MediaSlot id="careers.hero" priority /> : undefined}
         actions={
           open ? (
             <Button href="#open-roles" variant="secondary" size="lg" arrow>
