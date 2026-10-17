@@ -81,10 +81,10 @@ Sections in order. "→ Hn" names the homepage pattern each one carries.
 
 ### Careers (closed until opened in the Super Admin, ADR-039)
 
-| Route             | Sections                                                                                                                                             |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/careers`        | Hero full with `MediaSlot` `careers.hero` → H1 · How we work (value cards) · Open roles by practice (rows) · Optional policy sections · Closing → H7 |
-| `/careers/[slug]` | Hero light compact with practice, facts and apply → H1 · Role sections and the application form (exempt); ends with its own apply action             |
+| Route             | Sections                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `/careers`        | Hero full (text only) → H1 · How we work (value cards) · Open roles by practice (rows) · Optional policy sections · Closing → H7         |
+| `/careers/[slug]` | Hero light compact with practice, facts and apply → H1 · Role sections and the application form (exempt); ends with its own apply action |
 
 ### Trust Centre
 

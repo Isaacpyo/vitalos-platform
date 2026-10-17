@@ -25,6 +25,7 @@ export const structuralLabels = {
   whatWeDo: navLabels.whatWeDo,
   /** The FAQ page title (Support menu, owner direction 15 Oct 2026). */
   faq: "Frequently asked questions",
+  faqGroups: "Question groups",
   /** Closing links of the What We Do and Who We Are menu columns. */
   allSolutions: "All solutions",
   allOffers: "All offers",

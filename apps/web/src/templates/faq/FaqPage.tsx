@@ -9,6 +9,7 @@ import type { Crumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { FaqGroup } from "./load";
+import { FaqNav } from "./FaqNav";
 import { ClosingBand } from "../commercial/bands";
 import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
@@ -32,8 +33,8 @@ const FAQ_LIST_ID = "faq-list";
 
 /**
  * FAQ (Support menu). One section per solution: its questions as disclosures and a link to the
- * solution page that answers them in context. From lg the section's title sticks in the left column
- * beside its questions. The questions and answers are the solution pages' own; the page adds only
+ * solution page that answers them in context. From lg the left column is one sticky list of every
+ * group title (FaqNav) that highlights the group in view. The questions and answers are the solution pages' own; the page adds only
  * structural labels.
  */
 export function FaqPage({
@@ -63,24 +64,33 @@ export function FaqPage({
           targetId={FAQ_LIST_ID}
           labels={{ label: faqLabels.filter, count: faqLabels.count, none: faqLabels.none }}
         />
-        <Stack gap={8} id={FAQ_LIST_ID} className="mt-(--space-6)">
-          {groups.map((group, index) => (
-            // Stable section anchor (the solution slug) and the filter's group marker (B10).
-            <section
-              key={group.href}
-              id={group.id}
-              data-faq-group=""
-              aria-labelledby={groupId(index)}
-              className="grid min-w-0 gap-(--space-5) lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-(--space-8)"
-            >
-              {/* The group's title stays in view on the left while its questions scroll (owner
-                  direction, 17 Oct 2026); stacked above them on smaller screens. */}
-              <div className="min-w-0 lg:sticky lg:top-[calc(var(--size-header)+var(--space-5))] lg:self-start">
-                <Heading id={groupId(index)} level={2} size="h3">
+        <div className="mt-(--space-6) grid min-w-0 gap-(--space-8) lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:items-start">
+          {/* One sticky panel listing every group title; the one in view is highlighted (owner
+              direction, 17 Oct 2026). Small screens show the groups stacked with their own titles. */}
+          <div className="hidden min-w-0 lg:sticky lg:top-[calc(var(--size-header)+var(--space-5))] lg:block">
+            <FaqNav
+              label={structuralLabels.faqGroups}
+              items={groups.map((group) => ({ id: group.id, title: group.title }))}
+            />
+          </div>
+          <Stack gap={8} id={FAQ_LIST_ID} className="min-w-0">
+            {groups.map((group, index) => (
+              // Stable section anchor (the solution slug) and the filter's group marker (B10).
+              <section
+                key={group.href}
+                id={group.id}
+                data-faq-group=""
+                aria-labelledby={groupId(index)}
+                className="min-w-0 scroll-mt-[calc(var(--size-header)+var(--space-5))]"
+              >
+                <Heading
+                  id={groupId(index)}
+                  level={2}
+                  size="h3"
+                  className="mb-(--space-5) lg:sr-only"
+                >
                   {group.title}
                 </Heading>
-              </div>
-              <div className="min-w-0">
                 <div className="grid gap-(--space-3)">
                   {group.entries.map((entry, entryIndex) => (
                     <Disclosure
@@ -102,10 +112,10 @@ export function FaqPage({
                   </TextLink>
                   {relayEnabled ? <AskRelayButton label={faqLabels.askRelay} /> : null}
                 </p>
-              </div>
-            </section>
-          ))}
-        </Stack>
+              </section>
+            ))}
+          </Stack>
+        </div>
       </PageBand>
       <ClosingBand />
     </PageMain>

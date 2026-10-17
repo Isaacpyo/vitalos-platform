@@ -124,6 +124,24 @@ test.describe("faq", () => {
     await expect(page.locator('main a[href^="/contact?intent="]').first()).toBeVisible();
     await expectNoA11yViolations(page);
   });
+
+  test("on a wide screen the group titles stack in one panel and the one in view is marked", async ({
+    page,
+  }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/faq");
+    const nav = page.getByRole("navigation", { name: "Question groups" });
+    await expect(nav).toBeVisible();
+    const links = nav.getByRole("link");
+    await expect(links.first()).toHaveAttribute("aria-current", "location");
+    const count = await links.count();
+    if (count > 1) {
+      await links.nth(count - 1).click();
+      await expect(links.nth(count - 1)).toHaveAttribute("aria-current", "location");
+      await expect(links.first()).not.toHaveAttribute("aria-current", "location");
+    }
+  });
 });
 
 test.describe("trust centre", () => {
