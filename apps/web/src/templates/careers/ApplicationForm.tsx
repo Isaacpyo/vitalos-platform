@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { ChangeEvent, DragEvent, FormEvent, ReactNode } from "react";
 import { TurnstileWidget } from "../../components/contact/TurnstileWidget";
+import { track } from "../../features/analytics/track";
 import {
   COVER_NOTE_COUNTER_FROM,
   COVER_NOTE_MAX,
@@ -114,8 +115,10 @@ export function ApplicationForm({
   const focusAfterErrors = useRef(false);
 
   useEffect(() => {
-    if (status === "sent") successRef.current?.focus();
-  }, [status]);
+    if (status !== "sent") return;
+    successRef.current?.focus();
+    track("application_sent", { roleSlug });
+  }, [status, roleSlug]);
 
   useEffect(() => {
     if (!focusAfterErrors.current) return;
@@ -350,6 +353,8 @@ export function ApplicationForm({
         hidden={!hydrated}
         noValidate
         onSubmit={onSubmit}
+        data-analytics-form="application"
+        data-role-slug={roleSlug}
         className="flex max-w-[44rem] flex-col gap-(--space-5)"
       >
         {errorList.length > 1 || formError ? (
