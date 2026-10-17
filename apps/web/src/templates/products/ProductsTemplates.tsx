@@ -1,21 +1,21 @@
 import { navLabels, productPath, routes } from "@vitalos/cms";
 import type { ProductPoint, ProductSection, ProductView, RoutePageView } from "@vitalos/cms";
-import { Button, DefinitionList, FeatureGrid, Icon, ProcessJourney, RevealItem } from "@vitalos/ui";
+import { Button, FeatureGrid, Icon, ProcessJourney, RevealItem } from "@vitalos/ui";
 import type { IconName, ProcessJourneyProps, SectionTone } from "@vitalos/ui";
 import { MediaSlot } from "../../components/media-slot";
 import { isMediaSlotId } from "../../content/media-slots";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
-import { structuralLabels } from "../../lib/view-mapping/labels";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
 import type { BandFactory } from "../commercial/bands";
 import { PageMain } from "../institutional/page-main";
 
 /**
- * The Products section (owner direction, 17 Oct 2026), in the site's patterns: the compact dark
- * hero, the snapshot band, then whatever else the product has (an "At a glance" list, headed
- * sections, further screens), and the closing "Talk to Vitalos" card. Every word comes from
- * `@vitalos/cms` (products.ts and the Products route page); each image is a `products.{slug}.*`
- * slot.
+ * The Products section (owner direction, 17 Oct 2026), in the site's patterns. A product page is
+ * the product page template (docs/content/PRODUCT-PAGE-TEMPLATE.md, after the Fauward page): the
+ * compact dark hero, the snapshot, "What it does" (icon cards), "How it works" (numbered steps on
+ * the dark band), "Built for" (tiles), then the closing "Talk to Vitalos" card. Every word comes
+ * from `@vitalos/cms` (products.ts and the Products route page); the snapshot is the
+ * `products.{slug}.hero` slot.
  */
 
 export const productsTrail = () => trail({ label: navLabels.products, path: routes.products() });
@@ -28,16 +28,7 @@ export const productTrail = (product: ProductView) =>
 
 /** The product's snapshot: its `products.{slug}.hero` slot, or nothing when none is registered. */
 function ProductSnapshot({ product, sizes }: Readonly<{ product: ProductView; sizes: string }>) {
-  return <ProductImage product={product} slotKey="hero" sizes={sizes} />;
-}
-
-/** The product's `products.{slug}.{key}` slot, or nothing when none is registered. */
-function ProductImage({
-  product,
-  slotKey,
-  sizes,
-}: Readonly<{ product: ProductView; slotKey: string; sizes: string }>) {
-  const id = `products.${product.slug}.${slotKey}`;
+  const id = `products.${product.slug}.hero`;
   return isMediaSlotId(id) ? <MediaSlot id={id} sizes={sizes} /> : null;
 }
 
@@ -61,8 +52,12 @@ function SectionPoints({ points }: Readonly<{ points: NonNullable<ProductSection
   );
 }
 
-/** Subject icons for section points, by the point's `key` (decorative: the title carries it). */
-const pointIcons: Readonly<Record<string, IconName>> = {
+/**
+ * Subject icons for section points, by the point's `key` (decorative: the title carries it). A new
+ * product adds its keys here; `ProductsTemplates.test.tsx` fails when a card or tile has none.
+ */
+export const pointIcons: Readonly<Record<string, IconName>> = {
+  // Fauward
   shipments: "workflow",
   "white-label": "layers",
   "field-app": "target",
@@ -73,6 +68,17 @@ const pointIcons: Readonly<Record<string, IconName>> = {
   freight: "server",
   "3pl": "users",
   enterprise: "building",
+  // SOB Autofix
+  booking: "workflow",
+  times: "clock",
+  manage: "link",
+  quote: "document",
+  privacy: "shield",
+  admin: "window",
+  drivers: "gauge",
+  mobile: "compass",
+  "car-buyers": "search",
+  workshop: "users",
 };
 
 const withIcon = (point: ProductPoint) => ({
@@ -101,60 +107,24 @@ function SectionBody({ section }: Readonly<{ section: ProductSection }>) {
   }
 }
 
-/** The product's optional bands after the snapshot: facts, sections, then further screens. */
+/** The product's sections after the snapshot, each a headed band in its layout. */
 function productBands(product: ProductView): BandFactory[] {
-  const facts = product.facts ?? [];
-  const screens = (product.screens ?? []).filter((screen) =>
-    isMediaSlotId(`products.${product.slug}.${screen.key}`),
-  );
-  return [
-    (tone) =>
-      facts.length > 0 ? (
-        <Band tone={tone} heading={structuralLabels.atAGlance} eyebrow={product.name}>
-          <DefinitionList
-            items={facts.map((fact) => ({ term: fact.label, description: fact.value }))}
-            className="max-w-(--container-content) border-b border-tone-border"
-          />
+  return product.sections.map((section): BandFactory => {
+    function sectionBand(tone: SectionTone) {
+      return (
+        <Band
+          // Numbered steps sit on the dark tone, like the homepage lifecycle band.
+          tone={section.layout === "steps" ? "dark" : tone}
+          heading={section.heading}
+          eyebrow={product.name}
+          intro={section.intro}
+        >
+          <SectionBody section={section} />
         </Band>
-      ) : null,
-    ...(product.sections ?? []).map((section): BandFactory => {
-      function sectionBand(tone: SectionTone) {
-        return (
-          <Band
-            // Numbered steps sit on the dark tone, like the homepage lifecycle band.
-            tone={section.layout === "steps" ? "dark" : tone}
-            heading={section.heading}
-            eyebrow={product.name}
-            intro={section.intro}
-          >
-            <SectionBody section={section} />
-          </Band>
-        );
-      }
-      return sectionBand;
-    }),
-    (tone) =>
-      screens.length > 0 ? (
-        <Band tone={tone} heading={structuralLabels.productScreens} eyebrow={product.name}>
-          <ul className="m-0 grid list-none grid-cols-1 gap-(--space-6) p-0 md:grid-cols-2">
-            {screens.map((screen) => (
-              <RevealItem as="li" key={screen.key} className="min-w-0">
-                <figure className="m-0">
-                  <ProductImage
-                    product={product}
-                    slotKey={screen.key}
-                    sizes="(min-width: 70rem) 34rem, (min-width: 48rem) 46vw, 92vw"
-                  />
-                  <figcaption className="mt-(--space-3) text-small text-pretty text-tone-muted">
-                    {screen.caption}
-                  </figcaption>
-                </figure>
-              </RevealItem>
-            ))}
-          </ul>
-        </Band>
-      ) : null,
-  ];
+      );
+    }
+    return sectionBand;
+  });
 }
 
 /** One product as a card: the snapshot, the name, one line and the link to its page. */
@@ -221,7 +191,7 @@ export function ProductTemplate({ product }: Readonly<{ product: ProductView }>)
       <PageIntro
         crumbs={productTrail(product)}
         compact
-        eyebrow={product.sector ? `${navLabels.products} · ${product.sector}` : navLabels.products}
+        eyebrow={`${navLabels.products} · ${product.sector}`}
         title={product.name}
         lead={product.description}
         actions={

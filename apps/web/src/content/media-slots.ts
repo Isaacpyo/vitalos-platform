@@ -105,28 +105,6 @@ export const mediaSlots = [
     alt: "SOB Autofix booking flow, step 1 of 7: the vehicle registration lookup with a manual-entry option",
     mobile: { ratio: "5:7", size: [733, 1026] },
   },
-  {
-    id: "products.sob-autofix.home",
-    page: "/products/sob-autofix",
-    section: "Screens",
-    ratio: "16:9",
-    size: [1600, 900],
-    brief:
-      "The first screen of sobautofix.com, captured like the snapshot at 1440 wide (2x); the phone version at 390 wide.",
-    alt: "The sobautofix.com homepage, with the registration lookup beside the headline",
-    mobile: { ratio: "5:7", size: [733, 1026] },
-  },
-  {
-    id: "products.sob-autofix.quote",
-    page: "/products/sob-autofix",
-    section: "Screens",
-    ratio: "16:9",
-    size: [1600, 900],
-    brief:
-      "The first screen of sobautofix.com/get-a-quote, captured like the snapshot at 1440 wide (2x); the phone version at 390 wide.",
-    alt: "The SOB Autofix quote request, which starts with the vehicle registration",
-    mobile: { ratio: "5:7", size: [733, 1026] },
-  },
 ] as const satisfies readonly MediaSlotEntry[];
 
 export type MediaSlotId = (typeof mediaSlots)[number]["id"];

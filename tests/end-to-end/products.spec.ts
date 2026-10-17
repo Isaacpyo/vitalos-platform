@@ -101,7 +101,7 @@ test.describe("Products", () => {
     await expectNoHorizontalOverflowAt320(page);
   });
 
-  test("/products/sob-autofix: every section, the screens, and sobautofix.com in the same tab", async ({
+  test("/products/sob-autofix: the product page template, and sobautofix.com in the same tab", async ({
     page,
   }) => {
     // Collect layout shifts from the first paint.
@@ -122,35 +122,22 @@ test.describe("Products", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("SOB Autofix");
     const main = page.locator("main");
     await expect(main).toContainText("Products · Automotive services");
+    // The product page template (docs/content/PRODUCT-PAGE-TEMPLATE.md), as on Fauward.
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-      "At a glance",
-      "The problem",
       "What it does",
-      "Engineering decisions",
-      "Outcome",
-      "More of the site",
+      "How it works",
+      "Built for",
       // The closing card.
       /.+/,
     ]);
-    await expect(main.locator("dl dt")).toHaveText([
-      "Live at",
-      "Sector",
-      "Scope",
-      "Stack",
-      "Live since",
-    ]);
-    for (const name of [
-      /^SOB Autofix booking flow, step 1 of 7/,
-      /^The sobautofix\.com homepage/,
-      /^The SOB Autofix quote request/,
-    ]) {
-      const image = main.getByRole("img", { name });
-      await image.scrollIntoViewIfNeeded();
-      await expect(image).toBeVisible();
-      // Sized by the slot, so the frame is reserved before the file loads.
-      await expect(image).toHaveAttribute("width", /\d+/);
-      await expect(image).toHaveAttribute("height", /\d+/);
-    }
+    await expect(
+      main.getByRole("list", { name: "How it works" }).getByRole("listitem"),
+    ).toHaveCount(4);
+    const image = main.getByRole("img", { name: /^SOB Autofix booking flow, step 1 of 7/ });
+    await expect(image).toBeVisible();
+    // Sized by the slot, so the frame is reserved before the file loads.
+    await expect(image).toHaveAttribute("width", /\d+/);
+    await expect(image).toHaveAttribute("height", /\d+/);
     const cta = page.getByRole("link", { name: "Open sobautofix.com" });
     await expect(cta).toHaveAttribute("href", "https://sobautofix.com");
     await expect(cta).toHaveAttribute("rel", "noopener");

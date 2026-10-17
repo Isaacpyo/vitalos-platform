@@ -30,18 +30,13 @@ export interface ProductView {
   applicationCategory: "BusinessApplication";
   seo: { title: string; description: string };
   /** The sector, after "Products" in the page's eyebrow. */
-  sector?: string;
-  /** The "At a glance" row under the snapshot: short facts, each verified. */
-  facts?: readonly ProductFact[];
-  /** Body sections after the facts, in order: each a headed band. */
-  sections?: readonly ProductSection[];
-  /** Further captures of the product's site, each the `products.{slug}.{key}` image slot. */
-  screens?: readonly ProductScreen[];
-}
-
-export interface ProductFact {
-  label: string;
-  value: string;
+  sector: string;
+  /**
+   * The body bands after the snapshot, in the product page template's order
+   * (docs/content/PRODUCT-PAGE-TEMPLATE.md): "What it does" (cards), "How it works" (steps) and
+   * "Built for" (tiles). `products.test.ts` holds every product to that shape.
+   */
+  sections: readonly ProductSection[];
 }
 
 /**
@@ -62,13 +57,6 @@ export interface ProductPoint {
   key?: string;
   title: string;
   text: string;
-}
-
-export interface ProductScreen {
-  /** The slot key: the image is the `products.{slug}.{key}` slot. */
-  key: string;
-  /** What the capture shows, nothing more. */
-  caption: string;
 }
 
 export const products: readonly ProductView[] = [
@@ -152,7 +140,8 @@ export const products: readonly ProductView[] = [
     ],
   },
   // Every claim maps to a line in docs/content/DISCOVERY-sob-autofix.md (the SOB Autofix
-  // repository and the live site, 17 Oct 2026). No outcome figures: none are evidenced.
+  // repository and the live site, 17 Oct 2026): its booking flow (seven steps, in four here),
+  // its other systems and the people it serves. No outcome figures: none are evidenced.
   {
     slug: "sob-autofix",
     name: "SOB Autofix",
@@ -161,12 +150,11 @@ export const products: readonly ProductView[] = [
     summary:
       "A booking and operations platform for a diagnostics-led vehicle workshop, built and operated by Vitalos.",
     description:
-      "SOB Autofix is a booking and operations platform for a diagnostics-led vehicle workshop in Doncaster, built and operated by Vitalos and live at sobautofix.com.",
+      "Vitalos builds and operates SOB Autofix, a booking and operations platform for a diagnostics-led vehicle workshop in Doncaster.",
     url: "https://sobautofix.com",
     urlLabel: "Open sobautofix.com",
     viewLabel: "View SOB Autofix",
-    snapshotCaption:
-      "Step 1 of 7 of the booking flow on sobautofix.com: the vehicle comes first, by GB registration lookup or by hand, and the registration stays out of page addresses and analytics.",
+    snapshotCaption: "Step 1 of 7 of the SOB Autofix booking flow, as sobautofix.com shows it.",
     applicationCategory: "BusinessApplication",
     seo: {
       title: "SOB Autofix: Workshop Booking and Operations",
@@ -174,95 +162,62 @@ export const products: readonly ProductView[] = [
         "SOB Autofix is the vehicle-first booking and operations platform Vitalos built and runs for a diagnostics-led vehicle workshop in Doncaster.",
     },
     sector: "Automotive services",
-    facts: [
-      { label: "Live at", value: "sobautofix.com" },
-      { label: "Sector", value: "Automotive services: an independent workshop in Doncaster" },
-      {
-        label: "Scope",
-        value:
-          "Booking engine · Quote flow · Content and local SEO · Privacy and consent · Staff admin",
-      },
-      {
-        label: "Stack",
-        value: "Next.js, React, Supabase, Vercel, Cloudflare Workers, Cal.com, Resend, Sentry",
-      },
-      { label: "Live since", value: "August 2026" },
-    ],
     sections: [
       {
-        heading: "The problem",
-        intro:
-          "SOB Autofix sells evidence-based diagnostics: test first, then replace parts. Its front door had to work the same way. Capture the vehicle and the symptom before offering a time, let customers change a booking without creating an account, and run on a small team's budget.",
-      },
-      {
         heading: "What it does",
+        layout: "cards",
         points: [
           {
+            key: "booking",
             title: "Vehicle-first booking",
-            text: "Seven steps: vehicle, service, problem, location, details, appointment and review. A GB registration lookup fills in the vehicle, with manual entry when the lookup is unavailable. Customers book as guests, with no account.",
+            text: "Seven steps from registration lookup. No account needed.",
           },
           {
+            key: "times",
             title: "Live appointment times",
-            text: "Times come from the workshop's calendar through Cal.com, fetched on the server. Each service is set up for the workshop, for mobile visits, or for both.",
+            text: "From the workshop calendar, re-checked before confirming.",
           },
           {
+            key: "manage",
             title: "Manage Booking",
-            text: "Customers find a booking with its reference and registration, then reschedule or cancel it through short-lived, signed access.",
+            text: "Reschedule or cancel with reference and registration.",
           },
           {
+            key: "quote",
             title: "Get a Quote",
-            text: "A quote request that also starts with the vehicle, then the problem.",
+            text: "Quote requests that start with the vehicle.",
           },
           {
-            title: "Services and local content",
-            text: "Fourteen service pages across diagnostics, repairs and mobile work, a Doncaster service-area page, news and advice with an RSS feed, and cars-for-sale listings.",
+            key: "privacy",
+            title: "Private by design",
+            text: "Registrations kept out of page addresses and analytics.",
           },
           {
-            title: "Staff operations",
-            text: "One admin for bookings, enquiries with their email threads, stock, reviews, content and invoices; staff can secure sign-in with two-factor authentication. WhatsApp and click-to-call sit on every public page.",
+            key: "admin",
+            title: "Workshop admin",
+            text: "Bookings, enquiries, content, stock and invoices together.",
           },
         ],
       },
       {
-        heading: "Engineering decisions",
+        heading: "How it works",
+        layout: "steps",
         points: [
-          {
-            title: "Registrations stay private",
-            text: "A registration identifies a vehicle and often its owner. Lookups send it in the request body, the browser session holds the vehicle, and analytics strips it before sending, so it stays out of page addresses and analytics.",
-          },
-          {
-            title: "Consent before optional storage",
-            text: "The site runs on essential storage alone. Analytics and live chat load only after the visitor allows them; choosing essential only leaves both off.",
-          },
-          {
-            title: "Times re-checked at submit",
-            text: "Availability can change while a customer types. The server checks the chosen time with the calendar again before confirming: a taken time sends the customer back to choose another, and a repeated submission cannot create a second booking.",
-          },
-          {
-            title: "Budgets enforced in CI",
-            text: "Every change runs Lighthouse budgets (performance 90 or more, accessibility 95 or more, LCP within 2.5 seconds, CLS 0.1 or less) and axe checks on the booking flow and key pages.",
-          },
-          {
-            title: "Structured, staff-edited content",
-            text: "Services and pages are structured content that staff edit in the admin, with revisions, and the booking flow reads its choices from the same service catalogue. A content test fails the build if a service the workshop does not offer appears.",
-          },
+          { title: "Vehicle first", text: "Registration lookup, or the details by hand." },
+          { title: "Work and symptoms", text: "Choose the service, describe the problem." },
+          { title: "Place and time", text: "Workshop or mobile, then a live slot." },
+          { title: "Review and confirm", text: "Book as a guest; manage it later." },
         ],
       },
       {
-        heading: "Outcome",
-        intro:
-          "Live at sobautofix.com since August 2026. Customers book, request quotes and change their bookings online without an account; the workshop runs bookings, enquiries, content, stock and invoicing from one admin.",
-      },
-    ],
-    screens: [
-      {
-        key: "home",
-        caption:
-          "The sobautofix.com homepage: the registration lookup sits in the first screen, beside the call to book.",
-      },
-      {
-        key: "quote",
-        caption: "Get a Quote: the request starts with the vehicle, then the problem.",
+        heading: "Built for",
+        layout: "tiles",
+        points: [
+          { key: "drivers", title: "Drivers", text: "Book a diagnosis without an account." },
+          { key: "mobile", title: "Mobile visits", text: "Where the service allows it." },
+          { key: "car-buyers", title: "Car buyers", text: "Cars for sale, with enquiries." },
+          { key: "workshop", title: "Workshop staff", text: "One admin, with two-factor sign-in." },
+        ],
       },
     ],
   },
