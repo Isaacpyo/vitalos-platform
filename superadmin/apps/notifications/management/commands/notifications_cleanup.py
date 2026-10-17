@@ -21,8 +21,11 @@ class Command(BaseCommand):
         for label, count in report.counts.items():
             self.stdout.write(f"{label}: {count}")
         if apply:
-            record("notifications.smoke_purged", summary=f"Removed {report.total} smoke-test row(s)", **report.counts)
+            record(
+                "notifications.smoke_purged",
+                summary=f"Removed {report.total} smoke-test row(s)",
+                **report.counts,
+            )
             self.stdout.write(self.style.SUCCESS(f"Deleted {report.total} smoke-test row(s)."))
         else:
             self.stdout.write(f"Dry run: would delete {report.total} row(s). Re-run with --apply to delete.")
-

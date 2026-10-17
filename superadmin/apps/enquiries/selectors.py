@@ -16,7 +16,10 @@ FILTERS = {
     "unassigned": ("Unassigned", Q(assignee__isnull=True, status__in=OPEN_STATUSES)),
     "mine": ("Mine", Q(status__in=OPEN_STATUSES)),
     # Past the first-response target with no reply; "now" is added per query in _filter_q.
-    "overdue": ("Overdue", Q(status__in=OPEN_STATUSES, first_response_at__isnull=True, sla_due_at__isnull=False)),
+    "overdue": (
+        "Overdue",
+        Q(status__in=OPEN_STATUSES, first_response_at__isnull=True, sla_due_at__isnull=False),
+    ),
     "open": ("New and open", Q(status__in=(Enquiry.Status.NEW, Enquiry.Status.OPEN))),
     "pending": ("Pending", Q(status=Enquiry.Status.PENDING)),
     "resolved": ("Resolved", Q(status=Enquiry.Status.RESOLVED)),

@@ -81,7 +81,9 @@ def notify_overdue(now=None) -> int:
             url=enquiry.get_absolute_url(),
         )
         rows = [
-            OutboundNotification(recipient=user, event=OVERDUE_EVENT, enquiry=enquiry, mode=mode, created_at=now)
+            OutboundNotification(
+                recipient=user, event=OVERDUE_EVENT, enquiry=enquiry, mode=mode, created_at=now
+            )
             for user in users
             if (mode := _email_mode(user, preference_event)) != Mode.OFF
         ]
@@ -126,4 +128,3 @@ def queue_overdue_digest(now=None) -> int:
 
 def overdue_count(now=None) -> int:
     return overdue(now).count()
-

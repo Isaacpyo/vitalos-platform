@@ -74,11 +74,11 @@ def _inbound(inbox) -> Check:
 
 
 def _outbound(now) -> Check:
-    from apps.enquiries.notifications import emails_sent_today
+    from .email_usage import sent_today, threshold
 
     limit = getattr(settings, "RESEND_DAILY_LIMIT", 100)
     try:
-        sent = emails_sent_today(now)
+        sent = sent_today(now)
     except Exception:  # noqa: BLE001
         logger.exception("Health check: could not count emails sent today")
         sent = None
@@ -87,6 +87,7 @@ def _outbound(now) -> Check:
         ("Replies from", settings.SUPPORT_FROM_HEADER),
         ("Notifications from", settings.NOTIFY_FROM_HEADER),
         ("Sent today", f"{sent} of {limit} (Resend daily allowance)" if sent is not None else "Unknown"),
+        ("Warning at", f"{threshold()} emails (80 %), with an in-app notification to super admins"),
     ]
     if settings.EMAIL_TRANSPORT != "resend":
         level = "warn" if settings.APP_ENVIRONMENT == "production" else "info"
@@ -95,7 +96,7 @@ def _outbound(now) -> Check:
         return Check("outbound", "Outbound email", "fail", "Resend selected but no API key", details)
     if sent is not None and sent >= limit:
         return Check("outbound", "Outbound email", "fail", "Daily sending allowance used up", details)
-    if sent is not None and sent >= limit * 0.8:
+    if sent is not None and sent >= threshold():
         return Check("outbound", "Outbound email", "warn", f"{sent} of {limit} daily emails used", details)
     return Check("outbound", "Outbound email", "ok", "Sending through Resend", details)
 
