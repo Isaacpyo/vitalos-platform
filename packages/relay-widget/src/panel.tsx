@@ -22,7 +22,7 @@ import type {
 } from "@vitalos/relay-core/contract";
 import "./panel.css";
 import { api, RelayApiError, streamChat } from "./api";
-import { Convergence, Icon, StopSquare } from "./icons";
+import { Icon, StopSquare } from "./icons";
 import { Markdown } from "./markdown";
 import { RealtimeChannel } from "./realtime";
 import { clearConversation, loadConversation, saveConversation } from "./storage";
@@ -73,7 +73,6 @@ interface State {
   status: ConversationStatus;
   person: { name: string; initials: string } | null;
   team: TeamStatus;
-  greeting: string;
   suggestions: string[];
   noticeVersion: string;
   outOfHoursText: string;
@@ -84,14 +83,18 @@ interface State {
   streaming: boolean;
 }
 
-const DEFAULT_GREETING =
-  "I'm Relay, the Vitalos AI assistant. I answer from our published knowledge and show my sources. A person from the team is one message away.";
 const DEFAULT_SUGGESTIONS = [
   "What does an AI Opportunity Assessment involve?",
   "Can you take over a struggling software project?",
   "How does an engagement with Vitalos start?",
   "Which sectors do you work in?",
 ];
+/** The welcome shows three suggestions, each with its own glyph and tint. */
+const SUGGESTION_ICONS = [
+  { icon: "document", tone: "cobalt" },
+  { icon: "gear", tone: "mineral" },
+  { icon: "people", tone: "cobalt" },
+] as const;
 
 const initial: State = {
   conv: null,
@@ -99,7 +102,6 @@ const initial: State = {
   status: "ai",
   person: null,
   team: "offline",
-  greeting: DEFAULT_GREETING,
   suggestions: DEFAULT_SUGGESTIONS,
   noticeVersion: "2026-10",
   outOfHoursText: "The team is offline right now. We'll reply by email on the next working day.",
@@ -177,7 +179,6 @@ function reducer(state: State, action: Action): State {
     case "reset":
       return {
         ...initial,
-        greeting: state.greeting,
         suggestions: state.suggestions,
         team: state.team,
         noticeVersion: state.noticeVersion,
@@ -308,7 +309,6 @@ export function Panel(props: PanelProps) {
           type: "patch",
           patch: {
             suggestions: s.questions.length ? s.questions : DEFAULT_SUGGESTIONS,
-            greeting: s.greeting,
             team: s.teamStatus,
             noticeVersion: s.noticeVersion,
             outOfHoursText: s.outOfHoursText,
@@ -823,9 +823,8 @@ export function Panel(props: PanelProps) {
   const placeholder = human
     ? `Message ${firstName(state.person?.name ?? "")}`
     : welcome
-      ? "Ask about services or your project"
+      ? "Ask about your project"
       : "Reply to Relay";
-  const teamOnline = state.team === "online";
 
   const items = useMemo(() => {
     const out: ReactNode[] = [];
@@ -882,15 +881,18 @@ export function Panel(props: PanelProps) {
               <span className="relay-visually-hidden"> chat</span>
             </h2>
             <p className="relay-subtitle">
+              <span className="relay-status-dot" aria-hidden="true" />
+              {/* Team status shows only once a person has joined (owner direction, 17 Oct 2026). */}
               {human ? (
-                <span className="relay-online">VITALOS · A PERSON, NOT AI</span>
-              ) : (
                 <>
-                  AI ASSISTANT ·{" "}
-                  <span className={teamOnline ? "relay-online" : undefined}>
-                    {teamOnline ? "TEAM ONLINE" : "TEAM OFFLINE"}
+                  <span className="relay-online">Team online</span>
+                  <span className="relay-subtitle-sep" aria-hidden="true">
+                    ·
                   </span>
+                  A person, not AI
                 </>
+              ) : (
+                "AI assistant"
               )}
             </p>
           </div>
@@ -919,6 +921,18 @@ export function Panel(props: PanelProps) {
               <button type="button" role="menuitem" onClick={newConversation}>
                 Start a new conversation
               </button>
+              {!human && state.status !== "closed" && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    openHandoff("explicit_request");
+                  }}
+                >
+                  Talk to a person
+                </button>
+              )}
               {!confirmDelete ? (
                 <button
                   type="button"
@@ -958,43 +972,33 @@ export function Panel(props: PanelProps) {
           {welcome && (
             <>
               <section className="relay-hero" aria-label="Welcome">
-                <Convergence />
                 <h3 className="relay-hero-title">
                   Ask Vitalos<span className="relay-stop">.</span>
                 </h3>
-                <p className="relay-hero-text">{state.greeting}</p>
               </section>
-              <section className="relay-start" aria-labelledby="relay-start-label">
-                <p id="relay-start-label" className="relay-mono">
-                  START WITH
-                </p>
+              <section className="relay-start" aria-label="Suggested questions">
                 <ul className="relay-start-list">
-                  {state.suggestions.slice(0, 4).map((q, i) => (
-                    <li key={q}>
-                      <button
-                        type="button"
-                        className="relay-start-row"
-                        onClick={() => void send(q)}
-                      >
-                        <span className="relay-mono relay-start-index">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="relay-start-question">{q}</span>
-                        <Icon name="chevron" size={18} />
-                      </button>
-                    </li>
-                  ))}
-                  <li>
-                    <button
-                      type="button"
-                      className="relay-start-row relay-start-row--person"
-                      onClick={() => openHandoff("explicit_request")}
-                    >
-                      <span className="relay-ring" aria-hidden="true" />
-                      <span className="relay-start-question">Talk to a person</span>
-                      <Icon name="chevron" size={18} />
-                    </button>
-                  </li>
+                  {state.suggestions.slice(0, SUGGESTION_ICONS.length).map((q, i) => {
+                    const look = SUGGESTION_ICONS[i] ?? SUGGESTION_ICONS[0];
+                    return (
+                      <li key={q}>
+                        <button
+                          type="button"
+                          className="relay-start-row"
+                          onClick={() => void send(q)}
+                        >
+                          <span
+                            className={`relay-start-icon relay-start-icon--${look.tone}`}
+                            aria-hidden="true"
+                          >
+                            <Icon name={look.icon} size={24} />
+                          </span>
+                          <span className="relay-start-question">{q}</span>
+                          <Icon name="chevron" size={20} />
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             </>
@@ -1073,6 +1077,9 @@ export function Panel(props: PanelProps) {
               <label htmlFor="relay-composer-input" className="relay-visually-hidden">
                 Message Relay
               </label>
+              <span className="relay-composer-icon" aria-hidden="true">
+                <Icon name="chat" size={22} />
+              </span>
               <textarea
                 id="relay-composer-input"
                 ref={composerRef}
@@ -1123,7 +1130,7 @@ export function Panel(props: PanelProps) {
             <p>
               {human
                 ? "You're chatting with a person from Vitalos. "
-                : mode === "mobile"
+                : mode === "mobile" || welcome
                   ? "Relay is AI and can make mistakes. "
                   : "Relay is AI and can make mistakes. Don't share sensitive personal data. "}
               <a href={props.privacyUrl} className="relay-link">
@@ -1138,7 +1145,7 @@ export function Panel(props: PanelProps) {
               >
                 End chat
               </button>
-            ) : state.status !== "closed" ? (
+            ) : state.status !== "closed" && !welcome ? (
               <button
                 type="button"
                 className="relay-text-button relay-text-button--person"

@@ -58,6 +58,12 @@ export async function openRelay(page: Page) {
   await expect(page.getByText("Ask Vitalos.")).toBeVisible({ timeout: 10_000 });
 }
 
+/** Opens the hand-off form from the options menu (the welcome screen has no caption link). */
+export async function openHandoffFromMenu(page: Page) {
+  await page.getByRole("button", { name: "Conversation options" }).click();
+  await page.getByRole("menuitem", { name: "Talk to a person" }).click();
+}
+
 /** Sends a message through the composer and waits for Relay's answer to finish streaming. */
 export async function ask(page: Page, text: string) {
   const composer = page.getByLabel("Message Relay");

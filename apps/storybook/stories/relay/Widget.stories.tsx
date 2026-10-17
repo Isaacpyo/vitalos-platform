@@ -30,6 +30,13 @@ function Widget({ scenario }: { scenario: Scenario }) {
   );
 }
 
+/** The welcome screen offers a person from the options menu (the composer caption does once chatting). */
+async function openHandoffFromMenu(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  await userEvent.click(await canvas.findByRole("button", { name: "Conversation options" }));
+  await userEvent.click(await canvas.findByRole("menuitem", { name: "Talk to a person" }));
+}
+
 // --- Seeded conversations -----------------------------------------------------------------------
 
 const QUESTION = "Can you take over a struggling software project?";
@@ -150,7 +157,9 @@ export const WelcomeTeamOnline: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText(QUESTIONS[0]!);
-    await waitFor(() => expect(canvas.getByText("TEAM ONLINE")).toBeVisible());
+    // Team status appears only once a person has joined; the AI header says "AI assistant".
+    await waitFor(() => expect(canvas.getByText("AI assistant")).toBeVisible());
+    await expect(canvas.queryByText(/Team (online|offline)/)).toBeNull();
   },
 };
 
@@ -210,7 +219,7 @@ export const HandoffFormEmpty: Story = {
   render: () => <Widget scenario={online} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole("button", { name: /Talk to a person/ }));
+    await openHandoffFromMenu(canvasElement);
     await canvas.findByRole("button", { name: "Connect me to a person" });
   },
 };
@@ -220,7 +229,7 @@ export const HandoffFormErrors: Story = {
   render: () => <Widget scenario={online} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole("button", { name: /Talk to a person/ }));
+    await openHandoffFromMenu(canvasElement);
     await userEvent.type(await canvas.findByLabelText("Work email"), "not-an-email");
     await userEvent.click(canvas.getByRole("button", { name: "Connect me to a person" }));
     await canvas.findByText("Enter your name");

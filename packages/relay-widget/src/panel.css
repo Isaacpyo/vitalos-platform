@@ -1,8 +1,10 @@
 /*
  * Vitalos Relay panel (build prompt sections 4.1-4.9; boards in docs/relay/reference/relay).
  * Semantic --relay-* tokens only; foundation colours only on fixed brand grounds. Flat colour and
- * hairlines: no gradients, glows, shadows or rounded cards. Radii: 0 panels/messages, 2px buttons
- * and inputs, 4px tags, 999px dots and badges.
+ * hairlines, no gradients or glows. Desktop and tablet open a rounded floating card with a soft
+ * shadow; the welcome uses rounded suggestion cards and a rounded composer (owner direction,
+ * 17 Oct 2026, docs/relay/DECISIONS.md 31). Messages stay square; 2px buttons and inputs
+ * elsewhere, 999px dots and badges.
  */
 
 .relay-root {
@@ -11,6 +13,8 @@
   --relay-font-text: var(--font-sans, system-ui, sans-serif);
   --relay-font-mono: var(--font-mono, ui-monospace, monospace);
   --relay-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --relay-radius-panel: 16px;
+  --relay-radius-card: 12px;
 }
 
 /* Desktop and tablet: a floating card above the launcher corner, never the full window height
@@ -28,8 +32,9 @@
   overflow: hidden;
   background: var(--relay-surface-200);
   color: var(--relay-ink);
-  /* Brand rule (header above): square panel, hairline only, no shadow. */
   border: 1px solid var(--relay-line);
+  border-radius: var(--relay-radius-panel);
+  box-shadow: 0 24px 48px -12px rgb(11 19 32 / 0.28);
   font-family: var(--relay-font-text);
   font-size: 15px;
   line-height: 24px;
@@ -68,6 +73,7 @@
     animation: relay-fade-in 120ms linear;
   }
   .relay-caret,
+  .relay-status-dot,
   .relay-typing-squares i {
     animation: none !important;
   }
@@ -76,14 +82,42 @@
 .relay-panel--tablet {
   width: 400px;
 }
+/* The floating card rises into place; the full-screen mobile panel keeps the slide. */
+.relay-panel--desktop.relay-panel--open,
+.relay-panel--tablet.relay-panel--open {
+  animation: relay-rise-in 220ms var(--relay-ease);
+}
+@keyframes relay-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .relay-panel--desktop.relay-panel--open,
+  .relay-panel--tablet.relay-panel--open {
+    animation: relay-fade-in 120ms linear;
+  }
+}
+/* Mobile: exactly the visible screen (visual viewport height, set in panel.tsx), never wider
+   than it, and nothing inside may scroll sideways. */
 .relay-panel--mobile {
   top: 0;
   right: 0;
   bottom: auto;
-  width: 100vw;
-  max-width: 100vw;
+  left: 0;
+  width: 100%;
+  max-width: 100%;
   height: var(--relay-vh, 100dvh);
+  max-height: 100dvh;
+  overflow: hidden;
   border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 .relay-scrim {
   position: fixed;
@@ -133,29 +167,30 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 8px 12px 16px;
+  gap: 14px;
+  padding: 18px 10px 14px 24px;
   background: var(--relay-midnight);
   color: var(--relay-off-white);
   flex: none;
 }
 .relay-header-symbol,
 .relay-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   flex: none;
   display: grid;
   place-items: center;
 }
 .relay-header-symbol img {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: block;
 }
 .relay-avatar {
+  border-radius: 999px;
   background: var(--relay-mineral);
   color: var(--relay-midnight);
-  font: 800 13px/1 var(--relay-font-display);
+  font: 800 14px/1 var(--relay-font-display);
 }
 .relay-header-text {
   min-width: 0;
@@ -163,20 +198,43 @@
 }
 .relay-title {
   margin: 0;
-  font: 700 18px/22px var(--relay-font-display);
+  font: 700 21px/26px var(--relay-font-display);
+  letter-spacing: -0.01em;
   color: var(--relay-off-white);
 }
 .relay-subtitle {
-  margin: 0;
-  font-family: var(--relay-font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  margin: 2px 0 0;
+  font-family: var(--relay-font-text);
+  font-size: 13px;
+  line-height: 18px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--relay-slate-300);
+}
+.relay-status-dot {
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--relay-mineral-300);
+  flex: none;
+  animation: relay-pulse 2.4s ease-in-out infinite;
+}
+/* A slow breathing light: Relay is ready. */
+@keyframes relay-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.relay-subtitle-sep {
+  margin: 0 8px;
 }
 .relay-online {
   color: var(--relay-mineral-300);
@@ -206,14 +264,17 @@
 }
 .relay-menu {
   position: absolute;
-  top: 56px;
-  right: 8px;
+  top: 64px;
+  right: 10px;
   z-index: 2;
   min-width: 240px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--relay-surface-200);
-  border: 1px solid var(--relay-line-strong);
+  border: 1px solid var(--relay-line);
+  border-radius: var(--relay-radius-card);
+  box-shadow: 0 12px 24px -8px rgb(11 19 32 / 0.2);
   color: var(--relay-ink);
 }
 .relay-menu > button,
@@ -256,83 +317,82 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 .relay-hero {
-  position: relative;
-  overflow: hidden;
-  padding: 28px 24px 32px;
+  padding: 34px 24px 52px;
   background: var(--relay-midnight);
   color: var(--relay-off-white);
 }
-.relay-convergence {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 420px;
-  height: 96px;
-  pointer-events: none;
-}
-.relay-convergence-ai {
-  fill: var(--relay-cobalt);
-}
-.relay-convergence-people {
-  fill: var(--relay-mineral);
-}
 .relay-hero-title {
-  position: relative;
-  margin: 40px 0 16px;
-  font: 800 40px/44px var(--relay-font-display);
-  letter-spacing: -0.025em;
+  margin: 0;
+  font: 800 46px/1.05 var(--relay-font-display);
+  letter-spacing: -0.035em;
   color: var(--relay-off-white);
 }
 .relay-hero-title .relay-stop {
   color: var(--relay-cobalt);
 }
-.relay-hero-text {
-  position: relative;
-  margin: 0;
-  color: var(--relay-slate-300);
-  font-size: 15px;
-  line-height: 24px;
-}
+/* The white sheet rises over the bottom of the midnight hero with rounded top corners. */
 .relay-start {
-  padding: 24px 24px 8px;
+  position: relative;
+  margin-top: -20px;
+  padding: 24px 16px 8px;
+  border-radius: var(--relay-radius-panel) var(--relay-radius-panel) 0 0;
+  background: var(--relay-surface-200);
 }
 .relay-start-list {
   list-style: none;
-  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
   padding: 0;
 }
 .relay-start-row {
   width: 100%;
-  min-height: 44px;
+  min-height: 76px;
   display: grid;
-  grid-template-columns: 28px 1fr 20px;
+  grid-template-columns: 44px minmax(0, 1fr) 20px;
   align-items: center;
-  gap: 2px;
-  padding: 14px 0;
-  border: 0;
-  border-bottom: 1px solid var(--relay-line);
-  background: none;
+  gap: 18px;
+  padding: 14px 18px 14px 16px;
+  border: 1px solid var(--relay-line);
+  border-radius: var(--relay-radius-card);
+  background: var(--relay-surface-200);
   color: var(--relay-ink);
-  font: 400 15px/22px var(--relay-font-text);
+  font: 400 16px/23px var(--relay-font-text);
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color 120ms linear,
+    background-color 120ms linear;
 }
-.relay-start-row svg {
-  color: var(--relay-line-strong);
+.relay-start-row > svg {
+  color: var(--relay-ink-muted);
 }
-.relay-start-row:hover .relay-start-question {
-  text-decoration: underline;
+.relay-start-row:hover {
+  border-color: var(--relay-line-strong);
+  background: var(--relay-surface-100);
 }
-.relay-start-row--person {
-  border-bottom: 0;
-  color: var(--relay-mineral-text);
-  font-weight: 600;
+.relay-start-question {
+  overflow-wrap: anywhere;
 }
-.relay-start-row--person svg {
+.relay-start-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+.relay-start-icon--cobalt {
+  background: color-mix(in srgb, var(--relay-cobalt) 9%, var(--relay-surface-200));
+  color: var(--relay-accent-text);
+}
+.relay-start-icon--mineral {
+  background: color-mix(in srgb, var(--relay-mineral) 11%, var(--relay-surface-200));
   color: var(--relay-mineral-text);
 }
 .relay-ring {
@@ -705,46 +765,63 @@ a.relay-source:hover .relay-source-title {
 /* ---- Composer and system copy (4.9) ----------------------------------------------------- */
 .relay-composer-area {
   flex: none;
-  padding: 12px 16px 14px;
-  border-top: 1px solid var(--relay-line);
+  padding: 12px 16px 16px;
   background: var(--relay-surface-200);
 }
 .relay-panel--mobile .relay-composer-area {
   padding: 10px 12px calc(10px + max(24px, env(safe-area-inset-bottom, 0px)));
 }
+/* One rounded field holds the glyph, the textarea and the send button. It draws the focus ring
+   for the textarea inside it (2px cobalt: border plus an inset shadow, so nothing shifts). */
 .relay-composer {
+  min-width: 0;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: flex-end;
+  padding: 5px 5px 5px 14px;
+  border: 1px solid var(--relay-line-strong);
+  border-radius: 14px;
+  background: var(--relay-surface-200);
+}
+.relay-composer:focus-within {
+  border-color: var(--relay-focus-ring);
+  box-shadow: inset 0 0 0 1px var(--relay-focus-ring);
+}
+.relay-composer-icon {
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--relay-ink-muted);
 }
 .relay-input {
   flex: 1;
+  min-width: 0;
   min-height: 48px;
-  max-height: calc(13px * 2 + 20px * 6);
-  padding: 13px 14px;
-  border: 1px solid var(--relay-line-strong);
-  border-radius: 2px;
-  background: var(--relay-surface-200);
+  max-height: calc(14px * 2 + 20px * 6);
+  padding: 14px 6px;
+  border: 0;
+  background: transparent;
   color: var(--relay-ink);
-  font: 400 15px/20px var(--relay-font-text);
+  font: 400 16px/20px var(--relay-font-text);
   resize: none;
   field-sizing: content;
 }
-.relay-panel--mobile .relay-input {
-  font-size: 16px;
+.relay-panel .relay-input:focus-visible {
+  outline: none;
 }
 .relay-input::placeholder {
   color: var(--relay-ink-muted);
 }
 .relay-send,
 .relay-stop-button {
-  width: 48px;
+  width: 52px;
   height: 48px;
   flex: none;
   display: grid;
   place-items: center;
   padding: 0;
-  border-radius: 2px;
+  border-radius: 10px;
   cursor: pointer;
 }
 .relay-send {
@@ -780,13 +857,17 @@ a.relay-source:hover .relay-source-title {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 16px;
+  margin-top: 12px;
+  padding: 0 4px;
+  font-size: 13px;
+  line-height: 18px;
   color: var(--relay-ink-muted);
 }
 .relay-caption p {
   margin: 0;
+}
+.relay-caption .relay-link {
+  margin-left: 6px;
 }
 .relay-link {
   color: var(--relay-accent-text);
@@ -865,13 +946,22 @@ a.relay-source:hover .relay-source-title {
 }
 
 @media (max-width: 639px) {
+  .relay-header {
+    padding: 14px 6px 12px 16px;
+  }
   .relay-title {
-    font-size: 17px;
+    font-size: 19px;
   }
   .relay-header-symbol,
   .relay-header-symbol img {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
+  }
+  .relay-hero {
+    padding: 28px 16px 48px;
+  }
+  .relay-hero-title {
+    font-size: 42px;
   }
   .relay-icon-button {
     width: 48px;
