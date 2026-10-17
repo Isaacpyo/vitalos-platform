@@ -247,7 +247,8 @@ Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md) (
 93. **The .eml is an unsent draft.** It carries `X-Unsent: 1` (Outlook and Apple Mail open it as a draft), From is the signed-in user, To is the recipient if given, and it uses the mailer's multipart/related message with the CID images. Everything that renders user-supplied values is a POST, and values are single-line, length-limited and escaped by the same renderer as the preview.
 94. **Audit: `email_templates.used`.** Written when an .eml is downloaded or a rendered payload is fetched for copying. The summary holds the template name, version and action only, never the recipient address. Previews are not audited.
 95. **Editor line endings are normalised.** Browsers post textarea line breaks as CRLF while seed content is LF, so a status-only save was read as a content change (a new version, CRLF stored). `services.create_template` and `update_template` now normalise `
-` and `` to `
+` and `
+` to `
 ` in every field and block, and `blocks_from_post` does the same.
 
 ## Automatic deploy (14 Oct 2026)
@@ -268,3 +269,8 @@ Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md) (
 103. **Alert emails use the shared layout as it is.** The board's eyebrow is a section title, the cobalt full stop is a plain full stop and "Manage notifications" is a pasted link in the footer notice; `layout.py` and its golden fixtures are unchanged. From `RELAY_EMAIL_FROM` (default `Vitalos Relay <relay@notify.vitalos.co.uk>`; that domain must be verified in Resend before `EMAIL_TRANSPORT=resend` sends it).
 104. **Realtime only on Relay pages.** `relay.js` opens the Supabase Realtime socket (pings only) and widens `connect-src` to that `wss://` origin on Relay responses alone; it polls every 10 seconds when the socket is down. Every other page polls `/relay/pulse/` every 20 seconds (local rows only) for toasts. `RELAY_REALTIME_ENABLED=False` turns the socket off.
 105. **`RELAY_CLIENT=fake`** serves in-memory sample data (fictional people, `example.com` addresses) for tests, local UI work and the accessibility check; production settings refuse it.
+
+## Backup storage (17 Oct 2026)
+
+106. **Nightly dumps go to private Azure Blob Storage, not workflow artifacts.** The repository is public, so artifacts are downloadable by anyone signed in, and AGENTS.md forbids database dumps in artifacts even when encrypted. `backup.yml` now stores the gpg-encrypted dump in the private container `superadmin-db` (storage account `stvitalosbackups`, DEPLOY.md §6.2) and verifies its size. It signs in with OIDC as `github-vitalos-superadmin-backup`, which holds only Storage Blob Data Contributor on that container, so no Azure key is stored and the backup environment can't deploy. A 14-day time-based immutability policy stops anyone, this workflow included, from deleting or overwriting a dump early; a lifecycle rule deletes it after 15 days. Owner approved the small storage cost on 17 Oct 2026. Considered and rejected: Cloudflare R2 (free, but needs a stored access key in GitHub), a Supabase bucket (needs a full-access database key) and the Oracle VM (would give GitHub SSH access to it). Replaces the artifact retention in #100.
+
