@@ -8,6 +8,7 @@ import {
   Field,
   FormErrorSummary,
   Icon,
+  SubmissionDialog,
   TextInput,
   TextLink,
   Textarea,
@@ -128,11 +129,17 @@ export function ApplicationForm({
   const successRef = useRef<HTMLDivElement>(null);
   const focusAfterErrors = useRef(false);
 
+  const [confirmationClosed, setConfirmationClosed] = useState(false);
+
   useEffect(() => {
     if (status !== "sent") return;
-    successRef.current?.focus();
     track("application_sent", { roleSlug });
   }, [status, roleSlug]);
+
+  useEffect(() => {
+    // While the confirmation dialog is open the page is inert; focus lands here once it closes.
+    if (status === "sent" && confirmationClosed) successRef.current?.focus();
+  }, [status, confirmationClosed]);
 
   useEffect(() => {
     if (!focusAfterErrors.current) return;
@@ -310,47 +317,62 @@ export function ApplicationForm({
     );
   }
 
+  const dialog = (
+    <SubmissionDialog
+      open={status === "sending" || (status === "sent" && !confirmationClosed)}
+      phase={status === "sent" ? "success" : "sending"}
+      sendingTitle="Sending your application…"
+      successTitle={formCopy.successTitle}
+      onClose={() => setConfirmationClosed(true)}
+    >
+      <p className="m-0">{formCopy.successBody(result?.roleTitle ?? roleTitle)}</p>
+    </SubmissionDialog>
+  );
+
   if (status === "sent" && result) {
     const email = contactEmail?.trim();
     return (
-      <div
-        ref={successRef}
-        tabIndex={-1}
-        className="border-t-2 border-tone-action pt-(--space-5) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-tone-focus"
-      >
-        <h3 className="m-0 text-h2 text-tone-heading">
-          {formCopy.successTitle.slice(0, -1)}
-          <span className="text-tone-link">.</span>
-        </h3>
-        <p className="mt-(--space-4) text-body-l text-tone-text">
-          {formCopy.successBody(result.roleTitle)}
-        </p>
-        <h4 className="m-0 mt-(--space-6) text-h3 text-tone-heading">{formCopy.nextHeading}</h4>
-        <p className="m-0 mt-(--space-3) text-body text-tone-text">{formCopy.nextAssess}</p>
-        {result.processHtml ? (
-          <div
-            className="mt-(--space-3) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
-            // Sanitised by the site's one renderer on the server.
-            dangerouslySetInnerHTML={{ __html: result.processHtml }}
-          />
-        ) : null}
-        <p className="m-0 mt-(--space-3) text-body text-tone-text">
-          {formCopy.nextContactBefore}
-          <TextLink href={privacyNoticeUrl} arrow={false}>
-            {formCopy.consentLink}
-          </TextLink>
-          {formCopy.nextContactAfter}
-        </p>
-        {email ? (
-          <p className="m-0 mt-(--space-3) text-body text-tone-text">
-            {formCopy.withdrawBefore}
-            <TextLink href={`mailto:${email}`} arrow={false}>
-              {email}
-            </TextLink>
-            {formCopy.withdrawAfter}
+      <>
+        {dialog}
+        <div
+          ref={successRef}
+          tabIndex={-1}
+          className="border-t-2 border-tone-action pt-(--space-5) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-tone-focus"
+        >
+          <h3 className="m-0 text-h2 text-tone-heading">
+            {formCopy.successTitle.slice(0, -1)}
+            <span className="text-tone-link">.</span>
+          </h3>
+          <p className="mt-(--space-4) text-body-l text-tone-text">
+            {formCopy.successBody(result.roleTitle)}
           </p>
-        ) : null}
-      </div>
+          <h4 className="m-0 mt-(--space-6) text-h3 text-tone-heading">{formCopy.nextHeading}</h4>
+          <p className="m-0 mt-(--space-3) text-body text-tone-text">{formCopy.nextAssess}</p>
+          {result.processHtml ? (
+            <div
+              className="mt-(--space-3) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
+              // Sanitised by the site's one renderer on the server.
+              dangerouslySetInnerHTML={{ __html: result.processHtml }}
+            />
+          ) : null}
+          <p className="m-0 mt-(--space-3) text-body text-tone-text">
+            {formCopy.nextContactBefore}
+            <TextLink href={privacyNoticeUrl} arrow={false}>
+              {formCopy.consentLink}
+            </TextLink>
+            {formCopy.nextContactAfter}
+          </p>
+          {email ? (
+            <p className="m-0 mt-(--space-3) text-body text-tone-text">
+              {formCopy.withdrawBefore}
+              <TextLink href={`mailto:${email}`} arrow={false}>
+                {email}
+              </TextLink>
+              {formCopy.withdrawAfter}
+            </p>
+          ) : null}
+        </div>
+      </>
     );
   }
 
@@ -410,6 +432,7 @@ export function ApplicationForm({
 
   return (
     <>
+      {dialog}
       <noscript>
         <p className="m-0 text-body-l text-tone-text">{formCopy.noScript}</p>
       </noscript>
@@ -606,12 +629,7 @@ export function ApplicationForm({
         ) : null}
 
         <div>
-          <Button
-            type="submit"
-            size="lg"
-            aria-disabled={status === "sending" || undefined}
-            aria-busy={status === "sending" || undefined}
-          >
+          <Button type="submit" size="md" loading={status === "sending"}>
             {status === "sending" ? formCopy.sending : formCopy.submit}
           </Button>
         </div>

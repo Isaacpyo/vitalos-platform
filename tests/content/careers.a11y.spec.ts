@@ -60,10 +60,14 @@ for (const viewport of VIEWPORTS) {
       await page.locator('input[type="file"]').setInputFiles(pdf());
       await page.getByText("example-cv.pdf, 2 KB").waitFor();
       await page.getByLabel("Full name").fill("Example Applicant");
-      await page.getByLabel("Email").fill("applicant@example.test");
+      await page.getByLabel("Email", { exact: true }).fill("applicant@example.test");
       await page.getByLabel("Yes", { exact: true }).check();
       await page.getByRole("checkbox").check();
       await page.getByRole("button", { name: "Send application" }).click();
+      // The confirmation dialog (#72) opens first; the page's own receipt follows when it closes.
+      const dialog = page.getByRole("dialog");
+      await dialog.getByRole("heading", { name: "Application received." }).waitFor();
+      await dialog.getByRole("button", { name: "Close" }).click();
       await page.getByRole("heading", { name: "What happens next" }).waitFor();
       await expectNoA11yViolations(page);
     });

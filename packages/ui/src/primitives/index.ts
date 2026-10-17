@@ -17,6 +17,7 @@ export { Small, type SmallProps } from "./Small";
 // Actions
 export {
   Button,
+  Spinner,
   type ButtonAsButtonProps,
   type ButtonAsLinkProps,
   type ButtonProps,
@@ -34,6 +35,7 @@ export { Textarea, type TextareaProps } from "./Textarea";
 export { Select, type SelectProps } from "./Select";
 export { Checkbox, type CheckboxProps } from "./Checkbox";
 export { FormErrorSummary, type FormError, type FormErrorSummaryProps } from "./FormErrorSummary";
+export { SubmissionDialog, type SubmissionDialogProps } from "./SubmissionDialog";
 export { SubmitButton, type SubmitButtonProps } from "./SubmitButton";
 export { StatusMessage, type StatusMessageProps, type StatusVariant } from "./StatusMessage";
 

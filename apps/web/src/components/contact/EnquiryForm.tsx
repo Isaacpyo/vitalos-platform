@@ -7,6 +7,7 @@ import {
   FormErrorSummary,
   Select,
   StatusMessage,
+  SubmissionDialog,
   SubmitButton,
   TextInput,
   Textarea,
@@ -334,6 +335,19 @@ export function EnquiryFormView({
 }
 
 export function EnquiryForm({ action, ...rest }: EnquiryFormProps) {
-  const [state, formAction] = useActionState(action, initialEnquiryFormState);
-  return <EnquiryFormView {...rest} state={state} formAction={formAction} />;
+  const [state, formAction, pending] = useActionState(action, initialEnquiryFormState);
+  return (
+    <>
+      <EnquiryFormView {...rest} state={state} formAction={formAction} />
+      {/* Open while the request is in flight (including the redirect to the thank-you page). On a
+          validation or delivery error it closes and the form's own message takes focus. */}
+      <SubmissionDialog
+        open={pending}
+        phase="sending"
+        sendingTitle="Sending your enquiry…"
+        successTitle="Your enquiry has been received"
+        onClose={() => undefined}
+      />
+    </>
+  );
 }

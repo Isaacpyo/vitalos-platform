@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, type ButtonSize, type ButtonTheme } from "./Button";
 
@@ -15,8 +15,8 @@ export interface SubmitButtonProps {
 
 /**
  * Submit button that reads the pending state of its parent `<form action>` via useFormStatus.
- * While pending it stays focusable (aria-disabled, not `disabled`), blocks repeat submits, sets
- * aria-busy and swaps to `pendingLabel` so progress is communicated (Stage 9 section 15).
+ * While pending it shows the Button spinner, is disabled (no repeat submits), sets aria-busy and
+ * swaps to `pendingLabel` so progress is communicated (Stage 9 section 15).
  */
 export function SubmitButton({
   children,
@@ -26,9 +26,6 @@ export function SubmitButton({
   className,
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
-  const onClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (pending) event.preventDefault();
-  };
   return (
     <Button
       type="submit"
@@ -36,9 +33,7 @@ export function SubmitButton({
       size={size}
       {...(theme ? { theme } : {})}
       {...(className ? { className } : {})}
-      aria-disabled={pending || undefined}
-      aria-busy={pending || undefined}
-      onClick={onClick}
+      loading={pending}
     >
       {pending && pendingLabel ? pendingLabel : children}
     </Button>
