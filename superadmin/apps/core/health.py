@@ -27,6 +27,8 @@ class Check:
     status: str
     summary: str
     details: list[tuple[str, str]] = field(default_factory=list)
+    # A setup task: numbered steps shown under the check (exact variable names, no secret values).
+    steps: list[str] = field(default_factory=list)
 
 
 def _database() -> Check:
@@ -114,6 +116,19 @@ def _queue(now) -> Check:
     return Check("queue", "Notification emails", "ok", "Up to date", details)
 
 
+STORAGE_STEPS = [
+    "Create a private Cloudflare R2 bucket named vitalos-enquiry-attachments (npx wrangler r2 bucket create; "
+    "check the R2 free tier first: a payment method needs the owner's approval).",
+    "Create an R2 API token with Object Read & Write on that bucket only.",
+    "Set the variables OBJECT_STORAGE_ENDPOINT (https://<account-id>.r2.cloudflarestorage.com), "
+    "OBJECT_STORAGE_BUCKET=vitalos-enquiry-attachments and OBJECT_STORAGE_REGION=auto in the "
+    "GitHub Production environment.",
+    "Store the token as the secrets OBJECT_STORAGE_ACCESS_KEY_ID and OBJECT_STORAGE_SECRET_ACCESS_KEY "
+    "(never in the repo), then run the Super Admin deploy.",
+    "Full steps: superadmin/docs/email-setup.md, section 6 (private R2 bucket for attachments).",
+]
+
+
 def _storage() -> Check:
     if settings.ATTACHMENTS_STORAGE_ENABLED:
         return Check("storage", "Attachment storage", "ok", "Attachments are stored")
@@ -121,19 +136,28 @@ def _storage() -> Check:
         "storage",
         "Attachment storage",
         "info",
-        "Not configured: attachments are listed, originals stay in the mailbox",
+        "Set-up task: attachments are listed, originals stay in the mailbox",
+        steps=STORAGE_STEPS,
     )
+
+
+DOMAIN_STALE = timedelta(days=2)
 
 
 def _domain(inbox) -> Check:
-    status = inbox.domain_status or "Not checked"
-    return Check(
-        "domain",
-        "Sending domain",
-        "info",
-        status,
-        [("Last checked", _when(inbox.domain_checked_at) or "Never")],
-    )
+    from apps.enquiries.domain import level, sending_domain
+
+    status = inbox.domain_status or f"{sending_domain()}: not checked yet"
+    details = [
+        ("Sending domain", sending_domain()),
+        ("Last checked", _when(inbox.domain_checked_at) or "Never"),
+        ("Checked", "Daily, by the content tick (manage.py check_sending_domain)"),
+    ]
+    result = level(inbox.domain_status)
+    stale = inbox.domain_checked_at is None or timezone.now() - inbox.domain_checked_at > DOMAIN_STALE
+    if settings.EMAIL_TRANSPORT == "resend" and stale and inbox.domain_status:
+        return Check("domain", "Sending domain", "warn", f"{status} (check is out of date)", details)
+    return Check("domain", "Sending domain", result, status, details)
 
 
 def _when(moment) -> str:

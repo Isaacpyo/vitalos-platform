@@ -2,6 +2,7 @@
 
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
+from django.utils import timezone
 
 from apps.accounts.roles import SERVICE_LEAD, SUPERADMIN, has_role
 
@@ -14,6 +15,8 @@ FILTERS = {
     "all": ("All", ~Q(status=Enquiry.Status.SPAM)),
     "unassigned": ("Unassigned", Q(assignee__isnull=True, status__in=OPEN_STATUSES)),
     "mine": ("Mine", Q(status__in=OPEN_STATUSES)),
+    # Past the first-response target with no reply; "now" is added per query in _filter_q.
+    "overdue": ("Overdue", Q(status__in=OPEN_STATUSES, first_response_at__isnull=True, sla_due_at__isnull=False)),
     "open": ("New and open", Q(status__in=(Enquiry.Status.NEW, Enquiry.Status.OPEN))),
     "pending": ("Pending", Q(status=Enquiry.Status.PENDING)),
     "resolved": ("Resolved", Q(status=Enquiry.Status.RESOLVED)),
@@ -31,6 +34,8 @@ def _filter_q(key: str, user) -> Q:
     label, condition = FILTERS.get(key, FILTERS["all"])
     if key == "mine":
         condition &= Q(assignee=user)
+    elif key == "overdue":
+        condition &= Q(sla_due_at__lte=timezone.now())
     return condition
 
 
@@ -78,7 +83,7 @@ def assignable_users():
         User.objects.filter(is_active=True)
         .filter(Q(is_superuser=True) | Q(groups__name__in=(SUPERADMIN, SERVICE_LEAD)))
         .distinct()
-        .order_by("email")
+        .order_by("full_name", "email")
     )
 
 

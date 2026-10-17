@@ -54,6 +54,8 @@ class Enquiry(models.Model):
     last_message_at = models.DateTimeField(default=timezone.now, db_index=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
     sla_due_at = models.DateTimeField(null=True, blank=True)
+    # Set once when the first-response target passes and the team is told (E5); never cleared.
+    sla_breach_notified_at = models.DateTimeField(null=True, blank=True)
     anonymised_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)

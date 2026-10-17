@@ -10,7 +10,9 @@ Usage (credentials come only from the environment and are never printed):
 If the account has no authenticator yet, the test enrols a temporary TOTP device, and removes it at
 the end (the real owner enrols their own on first sign-in). If a device already exists, pass its
 base32 secret in SMOKE_TOTP_SECRET. Records the test creates are named "Smoke test …" and archived
-(not deleted) at the end so their history remains visible.
+(not deleted) at the end so their history remains visible. The notifications they raise for other
+super admins are removed afterwards with
+`python manage.py notifications_cleanup --purge-smoke-test` (dry run; add --apply to delete).
 """
 
 import argparse
@@ -303,6 +305,15 @@ class Smoke:
         self.page.goto(self.url("/s/consulting/?tab=structure"))
         expect(self.page.get_by_text(names["practice"])).to_have_count(0)
         self.check("smoke records archived (history kept)", True)
+        # The smoke records raised project-status and KPI-breach notifications. Clear this account's
+        # bell here; other super admins' copies are removed server-side with
+        # `manage.py notifications_cleanup --purge-smoke-test --apply` (a dry run without --apply).
+        self.page.goto(self.url("/notifications/"))
+        mark_all = self.page.get_by_role("button", name="Mark all as read")
+        if mark_all.count():
+            mark_all.first.click()
+            self.page.wait_for_load_state("networkidle")
+        self.check("smoke account's notifications marked as read", True)
         if self.enrolled_secret:
             self.page.goto(self.url("/account/"))
             self.page.get_by_text("Replace authenticator").click()

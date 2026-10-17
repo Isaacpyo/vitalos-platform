@@ -51,6 +51,7 @@ TITLES = {
     Event.NEW_ENQUIRY: "New enquiry",
     Event.ASSIGNED: "Assigned to you",
     Event.CUSTOMER_REPLY: "Customer replied",
+    "sla_overdue": "First response overdue",  # apps.enquiries.overdue.OVERDUE_EVENT
 }
 
 

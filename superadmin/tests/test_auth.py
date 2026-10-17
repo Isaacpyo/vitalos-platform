@@ -148,7 +148,7 @@ def test_superadmin_creates_user_and_changes_role(seeded, superadmin, client_for
     # Removing your own SuperAdmin role is refused.
     own = client.post(
         f"/settings/users/{superadmin.pk}/edit/",
-        {"full_name": "", "role": "Viewer", "is_active": "on"},
+        {"full_name": "Ada Admin", "role": "Viewer", "is_active": "on"},
         HTTP_HX_REQUEST="true",
     )
     assert own.status_code == 200 and b"cannot remove your own" in own.content
@@ -167,7 +167,7 @@ def test_superuser_role_cannot_be_changed_in_the_app(seeded, superadmin, make_us
     root = make_user(None, is_superuser=True, is_staff=True)
     response = client_for(superadmin).post(
         f"/settings/users/{root.pk}/edit/",
-        {"full_name": "", "role": "Viewer", "is_active": "on"},
+        {"full_name": "Ada Admin", "role": "Viewer", "is_active": "on"},
         HTTP_HX_REQUEST="true",
     )
     assert response.status_code == 200 and b"Django superuser" in response.content
