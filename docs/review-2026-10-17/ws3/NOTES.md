@@ -76,12 +76,12 @@ The storage layer cannot list the bucket, but every upload is a `MediaAsset` row
 
 Fresh SQLite database (`config.settings.dev`, `DATABASE_URL` pointing at a new file), `migrate`, one local test user `Temitope.agbola@vitalos.co.uk` with the SuperAdmin role (local only), then `import_insights_batch apps/insights/imports/insights-batch-2` with `--report` outside the repo:
 
-| Step | Result |
-|---|---|
-| Dry run | `Dry run (use --apply to write): 20 posts, status draft (create draft: 20).` Nothing written. |
-| `--apply` | `Imported: 20 posts, status draft (create draft: 20).` |
-| `--apply` again | `Imported: 20 posts, status draft (unchanged: 20).` |
-| State | 20 posts, 20 drafts, 0 published; 0 editorial checks, 0 revisions, 0 post sync events, 0 `first_published_at`; 0 posts missing SEO title or description; 0 posts without topics; author `vitalos` (organisation, not approved). |
+| Step            | Result                                                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dry run         | `Dry run (use --apply to write): 20 posts, status draft (create draft: 20).` Nothing written.                                                                                                                                   |
+| `--apply`       | `Imported: 20 posts, status draft (create draft: 20).`                                                                                                                                                                          |
+| `--apply` again | `Imported: 20 posts, status draft (unchanged: 20).`                                                                                                                                                                             |
+| State           | 20 posts, 20 drafts, 0 published; 0 editorial checks, 0 revisions, 0 post sync events, 0 `first_published_at`; 0 posts missing SEO title or description; 0 posts without topics; author `vitalos` (organisation, not approved). |
 
 The same flow runs in pytest (`test_the_real_batch_imports_as_twenty_drafts_and_reruns_change_nothing`). The editor was then opened on the imported "The 17% problem" draft (screenshots `admin-editor-*.jpg`): 946 words, 5 min read; checks unticked; SEO title and description filled; topics and sectors ticked; author list, reordering (Ben moved above Vitalos, saved by autosave as `['Ben Example (local)', 'Vitalos']`) and the cover preview (`example.png · 1 KB · 16 × 9`) checked in Chromium with local-only test authors.
 
