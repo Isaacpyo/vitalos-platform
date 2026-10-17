@@ -90,6 +90,7 @@ function mapMessage(row: Row): MessageRecord {
     ...r,
     confidence: numberOrNull(row.confidence),
     feedback: (row.feedback as -1 | 1 | null) ?? null,
+    feedbackReason: (row.feedback_reason as MessageRecord["feedbackReason"] | undefined) ?? null,
     meta: (row.meta as Record<string, unknown>) ?? {},
     citations: (row.citations as MessageRecord["citations"]) ?? [],
   };
@@ -478,6 +479,27 @@ export class SupabaseRelayStore implements RelayStore {
     }));
   }
 
+  private vocabulary: { at: number; words: ReadonlyMap<string, number> } | null = null;
+
+  /**
+   * `relay.kb_vocabulary()` (one jsonb object, so no row limit applies), cached for ten minutes
+   * per server instance. A missing function (migration not yet applied) or an error disables typo
+   * tolerance rather than failing the answer.
+   */
+  async kbVocabulary(): Promise<ReadonlyMap<string, number>> {
+    const now = Date.now();
+    if (this.vocabulary && now - this.vocabulary.at < 600_000) return this.vocabulary.words;
+    let words: ReadonlyMap<string, number> = new Map();
+    try {
+      const data = check(await this.db.rpc("kb_vocabulary")) as Record<string, number> | null;
+      words = new Map(Object.entries(data ?? {}).map(([w, n]) => [w, Number(n)]));
+    } catch {
+      words = new Map();
+    }
+    this.vocabulary = { at: now, words };
+    return words;
+  }
+
   async faqQuestionsForPage(pagePath: string, limit: number) {
     const rows = check(
       await this.db
@@ -767,6 +789,20 @@ export class SupabaseRelayStore implements RelayStore {
       tokensOut: Number(data.tokensOut),
       cacheHitTokens: Number(data.cacheHitTokens),
       estCostUsd: Number(data.estCostUsd),
+      // Added by 20261017090000_relay_review.sql; zero until that migration is applied.
+      turns: {
+        count: Number((data.turns as Row | undefined)?.count ?? 0),
+        tokensIn: Number((data.turns as Row | undefined)?.tokensIn ?? 0),
+        avgTokensIn: Math.round(Number((data.turns as Row | undefined)?.avgTokensIn ?? 0)),
+        maxTokensIn: Number((data.turns as Row | undefined)?.maxTokensIn ?? 0),
+      },
+      feedbackReasons: {
+        wrong: Number((data.feedbackReasons as Row | undefined)?.wrong ?? 0),
+        incomplete: Number((data.feedbackReasons as Row | undefined)?.incomplete ?? 0),
+        didnt_understand: Number(
+          (data.feedbackReasons as Row | undefined)?.didnt_understand ?? 0,
+        ),
+      },
     };
   }
 

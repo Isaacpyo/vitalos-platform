@@ -36,3 +36,21 @@ export function initialsOf(name: string): string {
 
 export const firstName = (name: string | null | undefined) =>
   (name ?? "").trim().split(/\s+/)[0] ?? "";
+
+export const STAFF_FALLBACK_NAME = "Vitalos team";
+
+/**
+ * The name a visitor sees for a staff member: the first name only ("Temitope Agbola" ->
+ * "Temitope"), never a username or an email address. Anything that looks like one (an "@", dots
+ * or underscores inside the word, digits) falls back to "Vitalos team" (finding D3, ADR-048).
+ */
+export function publicStaffName(name: string | null | undefined): string {
+  const first = firstName(name);
+  if (!first || first === "Vitalos") return STAFF_FALLBACK_NAME;
+  if (/[@._\d]/.test(first) || !/^[\p{L}][\p{L}'-]{0,39}$/u.test(first))
+    return STAFF_FALLBACK_NAME;
+  // A name typed in one case ("temitope", "TEMITOPE") is shown in normal case.
+  return first === first.toLowerCase() || first === first.toUpperCase()
+    ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()
+    : first;
+}

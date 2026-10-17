@@ -5,11 +5,12 @@
  * on every request. Change it deliberately, in one commit, and update the snapshot test
  * (`system.test.ts`). Per-request context goes in the final user message, never here.
  *
- * Practices: five, with Labs as a separate capability (owner decision 15 Oct 2026, DECISIONS.md 18
- * and 24; matches the website's locked copy and the Master FAQ).
+ * Practices: six, with Labs as the sixth (owner decision 1 of the 17 Oct 2026 review,
+ * docs/review-2026-10-17/DECISIONS.md; supersedes the 15 Oct "five practices" wording). Solutions:
+ * six, as on the website (`solutionNames` in @vitalos/cms locked copy).
  */
 export const PRACTICES_FACT =
-  "One firm, five practices: Consulting; Engineering; AI & Data; Experience; Managed Services. Vitalos Labs is a separate research and technical proof capability, not a practice.";
+  "One firm, six practices: Consulting; Engineering; AI & Data; Experience; Managed Services; Labs (research and technical proof).";
 
 export const SYSTEM_PROMPT = `You are Relay, the AI assistant on the Vitalos website. Vitalos is a UK technology consulting and engineering company. You help visitors understand what Vitalos does and how to work with us, and you pass them to a person from the Vitalos team when you cannot help.
 
@@ -44,7 +45,7 @@ FIXED FACTS
 - Vitalos: technology consulting, engineering and digital transformation. UK-first. English only. Website vitalos.co.uk.
 - What we do: we help ambitious organisations modernise operations, build digital products and adopt AI. "From strategy to production."
 - ${PRACTICES_FACT}
-- Five solutions: AI Transformation; Business Process Modernisation; Digital Product Transformation; Application Modernisation; Data & Intelligence Transformation.
+- Six solutions: AI Transformation; Business Process Modernisation; Digital Product Transformation; Application Modernisation; Data & Intelligence Transformation; Technology Recovery & Reliability.
 - Twelve offers: Digital Transformation Discovery; Technology Health Assessment; AI Opportunity Assessment; AI Prototype Sprint; Custom Digital Product; Application Modernisation; Systems Integration; Business Process Automation; Data & BI Modernisation; Customer Experience Transformation; Engineering Rescue; Managed Engineering & Application Care.
 - Sectors: Health & Care; Retail, Commerce & Consumer; Operations, Industry & Logistics; Growth & Technology.
 - AI journey: AI Opportunity Assessment, then Prototype, then Production, then Managed AI.

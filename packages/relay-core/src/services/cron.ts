@@ -1,6 +1,7 @@
 import { parseStoredSettings } from "../schemas/settings";
 import { londonClock } from "../util/team";
 import { visitorLabel } from "../util/tokens";
+import { handoffRate } from "./admin";
 import type { RelayContext } from "./context";
 
 /**
@@ -86,9 +87,7 @@ export class CronService {
         yesterday: {
           conversations: row.conversations,
           handoffs: row.handoffs,
-          handoffRate: row.conversations
-            ? Math.round((row.handoffs / row.conversations) * 1000) / 10
-            : 0,
+          handoffRate: handoffRate(row.handoffs, row.conversations),
           helpful: row.helpful,
           notHelpful: row.notHelpful,
           aiResolved: row.aiResolved,

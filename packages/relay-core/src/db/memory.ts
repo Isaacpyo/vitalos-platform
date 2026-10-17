@@ -1,4 +1,6 @@
 import type { ConversationStatus } from "../contract";
+import { buildVocabulary } from "../retrieval/spelling";
+import { FEEDBACK_REASONS } from "./types";
 import type {
   ConversationPatch,
   ConversationRecord,
@@ -263,6 +265,7 @@ export class MemoryRelayStore implements RelayStore {
       latencyMs: null,
       firstTokenMs: null,
       feedback: null,
+      feedbackReason: null,
       feedbackAt: null,
       clientMessageId: null,
       createdAt: this.now(),
@@ -512,6 +515,15 @@ export class MemoryRelayStore implements RelayStore {
       .sort((a, b) => b.rrfScore - a.rrfScore || a.chunkId.localeCompare(b.chunkId))
       .slice(0, params.matchCount);
     return Promise.resolve(out);
+  }
+
+  kbVocabulary(): Promise<ReadonlyMap<string, number>> {
+    const texts: string[] = [];
+    for (const c of this.chunks.values()) {
+      const d = this.documents.get(c.documentId);
+      if (d?.status === "published") texts.push(d.title, c.heading, c.content);
+    }
+    return Promise.resolve(buildVocabulary(texts));
   }
 
   faqQuestionsForPage(pagePath: string, limit: number) {
@@ -810,6 +822,25 @@ export class MemoryRelayStore implements RelayStore {
       tokensOut: usage.reduce((s, u) => s + u.tokensOut, 0),
       cacheHitTokens: usage.reduce((s, u) => s + u.cacheHitTokens, 0),
       estCostUsd: usage.reduce((s, u) => s + u.estCostUsd, 0),
+      turns: (() => {
+        const measured = msgs
+          .filter((m) => m.senderType === "ai" && typeof m.tokensIn === "number")
+          .map((m) => m.tokensIn as number);
+        const total = measured.reduce((s, n) => s + n, 0);
+        return {
+          count: measured.length,
+          tokensIn: total,
+          avgTokensIn: measured.length ? Math.round(total / measured.length) : 0,
+          maxTokensIn: measured.length ? Math.max(...measured) : 0,
+        };
+      })(),
+      feedbackReasons: Object.fromEntries(
+        FEEDBACK_REASONS.map((r) => [
+          r,
+          msgs.filter((m) => m.senderType === "ai" && m.feedback === -1 && m.feedbackReason === r)
+            .length,
+        ]),
+      ) as InsightsRow["feedbackReasons"],
     });
   }
 }

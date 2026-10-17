@@ -85,12 +85,20 @@ const archiveMissingFor: KbSource[] = [
   ...(faqMode === "snapshot" ? (["faq"] as const) : []),
 ];
 const started = Date.now();
+// One sync run per bundled source, so the admin knowledge page shows when it last ran (D4).
+const runs = await Promise.all((["cms", "repo"] as const).map((s) => store.startSyncRun(s, "full")));
 const result = await ingestEntries(store, embedder, entries, {
   archiveMissingFor,
   force: args.has("--force"),
   repairEmbeddings: true,
   updatedBy: "relay:ingest",
 });
+for (const run of runs)
+  await store.finishSyncRun({
+    ...run,
+    finishedAt: new Date().toISOString(),
+    errors: result.errors.filter((e) => e.startsWith(`${run.source}:`)).slice(0, 20),
+  });
 console.log(
   `ingest: ${result.added} added, ${result.updated} updated, ${result.unchanged} unchanged (${result.repaired} re-embedded), ${result.archived} archived; ` +
     `${result.chunks} chunks, ${result.embedded} embedded in ${((Date.now() - started) / 1000).toFixed(1)}s`,

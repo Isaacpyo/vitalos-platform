@@ -1,6 +1,7 @@
 import type {
   Citation,
   ConversationStatus,
+  FeedbackReason,
   HandoffTrigger,
   NextStep,
   SenderType,
@@ -89,10 +90,15 @@ export interface MessageRecord {
   latencyMs: number | null;
   firstTokenMs: number | null;
   feedback: -1 | 1 | null;
+  /** Why an answer was not helpful, chosen with one tap after thumbs-down (finding D6). */
+  feedbackReason: FeedbackReason | null;
   feedbackAt: string | null;
   clientMessageId: string | null;
   createdAt: string;
 }
+
+export { FEEDBACK_REASONS } from "../contract";
+export type { FeedbackReason } from "../contract";
 
 export interface StoredCitation extends Citation {
   documentId: string;
@@ -291,10 +297,15 @@ export interface InsightsRow {
   medianFirstReplySeconds: number | null;
   waitingNow: number;
   topQuestions: { question: string; count: number }[];
+  /** All model calls on these days (`relay.usage_daily`): answers, summaries, evals, deleted chats. */
   tokensIn: number;
   tokensOut: number;
   cacheHitTokens: number;
   estCostUsd: number;
+  /** Per-turn input tokens of AI answers stored in the window (`relay.messages.tokens_in`). */
+  turns: { count: number; tokensIn: number; avgTokensIn: number; maxTokensIn: number };
+  /** Thumbs-down reasons on AI answers in the window. */
+  feedbackReasons: Record<FeedbackReason, number>;
 }
 
 /**
@@ -355,6 +366,11 @@ export interface RelayStore {
   /** Source refs currently stored for a source (for archiving entries that disappeared). */
   listSourceRefs(source: KbSource): Promise<{ id: string; sourceRef: string; status: KbStatus }[]>;
   matchChunks(params: MatchParams): Promise<MatchedChunk[]>;
+  /**
+   * Words (lower case, three or more letters) of published chunks with their counts, for typo
+   * tolerance (`retrieval/spelling.ts`). Adapters may cache it for a few minutes.
+   */
+  kbVocabulary(): Promise<ReadonlyMap<string, number>>;
   /** Public FAQ questions placed on a page (START WITH). Published FAQ documents only. */
   faqQuestionsForPage(
     pagePath: string,
