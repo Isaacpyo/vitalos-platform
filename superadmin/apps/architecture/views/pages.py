@@ -2,8 +2,10 @@
 
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET, require_POST
@@ -16,7 +18,7 @@ from apps.accounts.roles import (
     role_label,
     role_required,
 )
-from apps.core import overview
+from apps.core import morning, overview
 from apps.core.htmx import changed_response
 from apps.enquiries.selectors import can_access as can_access_enquiries
 
@@ -33,6 +35,12 @@ TABS = [
 ]
 
 
+def _module_enabled() -> None:
+    """ARCHITECTURE_MODULE_ENABLED=false: the Service lines and Architecture pages answer 404."""
+    if not settings.ARCHITECTURE_MODULE_ENABLED:
+        raise Http404("The architecture module is switched off.")
+
+
 def _show_archived(request) -> bool:
     return request.GET.get("archived") == "1"
 
@@ -45,21 +53,21 @@ def _partial(request, target: str) -> bool:
 @role_required()
 @require_GET
 def home(request):
+    """The morning Overview: what needs doing today across every module (ADR-049)."""
     user = request.user
-    context = {
-        "service_lines": selectors.service_lines_for_home(user),
-        "recent_activity": activity.feed(user, limit=8),
-        "show_enquiry_kpis": can_access_enquiries(user),
-    }
+    context = morning.build(user)
+    context["recent_activity"] = activity.feed(user, limit=8)
+    context["show_enquiry_kpis"] = can_access_enquiries(user)
     if context["show_enquiry_kpis"]:
         context["kpis"] = overview.enquiry_kpis()
-        context["attention_count"] = len(overview.needs_attention())
+        context["attention_count"] = len(context["attention"])
     return render(request, "architecture/home.html", context)
 
 
 @role_required()
 @require_GET
 def service_lines(request):
+    _module_enabled()
     context = {"service_lines": selectors.service_lines_for_home(request.user)}
     return render(request, "architecture/service_lines.html", context)
 
@@ -130,6 +138,7 @@ TAB_BUILDERS = {
 @role_required()
 @require_GET
 def service_dashboard(request, slug):
+    _module_enabled()
     user = request.user
     line = get_object_or_404(visible(ServiceLine.objects.select_related("owner"), user), slug=slug)
     tab = request.GET.get("tab", "overview")
@@ -157,6 +166,7 @@ def service_dashboard(request, slug):
 @role_required()
 @require_GET
 def architecture(request):
+    _module_enabled()
     user = request.user
     archived = _show_archived(request)
     lines = visible(ServiceLine.objects.select_related("owner"), user)
@@ -253,9 +263,7 @@ def team_overview(request):
     """
     user = request.user
     archived = _show_archived(request)
-    members = (
-        visible(TeamMember.objects.all(), user).prefetch_related("service_lines").select_related("user")
-    )
+    members = visible(TeamMember.objects.all(), user).prefetch_related("service_lines").select_related("user")
     if not archived:
         members = members.filter(is_archived=False)
     members = list(members)

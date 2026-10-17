@@ -146,6 +146,8 @@ class Offering(AutoSlugMixin, GovernedModel):
     status = models.CharField(max_length=16, choices=OfferingStatus.choices, default=OfferingStatus.DRAFT)
     maturity = models.CharField(max_length=16, choices=Maturity.choices, default=Maturity.EMERGING)
     order = models.PositiveIntegerField(default=0)
+    # The page on the public website, filled by ``sync_architecture_from_web`` (ADR-049).
+    public_url = models.URLField(max_length=300, blank=True)
 
     class Meta:
         abstract = True
