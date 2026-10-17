@@ -1,4 +1,7 @@
-import { NotFoundContent } from "../src/components/site-chrome/NotFoundContent";
+import { NotFoundContent, notFoundMetadata } from "../src/components/site-chrome/NotFoundContent";
+
+/** "Page not found | Vitalos" (finding B12). */
+export const metadata = notFoundMetadata;
 import { SiteShell } from "../src/components/site-chrome/SiteShell";
 
 /**

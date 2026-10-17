@@ -9,6 +9,7 @@ import {
   COMMERCIAL_ROUTES_FULL,
   internalLinks,
 } from "./commercial.support";
+import { CURRENT_NAV_ONLY, isIaRun } from "../support/nav-variant";
 
 /**
  * Commercial templates and site shell (workstream G2a), against the `full` fixture set: every
@@ -156,6 +157,7 @@ test.describe("site shell", () => {
   test("desktop header shows the three menus and the CTA, and no Trust Centre", async ({
     page,
   }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
@@ -178,6 +180,7 @@ test.describe("site shell", () => {
   });
 
   test("Who We Are and Support open their panels", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
@@ -204,6 +207,7 @@ test.describe("site shell", () => {
   test("the What We Do mega-menu opens from its own button and closes with Escape", async ({
     page,
   }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(!isDesktop(page), "the compact viewport uses the mobile navigation");
     await page.goto("/");
@@ -242,6 +246,7 @@ test.describe("site shell", () => {
   test("the compact viewport exposes the same menus, the social profiles and the CTA", async ({
     page,
   }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(isDraftRun, FIXTURE_SPECIFIC);
     test.skip(isDesktop(page), "the desktop header shows the navigation directly");
     await page.goto("/");
@@ -276,7 +281,8 @@ test.describe("site shell", () => {
       await expect(footer.locator("details[open]")).toHaveCount(0);
       for (const heading of await footer.locator("summary").all()) await heading.click();
     }
-    for (const label of ["Industries", "Work", "Labs", "FAQ"]) {
+    // Labs is listed once, as the sixth practice "Vitalos Labs" (owner decision 1, ADR-045).
+    for (const label of ["Industries", "Work", "Vitalos Labs", "FAQ"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
     // Insights and Careers are opened in the Super Admin (ADR-039); closed with no content API.

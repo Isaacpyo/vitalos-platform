@@ -1,5 +1,5 @@
 /**
- * Orders items by a locked list of names (for example the five practices in the order the specs
+ * Orders items by a locked list of names (for example the five practice pages in the order the specs
  * give them). The content sources sort by title, which is alphabetical, so the order the specs
  * fix is applied here.
  *

@@ -12,6 +12,8 @@ import {
   industryNames,
   offerNames,
   practiceDisplayName,
+  firmPracticeNames,
+  labsPracticeName,
   practiceNames,
   priorityOfferNames,
   proposition,
@@ -30,10 +32,22 @@ describe("locked copy (verbatim from the specs)", () => {
     expect(ctas).toEqual({ primary: "Talk to Vitalos", secondary: "Explore what we do" });
   });
 
-  it("has five practices and does not treat Labs as one", () => {
+  it("has six practices: five practice pages, then Labs at /labs (owner decision 1, 17 Oct 2026)", () => {
+    expect(firmPracticeNames).toHaveLength(6);
+    expect(firmPracticeNames[5]).toBe(labsPracticeName);
+    expect(labsPracticeName).toBe("Labs");
+    // The five with a page under /what-we-do; Labs lives at /labs.
     expect(practiceNames).toHaveLength(5);
     expect(practiceNames as readonly string[]).not.toContain("Labs");
     expect(practiceDisplayName("AI & Data")).toBe("Vitalos AI & Data");
+    expect(practiceDisplayName("Labs")).toBe("Vitalos Labs");
+  });
+
+  it("never counts five practices in a heading", () => {
+    const practices = homeSections.find((section) => section.key === "practices");
+    expect(practices && "visibleHeading" in practices ? practices.visibleHeading : "").toBe(
+      "Six practices, one firm",
+    );
   });
 
   it("has the six solutions, thirteen offers (six priority) and four industries", () => {

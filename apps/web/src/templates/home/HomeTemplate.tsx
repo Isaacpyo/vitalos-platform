@@ -1,6 +1,7 @@
 import type { HomePageView, PublicationGates } from "@vitalos/cms";
 import type { HomeData } from "../../features/content/schemas";
 import type { DerivedStage } from "../../lib/view-mapping/stages";
+import type { ProofApproachItem } from "../../lib/view-mapping/proof-approach";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { renderBands } from "../commercial/bands";
 import { HeroSection, finalConversionSection, homeBands } from "./sections";
@@ -14,6 +15,10 @@ export interface HomeTemplateProps {
   howWeWorkStages?: readonly DerivedStage[] | undefined;
   /** The admin's Insights and Careers sections; null leaves both out. */
   content?: HomeData | null | undefined;
+  /** Intro of the Labs route page (the line of Vitalos Labs, the sixth practice). */
+  labsIntro?: string | undefined;
+  /** "How we prove it" items (finding B3). */
+  proof?: readonly ProofApproachItem[] | undefined;
 }
 
 /**
@@ -27,8 +32,12 @@ export function HomeTemplate({
   howWeWorkIntro,
   howWeWorkStages,
   content,
+  labsIntro,
+  proof,
 }: Readonly<HomeTemplateProps>) {
-  const context = home ? { home, gates, howWeWorkIntro, howWeWorkStages, content } : null;
+  const context = home
+    ? { home, gates, howWeWorkIntro, howWeWorkStages, content, labsIntro, proof }
+    : null;
   return (
     <PageMain>
       <HeroSection />

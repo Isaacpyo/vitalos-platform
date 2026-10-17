@@ -12,7 +12,7 @@
 import { trustTopicLabels } from "../../locked-copy";
 import type { TrustTopicView } from "../../content/types";
 import type { TrustTopic } from "../../routes";
-import { h2, p, richText, seo, ul } from "../build";
+import { h2, p, pLink, richText, seo, ul } from "../build";
 import { cite, drafted } from "../provenance";
 import type { DraftProvenance } from "../provenance";
 import { DRAFTED_ON, draftId } from "../slugs";
@@ -101,6 +101,8 @@ export const trustDrafts: readonly TrustDraft[] = [
       h2("Reporting a security concern"),
       // Owner direction, 15 Oct 2026: support@ is the security contact (no security@ mailbox).
       p("Security contact: support@vitalos.co.uk."),
+      // RFC 9116 file (finding B8, 17 Oct 2026): the same contact, machine-readable.
+      pLink("The same contact is published in ", "security.txt", "/.well-known/security.txt", "."),
     ),
     [
       cite(6, "8. Security & privacy readiness"),

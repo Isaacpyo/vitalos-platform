@@ -12,6 +12,7 @@ import { deriveStages } from "../../src/lib/view-mapping/stages";
 import { loadRoutePage } from "../../src/templates/commercial/load";
 import { HomeTemplate } from "../../src/templates/home/HomeTemplate";
 import { loadHomeSections } from "../../src/features/content/home";
+import { loadProofApproach } from "../../src/templates/commercial/proof-load";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [source, { settings }] = await Promise.all([getContentSource(), loadChromeContent()]);
@@ -27,11 +28,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const source = await getContentSource();
-  const [home, { gates, settings }, howWeWork, content] = await Promise.all([
+  const [home, { gates, settings }, howWeWork, content, labs, proof] = await Promise.all([
     source.getHomePage(),
     loadChromeContent(),
     loadRoutePage("how-we-work"),
     loadHomeSections(),
+    loadRoutePage("labs"),
+    loadProofApproach(),
   ]);
   const ctx = { siteUrl: getSeoContext().siteUrl };
   return (
@@ -51,6 +54,8 @@ export default async function HomePage() {
         howWeWorkIntro={howWeWork?.intro}
         howWeWorkStages={deriveStages(howWeWork?.body, howWeWorkStages).stages}
         content={content}
+        labsIntro={labs?.intro}
+        proof={proof}
       />
     </>
   );

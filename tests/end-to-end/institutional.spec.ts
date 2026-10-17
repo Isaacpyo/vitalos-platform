@@ -67,7 +67,19 @@ test.describe("about and the removed leadership page", () => {
     await page.goto("/about");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("About (fixture)");
     await expect(page.locator("main #leadership")).toHaveCount(0);
-    await expect(page.locator("main").getByRole("link", { name: "Trust Centre" })).toBeVisible();
+    await expect(
+      page.locator("main").getByRole("link", { name: "Trust Centre" }).first(),
+    ).toBeVisible();
+    // Six practices with Vitalos Labs last, How we prove it and the company facts (finding B4).
+    const main = page.locator("main");
+    await expect(main.getByRole("link", { name: /Vitalos Labs/ }).first()).toHaveAttribute(
+      "href",
+      "/labs",
+    );
+    // "How we prove it" quotes the repo pages' own text, which the fixtures do not carry; the
+    // unit tests (content-ia.test.ts) cover it against the repo content.
+    await expect(main.getByRole("heading", { name: "Company facts" })).toBeVisible();
+    await expect(main.getByText(/High Street|DN5/)).toHaveCount(0);
     // Careers follows the Super Admin's `careers_open` (ADR-039): closed with no content API.
     await expect(page.locator("main").getByRole("link", { name: "Careers" })).toHaveCount(0);
   });
@@ -90,6 +102,27 @@ test.describe("faq", () => {
     await main.getByText("Example question (fixture)?").first().click();
     await expect(main.getByText("Example answer (fixture).").first()).toBeVisible();
     await expect(main.locator('a[href^="/solutions/"]').first()).toBeVisible();
+  });
+
+  test("has FAQPage structured data, stable anchors that open, and a filter (finding B10)", async ({
+    page,
+  }) => {
+    test.skip(isDraftRun, FIXTURE_SPECIFIC);
+    await page.goto("/faq");
+    expect(await jsonLdTypes(page)).toContain("FAQPage");
+    const first = page.locator("main details[data-faq-entry]").first();
+    const id = await first.getAttribute("id");
+    expect(id).toMatch(/^[a-z0-9-]+--[a-z0-9-]+$/);
+    await page.goto(`/faq#${id}`);
+    await expect(page.locator(`details#${id}`)).toHaveJSProperty("open", true);
+    const filter = page.getByRole("searchbox", { name: "Filter questions" });
+    await filter.fill("zzzz-no-such-question");
+    await expect(page.getByRole("status").filter({ hasText: "No questions match" })).toBeVisible();
+    await expect(page.locator("main details[data-faq-entry]:visible")).toHaveCount(0);
+    await filter.fill("");
+    await expect(page.locator("main details[data-faq-entry]:visible").first()).toBeVisible();
+    await expect(page.locator('main a[href^="/contact?intent="]').first()).toBeVisible();
+    await expectNoA11yViolations(page);
   });
 });
 

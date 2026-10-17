@@ -4,6 +4,7 @@ import type { LabAssetSummary, OfferSummary, PracticeSummary, SolutionSummary } 
 import {
   buildFooterModel,
   buildHeaderModel,
+  buildIaWhatWeDoColumns,
   buildWhatWeDoColumns,
   buildWhoWeAreColumns,
   colourLogo,
@@ -226,6 +227,134 @@ describe("What We Do mega-menu", () => {
   });
 });
 
+describe("six practices (owner decision 1, 17 Oct 2026)", () => {
+  const practices = [
+    summary("consulting", "Vitalos Consulting"),
+    summary("engineering", "Vitalos Engineering"),
+    summary("ai-data", "Vitalos AI & Data"),
+    summary("experience", "Vitalos Experience"),
+    summary("managed-services", "Vitalos Managed Services"),
+  ];
+
+  it("lists Vitalos Labs as the sixth practice in the menu and the footer, linking to /labs", () => {
+    const content = { ...base, practices, gates: evaluateGates({ labs: 1 }) };
+    const menu = buildWhatWeDoColumns(content).find((c) => c.key === "practices");
+    expect(menu?.links).toHaveLength(6);
+    expect(menu?.links[5]).toEqual({ label: "Vitalos Labs", href: "/labs", icon: "flask" });
+    const footer = buildFooterModel(content).columns.find((c) => c.key === "what-we-do");
+    expect(footer?.links.map((l) => l.label)).toEqual([
+      "Vitalos Consulting",
+      "Vitalos Engineering",
+      "Vitalos AI & Data",
+      "Vitalos Experience",
+      "Vitalos Managed Services",
+      "Vitalos Labs",
+    ]);
+    // Labs is listed once in the footer, as a practice, not again under Explore.
+    const all = buildFooterModel(content).columns.flatMap((c) => c.links.map((l) => l.href));
+    expect(all.filter((href) => href === "/labs")).toHaveLength(1);
+  });
+
+  it("leaves Labs out while its gate is closed, so nothing links to a 404", () => {
+    const menu = buildWhatWeDoColumns({ ...base, practices }).find((c) => c.key === "practices");
+    expect(menu?.links.map((l) => l.href)).not.toContain("/labs");
+  });
+});
+
+describe("header model, ia variant (ADR-045)", () => {
+  const open = evaluateGates({ industries: 1, labs: 1 });
+  const content: ChromeContent = {
+    ...base,
+    navVariant: "ia",
+    gates: open,
+    practices: [summary("consulting", "Vitalos Consulting")],
+    solutions: [summary("ai-transformation", "AI Transformation")],
+    offers: [
+      offer("ai-opportunity-assessment", "AI Opportunity Assessment"),
+      offer("systems-integration", "Systems Integration"),
+    ],
+    industries: [summary("health-care", "Health & Care")],
+    labAssets: [lab("a", "research")],
+  };
+
+  it("shows What We Do, Industries, Labs (in the Work slot) and About while Work and Insights are closed", () => {
+    const header = buildHeaderModel(content);
+    expect(header.navVariant).toBe("ia");
+    expect(header.items.map((i) => [i.key, i.label, i.href])).toEqual([
+      ["what-we-do", "What We Do", "/what-we-do"],
+      ["industries", "Industries", "/industries"],
+      ["labs", "Labs", "/labs"],
+      ["about", "About", "/about"],
+    ]);
+    // Never a link to the closed Work section, and Labs only once.
+    expect(header.items.map((i) => i.href)).not.toContain("/work");
+  });
+
+  it("shows Work and Insights once their gates open, and Labs after them", () => {
+    const all = evaluateGates({ industries: 1, work: 2, insights: 6, labs: 1 });
+    const header = buildHeaderModel({ ...content, gates: all });
+    expect(header.items.map((i) => i.key)).toEqual([
+      "what-we-do",
+      "industries",
+      "work",
+      "insights",
+      "labs",
+      "about",
+    ]);
+  });
+
+  it("drops Industries and Labs while their gates are closed", () => {
+    const header = buildHeaderModel({ ...content, gates: closedGates });
+    expect(header.items.map((i) => i.key)).toEqual(["what-we-do", "about"]);
+  });
+
+  it("has the Trust Centre and Contact as utility links and the same primary action", () => {
+    const header = buildHeaderModel(content);
+    expect(header.utility).toEqual([
+      { key: "trust", label: "Trust Centre", href: "/trust" },
+      { key: "contact", label: "Contact", href: "/contact" },
+    ]);
+    expect(header.cta).toEqual({ label: "Talk to Vitalos", href: "/contact" });
+  });
+
+  it("opens a What We Do mega-menu with Practices, Solutions, Offers, Industries and Labs", () => {
+    const columns = buildIaWhatWeDoColumns(content);
+    expect(columns.map((c) => c.key)).toEqual([
+      "practices",
+      "solutions",
+      "offers",
+      "industries",
+      "labs",
+    ]);
+    const offers = columns.find((c) => c.key === "offers");
+    // Priority offers only, closed by the offers index.
+    expect(offers?.links.map((l) => l.label)).toEqual(["AI Opportunity Assessment"]);
+    expect(offers?.more).toEqual({ label: "All offers", href: "/offers" });
+    // Without any priority offer published, the first offers in locked order stand in.
+    const fallback = buildIaWhatWeDoColumns({
+      ...content,
+      offers: [offer("systems-integration", "Systems Integration")],
+    }).find((c) => c.key === "offers");
+    expect(fallback?.links.map((l) => l.label)).toEqual(["Systems Integration"]);
+    const header = buildHeaderModel(content);
+    expect(header.items[0]?.menu?.columns).toEqual(columns);
+    expect(header.items[0]?.menu?.feature).toBeUndefined();
+    // Only What We Do has a menu.
+    expect(header.items.slice(1).every((item) => item.menu === undefined)).toBe(true);
+  });
+
+  it("leaves the current variant unchanged when the variant is omitted or current", () => {
+    const withoutVariant: ChromeContent = { ...content };
+    delete withoutVariant.navVariant;
+    const omitted = buildHeaderModel(withoutVariant);
+    const current = buildHeaderModel({ ...content, navVariant: "current" });
+    expect(current).toEqual(omitted);
+    expect(current.navVariant).toBe("current");
+    expect(current.items.map((i) => i.key)).toEqual(["what-we-do", "who-we-are", "support"]);
+    expect(current.utility).toBeUndefined();
+  });
+});
+
 describe("footer model", () => {
   it("has no gated link and no empty column while everything is closed and empty", () => {
     const { columns, legalIdentity } = buildFooterModel(base);
@@ -298,10 +427,22 @@ describe("footer model", () => {
     ]);
   });
 
+  it("has no podcast block while PODCAST_ENABLED is off, even with valid URLs (decision 3)", () => {
+    const urls = {
+      spotifyUrl: "https://open.spotify.com/show/example-fixture",
+      appleUrl: "https://podcasts.apple.com/gb/podcast/example-fixture",
+    };
+    expect(buildFooterModel({ ...base, settings: { podcast: urls } }).podcast).toBeUndefined();
+    expect(
+      buildFooterModel({ ...base, podcastEnabled: false, settings: { podcast: urls } }).podcast,
+    ).toBeUndefined();
+  });
+
   it("has no podcast block without valid URLs, and drops invalid ones", () => {
-    expect(buildFooterModel(base).podcast).toBeUndefined();
+    expect(buildFooterModel({ ...base, podcastEnabled: true }).podcast).toBeUndefined();
     const invalid = buildFooterModel({
       ...base,
+      podcastEnabled: true,
       settings: {
         podcast: {
           spotifyUrl: "https://example.invalid/show",
@@ -315,6 +456,7 @@ describe("footer model", () => {
   it("renders each podcast link only when its URL is set", () => {
     const spotifyOnly = buildFooterModel({
       ...base,
+      podcastEnabled: true,
       settings: { podcast: { spotifyUrl: "https://open.spotify.com/show/example-fixture" } },
     }).podcast;
     expect(spotifyOnly?.heading).toBe("Podcast");
@@ -329,6 +471,7 @@ describe("footer model", () => {
     ]);
     const both = buildFooterModel({
       ...base,
+      podcastEnabled: true,
       settings: {
         podcast: {
           spotifyUrl: "https://open.spotify.com/show/example-fixture",
@@ -374,6 +517,23 @@ describe("activeSectionForPath", () => {
     expect(activeSectionForPath("/worksheets")).toBeUndefined();
     expect(activeSectionForPath("/what-we-do/")).toBe("what-we-do");
     expect(activeSectionForPath(null)).toBeUndefined();
+  });
+});
+
+describe("activeSectionForPath, ia variant", () => {
+  it("marks each top-level IA item", () => {
+    expect(activeSectionForPath("/solutions/x", "ia")).toBe("what-we-do");
+    expect(activeSectionForPath("/offers", "ia")).toBe("what-we-do");
+    expect(activeSectionForPath("/industries/health-care", "ia")).toBe("industries");
+    expect(activeSectionForPath("/labs/research/x", "ia")).toBe("labs");
+    expect(activeSectionForPath("/insights", "ia")).toBe("insights");
+    expect(activeSectionForPath("/how-we-work", "ia")).toBe("about");
+    expect(activeSectionForPath("/contact", "ia")).toBeUndefined();
+  });
+
+  it("defaults to the current variant", () => {
+    expect(activeSectionForPath("/labs")).toBe("what-we-do");
+    expect(activeSectionForPath("/contact")).toBe("support");
   });
 });
 

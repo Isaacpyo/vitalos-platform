@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { FIXTURE_SPECIFIC, isDraftRun } from "../support/content-source";
 import type { Page, TestInfo } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
+import { CURRENT_NAV_ONLY, isIaRun } from "../support/nav-variant";
 
 /**
  * Visitor journeys (Stage 10 §26), clicked through like a person would: no direct URL jumps
@@ -151,6 +152,7 @@ test.describe("gated sections are reachable while their gates are open", () => {
   test("the header leads to Work, Labs and Industries, each with its own heading", async ({
     page,
   }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     for (const [menu, label, path] of [
       ["Who We Are", "Work", /\/work$/],
       ["What We Do", "Labs", /\/labs$/],
@@ -212,6 +214,7 @@ test.describe("compact navigation", () => {
   });
 
   test("following a menu link lands on that page with the menu closed", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(!isCompact(page), "the desktop header shows the navigation directly");
     await page.goto("/");
     await clickMenuLink(page, "Who We Are", "About");
@@ -228,6 +231,7 @@ test.describe("desktop mega-menu", () => {
     page.getByRole("navigation", { name: "Primary" }).getByRole("button", { name: /What We Do/ });
 
   test("opens and closes from the keyboard and keeps a sensible tab order", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(isCompact(page), "the compact viewport uses the Menu disclosure");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });

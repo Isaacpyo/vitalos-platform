@@ -19,10 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function WhatWeDoPage() {
-  const [page, content, howWeWork] = await Promise.all([
+  const [page, content, howWeWork, labs] = await Promise.all([
     loadRoutePage("what-we-do"),
     loadChromeContent(),
     loadRoutePage("how-we-work"),
+    loadRoutePage("labs"),
   ]);
   const { practices, solutions, offers } = content;
   // Nothing to show: no introduction and no documents. A page of only a heading would be a
@@ -44,6 +45,8 @@ export default async function WhatWeDoPage() {
         practices={practices}
         solutions={solutions}
         offers={offers}
+        gates={content.gates}
+        labsIntro={labs?.intro}
         howWeWorkIntro={howWeWork?.intro}
         {...(howWeWork
           ? {

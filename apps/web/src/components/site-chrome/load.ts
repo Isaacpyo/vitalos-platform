@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import type { PublicationGates } from "@vitalos/cms";
+import { getEnv } from "@vitalos/config";
 import { getSiteStateOrClosed } from "../../features/content/site-state";
 import { getContentSource } from "../../lib/cms/get-content-source";
 import { buildFooterModel, buildHeaderModel } from "./nav-model";
@@ -44,6 +45,9 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
     labAssets,
     trustTopics,
     legalPages,
+    // Presentation flags (ADR-045): the header variant and the podcast footer block.
+    navVariant: getEnv().site.navVariant,
+    podcastEnabled: getEnv().site.podcastEnabled,
   };
 });
 

@@ -85,7 +85,7 @@ test.describe("draft content source", () => {
     for (const heading of [
       "Problems we solve",
       "From strategy to production",
-      "Five practices, one firm",
+      "Six practices, one firm",
       "Industries",
       "Vitalos Labs",
       "Have a problem worth solving?",

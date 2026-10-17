@@ -1,9 +1,10 @@
-import { howWeWorkStages } from "@vitalos/cms";
+import { howWeWorkStages, labsPracticeName, practiceDisplayName, routes } from "@vitalos/cms";
 import type {
   IndustrySummary,
   LabAssetSummary,
   OfferSummary,
   PracticeSummary,
+  PublicationGates,
   SolutionSummary,
 } from "@vitalos/cms";
 import type {
@@ -21,6 +22,7 @@ import { labAssetPresentation, toOfferRows, toRow, toRows, toSolutionCard } from
 import { practiceArtworkFor } from "./practice-artwork";
 import { solutionDiagramFor } from "./solution-diagrams";
 import { stageIconFor } from "./stage-icons";
+import { firstSentence } from "./text";
 import type { DerivedStage } from "./stages";
 
 /**
@@ -42,6 +44,39 @@ export function practiceShowcaseItems(
       art: practiceArtworkFor(row.title),
     };
   });
+}
+
+/**
+ * Vitalos Labs as the sixth practice (owner decision 1, 17 Oct 2026), for the practice showcases.
+ * Its page is the Labs index, so it appears only while the Labs gate is open; its line is the
+ * first sentence of the Labs page introduction (repo copy). Its artwork is the Labs family
+ * (`practiceArtworkFor`, ADR-044).
+ */
+export function labsPracticeItem(
+  gates: PublicationGates,
+  labsIntro: string | undefined,
+): PracticeShowcaseItem | null {
+  if (!gates.open.labs) return null;
+  const title = practiceDisplayName(labsPracticeName);
+  const summary = firstSentence(labsIntro);
+  return {
+    title,
+    href: routes.labs(),
+    ...(summary ? { summary } : {}),
+    icon: iconFor("lab", title),
+    art: practiceArtworkFor(title),
+  };
+}
+
+/** The six practices for a showcase: the five practice pages, then Vitalos Labs when public. */
+export function sixPracticeShowcaseItems(
+  practices: readonly PracticeSummary[],
+  labs: { gates: PublicationGates; intro: string | undefined },
+  options: MapOptions = {},
+): PracticeShowcaseItem[] {
+  const items = practiceShowcaseItems(practices, options);
+  const labsItem = items.length > 0 ? labsPracticeItem(labs.gates, labs.intro) : null;
+  return labsItem ? [...items, labsItem] : items;
 }
 
 export function solutionShowcaseItems(

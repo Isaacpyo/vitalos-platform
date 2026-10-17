@@ -257,9 +257,10 @@ function MobileNavInner({
         <m.nav
           key={openings}
           aria-label={ariaLabel}
-          initial={animate ? { y: -16, clipPath: "inset(0 0 100% 0)" } : false}
-          animate={{ y: 0, clipPath: "inset(0 0 0% 0)" }}
-          transition={{ y: sheetSpring, clipPath: { duration: 0.2, ease: [0.2, 0, 0, 1] } }}
+          // Moves into place only: no clip-path, so no menu row is ever cut off mid-entrance (A9).
+          initial={animate ? { y: -16 } : false}
+          animate={{ y: 0 }}
+          transition={{ y: sheetSpring }}
           className={cx(
             "absolute inset-x-0 top-full overflow-y-auto overscroll-contain border-y border-tone-border bg-tone-bg shadow-floating",
             "h-[calc(100dvh-var(--header-h,var(--size-header)))] px-(--gutter) pt-(--space-4) pb-(--space-8)",

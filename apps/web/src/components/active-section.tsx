@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { SiteHeader } from "@vitalos/ui";
 import type { SiteHeaderProps } from "@vitalos/ui";
+import type { NavVariant } from "@vitalos/config";
 import { heroToneForPath } from "../lib/view-mapping/hero-artwork";
 import { activeSectionForPath } from "./site-chrome/section-for-path";
 
@@ -17,11 +18,12 @@ import { activeSectionForPath } from "./site-chrome/section-for-path";
  * redesign, 15 Oct 2026). Reading pages have the light compact hero instead and a solid bar
  * (`heroToneForPath`, ADR-044).
  */
-export function ActiveSectionHeader(
-  props: Readonly<Omit<SiteHeaderProps, "activeSection" | "overlay">>,
-) {
+export function ActiveSectionHeader({
+  navVariant = "current",
+  ...props
+}: Readonly<Omit<SiteHeaderProps, "activeSection" | "overlay"> & { navVariant?: NavVariant }>) {
   const pathname = usePathname();
-  const activeSection = activeSectionForPath(pathname);
+  const activeSection = activeSectionForPath(pathname, navVariant);
   const overlay = heroToneForPath(pathname) === "dark";
   return <SiteHeader {...props} {...(activeSection ? { activeSection } : {})} overlay={overlay} />;
 }

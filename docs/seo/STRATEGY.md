@@ -90,6 +90,6 @@ Home ─┬─ What We Do (hub of hubs) ─┬─ Practice ↔ Solution ↔ Offe
 ## 7. Proposed LinkedIn wording (for the owner; not published)
 
 > **Vitalos** — Technology Consulting, Engineering & Digital Transformation.
-> We help ambitious organisations modernise operations, build digital products and adopt AI. Five practices (Consulting, Engineering, AI & Data, Experience and Managed Services) share one delivery lifecycle, from strategy to production. UK first, international by design. vitalos.co.uk
+> We help ambitious organisations modernise operations, build digital products and adopt AI. Six practices (Consulting, Engineering, AI & Data, Experience, Managed Services and Labs) share one delivery lifecycle, from strategy to production. UK first, international by design. vitalos.co.uk
 
 Every sentence above already appears in approved site copy.
