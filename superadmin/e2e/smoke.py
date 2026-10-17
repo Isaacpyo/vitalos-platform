@@ -115,6 +115,10 @@ class Smoke:
         )
 
     def homepage(self) -> None:
+        # The Overview is the morning screen; the service-line cards live on their own page (ADR-049).
+        expect(self.page.get_by_test_id("overview-sections")).to_be_visible()
+        self.shot("03-homepage")
+        self.page.goto(self.url("/service-lines/"))
         cards = self.page.get_by_test_id("service-line-card")
         expect(cards).to_have_count(6)
         names = [cards.nth(i).locator("h3").inner_text() for i in range(6)]
@@ -126,8 +130,8 @@ class Smoke:
             "Vitalos Managed Services",
             "Vitalos Labs",
         ]
-        self.check("homepage shows the six service lines in order", names == expected, ", ".join(names))
-        self.shot("03-homepage")
+        self.check("service lines page shows the six lines in order", names == expected, ", ".join(names))
+        self.shot("03-service-lines")
 
     def dashboards(self) -> None:
         for index, slug in enumerate(SLUGS):
