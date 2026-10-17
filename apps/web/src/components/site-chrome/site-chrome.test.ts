@@ -330,6 +330,12 @@ describe("header model, ia variant (ADR-045)", () => {
     // Priority offers only, closed by the offers index.
     expect(offers?.links.map((l) => l.label)).toEqual(["AI Opportunity Assessment"]);
     expect(offers?.more).toEqual({ label: "All offers", href: "/offers" });
+    // Without any priority offer published, the first offers in locked order stand in.
+    const fallback = buildIaWhatWeDoColumns({
+      ...content,
+      offers: [offer("systems-integration", "Systems Integration")],
+    }).find((c) => c.key === "offers");
+    expect(fallback?.links.map((l) => l.label)).toEqual(["Systems Integration"]);
     const header = buildHeaderModel(content);
     expect(header.items[0]?.menu?.columns).toEqual(columns);
     expect(header.items[0]?.menu?.feature).toBeUndefined();

@@ -335,10 +335,13 @@ export function buildSupportColumns(content: ChromeContent): MegaMenuColumn[] {
 export function buildIaWhatWeDoColumns(content: ChromeContent): MegaMenuColumn[] {
   const current = buildWhatWeDoColumns(content);
   const column = (key: string) => current.find((entry) => entry.key === key);
+  // The priority offers (Stage 10 §12); when none of the published offers is one of them, the
+  // first six offers in locked order, so the column never disappears while offers exist.
   const priority = new Set<string>(priorityOfferNames);
-  const offers = summaryLinks(
-    orderByLockedNames(content.offers, offerNames).filter((offer) => priority.has(offer.title)),
-    (item) => hrefForSummary("offer", item),
+  const ordered = orderByLockedNames(content.offers, offerNames);
+  const picked = ordered.filter((offer) => priority.has(offer.title));
+  const offers = summaryLinks(picked.length > 0 ? picked : ordered.slice(0, 6), (item) =>
+    hrefForSummary("offer", item),
   );
   const industries = buildWhoWeAreColumns(content).find((entry) => entry.key === "industries");
   const columns: (MegaMenuColumn | undefined)[] = [

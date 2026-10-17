@@ -255,6 +255,7 @@ test.describe("compact menu sheet", () => {
   });
 
   test("on a tablet the sheet has two columns with the section groups open", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     await page.setViewportSize({ width: 834, height: 1112 });
     await page.goto("/");
     const nav = page.getByRole("banner").getByRole("navigation", { name: "Primary" });

@@ -231,6 +231,7 @@ test.describe("desktop mega-menu", () => {
     page.getByRole("navigation", { name: "Primary" }).getByRole("button", { name: /What We Do/ });
 
   test("opens and closes from the keyboard and keeps a sensible tab order", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     test.skip(isCompact(page), "the compact viewport uses the Menu disclosure");
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
