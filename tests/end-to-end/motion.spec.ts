@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { isDraftRun } from "../support/content-source";
 import type { Page } from "@playwright/test";
 import { waitForSettledLayout } from "../support/overflow";
+import { CURRENT_NAV_ONLY, isIaRun } from "../support/nav-variant";
 
 /**
  * Motion and navigation enhancements (ADR-024), in a real browser against the production build.
@@ -289,6 +290,7 @@ test.describe("header", () => {
   }
 
   test("at 1024px the bar has the three menus and no Trust Centre", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("/");
     const banner = page.getByRole("banner");

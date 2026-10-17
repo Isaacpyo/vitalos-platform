@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { expectNoHorizontalOverflowAt320 } from "../support/overflow";
 import { COMMERCIAL_ROUTES_SPARSE, internalLinks } from "./commercial.support";
+import { CURRENT_NAV_ONLY, isIaRun } from "../support/nav-variant";
 
 /**
  * Commercial templates below every publication gate (workstream G2a), against the `sparse`
@@ -28,6 +29,7 @@ async function hrefsOf(page: Page, route: string) {
 
 test.describe("shell with every gate closed", () => {
   test("the header shows the three menus and no gated section", async ({ page }) => {
+    test.skip(isIaRun, CURRENT_NAV_ONLY);
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
     for (const label of ["What We Do", "Who We Are", "Support"]) {
