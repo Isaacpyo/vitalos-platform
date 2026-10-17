@@ -5,9 +5,18 @@ before anything is written, and a single problem fails the whole run. Writes go 
 services as the editor (working copy, editorial checks, submit, approve, publish), so every post gets
 its snapshot, revision, audit rows and sync event exactly as a publish from the admin would.
 
-Imported posts carry their original publish date (``publish_date`` at 09:00 Europe/London) through
-``services.publish(published_at=...)``. Posts are matched by slug, so running the same folder again
-changes nothing, and an edited file publishes its changes. Nothing is ever deleted.
+Drafts are the default: ``status=draft`` saves each post's working copy (title, body, format, topics,
+practice, excerpt, SEO title and description, call to action, authors) and nothing else, so no
+editorial check is ticked, no revision is made and nothing reaches the website. Only an explicit
+``status=published`` ticks the checks and publishes each post with its original date
+(``publish_date`` at 09:00 Europe/London, through ``services.publish(published_at=...)``).
+
+Posts are matched by slug, so running the same folder again changes nothing, and an edited file
+updates (or, when publishing, publishes) its changes. Nothing is ever deleted.
+
+The files name the organisation author "Vitalos". ``author`` (a slug, or the email of the author's
+linked dashboard user) puts every post under an existing person author instead; an import never
+creates a person author, because only a real person can approve their own profile.
 """
 
 import re
@@ -353,15 +362,67 @@ def _differs(post: Post, item: Item, author_ids: list[str]) -> bool:
     return services.topic_ids(post) != sorted(str(topic.pk) for topic in item.topics)
 
 
-def plan(items: list[Item], status: str) -> list[str]:
+def person_author(reference: str) -> Author | None:
+    """An existing author by slug, or by the email of their linked dashboard user."""
+    reference = (reference or "").strip()
+    if not reference:
+        return None
+    author = Author.objects.filter(slug=reference).first()
+    if author is None and "@" in reference:
+        author = Author.objects.filter(admin_user__email__iexact=reference).first()
+    return author
+
+
+def _organisation_author() -> Author | None:
+    return Author.objects.filter(slug=ORGANISATION_AUTHOR["slug"]).first()
+
+
+def author_plan(status: str = PostStatus.DRAFT, reference: str = "") -> str:
+    """What happens to the author, in words. Starts with "refuse" when the run must stop."""
+    publishing = status == PostStatus.PUBLISHED
+    if reference:
+        author = person_author(reference)
+        if author is None:
+            return f"refuse: there is no author {reference!r} (an import never creates a person author)"
+        if author.kind != AuthorKind.PERSON:
+            return f"refuse: {author.name} is an organisation author, not a person"
+        if not author.is_active:
+            return f"refuse: {author.name} is inactive"
+        if publishing and not author.is_confirmed:
+            return f"refuse: {author.name} is not confirmed as a real person, so the posts cannot be published"
+        note = "" if author.is_confirmed else " (not yet confirmed as a real person: confirm before publishing)"
+        return f"{author.name}, person author `{author.slug}`, in place of the files' Vitalos{note}"
+    author = _organisation_author()
+    if author is None:
+        if publishing:
+            return "create the Vitalos organisation author and record the founder approval"
+        return "create the Vitalos organisation author (approval not recorded: record it before publishing)"
+    if author.kind != AuthorKind.ORGANISATION:
+        return "refuse: the existing 'vitalos' author is a person"
+    if publishing and (not author.is_confirmed or not author.is_active):
+        return "record the founder approval and activate the Vitalos author"
+    if not author.is_active:
+        return "activate the Vitalos author"
+    return "use the existing Vitalos author"
+
+
+def organisation_author_plan() -> str:
+    """The organisation author's plan when publishing (the first version's name)."""
+    return author_plan(PostStatus.PUBLISHED)
+
+
+def _author_ids(reference: str) -> list[str]:
+    author = person_author(reference) if reference else _organisation_author()
+    return [str(author.pk)] if author is not None else []
+
+
+def plan(items: list[Item], status: str, author: str = "") -> list[str]:
     """Decide what happens to each item (``item.action``). Returns problems that stop the run.
 
     The file is the source of truth: an existing post whose working copy differs from it (including
     edits made in the admin since the last import) is updated to match the file."""
     problems = []
-    author_ids = [
-        str(pk) for pk in Author.objects.filter(slug=ORGANISATION_AUTHOR["slug"]).values_list("pk", flat=True)
-    ]
+    author_ids = _author_ids(author)
     for item in items:
         post = Post.objects.filter(slug=item.slug).first()
         item.post = post
@@ -387,17 +448,6 @@ def plan(items: list[Item], status: str) -> list[str]:
     return problems
 
 
-def organisation_author_plan() -> str:
-    author = Author.objects.filter(slug=ORGANISATION_AUTHOR["slug"]).first()
-    if author is None:
-        return "create the Vitalos organisation author and record the founder approval"
-    if author.kind != AuthorKind.ORGANISATION:
-        return "refuse: the existing 'vitalos' author is a person"
-    if not author.is_confirmed or not author.is_active:
-        return "record the founder approval and activate the Vitalos author"
-    return "use the existing Vitalos author"
-
-
 def render_problems(items: list[Item], *, required: bool) -> tuple[list[str], bool]:
     """Render every body with the website's renderer. Returns (problems, reachable)."""
     problems, reachable = [], True
@@ -417,16 +467,25 @@ def render_problems(items: list[Item], *, required: bool) -> tuple[list[str], bo
 # --- Writing -------------------------------------------------------------------------------------
 
 
-def ensure_author(actor) -> Author:
-    """The Vitalos organisation author, created if needed, active and approved by ``actor``."""
-    author = Author.objects.filter(slug=ORGANISATION_AUTHOR["slug"]).first()
+def ensure_author(actor, status: str = PostStatus.PUBLISHED, reference: str = "") -> Author:
+    """The author every post is written under.
+
+    With ``reference``: that existing person author, never created or confirmed here. Otherwise the
+    Vitalos organisation author, created and activated if needed; its founder approval is recorded by
+    ``actor`` only when the run publishes (a draft import approves nothing)."""
+    if reference:
+        verdict = author_plan(status, reference)
+        if verdict.startswith("refuse"):
+            raise BatchError([verdict.removeprefix("refuse: ")])
+        return person_author(reference)
+    author = _organisation_author()
     if author is None:
         author = taxonomy.create_author(dict(ORGANISATION_AUTHOR), actor=actor)
     if author.kind != AuthorKind.ORGANISATION:
         raise BatchError(["The existing 'vitalos' author is a person, not an organisation."])
     if not author.is_active:
         author = taxonomy.set_author_active(author, True, actor=actor)
-    if not author.is_confirmed:
+    if status == PostStatus.PUBLISHED and not author.is_confirmed:
         author = taxonomy.confirm_author(author, actor=actor)
     return author
 
@@ -479,8 +538,8 @@ def _apply_one(item: Item, author: Author, actor, status: str) -> None:
         item.status = post.status
 
 
-def apply(items: list[Item], *, actor, status: str) -> Author:
-    author = ensure_author(actor)
+def apply(items: list[Item], *, actor, status: str, author: str = "") -> Author:
+    chosen = ensure_author(actor, status, author)
     for item in items:
         if item.action == "unchanged":
             post = item.post
@@ -489,7 +548,7 @@ def apply(items: list[Item], *, actor, status: str) -> Author:
             event = _publish_event(post)
             item.sync_event_id = str(event.pk) if event else ""
             continue
-        _apply_one(item, author, actor, status)
+        _apply_one(item, chosen, actor, status)
     counts: dict[str, int] = {}
     for item in items:
         counts[item.action] = counts.get(item.action, 0) + 1
@@ -500,10 +559,11 @@ def apply(items: list[Item], *, actor, status: str) -> Author:
             summary=f"Imported {len(items)} Insights ({status})",
             via=VIA,
             status=status,
+            author=chosen.slug,
             counts=counts,
             slugs=[item.slug for item in items if item.action != "unchanged"],
         )
-    return author
+    return chosen
 
 
 # --- Report --------------------------------------------------------------------------------------
