@@ -90,7 +90,7 @@ describe("calls to action open the form on their topic (finding B13)", () => {
   const cta = (intent: CtaView["intent"]): CtaView => ({
     label: "Discuss",
     href: "/contact",
-    intent,
+    ...(intent ? { intent } : {}),
   });
 
   it("adds the content's intent to contact links", () => {
