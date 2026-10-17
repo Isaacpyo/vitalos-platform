@@ -23,6 +23,13 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain("Technology Consulting, Engineering & Digital Transformation");
   });
 
+  it("counts six practices, Labs included (decision 1)", () => {
+    expect(text).toContain(
+      "Six practices (Consulting, Engineering, AI & Data, Experience, Managed Services and Labs)",
+    );
+    expect(text.toLowerCase()).not.toContain("five practices");
+  });
+
   it("lists only sitemap pages, one line each, and skips empty sections", () => {
     expect(text).toContain(
       "- [Example A](https://www.example.invalid/what-we-do/a): One line summary.",

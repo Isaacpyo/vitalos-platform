@@ -26,7 +26,12 @@ export function LabsIndex({ data }: Readonly<{ data: LabsIndexData }>) {
         crumbs={
           <Breadcrumbs
             trail={[homeCrumb, { name: navLabels.labs, path: routes.labs() }]}
-            page={{ type: "CollectionPage", name: page?.heading, description: page?.intro }}
+            page={{
+              type: "CollectionPage",
+              name: page?.heading,
+              description: page?.intro,
+              items: assets.map((a) => ({ name: a.title, path: routes.labAsset(a.labType, a.slug) })),
+            }}
           />
         }
         title={page?.heading ?? navLabels.labs}

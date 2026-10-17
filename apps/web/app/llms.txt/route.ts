@@ -32,6 +32,19 @@ export async function GET(): Promise<Response> {
     sitemapPaths,
     sections: [
       {
+        // The section indexes, so an assistant can find each list (C10).
+        heading: "Sections",
+        links: [
+          { path: routes.whatWeDo(), title: navLabels.whatWeDo },
+          { path: routes.solutions(), title: structuralLabels.solutions },
+          { path: routes.offers(), title: structuralLabels.offers },
+          { path: routes.industries(), title: navLabels.industries },
+          { path: routes.labs(), title: navLabels.labs },
+          { path: routes.insights(), title: navLabels.insights },
+          { path: routes.careers(), title: navLabels.careers },
+        ],
+      },
+      {
         heading: structuralLabels.practices,
         links: chrome.practices.map((d) => ({ ...d, path: routes.practice(d.slug) })),
       },

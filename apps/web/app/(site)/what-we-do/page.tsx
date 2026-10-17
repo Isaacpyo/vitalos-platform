@@ -36,6 +36,7 @@ export default async function WhatWeDoPage() {
           name: page?.heading ?? navLabels.whatWeDo,
           description: page?.intro,
           type: "CollectionPage",
+          items: practices.map((d) => ({ name: d.title, path: routes.practice(d.slug) })),
         })}
       />
       <WhatWeDoTemplate
