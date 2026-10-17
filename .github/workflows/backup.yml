@@ -1,12 +1,16 @@
 name: Super Admin backup
-# Daily logical backup of the Super Admin's database (Supabase by default, or Neon) at 02:00 UTC, kept
-# 7 days as a workflow artifact (free). On Supabase's free plan this is the only backup, and the daily
-# connection also keeps the project from being paused for inactivity. Uses the "backup" environment,
-# which has no required reviewers so the schedule is never held for approval; it holds DATABASE_URL
-# (the read-only backup_reader role, DEPLOY.md §6.1) and BACKUP_PASSPHRASE, which is required: the
-# repository is public, so any signed-in GitHub user can download its artifacts, and the dump is only
-# ever uploaded encrypted. Scheduled runs only start once this file is on main.
-# Restore steps: superadmin/docs/DEPLOY.md §6.
+# Daily logical backup of the Super Admin's database (Supabase by default, or Neon) at 02:00 UTC. The dump is
+# encrypted with BACKUP_PASSPHRASE and written to a private Azure Blob Storage container (DECISIONS #101). It is
+# never uploaded as a workflow artifact: the repository is public, so artifacts are downloadable by anyone signed in.
+# The container has a 14-day time-based immutability policy (a blob can't be deleted or overwritten for 14 days,
+# even by this workflow) and a lifecycle rule that deletes blobs after 15 days.
+# The "backup" environment (no required reviewers, so the schedule is never held) holds:
+#   secrets DATABASE_URL (the read-only backup_reader role, DEPLOY.md §6.1) and BACKUP_PASSPHRASE;
+#   secrets AZURE_BACKUP_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID for OIDC (no stored Azure keys); the app
+#   registration github-vitalos-superadmin-backup only has Storage Blob Data Contributor on the container;
+#   variables BACKUP_STORAGE_ACCOUNT and BACKUP_CONTAINER.
+# On Supabase's free plan this is the only backup, and the daily connection also keeps the project from pausing.
+# Scheduled runs only start once this file is on main. Restore steps: superadmin/docs/DEPLOY.md §6.
 on:
   schedule:
     - cron: "0 2 * * *"
@@ -22,6 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: backup
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write # OIDC to Azure; no stored Azure keys
     steps:
       - name: pg_dump (client matching the server's PostgreSQL version)
         id: dump
@@ -35,8 +42,7 @@ jobs:
             exit 1
           fi
           if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
-            echo "::error::BACKUP_PASSPHRASE is not set in the 'backup' environment. Artifacts of this public"
-            echo "::error::repository are downloadable by anyone signed in, so an unencrypted dump is never uploaded."
+            echo "::error::BACKUP_PASSPHRASE is not set in the 'backup' environment; an unencrypted dump is never stored."
             exit 1
           fi
           # pg_dump needs a session. Supabase's session pooler (port 5432) provides one, so its URL is
@@ -62,10 +68,34 @@ jobs:
             -o "$file.gpg" "$file" <<< "$BACKUP_PASSPHRASE"
           rm "$file"
           ls -l dump
-          echo "name=superadmin-db-$stamp-pg$major" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+          echo "file=$file.gpg" >> "$GITHUB_OUTPUT"
+          echo "blob=superadmin/$(date -u +%Y/%m)/superadmin-$stamp-pg$major.sql.gz.gpg" >> "$GITHUB_OUTPUT"
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
         with:
-          name: ${{ steps.dump.outputs.name }}
-          path: dump/
-          if-no-files-found: error
-          retention-days: 7 # TODO: move the dump to private storage (Azure Blob via OIDC) once the owner approves; a public repo should not hold dumps even encrypted
+          client-id: ${{ secrets.AZURE_BACKUP_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true # the identity only has a role on one storage container
+      - name: Store the encrypted dump in private blob storage
+        env:
+          ACCOUNT: ${{ vars.BACKUP_STORAGE_ACCOUNT }}
+          CONTAINER: ${{ vars.BACKUP_CONTAINER }}
+          FILE: ${{ steps.dump.outputs.file }}
+          BLOB: ${{ steps.dump.outputs.blob }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ACCOUNT" ] || [ -z "$CONTAINER" ]; then
+            echo "::error::BACKUP_STORAGE_ACCOUNT and BACKUP_CONTAINER must be set as 'backup' environment variables"
+            exit 1
+          fi
+          case "$FILE" in *.gpg) ;; *) echo "::error::refusing to store an unencrypted file"; exit 1 ;; esac
+          az storage blob upload --auth-mode login --account-name "$ACCOUNT" --container-name "$CONTAINER"             --file "$FILE" --name "$BLOB" --overwrite false --only-show-errors --output none
+          local_size="$(stat -c %s "$FILE")"
+          remote_size="$(az storage blob show --auth-mode login --account-name "$ACCOUNT" --container-name "$CONTAINER"             --name "$BLOB" --query properties.contentLength --output tsv --only-show-errors)"
+          if [ "$local_size" != "$remote_size" ]; then
+            echo "::error::stored blob is $remote_size bytes, expected $local_size"
+            exit 1
+          fi
+          echo "Stored $BLOB ($remote_size bytes)"
+          rm -f "$FILE"
