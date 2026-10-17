@@ -119,6 +119,25 @@ Every finding is listed in [FINDINGS.md](FINDINGS.md) with its status. In summar
 
 Lighthouse could not be re-run against the preview, because the preview is behind Vercel sign-in. The baseline method and numbers are in [baseline/BASELINE.md](baseline/BASELINE.md). Mobile figures from the baseline are pessimistic, because the host was overloaded.
 
+**Like-for-like Lighthouse (C5).** The required `seo` job runs Lighthouse on every template against a production build on a GitHub runner (mobile emulation, simulated throttling, budgets in `tooling/seo/budgets.json`). The table compares its `seo-report` artifact for `main` (run 39025857883, 34bee3c) with this branch (run 39041076759, bedb618). Both ran on the same runner type, so the comparison is fair, unlike the laptop baseline. Simulated LCP on a local server reads about 1.5 s higher than field LCP (see the budgets file).
+
+| Template      | Route                                           | Performance | LCP (lab)     | TBT         | CLS       |
+| ------------- | ----------------------------------------------- | ----------- | ------------- | ----------- | --------- |
+| home          | /                                               | 92 → 91     | 3.33 → 3.43 s | 49 → 69 ms  | 0 → 0     |
+| section-index | /what-we-do                                     | 88 → 93     | 3.88 → 3.18 s | 40 → 22 ms  | 0 → 0     |
+| practice      | /what-we-do/engineering                         | 89 → 91     | 3.76 → 3.42 s | 52 → 59 ms  | 0 → 0     |
+| solution      | /solutions/application-modernisation            | 93 → 95     | 3.17 → 2.88 s | 42 → 31 ms  | 0 → 0     |
+| offer         | /offers/engineering-rescue                      | 92 → 93     | 3.32 → 3.17 s | 50 → 38 ms  | 0 → 0     |
+| industry      | /industries/health-care                         | 92 → 92     | 3.34 → 3.27 s | 52 → 49 ms  | 0 → 0     |
+| how-we-work   | /how-we-work                                    | 90 → 91     | 3.61 → 3.43 s | 45 → 68 ms  | 0 → 0     |
+| lab-asset     | /labs/research/production-ai-evaluation-harness | 92 → 96     | 3.31 → 2.72 s | 40 → 18 ms  | 0 → 0     |
+| trust-topic   | /trust/security                                 | 92 → 92     | 3.29 → 3.33 s | 32 → 104 ms | 0 → 0     |
+| faq           | /faq                                            | 92 → 96     | 3.31 → 2.73 s | 45 → 32 ms  | 0 → 0.059 |
+| contact       | /contact                                        | 90 → 91     | 3.54 → 3.40 s | 47 → 18 ms  | 0 → 0     |
+| legal         | /legal/privacy                                  | 92 → 91     | 3.30 → 3.41 s | 37 → 35 ms  | 0 → 0     |
+
+Average performance went from 91.2 to 92.7 and average lab LCP from 3.43 s to 3.20 s. Every template is within budget, and accessibility is 100 on all twelve. The one regression was `/faq` CLS (0 → 0.059): the new filter box rendered only after hydration and pushed the questions down. It now renders in the server HTML and is hidden by CSS when scripting is off (`FaqFilter.tsx`). The next `seo` run on the PR confirms it.
+
 ### Checks on the final integration branch
 
 Run locally on the fully merged branch, 17 Oct.
@@ -185,7 +204,7 @@ Nothing below has been done. Each item gives the exact next step.
 ## Follow-ups (fallback in place)
 
 - **Seven draft roles: verdicts not written.** Production admin data could not be passed to the agents (auto mode blocks sharing production reads). The read-only command to list them is in [CAREERS-DRAFTS-REVIEW.md](CAREERS-DRAFTS-REVIEW.md), part B. Fallback: the roles stay drafts.
-- **Lighthouse after-numbers:** run `pnpm seo:check --lighthouse` against the preview once you're signed in, or after merge. Budgets were left unchanged so the required `seo` check stays stable.
+- **Lighthouse after-numbers:** the like-for-like CI comparison is above. Field numbers (Speed Insights, p75) need about a week of production traffic after merge. Budgets were left unchanged so the required `seo` check stays stable.
 - **Insights media library:** buildable from the stored upload records. The admin CSP now allows the media origin (WS7). Fallback: upload per post.
 - **390 px screenshots of the IA nav:** they timed out locally. The 390 px layout is covered by the Playwright `mobile` project.
 - **Stale CSS:** unused `hv-drift` and `hv-glint` keyframes remain in the generated token CSS.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useState } from "react";
 
 export interface FaqFilterLabels {
   label: string;
@@ -8,10 +8,6 @@ export interface FaqFilterLabels {
   count: string;
   none: string;
 }
-
-const noSubscription = () => () => undefined;
-const onClient = () => true;
-const onServer = () => false;
 
 /** Opens the question a link points at (`/faq#{id}`): a closed `<details>` hides its answer. */
 function openFromHash(container: HTMLElement | null) {
@@ -40,7 +36,9 @@ function applyFilter(container: HTMLElement, query: string): { shown: number; to
 
 /**
  * The FAQ page's filter (finding B10): progressive enhancement over the server-rendered list.
- * Without JavaScript nothing is rendered and every question shows. With it, typing hides the
+ * The box is in the server HTML so nothing shifts when the page hydrates (it once rendered only
+ * after hydration, which cost /faq a 0.059 layout shift); without scripting it is hidden by CSS
+ * (`noscript:`) and every question shows. With JavaScript, typing hides the
  * questions (`[data-faq-entry]`) whose text does not contain every word typed, and any group
  * (`[data-faq-group]`) left empty; a polite status line says how many remain. It also opens the
  * question named in the URL fragment, so per-question links land on an open answer.
@@ -50,7 +48,6 @@ export function FaqFilter({
   labels,
 }: Readonly<{ targetId: string; labels: FaqFilterLabels }>) {
   const inputId = useId();
-  const hydrated = useSyncExternalStore(noSubscription, onClient, onServer);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
 
@@ -76,9 +73,8 @@ export function FaqFilter({
     );
   };
 
-  if (!hydrated) return null;
   return (
-    <div role="search" className="grid max-w-(--container-content) gap-(--space-2)">
+    <div role="search" className="grid max-w-(--container-content) gap-(--space-2) noscript:hidden">
       <label htmlFor={inputId} className="text-small font-semibold text-tone-heading">
         {labels.label}
       </label>
