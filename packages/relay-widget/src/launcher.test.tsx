@@ -93,12 +93,15 @@ afterEach(() => {
 
 const launcher = () => render(<RelayLauncher symbolSrc="/relay.svg" privacyUrl="/legal/privacy" />);
 
-const openButton = () => screen.getByRole("button", { name: /Open chat with Relay/ });
+const openButton = () => screen.getByRole("button", { name: /^Ask Vitalos/ });
 
 describe("Relay launcher and panel mounting (C2)", () => {
   it("renders no panel until opened, and removes it on close", async () => {
     const { container } = launcher();
     expect(container.querySelector("#relay-panel")).toBeNull();
+    // Label in Name (WCAG 2.5.3) and no aria-controls pointing at an unmounted panel.
+    expect(openButton().getAttribute("aria-label")).toMatch(/^Ask Vitalos/);
+    expect(openButton().hasAttribute("aria-controls")).toBe(false);
     const events: string[] = [];
     window.addEventListener(RELAY_EVENT, (e) => {
       events.push((e as CustomEvent<RelayEventDetail>).detail.type);
@@ -107,6 +110,7 @@ describe("Relay launcher and panel mounting (C2)", () => {
     await waitFor(() => expect(container.querySelector("#relay-panel")).not.toBeNull());
     expect(events).toEqual(["relay_opened"]);
     expect(container.querySelector("article")).toBeNull();
+    expect(container.querySelector("button[aria-controls='relay-panel']")).not.toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Close chat" }));
     await waitFor(() => expect(container.querySelector("#relay-panel")).toBeNull());
   });

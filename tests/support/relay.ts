@@ -51,7 +51,7 @@ export const newId = () => randomUUID();
  * conversation" first, ADR-048).
  */
 export async function openRelay(page: Page, options: { expectWelcome?: boolean } = {}) {
-  const launcher = page.getByRole("button", { name: /Open chat with Relay/ });
+  const launcher = page.getByRole("button", { name: /^Ask Vitalos/ });
   const panel = page.locator("#relay-panel");
   // A click that lands before hydration does nothing: retry until the panel is open. Check the
   // panel, not the launcher: once a modal panel opens the launcher leaves the accessibility tree.

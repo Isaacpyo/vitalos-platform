@@ -111,10 +111,11 @@ export function RelayLauncher(props: RelayLauncherProps) {
     if (returnFocus) requestAnimationFrame(() => buttonRef.current?.focus());
   }, []);
 
+  // WCAG 2.5.3 Label in Name: the accessible name starts with the visible text "Ask Vitalos".
   const label =
     unread > 0
-      ? `Open chat with Relay. ${unread} new ${unread === 1 ? "reply" : "replies"} from the Vitalos team`
-      : "Open chat with Relay, the Vitalos assistant";
+      ? `Ask Vitalos: ${unread} new ${unread === 1 ? "reply" : "replies"} from the Vitalos team`
+      : "Ask Vitalos, the Vitalos assistant";
 
   return (
     <div className={`relay-root ${props.fontClassName ?? ""}`}>

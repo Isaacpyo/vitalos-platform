@@ -8,7 +8,7 @@ test.describe("Relay launcher and panel", () => {
   test("launcher opens the panel; Esc closes it and returns focus", async ({ page }) => {
     await page.goto("/");
     const launcher = page.getByRole("button", {
-      name: "Open chat with Relay, the Vitalos assistant",
+      name: "Ask Vitalos, the Vitalos assistant",
     });
     await expect(launcher).toBeVisible();
     await expect(launcher).toHaveAttribute("aria-expanded", "false");
@@ -169,7 +169,7 @@ test.describe("Relay launcher and panel", () => {
 
   test("keyboard only: open, ask, thumbs down, close with Esc", async ({ page }) => {
     await page.goto("/");
-    const launcher = page.getByRole("button", { name: /Open chat with Relay/ });
+    const launcher = page.getByRole("button", { name: /^Ask Vitalos/ });
     await launcher.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByLabel("Message Relay")).toBeFocused();
