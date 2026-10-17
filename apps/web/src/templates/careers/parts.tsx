@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
-import { closesLine, roleFactsLine, rolePathOf } from "../../features/content/careers/model";
+import { routes } from "@vitalos/cms";
+import { TextLink } from "@vitalos/ui";
+import {
+  aboutVitalos,
+  closesLine,
+  practicesLine,
+  roleFactsLine,
+  rolePathOf,
+} from "../../features/content/careers/model";
 import type { Fact, RoleSummaryData } from "../../features/content/careers/model";
 import { CardArrow, monoLabel } from "../insights/card";
 
@@ -65,6 +73,64 @@ export function FactsGrid({ facts }: Readonly<{ facts: readonly Fact[] }>) {
   );
 }
 
+const proseClasses =
+  "text-body-l text-tone-text [&_a]:text-tone-link [&_a]:underline [&_a]:underline-offset-4 [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-4) [&_ul]:list-disc [&_ul]:pl-(--space-5) [&_h2]:text-h3 [&_h3]:text-body-l [&_h3]:font-semibold";
+
+/**
+ * The hiring process as its own panel (review 17 Oct 2026, B7): the role's text, else the careers
+ * default. The caller renders it only when there is text, so an empty setting shows nothing.
+ */
+export function ProcessBlock({
+  id,
+  heading,
+  html,
+}: Readonly<{ id: string; heading: string; html: string }>) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="mt-(--space-8) max-w-[68ch] rounded-2xl border border-tone-border bg-tone-tile-bg p-(--space-6) md:p-(--space-7)"
+    >
+      <h2 id={id} className="m-0 text-h2 text-tone-heading">
+        {heading}
+      </h2>
+      <div
+        className={`mt-(--space-4) ${proseClasses} [&_ol>li]:marker:font-mono [&_ol>li]:marker:text-tone-muted [&>:last-child]:mb-0`}
+        // Sanitised by the site's one renderer (role or settings context).
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </section>
+  );
+}
+
+/**
+ * "About Vitalos" at the end of a role (review 17 Oct 2026, B7): the locked proposition and the
+ * six-practices line, both from `@vitalos/cms` exports, with links to About and What We Do.
+ */
+export function AboutVitalosStrip({ id = "about-vitalos" }: Readonly<{ id?: string }>) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="mt-(--space-8) flex flex-col gap-(--space-4) border-t border-tone-border pt-(--space-7) md:flex-row md:items-start md:justify-between md:gap-(--space-8)"
+    >
+      <div className="max-w-[68ch]">
+        <h2 id={id} className="m-0 text-h3 text-tone-heading">
+          {aboutVitalos.heading}
+        </h2>
+        <p className="m-0 mt-(--space-3) text-body-l text-tone-text">{aboutVitalos.lead}</p>
+        <p className="m-0 mt-(--space-3) text-body text-tone-text">{practicesLine()}</p>
+      </div>
+      <ul className="m-0 flex list-none flex-col gap-(--space-3) p-0 md:shrink-0">
+        <li>
+          <TextLink href={routes.about()}>{aboutVitalos.aboutLink}</TextLink>
+        </li>
+        <li>
+          <TextLink href={routes.whatWeDo()}>{aboutVitalos.whatWeDoLink}</TextLink>
+        </li>
+      </ul>
+    </section>
+  );
+}
+
 /** A titled block of rendered (sanitised) Markdown. */
 export function HtmlSection({
   id,
@@ -79,7 +145,7 @@ export function HtmlSection({
       </h2>
       {html ? (
         <div
-          className="mt-(--space-4) text-body-l text-tone-text [&_a]:text-tone-link [&_a]:underline [&_a]:underline-offset-4 [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-4) [&_ul]:list-disc [&_ul]:pl-(--space-5) [&_h2]:text-h3 [&_h3]:text-body-l [&_h3]:font-semibold"
+          className={`mt-(--space-4) ${proseClasses}`}
           // Sanitised by the site's one renderer (role or settings context).
           dangerouslySetInnerHTML={{ __html: html }}
         />

@@ -45,12 +45,12 @@ export async function generateMetadata({
 export default async function RoleRoute({ params }: Readonly<{ params: Promise<Params> }>) {
   const view = await loadRolePage(await slugOf(params));
   const ctx = { siteUrl: getSeoContext().siteUrl };
+  const { settings } = await loadChromeContent();
   let jsonLd: (Record<string, unknown> | null)[] = [];
   // One JSON-LD graph for an open, published role (docs/seo/DECISIONS.md 22): the WebPage, its
   // BreadcrumbList and the JobPosting (omitted when any required field is missing). A closed
   // role or a preview emits none.
   if (view.kind === "open" && !view.previewStatus) {
-    const { settings } = await loadChromeContent();
     const organization = organizationJsonLd(settings, ctx);
     const path = rolePathOf(view.role.slug);
     jsonLd = [
@@ -86,6 +86,7 @@ export default async function RoleRoute({ params }: Readonly<{ params: Promise<P
       view={view}
       url={new URL(rolePathOf(view.role.slug), ctx.siteUrl).toString()}
       jsonLd={jsonLd}
+      contactEmail={settings.contactEmail}
       turnstileSiteKey={getEnv().turnstile.siteKey}
     />
   );
