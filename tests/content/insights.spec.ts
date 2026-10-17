@@ -14,6 +14,12 @@ test.describe("Insights index", () => {
     await expect(page.getByRole("navigation", { name: "Formats" })).toBeVisible();
     await expect(page.locator('main a[href="/insights/example-post-1"]').first()).toBeVisible();
     await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveCount(1);
+    // More than one post: the topic links and a visible feed link sit beside the format tabs.
+    await expect(page.locator("main").getByRole("link", { name: "RSS feed" })).toHaveAttribute(
+      "href",
+      "/insights/feed.xml",
+    );
+    await expect(page.locator("main summary", { hasText: "Topics" })).toBeVisible();
     // The site's closing card (pages redesign): the locked closing heading and Talk to Vitalos.
     await expect(
       page.locator("main").getByRole("heading", { name: "Have a problem worth solving?" }),
@@ -53,6 +59,16 @@ test.describe("Insights article", () => {
     await expect(page.locator("#example-heading")).toHaveText("Example heading");
     await expect(page.getByRole("heading", { name: "Sources" })).toBeVisible();
     await expect(page.getByRole("link", { name: "More from Example" })).toBeVisible();
+    // The author's name in the author block links to their page too.
+    await expect(
+      page.getByRole("region", { name: "Author" }).getByRole("link", { name: "Example Author" }),
+    ).toHaveAttribute("href", "/insights/authors/example-author");
+    // The closing card pre-selects the enquiry intent from the post's practice (Engineering).
+    await expect(
+      page.locator("main").getByRole("link", { name: "Talk to Vitalos" }).last(),
+    ).toHaveAttribute("href", "/contact?intent=engineering");
+    // Related posts by shared topic (from the admin), at most three.
+    await expect(page.getByRole("heading", { name: "Related insights" })).toBeVisible();
     // No excerpt under the title (owner decision, 16 Oct 2026); related cards may still show theirs.
     await expect(
       page.locator("h1 ~ p", { hasText: "Example excerpt for a fixture post." }),
