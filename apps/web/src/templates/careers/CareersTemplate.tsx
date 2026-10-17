@@ -11,8 +11,6 @@ import { renderBands } from "../commercial/bands";
 import { InsightsHero, TalkBand, monoLabel } from "../insights/parts";
 import { HtmlSection, RoleList } from "./parts";
 
-const pad = (index: number) => String(index + 1).padStart(2, "0");
-
 /** A careers band: a named region with the site's section heading, on the given surface. */
 function CareersBand({
   id,
@@ -37,7 +35,7 @@ function CareersBand({
 
 /**
  * `/careers` (brief 6.1) in the site's design: the full dark hero with the `careers.hero` image
- * slot, how we work, open roles by practice (with filters as links when more than six are open),
+ * slot, open roles by practice (with filters as links when more than six are open),
  * the empty state, the optional settings sections, then the closing card. Bands alternate their
  * surface like every other page.
  */
@@ -50,35 +48,6 @@ export function CareersTemplate({
   const groups = groupRoles(page, filter);
   const filters = filterGroups(page, filter);
   const open = page.total > 0;
-
-  const howWeWork = (tone: SectionTone) =>
-    copy.values.length > 0 || copy.statements.length > 0 ? (
-      <CareersBand id="how-we-work" tone={tone} heading={careersCopy.howWeWork}>
-        {copy.values.length > 0 ? (
-          <ol className="m-0 grid list-none grid-cols-2 gap-(--space-3) p-0 sm:gap-(--space-4) md:grid-cols-3 lg:grid-cols-5">
-            {copy.values.map((value, index) => (
-              <li
-                key={value}
-                className="flex min-w-0 flex-col gap-(--space-3) rounded-2xl border border-tone-border bg-tone-bg p-(--space-5)"
-              >
-                <span className={`${monoLabel} text-tone-eyebrow`} aria-hidden="true">
-                  {pad(index)}
-                </span>
-                <span className="text-body-l font-semibold text-tone-heading">{value}</span>
-              </li>
-            ))}
-          </ol>
-        ) : null}
-        {copy.statements.map((statement) => (
-          <p
-            key={statement}
-            className="mt-(--space-6) max-w-(--container-prose) text-body-l text-tone-text"
-          >
-            {statement}
-          </p>
-        ))}
-      </CareersBand>
-    ) : null;
 
   const openRoles = (tone: SectionTone) => (
     <CareersBand id="open-roles" tone={tone} heading={careersCopy.openRoles}>
@@ -197,7 +166,7 @@ export function CareersTemplate({
           ) : undefined
         }
       />
-      {renderBands([howWeWork, openRoles, policies], "light")}
+      {renderBands([openRoles, policies], "light")}
       <TalkBand />
     </PageMain>
   );
