@@ -639,6 +639,212 @@
   window.addEventListener("pageshow", syncBulk);
   syncBulk();
 
+  // ---------------------------------------------------------------------------------------------
+  // Busy states: button spinners (full-page and HTMX submissions), a blurred "Saving…" overlay for
+  // full-page POST submissions, and a slim progress bar for HTMX navigations that swap main content.
+  // Opt a form out of the overlay with data-no-submit-overlay.
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var busyButtons = [];
+  var submitting = false;
+
+  function spinnerNode() {
+    var svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    svg.setAttribute("class", "btn-spinner h-4 w-4 shrink-0 animate-spin motion-reduce:animate-none");
+    var track = document.createElementNS(SVG_NS, "circle");
+    track.setAttribute("cx", "12");
+    track.setAttribute("cy", "12");
+    track.setAttribute("r", "9");
+    track.setAttribute("stroke", "currentColor");
+    track.setAttribute("stroke-width", "3");
+    track.setAttribute("opacity", "0.25");
+    var arc = document.createElementNS(SVG_NS, "path");
+    arc.setAttribute("d", "M21 12a9 9 0 0 0-9-9");
+    arc.setAttribute("stroke", "currentColor");
+    arc.setAttribute("stroke-width", "3");
+    arc.setAttribute("stroke-linecap", "round");
+    svg.appendChild(track);
+    svg.appendChild(arc);
+    return svg;
+  }
+
+  function isButtonLike(element) {
+    if (!element || element.nodeType !== 1) return false;
+    if (element.tagName === "BUTTON") return element.type !== "reset";
+    if (element.tagName === "INPUT") return element.type === "submit" || element.type === "button";
+    return element.tagName === "A" && element.classList.contains("btn");
+  }
+
+  function setBusy(button) {
+    if (!isButtonLike(button) || button.getAttribute("aria-busy") === "true") return;
+    button.setAttribute("aria-busy", "true");
+    if (button.tagName === "A") {
+      button.setAttribute("aria-disabled", "true");
+      button.classList.add("pointer-events-none");
+    } else {
+      button.disabled = true;
+    }
+    if (button.tagName !== "INPUT") {
+      var icon = button.querySelector(":scope > svg");
+      if (icon) {
+        icon.classList.add("hidden");
+        icon.setAttribute("data-spinner-hid", "");
+      }
+      button.insertBefore(spinnerNode(), button.firstChild);
+    }
+    busyButtons.push(button);
+  }
+
+  function clearBusy(button) {
+    var index = busyButtons.indexOf(button);
+    if (index !== -1) busyButtons.splice(index, 1);
+    button.removeAttribute("aria-busy");
+    if (button.tagName === "A") {
+      button.removeAttribute("aria-disabled");
+      button.classList.remove("pointer-events-none");
+    } else {
+      button.disabled = false;
+    }
+    button.querySelectorAll(":scope > .btn-spinner").forEach(function (node) {
+      node.remove();
+    });
+    button.querySelectorAll(":scope > svg[data-spinner-hid]").forEach(function (node) {
+      node.classList.remove("hidden");
+      node.removeAttribute("data-spinner-hid");
+    });
+  }
+
+  function submitOverlay() {
+    return document.getElementById("submit-overlay");
+  }
+
+  function showSubmitOverlay(label) {
+    var overlay = submitOverlay();
+    if (!overlay) return;
+    var text = overlay.querySelector("[data-submit-overlay-text]");
+    if (text) text.textContent = label;
+    overlay.hidden = false;
+    submitting = true;
+  }
+
+  function hideSubmitOverlay() {
+    var overlay = submitOverlay();
+    if (overlay) overlay.hidden = true;
+    submitting = false;
+  }
+
+  function overlayLabel(form, submitter) {
+    var explicit = form.getAttribute("data-submit-label");
+    if (explicit) return explicit;
+    var text = ((submitter && (submitter.value || submitter.textContent)) || "").trim().toLowerCase();
+    return /^(save|publish|create|add|update|apply|confirm|send|import)/.test(text)
+      ? "Saving…"
+      : "Working…";
+  }
+
+  // Full-page submissions. Deferred one tick so handlers that cancel the submit (confirm prompts,
+  // validation, HTMX) have run first; the form data is read before the button is disabled.
+  document.addEventListener("submit", function (event) {
+    var form = event.target;
+    if (!form || form.tagName !== "FORM") return;
+    if (submitting) {
+      event.preventDefault();
+      return;
+    }
+    if (event.defaultPrevented) return;
+    var submitter = event.submitter;
+    window.setTimeout(function () {
+      if (event.defaultPrevented) return;
+      if (submitter) setBusy(submitter);
+      var method = (form.getAttribute("method") || "get").toLowerCase();
+      var target = form.getAttribute("target");
+      var submitterTarget = submitter && submitter.getAttribute("formtarget");
+      var skip =
+        method !== "post" ||
+        form.hasAttribute("data-no-submit-overlay") ||
+        form.hasAttribute("hx-post") ||
+        form.hasAttribute("download") ||
+        (target && target !== "_self") ||
+        (submitterTarget && submitterTarget !== "_self");
+      if (!skip) showSubmitOverlay(overlayLabel(form, submitter));
+    }, 0);
+  });
+
+  // Back/forward restore from the bfcache: never leave the page stuck in a busy state.
+  window.addEventListener("pageshow", function () {
+    busyButtons.slice().forEach(clearBusy);
+    hideSubmitOverlay();
+  });
+
+  // HTMX requests: spinner on the triggering button; progress bar for navigations.
+  function requestButton(detail) {
+    var elt = detail.elt;
+    if (!elt) return null;
+    if (elt.tagName === "FORM") {
+      var triggering = detail.requestConfig && detail.requestConfig.triggeringEvent;
+      var submitter = triggering && triggering.submitter;
+      if (isButtonLike(submitter)) return submitter;
+      if (triggering && triggering.type && triggering.type !== "submit") return null;
+      return elt.querySelector("button[type='submit'], button:not([type]), input[type='submit']");
+    }
+    return isButtonLike(elt) ? elt : null;
+  }
+
+  function navigationRequest(detail) {
+    var main = document.getElementById("main");
+    return Boolean(
+      detail.elt &&
+        detail.target &&
+        detail.elt.hasAttribute &&
+        detail.elt.hasAttribute("hx-push-url") &&
+        main &&
+        main.contains(detail.target),
+    );
+  }
+
+  var progressCount = 0;
+
+  function progress(on) {
+    var bar = document.getElementById("nav-progress");
+    progressCount = Math.max(0, progressCount + (on ? 1 : -1));
+    if (bar) bar.hidden = progressCount === 0;
+  }
+
+  document.addEventListener("htmx:beforeRequest", function (event) {
+    var detail = event.detail;
+    var button = requestButton(detail);
+    if (button) {
+      if (button.getAttribute("aria-busy") === "true") {
+        event.preventDefault(); // a second submit while one is in flight
+        return;
+      }
+      setBusy(button);
+    }
+    if (navigationRequest(detail)) {
+      detail.elt.setAttribute("data-htmx-nav", "");
+      detail.target.setAttribute("aria-busy", "true");
+      detail.target.classList.add("opacity-60", "animate-pulse", "motion-reduce:animate-none");
+      progress(true);
+    }
+  });
+
+  document.addEventListener("htmx:afterRequest", function (event) {
+    var detail = event.detail;
+    var button = requestButton(detail);
+    if (button && button.isConnected) clearBusy(button);
+    if (detail.elt && detail.elt.hasAttribute && detail.elt.hasAttribute("data-htmx-nav")) {
+      detail.elt.removeAttribute("data-htmx-nav");
+      progress(false);
+      if (detail.target && detail.target.isConnected) {
+        detail.target.removeAttribute("aria-busy");
+        detail.target.classList.remove("opacity-60", "animate-pulse", "motion-reduce:animate-none");
+      }
+    }
+  });
+
   // Auto-dismiss server-rendered flash messages.
   window.setTimeout(function () {
     document.querySelectorAll("[data-autodismiss]").forEach(function (element) {
