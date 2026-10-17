@@ -18,8 +18,55 @@ test.describe("Relay launcher and panel", () => {
     await expect(page.locator("#relay-panel").getByText("START WITH")).toBeVisible();
     await expect(page.getByRole("button", { name: "Talk to a person" }).first()).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.locator("#relay-panel")).toBeHidden();
+    // Unmounted on close (ADR-048, C2): no panel or transcript in the DOM while closed.
+    await expect(page.locator("#relay-panel")).toHaveCount(0);
     await expect(launcher).toBeFocused();
+  });
+
+  test("the panel is never in the initial HTML and answers are not article landmarks", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page.locator("#relay-panel")).toHaveCount(0);
+    const html = await (await page.request.get("/")).text();
+    expect(html).not.toContain('id="relay-panel"');
+    await openRelay(page);
+    await ask(page, "Can you rescue a failing software project?");
+    await expect(page.locator("#relay-panel article")).toHaveCount(0);
+    await expect(page.getByRole("log").getByRole("group", { name: /Relay · AI/ }).last()).toBeVisible();
+  });
+
+  test("a stored conversation is restored only after Continue previous conversation", async ({
+    page,
+    context,
+  }) => {
+    await page.goto("/");
+    await openRelay(page);
+    await ask(page, "Which sectors do you work in?");
+    // A new tab shares localStorage but not the tab session: Relay asks first.
+    const next = await context.newPage();
+    const fetched: string[] = [];
+    next.on("request", (r) => {
+      if (r.url().includes("/messages")) fetched.push(r.url());
+    });
+    await next.goto("/about");
+    await expect(next.locator("#relay-panel")).toHaveCount(0);
+    await openRelay(next, { expectWelcome: false });
+    await expect(next.getByRole("button", { name: "Continue previous conversation" })).toBeVisible();
+    await expect(next.locator(".relay-visitor")).toHaveCount(0);
+    expect(fetched).toEqual([]);
+    await next.getByRole("button", { name: "Continue previous conversation" }).click();
+    await expect(
+      next.locator(".relay-visitor").getByText("Which sectors do you work in?"),
+    ).toBeVisible();
+    await next.close();
+  });
+
+  test("Hello gets a fixed greeting without a model call", async ({ page }) => {
+    await page.goto("/");
+    await openRelay(page);
+    await ask(page, "Hello");
+    await expect(page.locator(".relay-answer").last()).toContainText("I'm Relay, the Vitalos AI assistant");
   });
 
   test("no Relay request is made before the visitor interacts", async ({ page }) => {
@@ -47,6 +94,9 @@ test.describe("Relay launcher and panel", () => {
       "aria-pressed",
       "true",
     );
+    // One tap for the reason (D6), then the offer of a person.
+    await expect(answer.getByText("What went wrong?")).toBeVisible();
+    await answer.getByRole("button", { name: "It was incomplete" }).click();
     await expect(answer.getByText("NOTED")).toBeVisible();
     await expect(page.getByRole("heading", { name: /Sorry that didn't answer it/ })).toBeVisible();
   });
@@ -123,6 +173,9 @@ test.describe("Relay launcher and panel", () => {
     await expect(thumbsDown).toBeVisible({ timeout: 20_000 });
     await thumbsDown.focus();
     await page.keyboard.press("Enter");
+    // Focus moves to the first reason; Enter chooses it and opens the hand-off form.
+    await expect(page.getByRole("button", { name: "It was wrong" })).toBeFocused();
+    await page.keyboard.press("Enter");
     await expect(page.getByLabel("Name")).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(launcher).toBeFocused();
@@ -152,6 +205,7 @@ test.describe("Relay hand-off with a person (two parties)", () => {
     await openRelay(page);
     await ask(page, "Roughly how long would a modernisation take?");
     await page.locator(".relay-answer").last().getByRole("button", { name: "Not helpful" }).click();
+    await page.getByRole("button", { name: "Skip" }).click();
     await page.getByLabel("Name").fill("Jordan Ellis");
     await page.getByLabel("Work email").fill("jordan.ellis@example-care.invalid");
     await page.getByLabel(/Vitalos may contact me/).check();
@@ -180,9 +234,12 @@ test.describe("Relay hand-off with a person (two parties)", () => {
 
     // Join: the visitor sees the person and the AI pauses.
     expect((await adminCall(request, "POST", `/conversations/${id}/join`)).status).toBe(200);
-    await expect(page.getByRole("heading", { name: ADMIN.name })).toBeVisible({ timeout: 10_000 });
+    // Visitors see the first name only, never a username or email (D3).
+    const first = ADMIN.name.split(" ")[0] ?? "";
+    await expect(page.getByRole("heading", { name: first })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("VITALOS · A PERSON, NOT AI")).toBeVisible();
-    await expect(page.getByText(/TEMITOPE AGBOLA JOINED/)).toBeVisible();
+    await expect(page.getByText(new RegExp(`${first.toUpperCase()} JOINED`))).toBeVisible();
+    await expect(page.getByText(ADMIN.name)).toHaveCount(0);
     await expect(page.getByText("RELAY AI IS PAUSED WHILE YOU CHAT WITH THE TEAM")).toBeVisible();
 
     // Two-way messages.
@@ -194,6 +251,7 @@ test.describe("Relay hand-off with a person (two parties)", () => {
     await expect(page.getByText("Hi Jordan, I've read the conversation so far.")).toBeVisible({
       timeout: 10_000,
     });
+    await expect(page.getByText(`${first} · Vitalos`)).toBeVisible();
     const composer = page.getByLabel("Message Relay");
     await expect(composer).toHaveAttribute("placeholder", "Message Temitope");
     await composer.fill("Around 40 homes and 2,000 staff.");

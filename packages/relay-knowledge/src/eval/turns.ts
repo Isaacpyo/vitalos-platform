@@ -16,7 +16,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { estimatePromptTokens, PROMPT_BUDGET, VisitorService } from "@vitalos/relay-core";
+import { VisitorService } from "@vitalos/relay-core";
 import type {
   ChatEvent,
   LlmProvider,
@@ -28,6 +28,20 @@ import { memoryContext } from "@vitalos/relay-core/testing";
 import { allBundledEntries } from "../index";
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/** The per-call budget (ADR-048). Kept here so the eval also measures older code. */
+export const TURN_BUDGET = 8_000;
+
+/**
+ * Input-token estimate of one model call, computed from exactly what the service sent. It matches
+ * relay-core's `estimatePromptTokens` but is defined here so the eval does not depend on the
+ * code it measures: max(1.33 tokens a word, 4 characters a token) per message, plus 4 framing.
+ */
+export function promptTokens(system: string, messages: readonly { content: string }[]): number {
+  const est = (t: string) =>
+    t ? Math.max(Math.ceil((t.match(/\S+/g) ?? []).length * 1.33), Math.ceil(t.length / 4)) : 0;
+  return est(system) + messages.reduce((n, m) => n + est(m.content) + 4, 0);
+}
 export const TURNS_FILE = resolve(here, "../../../../docs/relay/evals/turns.jsonl");
 
 export interface TurnCase {
@@ -98,7 +112,7 @@ function recording(inner: LlmProvider) {
   const provider: LlmProvider = {
     name: inner.name,
     streamAnswer(input) {
-      calls.push({ tokens: estimatePromptTokens(input.system, input.messages), input });
+      calls.push({ tokens: promptTokens(input.system, input.messages), input });
       return inner.streamAnswer(input);
     },
     generateSummary: (input) => inner.generateSummary(input),
@@ -177,9 +191,9 @@ export async function runTurnsEval(
         ? "expected source retrieved and sent"
         : `expected one of ${expect.join(", ")}; got ${sent.map(keyOf).join(", ") || "nothing"}${lowConfidence ? " (low confidence)" : ""}`;
     }
-    if (promptTokens > PROMPT_BUDGET.total) {
+    if (promptTokens > TURN_BUDGET) {
       pass = false;
-      reason = `${promptTokens} input tokens is over the ${PROMPT_BUDGET.total} budget`;
+      reason = `${promptTokens} input tokens is over the ${TURN_BUDGET} budget`;
     }
     results.push({
       id: c.id,
