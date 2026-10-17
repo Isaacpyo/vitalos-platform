@@ -25,6 +25,7 @@ interface TurnstileApi {
       sitekey: string;
       action: string;
       size: "normal" | "flexible" | "compact";
+      theme: TurnstileTheme;
       "error-callback": () => void;
       "expired-callback": () => void;
     },
@@ -40,6 +41,19 @@ declare global {
 }
 
 let scriptPromise: Promise<TurnstileApi> | undefined;
+
+type TurnstileTheme = "light" | "dark";
+
+/**
+ * The site has no colour-scheme switch: its surfaces are the tone scopes (`data-tone`, ADR-016).
+ * Turnstile's default `auto` follows the visitor's operating system instead, which drew a dark
+ * widget inside the light contact form (finding A8, 17 Oct 2026). The widget takes the tone of the
+ * band it sits in: dark only inside a dark tone scope, light everywhere else.
+ */
+export function turnstileThemeFor(element: Element | null): TurnstileTheme {
+  const scope = element?.closest("[data-tone]");
+  return scope?.getAttribute("data-tone") === "dark" ? "dark" : "light";
+}
 
 function loadTurnstile(): Promise<TurnstileApi> {
   if (window.turnstile) return Promise.resolve(window.turnstile);
@@ -91,6 +105,7 @@ export function TurnstileWidget({
           sitekey: siteKey,
           action,
           size: container.current.clientWidth < MIN_FLEXIBLE_WIDTH ? "compact" : "flexible",
+          theme: turnstileThemeFor(container.current),
           "error-callback": () => setFailed(true),
           "expired-callback": () => {
             if (widgetId.current) turnstile.reset(widgetId.current);

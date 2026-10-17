@@ -15,17 +15,18 @@ import type {
   SolutionShowcaseItem,
 } from "@vitalos/ui";
 import { iconFor } from "./icons";
-import { industryImageFor } from "./industry-images";
+import { industryArtworkFor } from "./industry-artwork";
 import type { MapOptions } from "./patterns";
 import { labAssetPresentation, toOfferRows, toRow, toRows, toSolutionCard } from "./patterns";
-import { practiceImageFor } from "./practice-images";
-import { solutionImageFor } from "./solution-images";
-import { stageImageFor } from "./stage-images";
+import { practiceArtworkFor } from "./practice-artwork";
+import { solutionDiagramFor } from "./solution-diagrams";
+import { stageIconFor } from "./stage-icons";
 import type { DerivedStage } from "./stages";
 
 /**
  * Items for the homepage showcases, shared by every page that carries them (pages redesign,
- * 15 Oct 2026): each item gets its locked-name icon and approved image. Callers order the
+ * 15 Oct 2026): each item gets its locked-name icon and its brand-system artwork or line diagram
+ * (ADR-044). Callers order the
  * summaries (orderByLockedNames) first.
  */
 export function practiceShowcaseItems(
@@ -33,13 +34,12 @@ export function practiceShowcaseItems(
   options: MapOptions = {},
 ): PracticeShowcaseItem[] {
   return toRows("practice", practices, options).map((row) => {
-    const image = practiceImageFor(row.title);
     return {
       title: row.title,
       href: row.href,
       ...(row.summary ? { summary: row.summary } : {}),
       icon: iconFor("practice", row.title),
-      ...(image ? { image } : {}),
+      art: practiceArtworkFor(row.title),
     };
   });
 }
@@ -51,14 +51,14 @@ export function solutionShowcaseItems(
   return solutions.flatMap((solution) => {
     const card = toSolutionCard(solution, options);
     if (!card) return [];
-    const image = solutionImageFor(card.title);
+    const diagram = solutionDiagramFor(card.title);
     return [
       {
         title: card.title,
         href: card.href,
         ...(card.summary ? { summary: card.summary } : {}),
         icon: iconFor("solution", card.title),
-        ...(image ? { image } : {}),
+        ...(diagram ? { diagram } : {}),
       },
     ];
   });
@@ -69,13 +69,12 @@ export function industryShowcaseItems(
   options: MapOptions = {},
 ): IndustryShowcaseItem[] {
   return toRows("industry", industries, options).map((row) => {
-    const image = industryImageFor(row.title);
     return {
       title: row.title,
       href: row.href,
       ...(row.summary ? { summary: row.summary } : {}),
       icon: iconFor("industry", row.title),
-      ...(image ? { image } : {}),
+      art: industryArtworkFor(row.title),
     };
   });
 }
@@ -95,18 +94,18 @@ export function offerFeatureItems(offers: readonly OfferSummary[]): FeatureGridI
 }
 
 /**
- * The nine locked stages for the lifecycle ring, each with its disc and the summary the How We
+ * The nine locked stages for the lifecycle ring, each with its line icon and the summary the How We
  * Work page gives it (deriveStages).
  */
 export function lifecycleStages(described: readonly DerivedStage[] = []): ProcessCycleStage[] {
   const summaries = new Map(described.map((stage) => [stage.title, stage.summary]));
   return howWeWorkStages.map((stage) => {
-    const image = stageImageFor(stage);
+    const icon = stageIconFor(stage);
     const summary = summaries.get(stage);
     return {
       title: stage as string,
       ...(summary ? { summary } : {}),
-      ...(image ? { image } : {}),
+      ...(icon ? { icon } : {}),
     };
   });
 }

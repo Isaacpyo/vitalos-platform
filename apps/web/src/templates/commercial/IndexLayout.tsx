@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { RichText as RichTextValue } from "@vitalos/cms";
-import type { PatternLink } from "@vitalos/ui";
+import type { ArtworkSpec, PatternLink } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import type { Crumb } from "../../lib/view-mapping/breadcrumbs";
 import { ClosingBand, PageIntro, renderBands } from "./bands";
@@ -15,6 +15,8 @@ export interface IndexLayoutProps {
   lead?: string | undefined;
   /** Route page body (CMS rich text). */
   body?: RichTextValue | undefined;
+  /** The family artwork of the hero (ADR-044). */
+  artwork: ArtworkSpec;
   /** Hero actions, usually one link. */
   actions?: ReactNode;
   /** Bands for each list on the page. A factory returns null when its list is empty. */
@@ -36,13 +38,20 @@ export function IndexLayout({
   lead,
   body,
   actions,
+  artwork,
   bands,
   closing,
   children,
 }: Readonly<IndexLayoutProps>) {
   return (
     <PageMain>
-      <PageIntro crumbs={crumbs} title={title} {...(lead ? { lead } : {})} actions={actions} />
+      <PageIntro
+        crumbs={crumbs}
+        title={title}
+        {...(lead ? { lead } : {})}
+        actions={actions}
+        artwork={artwork}
+      />
       {renderBands([...bodyBands(body), ...bands], "light")}
       {children}
       <ClosingBand primary={closing} />

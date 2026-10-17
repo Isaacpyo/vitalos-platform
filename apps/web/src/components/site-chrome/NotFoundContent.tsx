@@ -1,6 +1,6 @@
 import { ctas, routes } from "@vitalos/cms";
 import { Button, PageHero } from "@vitalos/ui";
-import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 import { ClosingBand } from "../../templates/commercial/bands";
 
 /**
@@ -14,7 +14,7 @@ export function NotFoundContent() {
       <PageHero
         tone="dark"
         size="title"
-        backdrop={heroPhotograph}
+        artwork={heroArtwork("not-found")}
         title="Page not found"
         lead="This page does not exist or is no longer available."
         actions={

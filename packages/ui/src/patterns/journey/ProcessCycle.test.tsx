@@ -8,7 +8,7 @@ const stages: ProcessCycleStage[] = [
   {
     title: "Example stage one (fixture)",
     summary: "Example summary one (fixture).",
-    image: { src: "/example/one.webp", width: 192, height: 192 },
+    icon: "search",
   },
   {
     title: "Example stage two (fixture)",
@@ -32,8 +32,9 @@ describe("ProcessCycle", () => {
     expect(document.getElementById(describedBy)?.textContent).toBe(
       "Example summary two (fixture).",
     );
-    // Illustrations are decorative.
-    expect(list.querySelector("img")?.getAttribute("alt")).toBe("");
+    // Line icons only (ADR-044): no raster images, and the icon is decorative.
+    expect(list.querySelector("img")).toBeNull();
+    expect(list.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("presents the pointed or focused stage in the centre, which is hidden from assistive tech", () => {

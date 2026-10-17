@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Container, Eyebrow, Heading, Lead, PageHero, Section, Stack } from "@vitalos/ui";
-import type { HeadingLevel, ContainerSize, SectionTone } from "@vitalos/ui";
-import { heroPhotograph } from "../../lib/view-mapping/hero-images";
+import type { ArtworkSpec, HeadingLevel, ContainerSize, SectionTone } from "@vitalos/ui";
 
 /** A page band: Section plus Container. The page's own `<main>` is `PageMain`. */
 export function PageBand({
@@ -31,9 +30,11 @@ export function PageBand({
 
 /**
  * The page's first band: the homepage hero's language (pages redesign, 15 Oct 2026), a dark band
- * under the clear header with the hero photograph and rounded bottom corners. The eyebrow, the
- * single H1, an optional lead, then anything beneath them; optional media on the right. `full`
- * is the larger hero of a top-level page (About, Trust Centre, Careers, Insights, Labs).
+ * under the clear header with the family's brand-system artwork (ADR-044) and rounded bottom
+ * corners. The eyebrow, the single H1, an optional lead, then anything beneath them; optional
+ * media on the right. `full` is the larger hero of a top-level page (About, Trust Centre,
+ * Careers, Insights, Labs). `tone="light"` is the compact light hero of a reading page (an
+ * article, a role, a legal page, a Trust Centre topic).
  */
 export function PageHeroBand({
   crumbs,
@@ -44,6 +45,8 @@ export function PageHeroBand({
   actions,
   media,
   full = false,
+  artwork,
+  tone = "dark",
   children,
 }: Readonly<{
   /** Retained for callers: every hero now uses the wide container, like the homepage. */
@@ -61,15 +64,19 @@ export function PageHeroBand({
   media?: ReactNode;
   /** The larger hero of a top-level page. */
   full?: boolean;
+  /** The page family's artwork and the item's variant (ADR-044). */
+  artwork: ArtworkSpec;
+  /** `light`: the compact light hero of a reading page. Default `dark`. */
+  tone?: "dark" | "light";
   children?: ReactNode;
 }>) {
   return (
     <>
       {crumbs}
       <PageHero
-        tone="dark"
-        backdrop={heroPhotograph}
-        size={full ? "display" : "title"}
+        tone={tone}
+        artwork={artwork}
+        size={full && tone === "dark" ? "display" : "title"}
         containerSize="wide"
         title={title}
         eyebrow={eyebrow}

@@ -58,3 +58,7 @@ Approved Figma templates (Direction 01) supersede the comp; the owner confirms o
 ## Status update (10 Oct 2026)
 
 The owner approved Motion for React (handoff section 7). [ADR-024](ADR-024-motion.md) supersedes the sentence "No Motion for React dependency" in decision 4 and the rejected option "Port with Motion for React": motion now runs on `motion` 13.4.4 under progressive-enhancement rules (server HTML is the final state, no opacity on page text, reduced motion, `LazyMotion` with `domAnimation`, CSP unchanged). `RevealController` is removed; `Reveal` runs on Motion. The rest of this decision stands, including the no-fade rule, which ADR-024 keeps.
+
+## Amendment, 17 Oct 2026 (ADR-044)
+
+The imagery of this decision is amended by [ADR-044](ADR-044-brand-system-hero-artwork.md): the hero photograph, the practice, solution and lifecycle illustrations and the industry photographs (all AI-generated) are replaced by code-drawn brand artwork and line diagrams. Real photography enters only through registered `MediaSlot`s.

@@ -8,6 +8,7 @@ import { labTypeLabel } from "./map";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { labShowcaseItems } from "../../lib/view-mapping/showcase";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /**
  * One Labs category, as the homepage Labs bench (pages redesign, 15 Oct 2026): specimen cards with
@@ -20,6 +21,7 @@ export function LabTypePage({ data }: Readonly<{ data: LabTypeData }>) {
   return (
     <PageMain>
       <PageHeroBand
+        artwork={heroArtwork("labs", type)}
         crumbs={
           <Breadcrumbs
             trail={[

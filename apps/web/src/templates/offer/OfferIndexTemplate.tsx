@@ -7,6 +7,7 @@ import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { offerFeatureItems } from "../../lib/view-mapping/showcase";
 import { Band } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface OfferIndexTemplateProps {
   page: RoutePageView | null;
@@ -24,6 +25,7 @@ export function OfferIndexTemplate({ page, offers }: Readonly<OfferIndexTemplate
   const items = offerFeatureItems(orderByLockedNames(offers, offerNames));
   return (
     <IndexLayout
+      artwork={heroArtwork("what-we-do", "offers")}
       crumbs={offersTrail()}
       title={page?.heading ?? structuralLabels.offers}
       lead={page?.intro}

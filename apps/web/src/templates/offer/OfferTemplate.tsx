@@ -1,10 +1,11 @@
 import { ctas, megaMenuColumns, routes } from "@vitalos/cms";
 import type { OfferView } from "@vitalos/cms";
-import { Button, DefinitionList, FeatureGrid, Icon } from "@vitalos/ui";
+import { Button, DefinitionList, FeatureGrid } from "@vitalos/ui";
 import type { DefinitionItem, IconName } from "@vitalos/ui";
 import { PageMain } from "../../components/site-chrome/PageMain";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { toRows } from "../../lib/view-mapping/patterns";
@@ -38,20 +39,34 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
   );
 }
 
+/** The facts the hero's engagement panel carries, so the summary band below does not repeat them. */
+const heroTerms: ReadonlySet<string> = new Set([
+  structuralLabels.audience,
+  structuralLabels.duration,
+  structuralLabels.nextStep,
+]);
+
+/** How many of the offer's outputs the hero panel lists; the full list follows in its band. */
+const HERO_OUTPUTS = 3;
+
 /**
- * Offer page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
- * compact dark hero with the offer's mark, the engagement summary as a definition list, what the
- * client receives, what is required from them, what is not included (rows), and where the offer
- * leads (icon cards), then the closing card. The call
- * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
+ * Offer page (Stage 9 section 22): a reading page, so the light compact hero (ADR-044) with the
+ * What We Do family's artwork in the offer's own variant and, beside the copy, the engagement
+ * panel (finding A7): typical duration, who it is for, what you receive and how it connects to the
+ * next phase, all from the offer's own fields (nothing is added when a field is empty). Then the
+ * rest of the engagement summary as a definition list, what the client receives, what is required
+ * from them, what is not included (rows), and where the offer leads (icon cards), then the closing
+ * card. The call to action starts the enquiry with this offer pre-selected unless the CMS supplies
+ * its own.
  */
 export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
   const cta = ctaToLink(offer.cta) ?? {
     label: ctas.primary,
     href: contactHref("offer", offer.slug),
   };
-  const summary = engagementSummary(offer);
-  const duration = durationLabel(offer.durationCategory);
+  const summary = engagementSummary(offer).filter(
+    (item) => !(typeof item.term === "string" && heroTerms.has(item.term)),
+  );
   const related = (kind: "solution" | "practice", items: OfferView["solutions"]) =>
     toRows(kind, items).map((row) => ({
       title: row.title,
@@ -68,21 +83,17 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
     <PageMain>
       <PageIntro
         crumbs={offerTrail(offer)}
-        compact
+        tone="light"
+        artwork={heroArtwork("what-we-do", offer.slug)}
         eyebrow={structuralLabels.offers}
         title={offer.title}
         {...(offer.summary ? { lead: offer.summary } : {})}
         actions={
-          <Button href={cta.href} variant="secondary" size="lg" arrow>
+          <Button href={cta.href} size="lg" arrow>
             {cta.label}
           </Button>
         }
-        media={
-          <OfferMark
-            icon={iconFor("offer", offer.title)}
-            {...(duration ? { fact: { label: structuralLabels.duration, value: duration } } : {})}
-          />
-        }
+        media={<EngagementPanel offer={offer} />}
       />
       {renderBands(
         [
@@ -142,30 +153,54 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
 }
 
 /**
- * The offer's mark beside the hero copy: its icon on a frosted panel with the typical duration,
- * in the hero panel's style. Decorative apart from the fact, which is also in the summary below.
+ * The engagement panel beside the offer's hero copy (finding A7, ADR-044): the facts a buyer looks
+ * for first, from the offer's own fields. A field that is empty is left out; with none at all the
+ * panel is not rendered. Real content, so it is a named region for assistive technology.
  */
-function OfferMark({
-  icon,
-  fact,
-}: Readonly<{ icon: IconName; fact?: { label: string; value: string } }>) {
+export function EngagementPanel({ offer }: Readonly<{ offer: OfferView }>) {
+  const duration = durationLabel(offer.durationCategory);
+  const outputs = offer.outputs.filter((item) => item.trim() !== "").slice(0, HERO_OUTPUTS);
+  const facts: { term: string; value: string | readonly string[] }[] = [];
+  if (duration) facts.push({ term: structuralLabels.duration, value: duration });
+  if (offer.audience?.trim())
+    facts.push({ term: structuralLabels.audience, value: offer.audience });
+  if (outputs.length > 0) facts.push({ term: structuralLabels.outputs, value: outputs });
+  if (offer.nextStep?.trim())
+    facts.push({ term: structuralLabels.nextStep, value: offer.nextStep });
+  if (facts.length === 0) return null;
   return (
-    <div className="relative mx-auto grid aspect-square w-full max-w-sm place-items-center overflow-hidden rounded-3xl border border-white/20 bg-white/10 backdrop-blur-xl">
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,color-mix(in_srgb,var(--color-blue-600)_45%,transparent),transparent_65%)]"
-      />
-      <span
-        aria-hidden="true"
-        className="relative inline-flex size-28 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-floating"
-      >
-        <Icon name={icon} size={32} className="scale-150" />
-      </span>
-      {fact ? (
-        <p className="absolute inset-x-(--space-5) bottom-(--space-5) m-0 rounded-xl bg-white/90 px-(--space-4) py-(--space-3) text-center text-small text-midnight-950">
-          <span className="font-semibold">{fact.label}:</span> {fact.value}
-        </p>
-      ) : null}
-    </div>
+    <aside
+      aria-label={structuralLabels.engagement}
+      data-tone="light"
+      className="rounded-2xl border border-tone-border bg-tone-bg p-(--space-6) text-tone-text shadow-floating"
+    >
+      <p className="m-0 font-mono text-eyebrow tracking-wide text-tone-eyebrow uppercase">
+        {structuralLabels.engagement}
+      </p>
+      <dl className="m-0 mt-(--space-4) divide-y divide-tone-border">
+        {facts.map((fact) => (
+          <div key={fact.term} className="py-(--space-4) first:pt-0 last:pb-0">
+            <dt className="text-small font-semibold text-tone-heading">{fact.term}</dt>
+            <dd className="m-0 mt-(--space-1) text-small text-pretty">
+              {typeof fact.value === "string" ? (
+                fact.value
+              ) : (
+                <ul className="m-0 list-none space-y-(--space-1) p-0">
+                  {fact.value.map((item) => (
+                    <li key={item} className="flex gap-(--space-2)">
+                      <span
+                        aria-hidden="true"
+                        className="mt-[0.55em] size-1.5 shrink-0 bg-aqua-600"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </aside>
   );
 }

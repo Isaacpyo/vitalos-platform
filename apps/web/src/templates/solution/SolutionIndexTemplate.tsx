@@ -7,6 +7,7 @@ import { orderByLockedNames } from "../../lib/view-mapping/ordering";
 import { solutionShowcaseItems } from "../../lib/view-mapping/showcase";
 import { Band } from "../commercial/bands";
 import { IndexLayout } from "../commercial/IndexLayout";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 export interface SolutionIndexTemplateProps {
   page: RoutePageView | null;
@@ -26,6 +27,7 @@ export function SolutionIndexTemplate({ page, solutions }: Readonly<SolutionInde
   });
   return (
     <IndexLayout
+      artwork={heroArtwork("what-we-do", "solutions")}
       crumbs={solutionsTrail()}
       title={page?.heading ?? structuralLabels.solutions}
       lead={page?.intro}

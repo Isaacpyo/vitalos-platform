@@ -4,33 +4,26 @@ import { PracticeShowcase, type PracticeShowcaseItem } from "./PracticeShowcase"
 
 afterEach(cleanup);
 
-const image = (name: string) => ({
-  src: `/example/${name}.webp`,
-  srcSet: `/example/${name}-960.webp 960w, /example/${name}.webp 1672w`,
-  width: 1672,
-  height: 941,
-});
-
 const items: PracticeShowcaseItem[] = [
   {
     title: "Example practice one (fixture)",
     href: "https://example.invalid/one",
     summary: "Example summary one (fixture).",
     icon: "compass",
-    image: image("one"),
+    art: { family: "what-we-do", seed: "one" },
   },
   {
     title: "Example practice two (fixture)",
     href: "https://example.invalid/two",
     summary: "Example summary two (fixture).",
     icon: "code",
-    image: image("two"),
+    art: { family: "what-we-do", seed: "two" },
   },
-  // No illustration: the stage falls back to the icon on a tint.
+  // No artwork: the stage falls back to the icon on a tint.
   {
     title: "Example practice three (fixture)",
     href: "https://example.invalid/three",
-    icon: "chip",
+    icon: "dataflow",
   },
 ];
 
@@ -56,20 +49,21 @@ describe("PracticeShowcase", () => {
     expect(active()).toEqual(["https://example.invalid/three"]);
   });
 
-  it("keeps the stage decorative, with an illustration per practice that has one", () => {
+  it("keeps the stage decorative, with its own artwork per practice that has one", () => {
     const { container } = render(<PracticeShowcase items={items} />);
     const stage = container.querySelector("[data-practice-stage]");
     expect(stage?.getAttribute("aria-hidden")).toBe("true");
     expect(stage).not.toBeNull();
-    const stageImages = stage?.querySelectorAll("img") ?? [];
-    expect(stageImages).toHaveLength(2);
-    for (const img of stageImages) expect(img.getAttribute("alt")).toBe("");
-    expect(stageImages[0]?.getAttribute("srcset")).toContain("960w");
+    expect(container.querySelector("img")).toBeNull();
+    const stageArt = stage?.querySelectorAll("[data-artwork]") ?? [];
+    expect(stageArt).toHaveLength(2);
+    // Each practice draws its own variant (deterministic per seed).
+    expect(stageArt[0]?.innerHTML).not.toBe(stageArt[1]?.innerHTML);
     expect(stage?.textContent).toContain("01 / 03");
-    // The compact layout's own illustrations are decorative too, inside the named links.
-    const inline = container.querySelectorAll("ol img");
+    // The compact layout's strips are decorative too, inside the named links.
+    const inline = container.querySelectorAll("ol [data-artwork]");
     expect(inline).toHaveLength(2);
-    for (const img of inline) expect(img.getAttribute("alt")).toBe("");
+    for (const svg of inline) expect(svg.getAttribute("aria-hidden")).toBe("true");
   });
 
   it("renders nothing without practices", () => {

@@ -119,3 +119,7 @@ Also on 15 Oct 2026 the owner asked for every section and block to fade in on mo
 Held text is fully transparent (axe treats it as not visible) until it is in view. Axe scrolls elements into view while it measures contrast, which starts their fades, so the end-to-end accessibility scan (`tests/support/axe.ts`) first shows every held item and waits for the fades to finish: it checks the page as readers see it once each band has arrived.
 
 The finite rule still applies everywhere else, including the `planes` variant of `HeroVisual`.
+
+## Amendment, 17 Oct 2026 (ADR-044)
+
+Decision 4 is narrowed by [ADR-044](ADR-044-brand-system-hero-artwork.md): text is moved, never clipped (as well as never faded). `Reveal`, `RevealItem` and the showcase panels drop their clip-path wipes, because a heading caught mid-entrance showed half cut (review finding A9). Reduced motion is unchanged.

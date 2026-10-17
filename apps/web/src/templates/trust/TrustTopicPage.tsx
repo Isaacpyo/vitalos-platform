@@ -24,6 +24,7 @@ import {
   trustTopicLabel,
 } from "./map";
 import { ClosingBand } from "../commercial/bands";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 /**
  * One Trust Centre topic. Certification blocks are omitted when there are none; the subprocessor
@@ -40,6 +41,8 @@ export function TrustTopicPage({ data }: Readonly<{ data: TrustTopicData }>) {
   return (
     <PageMain>
       <PageHeroBand
+        tone="light"
+        artwork={heroArtwork("trust", topic)}
         crumbs={
           <Breadcrumbs
             trail={[

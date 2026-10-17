@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { routes } from "@vitalos/cms";
 import { Button, Container, Section, SectionHeading } from "@vitalos/ui";
 import type { SectionTone } from "@vitalos/ui";
-import { MediaSlot } from "../../components/media-slot";
+import { MediaSlot, mediaSlotRenders } from "../../components/media-slot";
 import type { CareersPageView } from "../../features/content/careers/load";
 import { careersCopy, filterGroups, groupRoles } from "../../features/content/careers/model";
 import type { CareersFilter } from "../../features/content/careers/model";
@@ -10,6 +10,7 @@ import { PageMain } from "../institutional/page-main";
 import { renderBands } from "../commercial/bands";
 import { InsightsHero, TalkBand, monoLabel } from "../insights/parts";
 import { HtmlSection, RoleList } from "./parts";
+import { heroArtwork } from "../../lib/view-mapping/hero-artwork";
 
 const pad = (index: number) => String(index + 1).padStart(2, "0");
 
@@ -184,11 +185,14 @@ export function CareersTemplate({
   return (
     <PageMain>
       <InsightsHero
+        artwork={heroArtwork("careers")}
         full
         eyebrow={careersCopy.eyebrow}
         title={copy.heading}
         intro={copy.intro}
-        media={<MediaSlot id="careers.hero" priority />}
+        media={
+          mediaSlotRenders("careers.hero") ? <MediaSlot id="careers.hero" priority /> : undefined
+        }
         actions={
           open ? (
             <Button href="#open-roles" variant="secondary" size="lg" arrow>
