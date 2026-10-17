@@ -1,0 +1,25 @@
+{% load ui %}
+{% comment %}
+  The admin's styled file control: a native file input (it works, and is labelled, without JavaScript)
+  inside a drop zone. With JavaScript (insights-editor.js, [data-file-drop]) an image can be dragged
+  onto the zone, and the chosen file shows its name, size and an inline preview before upload.
+  Parameters: id, name, label, accept, max_bytes, and optional help.
+{% endcomment %}
+<div class="space-y-1" data-file-drop data-max-bytes="{{ max_bytes }}">
+  <label for="{{ id }}" class="field-label">{{ label }}</label>
+  <div class="rounded-md border-2 border-dashed border-slate-300 bg-slate-50 p-3 transition-colors focus-within:border-cobalt-600 data-[dragging]:border-cobalt-600 data-[dragging]:bg-cobalt-600/10 dark:border-slate-600 dark:bg-slate-900 dark:focus-within:border-cobalt-300 dark:data-[dragging]:border-cobalt-300 dark:data-[dragging]:bg-cobalt/20" data-drop-zone>
+    <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+      {% icon "upload" "h-4 w-4 shrink-0" %}
+      <span>Choose an image<span class="hidden" data-drop-hint>, or drag one here</span>.</span>
+    </div>
+    <input id="{{ id }}" type="file" name="{{ name }}" accept="{{ accept }}" required aria-describedby="{{ id }}-help {{ id }}-chosen"
+           class="mt-2 block w-full text-sm text-slate-700 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-900 file:shadow-sm file:ring-1 file:ring-slate-300 hover:file:bg-slate-100 dark:text-slate-200 dark:file:bg-slate-800 dark:file:text-white dark:file:ring-slate-600"
+           data-file-input>
+    <div class="mt-3 hidden items-start gap-3" data-file-chosen-box>
+      <img alt="" class="h-16 w-28 shrink-0 rounded border border-slate-200 object-cover dark:border-slate-700" data-file-preview>
+      <p class="min-w-0 break-words text-xs text-slate-700 dark:text-slate-200" id="{{ id }}-chosen" aria-live="polite" data-file-chosen></p>
+    </div>
+  </div>
+  <p class="field-help" id="{{ id }}-help">{{ help|default:"JPEG, PNG, WebP or AVIF, 5 MB at most. Shown at 16:9 on the website." }}</p>
+  <p class="field-error" role="alert" hidden data-file-error></p>
+</div>

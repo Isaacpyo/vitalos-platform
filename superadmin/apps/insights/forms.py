@@ -25,6 +25,9 @@ class PostForm(StyledFormMixin, forms.Form):
     body_md = forms.CharField(label="Body", max_length=200_000, required=False, widget=forms.Textarea())
     format = forms.ChoiceField(choices=PostFormat.choices)
     slug = forms.CharField(max_length=80, required=False)
+    # In byline order: the browser submits ticked boxes in the order they appear, and the editor's
+    # script keeps the ticked authors first, in the order the editor arranged them (lead first).
+    authors = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
     practice = forms.ChoiceField(choices=[("", "None")] + Practice.choices, required=False)
     topics = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
     cover_alt = forms.CharField(label="Alt text", max_length=300, required=False)
@@ -55,19 +58,7 @@ class PostForm(StyledFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         self.post = post
         current_authors = public.working_authors(post)
-        author_choices = [("", "None")] + [
-            (str(author.pk), f"{author.name}{'' if author.is_confirmed else ' (not confirmed)'}")
-            for author in Author.objects.filter(is_active=True).order_by("name")
-        ]
-        known = {value for value, _ in author_choices}
-        author_choices += [
-            (str(a.pk), f"{a.name} (inactive)") for a in current_authors if str(a.pk) not in known
-        ]
-        for index in range(1, MAX_AUTHORS + 1):
-            label = "Lead author" if index == 1 else f"Author {index}"
-            self.fields[f"author_{index}"] = forms.ChoiceField(
-                label=label, choices=author_choices, required=False
-            )
+        self.fields["authors"].choices = self._author_choices(current_authors)
         self.fields["topics"].choices = [
             (str(topic.pk), f"{topic.name}{' (sector)' if topic.kind == TopicKind.SECTOR else ''}")
             for topic in Topic.objects.order_by("kind", "sort", "name")
@@ -106,8 +97,7 @@ class PostForm(StyledFormMixin, forms.Form):
                     "updated_at": post.updated_at.isoformat(),
                 }
             )
-            for index, author in enumerate(current_authors[:MAX_AUTHORS], start=1):
-                self.initial[f"author_{index}"] = str(author.pk)
+            self.initial["authors"] = [str(author.pk) for author in current_authors[:MAX_AUTHORS]]
             related = list(post.related_links.order_by("position").values_list("related_post_id", flat=True))
             for index, pk in enumerate(related[:MAX_RELATED], start=1):
                 self.initial[f"related_{index}"] = str(pk)
@@ -124,6 +114,42 @@ class PostForm(StyledFormMixin, forms.Form):
                         "class": INPUT + " font-mono text-[13px] leading-6",
                     }
                 )
+
+    def _author_choices(self, current_authors) -> list[tuple[str, str]]:
+        """Confirmed, active authors, plus the post's own authors whatever their state (so an edit
+        never drops one silently). The chosen authors come first in byline order (the submitted order
+        when the form is bound), then everyone else by name."""
+
+        def label(author) -> str:
+            notes = [] if author.is_confirmed else ["not confirmed"]
+            if not author.is_active:
+                notes.append("inactive")
+            kind = " · organisation" if author.kind == AuthorKind.ORGANISATION else ""
+            state = " (" + ", ".join(notes) + ")" if notes else ""
+            return f"{author.name}{kind}{state}"
+
+        pool = {
+            str(author.pk): author
+            for author in Author.objects.filter(is_active=True, confirmed_real_at__isnull=False).order_by("name")
+        }
+        for author in current_authors:
+            pool.setdefault(str(author.pk), author)
+        if self.is_bound:
+            getlist = getattr(self.data, "getlist", None)
+            submitted = getlist(self.add_prefix("authors")) if getlist else self.data.get("authors") or []
+            if isinstance(submitted, str):
+                submitted = [submitted]
+            chosen = [str(key) for key in submitted if str(key) in pool]
+        else:
+            chosen = [str(author.pk) for author in current_authors]
+        rest = sorted((key for key in pool if key not in chosen), key=lambda key: pool[key].name.lower())
+        return [(key, label(pool[key])) for key in dict.fromkeys([*chosen, *rest])]
+
+    def clean_authors(self) -> list[str]:
+        chosen = list(dict.fromkeys(self.cleaned_data.get("authors") or []))
+        if len(chosen) > MAX_AUTHORS:
+            raise forms.ValidationError(f"Choose at most {MAX_AUTHORS} authors.")
+        return chosen
 
     def working_data(self) -> dict:
         data = {
@@ -161,11 +187,8 @@ class PostForm(StyledFormMixin, forms.Form):
         return data
 
     def authors(self) -> list[str]:
-        return [
-            self.cleaned_data[f"author_{index}"]
-            for index in range(1, MAX_AUTHORS + 1)
-            if self.cleaned_data.get(f"author_{index}")
-        ]
+        """The chosen author ids in byline order (the lead author first)."""
+        return list(self.cleaned_data.get("authors") or [])
 
     def related(self) -> list[str]:
         return [
