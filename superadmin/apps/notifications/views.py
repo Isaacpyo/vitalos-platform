@@ -45,8 +45,9 @@ def attention(request):
 @login_required
 @require_GET
 def badge(request):
-    """Polled by the bell every 60 seconds."""
-    return render(request, "notifications/_bell.html", {"unread_count": services.unread_count(request.user)})
+    """Polled by the bell every 60 seconds; ``?nav=1`` returns the sidebar's count pill instead."""
+    template = "notifications/_nav_badge.html" if request.GET.get("nav") else "notifications/_bell.html"
+    return render(request, template, {"unread_count": services.unread_count(request.user)})
 
 
 @login_required
