@@ -53,7 +53,7 @@ describe("header model", () => {
   it("lists the company pages under Who We Are, and the industries once their gate opens", () => {
     const industries = [summary("i", "Health & Care"), summary("j", "Growth & Technology")];
     const closed = buildWhoWeAreColumns({ ...base, industries });
-    expect(closed.map((c) => c.key)).toEqual(["company"]);
+    expect(closed.map((c) => c.key)).toEqual(["company", "products"]);
     expect(closed[0]?.links.map((l) => l.label)).toEqual([
       "About",
       "How We Work",
@@ -77,6 +77,28 @@ describe("header model", () => {
     expect(column?.links.map((l) => l.label)).toEqual(["Health & Care", "Growth & Technology"]);
     expect(column?.links.every((l) => l.icon !== undefined)).toBe(true);
     expect(column?.more).toEqual({ label: "All industries", href: "/industries" });
+  });
+
+  it("lists the products under Who We Are: the heading to /products, each product to its page", () => {
+    const products = buildWhoWeAreColumns(base).find((c) => c.key === "products");
+    expect(products?.heading).toBe("Products");
+    expect(products?.href).toBe("/products");
+    expect(products?.links).toEqual([
+      {
+        label: "Fauward — logistics SaaS",
+        description: "Built and operated by Vitalos",
+        href: "/products/fauward",
+        icon: "gauge",
+      },
+    ]);
+    expect(products?.more).toEqual({ label: "All products", href: "/products" });
+    // Who We Are stays within the What We Do panel's width: at most three columns.
+    const open = buildWhoWeAreColumns({
+      ...base,
+      industries: [summary("i", "Health & Care")],
+      gates: evaluateGates({ industries: 1 }),
+    });
+    expect(open.map((c) => c.key)).toEqual(["company", "industries", "products"]);
   });
 
   it("gives What We Do and Who We Are a feature card from locked copy only", () => {
@@ -235,6 +257,11 @@ describe("footer model", () => {
     }
     expect(columns.every((column) => column.links.length > 0)).toBe(true);
     expect(legalIdentity).toBeUndefined();
+  });
+
+  it("lists Products in the Explore column, linking to the Products index", () => {
+    const explore = buildFooterModel(base).columns.find((c) => c.key === "explore");
+    expect(explore?.links).toContainEqual({ label: "Products", href: "/products" });
   });
 
   it("lists Careers only once there is an open role", () => {

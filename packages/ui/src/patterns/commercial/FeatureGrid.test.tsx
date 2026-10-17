@@ -6,6 +6,34 @@ import { FeatureGrid } from "./FeatureGrid";
 afterEach(cleanup);
 
 describe("FeatureGrid", () => {
+  it("shows an unlinked card's richText (an inline link) in place of its text", () => {
+    render(
+      <FeatureGrid
+        items={[
+          {
+            title: "Example (fixture)",
+            text: "See the example (fixture).",
+            richText: (
+              <>
+                See the <a href="/example">example</a> (fixture).
+              </>
+            ),
+          },
+          {
+            title: "Linked (fixture)",
+            text: "Plain line (fixture).",
+            richText: <a href="/nested">nested</a>,
+            href: "/card",
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "example" }).getAttribute("href")).toBe("/example");
+    // A linked card never nests a link: it keeps the plain text.
+    expect(screen.queryByRole("link", { name: "nested" })).toBeNull();
+    expect(screen.getByText("Plain line (fixture).")).toBeTruthy();
+  });
+
   it("renders each item as a list item with its title and line", () => {
     render(
       <FeatureGrid

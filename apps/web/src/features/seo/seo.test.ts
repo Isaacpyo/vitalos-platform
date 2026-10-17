@@ -303,6 +303,7 @@ describe("buildSitemap", () => {
     "trust",
     "careers",
     "contact",
+    "products",
   ]);
   const entries: SitemapEntry[] = [
     { path: "/what-we-do/consulting", kind: "practice", lastModified: "2026-02-01T00:00:00Z" },
@@ -357,6 +358,19 @@ describe("buildSitemap", () => {
     expect(list).toContain("https://www.example.invalid/what-we-do/consulting");
     expect(list).toContain("https://www.example.invalid/people/example");
     expect(list).toContain("https://www.example.invalid/trust/security");
+  });
+
+  it("lists /products and each product page while the Products route page exists", () => {
+    const listed = urls(
+      buildSitemap({ siteUrl, gates: closedGates, hasHome: true, routePages: all, entries }),
+    );
+    expect(listed).toContain("https://www.example.invalid/products");
+    expect(listed).toContain("https://www.example.invalid/products/fauward");
+    const without = new Set([...all].filter((key) => key !== "products"));
+    const unlisted = urls(
+      buildSitemap({ siteUrl, gates: closedGates, hasHome: true, routePages: without, entries }),
+    );
+    expect(unlisted.some((url) => url.includes("/products"))).toBe(false);
   });
 
   it("opens each gate independently", () => {

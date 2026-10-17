@@ -1,4 +1,12 @@
-import { absoluteUrl, brandName, descriptor, propositionLong, routes } from "@vitalos/cms";
+import {
+  absoluteUrl,
+  brandName,
+  descriptor,
+  productPath,
+  products,
+  propositionLong,
+  routes,
+} from "@vitalos/cms";
 
 /**
  * `/llms.txt` (llmstxt.org): a plain Markdown map of the site for AI assistants. Low priority:
@@ -30,6 +38,12 @@ export function buildLlmsTxt(input: {
     `> ${propositionLong}`,
     "",
     `${brandName}: ${descriptor}. UK first, international by design. Five practices (Consulting, Engineering, AI & Data, Experience and Managed Services) share one delivery lifecycle, from strategy to production. Contact: ${absoluteUrl(input.siteUrl, routes.contact())}`,
+    // The About sentence for each product, with its page (owner direction, 17 Oct 2026).
+    ...products
+      .filter((product) => input.sitemapPaths.has(productPath(product)))
+      .map(
+        (product) => `${product.description} ${absoluteUrl(input.siteUrl, productPath(product))}`,
+      ),
   ];
   for (const section of input.sections) {
     const links = section.links.filter((link) => input.sitemapPaths.has(link.path));

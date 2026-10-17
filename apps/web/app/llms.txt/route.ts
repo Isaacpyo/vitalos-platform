@@ -1,4 +1,4 @@
-import { navLabels, routes } from "@vitalos/cms";
+import { navLabels, productPath, products, routes } from "@vitalos/cms";
 import { loadChromeContent } from "../../src/components/site-chrome/load";
 import { getSeoContext } from "../../src/features/seo/context";
 import { buildLlmsTxt } from "../../src/features/seo/llms-txt";
@@ -14,13 +14,14 @@ export const dynamic = "force-static";
 
 export async function GET(): Promise<Response> {
   const { siteUrl } = getSeoContext();
-  const [sections, chrome, about, howWeWork, trust, contact] = await Promise.all([
+  const [sections, chrome, about, howWeWork, trust, contact, productsPage] = await Promise.all([
     loadSitemapSections(),
     loadChromeContent(),
     loadRoutePage("about"),
     loadRoutePage("how-we-work"),
     loadRoutePage("trust"),
     loadRoutePage("contact"),
+    loadRoutePage("products"),
   ]);
   const sitemapPaths = new Set(
     Object.values(sections)
@@ -50,6 +51,17 @@ export async function GET(): Promise<Response> {
       {
         heading: navLabels.labs,
         links: chrome.labAssets.map((d) => ({ ...d, path: routes.labAsset(d.labType, d.slug) })),
+      },
+      {
+        heading: navLabels.products,
+        links: [
+          { path: routes.products(), title: navLabels.products, summary: productsPage?.intro },
+          ...products.map((product) => ({
+            path: productPath(product),
+            title: product.name,
+            summary: product.description,
+          })),
+        ],
       },
       {
         heading: "Company",

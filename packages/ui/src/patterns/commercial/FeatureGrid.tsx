@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { RevealItem } from "../../motion/Reveal";
 import { cx } from "../../primitives/_internal/cx";
 import { Icon, type IconName } from "../../primitives/Icon";
@@ -9,6 +10,11 @@ export interface FeatureGridItem {
   title?: string | undefined;
   /** One line (fifteen words or fewer). */
   text?: string | undefined;
+  /**
+   * The line as inline content, for a line with an inline link; shown in place of `text`, which
+   * still carries the plain words. Never with `href`: a link inside a linked card would nest.
+   */
+  richText?: ReactNode;
   icon?: IconName | undefined;
   /** A short fact under the title, for example the typical duration of an offer. */
   meta?: string | undefined;
@@ -96,7 +102,7 @@ export function FeatureGrid({
                     hasText(item.title) ? "mt-(--space-2) text-body" : "text-body-l",
                   )}
                 >
-                  {item.text}
+                  {item.href ? item.text : (item.richText ?? item.text)}
                 </span>
               ) : null}
             </span>

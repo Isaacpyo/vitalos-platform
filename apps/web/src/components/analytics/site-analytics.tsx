@@ -3,8 +3,19 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { routes } from "@vitalos/cms";
+import { products, routes } from "@vitalos/cms";
 import { analyticsEnabled, vercelAnalyticsSink } from "../../features/analytics/vercel-sink";
+
+/** A product's site, by host with and without `www.` (fauward.com redirects to www). */
+const productHosts = new Map(
+  products.flatMap((product) => {
+    const host = new URL(product.url).hostname.replace(/^www\./, "");
+    return [
+      [host, product.slug],
+      [`www.${host}`, product.slug],
+    ] as const;
+  }),
+);
 
 /** Page URLs are sent without their query string: a query can carry a reference or an intent. */
 const withoutQuery = <T extends { url: string }>(event: T): T => ({
@@ -15,7 +26,8 @@ const withoutQuery = <T extends { url: string }>(event: T): T => ({
 /**
  * Cookieless analytics for the whole site (docs/seo/DECISIONS.md 23): Vercel Web Analytics page
  * views, Speed Insights field data (Core Web Vitals at p75), and one delegated listener for
- * "Talk to Vitalos" clicks (any link to the contact page). Renders nothing and loads nothing
+ * "Talk to Vitalos" clicks (any link to the contact page) and for links to a Vitalos product's
+ * own site (`outbound_click`). Renders nothing and loads nothing
  * unless `NEXT_PUBLIC_ANALYTICS_PROVIDER=vercel`. Both scripts are served from this origin
  * (`/_vercel/…`), so the CSP is unchanged.
  */
@@ -27,6 +39,14 @@ export function SiteAnalytics() {
       const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
       if (!link) return;
       const href = new URL(link.getAttribute("href") ?? "", window.location.href);
+      const product = href.origin !== window.location.origin && productHosts.get(href.hostname);
+      if (product) {
+        vercelAnalyticsSink.track("outbound_click", {
+          destination: product,
+          route: window.location.pathname,
+        });
+        return;
+      }
       if (href.origin !== window.location.origin || href.pathname !== contact) return;
       vercelAnalyticsSink.track("primary_cta_click", {
         ctaId: "talk-to-vitalos",

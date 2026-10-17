@@ -15,6 +15,11 @@ export interface BodySection {
   blocks: RichTextBlock[];
   /** Needs its rich text: it has links or blocks other than plain paragraphs and lists. */
   rich: boolean;
+  /**
+   * Rich only because its paragraphs carry inline links: it can still be a short card, with the
+   * links kept in the card's line (`blocks` holds the paragraphs).
+   */
+  inlineLinks: boolean;
 }
 
 export interface SplitBody {
@@ -29,6 +34,7 @@ const emptySection = (title?: string): BodySection => ({
   items: [],
   blocks: [],
   rich: false,
+  inlineLinks: false,
 });
 
 const hasLinks = (block: RichTextBlock): boolean =>
@@ -47,7 +53,11 @@ export function splitBody(body: RichText | undefined): SplitBody {
       continue;
     }
     current.blocks.push(block);
+    const linkedParagraph =
+      block._type === "block" && style === "normal" && !block["listItem"] && hasLinks(block);
     if (block._type !== "block" || (style !== "normal" && !block["listItem"]) || hasLinks(block)) {
+      // Linked paragraphs alone keep `inlineLinks`; any other rich block clears it for good.
+      current.inlineLinks = linkedParagraph && (!current.rich || current.inlineLinks);
       current.rich = true;
       continue;
     }
@@ -58,6 +68,10 @@ export function splitBody(body: RichText | undefined): SplitBody {
   return { lead, sections };
 }
 
+/** Paragraphs only (inline links allowed) and no list: the section reads as one short card. */
+export const isCardSection = (section: BodySection): boolean =>
+  (!section.rich || section.inlineLinks) && section.items.length === 0;
+
 /** True when every section is plain paragraphs: the body reads as a set of short cards. */
 export const isCardBody = ({ sections }: SplitBody): boolean =>
-  sections.length > 1 && sections.every((section) => !section.rich && section.items.length === 0);
+  sections.length > 1 && sections.every(isCardSection);

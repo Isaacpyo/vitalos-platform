@@ -21,6 +21,8 @@ import {
   navLabels,
   practiceNames,
   primaryNav,
+  productPath,
+  products,
   proposition,
   propositionLong,
   routes,
@@ -213,9 +215,30 @@ const companyIcons: Readonly<Record<string, IconName>> = {
 };
 
 /**
+ * The Products column (owner direction, 17 Oct 2026): each product Vitalos builds and operates,
+ * linking to its page on this site, under a heading that links to the Products index. It sits in
+ * Who We Are because What We Do already holds three columns and its card, the widest panel that
+ * fits at 1024px.
+ */
+export function buildProductsColumn(): MegaMenuColumn {
+  return {
+    key: "products",
+    heading: navLabels.products,
+    href: routes.products(),
+    links: products.map((product) => ({
+      label: product.navLabel,
+      description: product.navDescription,
+      href: productPath(product),
+      icon: "gauge" as const,
+    })),
+    more: { label: navLabels.allProducts, href: routes.products() },
+  };
+}
+
+/**
  * The Who We Are mega-menu: the company pages (About, How We Work, then Work, Insights and Careers
- * as their gates open, and All What We Do), the industries while their gate is open, and a card
- * with the proposition.
+ * as their gates open, and All What We Do), the industries while their gate is open, the products,
+ * and a card with the proposition.
  */
 export function buildWhoWeAreColumns(content: ChromeContent): MegaMenuColumn[] {
   const { gates } = content;
@@ -241,6 +264,7 @@ export function buildWhoWeAreColumns(content: ChromeContent): MegaMenuColumn[] {
       links: industries,
       more: { label: structuralLabels.allIndustries, href: routes.industries() },
     },
+    buildProductsColumn(),
   ];
   return columns.filter((column) => column.links.length > 0);
 }
@@ -356,6 +380,7 @@ export function buildFooterModel(content: ChromeContent): FooterModel {
         ...gatedSection("work"),
         ...gatedSection("insights"),
         ...gatedSection("labs"),
+        ...(products.length > 0 ? [{ label: navLabels.products, href: routes.products() }] : []),
       ],
     },
     {
