@@ -578,7 +578,9 @@ export class VisitorService {
     }
     await this.store.updateMessage(message.id, {
       feedback: body.value,
-      feedbackReason: body.value === -1 && !closingReview ? (body.reason ?? null) : null,
+      // Only written when given, so the write works before the column's migration is applied;
+      // Insights count reasons on thumbs-down answers only, so a stale reason never shows.
+      ...(body.value === -1 && body.reason && !closingReview ? { feedbackReason: body.reason } : {}),
       feedbackAt: this.ctx.deps.now().toISOString(),
     });
     if (closingReview) {

@@ -41,7 +41,8 @@ def test_digest_handoff_rate_is_a_percentage_of_a_fraction():
     email = emails.digest(
         {"waitingNow": 0, "yesterday": {"conversations": 4, "handoffs": 1, "handoffRate": 0.25}, "openGaps": 0}
     )
-    assert "25%" in email.text and "2500%" not in email.text
+    rendered = repr(email.document)
+    assert "25%" in rendered and "2500%" not in rendered
 
 
 # --- D3: staff names --------------------------------------------------------------------------------
