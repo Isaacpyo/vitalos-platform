@@ -116,3 +116,34 @@ def test_palette_and_help_require_a_role(client, client_for, norole):
 def test_help_page_lists_shortcuts(client_for, viewer):
     body = client_for(viewer).get("/help/").content.decode()
     assert "Ctrl/⌘ K" in body and "Ctrl/⌘ B" in body
+
+
+def test_sidebar_has_notifications_item_active_on_its_pages(client_for, superadmin, seeded):
+    client = client_for(superadmin)
+    for path in ("/notifications/", "/notifications/attention/"):
+        body = client.get(path).content.decode()
+        assert _active(body) == ["notifications"]
+    body = client.get("/").content.decode()
+    assert 'data-nav="notifications"' in body and "notifications/badge/?nav=1" in body
+    assert 'data-testid="bell"' in body or "notifications:badge" in body or "/notifications/badge/" in body
+
+
+def test_notifications_nav_badge_variant(client_for, superadmin, seeded):
+    response = client_for(superadmin).get("/notifications/badge/?nav=1", **HX)
+    assert response.status_code == 200 and b"bell-count" not in response.content
+
+
+def test_logout_control_renders_confirmation_dialog(client_for, superadmin, seeded):
+    client = client_for(superadmin)
+    body = client.get("/").content.decode()
+    assert 'id="logout-dialog"' in body and "Sign out of Vitalos Super Admin?" in body
+    assert "data-confirm-logout" in body and "data-close-logout" in body
+    assert 'method="post" action="/logout/"' in body
+    assert client.get("/logout/").status_code == 405
+    assert client.post("/logout/").status_code == 302
+
+
+def test_no_smoke_test_details_in_the_admin(client_for, superadmin, seeded):
+    client = client_for(superadmin)
+    for path in ("/", "/system/health/", "/help/"):
+        assert "smoke" not in client.get(path).content.decode().lower()

@@ -364,6 +364,38 @@
     }
   });
 
+  // Sign-out confirmation: the menu button opens a <dialog>; without JS the form posts directly.
+  var logoutReturn = null;
+  function logoutDialog() {
+    var dialog = document.getElementById("logout-dialog");
+    return dialog && typeof dialog.showModal === "function" ? dialog : null;
+  }
+  document.addEventListener("click", function (event) {
+    var dialog = logoutDialog();
+    if (!dialog) return;
+    var open = event.target.closest("[data-confirm-logout]");
+    if (open) {
+      event.preventDefault();
+      logoutReturn = open;
+      dialog.showModal();
+      var cancel = dialog.querySelector("[data-close-logout]");
+      if (cancel) cancel.focus();
+    } else if (event.target.closest("[data-close-logout]") || event.target === dialog) {
+      dialog.close();
+    }
+  });
+  document.addEventListener(
+    "close",
+    function (event) {
+      if (event.target.id !== "logout-dialog" || !logoutReturn) return;
+      var details = logoutReturn.closest("details[data-menu]");
+      if (details) details.setAttribute("open", "");
+      logoutReturn.focus();
+      logoutReturn = null;
+    },
+    true,
+  );
+
   document.addEventListener("vsa-close-modal", closeModal);
   document.addEventListener("vsa-toast", function (event) {
     showToast(event.detail && event.detail.message);
