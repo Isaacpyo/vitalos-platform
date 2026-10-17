@@ -13,13 +13,13 @@ Under each paragraph is the source it comes from. Where no approved source exist
 
 ## What is live today (checked 17 Oct 2026)
 
-| Field | Live state | Notes |
-|---|---|---|
-| Benefits | empty, hidden | — |
-| Default hiring process | empty, hidden | No role has its own process either: none of the three role pages shows "How we hire". |
-| Salary policy | empty, hidden | — |
-| Equal opportunities | **filled and live** on `/careers` and on every role page | FINDINGS B7 lists it as empty, which is out of date. The live text is quoted in section 4 below. |
-| Intro | live text is shorter than the seeded copy | The live intro ends "…and high standards.", while the seed (`content_sync/copy.py`) and CAR-02 end "…and high standards without unnecessary bureaucracy." Someone shortened it in the admin. This is noted only; nothing was changed. |
+| Field                  | Live state                                               | Notes                                                                                                                                                                                                                                 |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Benefits               | empty, hidden                                            | —                                                                                                                                                                                                                                     |
+| Default hiring process | empty, hidden                                            | No role has its own process either: none of the three role pages shows "How we hire".                                                                                                                                                 |
+| Salary policy          | empty, hidden                                            | —                                                                                                                                                                                                                                     |
+| Equal opportunities    | **filled and live** on `/careers` and on every role page | FINDINGS B7 lists it as empty, which is out of date. The live text is quoted in section 4 below.                                                                                                                                      |
+| Intro                  | live text is shorter than the seeded copy                | The live intro ends "…and high standards.", while the seed (`content_sync/copy.py`) and CAR-02 end "…and high standards without unnecessary bureaucracy." Someone shortened it in the admin. This is noted only; nothing was changed. |
 
 ## 1. Benefits
 

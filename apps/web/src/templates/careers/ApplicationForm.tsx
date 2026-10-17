@@ -562,7 +562,6 @@ export function ApplicationForm({
                   value={option.value}
                   checked={fields.rightToWork === option.value}
                   onChange={() => change("rightToWork", option.value)}
-                  aria-invalid={errors.rightToWork ? true : undefined}
                   className="size-5 accent-tone-action"
                 />
                 {option.label}

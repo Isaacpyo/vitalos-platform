@@ -15,11 +15,11 @@ Read from the role pages and their `JobPosting` JSON-LD:
 - https://vitalos.co.uk/careers/senior-software-engineer
 - https://vitalos.co.uk/careers/ai-data-engineer
 
-| Role | Practice | Level | Location | Work model | Employment | Salary shown | JSON-LD salary | Posted |
-|---|---|---|---|---|---|---|---|---|
-| Senior Technology Consultant | Consulting | Senior (L3) | United Kingdom | Hybrid | Permanent | £70,000–£85,000 a year | GBP 70000–85000 YEAR | 2026-10-16 12:14 UTC |
-| Senior Software Engineer | Engineering | Senior (L3) | United Kingdom | Remote | Permanent | £70,000–£85,000 a year | GBP 70000–85000 YEAR | 2026-10-16 12:12 UTC |
-| AI & Data Engineer | AI & Data | Professional (L2) | United Kingdom | Remote | Permanent | **£65,000–£80,000 a year** | GBP 65000–80000 YEAR | 2026-10-16 12:13 UTC |
+| Role                         | Practice    | Level             | Location       | Work model | Employment | Salary shown               | JSON-LD salary       | Posted               |
+| ---------------------------- | ----------- | ----------------- | -------------- | ---------- | ---------- | -------------------------- | -------------------- | -------------------- |
+| Senior Technology Consultant | Consulting  | Senior (L3)       | United Kingdom | Hybrid     | Permanent  | £70,000–£85,000 a year     | GBP 70000–85000 YEAR | 2026-10-16 12:14 UTC |
+| Senior Software Engineer     | Engineering | Senior (L3)       | United Kingdom | Remote     | Permanent  | £70,000–£85,000 a year     | GBP 70000–85000 YEAR | 2026-10-16 12:12 UTC |
+| AI & Data Engineer           | AI & Data   | Professional (L2) | United Kingdom | Remote     | Permanent  | **£65,000–£80,000 a year** | GBP 65000–80000 YEAR | 2026-10-16 12:13 UTC |
 
 None of the three has a closing date, a stated sponsorship position or its own hiring process. All three use the website form.
 
@@ -35,11 +35,11 @@ None of the three has a closing date, a stated sponsorship position or its own h
 
 ### What would confirm each band
 
-| Role | Evidence that would confirm the band | Where |
-|---|---|---|
+| Role                         | Evidence that would confirm the band                                                                                                                                                                           | Where                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Senior Technology Consultant | The owner's pay decision or benchmarking note for Consulting L3; the role's first revision and `careers.role_created` audit event, which together show whether the salary was entered or came from a duplicate | Admin › Careers › Roles › role › revision history; Admin › Audit (filter `careers.role_`); query below |
-| Senior Software Engineer | The same, for Engineering L3. If a `careers.role_duplicated` audit event exists with `source` = the Consultant's id (or the other way round), the band was copied and needs a deliberate confirmation | Same |
-| AI & Data Engineer | The owner's pay decision for AI & Data L2. Also: was it ever £70,000–£85,000? If earlier revisions show the band changed from that, it was copied and then corrected | Same |
+| Senior Software Engineer     | The same, for Engineering L3. If a `careers.role_duplicated` audit event exists with `source` = the Consultant's id (or the other way round), the band was copied and needs a deliberate confirmation          | Same                                                                                                   |
+| AI & Data Engineer           | The owner's pay decision for AI & Data L2. Also: was it ever £70,000–£85,000? If earlier revisions show the band changed from that, it was copied and then corrected                                           | Same                                                                                                   |
 
 ## B. The seven draft roles
 
@@ -56,9 +56,9 @@ Each verdict comes from the admin's own rule for opening a role (`docs/content/B
 
 ### Verdicts
 
-| # | Draft (slug) | Verdict | Reason |
-|---|---|---|---|
-| 1–7 | not visible from this run | — | Fill in from the output of the command below |
+| #   | Draft (slug)              | Verdict | Reason                                       |
+| --- | ------------------------- | ------- | -------------------------------------------- |
+| 1–7 | not visible from this run | —       | Fill in from the output of the command below |
 
 ### Read-only command for the owner
 

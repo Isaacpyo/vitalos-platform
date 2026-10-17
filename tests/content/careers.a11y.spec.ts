@@ -1,4 +1,5 @@
 import { test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { expectNoA11yViolations } from "../support/axe";
 import { CAREERS_PAGES, stubMedia } from "./support/media";
 
@@ -6,6 +7,20 @@ import { CAREERS_PAGES, stubMedia } from "./support/media";
  * axe (WCAG 2.2 AA) on every Careers page, including the role page's form, at 1440 px and at
  * 390 px (review 17 Oct 2026, B7): each page, the form with its errors, and the confirmation.
  */
+
+/**
+ * Sends the website's own careers requests from the given client address (the site allows 5 CV
+ * uploads an hour per address, and other suites spend that). Only the website's routes: the
+ * admin's upload URL takes no extra headers (CORS).
+ */
+async function sendFrom(page: Page, ip: string): Promise<void> {
+  await page.route(
+    (url) =>
+      url.pathname.startsWith("/api/careers/") && !url.pathname.startsWith("/api/careers/v1/"),
+    (route) => route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": ip } }),
+  );
+}
+
 const VIEWPORTS = [
   { name: "1440", width: 1440, height: 900 },
   { name: "390", width: 390, height: 844 },
@@ -38,6 +53,9 @@ for (const viewport of VIEWPORTS) {
     });
 
     test("axe: the confirmation after sending", async ({ page }) => {
+      // Its own client address, so the site's per-address limit (5 CV uploads an hour) is not
+      // spent by the other suites' applications.
+      await sendFrom(page, `198.51.100.${viewport.width % 250}`);
       await page.goto("/careers/example-role-fixture");
       await page.locator('input[type="file"]').setInputFiles(pdf());
       await page.getByText("example-cv.pdf, 2 KB").waitFor();
