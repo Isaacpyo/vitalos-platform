@@ -105,7 +105,7 @@ def role_list(request):
         **_common(request, "roles"),
         "tab": tab,
         "tabs": [(key, label, counts[key]) for key, (label, _) in selectors.ROLE_TABS.items()],
-        "bulk_actions": list(BULK_ROLE_ACTIONS.values()) if access.can_publish_roles(request.user) else [],
+        "bulk_actions": _bulk_actions_for_tab(tab) if access.can_publish_roles(request.user) else [],
         "bulk_url": reverse("careers:role_bulk"),
         "bulk_qs": request.GET.urlencode(),
         "rows": [
@@ -242,6 +242,21 @@ BULK_ROLE_ACTIONS = {
         BulkAction("archive", "Archive", "archived", True, "Each role leaves the website completely."),
     )
 }
+
+
+# Each tab offers only the actions that can apply to its roles (a draft opens; only an open role has
+# changes to publish). The bulk endpoint still checks every item, whatever the tab.
+BULK_ROLE_ACTIONS_BY_TAB = {
+    "open": ("publish", "pause", "close", "archive"),
+    "drafts": ("open", "archive"),
+    "paused": ("open", "close", "archive"),
+    "closed": ("open", "archive"),
+    "archived": (),
+}
+
+
+def _bulk_actions_for_tab(tab: str) -> list[BulkAction]:
+    return [BULK_ROLE_ACTIONS[key] for key in BULK_ROLE_ACTIONS_BY_TAB.get(tab, ())]
 
 
 def _bulk_back(request) -> HttpResponseRedirect:

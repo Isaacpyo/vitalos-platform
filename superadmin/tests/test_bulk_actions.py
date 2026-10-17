@@ -164,6 +164,27 @@ def test_roles_list_renders_checkboxes_and_select_all(superadmin, viewer, client
     assert "data-bulk-item" not in quiet and "data-bulk-bar" not in quiet
 
 
+def options(html: str) -> list[str]:
+    import re
+
+    return re.findall(r'<option value="([a-z]+)">', html)
+
+
+def test_each_roles_tab_offers_only_the_actions_that_apply(superadmin, client_for):
+    make_role("Example role (fixture)")
+    client = client_for(superadmin)
+
+    def tab(key):
+        return options(client.get(reverse("careers:roles") + f"?tab={key}").content.decode())
+
+    # A draft is opened, never "published" (owner report, 17 Oct 2026: Publish changes on drafts).
+    assert tab("drafts") == ["open", "archive"]
+    assert tab("open") == ["publish", "pause", "close", "archive"]
+    assert tab("paused") == ["open", "close", "archive"]
+    assert tab("closed") == ["open", "archive"]
+    assert tab("archived") == []
+
+
 # --- Posts ---------------------------------------------------------------------------------------
 
 
@@ -279,3 +300,20 @@ def test_posts_list_renders_checkboxes_and_select_all(superadmin, viewer, client
     assert '<option value="unpublish">Unpublish</option>' in html and 'value="delete"' not in html
     quiet = client_for(viewer).get(reverse("insights:posts")).content.decode()
     assert "data-bulk-item" not in quiet
+
+
+def test_each_posts_tab_offers_only_the_actions_that_apply(superadmin, make_user, client_for):
+    make_post("Example post (fixture)", superadmin)
+    client = client_for(superadmin)
+
+    def tab(key, who=client):
+        return options(who.get(reverse("insights:posts") + f"?tab={key}").content.decode())
+
+    assert tab("drafts") == ["submit", "archive"]
+    assert tab("review") == ["approve", "return", "publish", "archive"]
+    assert tab("scheduled") == ["unschedule", "publish", "archive"]
+    assert tab("published") == ["publish", "unpublish", "archive"]
+    assert tab("archived") == ["restore"]
+    assert "restore" in tab("all") and "submit" in tab("all")
+    editor = client_for(with_perms(make_user, "change_post"))
+    assert tab("review", editor) == ["return", "archive"]  # approving and publishing need publish rights

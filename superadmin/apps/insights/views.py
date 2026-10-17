@@ -136,7 +136,7 @@ def post_list(request):
         "authors": Author.objects.order_by("name"),
         "topics": Topic.objects.order_by("kind", "sort", "name"),
         "page": page,
-        "bulk_actions": _bulk_actions_for(request.user),
+        "bulk_actions": _bulk_actions_for(request.user, tab),
         "bulk_url": reverse("insights:post_bulk"),
         "bulk_qs": request.GET.urlencode(),
         "rows": [
@@ -424,11 +424,24 @@ def _bulk_back(request) -> HttpResponseRedirect:
     return redirect(reverse("insights:posts") + (f"?{query}" if query else ""))
 
 
-def _bulk_actions_for(user) -> list:
+# Each tab offers only the actions that can apply to its posts ("All" offers every one). The bulk
+# endpoint still checks every item, whatever the tab.
+BULK_POST_ACTIONS_BY_TAB = {
+    "drafts": ("submit", "archive"),
+    "review": ("approve", "return", "publish", "archive"),
+    "scheduled": ("unschedule", "publish", "archive"),
+    "published": ("publish", "unpublish", "archive"),
+    "archived": ("restore",),
+}
+
+
+def _bulk_actions_for(user, tab: str = "all") -> list:
+    keys = BULK_POST_ACTIONS_BY_TAB.get(tab, tuple(BULK_POST_ACTIONS))
+    actions = [BULK_POST_ACTIONS[key] for key in keys]
     if access.can_publish(user):
-        return list(BULK_POST_ACTIONS.values())
+        return actions
     if access.can_edit(user):
-        return [a for a in BULK_POST_ACTIONS.values() if a.key not in PUBLISH_ACTIONS]
+        return [a for a in actions if a.key not in PUBLISH_ACTIONS]
     return []
 
 
