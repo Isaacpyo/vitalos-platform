@@ -16,13 +16,13 @@
     <div class="card mt-6 overflow-x-auto">
       <table class="table-base" data-testid="team-people">
         <caption class="sr-only">People with a Super Admin account</caption>
-        <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Service lines</th><th scope="col">Last sign-in</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th scope="col">Name</th><th scope="col">Role</th>{% if architecture_enabled %}<th scope="col">Service lines</th>{% endif %}<th scope="col">Last sign-in</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
           {% for row in people %}
             <tr id="person-{{ row.user.pk }}">
               <td class="font-medium">{{ row.user.display_label }}{% if row.user.name_needs_review %} <span class="{{ 'pending'|badge_class }}" title="Name taken from the email address">Name to confirm</span>{% endif %}<br><span class="muted text-xs font-normal">{{ row.user.email }}{% if row.member.role_title %} · {{ row.member.role_title }}{% endif %}</span></td>
               <td class="whitespace-nowrap">{{ row.role }}</td>
-              <td><div class="flex flex-wrap gap-1">{% for line in row.lines %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>
+              {% if architecture_enabled %}<td><div class="flex flex-wrap gap-1">{% for line in row.lines %}<a href="{{ line.get_absolute_url }}?tab=team" class="inline-flex items-center gap-1 text-xs hover:underline">{% swatch line.colour "h-2.5 w-2.5" %}{{ line.name }}</a>{% empty %}<span class="muted text-xs">None</span>{% endfor %}</div></td>{% endif %}
               <td class="whitespace-nowrap text-sm">{% if row.user.last_login %}<time datetime="{{ row.user.last_login|date:'c' }}">{{ row.user.last_login|date:"j M Y, H:i" }}</time>{% else %}<span class="muted">Never</span>{% endif %}</td>
               <td class="text-right">{% if row.member %}{% include "architecture/dashboard/_node_actions.html" with obj=row.member kind="teammember" child_kind="" can_edit=can_edit_team %}{% endif %}</td>
             </tr>

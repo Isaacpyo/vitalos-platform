@@ -108,7 +108,8 @@ def test_without_an_owner_superadmins_manage_roles_as_before(db, superadmin, mak
 def test_role_changes_are_audited(client_for, superadmin, make_user):
     target = make_user(VIEWER)
     response = client_for(superadmin).post(
-        f"/settings/users/{target.pk}/edit/", {"full_name": "", "role": SERVICE_LEAD, "is_active": "on"}
+        f"/settings/users/{target.pk}/edit/",
+        {"full_name": "Target User", "role": SERVICE_LEAD, "is_active": "on"},
     )
     assert response.status_code in (200, 204, 302)
     event = AuditEvent.objects.get(action="users.role_changed", entity_id=str(target.pk), actor=superadmin)

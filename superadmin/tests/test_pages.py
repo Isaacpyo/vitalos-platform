@@ -133,7 +133,8 @@ def test_htmx_partials_render(populated, superadmin, client_for):
 def test_homepage_cards_show_counts_and_headline_kpi(populated, superadmin, client_for):
     project = populated["project"]
     services.change_project_status(project, "active", superadmin)
-    body = client_for(superadmin).get("/").content.decode()
+    # The cards moved from the Overview to the Service lines page (ADR-049).
+    body = client_for(superadmin).get("/service-lines/").content.decode()
     assert body.count('data-testid="service-line-card"') == 6
     assert "From strategy to production." not in body  # the north star block was removed (owner, 2026-10-14)
     assert "Utilisation" in body and "72" in body

@@ -358,6 +358,16 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+# Morning Overview and module switches (ADR-049).
+# ARCHITECTURE_MODULE_ENABLED=false hides Service lines, Architecture and their filters (decision is
+# one toggle; the data and URLs stay). Website analytics: a link-out card to ANALYTICS_DASHBOARD_URL;
+# a numbers panel appears only when ANALYTICS_PROVIDER names an adapter with a read API and
+# ANALYTICS_API_KEY is set (apps/core/analytics.py). Vercel Web Analytics has no public read API.
+ARCHITECTURE_MODULE_ENABLED = env.bool("ARCHITECTURE_MODULE_ENABLED", default=True)
+ANALYTICS_PROVIDER = env("ANALYTICS_PROVIDER", default="vercel").strip().lower()
+ANALYTICS_API_KEY = env("ANALYTICS_API_KEY", default="")
+ANALYTICS_DASHBOARD_URL = env("ANALYTICS_DASHBOARD_URL", default="").strip()
+
 SIMPLE_HISTORY_REVERT_DISABLED = True
 SIMPLE_HISTORY_HISTORY_CHANGE_REASON_USE_TEXT_FIELD = True
 

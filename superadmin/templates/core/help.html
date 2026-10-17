@@ -4,6 +4,30 @@
 {% block breadcrumbs %}<li class="truncate font-medium" aria-current="page">Help &amp; docs</li>{% endblock %}
 {% block content %}
   <h1 class="text-2xl font-bold">Help and keyboard shortcuts</h1>
+
+  <nav class="card mt-6 p-5" aria-labelledby="guides-heading">
+    <h2 id="guides-heading" class="font-semibold">Guides</h2>
+    <p class="muted mt-1 text-sm">Step by step, using the buttons as they appear on each screen.</p>
+    <ul class="mt-3 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+      {% for guide in guides %}<li><a class="text-cobalt-600 underline underline-offset-2 dark:text-cobalt-300" href="#{{ guide.slug }}">{{ guide.title }}</a></li>{% endfor %}
+    </ul>
+  </nav>
+
+  <div class="mt-6 space-y-6">
+    {% for guide in guides %}
+      <section class="card p-5" id="{{ guide.slug }}" aria-labelledby="{{ guide.slug }}-title" data-guide="{{ guide.slug }}">
+        <p class="mono-label muted">{{ guide.area }}</p>
+        <h2 id="{{ guide.slug }}-title" class="mt-1 font-semibold">{{ guide.title }}</h2>
+        <p class="muted mt-1 text-sm">{{ guide.intro }}</p>
+        <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm">
+          {% for step in guide.steps %}<li>{{ step }}</li>{% endfor %}
+        </ol>
+        {% if guide.note %}<p class="muted mt-3 text-xs">{{ guide.note }}</p>{% endif %}
+        {% if guide.url %}<p class="mt-3 text-sm"><a class="text-cobalt-600 underline underline-offset-2 dark:text-cobalt-300" href="{{ guide.url }}">{{ guide.link_label }}</a></p>{% endif %}
+      </section>
+    {% endfor %}
+  </div>
+
   <div class="mt-6 grid gap-6 lg:grid-cols-2">
     <section class="card p-5" aria-labelledby="shortcuts-global">
       <h2 id="shortcuts-global" class="font-semibold">Everywhere</h2>

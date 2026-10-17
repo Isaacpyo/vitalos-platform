@@ -172,8 +172,9 @@ def test_overview_renders_for_superadmin(client_for, superadmin, seeded):
     for label in ("Open enquiries", "Median first response (7 days)", "New this week", "Unassigned"):
         assert label in html
     assert "No responses yet" in html
-    # Needs attention and system status moved to Notifications and the footer / System health page.
-    assert "Overdue thing" not in html and "Worker timed out" not in html
+    # The morning Overview (ADR-049) lists enquiries needing attention, overdue first; system problems
+    # appear as one-line summaries, with the details on the System health page.
+    assert "Overdue thing" in html and "Worker timed out" not in html
     assert 'data-testid="attention-link"' in html and "1 enquiry needs attention" in html
     assert 'data-testid="health-footer"' in html
 

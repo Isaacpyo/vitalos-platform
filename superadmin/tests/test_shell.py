@@ -90,7 +90,8 @@ def test_no_chrome_before_sign_in(client):
 
 def test_old_home_url_still_works_and_service_lines_has_its_own_page(client_for, superadmin, seeded):
     client = client_for(superadmin)
-    assert "service-line-card" in client.get("/").content.decode()
+    # The Overview is the morning screen; the service-line cards live on their own page (ADR-049).
+    assert "service-line-card" not in client.get("/").content.decode()
     body = client.get("/service-lines/").content.decode()
     assert body.count('data-testid="service-line-card"') == 6
 
