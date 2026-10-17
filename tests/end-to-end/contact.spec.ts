@@ -131,6 +131,8 @@ test.describe("enquiry form", () => {
 
     const summary = page.getByRole("alert", { name: /check the highlighted fields/i });
     await expect(summary).toBeVisible();
+    // The sending modal closes on failure and the summary takes focus.
+    await expect(page.getByRole("dialog")).toBeHidden();
     await expect(summary).toBeFocused();
     await expect(summary.getByRole("link", { name: /work email address/i })).toBeVisible();
     await expect(summary.getByRole("link", { name: /privacy notice/i })).toBeVisible();
@@ -146,6 +148,34 @@ test.describe("enquiry form", () => {
     await expect(page.getByLabel("Work email")).toBeFocused();
 
     await expectNoA11yViolations(page);
+  });
+
+  test("submitting opens a sending modal over the page; it closes on a failure and returns focus", async ({
+    page,
+  }) => {
+    test.skip(!(await openContact(page)), SKIP_NO_FORM);
+    // Hold the server response so the in-flight state can be observed deterministically.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/contact", async (route) => {
+      if (route.request().method() === "POST") await held;
+      await route.continue();
+    });
+    await page.getByLabel("Name").fill("Example Person");
+    const send = page.getByRole("button", { name: "Send enquiry" });
+    await send.click();
+    const dialog = page.getByRole("dialog", { name: /Sending your enquiry/ });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("status")).toBeVisible();
+    // The page behind is inert while the dialog is open, so focus cannot leave it.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+    release();
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByRole("alert", { name: /check the highlighted fields/i })).toBeFocused();
+    await expectNoA11yViolations(page, { exclude: ['iframe[src*="challenges.cloudflare.com"]'] });
   });
 
   test("happy path shows the reference and a neutral receipt", async ({ page }) => {
