@@ -87,7 +87,11 @@ export function PageHero({
       {artwork ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[42%] md:block"
+          className={cx(
+            "pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[42%]",
+            // With media the copy is full width until lg, so the artwork waits for the columns.
+            media ? "lg:block" : "md:block",
+          )}
         >
           <HeroArtwork {...artwork} className="size-full" />
         </div>

@@ -190,7 +190,9 @@ export function CareersTemplate({
         eyebrow={careersCopy.eyebrow}
         title={copy.heading}
         intro={copy.intro}
-        media={mediaSlotRenders("careers.hero") ? <MediaSlot id="careers.hero" priority /> : undefined}
+        media={
+          mediaSlotRenders("careers.hero") ? <MediaSlot id="careers.hero" priority /> : undefined
+        }
         actions={
           open ? (
             <Button href="#open-roles" variant="secondary" size="lg" arrow>

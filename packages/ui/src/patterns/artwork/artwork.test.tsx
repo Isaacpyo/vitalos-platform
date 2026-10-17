@@ -21,7 +21,9 @@ describe("HeroArtwork (ADR-044)", () => {
   });
 
   it("gives each family its own composition", () => {
-    const drawings = artworkFamilies.map((family) => markup(family).replace(/data-artwork="[^"]+"/, ""));
+    const drawings = artworkFamilies.map((family) =>
+      markup(family).replace(/data-artwork="[^"]+"/, ""),
+    );
     expect(new Set(drawings).size).toBe(artworkFamilies.length);
   });
 

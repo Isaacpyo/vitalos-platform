@@ -188,7 +188,15 @@ function whatWeDo(next: Next): ReactNode {
   const gapX = (1160 - from) / (count - 1);
   return (
     <>
-      <Bands startX={600} mergeX={mergeX} axisY={axisY} upper={upper} lower={52} gap={6} endX={OFF} />
+      <Bands
+        startX={600}
+        mergeX={mergeX}
+        axisY={axisY}
+        upper={upper}
+        lower={52}
+        gap={6}
+        endX={OFF}
+      />
       <Path d={polyline([start, lift, [OFF, lift[1]]])} />
       <Node x={start[0]} y={start[1]} kind="pending" size={8} />
       {kinds(count, decided).map((kind, index) => (
@@ -202,7 +210,8 @@ function whatWeDo(next: Next): ReactNode {
 function industries(next: Next): ReactNode {
   const cells: { x: number; y: number }[] = [];
   for (let row = 0; row < 3; row += 1) {
-    for (let column = 0; column < 5; column += 1) cells.push({ x: 640 + column * 104, y: 140 + row * 100 });
+    for (let column = 0; column < 5; column += 1)
+      cells.push({ x: 640 + column * 104, y: 140 + row * 100 });
   }
   const field = pick(next, 0, cells.length - 1);
   const outcome = (field + pick(next, 3, cells.length - 3)) % cells.length;
@@ -231,7 +240,9 @@ function industries(next: Next): ReactNode {
       })}
       {(() => {
         const cell = cells[outcome] ?? cells[0]!;
-        return <rect x={cell.x + 36} y={cell.y + 34} width={32} height={32} className="fill-aqua-600" />;
+        return (
+          <rect x={cell.x + 36} y={cell.y + 34} width={32} height={32} className="fill-aqua-600" />
+        );
       })()}
       <Bands startX={600} mergeX={720} axisY={458} upper={26} lower={16} gap={4} endX={OFF} />
     </>
@@ -261,7 +272,13 @@ function about(next: Next): ReactNode {
     <>
       <Path d={polyline(route)} />
       {nodes.map(([x, y], index) => (
-        <Node key={index} x={x} y={y} kind={kinds(9, decided)[index]!} size={index === 8 ? 12 : 9} />
+        <Node
+          key={index}
+          x={x}
+          y={y}
+          kind={kinds(9, decided)[index]!}
+          size={index === 8 ? 12 : 9}
+        />
       ))}
       <Ruler x={640} y={470} length={252} />
     </>
@@ -307,9 +324,11 @@ function labs(next: Next): ReactNode {
       <CropMarks x1={606} y1={140} x2={1190} y2={460} />
       {dots}
       <Path d={polyline(route)} />
-      {route.slice(0, -1).map(([x, y], index) =>
-        index % 2 === 0 ? <Node key={index} x={x} y={y} kind="decided" size={7} /> : null,
-      )}
+      {route
+        .slice(0, -1)
+        .map(([x, y], index) =>
+          index % 2 === 0 ? <Node key={index} x={x} y={y} kind="decided" size={7} /> : null,
+        )}
       <Node x={end[0]} y={end[1]} kind="outcome" size={11} />
     </>
   );
@@ -360,7 +379,14 @@ function careers(next: Next): ReactNode {
       {fills.map((fill, index) => {
         const height = 90 + index * 80 + lift;
         return (
-          <rect key={fill} x={700 + index * 120} y={470 - height} width={108} height={height} className={fill} />
+          <rect
+            key={fill}
+            x={700 + index * 120}
+            y={470 - height}
+            width={108}
+            height={height}
+            className={fill}
+          />
         );
       })}
       <Ruler x={700} y={500} length={468} />
@@ -372,14 +398,39 @@ function careers(next: Next): ReactNode {
 function trust(next: Next): ReactNode {
   const cx0 = 880 + pick(next, -1, 1) * 20;
   const cy0 = 300;
-  const frame = (half: number) => ({ x: cx0 - half, y: cy0 - half, width: half * 2, height: half * 2 });
+  const frame = (half: number) => ({
+    x: cx0 - half,
+    y: cy0 - half,
+    width: half * 2,
+    height: half * 2,
+  });
   return (
     <>
-      <rect {...frame(160)} className="fill-none stroke-tone-border" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
-      <rect {...frame(110)} className="fill-none stroke-blue-600" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-      <rect {...frame(60)} className="fill-none stroke-blue-600" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+      <rect
+        {...frame(160)}
+        className="fill-none stroke-tone-border"
+        strokeWidth={1.5}
+        vectorEffect="non-scaling-stroke"
+      />
+      <rect
+        {...frame(110)}
+        className="fill-none stroke-blue-600"
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
+      <rect
+        {...frame(60)}
+        className="fill-none stroke-blue-600"
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
       <CropMarks x1={cx0 - 160} y1={cy0 - 160} x2={cx0 + 160} y2={cy0 + 160} />
-      <Path d={polyline([[cx0 + 60, cy0], [OFF, cy0]])} />
+      <Path
+        d={polyline([
+          [cx0 + 60, cy0],
+          [OFF, cy0],
+        ])}
+      />
       <Node x={cx0} y={cy0} kind="outcome" size={16} />
     </>
   );
@@ -392,13 +443,19 @@ function contact(): ReactNode {
   return (
     <>
       <path
-        d={polyline([[620, meet[1] - 7 - rise30(run)], [meet[0], meet[1] - 7]])}
+        d={polyline([
+          [620, meet[1] - 7 - rise30(run)],
+          [meet[0], meet[1] - 7],
+        ])}
         className="stroke-blue-600"
         strokeWidth={14}
         fill="none"
       />
       <path
-        d={polyline([[620, meet[1] + 6 + rise30(run)], [meet[0], meet[1] + 6]])}
+        d={polyline([
+          [620, meet[1] + 6 + rise30(run)],
+          [meet[0], meet[1] + 6],
+        ])}
         className="stroke-aqua-600"
         strokeWidth={9}
         fill="none"

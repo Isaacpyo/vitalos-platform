@@ -48,18 +48,23 @@ export const ItemVariants: Story = {
   render: () => (
     <Section tone="muted" spacing="compact">
       <ul className="m-0 grid list-none gap-(--space-4) p-(--space-5) md:grid-cols-3">
-        {["consulting", "engineering", "ai-data", "experience", "managed-services", "health-care"].map(
-          (seed, index) => (
-            <li key={seed} className="border border-tone-border">
-              <HeroArtwork
-                family={index < 5 ? "what-we-do" : "industries"}
-                seed={seed}
-                crop="strip"
-                className="aspect-[3/1] w-full"
-              />
-            </li>
-          ),
-        )}
+        {[
+          "consulting",
+          "engineering",
+          "ai-data",
+          "experience",
+          "managed-services",
+          "health-care",
+        ].map((seed, index) => (
+          <li key={seed} className="border border-tone-border">
+            <HeroArtwork
+              family={index < 5 ? "what-we-do" : "industries"}
+              seed={seed}
+              crop="strip"
+              className="aspect-[3/1] w-full"
+            />
+          </li>
+        ))}
       </ul>
     </Section>
   ),

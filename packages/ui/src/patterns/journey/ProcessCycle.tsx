@@ -187,9 +187,7 @@ function ProcessCycleInner({ stages, label, className }: ProcessCycleProps) {
                       : "border-slate-700 bg-midnight-800 text-tone-heading group-hover:scale-105 group-hover:border-blue-600",
                   )}
                 >
-                  {stage.icon ? (
-                    <Icon name={stage.icon} size={32} className="size-[45%]" />
-                  ) : null}
+                  {stage.icon ? <Icon name={stage.icon} size={32} className="size-[45%]" /> : null}
                 </span>
                 <span
                   className={cx(

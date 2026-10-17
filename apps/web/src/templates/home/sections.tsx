@@ -150,7 +150,10 @@ export function HeroSection(): ReactNode {
           className="w-full lg:aspect-[4/5] lg:max-h-[36rem]"
         />
       </Container>
-      <div aria-hidden="true" className="pointer-events-none mt-(--space-7) -mb-(--section-default) h-28 lg:hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none mt-(--space-7) -mb-(--section-default) h-28 lg:hidden"
+      >
         <HeroArtwork {...homeArtwork} crop="strip" className="size-full" />
       </div>
     </Section>

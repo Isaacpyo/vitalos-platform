@@ -78,8 +78,7 @@ export const mediaSlots = [
       "A screenshot or diagram of the asset itself (framework page, harness output, assessment template). No decorative imagery.",
     alt: "A view of {name}.",
     perItem: true,
-    source:
-      "The team member who built the asset: a screenshot or an exported diagram.",
+    source: "The team member who built the asset: a screenshot or an exported diagram.",
   },
   {
     id: "work.case-study",
@@ -91,8 +90,7 @@ export const mediaSlots = [
       "A screenshot or photograph of the delivered work, used only with the client's written permission.",
     alt: "The delivered work: {name}.",
     perItem: true,
-    source:
-      "The delivery team, with the client's written permission for the specific image.",
+    source: "The delivery team, with the client's written permission for the specific image.",
   },
   {
     id: "insights.article",
@@ -104,8 +102,7 @@ export const mediaSlots = [
       "A cover that illustrates the article: a diagram, a screenshot or a real photograph. No stock or AI-generated imagery. Covers are uploaded in the Super Admin (Insights › Posts › Cover, ADR-039); an article without one shows no hero image.",
     alt: "Cover image for {name}.",
     perItem: true,
-    source:
-      "The article's author or the editor, uploaded in the Super Admin.",
+    source: "The article's author or the editor, uploaded in the Super Admin.",
   },
   {
     id: "about.founder",

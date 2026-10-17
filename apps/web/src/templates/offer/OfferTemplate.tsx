@@ -64,7 +64,9 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
     label: ctas.primary,
     href: contactHref("offer", offer.slug),
   };
-  const summary = engagementSummary(offer).filter((item) => !heroTerms.has(item.term));
+  const summary = engagementSummary(offer).filter(
+    (item) => !(typeof item.term === "string" && heroTerms.has(item.term)),
+  );
   const related = (kind: "solution" | "practice", items: OfferView["solutions"]) =>
     toRows(kind, items).map((row) => ({
       title: row.title,
@@ -160,9 +162,11 @@ export function EngagementPanel({ offer }: Readonly<{ offer: OfferView }>) {
   const outputs = offer.outputs.filter((item) => item.trim() !== "").slice(0, HERO_OUTPUTS);
   const facts: { term: string; value: string | readonly string[] }[] = [];
   if (duration) facts.push({ term: structuralLabels.duration, value: duration });
-  if (offer.audience?.trim()) facts.push({ term: structuralLabels.audience, value: offer.audience });
+  if (offer.audience?.trim())
+    facts.push({ term: structuralLabels.audience, value: offer.audience });
   if (outputs.length > 0) facts.push({ term: structuralLabels.outputs, value: outputs });
-  if (offer.nextStep?.trim()) facts.push({ term: structuralLabels.nextStep, value: offer.nextStep });
+  if (offer.nextStep?.trim())
+    facts.push({ term: structuralLabels.nextStep, value: offer.nextStep });
   if (facts.length === 0) return null;
   return (
     <aside
@@ -184,7 +188,10 @@ export function EngagementPanel({ offer }: Readonly<{ offer: OfferView }>) {
                 <ul className="m-0 list-none space-y-(--space-1) p-0">
                   {fact.value.map((item) => (
                     <li key={item} className="flex gap-(--space-2)">
-                      <span aria-hidden="true" className="mt-[0.55em] size-1.5 shrink-0 bg-aqua-600" />
+                      <span
+                        aria-hidden="true"
+                        className="mt-[0.55em] size-1.5 shrink-0 bg-aqua-600"
+                      />
                       <span>{item}</span>
                     </li>
                   ))}

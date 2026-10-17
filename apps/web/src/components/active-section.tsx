@@ -23,7 +23,5 @@ export function ActiveSectionHeader(
   const pathname = usePathname();
   const activeSection = activeSectionForPath(pathname);
   const overlay = heroToneForPath(pathname) === "dark";
-  return (
-    <SiteHeader {...props} {...(activeSection ? { activeSection } : {})} overlay={overlay} />
-  );
+  return <SiteHeader {...props} {...(activeSection ? { activeSection } : {})} overlay={overlay} />;
 }

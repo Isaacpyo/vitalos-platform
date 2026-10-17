@@ -83,7 +83,11 @@ export function IndustryShowcase({ items, headingLevel = 3, className }: Industr
                   aria-hidden="true"
                   className="-mx-(--space-6) -mt-(--space-6) mb-(--space-5) block overflow-hidden border-b border-white/10"
                 >
-                  <HeroArtwork {...item.art} crop="strip" className="aspect-[3/1] w-full min-w-[18rem]" />
+                  <HeroArtwork
+                    {...item.art}
+                    crop="strip"
+                    className="aspect-[3/1] w-full min-w-[18rem]"
+                  />
                 </span>
               ) : null}
               <span

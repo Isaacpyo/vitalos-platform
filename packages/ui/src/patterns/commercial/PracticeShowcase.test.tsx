@@ -4,7 +4,6 @@ import { PracticeShowcase, type PracticeShowcaseItem } from "./PracticeShowcase"
 
 afterEach(cleanup);
 
-
 const items: PracticeShowcaseItem[] = [
   {
     title: "Example practice one (fixture)",

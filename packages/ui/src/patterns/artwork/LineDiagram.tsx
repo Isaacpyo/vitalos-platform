@@ -32,11 +32,28 @@ const line = {
   vectorEffect: "non-scaling-stroke",
 } as const;
 
-function Dot({ x, y, kind, r = 8 }: { x: number; y: number; kind: "pending" | "decided" | "outcome"; r?: number }) {
+function Dot({
+  x,
+  y,
+  kind,
+  r = 8,
+}: {
+  x: number;
+  y: number;
+  kind: "pending" | "decided" | "outcome";
+  r?: number;
+}) {
   if (kind === "pending") {
     return <circle cx={x} cy={y} r={r} {...line} className="fill-tone-bg" />;
   }
-  return <circle cx={x} cy={y} r={r} className={kind === "outcome" ? "fill-aqua-600" : "fill-blue-600"} />;
+  return (
+    <circle
+      cx={x}
+      cy={y}
+      r={r}
+      className={kind === "outcome" ? "fill-aqua-600" : "fill-blue-600"}
+    />
+  );
 }
 
 /** AI Transformation: four fields rising in height, a node on each; the last is the outcome. */
@@ -106,10 +123,24 @@ function application(): ReactNode {
       <rect x={20} y={52} width={72} height={136} {...line} />
       <path d="M20 86h72M20 120h72M20 154h72" {...line} />
       <path d="M104 120h20m-8-8 8 8-8 8" {...line} />
-      <rect x={140} y={52} width={36} height={36} {...line} className="fill-blue-600 stroke-blue-600" />
+      <rect
+        x={140}
+        y={52}
+        width={36}
+        height={36}
+        {...line}
+        className="fill-blue-600 stroke-blue-600"
+      />
       <rect x={196} y={52} width={36} height={36} {...line} />
       <rect x={140} y={152} width={36} height={36} {...line} />
-      <rect x={196} y={152} width={36} height={36} {...line} className="fill-aqua-600 stroke-aqua-600" />
+      <rect
+        x={196}
+        y={152}
+        width={36}
+        height={36}
+        {...line}
+        className="fill-aqua-600 stroke-aqua-600"
+      />
       <path d="M158 88v64M214 88v64M176 70h20M176 170h20" {...line} />
     </>
   );
