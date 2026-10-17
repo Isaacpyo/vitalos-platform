@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from apps.accounts.roles import is_superadmin
+from apps.core.synthetic import exclude_synthetic
 
 from .models import (
     KPI,
@@ -69,7 +70,7 @@ def _history_queryset(key, user, service_line=None):
         queryset = queryset.filter(visibility_q(user, path))
         hidden_now = model.objects.exclude(visibility_q(user, model.service_line_path)).values("pk")
         queryset = queryset.exclude(id__in=hidden_now)
-    return queryset.order_by("-history_date", "-history_id")
+    return exclude_synthetic(queryset).order_by("-history_date", "-history_id")
 
 
 def _display(record, field_name, value, user):

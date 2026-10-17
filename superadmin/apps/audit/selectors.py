@@ -5,6 +5,8 @@ from datetime import date, datetime, time, timedelta
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
+from apps.core.synthetic import exclude_synthetic_text
+
 from .models import AuditEvent
 from .services import ACTIONS
 
@@ -29,7 +31,7 @@ def _day_start(day: date) -> datetime:
 
 
 def filtered(filters: dict[str, str]):
-    queryset = AuditEvent.objects.all()
+    queryset = exclude_synthetic_text(AuditEvent.objects.all(), "summary")
     if filters["actor"]:
         queryset = queryset.filter(actor_email__icontains=filters["actor"])
     if filters["action"]:
@@ -47,7 +49,7 @@ def filtered(filters: dict[str, str]):
 
 def entity_types() -> list[str]:
     return list(
-        AuditEvent.objects.exclude(entity_type="")
+        exclude_synthetic_text(AuditEvent.objects.exclude(entity_type=""), "summary")
         .order_by("entity_type")
         .values_list("entity_type", flat=True)
         .distinct()

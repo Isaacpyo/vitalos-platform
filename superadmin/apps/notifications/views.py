@@ -8,7 +8,6 @@ from django.views.decorators.http import require_GET, require_POST
 from apps.core.htmx import changed_response
 
 from . import services
-from .models import Notification
 
 
 def _attention_items(user):
@@ -22,7 +21,7 @@ def _attention_items(user):
 @login_required
 @require_GET
 def notification_list(request):
-    notifications = Notification.objects.filter(recipient=request.user)[:100]
+    notifications = services.visible_notifications(request.user)[:100]
     attention = _attention_items(request.user)
     context = {
         "notifications": notifications,
