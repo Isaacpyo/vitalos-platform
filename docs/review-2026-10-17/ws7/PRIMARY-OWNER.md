@@ -10,11 +10,11 @@ Prepared for approval. Nothing has been run. Changing, disabling or renaming the
 
 ## Options
 
-| | Option | What changes | Risk | Effort |
-|---|---|---|---|---|
-| A | **Make Temitope the primary owner** (recommended) | The flag moves to Temitope's own account. `admin@` stays a super admin. | Low. Reversible with the same command. | One command. |
-| B | **A, then turn `admin@` into a break-glass account** | As A. Then `admin@` gets a long random password kept offline (a password manager vault the owner controls) and its own authenticator, and is used only if Temitope's account is lost. | Low, if the vault and authenticator are really separate from Temitope's own. | A, plus about 15 minutes. |
-| C | **A, then deactivate `admin@`** | As A. Then `admin@` is deactivated in Settings → Users (possible once it is no longer the primary owner). | Medium: one person holds the only owner account; losing it needs a database-level recovery (`create_owner --transfer` run in the Container App). | A, plus one click. |
+|     | Option                                               | What changes                                                                                                                                                                          | Risk                                                                                                                                             | Effort                    |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| A   | **Make Temitope the primary owner** (recommended)    | The flag moves to Temitope's own account. `admin@` stays a super admin.                                                                                                               | Low. Reversible with the same command.                                                                                                           | One command.              |
+| B   | **A, then turn `admin@` into a break-glass account** | As A. Then `admin@` gets a long random password kept offline (a password manager vault the owner controls) and its own authenticator, and is used only if Temitope's account is lost. | Low, if the vault and authenticator are really separate from Temitope's own.                                                                     | A, plus about 15 minutes. |
+| C   | **A, then deactivate `admin@`**                      | As A. Then `admin@` is deactivated in Settings → Users (possible once it is no longer the primary owner).                                                                             | Medium: one person holds the only owner account; losing it needs a database-level recovery (`create_owner --transfer` run in the Container App). | A, plus one click.        |
 
 Recommendation: **B**. It gives a named, accountable owner and keeps a tested way back in.
 
