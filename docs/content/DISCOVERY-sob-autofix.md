@@ -7,6 +7,27 @@ Evidence for every claim on `/products/sob-autofix`. Sources:
 
 A claim goes on the page only if it has a line here. Claims that failed or only partly passed are listed at the end, with the reason they are cut or narrowed.
 
+## The page in the product template
+
+Since the product page template (`docs/content/PRODUCT-PAGE-TEMPLATE.md`, 17 Oct 2026), the page uses the Fauward layout: cards, steps and tiles. Each item maps to the evidence rows below.
+
+| Band         | Item                                                                                                                              | Evidence rows                                                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Hero         | "Vitalos builds and operates SOB Autofix, a booking and operations platform for a diagnostics-led vehicle workshop in Doncaster." | 24 (built); "operates" is the owner's statement (see "Unverified")                                                                  |
+| What it does | Vehicle-first booking: seven steps from registration lookup, no account needed                                                    | 1, 2, 7                                                                                                                             |
+| What it does | Live appointment times: from the workshop calendar, re-checked before confirming                                                  | 5, 6                                                                                                                                |
+| What it does | Manage Booking: reschedule or cancel with reference and registration                                                              | 8                                                                                                                                   |
+| What it does | Get a Quote: quote requests that start with the vehicle                                                                           | 9                                                                                                                                   |
+| What it does | Private by design: registrations kept out of page addresses and analytics                                                         | 10                                                                                                                                  |
+| What it does | Workshop admin: bookings, enquiries, content, stock and invoices together                                                         | 18                                                                                                                                  |
+| How it works | Vehicle first → Work and symptoms → Place and time → Review and confirm                                                           | 1 (the wizard's seven steps, grouped in pairs: Vehicle; Service + Problem; Location + Appointment; Details + Review), 2, 4, 5, 7, 8 |
+| Built for    | Drivers: book a diagnosis without an account                                                                                      | 1, 7, 12 (diagnostics services)                                                                                                     |
+| Built for    | Mobile visits: where the service allows it                                                                                        | 4                                                                                                                                   |
+| Built for    | Car buyers: cars for sale, with enquiries                                                                                         | 15; vehicle enquiry form (`sobautofix` commit `4d577ca`, "remove photo upload from vehicle enquiry form")                           |
+| Built for    | Workshop staff: one admin, with two-factor sign-in                                                                                | 18, 19 (available to staff; mandatory only when the policy flag is on)                                                              |
+
+The rows below remain the evidence base. Rows 11, 13, 14, 16, 17 and 20–23 supported the first version of the page; they are no longer shown, but they remain valid if the page grows.
+
 ## Claims used on the page
 
 | #   | Page claim                                                                                                                                         | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

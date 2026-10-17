@@ -112,3 +112,5 @@ The images were cropped to the slot ratios and saved as AVIF and WebP at full an
 - homepage and quote: 16:9, each with a 5:7 phone version
 
 "AB12 CDE" is the site's own placeholder registration, not a real vehicle. The photograph in the homepage hero is SOB Autofix's own. Recapture when those pages change.
+
+**Update, 17 Oct 2026 (product page template):** the homepage and quote captures were retired with the page's "More of the site" band; only the booking snapshot (`products.sob-autofix.hero`) remains. The snapshot of any product can now be recaptured with `pnpm media:product-snapshot` (`docs/content/PRODUCT-PAGE-TEMPLATE.md`); this one with `--url https://sobautofix.com/book --consent "Essential only" --hide 'a[href*="wa.me"]' --top 95 --mobile-top 85`.
