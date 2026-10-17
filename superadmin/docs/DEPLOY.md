@@ -11,7 +11,7 @@ Target: **https://admin.vitalos.co.uk**. Expected cost: **£0.00 per month.**
 | TLS              | Azure Container Apps managed certificate                                   | No charge                                                        |
 | Secrets          | Container Apps secrets                                                     | No charge (no Key Vault)                                         |
 | Logs             | Log Analytics, daily cap 0.1 GB, 31-day retention                          | First 5 GB/month and 31 days are free                            |
-| Backups          | Daily `pg_dump` artifact in GitHub Actions (14 days); plus history on Neon | Actions minutes and artifact storage included                    |
+| Backups          | Daily encrypted `pg_dump` in private Azure Blob Storage (15 days, locked 14); plus history on Neon | Pennies a month (a few MB, LRS Hot)                              |
 | Deploy           | GitHub Actions `Super Admin deploy`, Azure OIDC                            | Actions minutes included                                         |
 
 ## Status
@@ -53,7 +53,7 @@ The deploy works without any mail settings: `EMAIL_TRANSPORT` defaults to `log`,
 3. **Azure.** Run the §2.1 one-time setup as subscription Owner. A card on file is required, but nothing is charged within the free grant. A free-trial subscription must be upgraded to Pay-As-You-Go before its credit expires (for "Azure subscription 1", 10 Nov 2026).
 4. **GitHub.** Go to **Settings → Environments**.
    - `production`: this repository uses the existing Vercel-created `Production` environment; names match case-insensitively. Required reviewers aren't available on this private repository's plan, so there is no approval gate. The environment is shared with the website, so the Super Admin's database string has its own name: add `SUPERADMIN_DATABASE_URL` (step 1; never the website's database), `CLOUDFLARE_API_TOKEN` (step 2), `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (printed by §2.1). Optionally add `SENTRY_DSN`. No registry token is needed: the image is public.
-   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production), and `BACKUP_PASSPHRASE` to encrypt dumps (required: the repository is public, so its artifacts are downloadable by any signed-in GitHub user, and the workflow refuses to upload an unencrypted dump). Keep a copy of the passphrase outside GitHub, in the owner's password manager; without it no backup can be restored. On Supabase's free plan this nightly dump is the **only** backup, and it also keeps the project from being paused (§2.3).
+   - `backup` (no reviewers): add `DATABASE_URL` (the `backup_reader` string from §6.1, or the same one as production), and `BACKUP_PASSPHRASE` to encrypt dumps (required: the workflow refuses to store an unencrypted dump). Then set up blob storage for the dumps (§6.2) and add its secrets and variables to the same environment. Keep a copy of the passphrase outside GitHub, in the owner's password manager; without it no backup can be restored. On Supabase's free plan this nightly dump is the **only** backup, and it also keeps the project from being paused (§2.3).
 5. **Deploy.** Merge PR #50. Open **Actions → Super Admin deploy → Run workflow** on `main`, type `DEPLOY`, and tick **smoke test** (first run only).
 6. **Make the image public (first run only).** The build job creates the package `vitalos-platform/superadmin` on ghcr.io as private, which GitHub always does for a new package, and the API can't change it. There is no approval pause, so:
    1. Run the deploy (step 5) and let it stop at the **public-image check**. It fails before touching Azure and prints the package settings link.
@@ -204,7 +204,7 @@ REVOKE USAGE ON SCHEMA public FROM anon, authenticated, service_role;
 Things to know about the Supabase free plan:
 
 - **Inactivity pause.** A free project is paused after **7 days without activity**. The nightly backup (`backup.yml`, 02:00 UTC) connects every day, which keeps the project active, so keep it running. It starts once the workflow is on `main` and the `backup` environment has `DATABASE_URL`. If backups stop, for example because Actions minutes run out (§7), the project can pause. The app then fails until you **Restore** the project from the Supabase dashboard; the data is kept while it is paused.
-- **No automatic backups.** The free plan has no scheduled backups or point-in-time recovery, so **the GitHub Actions `pg_dump` is the only backup**. Artifacts are kept 7 days. Set `BACKUP_PASSPHRASE`, watch the backup run history, and download a dump now and then to keep a copy outside GitHub. Paid plans add daily backups (PHASE2.md).
+- **No automatic backups.** The free plan has no scheduled backups or point-in-time recovery, so **the nightly `pg_dump` is the only backup**. It is stored encrypted in a private Azure Blob container for 15 days (§6.2). Set `BACKUP_PASSPHRASE`, watch the backup run history, and download a dump now and then to keep an offline copy. Paid plans add daily backups (PHASE2.md).
 - **Limits:** 500 MB of database. The app stores structured text, far below that. The app uses at most about 4 connections at once: 2 gunicorn workers on one replica, the release job and the backup.
 - **PostgreSQL version:** Supabase projects run PostgreSQL 15, or 17 on newer projects. Both work. The `vitalos-superadmin` project runs 17.11. The test suite passes on Supabase's own PostgreSQL 15 image, and the backup uses a client matching the server's version (§6).
 
@@ -261,7 +261,7 @@ Merging a Super Admin change to `main` deploys it, under the standing approval f
 2. When that run **completes**, **Super Admin deploy** starts through `workflow_run` (branch `main`, push events only). The plan job proceeds only if the CI conclusion is `success` and every one of its jobs is `success` (a skipped or cancelled job stops it), and the range since the commit running in production changed Super Admin runtime files or the deploy workflow (`git diff --name-only <deployed> <sha>`, see the range below). Docs-only and non-Super Admin pushes never start CI, so they never deploy.
 3. It builds, migrates and deploys exactly `workflow_run.head_sha`, the commit CI tested, never the moving branch tip. Super Admin CI no longer cancels in-progress runs on `main`, so each commit gets its own finished run.
 4. **Migration guard and its range.** The range is every commit between the **deployed commit** and the commit being deployed. The deployed commit is the tag of the image the production Container App runs now (the tag is the commit SHA); a read-only `current` job in the `production` environment reads it through the Azure OIDC login (`id-token: write`, nothing else). The plan job fetches history, requires `git merge-base --is-ancestor <deployed> <sha>`, then scans migration files added or modified in that range (`git diff --diff-filter=AM <deployed> <sha>`, `superadmin/apps/*/migrations/*.py`) for `RemoveField`, `DeleteModel`, `RenameField`, `RenameModel`, `AlterField` (flagged for review) and `RunSQL`. The changed-files gate uses the same range. A hit fails the plan job: "deploy manually with confirm=DEPLOY after review". If the deployed SHA cannot be read (no app yet, tag not a SHA, Azure unreachable) or is not an ancestor of the new commit (a rollback or a deploy from a branch), the plan fails closed with the same message and never falls back to the previous commit. So two quick merges cannot hide a risky migration, and Super Admin PRs no longer need merging one at a time.
-5. **Pre-migration backup.** The `backup` job dispatches **Super Admin backup** (`backup.yml`, which stores an encrypted dump as its own artifact for 7 days) and waits for it to succeed before the deploy job runs. A failed backup stops the deploy before any migration. The deploy workflow itself never creates or uploads a dump, because this repository is public and personal data stays out of its artifacts and logs.
+5. **Pre-migration backup.** The `backup` job dispatches **Super Admin backup** (`backup.yml`, which stores an encrypted dump in private blob storage, §6.2) and waits for it to succeed before the deploy job runs. A failed backup stops the deploy before any migration. The deploy workflow itself never creates or uploads a dump, because this repository is public and personal data stays out of its artifacts and logs.
 6. **Post-deploy check.** After `deploy.sh`, the job polls `https://admin.vitalos.co.uk/healthz/` for up to 5 minutes and confirms the app runs the new image tag. On failure the run fails and prints the rollback command. **Nothing rolls back automatically.**
 7. Deploys queue in the `superadmin-deploy` group and never cancel one another mid-migration.
 
@@ -296,7 +296,7 @@ What you can restore from depends on the database:
 
 **Daily dump.** `.github/workflows/backup.yml` runs at 02:00 UTC (once on `main`), or on demand with **Actions → Super Admin backup → Run workflow**.
 
-- Each run uploads `superadmin-db-<UTC timestamp>-pg<major>`: a gzipped plain SQL dump of the app's `public` schema, always encrypted as `.gpg` with `BACKUP_PASSPHRASE`. Artifacts are kept **7 days**.
+- Each run stores `superadmin/<yyyy>/<mm>/superadmin-<UTC timestamp>-pg<major>.sql.gz.gpg` in the private container (§6.2): a gzipped plain SQL dump of the app's `public` schema, always encrypted with `BACKUP_PASSPHRASE`. A blob can't be deleted or overwritten for **14 days** and is deleted after **15 days**. Nothing is uploaded as a workflow artifact: this repository is public.
 - The workflow reads the server's version first and dumps with the matching client (for example `postgres:15` for Supabase on 15), so the dump restores on that version.
 - Supabase's own schemas (`auth`, `storage` and others) are not included. The app doesn't use them, and `backup_reader` can't read them.
 
@@ -305,11 +305,13 @@ Restore into an **empty** database:
 - **Supabase:** a new project. Run the §2.3 Data API lock-down SQL in it first, then restore over its **session pooler** string, as `postgres`.
 - **Neon:** a new branch or database, using its **direct** (non-pooler) string.
 
-Use the PostgreSQL image whose major version matches `pg<major>` in the artifact name:
+Use the PostgreSQL image whose major version matches `pg<major>` in the file name:
 
 ```sh
-gh run download <run-id> -n superadmin-db-<timestamp>-pg<major>         # or download the artifact in the browser
-# if encrypted: gpg --decrypt superadmin-<timestamp>-pg<major>.sql.gz.gpg > superadmin-<timestamp>-pg<major>.sql.gz
+az storage blob list --auth-mode login --account-name stvitalosbackups --container-name superadmin-db --prefix superadmin/ -o table
+az storage blob download --auth-mode login --account-name stvitalosbackups --container-name superadmin-db \n  --name superadmin/<yyyy>/<mm>/superadmin-<timestamp>-pg<major>.sql.gz.gpg --file superadmin-<timestamp>-pg<major>.sql.gz.gpg
+# (or download it in the portal: Storage account -> Containers -> superadmin-db)
+gpg --decrypt superadmin-<timestamp>-pg<major>.sql.gz.gpg > superadmin-<timestamp>-pg<major>.sql.gz
 gunzip -c superadmin-<timestamp>-pg<major>.sql.gz | sed '/^CREATE SCHEMA public;$/d' \
   | docker run --rm -i postgres:<major> psql "<connection string>" -v ON_ERROR_STOP=1
 ```
@@ -355,11 +357,28 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT ON SEQU
      `postgresql://backup_reader.<project-ref>:<password>@aws-0-eu-west-2.pooler.supabase.com:5432/postgres?sslmode=require`
 
    - **Neon:** `postgresql://backup_reader:<password>@<endpoint host>/neondb?sslmode=require`. Copy `<endpoint host>` from the production string. Either the pooled (`-pooler`) host or the direct host works, because the workflow switches to the direct host for `pg_dump`.
-4. Run **Actions → Super Admin backup → Run workflow** once and check that it uploads an artifact. This is also the check that the connection string is right.
+4. Run **Actions → Super Admin backup → Run workflow** once and check that it ends with `Stored superadmin/...` (§6.2). This is also the check that the connection string is right.
 
 If the app's tables are owned by another role, use that role's name in both `ALTER DEFAULT PRIVILEGES` lines and run the SQL as that role. Check the owner with `SELECT DISTINCT tableowner FROM pg_tables WHERE schemaname = 'public';`.
 
 Rotate the password with `ALTER ROLE backup_reader PASSWORD '<new>';`, then update the secret. Remove the role with `DROP OWNED BY backup_reader; DROP ROLE backup_reader;`. `DROP OWNED` here revokes only its grants, because it owns nothing.
+
+### 6.2 Backup storage (Azure Blob, private)
+
+The dumps live in their own storage account, separate from the app's resources, and are reached only through Microsoft Entra ID: account keys and anonymous access are off. The workflow signs in with OIDC as its own app registration, which can write to this one container and nothing else (the deploy identity has no access to it, and the backup identity can't deploy).
+
+| Item | Value |
+| --- | --- |
+| Storage account | `stvitalosbackups` in `rg-vitalos-superadmin`, UK South, StorageV2, Standard LRS, Hot |
+| Hardening | Shared key access off, blob anonymous access off, minimum TLS 1.2, HTTPS only |
+| Container | `superadmin-db`, private |
+| Immutability | Container time-based retention, **14 days** (unlocked): no blob can be deleted or overwritten for 14 days, so a leaked credential or a bad workflow can't wipe the backups |
+| Lifecycle | Delete blobs **15 days** after creation |
+| Identity | App registration `github-vitalos-superadmin-backup`, federated credential `repo:Isaacpyo@54102915/vitalos-platform@1417273525:environment:backup`, role **Storage Blob Data Contributor** on the container only |
+| Restore access | The owner's account has **Storage Blob Data Reader** on the container |
+| `backup` environment | Secrets `AZURE_BACKUP_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`; variables `BACKUP_STORAGE_ACCOUNT=stvitalosbackups`, `BACKUP_CONTAINER=superadmin-db` |
+
+Cost: a few MB of dumps cost pennies a month (and fall inside the 12-month free 5 GB on a new subscription). To change the retention, update the container's immutability policy and the lifecycle rule together; the lifecycle delete must come after the lock ends.
 
 **Verified on 11 Oct 2026:**
 
