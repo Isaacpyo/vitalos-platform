@@ -3,19 +3,14 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { products, routes } from "@vitalos/cms";
+import { routes } from "@vitalos/cms";
 import { analyticsEnabled, vercelAnalyticsSink } from "../../features/analytics/vercel-sink";
 
-/** A product's site, by host with and without `www.` (fauward.com redirects to www). */
-const productHosts = new Map(
-  products.flatMap((product) => {
-    const host = new URL(product.url).hostname.replace(/^www\./, "");
-    return [
-      [host, product.slug],
-      [`www.${host}`, product.slug],
-    ] as const;
-  }),
-);
+/**
+ * The product slug a server-rendered link to a product's own site carries (`data-product`). Read
+ * from the link, not from `@vitalos/cms`, so the product copy stays out of the client bundle.
+ */
+const productOf = (link: Element) => link.getAttribute("data-product") || undefined;
 
 /** Page URLs are sent without their query string: a query can carry a reference or an intent. */
 const withoutQuery = <T extends { url: string }>(event: T): T => ({
@@ -39,7 +34,7 @@ export function SiteAnalytics() {
       const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
       if (!link) return;
       const href = new URL(link.getAttribute("href") ?? "", window.location.href);
-      const product = href.origin !== window.location.origin && productHosts.get(href.hostname);
+      const product = href.origin !== window.location.origin && productOf(link);
       if (product) {
         vercelAnalyticsSink.track("outbound_click", {
           destination: product,

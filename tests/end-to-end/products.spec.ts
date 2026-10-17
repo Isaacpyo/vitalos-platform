@@ -69,7 +69,12 @@ test.describe("Products", () => {
       "href",
       "/products/sob-autofix",
     );
-    await expect(main.getByRole("heading", { level: 2 })).toHaveText(["Fauward", "SOB Autofix"]);
+    // The two cards in order, then the closing card.
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "Fauward",
+      "SOB Autofix",
+      /.+/,
+    ]);
     await expectNoA11yViolations(page);
     await expectNoHorizontalOverflowAt320(page);
   });
@@ -150,6 +155,8 @@ test.describe("Products", () => {
     await expect(cta).toHaveAttribute("href", "https://sobautofix.com");
     await expect(cta).toHaveAttribute("rel", "noopener");
     await expect(cta).not.toHaveAttribute("target", /.+/);
+    // outbound_click reads the slug from the link (the product copy stays out of the client bundle).
+    await expect(cta).toHaveAttribute("data-product", "sob-autofix");
     const graph = JSON.parse(
       (await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}",
     ) as { "@graph": { "@type": string; url?: string; applicationCategory?: string }[] };

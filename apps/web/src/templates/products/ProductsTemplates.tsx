@@ -182,7 +182,7 @@ export function ProductTemplate({ product }: Readonly<{ product: ProductView }>)
         lead={product.description}
         actions={
           // Its own site, in the same tab: it is a Vitalos product.
-          <Button href={product.url} rel="noopener" size="lg" arrow>
+          <Button href={product.url} rel="noopener" data-product={product.slug} size="lg" arrow>
             {product.urlLabel}
           </Button>
         }
