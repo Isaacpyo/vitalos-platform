@@ -1,11 +1,11 @@
 {
-  "_rationale": "Budgets are gzip bytes of JavaScript requested while loading a route (production build, fixtures, desktop Chromium), set from the measured value plus about 8 percent headroom, rounded up to the next 1000 B; the default for a route without an entry is the largest non-contact budget. Re-measured 10 Oct 2026 for ADR-024 (Motion for React islands: Reveal, menus, sheet, parallax), which added about 34.6 KB gzip to every route through the shared layout chunk: / 148821 -> 183459; the RichText/CmsImage templates 155164 -> 189802; /work /insights /labs 155764 -> 190402 (client-side filter island); /labs/:type 149643 -> 184281; 404 page 147591 -> 182229; /contact 189243 -> 223921 first-party (the enquiry form island) plus 27685 third-party (Cloudflare Turnstile api.js). The before and after table and the reasons are in docs/adr/ADR-024-motion.md. Third-party scripts are budgeted separately (maxThirdPartyJsGzipBytes, default 0) because their size changes without a deploy: only /contact may load one, with about 50 percent headroom. A budget is only raised in a PR that says why; the lab LCP and CLS values printed by the perf suite are advisory. Re-measured 17 Oct 2026 (review run, PR #69): the shared layout chunk grew by about 0.2 KB gzip (the analytics track() listener, C1; Relay's lighter launcher with Continue/Start new, C2) and the home, offer, industry and 404 routes by up to 2.3 KB (the 404 page's main-routes list and Ask Relay, B12; the six-practice showcase). Each failing budget was raised to the next 1000 B above its measurement; nothing else changed.",
+  "_rationale": "Budgets are gzip bytes of JavaScript requested while loading a route (production build, fixtures, desktop Chromium), set from the measured value plus about 8 percent headroom, rounded up to the next 1000 B; the default for a route without an entry is the largest non-contact budget. Re-measured 10 Oct 2026 for ADR-024 (Motion for React islands: Reveal, menus, sheet, parallax), which added about 34.6 KB gzip to every route through the shared layout chunk: / 148821 -> 183459; the RichText/CmsImage templates 155164 -> 189802; /work /insights /labs 155764 -> 190402 (client-side filter island); /labs/:type 149643 -> 184281; 404 page 147591 -> 182229; /contact 189243 -> 223921 first-party (the enquiry form island) plus 27685 third-party (Cloudflare Turnstile api.js). The before and after table and the reasons are in docs/adr/ADR-024-motion.md. Third-party scripts are budgeted separately (maxThirdPartyJsGzipBytes, default 0) because their size changes without a deploy: only /contact may load one, with about 50 percent headroom. A budget is only raised in a PR that says why; the lab LCP and CLS values printed by the perf suite are advisory. Re-measured 17 Oct 2026 (review run, PR #69): the shared layout chunk grew by about 0.2 KB gzip (the analytics track() listener, C1; Relay's lighter launcher with Continue/Start new, C2) and the home, offer, industry and 404 routes by up to 2.3 KB (the 404 page's main-routes list and Ask Relay, B12; the six-practice showcase). Each failing budget was raised to the next 1000 B above its measurement; nothing else changed. Merging main #72 (SubmissionDialog and the Button loading state, in the shared chunk) added about 0.5 KB: / 200414 -> 201000, /labs and /work 206337 -> 207000.",
   "default": {
     "maxJsGzipBytes": 206000
   },
   "routes": {
     "/": {
-      "maxJsGzipBytes": 200000
+      "maxJsGzipBytes": 201000
     },
     "/what-we-do": {
       "maxJsGzipBytes": 206000
@@ -35,7 +35,7 @@
       "maxJsGzipBytes": 206000
     },
     "/work": {
-      "maxJsGzipBytes": 206000
+      "maxJsGzipBytes": 207000
     },
     "/work/example-case-study": {
       "maxJsGzipBytes": 206000
@@ -44,7 +44,7 @@
       "maxJsGzipBytes": 206000
     },
     "/labs": {
-      "maxJsGzipBytes": 206000
+      "maxJsGzipBytes": 207000
     },
     "/labs/open-source": {
       "maxJsGzipBytes": 200000
