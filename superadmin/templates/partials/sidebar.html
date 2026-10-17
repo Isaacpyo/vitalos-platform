@@ -42,6 +42,8 @@
                 <span class="nav-label">{{ entry.item.label }}</span>
                 {% if entry.item.key == "careers" %}
                   <span hx-get="{% url 'careers:badge' %}" hx-trigger="load, every 60s" hx-swap="innerHTML" class="contents" data-testid="careers-badge-slot"></span>
+                {% elif entry.item.key == "notifications" %}
+                  <span hx-get="{% url 'notifications:badge' %}?nav=1" hx-trigger="load, every 60s" hx-swap="innerHTML" class="contents" data-testid="notifications-badge-slot"></span>
                 {% elif entry.item.key == "relay" %}
                   <span hx-get="{% url 'relay:badge' %}" hx-trigger="load, every 30s, relay-badge-refresh from:body" hx-swap="innerHTML" class="contents" data-testid="relay-badge-slot"></span>
                 {% endif %}
@@ -87,11 +89,23 @@
         <a class="block rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="{% url 'notifications:list' %}">Notifications</a>
         <a class="block rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="{% url 'api:docs' %}">API docs</a>
         {% if user.is_superuser %}<a class="block rounded px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800" href="{% url 'admin:index' %}">Django admin</a>{% endif %}
-        <form method="post" action="{% url 'accounts:logout' %}" class="border-t border-slate-200 pt-1 dark:border-slate-800">
+        <form method="post" action="{% url 'accounts:logout' %}" class="border-t border-slate-200 pt-1 dark:border-slate-800" data-logout-form>
           {% csrf_token %}
-          <button type="submit" class="flex w-full items-center gap-2 rounded px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800">{% icon "logout" "h-4 w-4" %} Sign out</button>
+          <button type="submit" class="flex w-full items-center gap-2 rounded px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800" data-confirm-logout aria-haspopup="dialog" aria-controls="logout-dialog">{% icon "logout" "h-4 w-4" %} Sign out</button>
         </form>
       </div>
     </details>
   </div>
 </aside>
+{# Sign-out confirmation. Without JS the Sign out button submits its POST form directly. #}
+<dialog id="logout-dialog" class="logout-dialog card w-full max-w-sm p-6 text-slate-900 dark:text-slate-100" aria-labelledby="logout-title" data-testid="logout-dialog">
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <h2 id="logout-title" class="text-lg font-semibold">Sign out of Vitalos Super Admin?</h2>
+    <p class="muted mt-2 text-sm">You will need to sign in again to continue.</p>
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" class="btn btn-ghost" data-close-logout autofocus>Cancel</button>
+      <button type="submit" class="btn btn-primary" data-testid="logout-confirm">Sign out</button>
+    </div>
+  </form>
+</dialog>

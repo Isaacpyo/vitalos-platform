@@ -2,11 +2,11 @@ import { navLabels, routes, solutionNames } from "@vitalos/cms";
 import type { ContactIntent } from "@vitalos/cms";
 import { AskRelayButton } from "../../components/ask-relay";
 import { FaqFilter } from "./FaqFilter";
-import { Disclosure, Stack, TextLink } from "@vitalos/ui";
+import { Disclosure, Heading, Stack, TextLink } from "@vitalos/ui";
 import { structuralLabels } from "../../lib/view-mapping/labels";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import type { Crumb } from "../institutional/breadcrumbs";
-import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
+import { PageBand, PageHeroBand } from "../institutional/layout";
 import { PageMain } from "../institutional/page-main";
 import type { FaqGroup } from "./load";
 import { ClosingBand } from "../commercial/bands";
@@ -31,9 +31,10 @@ export const faqContactIntent = (title: string): ContactIntent =>
 const FAQ_LIST_ID = "faq-list";
 
 /**
- * FAQ (Support menu). One section per solution, its questions as disclosures and a link to the
- * solution page that answers them in context. The questions and answers are the solution pages'
- * own; the page adds only structural labels.
+ * FAQ (Support menu). One section per solution: its questions as disclosures and a link to the
+ * solution page that answers them in context. From lg the section's title sticks in the left column
+ * beside its questions. The questions and answers are the solution pages' own; the page adds only
+ * structural labels.
  */
 export function FaqPage({
   groups,
@@ -64,10 +65,23 @@ export function FaqPage({
         />
         <Stack gap={8} id={FAQ_LIST_ID} className="mt-(--space-6)">
           {groups.map((group, index) => (
-            // Stable section anchor (the solution slug) and the filter's group marker.
-            <div key={group.href} id={group.id} data-faq-group="">
-              <ContentSection id={groupId(index)} heading={group.title}>
-                <div className="grid max-w-(--container-content) gap-(--space-3)">
+            // Stable section anchor (the solution slug) and the filter's group marker (B10).
+            <section
+              key={group.href}
+              id={group.id}
+              data-faq-group=""
+              aria-labelledby={groupId(index)}
+              className="grid min-w-0 gap-(--space-5) lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-(--space-8)"
+            >
+              {/* The group's title stays in view on the left while its questions scroll (owner
+                  direction, 17 Oct 2026); stacked above them on smaller screens. */}
+              <div className="min-w-0 lg:sticky lg:top-[calc(var(--size-header)+var(--space-5))] lg:self-start">
+                <Heading id={groupId(index)} level={2} size="h3">
+                  {group.title}
+                </Heading>
+              </div>
+              <div className="min-w-0">
+                <div className="grid gap-(--space-3)">
                   {group.entries.map((entry, entryIndex) => (
                     <Disclosure
                       key={`${entry.question}-${entryIndex}`}
@@ -88,8 +102,8 @@ export function FaqPage({
                   </TextLink>
                   {relayEnabled ? <AskRelayButton label={faqLabels.askRelay} /> : null}
                 </p>
-              </ContentSection>
-            </div>
+              </div>
+            </section>
           ))}
         </Stack>
       </PageBand>

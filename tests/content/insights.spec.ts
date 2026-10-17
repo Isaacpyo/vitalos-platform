@@ -77,23 +77,32 @@ test.describe("Insights article", () => {
     await expect(
       page.getByRole("region", { name: "Author" }).getByText("EA", { exact: true }),
     ).toBeVisible();
-    // One Share button opens a menu of plain share links; Escape closes it.
-    const share = page.locator("summary", { hasText: "Share" });
+    // One Share button opens a modal of icon links (plain share URLs); Escape closes it and
+    // returns focus to the button (owner direction, 17 Oct 2026).
+    const share = page.getByRole("button", { name: "Share" });
     await share.click();
-    const menu = page.getByRole("group", { name: "Share this article" });
-    for (const network of ["LinkedIn", "X", "Facebook", "WhatsApp", "Reddit", "Bluesky", "Email"]) {
-      await expect(menu.getByRole("link", { name: new RegExp(`^${network}\\b`) })).toBeVisible();
+    const menu = page.getByRole("dialog", { name: "Share this article" });
+    await expect(menu).toBeVisible();
+    for (const network of ["LinkedIn", "X", "Facebook", "WhatsApp", "Reddit", "Bluesky"]) {
+      await expect(
+        menu.getByRole("link", { name: new RegExp(`^Share on ${network}\\b`) }),
+      ).toBeVisible();
     }
-    await expect(menu.getByRole("link", { name: /^LinkedIn/ })).toHaveAttribute(
+    await expect(menu.getByRole("link", { name: "Share by email" })).toHaveAttribute(
+      "href",
+      /^mailto:/,
+    );
+    const linkedin = menu.getByRole("link", { name: /^Share on LinkedIn/ });
+    await expect(linkedin).toHaveAttribute(
       "href",
       /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=/,
     );
-    await expect(menu.getByRole("link", { name: /^LinkedIn/ })).toHaveAttribute(
-      "rel",
-      "noopener noreferrer",
-    );
+    await expect(linkedin).toHaveAttribute("rel", "noopener noreferrer");
+    // Icons only: no visible network names.
+    await expect(linkedin).toHaveText("");
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
+    await expect(share).toBeFocused();
     await expect(share).toBeFocused();
     const jsonLd = (
       await page.locator('script[type="application/ld+json"]').allTextContents()

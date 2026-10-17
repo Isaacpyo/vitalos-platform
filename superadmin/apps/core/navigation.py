@@ -105,6 +105,7 @@ NAV_ITEMS = (
         permission="apps.relay.selectors.nav_visible",
     ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
+    NavItem("notifications", "Notifications", "notifications:list", "bell", "Operate", ("/notifications",)),
     NavItem(
         "service_lines",
         "Service lines",

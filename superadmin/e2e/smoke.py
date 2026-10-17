@@ -346,6 +346,8 @@ def main() -> int:
             launch["executable_path"] = executable
         browser = playwright.chromium.launch(**launch)
         context = browser.new_context(viewport={"width": 1440, "height": 900}, color_scheme="light")
+        # Synthetic records are hidden from the admin UI; this session opts back in to verify them.
+        context.add_cookies([{"name": "vitalos_show_synthetic", "value": "1", "url": base}])
         page = context.new_page()
         console_errors: list[str] = []
         page.on(

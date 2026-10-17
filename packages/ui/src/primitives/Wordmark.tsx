@@ -72,6 +72,10 @@ export function Wordmark({
   const size = compactLogo
     ? cx(LOGO_SIZE_CLASSES, "max-[27.99rem]:h-6 max-[24.99rem]:hidden!")
     : LOGO_SIZE_CLASSES;
+  // The white logo keeps its brand colour but carries a fine Midnight edge and a soft shadow, so it still reads
+  // when a light part of a photograph sits behind the clear header (owner direction, 16 Oct 2026).
+  const darkLogoShadow =
+    "[filter:drop-shadow(0_0_1px_color-mix(in_srgb,var(--color-midnight-950)_70%,transparent))_drop-shadow(0_1px_5px_color-mix(in_srgb,var(--color-midnight-950)_60%,transparent))]";
   // With a dark-surface logo, a dark tone scope around the wordmark decides which of the two is
   // drawn. Every image not drawn is display:none, so only one is ever in the accessibility tree.
   const mark = logo ? (
@@ -79,7 +83,7 @@ export function Wordmark({
       {darkLogo ? (
         <>
           {image(logo, cx(size, "block [[data-tone=dark]_&]:hidden"))}
-          {image(darkLogo, cx(size, "hidden [[data-tone=dark]_&]:block"))}
+          {image(darkLogo, cx(size, "hidden [[data-tone=dark]_&]:block", darkLogoShadow))}
         </>
       ) : (
         image(logo, cx(size, "block"))

@@ -20,6 +20,7 @@ from apps.accounts.roles import (
 )
 from apps.core import morning, overview
 from apps.core.htmx import changed_response
+from apps.core.synthetic import exclude_synthetic, not_synthetic_project_q
 from apps.enquiries.selectors import can_access as can_access_enquiries
 
 from .. import activity, search, selectors, services
@@ -152,7 +153,9 @@ def service_dashboard(request, slug):
         "show_archived": archived,
         "can_edit": has_service_access(user, line),
         "can_edit_team": is_superadmin(user),
-        "active_projects": line.projects.active().filter(status=Project.Status.ACTIVE).count(),
+        "active_projects": exclude_synthetic(line.projects.active())
+        .filter(status=Project.Status.ACTIVE)
+        .count(),
     }
     context.update(TAB_BUILDERS[tab](request, line, archived))
     template = (
@@ -178,7 +181,11 @@ def architecture(request):
         Prefetch("solutions", queryset=solutions)
     )
     lines = lines.prefetch_related(Prefetch("practices", queryset=practices)).annotate(
-        project_total=Count("projects", filter=Q(projects__is_archived=False), distinct=True),
+        project_total=Count(
+            "projects",
+            filter=Q(projects__is_archived=False) & not_synthetic_project_q("projects__"),
+            distinct=True,
+        ),
         member_total=Count("team_members", filter=Q(team_members__is_archived=False), distinct=True),
     )
     context = {

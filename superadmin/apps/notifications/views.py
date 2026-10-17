@@ -8,7 +8,6 @@ from django.views.decorators.http import require_GET, require_POST
 from apps.core.htmx import changed_response
 
 from . import services
-from .models import Notification
 
 
 def _attention_items(user):
@@ -22,7 +21,7 @@ def _attention_items(user):
 @login_required
 @require_GET
 def notification_list(request):
-    notifications = Notification.objects.filter(recipient=request.user)[:100]
+    notifications = services.visible_notifications(request.user)[:100]
     attention = _attention_items(request.user)
     context = {
         "notifications": notifications,
@@ -45,8 +44,9 @@ def attention(request):
 @login_required
 @require_GET
 def badge(request):
-    """Polled by the bell every 60 seconds."""
-    return render(request, "notifications/_bell.html", {"unread_count": services.unread_count(request.user)})
+    """Polled by the bell every 60 seconds; ``?nav=1`` returns the sidebar's count pill instead."""
+    template = "notifications/_nav_badge.html" if request.GET.get("nav") else "notifications/_bell.html"
+    return render(request, template, {"unread_count": services.unread_count(request.user)})
 
 
 @login_required

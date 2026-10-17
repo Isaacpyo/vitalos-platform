@@ -22,7 +22,7 @@ const pdf = (size = 2048) => {
 
 async function fillValid(page: Page) {
   await page.getByLabel("Full name").fill("Example Applicant");
-  await page.getByLabel("Email").fill("applicant@example.test");
+  await page.getByRole("textbox", { name: "Email" }).fill("applicant@example.test");
   await page.locator('input[type="file"]').setInputFiles(pdf());
   await page.getByLabel("Yes", { exact: true }).check();
   await page.getByRole("checkbox").check();
@@ -37,7 +37,8 @@ test.describe("Careers pages", () => {
       "href",
       "#open-roles",
     );
-    await expect(page.getByRole("heading", { name: "How we work" })).toBeVisible();
+    // The "How we work" values section was removed (owner direction, 17 Oct 2026).
+    await expect(page.getByRole("heading", { name: "How we work" })).toHaveCount(0);
     await expect(page.getByText("Engineering (1)")).toBeVisible();
     await expect(page.locator(`main a[href="${ROLE}"]`)).toBeVisible();
   });
@@ -54,9 +55,11 @@ test.describe("Careers pages", () => {
     );
     await expect(page.getByRole("button", { name: "Send application" })).toBeVisible();
     // The same Share menu as an article, with the role's canonical URL.
-    await page.locator("summary", { hasText: "Share" }).click();
+    await page.getByRole("button", { name: "Share" }).click();
     await expect(
-      page.getByRole("group", { name: "Share this role" }).getByRole("link", { name: /^LinkedIn/ }),
+      page
+        .getByRole("dialog", { name: "Share this role" })
+        .getByRole("link", { name: /^Share on LinkedIn/ }),
     ).toHaveAttribute("href", /share-offsite\/\?url=.*%2Fcareers%2Fexample-role-fixture$/);
     const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join(
       "",
@@ -98,10 +101,14 @@ test.describe("Careers pages", () => {
     expect(await missing.text()).toContain("<main");
   });
 
-  test("the homepage shows the Careers section after Insights", async ({ page }) => {
+  test("the homepage shows the Careers banner after Insights, without listing roles", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: "All open roles" })).toBeVisible();
-    await expect(page.locator(`main a[href="${ROLE}"]`)).toHaveCount(1);
+    await expect(
+      page.locator("main").getByRole("link", { name: "See open roles" }),
+    ).toHaveAttribute("href", "/careers");
+    await expect(page.locator(`main a[href="${ROLE}"]`)).toHaveCount(0);
     await expect(page.locator('footer a[href="/careers"]').first()).toBeAttached();
   });
 });

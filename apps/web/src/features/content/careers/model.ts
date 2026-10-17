@@ -15,7 +15,6 @@ export type ClosedRole = ClosedRoleData;
 export const careersCopy = {
   eyebrow: "CAREERS",
   seeOpenRoles: "See open roles",
-  howWeWork: "How we work",
   openRoles: "Open roles",
   introduceYourself: "Introduce yourself",
   allOpenRoles: "All open roles",

@@ -106,13 +106,14 @@ const is404 = { digest: expect.stringContaining("404") };
 const html = (node: unknown) => renderToStaticMarkup(node as React.ReactElement);
 
 describe("Careers pages when open", () => {
-  it("renders the hero, how we work, the grouped roles and the closing band", async () => {
+  it("renders the hero, the grouped roles and the closing band (no values section)", async () => {
     const markup = html(await (await pages.index()).default());
     expect(jsonLdIssues(markup, "/careers")).toEqual([]);
     expect(markup).toContain("Build what you advise");
     expect(markup).toContain('href="#open-roles"');
-    expect(markup).toContain("01</span>");
-    expect(markup).toContain("Ownership");
+    // The "How we work" values section was removed (owner direction, 17 Oct 2026).
+    expect(markup).not.toContain('id="how-we-work"');
+    expect(markup).not.toContain("Ownership");
     expect(markup).toContain("Engineering (1)");
     expect(markup).toContain('href="/careers/example-role-fixture"');
     expect(markup).toContain("ENGINEERING · SENIOR · HYBRID · EXAMPLE CITY · PERMANENT");

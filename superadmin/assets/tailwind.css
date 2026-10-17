@@ -482,3 +482,12 @@
       hover:border-slate-300;
   }
 }
+
+/* Sign-out confirmation dialog: dimmed, blurred backdrop. */
+.logout-dialog {
+  margin: auto;
+}
+.logout-dialog::backdrop {
+  background: rgb(15 23 42 / 0.6);
+  backdrop-filter: blur(4px);
+}

@@ -4,6 +4,10 @@ export const shareCopy = {
   copyLink: "Copy link",
   linkCopied: "Link copied",
   more: "More options",
+  close: "Close",
+  /** Icon names: "Share on LinkedIn", "Share by email". */
+  on: "Share on",
+  byEmail: "Share by email",
   opensInNewTab: "(opens in a new tab)",
 } as const;
 
