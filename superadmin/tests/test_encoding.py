@@ -39,3 +39,12 @@ def test_source_files_have_no_mojibake():
         if _has_mojibake(text):
             offenders.append(str(path.relative_to(ROOT)))
     assert offenders == []
+
+
+def test_media_origin_for_the_image_csp():
+    from config.settings.base import _origin
+
+    assert _origin("https://media.example.test/insights/") == "https://media.example.test"
+    assert _origin("http://localhost:9000/bucket") == "http://localhost:9000"
+    assert _origin("") == "" and _origin("javascript:alert(1)") == ""
+    assert _origin("https://user:pass@media.example.test/") == ""

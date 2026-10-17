@@ -308,13 +308,28 @@ SECURE_REFERRER_POLICY = "same-origin"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
+
+def _origin(url: str) -> str:
+    """The scheme://host[:port] of an https (or, locally, http) URL, else ""."""
+    from urllib.parse import urlsplit
+
+    parts = urlsplit(url or "")
+    if parts.scheme not in ("https", "http") or not parts.netloc or "@" in parts.netloc:
+        return ""
+    return f"{parts.scheme}://{parts.netloc}"
+
+
+# Insights cover previews and media come from the public media host (CONTENT_MEDIA_PUBLIC_BASE_URL),
+# which is another origin in production; allow images from that origin only.
+CONTENT_MEDIA_ORIGIN = _origin(CONTENT_MEDIA_PUBLIC_BASE_URL)
+
 # Strict CSP: no inline script or style without the per-request nonce.
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": [NONE],
         "script-src": [SELF, NONCE],
         "style-src": [SELF, NONCE],
-        "img-src": [SELF, "data:"],
+        "img-src": [SELF, "data:", *([CONTENT_MEDIA_ORIGIN] if CONTENT_MEDIA_ORIGIN else [])],
         "font-src": [SELF],
         "connect-src": [SELF],
         "manifest-src": [SELF],

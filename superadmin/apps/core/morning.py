@@ -209,9 +209,7 @@ def insights_section(user) -> Section | None:
     next_at = Post.objects.filter(status=PostStatus.SCHEDULED, publish_at__isnull=False).aggregate(
         at=Min("publish_at")
     )["at"]
-    scheduled = (
-        timezone.localtime(next_at).strftime("%d %b, %H:%M").lstrip("0") if next_at else "None"
-    )
+    scheduled = timezone.localtime(next_at).strftime("%d %b, %H:%M").lstrip("0") if next_at else "None"
     return Section(
         "insights",
         "Insights",
