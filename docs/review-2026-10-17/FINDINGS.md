@@ -91,4 +91,26 @@ Source: the live review of vitalos.co.uk and admin.vitalos.co.uk on 17 Oct 2026 
 
 ## Baseline Core Web Vitals
 
-_Filled in by Phase 0 baseline / WS5._
+Live site, 17 Oct 2026, Lighthouse 12.8.2 on an overloaded laptop (mobile TBT and performance are pessimistic; CLS and accessibility are reliable). Full detail: [baseline/BASELINE.md](baseline/BASELINE.md). The screenshots (186 JPEGs, 55 MB) are kept outside the repo at `D:/Development/vitalos-baseline/docs/review-2026-10-17/baseline/screens/`, because the repo is public and they would bloat its history.
+
+| Route                                 | Mobile perf | Mobile LCP | CLS | Desktop perf | Desktop LCP | axe A/AA |
+| ------------------------------------- | ----------- | ---------- | --- | ------------ | ----------- | -------- |
+| /                                     | 52–58       | 4.54 s     | 0   | 98           | 1.09 s      | 0        |
+| /what-we-do                           | 86          | 3.17 s     | 0   | 94           | 1.03 s      | 0        |
+| /solutions/ai-transformation          | 86          | 3.54 s     | 0   | 98           | 0.97 s      | 0        |
+| /offers/ai-opportunity-assessment     | 71          | 3.38 s     | 0   | 68           | 1.06 s      | 0        |
+| /industries/health-care               | 79          | 3.63 s     | 0   | 94           | 0.96 s      | 0        |
+| /about                                | 50          | 4.32 s     | 0   | 95           | 0.92 s      | 0        |
+| /insights/introducing-vitalos         | 88 (rerun)  | 2.81 s     | 0   | 85           | 1.00 s      | 0        |
+| /careers/senior-technology-consultant | 67          | 3.66 s     | 0   | 97           | 0.95 s      | 0        |
+| /contact                              | 80          | 3.01 s     | 0   | 62           | 1.37 s      | 0        |
+| /trust                                | 65          | 3.31 s     | 0   | 88           | 0.90 s      | 0        |
+| /faq                                  | 62 (rerun)  | 2.78 s     | 0   | 98           | 0.90 s      | 0        |
+
+Baseline notes that change the findings:
+
+- **C3:** axe finds no WCAG A/AA violations on any route. There are no unnamed links or buttons. Images with empty `alt` that are not hidden: 19 on `/`, 15 on `/what-we-do`. The review's counts of 43 and 32 included hidden ones.
+- **Relay launcher:** fails WCAG 2.5.3, Label in Name. The visible text is "Ask Vitalos"; the accessible name is "Open chat with Relay…". Sent to WS6.
+- **C2:** before any interaction, production has no `#relay-panel` and no Relay `<article>`, yet the launcher's `aria-controls` points at the missing panel.
+- **C5:** the home page is the slowest on mobile. Its HTML is 388 KB with 3–8 s of main-thread work, and LCP is the hero image (71 % of it is render delay).
+- **Headers:** `Access-Control-Allow-Origin: *` is set on HTML responses. There is no X-Frame-Options and no COOP. HSTS has no `includeSubDomains`.
