@@ -210,7 +210,7 @@ def insights_section(user) -> Section | None:
         at=Min("publish_at")
     )["at"]
     scheduled = (
-        timezone.localtime(next_at).strftime("%d %b, %H:%M").lstrip("0") if next_at else "None scheduled"
+        timezone.localtime(next_at).strftime("%d %b, %H:%M").lstrip("0") if next_at else "None"
     )
     return Section(
         "insights",
@@ -279,7 +279,7 @@ def health_section() -> Section:
             Count(check.label, check.summary, _url("core:health"), "attention", key=check.key)
             for check in overall["problems"]
         ],
-        note=overall["summary"],
+        note="" if overall["problems"] else overall["summary"],
         status=overall["status"],
     )
 
