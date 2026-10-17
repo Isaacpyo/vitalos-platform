@@ -11,7 +11,9 @@ import type { JsonLdContext, JsonLdNode } from "./json-ld";
  * same person. Every value comes from the published author profile; nothing is added.
  */
 export function aboutFounderEnabled(): boolean {
-  return getEnv().site.aboutFounderEnabled;
+  // Read defensively: the flag is defined by WS2's config change (`env.site`).
+  const site = (getEnv() as { site?: { aboutFounderEnabled?: boolean } }).site;
+  return site?.aboutFounderEnabled === true;
 }
 
 export interface FounderProfile {
