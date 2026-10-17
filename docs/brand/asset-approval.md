@@ -101,3 +101,14 @@ captioned or used as if they were.
 ## Fauward snapshot (owner direction, 17 Oct 2026)
 
 The owner asked for a real snapshot of fauward.com (a Vitalos product) for the Products pages. The dashboard illustration in the fauward.com hero was captured with Playwright on 17 Oct 2026, at 1440x900 and 390x844 (device scale 2). The cookie banner was dismissed with "Essential only" and the chat launcher was hidden. Nothing else was changed. The images were cropped to the slot ratios (21:9, and 5:7 for phones), trimming about 9 px of edge, and saved as AVIF and WebP at full and half width as `apps/web/public/media/products.fauward.hero[.mobile][@1x].{avif,webp}` (slot `products.fauward.hero`). The figures in the illustration (shipments, drivers, revenue, SLA) are the sample data fauward.com itself shows. They are not Vitalos or client results and must not be quoted as such. Recapture when the fauward.com hero changes.
+
+## SOB Autofix snapshots (owner direction, 17 Oct 2026)
+
+Three public pages of sobautofix.com (a Vitalos product) were captured with Playwright on 17 Oct 2026, at 1440x900 and 390x844 (device scale 2): booking step 1 (`/book`), the homepage and Get a Quote (`/get-a-quote`). Optional cookies were declined with "Essential only". The floating WhatsApp launcher and the focus ring the booking wizard puts on its heading at load were hidden. No registration was entered, and Manage Booking was not opened. Nothing else was changed.
+
+The images were cropped to the slot ratios and saved as AVIF and WebP at full and half width, as `apps/web/public/media/products.sob-autofix.{hero,home,quote}[.mobile][@1x].{avif,webp}`:
+
+- booking: 21:9, with a 5:7 phone version
+- homepage and quote: 16:9, each with a 5:7 phone version
+
+"AB12 CDE" is the site's own placeholder registration, not a real vehicle. The photograph in the homepage hero is SOB Autofix's own. Recapture when those pages change.

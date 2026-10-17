@@ -1,3 +1,80 @@
+# Report: SOB Autofix under Products (17 Oct 2026)
+
+Branch `feat/products-sob-autofix`, based on `main` after #74 (Products and Fauward). Discovery: [docs/content/DISCOVERY-sob-autofix.md](docs/content/DISCOVERY-sob-autofix.md). Every claim on the page maps to a line in that note: a file and line in the SOB Autofix repository, or a quotation from the live site.
+
+## Done
+
+- **`/products`** now shows two cards: Fauward, then "SOB Autofix", with the booking snapshot, one line and "View SOB Autofix".
+- **`/products/sob-autofix`** uses the same template as Fauward:
+  - the compact hero: eyebrow "Products · Automotive services", h1 "SOB Autofix", a one-sentence standfirst, and "Open sobautofix.com" (same tab, `rel="noopener"`, `outbound_click`)
+  - the booking-step snapshot
+  - **At a glance**: live at, sector, scope, stack, live since
+  - **The problem**, **What it does** (six systems), **Engineering decisions** (five, each constraint → choice → consequence) and **Outcome**
+  - **More of the site**: the homepage and Get a Quote captures
+  - the closing "Talk to Vitalos" card
+
+  Body copy is about 560 words; a unit test caps it at 700.
+
+- **Template extended, not forked.** `ProductView` gained the optional fields `sector`, `facts`, `sections` and `screens`, rendered with the existing `Band`, `DefinitionList` (as on offer pages) and `MediaSlot`. Fauward sets none of them, so its page is unchanged; a unit test checks this.
+- **Navigation.** "SOB Autofix — workshop platform" (gauge icon, "Built and operated by Vitalos") follows Fauward in Who We Are → Products and in the mobile sheet. The footer is unchanged: it links the Products index, not each product.
+- **About:** unchanged. A draft-source test checks that it does not mention SOB Autofix.
+- **Snapshots** are real Playwright captures of sobautofix.com at 1440×900 and 390×844 (2x): booking step 1, the homepage and Get a Quote. Optional cookies were declined. No registration was entered, and Manage Booking was not opened. They ship as AVIF and WebP at full and half width, with phone versions (10–63 KB each), in three registered slots with descriptive alt text. The asset record is in `docs/brand/asset-approval.md`.
+- **SEO:** the title is "SOB Autofix: Workshop Booking and Operations | Vitalos", with a 120–155 character description, the canonical URL and the `next/og` image from the brand template. JSON-LD has WebPage `about` a SoftwareApplication (`url` https://sobautofix.com, `applicationCategory` BusinessApplication, published by the Organization) and a BreadcrumbList. Both pages are in the sitemap and llms.txt (data-driven). The Products page SEO description now names both products.
+- **Bundle fix (found along the way).** The `outbound_click` listener imported the products list into the client bundle, so every product's copy shipped to every page. With SOB Autofix added, the 404 page went 429 B over its JS budget. The CTA now carries `data-product={slug}` and the listener reads it. Every route measures 195224 B gzip, down from 195658 B with Fauward alone.
+- **Docs:** discovery note, ADR-031 amendment, asset record, `observability.md`, the regenerated `IMAGE-SLOTS.md`, and Lighthouse budgets that now cover `/products` and the product template.
+
+## Verification (local, 17 Oct 2026, rebased on `main` 09b4cdd)
+
+| Gate                                                                                                                                     | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck, lint (web, cms), Prettier on changed files                                                                                    | pass. 2 lint warnings in files this PR does not touch (`media-slot.tsx`, `components.test.tsx`).                                                                                                                                                                                                                                                                                                                                                      |
+| Unit tests                                                                                                                               | web 927 passed, cms 132 passed, including new tests for the product template, the registry claims and the nav order                                                                                                                                                                                                                                                                                                                                   |
+| Playwright, fixtures (chromium 1440 + mobile 390 + http): products, a11y template sweep (axe, 320 px reflow, focus), sitemap, JS budgets | 193 passed, 0 failed                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `/products/sob-autofix` e2e                                                                                                              | every h2 in order, the facts, all three images with intrinsic size, CTA `href`/`rel`/no `target`/`data-product`, SoftwareApplication + BreadcrumbList, axe 0 violations, no 320 px overflow, CLS ≤ 0.1 (measured 0.001)                                                                                                                                                                                                                               |
+| Who We Are menu                                                                                                                          | lists Fauward then SOB Autofix; axe 0 violations with the menu open; the panel spans 39–985 px of 1024, the same as before                                                                                                                                                                                                                                                                                                                            |
+| JS per route (gzip, first-party)                                                                                                         | `/products`, `/products/fauward`, `/products/sob-autofix` and 404: 195224 B (budgets 206000 / 197000)                                                                                                                                                                                                                                                                                                                                                 |
+| `pnpm seo:check --lighthouse` (repo content)                                                                                             | SEO crawl clean (65 URLs, 57 in the sitemap). `/products` and `/products/sob-autofix` scored performance 93, accessibility 100, SEO 100, CLS 0, TBT 65–82 ms on all three runs. Each `--skip-build` run had one over-budget page outside this PR, a different one each time (`/what-we-do` performance 79, then `/trust/security` TBT 312 ms); both pass on other runs. The laptop was shared with other sessions, so this is load, not a regression. |
+| Playwright, draft source (real copy): products + a11y template sweep, chromium + mobile                                                  | 158 passed, 0 failed; About unchanged (no SOB Autofix), Fauward sentence once                                                                                                                                                                                                                                                                                                                                                                         |
+| Storybook build                                                                                                                          | pass. No story renders the product template or nav model, so none needed changes.                                                                                                                                                                                                                                                                                                                                                                     |
+
+**Not done:** a pixel-diff of the homepage and header against `main`. The menu's links and order are asserted, and the panel's measured box is unchanged. The non-gating visual CI job will report the new `product` route baseline.
+
+## Needs approval
+
+- **Merge and deploy.** The brief says not to merge or deploy, so the PR is open but not merged.
+- **Copy.** The page, card and menu wording need the owner's eye.
+
+## Unverified: Temitope to confirm or cut
+
+1. **"Built and operated by Vitalos".** "Built" is evidenced (footer credit, every commit). "Operated" comes from the brief only.
+2. **"Live since August 2026".** The first commit is 9 Aug 2026, and a doc committed 26 Aug describes production as live. No launch date is recorded.
+3. **"Run on a small team's budget"** (The problem) comes from the brief, not from evidence.
+4. **What sobautofix.com replaced.** Nothing in the repository says, so Outcome states only what shipped. Supply it if you want a before/after line.
+
+Cut or narrowed because the evidence does not support them:
+
+- mobile "eligibility": mobile is set per service, with no postcode or radius check
+- Manage Booking "with email": the code asks only for reference and registration, although its README says otherwise
+- coverage-area pages (plural): only Doncaster is built
+- database-level clash prevention: clashes are handled by Cal.com plus a re-check at submit
+- outcome figures
+- the "Not Guesswork." hero line: the live hero now reads "Professional Diagnostics, and Repair."
+
+## Assumptions
+
+- **Title and h1.** The Fauward page as built outranks the brief, so the h1 is the product name. The brief's "A booking and operations platform for a diagnostics-led workshop" is the standfirst instead. The SEO title drops "platform" and the em dash to fit the site's 60-character limit.
+- **Organization `brand`/`owns` not added.** schema.org gives `owns` the range Product/OwnershipInfo and `brand` the range Brand/Organization; SoftwareApplication fits neither, so the product links to the Organization through `publisher`, as Fauward does.
+- **`cta_click`** does not exist (only `primary_cta_click` and `outbound_click`), so the card and menu item fire nothing new.
+- **Screens:** booking step 1 is the snapshot (it shows the seven steps and the registration-privacy line). The homepage and quote captures are a second band. The WhatsApp launcher and a load-time focus ring were hidden in the captures.
+- **Dark theme:** the site has none (see the Fauward report). The dark hero, menu card and footer surfaces were checked.
+- **The template sweep route** for `product` is now `/products/sob-autofix`, because it uses every band. Fauward keeps its own axe and reflow checks in `products.spec.ts`.
+
+## Blockers
+
+None.
+
+---
+
 # Report: Products and Fauward (17 Oct 2026)
 
 Branch `feat/nav-products-fauward`. Discovery: [docs/content/DISCOVERY-fauward.md](docs/content/DISCOVERY-fauward.md).
