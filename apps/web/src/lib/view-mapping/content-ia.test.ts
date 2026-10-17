@@ -29,8 +29,8 @@ describe("Vitalos Labs as the sixth practice (decision 1)", () => {
     expect(item?.summary).toBe(
       "Vitalos Labs explores emerging technology, builds reference architectures and tests ideas before they become client capabilities or products.",
     );
-    // No illustration until the Labs artwork exists (WS1): the stage shows the icon.
-    expect(item?.image).toBeUndefined();
+    // The Labs family artwork (ADR-044).
+    expect(item?.art).toEqual({ family: "labs", seed: "practice" });
   });
 
   it("is left out while the Labs gate is closed and when there are no other practices", () => {
