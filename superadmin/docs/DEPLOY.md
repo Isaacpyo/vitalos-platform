@@ -478,7 +478,7 @@ Add the mail variables (`EMAIL_TRANSPORT`, `RESEND_API_KEY` as a `secretref:`) a
 
 ### Importing a batch of approved Insights
 
-`manage.py import_insights_batch FOLDER` imports `NN-slug.md` files (YAML front matter, then Markdown) through the editorial workflow and publishes each post with its original date (`docs/content/DECISIONS.md` 126 to 134). It is a dry run unless `--apply` is given, and any problem stops the whole run before anything is written. The image holds only `superadmin/`, so a batch to run in production is committed under `apps/insights/imports/` (batch 2 is `apps/insights/imports/insights-batch-2`, kept identical to `docs/content/imports/insights-batch-2` by a test) and deployed first.
+`manage.py import_insights_batch FOLDER` imports `NN-slug.md` files (YAML front matter, then Markdown) through the editorial workflow (`docs/content/DECISIONS.md` 126 to 134). It is a dry run unless `--apply` is given, and any problem stops the whole run before anything is written. Since 17 Oct 2026 it imports **drafts** by default (`--status draft`: working copies only, no editorial check ticked, nothing on the website); publishing each post with its original date needs the explicit `--status published`. `--author SLUG|EMAIL` puts every post under an existing person author instead of the files' "Vitalos" organisation author (the import never creates or confirms a person author). The image holds only `superadmin/`, so a batch to run in production is committed under `apps/insights/imports/` (batch 2 is `apps/insights/imports/insights-batch-2`, kept identical to `docs/content/imports/insights-batch-2` by a test) and deployed first.
 
 Production runs it as an execution of the release job, which has the app's database and content settings, with the command overridden:
 
@@ -487,9 +487,12 @@ RG=rg-vitalos-superadmin
 BATCH=apps/insights/imports/insights-batch-2
 # 1. Dry run: checks every file and the renderer, writes nothing.
 az containerapp job start -n superadmin-release -g "$RG" --command python --args manage.py import_insights_batch "$BATCH"
-# 2. Import and publish, acting as the owner's admin user (the default --as-user).
-az containerapp job start -n superadmin-release -g "$RG" --command python --args manage.py import_insights_batch "$BATCH" --apply --status published
+# 2. Import as drafts, acting as the owner's admin user (the default --as-user). Add
+#    --author <person-author-slug> to put the posts under a person author.
+az containerapp job start -n superadmin-release -g "$RG" --command python --args manage.py import_insights_batch "$BATCH" --apply
+# 3. Only after the owner approves publishing: the same folder publishes the drafts with their dates.
+#    az containerapp job start -n superadmin-release -g "$RG" --command python --args manage.py import_insights_batch "$BATCH" --apply --status published
 az containerapp job execution list -n superadmin-release -g "$RG" -o table
 ```
 
-Read the report in the execution's console logs (Log Analytics, `ContainerAppConsoleLogs_CL` for job `superadmin-release`). Publishing emits one sync event per post; the website's tick delivers any that did not go through at once, and **Settings › Content sync** shows them. Running the same batch again changes nothing.
+Read the report in the execution's console logs (Log Analytics, `ContainerAppConsoleLogs_CL` for job `superadmin-release`). A draft import emits no sync event. Publishing emits one sync event per post; the website's tick delivers any that did not go through at once, and **Settings › Content sync** shows them. Running the same batch again changes nothing.
