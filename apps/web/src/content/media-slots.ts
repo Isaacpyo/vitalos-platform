@@ -94,6 +94,39 @@ export const mediaSlots = [
     alt: "Fauward dashboard showing shipment operations",
     mobile: { ratio: "5:7", size: [733, 1026] },
   },
+  {
+    id: "products.sob-autofix.hero",
+    page: "/products/sob-autofix (and its card on /products)",
+    section: "Snapshot",
+    ratio: "21:9",
+    size: [2030, 870],
+    brief:
+      "Step 1 of the booking flow on sobautofix.com/book, captured with Playwright at 1440 wide (2x) with optional cookies declined, the focus ring and the WhatsApp launcher hidden, and no registration entered. The phone version is the same step at 390 wide.",
+    alt: "SOB Autofix booking flow, step 1 of 7: the vehicle registration lookup with a manual-entry option",
+    mobile: { ratio: "5:7", size: [733, 1026] },
+  },
+  {
+    id: "products.sob-autofix.home",
+    page: "/products/sob-autofix",
+    section: "Screens",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "The first screen of sobautofix.com, captured like the snapshot at 1440 wide (2x); the phone version at 390 wide.",
+    alt: "The sobautofix.com homepage, with the registration lookup beside the headline",
+    mobile: { ratio: "5:7", size: [733, 1026] },
+  },
+  {
+    id: "products.sob-autofix.quote",
+    page: "/products/sob-autofix",
+    section: "Screens",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "The first screen of sobautofix.com/get-a-quote, captured like the snapshot at 1440 wide (2x); the phone version at 390 wide.",
+    alt: "The SOB Autofix quote request, which starts with the vehicle registration",
+    mobile: { ratio: "5:7", size: [733, 1026] },
+  },
 ] as const satisfies readonly MediaSlotEntry[];
 
 export type MediaSlotId = (typeof mediaSlots)[number]["id"];

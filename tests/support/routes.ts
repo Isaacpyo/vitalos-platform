@@ -53,7 +53,8 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   // Served but noindex while the show links are placeholders (owner direction, 16 Oct 2026).
   { name: "podcast", path: "/podcast", pattern: "/podcast", inSitemap: false },
   { name: "products", path: "/products", pattern: "/products" },
-  { name: "product", path: "/products/fauward", pattern: "/products/:slug" },
+  // SOB Autofix uses every band the product template has (facts, sections, screens).
+  { name: "product", path: "/products/sob-autofix", pattern: "/products/:slug" },
 ];
 
 /**
@@ -95,7 +96,8 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "legal", path: "/legal/privacy", pattern: "/legal/:slug", inSitemap: false },
   { name: "contact", path: "/contact", pattern: "/contact" },
   { name: "products", path: "/products", pattern: "/products" },
-  { name: "product", path: "/products/fauward", pattern: "/products/:slug" },
+  // SOB Autofix uses every band the product template has (facts, sections, screens).
+  { name: "product", path: "/products/sob-autofix", pattern: "/products/:slug" },
 ];
 
 /** The templates of the content source under test (see tests/support/content-source.ts). */

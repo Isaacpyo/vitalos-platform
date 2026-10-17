@@ -70,6 +70,10 @@ export const structuralLabels = {
   /** Facts on case-study summaries. */
   client: "Client",
   engagementBasis: "Basis",
+
+  /** Product pages (owner direction, 17 Oct 2026). */
+  atAGlance: "At a glance",
+  productScreens: "More of the site",
 } as const;
 
 /** Display titles of the duration categories. */

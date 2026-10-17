@@ -90,6 +90,12 @@ describe("header model", () => {
         href: "/products/fauward",
         icon: "gauge",
       },
+      {
+        label: "SOB Autofix — workshop platform",
+        description: "Built and operated by Vitalos",
+        href: "/products/sob-autofix",
+        icon: "gauge",
+      },
     ]);
     expect(products?.more).toEqual({ label: "All products", href: "/products" });
     // Who We Are stays within the What We Do panel's width: at most three columns.

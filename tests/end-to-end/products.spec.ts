@@ -10,7 +10,7 @@ test.use({ reducedMotion: "reduce" });
 const isDesktop = (width: number | undefined) => (width ?? 0) >= 1024;
 
 test.describe("Products", () => {
-  test("Who We Are lists Products: the heading to /products, Fauward to its page", async ({
+  test("Who We Are lists Products: the heading to /products, then Fauward and SOB Autofix", async ({
     page,
   }) => {
     await page.goto("/");
@@ -23,10 +23,18 @@ test.describe("Products", () => {
       );
       const fauward = panel.getByRole("link", { name: /^Fauward — logistics SaaS/ });
       await expect(fauward).toHaveAttribute("href", "/products/fauward");
+      const sob = panel.getByRole("link", { name: /^SOB Autofix — workshop platform/ });
+      await expect(sob).toHaveAttribute("href", "/products/sob-autofix");
+      // Fauward first, then SOB Autofix.
+      const hrefs = await panel
+        .locator('a[href^="/products/"]')
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+      expect(hrefs).toEqual(["/products/fauward", "/products/sob-autofix"]);
       await expectNoA11yViolations(page);
     } else {
       // The mobile sheet renders the same columns; collapsed disclosures hide them from roles.
       await expect(page.locator('header a[href="/products/fauward"]').first()).toBeAttached();
+      await expect(page.locator('header a[href="/products/sob-autofix"]').first()).toBeAttached();
       await expect(page.locator('header a[href="/products"]').first()).toBeAttached();
     }
   });
@@ -37,7 +45,7 @@ test.describe("Products", () => {
     await expect(page.locator('footer a[href="/products"]')).toHaveText("Products");
   });
 
-  test("/products shows one Fauward card with its snapshot and a link to its page", async ({
+  test("/products shows the Fauward and SOB Autofix cards, each with its snapshot and page", async ({
     page,
   }) => {
     const response = await page.goto("/products");
@@ -53,6 +61,15 @@ test.describe("Products", () => {
       "href",
       "/products/fauward",
     );
+    await expect(main.getByRole("heading", { level: 2, name: "SOB Autofix" })).toHaveCount(1);
+    await expect(
+      main.getByRole("img", { name: /^SOB Autofix booking flow, step 1 of 7/ }),
+    ).toBeVisible();
+    await expect(main.getByRole("link", { name: "View SOB Autofix" })).toHaveAttribute(
+      "href",
+      "/products/sob-autofix",
+    );
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText(["Fauward", "SOB Autofix"]);
     await expectNoA11yViolations(page);
     await expectNoHorizontalOverflowAt320(page);
   });
@@ -79,6 +96,73 @@ test.describe("Products", () => {
     await expectNoHorizontalOverflowAt320(page);
   });
 
+  test("/products/sob-autofix: every section, the screens, and sobautofix.com in the same tab", async ({
+    page,
+  }) => {
+    // Collect layout shifts from the first paint.
+    await page.addInitScript(() => {
+      (window as unknown as { __cls: number }).__cls = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as unknown as {
+          value: number;
+          hadRecentInput: boolean;
+        }[]) {
+          if (!entry.hadRecentInput) (window as unknown as { __cls: number }).__cls += entry.value;
+        }
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    const response = await page.goto("/products/sob-autofix");
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveTitle("SOB Autofix: Workshop Booking and Operations | Vitalos");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("SOB Autofix");
+    const main = page.locator("main");
+    await expect(main).toContainText("Products · Automotive services");
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "At a glance",
+      "The problem",
+      "What it does",
+      "Engineering decisions",
+      "Outcome",
+      "More of the site",
+      // The closing card.
+      /.+/,
+    ]);
+    await expect(main.locator("dl dt")).toHaveText([
+      "Live at",
+      "Sector",
+      "Scope",
+      "Stack",
+      "Live since",
+    ]);
+    for (const name of [
+      /^SOB Autofix booking flow, step 1 of 7/,
+      /^The sobautofix\.com homepage/,
+      /^The SOB Autofix quote request/,
+    ]) {
+      const image = main.getByRole("img", { name });
+      await image.scrollIntoViewIfNeeded();
+      await expect(image).toBeVisible();
+      // Sized by the slot, so the frame is reserved before the file loads.
+      await expect(image).toHaveAttribute("width", /\d+/);
+      await expect(image).toHaveAttribute("height", /\d+/);
+    }
+    const cta = page.getByRole("link", { name: "Open sobautofix.com" });
+    await expect(cta).toHaveAttribute("href", "https://sobautofix.com");
+    await expect(cta).toHaveAttribute("rel", "noopener");
+    await expect(cta).not.toHaveAttribute("target", /.+/);
+    const graph = JSON.parse(
+      (await page.locator('script[type="application/ld+json"]').first().textContent()) ?? "{}",
+    ) as { "@graph": { "@type": string; url?: string; applicationCategory?: string }[] };
+    const software = graph["@graph"].find((node) => node["@type"] === "SoftwareApplication");
+    expect(software?.url).toBe("https://sobautofix.com");
+    expect(software?.applicationCategory).toBe("BusinessApplication");
+    expect(graph["@graph"].some((node) => node["@type"] === "BreadcrumbList")).toBe(true);
+    await expectNoA11yViolations(page);
+    await expectNoHorizontalOverflowAt320(page);
+    const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
+    expect(cls).toBeLessThanOrEqual(0.1);
+  });
+
   test("an unknown product is a 404", async ({ page }) => {
     const response = await page.goto("/products/not-a-product");
     expect(response?.status()).toBe(404);
@@ -97,5 +181,7 @@ test.describe("Products", () => {
       page.locator("main").getByRole("link", { name: "Fauward", exact: true }),
     ).toHaveAttribute("href", "/products/fauward");
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    // About is unchanged by the second product.
+    expect(text).not.toContain("SOB Autofix");
   });
 });
