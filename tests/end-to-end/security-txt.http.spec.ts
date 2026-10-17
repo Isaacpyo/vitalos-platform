@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { NO_DRAFT_CONTACT, isDraftRun } from "../support/content-source";
 
 // /.well-known/security.txt (RFC 9116; finding B8, ADR-045 era). Plain text with the required
 // Contact and Expires fields, Expires in the future and under a year away.
 test("security.txt publishes the contact, a future expiry, the language and the canonical URL", async ({
   request,
 }) => {
+  test.skip(isDraftRun, NO_DRAFT_CONTACT);
   const response = await request.get("/.well-known/security.txt");
   expect(response.status()).toBe(200);
   expect(response.headers()["content-type"]).toMatch(/^text\/plain/);

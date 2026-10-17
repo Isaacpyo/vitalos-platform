@@ -14,3 +14,8 @@ export const isDraftRun = contentSourceUnderTest === "draft";
 
 export const FIXTURE_SPECIFIC =
   "fixture-specific: asserts the artificial fixture documents or the full set's open gates, which the draft content source does not have";
+
+/** Draft content has no approved contact email (ADR-025), so `/.well-known/security.txt` answers
+ * 404 there by design (B8: no contact, nothing to publish). Repo and fixture content publish it. */
+export const NO_DRAFT_CONTACT =
+  "draft content has no approved contact email, so security.txt is not published (by design)";
