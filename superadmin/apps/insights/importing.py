@@ -389,8 +389,12 @@ def author_plan(status: str = PostStatus.DRAFT, reference: str = "") -> str:
         if not author.is_active:
             return f"refuse: {author.name} is inactive"
         if publishing and not author.is_confirmed:
-            return f"refuse: {author.name} is not confirmed as a real person, so the posts cannot be published"
-        note = "" if author.is_confirmed else " (not yet confirmed as a real person: confirm before publishing)"
+            return (
+                f"refuse: {author.name} is not confirmed as a real person, so the posts cannot be published"
+            )
+        note = (
+            "" if author.is_confirmed else " (not yet confirmed as a real person: confirm before publishing)"
+        )
         return f"{author.name}, person author `{author.slug}`, in place of the files' Vitalos{note}"
     author = _organisation_author()
     if author is None:

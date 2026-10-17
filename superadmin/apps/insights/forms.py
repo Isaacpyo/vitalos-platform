@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils.dateparse import parse_datetime
 
 from apps.content_sync.choices import Practice
-from apps.core.forms import INPUT, StyledFormMixin
+from apps.core.forms import CHECKBOX, INPUT, StyledFormMixin
 
 from . import public
 from .models import Author, AuthorKind, Post, PostFormat, Topic, TopicKind
@@ -25,9 +25,6 @@ class PostForm(StyledFormMixin, forms.Form):
     body_md = forms.CharField(label="Body", max_length=200_000, required=False, widget=forms.Textarea())
     format = forms.ChoiceField(choices=PostFormat.choices)
     slug = forms.CharField(max_length=80, required=False)
-    # In byline order: the browser submits ticked boxes in the order they appear, and the editor's
-    # script keeps the ticked authors first, in the order the editor arranged them (lead first).
-    authors = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
     practice = forms.ChoiceField(choices=[("", "None")] + Practice.choices, required=False)
     topics = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
     cover_alt = forms.CharField(label="Alt text", max_length=300, required=False)
@@ -58,7 +55,14 @@ class PostForm(StyledFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         self.post = post
         current_authors = public.working_authors(post)
-        self.fields["authors"].choices = self._author_choices(current_authors)
+        # Added here, not declared on the class, because ``authors()`` is the view's accessor. In byline
+        # order: the browser submits ticked boxes in the order they appear, and the editor's script
+        # keeps the ticked authors first, in the order the editor arranged them (lead first).
+        self.fields["authors"] = forms.MultipleChoiceField(
+            required=False,
+            choices=self._author_choices(current_authors),
+            widget=forms.CheckboxSelectMultiple(attrs={"class": CHECKBOX}),
+        )
         self.fields["topics"].choices = [
             (str(topic.pk), f"{topic.name}{' (sector)' if topic.kind == TopicKind.SECTOR else ''}")
             for topic in Topic.objects.order_by("kind", "sort", "name")
@@ -130,7 +134,9 @@ class PostForm(StyledFormMixin, forms.Form):
 
         pool = {
             str(author.pk): author
-            for author in Author.objects.filter(is_active=True, confirmed_real_at__isnull=False).order_by("name")
+            for author in Author.objects.filter(is_active=True, confirmed_real_at__isnull=False).order_by(
+                "name"
+            )
         }
         for author in current_authors:
             pool.setdefault(str(author.pk), author)
