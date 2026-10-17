@@ -1,7 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import type { ChangeEvent, DragEvent, FormEvent, ReactNode } from "react";
+import type { ChangeEvent, DragEvent, FormEvent } from "react";
+import {
+  Button,
+  Checkbox,
+  Field,
+  FormErrorSummary,
+  Icon,
+  TextInput,
+  TextLink,
+  Textarea,
+  VisuallyHidden,
+} from "@vitalos/ui";
 import { TurnstileWidget } from "../../components/contact/TurnstileWidget";
 import {
   COVER_NOTE_COUNTER_FROM,
@@ -28,6 +39,8 @@ export interface ApplicationFormProps {
   roleSlug: string;
   roleTitle: string;
   privacyNoticeUrl: string;
+  /** The site's contact address, for the confirmation's withdrawal line; omitted when unknown. */
+  contactEmail?: string | undefined;
   /** Public Turnstile site key, or undefined when Turnstile is not configured. */
   turnstileSiteKey?: string | undefined;
 }
@@ -60,8 +73,7 @@ const sizeLabel = (bytes: number) =>
     ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
-const inputClass =
-  "block min-h-11 w-full border border-tone-control-border bg-tone-control-bg px-(--space-3) text-body text-tone-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tone-focus aria-[invalid=true]:border-danger";
+type TextFieldName = Exclude<keyof ApplicationFields, "consent" | "rightToWork" | "coverNote">;
 
 async function postJson(url: string, body: unknown): Promise<{ status: number; data: unknown }> {
   const response = await fetch(url, {
@@ -88,6 +100,7 @@ export function ApplicationForm({
   roleSlug,
   roleTitle,
   privacyNoticeUrl,
+  contactEmail,
   turnstileSiteKey,
 }: Readonly<ApplicationFormProps>) {
   const hydrated = useSyncExternalStore(
@@ -97,7 +110,6 @@ export function ApplicationForm({
   );
   const id = useId();
   const fieldId = useCallback((name: FieldName) => `${id}-${name}`, [id]);
-  const errorId = (name: FieldName) => `${id}-${name}-error`;
   const [fields, setFields] = useState<ApplicationFields>(empty);
   const [cv, setCv] = useState<File | null>(null);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
@@ -106,6 +118,8 @@ export function ApplicationForm({
   const [result, setResult] = useState<{ roleTitle: string; processHtml: string } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [turnstileReset, setTurnstileReset] = useState(0);
+  // Counts sends that failed validation, so the error summary takes focus again each time.
+  const [attempt, setAttempt] = useState(0);
   const [submissionId] = useState(() => crypto.randomUUID());
   const ticket = useRef<{ file: File; ticket: Ticket } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -131,8 +145,35 @@ export function ApplicationForm({
     }
   }, [errors, formError, fieldId]);
 
-  const set = <K extends keyof ApplicationFields>(name: K, value: ApplicationFields[K]) =>
-    setFields((current) => ({ ...current, [name]: value }));
+  const cvInfo = cv ? { name: cv.name, size: cv.size, type: cv.type } : null;
+
+  /** Re-checks one field against the shared rules: sets its message, or clears it when fixed. */
+  const recheck = (name: FieldName, next: ApplicationFields) => {
+    const message = validateApplication(next, cvInfo)[name];
+    setErrors((current) => {
+      if (current[name] === message) return current;
+      const updated = { ...current };
+      if (message) updated[name] = message;
+      else delete updated[name];
+      return updated;
+    });
+  };
+
+  /** Typing clears a shown error as soon as the answer is valid; it never adds one. */
+  const change = <K extends keyof ApplicationFields>(name: K, value: ApplicationFields[K]) => {
+    const next = { ...fields, [name]: value };
+    setFields(next);
+    if (errors[name as FieldName]) recheck(name as FieldName, next);
+  };
+
+  /**
+   * Inline validation on leaving a field: an answer that was given is checked straight away; a
+   * required field left empty is only reported when the form is sent (no error for just tabbing
+   * through).
+   */
+  const blur = (name: TextFieldName | "coverNote") => {
+    if (fields[name].trim() || errors[name]) recheck(name, fields);
+  };
 
   const showErrors = (next: Partial<Record<FieldName, string>>, form: string | null = null) => {
     focusAfterErrors.current = true;
@@ -215,6 +256,7 @@ export function ApplicationForm({
       cv ? { name: cv.name, size: cv.size, type: cv.type } : null,
     );
     if (Object.keys(found).length > 0 || !cv) {
+      setAttempt((value) => value + 1);
       showErrors(found);
       return;
     }
@@ -266,6 +308,7 @@ export function ApplicationForm({
   }
 
   if (status === "sent" && result) {
+    const email = contactEmail?.trim();
     return (
       <div
         ref={successRef}
@@ -279,35 +322,61 @@ export function ApplicationForm({
         <p className="mt-(--space-4) text-body-l text-tone-text">
           {formCopy.successBody(result.roleTitle)}
         </p>
+        <h4 className="m-0 mt-(--space-6) text-h3 text-tone-heading">{formCopy.nextHeading}</h4>
+        <p className="m-0 mt-(--space-3) text-body text-tone-text">{formCopy.nextAssess}</p>
         {result.processHtml ? (
           <div
-            className="mt-(--space-4) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
+            className="mt-(--space-3) text-body text-tone-text [&_li]:my-(--space-2) [&_ol]:list-decimal [&_ol]:pl-(--space-5) [&_p]:my-(--space-3) [&_ul]:list-disc [&_ul]:pl-(--space-5)"
             // Sanitised by the site's one renderer on the server.
             dangerouslySetInnerHTML={{ __html: result.processHtml }}
           />
+        ) : null}
+        <p className="m-0 mt-(--space-3) text-body text-tone-text">
+          {formCopy.nextContactBefore}
+          <TextLink href={privacyNoticeUrl} arrow={false}>
+            {formCopy.consentLink}
+          </TextLink>
+          {formCopy.nextContactAfter}
+        </p>
+        {email ? (
+          <p className="m-0 mt-(--space-3) text-body text-tone-text">
+            {formCopy.withdrawBefore}
+            <TextLink href={`mailto:${email}`} arrow={false}>
+              {email}
+            </TextLink>
+            {formCopy.withdrawAfter}
+          </p>
         ) : null}
       </div>
     );
   }
 
-  const describedBy = (name: FieldName, hint?: string) =>
-    [hint, errors[name] ? errorId(name) : undefined].filter(Boolean).join(" ") || undefined;
-  const invalid = (name: FieldName) => (errors[name] ? true : undefined);
-  const errorText = (name: FieldName) =>
+  const errorList = fieldOrder.filter((name) => errors[name]);
+  const remaining = COVER_NOTE_MAX - fields.coverNote.length;
+  const showCounter = fields.coverNote.length >= COVER_NOTE_COUNTER_FROM;
+  const cvHint = `${fieldId("cv")}-hint`;
+  const cvErrorId = `${fieldId("cv")}-error`;
+  const cvChosen = `${fieldId("cv")}-chosen`;
+  const coverCount = `${fieldId("coverNote")}-count`;
+  const rightToWorkError = `${fieldId("rightToWork")}-error`;
+
+  /** The error line under a control the shared Field does not wrap (CV, right to work). */
+  const ownError = (name: FieldName, errorElementId: string) =>
     errors[name] ? (
-      <p id={errorId(name)} className="m-0 mt-(--space-1) text-small text-danger">
-        {errors[name]}
+      <p
+        id={errorElementId}
+        className="m-0 mt-(--space-2) flex items-start gap-(--space-2) text-small text-danger"
+      >
+        <Icon name="error" size={16} className="mt-0.5 shrink-0" />
+        <span>
+          <VisuallyHidden>Error: </VisuallyHidden>
+          {errors[name]}
+        </span>
       </p>
     ) : null;
-  const optional = <span className="font-normal text-tone-muted"> {formCopy.optional}</span>;
-  const label = (name: FieldName, text: string, extra?: ReactNode) => (
-    <label htmlFor={fieldId(name)} className="block text-body font-semibold text-tone-heading">
-      {text}
-      {extra}
-    </label>
-  );
+
   const text = (
-    name: Exclude<keyof ApplicationFields, "consent" | "rightToWork" | "coverNote">,
+    name: TextFieldName,
     title: string,
     props: {
       type?: string;
@@ -316,29 +385,25 @@ export function ApplicationForm({
       inputMode?: "url" | "tel" | "email";
     },
   ) => (
-    <div>
-      {label(name, title, props.required ? null : optional)}
-      <input
-        id={fieldId(name)}
+    <Field
+      id={fieldId(name)}
+      label={title}
+      optional={!props.required}
+      optionalText={formCopy.optional}
+      error={errors[name]}
+    >
+      <TextInput
         name={name}
         type={props.type ?? "text"}
         autoComplete={props.autoComplete}
         inputMode={props.inputMode}
         value={fields[name]}
-        onChange={(event) => set(name, event.target.value)}
-        aria-invalid={invalid(name)}
-        aria-describedby={describedBy(name)}
+        onChange={(event) => change(name, event.target.value)}
+        onBlur={() => blur(name)}
         aria-required={props.required ? true : undefined}
-        className={`mt-(--space-2) ${inputClass}`}
       />
-      {errorText(name)}
-    </div>
+    </Field>
   );
-
-  const errorList = fieldOrder.filter((name) => errors[name]);
-  const remaining = COVER_NOTE_MAX - fields.coverNote.length;
-  const coverHint = `${fieldId("coverNote")}-count`;
-  const cvHint = `${fieldId("cv")}-hint`;
 
   return (
     <>
@@ -352,31 +417,28 @@ export function ApplicationForm({
         onSubmit={onSubmit}
         className="flex max-w-[44rem] flex-col gap-(--space-5)"
       >
-        {errorList.length > 1 || formError ? (
+        {formError ? (
           <div
             ref={summaryRef}
             tabIndex={-1}
             role="alert"
-            className="border-l-4 border-danger bg-tone-tile-bg p-(--space-4)"
+            className="rounded-sm border-2 border-danger bg-tone-bg p-(--space-5)"
           >
-            <p className="m-0 text-body font-semibold text-tone-heading">
-              {formError ?? formCopy.errorSummary}
+            <p className="m-0 flex items-center gap-(--space-2) text-body font-semibold text-danger">
+              <Icon name="error" size={20} className="shrink-0" />
+              {formError}
             </p>
-            {errorList.length > 1 ? (
-              <ul className="m-0 mt-(--space-2) list-disc pl-(--space-5)">
-                {errorList.map((name) => (
-                  <li key={name}>
-                    <a
-                      href={`#${fieldId(name)}`}
-                      className="text-body text-tone-link underline underline-offset-4"
-                    >
-                      {errors[name]}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
           </div>
+        ) : null}
+        {errorList.length > 1 ? (
+          <FormErrorSummary
+            title={formCopy.errorSummary}
+            focusKey={attempt}
+            errors={errorList.map((name) => ({
+              fieldId: fieldId(name),
+              message: errors[name],
+            }))}
+          />
         ) : null}
 
         {text("name", formCopy.name, { autoComplete: "name", required: true })}
@@ -398,7 +460,7 @@ export function ApplicationForm({
           >
             {formCopy.cv}
           </span>
-          <p id={cvHint} className="m-0 mt-(--space-1) text-small text-tone-muted">
+          <p id={cvHint} className="m-0 mt-(--space-2) text-small text-tone-muted">
             {formCopy.cvHint}
           </p>
           <div
@@ -408,7 +470,7 @@ export function ApplicationForm({
             }}
             onDragLeave={() => setDragging(false)}
             onDrop={onDrop}
-            className={`mt-(--space-2) flex flex-wrap items-center gap-(--space-3) border border-dashed p-(--space-4) ${dragging ? "border-tone-action bg-tone-tile-bg" : errors.cv ? "border-danger" : "border-tone-control-border"}`}
+            className={`mt-(--space-2) flex flex-wrap items-center gap-(--space-3) rounded-sm border-2 border-dashed bg-tone-control-bg p-(--space-4) transition-colors duration-(--duration-feedback) ease-(--ease-standard) ${dragging ? "border-tone-action" : errors.cv ? "border-danger" : "border-tone-control-border"}`}
           >
             <input
               id={fieldId("cv")}
@@ -417,70 +479,72 @@ export function ApplicationForm({
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={onFile}
               aria-labelledby={`${fieldId("cv")}-label ${fieldId("cv")}-choose`}
-              aria-invalid={invalid("cv")}
-              aria-describedby={describedBy("cv", cvHint)}
+              aria-invalid={errors.cv ? true : undefined}
+              aria-describedby={[
+                cvHint,
+                cv ? cvChosen : undefined,
+                errors.cv ? cvErrorId : undefined,
+              ]
+                .filter(Boolean)
+                .join(" ")}
               className="peer sr-only"
             />
             <label
               id={`${fieldId("cv")}-choose`}
               htmlFor={fieldId("cv")}
-              className="inline-flex min-h-11 cursor-pointer items-center border border-tone-control-border px-(--space-4) text-body font-semibold text-tone-heading peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tone-focus"
+              className="inline-flex min-h-(--size-control) cursor-pointer items-center rounded-sm border border-tone-heading bg-tone-bg px-(--space-4) text-body font-semibold text-tone-heading transition-colors duration-(--duration-feedback) ease-(--ease-standard) hover:bg-tone-heading hover:text-tone-bg peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-tone-focus"
             >
-              {formCopy.cvChoose}
+              {cv ? formCopy.cvReplace : formCopy.cvChoose}
             </label>
             {cv ? (
               <>
-                <p className="m-0 text-body text-tone-heading" aria-live="polite">
+                <p id={cvChosen} className="m-0 min-w-0 break-all text-body text-tone-heading">
                   {cv.name}, {sizeLabel(cv.size)}
                 </p>
-                <button
+                <Button
                   type="button"
+                  variant="text"
+                  className="min-h-11"
                   onClick={() => chooseFile(null)}
-                  className="min-h-11 border border-tone-control-border px-(--space-3) text-body text-tone-heading focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tone-focus"
                 >
                   {formCopy.cvRemove}
                   <span className="sr-only"> {cv.name}</span>
-                </button>
+                </Button>
               </>
             ) : (
               <span className="text-body text-tone-muted">{formCopy.cvDrop}</span>
             )}
           </div>
-          {errorText("cv")}
+          <p aria-live="polite" className="sr-only">
+            {cv ? formCopy.cvChosen(cv.name) : ""}
+          </p>
+          {ownError("cv", cvErrorId)}
         </div>
 
-        <div>
-          {label("coverNote", formCopy.coverNote, optional)}
-          <textarea
-            id={fieldId("coverNote")}
+        <Field
+          id={fieldId("coverNote")}
+          label={formCopy.coverNote}
+          optional
+          optionalText={formCopy.optional}
+          error={errors.coverNote}
+        >
+          <Textarea
             name="coverNote"
             rows={6}
             maxLength={COVER_NOTE_MAX}
             value={fields.coverNote}
-            onChange={(event) => set("coverNote", event.target.value)}
-            aria-invalid={invalid("coverNote")}
-            aria-describedby={describedBy(
-              "coverNote",
-              fields.coverNote.length >= COVER_NOTE_COUNTER_FROM ? coverHint : undefined,
-            )}
-            className={`mt-(--space-2) ${inputClass} py-(--space-2)`}
+            onChange={(event) => change("coverNote", event.target.value)}
+            onBlur={() => blur("coverNote")}
+            aria-describedby={showCounter ? coverCount : undefined}
           />
-          <p
-            id={coverHint}
-            aria-live="polite"
-            className="m-0 mt-(--space-1) text-small text-tone-muted"
-          >
-            {fields.coverNote.length >= COVER_NOTE_COUNTER_FROM
-              ? formCopy.remaining(remaining)
-              : ""}
+          <p id={coverCount} aria-live="polite" className="m-0 text-small text-tone-muted">
+            {showCounter ? formCopy.remaining(remaining) : ""}
           </p>
-          {errorText("coverNote")}
-        </div>
+        </Field>
 
         <fieldset
           id={fieldId("rightToWork")}
-          aria-invalid={invalid("rightToWork")}
-          aria-describedby={describedBy("rightToWork")}
+          aria-describedby={errors.rightToWork ? rightToWorkError : undefined}
           className="m-0 border-0 p-0"
         >
           <legend className="text-body font-semibold text-tone-heading">
@@ -497,40 +561,34 @@ export function ApplicationForm({
                   name="rightToWork"
                   value={option.value}
                   checked={fields.rightToWork === option.value}
-                  onChange={() => set("rightToWork", option.value)}
+                  onChange={() => change("rightToWork", option.value)}
                   className="size-5 accent-tone-action"
                 />
                 {option.label}
               </label>
             ))}
           </div>
-          {errorText("rightToWork")}
+          {ownError("rightToWork", rightToWorkError)}
         </fieldset>
 
         {text("noticePeriod", formCopy.noticePeriod, {})}
 
-        <div>
-          <label className="flex items-start gap-(--space-3) text-body text-tone-text">
-            <input
-              id={fieldId("consent")}
-              type="checkbox"
-              name="consent"
-              checked={fields.consent}
-              onChange={(event) => set("consent", event.target.checked)}
-              aria-invalid={invalid("consent")}
-              aria-describedby={describedBy("consent")}
-              className="mt-1 size-5 shrink-0 accent-tone-action"
-            />
-            <span>
+        <Checkbox
+          id={fieldId("consent")}
+          name="consent"
+          checked={fields.consent}
+          onChange={(event) => change("consent", event.target.checked)}
+          error={errors.consent}
+          label={
+            <>
               {formCopy.consentBefore}
-              <a href={privacyNoticeUrl} className="text-tone-link underline underline-offset-4">
+              <TextLink href={privacyNoticeUrl} arrow={false}>
                 {formCopy.consentLink}
-              </a>
+              </TextLink>
               {formCopy.consentAfter}
-            </span>
-          </label>
-          {errorText("consent")}
-        </div>
+            </>
+          }
+        />
 
         {/* Honeypot: hidden from people and assistive technology; bots fill it. */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -543,13 +601,14 @@ export function ApplicationForm({
         ) : null}
 
         <div>
-          <button
+          <Button
             type="submit"
-            disabled={status === "sending"}
-            className="inline-flex min-h-11 items-center bg-tone-action px-(--space-5) text-body font-semibold text-tone-action-text hover:bg-tone-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tone-focus disabled:opacity-70"
+            size="lg"
+            aria-disabled={status === "sending" || undefined}
+            aria-busy={status === "sending" || undefined}
           >
             {status === "sending" ? formCopy.sending : formCopy.submit}
-          </button>
+          </Button>
         </div>
       </form>
     </>
