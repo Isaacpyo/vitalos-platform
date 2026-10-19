@@ -63,7 +63,7 @@ Sections in order. "→ Hn" names the homepage pattern each one carries.
 
 | Route          | Sections                                                                                                                                                                                       |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/about`       | Hero full with `MediaSlot` `about.hero` → H1 · Body sections → principles (H2 cards) · Explore → `FeatureGrid` with icons · Closing → H7                                                       |
+| `/about`       | Hero full (no image until a real team photograph, 19 Oct 2026) → H1 · Body sections → principles (H2 cards) · Explore → `FeatureGrid` with icons · Closing → H7                                |
 | `/how-we-work` | Hero full → H1 · The lifecycle → H3 `ProcessCycle` dark band (titles and discs) · Ways to start, engagement lead, gates → H2 cards · Stage detail → `ProcessJourney` (anchored) · Closing → H7 |
 
 ### Insights and Labs
