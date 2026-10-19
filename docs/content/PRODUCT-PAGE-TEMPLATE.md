@@ -44,7 +44,9 @@ The same entry also feeds:
 
    It writes `apps/web/public/media/products.{slug}.hero[.mobile][@1x].{avif,webp}`: 21:9 at 2030 × 870 wide, 5:7 at 733 × 1026 for phones. Look at all eight files and adjust `--top` until the crop shows the point of the page.
 
-3. **Slot.** Copy the `products.fauward.hero` entry in `apps/web/src/content/media-slots.ts`. Write a brief that says how it was captured, and alt text that says what it shows. Run `pnpm media:slots`. Add a record to `docs/brand/asset-approval.md`.
+   An owner-supplied image can replace the capture at its own ratio (Fauward's is a 16:9 composite of the tenant portal, 19 Oct 2026); record it in `docs/brand/asset-approval.md`.
+
+3. **Slot.** Copy the `products.sob-autofix.hero` entry in `apps/web/src/content/media-slots.ts`. Write a brief that says how it was captured, and alt text that says what it shows. Run `pnpm media:slots`. Add a record to `docs/brand/asset-approval.md`.
 4. **Registry.** Add the entry to `products` in `packages/cms/src/products.ts`, after the existing ones, with the three sections. Give every card and tile a `key`.
 5. **Icons.** Map each new key to an icon in `pointIcons` (`apps/web/src/templates/products/ProductsTemplates.tsx`). The icons are decorative; the title carries the meaning.
 6. **Tests.** Add the product's slug to the order test in `products.test.ts`. Add a "states only the verified claims" test that rejects the specific claims the discovery note cut. Extend `tests/end-to-end/products.spec.ts` with the new menu item and card.

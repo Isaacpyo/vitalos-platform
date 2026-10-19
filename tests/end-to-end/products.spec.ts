@@ -55,7 +55,9 @@ test.describe("Products", () => {
     const main = page.locator("main");
     await expect(main.getByRole("heading", { level: 2, name: "Fauward" })).toHaveCount(1);
     await expect(
-      main.getByRole("img", { name: "Fauward dashboard showing shipment operations" }),
+      main.getByRole("img", {
+        name: "Fauward tenant portal: the operations dashboard, with the finance and Fauward Go screens behind it",
+      }),
     ).toBeVisible();
     await expect(main.getByRole("link", { name: "View Fauward" })).toHaveAttribute(
       "href",

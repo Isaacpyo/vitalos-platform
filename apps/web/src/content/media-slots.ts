@@ -87,12 +87,12 @@ export const mediaSlots = [
     id: "products.fauward.hero",
     page: "/products/fauward (and its card on /products)",
     section: "Snapshot",
-    ratio: "21:9",
-    size: [2030, 870],
+    ratio: "16:9",
+    size: [1672, 941],
     brief:
-      "A screenshot of the dashboard on fauward.com, captured with Playwright at 1440 wide (2x), with the cookie banner dismissed. The phone version is the same dashboard captured at 390 wide.",
-    alt: "Fauward dashboard showing shipment operations",
-    mobile: { ratio: "5:7", size: [733, 1026] },
+      "The owner's composite of the Fauward tenant portal with sample data: the operations dashboard in front of the finance and Fauward Go screens. The phone version is the dashboard window cropped from it.",
+    alt: "Fauward tenant portal: the operations dashboard, with the finance and Fauward Go screens behind it",
+    mobile: { ratio: "5:7", size: [672, 941] },
   },
   {
     id: "products.sob-autofix.hero",

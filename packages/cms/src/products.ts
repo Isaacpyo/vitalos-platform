@@ -70,7 +70,8 @@ export const products: readonly ProductView[] = [
     url: "https://fauward.com",
     urlLabel: "Open fauward.com",
     viewLabel: "View Fauward",
-    snapshotCaption: "The Fauward dashboard as fauward.com shows it, with sample data.",
+    snapshotCaption:
+      "The Fauward tenant portal: dashboard, finance and Fauward Go, with sample data.",
     applicationCategory: "BusinessApplication",
     seo: {
       title: "Fauward: Logistics SaaS Platform",
