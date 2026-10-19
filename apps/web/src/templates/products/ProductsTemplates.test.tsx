@@ -71,9 +71,9 @@ describe("product template", () => {
     expect(markup).toMatch(/href="https:\/\/sobautofix\.com"[^>]*rel="noopener"/);
   });
 
-  it("still shows Fauward's dashboard snapshot", () => {
+  it("still shows Fauward's tenant portal snapshot", () => {
     expect(html(<ProductTemplate product={fauward} />)).toContain(
-      "Fauward dashboard showing shipment operations",
+      "Fauward tenant portal: the operations dashboard, with the finance and Fauward Go screens behind it",
     );
   });
 });
