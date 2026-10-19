@@ -41,16 +41,6 @@ export interface MediaSlotEntry {
 
 export const mediaSlots = [
   {
-    id: "about.hero",
-    page: "/about",
-    section: "Hero",
-    ratio: "4:3",
-    size: [1600, 1200],
-    brief:
-      "A real photograph of the Vitalos team working together, or of the working space. No stock imagery.",
-    alt: "The Vitalos team at work.",
-  },
-  {
     id: "labs.asset",
     page: "/labs/[type]/[slug]",
     section: "Hero",

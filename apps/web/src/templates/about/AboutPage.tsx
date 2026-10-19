@@ -1,7 +1,6 @@
 import { navLabels, routes } from "@vitalos/cms";
 import { FeatureGrid } from "@vitalos/ui";
 import type { IconName } from "@vitalos/ui";
-import { MediaSlot } from "../../components/media-slot";
 import { Band, ClosingBand, renderBands } from "../commercial/bands";
 import { bodyBands } from "../commercial/body-bands";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
@@ -18,9 +17,10 @@ const linkIcons: Readonly<Record<string, IconName>> = {
 };
 
 /**
- * About, in the homepage's design (pages redesign, 15 Oct 2026): the full dark hero with the
- * `about.hero` image slot; the narrative from the About route page as homepage bands (short
- * headed paragraphs as cards, lists as rows); the onward links as icon cards; the closing card.
+ * About, in the homepage's design (pages redesign, 15 Oct 2026): the full dark hero, with no image
+ * until there is a real team photograph (owner direction, 19 Oct 2026); the narrative from the
+ * About route page as homepage bands (short headed paragraphs as cards, lists as rows); the onward
+ * links as icon cards; the closing card.
  * The heading, introduction and narrative come from the CMS; the locked navigation label is the
  * only fallback heading; onward links use locked labels.
  */
@@ -39,7 +39,6 @@ export function AboutPage({ data }: Readonly<{ data: AboutData }>) {
         }
         title={page?.heading ?? navLabels.about}
         lead={page?.intro}
-        media={<MediaSlot id="about.hero" priority />}
       />
       {renderBands(
         [
