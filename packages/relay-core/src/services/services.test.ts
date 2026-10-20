@@ -577,7 +577,9 @@ describe("case ID", () => {
 
   it("is not shown before a person is involved", async () => {
     const { visitor, created } = await setup();
-    expect((await visitor.messages(created.conversationId, created.visitorToken)).caseId).toBeNull();
+    expect(
+      (await visitor.messages(created.conversationId, created.visitorToken)).caseId,
+    ).toBeNull();
   });
 
   it("stays the same across repeated requests and a person joining", async () => {

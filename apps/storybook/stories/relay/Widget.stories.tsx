@@ -260,7 +260,9 @@ export const WaitingForPerson: Story = {
     await canvas.findByRole("log", { name: "Conversation" });
     // The case ID shows on the request card and in the strip under the header.
     await expect(await canvas.findAllByText(STORY_CASE_ID)).toHaveLength(2);
-    await expect(canvas.getByRole("button", { name: `Copy case ID ${STORY_CASE_ID}` })).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: `Copy case ID ${STORY_CASE_ID}` }),
+    ).toBeVisible();
   },
 };
 

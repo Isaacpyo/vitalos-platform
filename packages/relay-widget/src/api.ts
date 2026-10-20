@@ -78,14 +78,11 @@ export const api = {
       teamStatus: TeamStatus;
       outOfHours: boolean;
       caseId: string;
-    }>(
-      "/handoff",
-      {
-        method: "POST",
-        token,
-        body: JSON.stringify(body),
-      },
-    ),
+    }>("/handoff", {
+      method: "POST",
+      token,
+      body: JSON.stringify(body),
+    }),
 
   typing: (conversationId: string, token: string) =>
     request<object>("/typing", {
