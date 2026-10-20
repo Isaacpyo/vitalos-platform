@@ -70,6 +70,7 @@ def post(client, relay):
 def handoff_data(**extra):
     data = {
         "conversationId": ALEX,
+        "caseId": "179249323700172",
         "displayName": "Alex Morgan",
         "trigger": "not_helpful",
         "lastVisitorMessage": "Roughly how long would that take?",
@@ -161,6 +162,7 @@ def test_handoff_requested_alerts_everyone_with_access(post, team, mailoutbox):
     assert "Alex Morgan is waiting for a reply." in text
     assert "Alex marked a Relay answer as not helpful and asked to talk to a person." in text
     assert "> “Roughly how long would that take?”" in text
+    assert "Case ID: 179249323700172" in text
     assert "Trigger: Not helpful, then asked for a person" in text
     assert "Waiting since: 14:24 BST, 15 October 2026" in text
     assert f"/relay/inbox/{ALEX}?ref=email" in text
@@ -212,6 +214,7 @@ def test_visitor_replied_goes_to_the_assigned_admin(post, team, mailoutbox):
         {
             "conversationId": ALEX,
             "displayName": "Alex Morgan",
+            "caseId": "179249323700172",
             "assignedAdminId": f"sa:{lead.pk}",
             "lastVisitorMessage": "Thanks",
             "pagePath": "/",
@@ -221,6 +224,7 @@ def test_visitor_replied_goes_to_the_assigned_admin(post, team, mailoutbox):
     assert [m.to for m in mailoutbox] == [["lead@example.test"]]
     assert mailoutbox[0].subject == "Relay: Alex Morgan replied"
     assert "sent a new message in your conversation" in mailoutbox[0].body
+    assert "Case ID: 179249323700172" in mailoutbox[0].body
 
 
 def test_visitor_replied_without_assignee_goes_to_everyone(post, team, mailoutbox):
@@ -241,6 +245,14 @@ def test_reminder(post, team, mailoutbox):
     assert row.title == "No one has joined Alex Morgan" and row.body == "Reminder after 10 minutes"
     assert mailoutbox[0].subject == "Relay: Alex Morgan is still waiting"
     assert "No one has joined after 10 minutes. This is reminder 1." in mailoutbox[0].body
+    assert "Case ID: 179249323700172" in mailoutbox[0].body
+
+
+def test_case_id_row_reads_not_recorded_for_events_without_one(post, team, mailoutbox):
+    data = handoff_data()
+    del data["caseId"]
+    post("handoff.requested", data)
+    assert "Case ID: Not recorded" in mailoutbox[0].body
 
 
 def test_no_answer_is_in_app_only_by_default(post, team, mailoutbox):

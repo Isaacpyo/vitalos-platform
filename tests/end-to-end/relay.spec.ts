@@ -70,6 +70,9 @@ test.describe("Relay launcher and panel", () => {
     // The first request also creates the conversation (Turnstile is fetched from Cloudflare).
     await expect(page.getByText(/REQUEST SENT/)).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/alex\.morgan@example-care\.invalid/)).toBeVisible();
+    // The case ID to quote: 15 digits, on the request card and in the strip under the header.
+    await expect(page.getByTestId("relay-case-row")).toContainText(/\d{15}/);
+    await expect(page.getByTestId("relay-case-strip")).toContainText(/\d{15}/);
   });
 
   test("an explicit request for a person skips the model and offers the hand-off", async ({

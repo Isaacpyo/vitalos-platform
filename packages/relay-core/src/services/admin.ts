@@ -18,6 +18,7 @@ import { parseStoredSettings, relaySettingsSchema } from "../schemas/settings";
 import type { RelaySettings } from "../schemas/settings";
 import { teamStatus as computeTeamStatus } from "../util/team";
 import { firstName, initialsOf, sha256Hex, visitorLabel } from "../util/tokens";
+import { ensureCaseId } from "./case-id";
 import type { RelayContext } from "./context";
 import { RelayError } from "./context";
 import type { z } from "zod";
@@ -79,6 +80,7 @@ function conversationRow(row: {
   const c = row.conversation;
   return {
     id: c.id,
+    caseId: c.caseId,
     status: c.status,
     displayName: c.contactName ?? visitorLabel(c.id),
     contactName: c.contactName,
@@ -124,7 +126,7 @@ export function adminMessage(m: MessageRecord) {
 
 function pickSystemMeta(meta: Record<string, unknown>) {
   const out: Record<string, unknown> = {};
-  for (const k of ["trigger", "consent", "name", "by", "outOfHours"] as const)
+  for (const k of ["trigger", "consent", "name", "by", "outOfHours", "caseId"] as const)
     if (meta[k] !== undefined) out[k] = meta[k];
   return out;
 }
@@ -191,6 +193,7 @@ export class AdminService {
     return {
       conversation: {
         id: c.id,
+        caseId: c.caseId,
         status: c.status,
         displayName: c.contactName ?? visitorLabel(c.id),
         contact: c.contactEmail
@@ -259,6 +262,7 @@ export class AdminService {
   private publicConversation(c: ConversationRecord) {
     return {
       id: c.id,
+      caseId: c.caseId,
       status: c.status,
       assigned: c.assignedAdminId
         ? {
@@ -292,6 +296,8 @@ export class AdminService {
       ["ai", "awaiting_human", "human"],
     );
     if (!updated) throw new RelayError("conversation_closed", "This conversation is closed.");
+    // Every conversation a person handles has a case ID, including one they join without a request.
+    const caseId = await ensureCaseId(this.store, () => this.now(), updated);
     const open = await this.store.openHandoff(id);
     if (open && !open.joinedAt)
       await this.store.updateHandoff(open.id, { joinedBy: admin.id, joinedAt: now });
@@ -309,7 +315,7 @@ export class AdminService {
     });
     this.pingVisitor(updated);
     this.pingAdmins(id);
-    return { conversation: this.publicConversation(updated) };
+    return { conversation: this.publicConversation({ ...updated, caseId }) };
   }
 
   async assign(id: string, target: { id: string; name: string; initials: string }) {
@@ -426,6 +432,7 @@ export class AdminService {
       visitorName: c.contactName ?? "",
       adminName: admin.name,
       reply: text,
+      caseId: c.caseId,
       resumeUrl: `${this.ctx.config.publicSiteUrl}/?relay=resume&t=${encodeURIComponent(token)}`,
       privacyUrl: this.ctx.config.privacyUrl,
     });
@@ -543,7 +550,11 @@ export class AdminService {
         (m) =>
           `[${time(m.createdAt)}] ${label(m)}: ${m.senderType === "system" ? m.body.replace(/_/g, " ") : m.body}`,
       );
-    return { text: [`Relay conversation ${visitorLabel(c.id)}`, ...lines].join("\n") };
+    const header = [
+      `Relay conversation ${visitorLabel(c.id)}`,
+      ...(c.caseId ? [`Case ID: ${c.caseId}`] : []),
+    ];
+    return { text: [...header, ...lines].join("\n") };
   }
 
   // -------------------------------------------------------------------------------------------

@@ -287,6 +287,7 @@ def thread(conversation: dict, messages: list[dict], user, now: datetime | None 
     first = first_name(conversation.get("displayName"))
     return {
         "id": conversation.get("id"),
+        "case_id": conversation.get("caseId") or "",
         "name": conversation.get("displayName") or "Visitor",
         "first_name": first,
         "visitor_ref": "the visitor" if first == "The visitor" else first,
@@ -334,6 +335,7 @@ def context(
         "consent": consent,
         "summary": conversation.get("summary") or "",
         "session": [
+            ("Case ID", conversation.get("caseId") or "", True),
             ("Page", page_path(session.get("pageUrl")) or conversation.get("pagePath") or "", True),
             ("Referrer", session.get("referrer") or "", False),
             ("Device", session.get("device") or "", False),

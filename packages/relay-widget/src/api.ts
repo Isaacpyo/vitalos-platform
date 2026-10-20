@@ -73,14 +73,16 @@ export const api = {
     }),
 
   handoff: (body: HandoffRequest, token: string) =>
-    request<{ status: "awaiting_human" | "human"; teamStatus: TeamStatus; outOfHours: boolean }>(
-      "/handoff",
-      {
-        method: "POST",
-        token,
-        body: JSON.stringify(body),
-      },
-    ),
+    request<{
+      status: "awaiting_human" | "human";
+      teamStatus: TeamStatus;
+      outOfHours: boolean;
+      caseId: string;
+    }>("/handoff", {
+      method: "POST",
+      token,
+      body: JSON.stringify(body),
+    }),
 
   typing: (conversationId: string, token: string) =>
     request<object>("/typing", {

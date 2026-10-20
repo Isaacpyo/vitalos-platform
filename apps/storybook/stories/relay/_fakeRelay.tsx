@@ -44,10 +44,14 @@ export interface Scenario {
     status: ConversationStatus;
     person?: { name: string; initials: string } | null;
     contact?: { name: string; email: string } | null;
+    caseId?: string | null;
     messages: VisitorMessage[];
   };
   chat?: ChatScript;
 }
+
+/** A made-up case ID in the real format: Unix seconds, then five digits. */
+export const STORY_CASE_ID = "179249323700172";
 
 /** Minutes before now, as ISO time: stories stay readable ("Today") whenever they are opened. */
 export const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
@@ -120,6 +124,7 @@ function createFakeFetch(scenario: Scenario, realFetch: typeof fetch, lifetime: 
   let status: ConversationStatus = scenario.conversation?.status ?? "ai";
   const person = scenario.conversation?.person ?? null;
   let contact = scenario.conversation?.contact ?? null;
+  let caseId = scenario.conversation?.caseId ?? null;
   const messages: VisitorMessage[] = [...(scenario.conversation?.messages ?? [])];
   let serial = 0;
   const id = (prefix: string) => `${prefix}-${++serial}`;
@@ -149,7 +154,7 @@ function createFakeFetch(scenario: Scenario, realFetch: typeof fetch, lifetime: 
       });
     }
     if (method === "GET" && /^\/conversations\/[^/]+\/messages$/.test(path))
-      return json(200, { messages, status, person, teamStatus: scenario.team, contact });
+      return json(200, { messages, status, person, teamStatus: scenario.team, contact, caseId });
 
     if (method === "POST" && path === "/chat") {
       const chat = scenario.chat ?? {
@@ -215,18 +220,20 @@ function createFakeFetch(scenario: Scenario, realFetch: typeof fetch, lifetime: 
     if (method === "POST" && path === "/handoff") {
       status = "awaiting_human";
       contact = { name: str(body.name), email: str(body.email) };
+      caseId = caseId ?? STORY_CASE_ID;
       messages.push({
         id: id("system"),
         senderType: "system",
         body: "handoff_requested",
         event: "handoff_requested",
         createdAt: new Date().toISOString(),
-        meta: { outOfHours: scenario.team === "offline" },
+        meta: { outOfHours: scenario.team === "offline", caseId },
       });
       return json(200, {
         status,
         teamStatus: scenario.team,
         outOfHours: scenario.team === "offline",
+        caseId,
       });
     }
     if (method === "POST" && path === "/typing") return json(200, {});

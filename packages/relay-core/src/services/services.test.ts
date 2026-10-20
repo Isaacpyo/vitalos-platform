@@ -5,6 +5,7 @@ import type { KnowledgeEntry } from "../knowledge/types";
 import { nullEmbedder } from "../retrieval/embed";
 import { memoryContext } from "../testing";
 import { AdminService } from "./admin";
+import { CASE_ID_PATTERN, ensureCaseId, newCaseId } from "./case-id";
 import { CronService } from "./cron";
 import { VisitorService } from "./visitor";
 
@@ -237,14 +238,22 @@ describe("hand-off and admin flow", () => {
       created.visitorToken,
     );
     expect(handoff.status).toBe("awaiting_human");
+    expect(handoff.caseId).toMatch(/^\d{15}$/);
     await settle();
     expect(notifier.events.map((e) => e.type)).toContain("handoff.requested");
     const requested = notifier.events.find((e) => e.type === "handoff.requested");
+    expect(requested?.data.caseId).toBe(handoff.caseId);
     expect(requested?.data.displayName).toBe("Alex Morgan");
     expect(JSON.stringify(requested)).not.toContain("example-care.co.uk");
     const inbox = await admin.inbox("needs", undefined, undefined);
     expect(inbox.counts.needs).toBe(1);
     expect(inbox.items[0]?.tags).toContain("NOT_HELPFUL");
+    expect(inbox.items[0]?.caseId).toBe(handoff.caseId);
+    const found = await admin.inbox("needs", handoff.caseId, undefined);
+    expect(found.items.map((i) => i.id)).toEqual([created.conversationId]);
+    expect((await admin.conversation(created.conversationId)).conversation.caseId).toBe(
+      handoff.caseId,
+    );
     expect((await store.getConversation(created.conversationId))?.summary).toBeTruthy();
 
     // Visitor keeps chatting with AI while waiting
@@ -274,6 +283,13 @@ describe("hand-off and admin flow", () => {
     expect(reply.emailed).toBe(false); // visitor emails are off by default
     const seen = await visitor.messages(created.conversationId, created.visitorToken);
     expect(seen.status).toBe("human");
+    expect(seen.caseId).toBe(handoff.caseId);
+    expect(seen.messages.find((m) => m.event === "handoff_requested")?.meta?.caseId).toBe(
+      handoff.caseId,
+    );
+    expect((await admin.transcript(created.conversationId)).text).toContain(
+      `Case ID: ${handoff.caseId}`,
+    );
     expect(seen.person).toEqual({ name: "Temitope Agbola", initials: "TA" });
     expect(seen.messages.filter((m) => m.senderType === "system").map((m) => m.event)).toEqual([
       "handoff_requested",
@@ -540,5 +556,95 @@ describe("closing review", () => {
         created.visitorToken,
       ),
     ).rejects.toMatchObject({ code: "not_found" });
+  });
+});
+
+describe("case ID", () => {
+  const request = (conversationId: string) => ({
+    conversationId,
+    trigger: "explicit_request" as const,
+    name: "Alex Morgan",
+    email: "alex@example-care.co.uk",
+    consent: true as const,
+    noticeVersion: "2026-10",
+  });
+
+  it("is 15 digits: the Unix time in seconds, then five digits", () => {
+    const id = newCaseId(new Date("2026-10-20T09:07:17.900Z"));
+    expect(id).toMatch(CASE_ID_PATTERN);
+    expect(id.slice(0, 10)).toBe("1792487237");
+  });
+
+  it("is not shown before a person is involved", async () => {
+    const { visitor, created } = await setup();
+    expect(
+      (await visitor.messages(created.conversationId, created.visitorToken)).caseId,
+    ).toBeNull();
+  });
+
+  it("stays the same across repeated requests and a person joining", async () => {
+    const { visitor, admin, created } = await setup();
+    const first = await visitor.handoff(request(created.conversationId), created.visitorToken);
+    const again = await visitor.handoff(request(created.conversationId), created.visitorToken);
+    expect(again.caseId).toBe(first.caseId);
+    const joined = await admin.join(created.conversationId, ADMIN);
+    expect(joined.conversation.caseId).toBe(first.caseId);
+    const afterJoin = await visitor.handoff(request(created.conversationId), created.visitorToken);
+    expect(afterJoin).toMatchObject({ status: "human", caseId: first.caseId });
+  });
+
+  it("is created when a person joins a conversation nobody requested a hand-off for", async () => {
+    const { visitor, admin, created } = await setup();
+    const joined = await admin.join(created.conversationId, ADMIN);
+    expect(joined.conversation.caseId).toMatch(CASE_ID_PATTERN);
+    const seen = await visitor.messages(created.conversationId, created.visitorToken);
+    expect(seen.caseId).toBe(joined.conversation.caseId);
+  });
+
+  it("differs between conversations, even requested in the same second", async () => {
+    const fixed = new Date("2026-10-20T09:07:17.900Z");
+    const t = memoryContext({}, () => fixed);
+    const visitor = new VisitorService(t.ctx);
+    const ids = new Set<string>();
+    for (let i = 0; i < 20; i += 1) {
+      const c = await visitor.createConversation({ pageUrl: "http://localhost:3000/" }, META);
+      ids.add((await visitor.handoff(request(c.conversationId), c.visitorToken)).caseId);
+    }
+    expect(ids.size).toBe(20);
+  });
+
+  it("tries again after a collision and gives up after five", async () => {
+    const t = memoryContext();
+    const visitor = new VisitorService(t.ctx);
+    const created = await visitor.createConversation({ pageUrl: "http://localhost:3000/" }, META);
+    let calls = 0;
+    const flaky = {
+      assignCaseId: (id: string, candidate: string) => {
+        calls += 1;
+        return calls < 3
+          ? Promise.resolve({ result: "collision" as const })
+          : t.store.assignCaseId(id, candidate);
+      },
+    };
+    const caseId = await ensureCaseId(flaky, () => new Date(), {
+      id: created.conversationId,
+      caseId: null,
+    });
+    expect(caseId).toMatch(CASE_ID_PATTERN);
+    expect(calls).toBe(3);
+
+    const always = { assignCaseId: () => Promise.resolve({ result: "collision" as const }) };
+    await expect(
+      ensureCaseId(always, () => new Date(), { id: "x", caseId: null }),
+    ).rejects.toMatchObject({ code: "unavailable" });
+  });
+
+  it("never reaches a visitor who asks for another conversation's case", async () => {
+    const { visitor, created } = await setup();
+    await visitor.handoff(request(created.conversationId), created.visitorToken);
+    const other = await visitor.createConversation({ pageUrl: "http://localhost:3000/" }, META);
+    await expect(
+      visitor.messages(created.conversationId, other.visitorToken),
+    ).rejects.toMatchObject({ code: "unauthorised" });
   });
 });

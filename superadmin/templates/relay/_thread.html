@@ -9,6 +9,12 @@
       <div class="mr-1 flex min-w-36 flex-1 basis-36 flex-col">
         <h2 class="truncate font-display text-lg font-bold">{{ thread.name }}</h2>
         <p id="relay-thread-status" class="relay-mono font-medium {% if thread.status_tone == 'mineral' %}relay-mineral{% else %}relay-muted{% endif %}">{{ thread.status_label }}</p>
+        {% if thread.case_id %}
+          <p class="relay-mono relay-muted flex items-center gap-2" data-testid="relay-thread-case">
+            <span>Case ID</span><span id="relay-thread-case-id" class="font-mono select-all">{{ thread.case_id }}</span>
+            <button type="button" class="text-cobalt-600 underline dark:text-cobalt-300" data-copy="relay-thread-case-id" aria-label="Copy case ID {{ thread.case_id }}">Copy</button>
+          </p>
+        {% endif %}
       </div>
       {% if thread.can_join %}
         <form method="post" action="{% url 'relay:join' thread.id %}" hx-post="{% url 'relay:join' thread.id %}" hx-target="#relay-thread" hx-swap="innerHTML" hx-disabled-elt="find button">

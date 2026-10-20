@@ -31,6 +31,7 @@ import {
   sha256Hex,
   visitorLabel,
 } from "../util/tokens";
+import { ensureCaseId } from "./case-id";
 import type { RelayContext } from "./context";
 import { RelayError } from "./context";
 import type { z } from "zod";
@@ -236,6 +237,7 @@ export class VisitorService {
             counts: await this.counts(),
             data: {
               conversationId: conversation.id,
+              caseId: conversation.caseId,
               displayName: conversation.contactName ?? visitorLabel(conversation.id),
               assignedAdminId: conversation.assignedAdminId,
               lastVisitorMessage: settings.emailSnippet ? body.text.slice(0, 280) : null,
@@ -558,7 +560,12 @@ export class VisitorService {
   async handoff(
     body: z.infer<typeof handoffBody>,
     bearer: string | null,
-  ): Promise<{ status: "awaiting_human" | "human"; teamStatus: TeamStatus; outOfHours: boolean }> {
+  ): Promise<{
+    status: "awaiting_human" | "human";
+    teamStatus: TeamStatus;
+    outOfHours: boolean;
+    caseId: string;
+  }> {
     const conversation = await this.authenticate(body.conversationId, bearer);
     if (conversation.status === "closed") throw new RelayError("conversation_closed", COPY.closed);
     await this.limit(`handoff:${conversation.id}`, 600, 5);
@@ -583,12 +590,14 @@ export class VisitorService {
       lastMessageAt: now.toISOString(),
     });
     if (!updated) throw new RelayError("not_found");
-    if (conversation.status === "human") return { status: "human", teamStatus: team, outOfHours };
+    const caseId = await ensureCaseId(this.store, deps.now, updated);
+    if (conversation.status === "human")
+      return { status: "human", teamStatus: team, outOfHours, caseId };
 
     // A repeat request (new details, double submit) updates the contact fields only: one alert
     // and one summary per open hand-off.
     const existing = await this.store.openHandoff(conversation.id);
-    if (existing) return { status: "awaiting_human", teamStatus: team, outOfHours };
+    if (existing) return { status: "awaiting_human", teamStatus: team, outOfHours, caseId };
     const lastAi = [...(await this.store.listMessages(conversation.id))]
       .reverse()
       .find((m) => m.senderType === "ai");
@@ -601,7 +610,13 @@ export class VisitorService {
       conversationId: conversation.id,
       senderType: "system",
       body: "handoff_requested",
-      meta: { trigger: body.trigger, consent: true, outOfHours, email: body.email.toLowerCase() },
+      meta: {
+        trigger: body.trigger,
+        consent: true,
+        outOfHours,
+        email: body.email.toLowerCase(),
+        caseId,
+      },
     });
     const tags =
       body.trigger === "explicit_request"
@@ -622,6 +637,7 @@ export class VisitorService {
         counts: await this.counts(),
         data: {
           conversationId: conversation.id,
+          caseId,
           displayName: body.name,
           trigger: body.trigger,
           lastVisitorMessage:
@@ -632,7 +648,7 @@ export class VisitorService {
       });
       await this.summarise(conversation.id);
     });
-    return { status: "awaiting_human", teamStatus: team, outOfHours };
+    return { status: "awaiting_human", teamStatus: team, outOfHours, caseId };
   }
 
   /** Admin summary on the redacted transcript (section 5.4). Failure never blocks the hand-off. */
@@ -706,6 +722,7 @@ export class VisitorService {
         conversation.contactName && conversation.contactEmail
           ? { name: conversation.contactName, email: conversation.contactEmail }
           : null,
+      caseId: conversation.caseId,
     };
   }
 
@@ -882,7 +899,12 @@ export function toVisitorMessage(m: MessageRecord): VisitorMessage {
         adminInitials: m.adminInitials,
       };
     case "system": {
-      const meta = m.meta as { name?: string; email?: string; outOfHours?: boolean };
+      const meta = m.meta as {
+        name?: string;
+        email?: string;
+        outOfHours?: boolean;
+        caseId?: string;
+      };
       return {
         ...base,
         senderType: "system",
@@ -892,6 +914,7 @@ export function toVisitorMessage(m: MessageRecord): VisitorMessage {
           ...(meta.name ? { name: meta.name } : {}),
           ...(meta.email ? { email: meta.email } : {}),
           ...(meta.outOfHours ? { outOfHours: true } : {}),
+          ...(meta.caseId ? { caseId: meta.caseId } : {}),
         },
       };
     }
