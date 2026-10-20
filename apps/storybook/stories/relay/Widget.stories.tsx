@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RelayLauncher } from "@vitalos/relay-widget";
 import type { VisitorMessage } from "@vitalos/relay-core/contract";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { FakeRelay, QUESTIONS, ago } from "./_fakeRelay";
+import { FakeRelay, QUESTIONS, STORY_CASE_ID, ago } from "./_fakeRelay";
 import type { Scenario } from "./_fakeRelay";
 
 /**
@@ -97,6 +97,7 @@ const waitingMessages: VisitorMessage[] = [
     body: "handoff_requested",
     event: "handoff_requested",
     createdAt: ago(1),
+    meta: { caseId: STORY_CASE_ID },
   },
 ];
 
@@ -110,6 +111,7 @@ const joinedMessages: VisitorMessage[] = [
     body: "handoff_requested",
     event: "handoff_requested",
     createdAt: ago(2),
+    meta: { caseId: STORY_CASE_ID },
   },
   {
     id: "m4",
@@ -247,13 +249,18 @@ export const WaitingForPerson: Story = {
         conversation: {
           status: "awaiting_human",
           contact: talkedToTeam,
+          caseId: STORY_CASE_ID,
           messages: waitingMessages,
         },
       }}
     />
   ),
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByRole("log", { name: "Conversation" });
+    const canvas = within(canvasElement);
+    await canvas.findByRole("log", { name: "Conversation" });
+    // The case ID shows on the request card and in the strip under the header.
+    await expect(await canvas.findAllByText(STORY_CASE_ID)).toHaveLength(2);
+    await expect(canvas.getByRole("button", { name: `Copy case ID ${STORY_CASE_ID}` })).toBeVisible();
   },
 };
 
@@ -266,8 +273,11 @@ export const WaitingForPersonOutOfHours: Story = {
         conversation: {
           status: "awaiting_human",
           contact: talkedToTeam,
+          caseId: STORY_CASE_ID,
           messages: waitingMessages.map((m) =>
-            m.event === "handoff_requested" ? { ...m, meta: { outOfHours: true } } : m,
+            m.event === "handoff_requested"
+              ? { ...m, meta: { outOfHours: true, caseId: STORY_CASE_ID } }
+              : m,
           ),
         },
       }}
@@ -284,7 +294,13 @@ export const PersonJoinedWithReply: Story = {
     <Widget
       scenario={{
         ...online,
-        conversation: { status: "human", person, contact: talkedToTeam, messages: joinedMessages },
+        conversation: {
+          status: "human",
+          person,
+          contact: talkedToTeam,
+          caseId: STORY_CASE_ID,
+          messages: joinedMessages,
+        },
       }}
     />
   ),

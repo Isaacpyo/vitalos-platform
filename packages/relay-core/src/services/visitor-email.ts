@@ -41,6 +41,8 @@ export function visitorReplyEmail(input: {
   visitorName: string;
   adminName: string;
   reply: string;
+  /** Shown so the visitor can quote it if they contact the team another way. */
+  caseId?: string | null;
   resumeUrl: string;
   privacyUrl: string;
 }): { subject: string; html: string; text: string; inlineImages: InlineImage[] } {
@@ -58,6 +60,15 @@ export function visitorReplyEmail(input: {
       },
       { type: "quote", text: cleanMultiline(input.reply).slice(0, 4000) },
       { type: "button", label: "Continue the conversation", url: input.resumeUrl },
+      ...(input.caseId
+        ? [
+            {
+              type: "text" as const,
+              tone: "muted" as const,
+              text: `Case ID: ${input.caseId}. Quote it if you contact us about this conversation.`,
+            },
+          ]
+        : []),
       {
         type: "text",
         tone: "muted",

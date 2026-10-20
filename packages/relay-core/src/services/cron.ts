@@ -47,6 +47,7 @@ export class CronService {
         counts: { needs: counts.needs, live: counts.live },
         data: {
           conversationId: c.id,
+          caseId: c.caseId,
           displayName: c.contactName ?? visitorLabel(c.id),
           trigger: h.trigger,
           minutesWaiting: Math.floor(waitedMin),

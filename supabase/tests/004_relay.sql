@@ -1,5 +1,5 @@
 begin;
-select plan(30);
+select plan(35);
 
 -- Schema, RLS deny-all, privileges
 select has_schema('relay', 'relay schema exists');
@@ -95,6 +95,22 @@ select is((select example_conversation_id from relay.kb_gaps where question_norm
 
 select is((select schedule from cron.job where jobname = 'relay-retention'), '40 3 * * *',
   'retention runs daily at 03:40 UTC');
+
+-- Case ID: a reference shown once a person is involved (ADR-050)
+select has_column('relay', 'conversations', 'case_id', 'conversations have a case_id');
+insert into relay.conversations (id, visitor_token_hash, channel_key, status, contact_name, case_id)
+values ('00000000-0000-0000-0000-0000000000c1', repeat('e', 64), repeat('q', 43), 'awaiting_human', 'Case Tester', '179249323700172'),
+       ('00000000-0000-0000-0000-0000000000c2', repeat('f', 64), repeat('r', 43), 'awaiting_human', 'Someone Else', null);
+select throws_ok(
+  $$update relay.conversations set case_id = '1234' where id = '00000000-0000-0000-0000-0000000000c2'$$,
+  '23514', null, 'a case ID must be 15 digits');
+select throws_ok(
+  $$update relay.conversations set case_id = '179249323700172' where id = '00000000-0000-0000-0000-0000000000c2'$$,
+  '23505', null, 'a case ID is unique');
+select is((select count(*)::int from relay.inbox_list('needs', '9249323700')), 1,
+  'the inbox finds a conversation by part of its case ID');
+select is((select count(*)::int from relay.inbox_list('needs', '999999999999999')), 0,
+  'the inbox returns nothing for an unknown case ID');
 
 select * from finish();
 rollback;

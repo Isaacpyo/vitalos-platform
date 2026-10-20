@@ -77,6 +77,8 @@ interface State {
   noticeVersion: string;
   outOfHoursText: string;
   contact: { name: string; email: string } | null;
+  /** Reference for the team, from the server once a person is involved. */
+  caseId: string | null;
   notice: Notice | null;
   handoff: HandoffForm;
   personTyping: string | null;
@@ -106,6 +108,7 @@ const initial: State = {
   noticeVersion: "2026-10",
   outOfHoursText: "The team is offline right now. We'll reply by email on the next working day.",
   contact: null,
+  caseId: null,
   notice: null,
   handoff: {
     open: false,
@@ -343,6 +346,7 @@ export function Panel(props: PanelProps) {
             person: res.person,
             team: res.teamStatus,
             contact: res.contact,
+            caseId: res.caseId,
           },
         });
         if (!stateRef.current.handoff.name && res.contact)
@@ -729,6 +733,7 @@ export function Panel(props: PanelProps) {
           status: res.status,
           team: res.teamStatus,
           contact: { name: f.name.trim(), email: f.email.trim() },
+          caseId: res.caseId,
         },
       });
       persist({ ...conv, personJoined: true });
@@ -817,6 +822,15 @@ export function Panel(props: PanelProps) {
     }
   };
 
+  const copyCaseId = async (caseId: string) => {
+    try {
+      await navigator.clipboard.writeText(caseId);
+      setAnnounce("Case ID copied.");
+    } catch {
+      // Clipboard can be blocked; the ID is on screen to read out or type.
+    }
+  };
+
   // --- Derived view state ----------------------------------------------------------------------
   const human = state.status === "human" && state.person;
   const welcome = state.messages.length === 0 && !state.handoff.open;
@@ -840,7 +854,9 @@ export function Panel(props: PanelProps) {
           key={m.id}
           m={m}
           contactEmail={state.contact?.email ?? null}
+          caseId={state.caseId}
           outOfHoursText={state.outOfHoursText}
+          onCopyCaseId={(id) => void copyCaseId(id)}
           onFeedback={(msg, value) => void feedback(msg, value)}
           onCopy={(msg) => void copyAnswer(msg)}
           onTalk={() => openHandoff("low_confidence")}
@@ -967,6 +983,12 @@ export function Panel(props: PanelProps) {
             </div>
           )}
         </header>
+        {state.caseId && (
+          <p className="relay-case-strip" data-testid="relay-case-strip">
+            <span className="relay-mono">Case ID</span>
+            <span className="relay-case-id-value">{state.caseId}</span>
+          </p>
+        )}
 
         <div ref={logRef} className="relay-body" onScroll={onScroll}>
           {welcome && (
@@ -1189,7 +1211,9 @@ const TYPE_LABEL: Record<Citation["type"], string> = {
 function MessageView(props: {
   m: UiMessage;
   contactEmail: string | null;
+  caseId: string | null;
   outOfHoursText: string;
+  onCopyCaseId: (caseId: string) => void;
   onFeedback: (m: UiMessage, v: 1 | -1) => void;
   onCopy: (m: UiMessage) => void;
   onTalk: () => void;
@@ -1219,6 +1243,12 @@ function MessageView(props: {
                   ? `${props.outOfHoursText}${(m.meta?.email ?? props.contactEmail) ? ` We'll write to ${m.meta?.email ?? props.contactEmail}.` : ""}`
                   : `We've let the team know. We'll reply here, or by email to ${m.meta?.email ?? props.contactEmail ?? "you"} if you leave.`}
               </p>
+              {(m.meta?.caseId ?? props.caseId) && (
+                <CaseIdRow
+                  caseId={m.meta?.caseId ?? props.caseId ?? ""}
+                  onCopy={props.onCopyCaseId}
+                />
+              )}
             </div>
           </div>
         );
@@ -1377,6 +1407,25 @@ function Sources({ messageId, citations }: { messageId: string; citations: Citat
         ))}
       </ol>
     </div>
+  );
+}
+
+/** The reference to quote if the visitor contacts the team another way. */
+function CaseIdRow({ caseId, onCopy }: { caseId: string; onCopy: (caseId: string) => void }) {
+  return (
+    <p className="relay-case-row" data-testid="relay-case-row">
+      <span className="relay-mono">Case ID</span>
+      <span className="relay-case-id-value">{caseId}</span>
+      <button
+        type="button"
+        className="relay-text-button relay-text-button--ink"
+        aria-label={`Copy case ID ${caseId}`}
+        onClick={() => onCopy(caseId)}
+      >
+        Copy
+      </button>
+      <span className="relay-case-hint">Quote it if you contact us about this chat.</span>
+    </p>
   );
 }
 

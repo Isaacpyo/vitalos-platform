@@ -50,6 +50,15 @@ def _footer(limit_line: str) -> dict:
     return {"notice": notice, "social": social, "company": facts}
 
 
+def _case_row(data: dict) -> dict:
+    return {
+        "label": "Case ID",
+        "value": str(data.get("caseId") or ""),
+        "code": True,
+        "missing": "Not recorded",
+    }
+
+
 def _quote(text: str | None) -> list[dict]:
     text = layout.clean_multiline(text)
     return [{"type": "quote", "text": f"“{text}”"}] if text else []
@@ -84,6 +93,7 @@ def handoff(data: dict) -> AlertEmail:
     sentence = reason.sentence.format(first=presenters.first_name(name))
     subject = f"Relay: {name} needs a person"
     rows = [
+        _case_row(data),
         {"label": "Trigger", "value": reason.label},
         {"label": "Page", "value": data.get("pagePath") or "", "code": True, "missing": "Not recorded"},
         {"label": "Waiting since", "value": presenters.long_date(data.get("requestedAt"))},
@@ -110,6 +120,7 @@ def reminder(data: dict) -> AlertEmail:
         else f"No one has joined yet. This is reminder {nth}."
     )
     rows = [
+        _case_row(data),
         {"label": "Trigger", "value": presenters.trigger(data.get("trigger")).label},
         {"label": "Page", "value": data.get("pagePath") or "", "code": True, "missing": "Not recorded"},
         {"label": "Waiting since", "value": presenters.long_date(data.get("requestedAt"))},
@@ -134,7 +145,10 @@ def visitor_replied(data: dict, *, assigned: bool) -> AlertEmail:
         if assigned
         else f"{first} sent a new message in a live conversation."
     )
-    rows = [{"label": "Page", "value": data.get("pagePath") or "", "code": True, "missing": "Not recorded"}]
+    rows = [
+        _case_row(data),
+        {"label": "Page", "value": data.get("pagePath") or "", "code": True, "missing": "Not recorded"},
+    ]
     blocks = _conversation_blocks(
         "Relay · Visitor replied",
         f"{name} replied.",

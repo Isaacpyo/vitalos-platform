@@ -10,7 +10,7 @@ from django.utils import timezone
 from apps.audit.models import AuditEvent
 from apps.relay import services
 from apps.relay.client import RelayError
-from apps.relay.fake import ALEX, CMS_DOC, JORDAN, TEAM_ANSWER, VISITOR_8C1D
+from apps.relay.fake import ALEX, CMS_DOC, JORDAN, TEAM_ANSWER, VISITOR_8C1D, VISITOR_21AF
 from apps.relay.models import RelayAlertLog, RelayInboxState, RelayNotification
 
 from .conftest import HX
@@ -188,6 +188,26 @@ def test_thread_shows_messages_context_and_alerts(client_for, superadmin, relay)
     assert "Consent to contact" in body and "notice v1.0" in body
     assert "In-app sent to 1 admin at" in body and "Next reminder at" in body
     assert "Send to HubSpot · phase 2" in body
+    assert 'data-testid="relay-thread-case"' in body and "179248856000172" in body
+    assert 'data-copy="relay-thread-case-id"' in body
+
+
+def test_thread_without_a_case_id_shows_none(client_for, superadmin, relay):
+    body = client_for(superadmin).get(f"/relay/inbox/{VISITOR_21AF}/").content.decode()
+    assert 'data-testid="relay-thread-case"' not in body
+
+
+def test_inbox_search_matches_a_case_id(client_for, superadmin, relay):
+    client = client_for(superadmin)
+    body = client.get(
+        "/relay/inbox/?tab=needs&q=179248856", HTTP_HX_TARGET="relay-list", **HX
+    ).content.decode()
+    assert "Alex Morgan" in body and "Visitor 8C1D" not in body
+
+
+def test_joining_gives_the_conversation_a_case_id(client_for, superadmin, relay):
+    client_for(superadmin).post(f"/relay/inbox/{VISITOR_21AF}/join/", **HX)
+    assert relay.data["conversations"][VISITOR_21AF]["caseId"]
 
 
 def test_thread_partial_and_marks_alerts_read(client_for, superadmin, relay):

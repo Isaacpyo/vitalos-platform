@@ -41,7 +41,7 @@ export interface VisitorMessage {
   adminInitials?: string | null;
   /** System messages: body is the event key */
   event?: SystemEvent;
-  meta?: { name?: string; email?: string; outOfHours?: boolean };
+  meta?: { name?: string; email?: string; outOfHours?: boolean; caseId?: string };
 }
 
 export interface RealtimeInfo {
@@ -107,6 +107,8 @@ export interface MessagesResponse {
   person: { name: string; initials: string } | null;
   teamStatus: TeamStatus;
   contact: { name: string; email: string } | null;
+  /** Reference to quote when contacting the team; null until a person is involved. */
+  caseId: string | null;
 }
 
 export interface FeedbackRequest {

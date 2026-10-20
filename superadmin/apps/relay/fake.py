@@ -98,6 +98,7 @@ def _seed(now: datetime) -> dict:
     conversations = {
         ALEX: {
             "id": ALEX,
+            "caseId": "179248856000172",
             "status": "awaiting_human",
             "contact": {
                 "name": "Alex Morgan",
@@ -154,6 +155,7 @@ def _seed(now: datetime) -> dict:
         },
         VISITOR_8C1D: {
             "id": VISITOR_8C1D,
+            "caseId": "179248832000241",
             "status": "awaiting_human",
             "contact": None,
             "session": _session("/trust", now, 14, 2, referrer="Direct", device="Mobile · Safari"),
@@ -184,6 +186,7 @@ def _seed(now: datetime) -> dict:
         },
         JORDAN: {
             "id": JORDAN,
+            "caseId": "179248640000093",
             "status": "human",
             "contact": {
                 "name": "Jordan Ellis",
@@ -445,6 +448,7 @@ def _row(conversation: dict) -> dict:
     waiting = (conversation.get("handoff") or {}).get("requestedAt")
     return {
         "id": conversation["id"],
+        "caseId": conversation.get("caseId"),
         "status": conversation["status"],
         "displayName": _display_name(conversation),
         "contactName": (conversation.get("contact") or {}).get("name"),
@@ -516,6 +520,9 @@ class FakeRelayClient(AdminApiMixin):
             raise RelayError("conflict", 409)
         if conversation["status"] != "human":
             conversation["status"] = "human"
+            conversation["caseId"] = (
+                conversation.get("caseId") or f"{int(datetime.now(_UTC).timestamp())}00001"
+            )
             conversation["firstAdminJoinedAt"] = conversation.get("firstAdminJoinedAt") or self._now()
             conversation["messages"].append(
                 _message("system", "admin_joined", datetime.now(_UTC), meta={"name": self._me()["name"]})
@@ -533,7 +540,8 @@ class FakeRelayClient(AdminApiMixin):
                 rows = [
                     r
                     for r in rows
-                    if q in r["displayName"].lower()
+                    if q in (r["caseId"] or "")
+                    or q in r["displayName"].lower()
                     or q in r["lastMessage"]["body"].lower()
                     or q in ((data["conversations"][r["id"]].get("contact") or {}).get("email") or "").lower()
                 ]

@@ -15,6 +15,8 @@ export interface ConversationRecord {
   visitorTokenHash: string;
   channelKey: string;
   status: ConversationStatus;
+  /** Reference quoted by the visitor and staff once a person is involved; see services/case-id.ts. */
+  caseId: string | null;
   assignedAdminId: string | null;
   assignedAdminName: string | null;
   assignedAdminInitials: string | null;
@@ -43,6 +45,13 @@ export interface ConversationRecord {
   tags: string[];
   createdAt: string;
 }
+
+/** Outcome of `assignCaseId`: the ID now on the conversation, a collision, or no such conversation. */
+export type CaseIdAssignment =
+  | { result: "assigned"; caseId: string }
+  | { result: "existing"; caseId: string }
+  | { result: "collision" }
+  | { result: "missing" };
 
 export interface SummaryMeta {
   intent: string;
@@ -311,6 +320,8 @@ export interface RelayStore {
     patch: ConversationPatch,
     expectStatus?: readonly ConversationRecord["status"][],
   ): Promise<ConversationRecord | null>;
+  /** Sets the case ID only while the conversation has none; otherwise reports the existing one. */
+  assignCaseId(id: string, candidate: string): Promise<CaseIdAssignment>;
   deleteConversation(id: string): Promise<boolean>;
   listInbox(params: InboxListParams): Promise<{ rows: InboxRow[]; nextCursor: string | null }>;
   inboxCounts(): Promise<Record<InboxTab, number>>;

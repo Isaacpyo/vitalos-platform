@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import type { SenderType } from "../contract";
 import type {
+  CaseIdAssignment,
   ConversationPatch,
   ConversationRecord,
   EmailOutboxRecord,
@@ -166,6 +167,28 @@ export class SupabaseRelayStore implements RelayStore {
     if (expectStatus && expectStatus.length > 0) query = query.in("status", [...expectStatus]);
     const row = check(await query.select().maybeSingle());
     return row ? mapConversation(row as Row) : null;
+  }
+
+  async assignCaseId(id: string, candidate: string): Promise<CaseIdAssignment> {
+    // `case_id is null` makes this a no-op for a conversation that already has one, so a double
+    // submit cannot change the ID the visitor has seen.
+    const result = await this.db
+      .from("conversations")
+      .update({ case_id: candidate })
+      .eq("id", id)
+      .is("case_id", null)
+      .select("case_id")
+      .maybeSingle();
+    if (result.error?.code === "23505") return { result: "collision" };
+    const row = check(result) as { case_id: string } | null;
+    if (row) return { result: "assigned", caseId: row.case_id };
+    const current = check(
+      await this.db.from("conversations").select("case_id").eq("id", id).maybeSingle(),
+    ) as { case_id: string | null } | null;
+    if (!current) return { result: "missing" };
+    return current.case_id
+      ? { result: "existing", caseId: current.case_id }
+      : { result: "collision" };
   }
 
   async deleteConversation(id: string): Promise<boolean> {

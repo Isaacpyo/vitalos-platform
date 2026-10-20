@@ -1,5 +1,6 @@
 import type { ConversationStatus } from "../contract";
 import type {
+  CaseIdAssignment,
   ConversationPatch,
   ConversationRecord,
   EmailOutboxRecord,
@@ -110,6 +111,7 @@ export class MemoryRelayStore implements RelayStore {
     const record: ConversationRecord = {
       id: crypto.randomUUID(),
       status: "ai",
+      caseId: null,
       assignedAdminId: null,
       assignedAdminName: null,
       assignedAdminInitials: null,
@@ -154,6 +156,16 @@ export class MemoryRelayStore implements RelayStore {
     return Promise.resolve({ ...next });
   }
 
+  assignCaseId(id: string, candidate: string): Promise<CaseIdAssignment> {
+    const c = this.conversations.get(id);
+    if (!c) return Promise.resolve({ result: "missing" });
+    if (c.caseId) return Promise.resolve({ result: "existing", caseId: c.caseId });
+    for (const other of this.conversations.values())
+      if (other.caseId === candidate) return Promise.resolve({ result: "collision" });
+    this.conversations.set(id, { ...c, caseId: candidate });
+    return Promise.resolve({ result: "assigned", caseId: candidate });
+  }
+
   deleteConversation(id: string): Promise<boolean> {
     const existed = this.conversations.delete(id);
     for (const [mid, m] of this.messages) if (m.conversationId === id) this.messages.delete(mid);
@@ -190,6 +202,7 @@ export class MemoryRelayStore implements RelayStore {
             m.body.toLowerCase().includes(q),
         );
         if (
+          !c.caseId?.includes(q) &&
           !c.contactName?.toLowerCase().includes(q) &&
           !c.contactEmail?.toLowerCase().includes(q) &&
           !inMessages
