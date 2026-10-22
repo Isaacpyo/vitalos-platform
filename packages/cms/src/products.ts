@@ -222,6 +222,111 @@ export const products: readonly ProductView[] = [
       },
     ],
   },
+  // Every claim maps to a line in docs/content/DISCOVERY-askbridge.md (the live site,
+  // askbridge.vitalos.co.uk, 22 Oct 2026): its features, its three set-up steps plus the hand-off
+  // (four here) and the businesses it names. No prices, allowances or outcome figures.
+  {
+    slug: "askbridge",
+    name: "Askbridge",
+    navLabel: "Askbridge — AI website assistant",
+    navDescription: "Built and operated by Vitalos",
+    summary: "An AI website assistant and live chat, built and operated by Vitalos.",
+    description: "Vitalos builds and operates Askbridge, an AI website assistant and live chat.",
+    url: "https://askbridge.vitalos.co.uk",
+    urlLabel: "Open askbridge.vitalos.co.uk",
+    viewLabel: "View Askbridge",
+    snapshotCaption: "The Askbridge homepage, with its example conversation.",
+    applicationCategory: "BusinessApplication",
+    seo: {
+      title: "Askbridge: AI Website Assistant and Live Chat",
+      description:
+        "Askbridge is the AI website assistant and live chat Vitalos builds and operates: answers from a business's own content, with sources, and a person on hand.",
+    },
+    sector: "Customer service",
+    sections: [
+      {
+        heading: "What it does",
+        layout: "cards",
+        points: [
+          {
+            key: "knowledge",
+            title: "Your own content",
+            text: "Answers from your pages, documents and FAQs only.",
+          },
+          {
+            key: "sources",
+            title: "Sources visitors can check",
+            text: "Each answer shows numbered sources with the quoted text.",
+          },
+          {
+            key: "handover",
+            title: "A named person",
+            text: "Visitors can ask for a person at any time.",
+          },
+          {
+            key: "inbox",
+            title: "Team inbox",
+            text: "Hand-offs arrive with a summary; one person takes each.",
+          },
+          {
+            key: "offline",
+            title: "Out-of-hours messages",
+            text: "A message form when nobody is available.",
+          },
+          {
+            key: "install",
+            title: "One script tag",
+            text: "Guides for WordPress, Wix, Squarespace, Shopify and Tag Manager.",
+          },
+        ],
+      },
+      {
+        heading: "How it works",
+        layout: "steps",
+        points: [
+          {
+            title: "Add your content",
+            text: "Your website, documents and FAQs.",
+          },
+          {
+            title: "Test the answers",
+            text: "Save Answer checks; re-run them when content changes.",
+          },
+          {
+            title: "Install the widget",
+            text: "Paste one tag; choose colours, greeting and who answers.",
+          },
+          { title: "Hand over to people", text: "Your team picks up with a summary, by name." },
+        ],
+      },
+      {
+        heading: "Built for",
+        layout: "tiles",
+        points: [
+          {
+            key: "lettings",
+            title: "Lettings agents",
+            text: "Fees, deposits, pets and repairs, often in the evening.",
+          },
+          {
+            key: "services",
+            title: "Service businesses",
+            text: "The same everyday questions, answered from your pages.",
+          },
+          {
+            key: "product-questions",
+            title: "Product businesses",
+            text: "Questions about what you sell, with sources.",
+          },
+          {
+            key: "support-teams",
+            title: "Customer-facing teams",
+            text: "One inbox for hand-offs and messages.",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const productBySlug = (slug: string): ProductView | undefined =>

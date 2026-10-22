@@ -518,12 +518,12 @@ const productsPage: RoutePageDraft = {
     cta: cta(ctas.primary, "general"),
     seo: seo(
       "Products Built and Operated by Vitalos",
-      "Software Vitalos builds and operates: Fauward, a logistics SaaS platform, and SOB Autofix, a booking and operations platform for a vehicle workshop.",
+      "Software Vitalos builds and operates: Fauward for logistics, SOB Autofix for a vehicle workshop, and Askbridge, an AI website assistant and live chat.",
     ),
   },
   provenance: drafted(
     [],
-    "Owner direction, 17 Oct 2026: Fauward, then SOB Autofix. No claims beyond each product's own site and, for SOB Autofix, its codebase (docs/content/DISCOVERY-sob-autofix.md).",
+    "Owner direction, 17 Oct 2026: Fauward, then SOB Autofix; Askbridge added on the owner's request, 22 Oct 2026. No claims beyond each product's own site and, for SOB Autofix, its codebase (docs/content/DISCOVERY-sob-autofix.md; docs/content/DISCOVERY-askbridge.md).",
   ),
 };
 

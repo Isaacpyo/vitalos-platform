@@ -116,3 +116,9 @@ The images were cropped to the slot ratios and saved as AVIF and WebP at full an
 "AB12 CDE" is the site's own placeholder registration, not a real vehicle. The photograph in the homepage hero is SOB Autofix's own. Recapture when those pages change.
 
 **Update, 17 Oct 2026 (product page template):** the homepage and quote captures were retired with the page's "More of the site" band; only the booking snapshot (`products.sob-autofix.hero`) remains. The snapshot of any product can now be recaptured with `pnpm media:product-snapshot` (`docs/content/PRODUCT-PAGE-TEMPLATE.md`); this one with `--url https://sobautofix.com/book --consent "Essential only" --hide 'a[href*="wa.me"]' --top 95 --mobile-top 85`.
+
+## Askbridge snapshot (owner request, 22 Oct 2026)
+
+The homepage of askbridge.vitalos.co.uk (a Vitalos product) was captured on 22 Oct 2026 with `pnpm media:product-snapshot --slug askbridge --url https://askbridge.vitalos.co.uk/ --top 190 --mobile-top 0 --wait 6000`, at 1440x900 and 390x844 (device scale 2) with reduced motion. The site has no cookie banner or chat launcher, so nothing was declined or hidden, and nothing was signed in to or typed. The 21:9 wide crop starts 190 CSS px down so the headline and the example conversation both show; the 5:7 phone version is the top of the page. Files: `apps/web/public/media/products.askbridge.hero[.mobile][@1x].{avif,webp}`.
+
+"Harbour Lettings", "Sam" and the conversation are the site's own fictional example, labelled "Example" on the page. Recapture when the homepage hero changes.

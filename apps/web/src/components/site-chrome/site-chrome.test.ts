@@ -96,6 +96,12 @@ describe("header model", () => {
         href: "/products/sob-autofix",
         icon: "gauge",
       },
+      {
+        label: "Askbridge — AI website assistant",
+        description: "Built and operated by Vitalos",
+        href: "/products/askbridge",
+        icon: "gauge",
+      },
     ]);
     expect(products?.more).toEqual({ label: "All products", href: "/products" });
     // Who We Are stays within the What We Do panel's width: at most three columns.
