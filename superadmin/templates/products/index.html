@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block title %}Product Pipeline · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <h1 class="text-2xl font-bold">Product Pipeline</h1>
+  <p class="muted mt-1 text-sm">Vitalos products, their live status and the way into each product's own superadmin. Status is read on this server and refreshed at most once a minute.</p>
+  <ul class="mt-6 grid gap-4 lg:grid-cols-2" data-testid="product-grid">
+    {% for entry in entries %}
+      {% with product=entry.product status=entry.status can_open=entry.can_open %}
+        <li class="card flex flex-col p-5" data-testid="product-card" data-product="{{ product.key }}">
+          <div class="flex items-start gap-4">
+            <img src="{% static product.app_icon %}" alt="" width="48" height="48" class="h-12 w-12 shrink-0 rounded-xl">
+            <div class="min-w-0">
+              <h2 class="text-lg font-semibold"><a href="{% url 'products:detail' product.key %}" class="hover:underline">{{ product.name }}</a> <span class="muted text-sm font-normal">{{ product.endorsement }}</span></h2>
+              <p class="muted mt-0.5 text-sm">{{ product.summary }}</p>
+            </div>
+          </div>
+          <div class="mt-4 flex-1">{% include "products/_status.html" with full=False %}</div>
+          <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+            {% include "products/_open.html" %}
+            <a href="{% url 'products:detail' product.key %}" class="btn btn-secondary btn-sm">Details {% icon "arrow-right" "h-4 w-4" %}</a>
+          </div>
+        </li>
+      {% endwith %}
+    {% empty %}
+      <li class="card muted p-6 text-sm lg:col-span-2">No products are listed yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

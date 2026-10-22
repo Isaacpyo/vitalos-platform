@@ -1,0 +1,8 @@
+{% load ui %}{# Product status pill: icon + text, never colour alone. Context: status (StatusResult). #}
+<span data-testid="product-state" data-state="{{ status.state }}{% if status.ok %}:{{ status.snapshot.status }}{% endif %}">
+{% if status.ok and status.snapshot.status == "operational" %}<span class="inline-flex items-center gap-1 font-medium text-mineral-700 dark:text-mineral-300">{% icon "check" "h-4 w-4" %} Operational</span>
+{% elif status.ok and status.snapshot.status == "degraded" %}<span class="inline-flex items-center gap-1 font-medium text-amber-800 dark:text-amber-300">{% icon "alert" "h-4 w-4" %} Degraded</span>
+{% elif status.ok %}<span class="inline-flex items-center gap-1 font-medium text-rose-700 dark:text-rose-300">{% icon "alert" "h-4 w-4" %} Down</span>
+{% elif status.state == "not_configured" %}<span class="muted inline-flex items-center gap-1 font-medium">{% icon "info" "h-4 w-4" %} Status not configured</span>
+{% else %}<span class="muted inline-flex items-center gap-1 font-medium">{% icon "info" "h-4 w-4" %} Status unavailable</span>{% endif %}
+</span>

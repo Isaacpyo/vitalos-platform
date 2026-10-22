@@ -96,6 +96,15 @@ NAV_ITEMS = (
         ("/relay",),
         permission="apps.relay.selectors.nav_visible",
     ),
+    NavItem(
+        "products",
+        "Product Pipeline",
+        "products:index",
+        "package",
+        "Operate",
+        ("/products",),
+        permission="apps.products.access.can_view",
+    ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem("notifications", "Notifications", "notifications:list", "bell", "Operate", ("/notifications",)),
     NavItem(

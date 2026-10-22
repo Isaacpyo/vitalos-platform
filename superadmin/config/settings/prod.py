@@ -6,6 +6,8 @@ from config import content_validation
 
 from .base import *  # noqa: F403
 from .base import (
+    ASKBRIDGE_STATUS_URL,
+    ASKBRIDGE_SUPERADMIN_URL,
     ATTACHMENTS_STORAGE,
     CAREERS_CV_BUCKET,
     CAREERS_CV_STORAGE,
@@ -51,6 +53,13 @@ if RELAY_API_BASE_URL:
         raise ImproperlyConfigured(
             "RELAY_ADMIN_API_SECRET and RELAY_WEBHOOK_SECRET (32+ characters) are required with RELAY_API_BASE_URL."
         )
+# Product Pipeline: the status token travels only over https, and the Open button leaves only for https.
+for _name, _url in (
+    ("ASKBRIDGE_STATUS_URL", ASKBRIDGE_STATUS_URL),
+    ("ASKBRIDGE_SUPERADMIN_URL", ASKBRIDGE_SUPERADMIN_URL),
+):
+    if _url and not _url.startswith("https://"):
+        raise ImproperlyConfigured(f"{_name} must be https in production.")
 # In production the reset email is offered only when it can actually be delivered.
 PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 

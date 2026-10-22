@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.enquiries",
     "apps.email_templates",
     "apps.relay",
+    "apps.products",
     "apps.api",
     "apps.content_sync",
     "apps.insights",
@@ -184,6 +185,16 @@ RELAY_REALTIME_ENABLED = env.bool("RELAY_REALTIME_ENABLED", default=True)
 # "http" (default) talks to the website; "fake" is in-memory sample data for local UI work and tests only.
 RELAY_CLIENT = env("RELAY_CLIENT", default="http").strip().lower()
 RELAY_EMAIL_FROM = env("RELAY_EMAIL_FROM", default="Vitalos Relay <relay@notify.vitalos.co.uk>")
+# Product Pipeline (ADR-044): each product's status is read server-side with a Bearer token and cached.
+# An empty token shows "Status not configured" and makes no request. The token is a secret.
+ASKBRIDGE_STATUS_URL = env(
+    "ASKBRIDGE_STATUS_URL", default="https://askbridge.vitalos.co.uk/api/platform/v1/status"
+).strip()
+ASKBRIDGE_STATUS_TOKEN = env("ASKBRIDGE_STATUS_TOKEN", default="")
+# Where "Open Askbridge Superadmin" goes after the permission check and audit. Nothing is appended to it.
+ASKBRIDGE_SUPERADMIN_URL = env(
+    "ASKBRIDGE_SUPERADMIN_URL", default="https://askbridge.vitalos.co.uk/superadmin"
+).strip()
 # Forgot-password emails only make sense when mail can actually be delivered (or locally).
 PASSWORD_RESET_ENABLED = env.bool(
     "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"

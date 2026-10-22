@@ -40,6 +40,9 @@
 #                    CONTENT_RELAY_SYNC_ENABLED, CONTENT_READ_RATE_LIMIT, CONTENT_OPPORTUNISTIC_TICK
 #   secrets          CONTENT_READ_CLIENT_KEYS, CAREERS_SUBMIT_CLIENT_KEYS, CONTENT_REVALIDATE_SECRET,
 #                    CONTENT_RENDER_SECRET, CONTENT_PREVIEW_SECRET, CONTENT_IP_SALT
+# Optional Product Pipeline settings (docs/DEPLOY.md section 10, ADR-044), same rules:
+#   plain variables  ASKBRIDGE_STATUS_URL, ASKBRIDGE_SUPERADMIN_URL
+#   secrets          ASKBRIDGE_STATUS_TOKEN
 set -euo pipefail
 
 DRY_RUN=0
@@ -252,7 +255,8 @@ for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_E
   CONTENT_WEB_TARGETS CONTENT_MEDIA_BUCKET CONTENT_MEDIA_PUBLIC_BASE_URL CAREERS_CV_BUCKET CAREERS_CV_MAX_MB \
   CAREERS_EMAIL_FROM CAREERS_CANDIDATE_EMAILS_ENABLED CONTENT_RELAY_SYNC_ENABLED CONTENT_READ_RATE_LIMIT \
   CONTENT_OPPORTUNISTIC_TICK \
-  RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM; do
+  RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM \
+  ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
 add_optional_secret() {  # env var name, Container Apps secret name
@@ -278,6 +282,7 @@ add_optional_secret CONTENT_PREVIEW_SECRET content-preview-secret
 add_optional_secret CONTENT_IP_SALT content-ip-salt
 add_optional_secret RELAY_ADMIN_API_SECRET relay-admin-api-secret
 add_optional_secret RELAY_WEBHOOK_SECRET relay-webhook-secret
+add_optional_secret ASKBRIDGE_STATUS_TOKEN askbridge-status-token
 unset _name
 # JOB_ENV is built from ENV_VARS, so PRIMARY_OWNER_EMAIL reaches the release job (create_owner).
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)

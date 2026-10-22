@@ -1,0 +1,22 @@
+{% load ui %}
+{# Context: alerts (Alert list), heading, empty, total (card only: all critical alerts). #}
+<section class="mt-4" aria-labelledby="{{ product.key }}-alerts" data-testid="product-alerts">
+  <h3 id="{{ product.key }}-alerts" class="kpi-label">{{ heading }}{% if total %} ({{ total }}){% endif %}</h3>
+  {% if alerts %}
+    <ul class="mt-2 space-y-2 text-sm">
+      {% for alert in alerts %}
+        <li class="flex items-start gap-2" data-testid="product-alert" data-severity="{{ alert.severity }}">
+          <span class="mt-0.5 shrink-0 {% if alert.severity == 'critical' %}text-rose-700 dark:text-rose-300{% elif alert.severity == 'warning' %}text-amber-800 dark:text-amber-300{% else %}muted{% endif %}">{% if alert.severity == "info" %}{% icon "info" "h-4 w-4" %}{% else %}{% icon "alert" "h-4 w-4" %}{% endif %}</span>
+          <span class="min-w-0">
+            <span class="sr-only">{{ alert.severity|capfirst }}: </span>
+            {% if alert.url %}<a class="underline underline-offset-2" href="{{ alert.url }}" rel="noreferrer">{{ alert.title }}</a>{% else %}{{ alert.title }}{% endif %}
+            <span class="muted block text-xs">{% if alert.severity != "info" %}{{ alert.severity|capfirst }} · {% endif %}since {{ alert.since|date:"j M Y, H:i" }}</span>
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if total and total > alerts|length %}<p class="muted mt-2 text-xs">{{ total|add:"-3" }} more on the details page.</p>{% endif %}
+  {% else %}
+    <p class="muted mt-1 text-sm">{{ empty }}</p>
+  {% endif %}
+</section>

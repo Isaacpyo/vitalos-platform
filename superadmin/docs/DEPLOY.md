@@ -512,3 +512,17 @@ az containerapp job execution list -n superadmin-release -g "$RG" -o table
 ```
 
 Read the report in the execution's console logs (Log Analytics, `ContainerAppConsoleLogs_CL` for job `superadmin-release`). Publishing emits one sync event per post; the website's tick delivers any that did not go through at once, and **Settings › Content sync** shows them. Running the same batch again changes nothing.
+
+## 10. Product Pipeline (ADR-044)
+
+The Product Pipeline shows each Vitalos product's live status and opens the product's own superadmin. Without a status token the Askbridge card says "Status not configured" and no request is made; nothing else changes.
+
+| Name | Kind | Container Apps secret | What |
+| ---- | ---- | --------------------- | ---- |
+| `ASKBRIDGE_STATUS_TOKEN` | secret | `askbridge-status-token` | Bearer token the Askbridge status endpoint accepts (32+ random characters; Askbridge holds the same value) |
+| `ASKBRIDGE_STATUS_URL` | variable | | Default `https://askbridge.vitalos.co.uk/api/platform/v1/status`; must be https in production |
+| `ASKBRIDGE_SUPERADMIN_URL` | variable | | Default `https://askbridge.vitalos.co.uk/superadmin`; must be https in production |
+
+`deploy/azure/deploy.sh` passes each one through when the deploy workflow provides a non-empty value. The deploy workflow (`.github/workflows/superadmin-deploy.yml`) must also map them from the GitHub `production` environment before a deploy can set them; until then set the secret once with `az containerapp secret set` and `az containerapp update --set-env-vars ASKBRIDGE_STATUS_TOKEN=secretref:askbridge-status-token`. Never print the value.
+
+Access: SuperAdmins see everything. For anyone else, `python manage.py product_access --email <email> --grant view_product_pipeline` (see the section) and `--grant open_askbridge_superadmin` (counts, alerts and the Open button). Run it in the release job's container or through `az containerapp exec`; each grant and revoke is in the audit trail.

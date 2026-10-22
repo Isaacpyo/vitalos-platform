@@ -257,6 +257,7 @@ class Smoke:
             ("/settings/users/", "14-settings-users"),
             ("/settings/data/", "15-settings-data"),
             ("/api/docs/", "16-api-docs"),
+            ("/products/", "16b-product-pipeline"),
         ]:
             response = self.page.goto(self.url(path))
             self.check(f"{path} returns 200", response is not None and response.status == 200)

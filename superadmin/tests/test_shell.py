@@ -20,6 +20,8 @@ ROUTES = {
     "/relay/knowledge/": "relay",
     "/relay/insights/": "relay",
     "/relay/settings/": "relay",
+    "/products/": "products",
+    "/products/askbridge/": "products",
 }
 
 
