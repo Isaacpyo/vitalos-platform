@@ -16,8 +16,12 @@ describe("products", () => {
     }
   });
 
-  it("lists Fauward, then SOB Autofix", () => {
-    expect(products.map((product) => product.slug)).toEqual(["fauward", "sob-autofix"]);
+  it("lists Fauward, then SOB Autofix, then Askbridge", () => {
+    expect(products.map((product) => product.slug)).toEqual([
+      "fauward",
+      "sob-autofix",
+      "askbridge",
+    ]);
   });
 
   it("Fauward is at /products/fauward", () => {
@@ -99,5 +103,27 @@ describe("SOB Autofix", () => {
     expect(text).not.toMatch(/eligib|postcode|radius/i);
     expect(text).not.toMatch(/email/i);
     expect(text).not.toMatch(/area pages/i);
+  });
+});
+
+describe("Askbridge", () => {
+  const askbridge = productBySlug("askbridge")!;
+
+  it("is at /products/askbridge, with its menu label and site", () => {
+    expect(productPath(askbridge)).toBe("/products/askbridge");
+    expect(askbridge.navLabel).toBe("Askbridge — AI website assistant");
+    expect(askbridge.url).toBe("https://askbridge.vitalos.co.uk");
+    expect(askbridge.sector).toBe("Customer service");
+  });
+
+  it("states only the verified claims (docs/content/DISCOVERY-askbridge.md)", () => {
+    const text = JSON.stringify(askbridge);
+    expect(text).toContain("numbered sources");
+    // Claims the evidence does not support stay out: no plan prices or allowances, no customer
+    // results (the site's businesses are fictional), no calendar booking, no languages.
+    expect(text).not.toMatch(/£|conversations a month|trial/i);
+    expect(text).not.toMatch(/customers? (say|use)|case stud|harbour lettings/i);
+    expect(text).not.toMatch(/calendar|books? viewings/i);
+    expect(text).not.toMatch(/languages|multilingual/i);
   });
 });

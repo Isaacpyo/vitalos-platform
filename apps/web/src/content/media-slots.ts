@@ -95,6 +95,17 @@ export const mediaSlots = [
     alt: "SOB Autofix booking flow, step 1 of 7: the vehicle registration lookup with a manual-entry option",
     mobile: { ratio: "5:7", size: [733, 1026] },
   },
+  {
+    id: "products.askbridge.hero",
+    page: "/products/askbridge (and its card on /products)",
+    section: "Snapshot",
+    ratio: "21:9",
+    size: [2030, 870],
+    brief:
+      "The homepage hero of askbridge.vitalos.co.uk, captured with Playwright at 1440 wide (2x) with reduced motion, cropped from 190 CSS px so the headline and the example conversation (fictional Harbour Lettings) both show. The phone version is the same page at 390 wide, from the top.",
+    alt: "Askbridge homepage: the headline beside an example chat with numbered sources and a team member joining",
+    mobile: { ratio: "5:7", size: [733, 1026] },
+  },
 ] as const satisfies readonly MediaSlotEntry[];
 
 export type MediaSlotId = (typeof mediaSlots)[number]["id"];

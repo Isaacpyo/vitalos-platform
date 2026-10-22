@@ -79,6 +79,17 @@ export const pointIcons: Readonly<Record<string, IconName>> = {
   mobile: "compass",
   "car-buyers": "search",
   workshop: "users",
+  // Askbridge
+  knowledge: "document",
+  sources: "link",
+  handover: "users",
+  inbox: "mail",
+  offline: "clock",
+  install: "code",
+  lettings: "building",
+  services: "target",
+  "product-questions": "search",
+  "support-teams": "chip",
 };
 
 const withIcon = (point: ProductPoint) => ({

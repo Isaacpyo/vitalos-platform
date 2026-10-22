@@ -10,7 +10,7 @@ test.use({ reducedMotion: "reduce" });
 const isDesktop = (width: number | undefined) => (width ?? 0) >= 1024;
 
 test.describe("Products", () => {
-  test("Who We Are lists Products: the heading to /products, then Fauward and SOB Autofix", async ({
+  test("Who We Are lists Products: the heading to /products, then Fauward, SOB Autofix and Askbridge", async ({
     page,
   }) => {
     await page.goto("/");
@@ -25,16 +25,19 @@ test.describe("Products", () => {
       await expect(fauward).toHaveAttribute("href", "/products/fauward");
       const sob = panel.getByRole("link", { name: /^SOB Autofix — workshop platform/ });
       await expect(sob).toHaveAttribute("href", "/products/sob-autofix");
-      // Fauward first, then SOB Autofix.
+      const askbridge = panel.getByRole("link", { name: /^Askbridge — AI website assistant/ });
+      await expect(askbridge).toHaveAttribute("href", "/products/askbridge");
+      // Fauward first, then SOB Autofix, then Askbridge.
       const hrefs = await panel
         .locator('a[href^="/products/"]')
         .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
-      expect(hrefs).toEqual(["/products/fauward", "/products/sob-autofix"]);
+      expect(hrefs).toEqual(["/products/fauward", "/products/sob-autofix", "/products/askbridge"]);
       await expectNoA11yViolations(page);
     } else {
       // The mobile sheet renders the same columns; collapsed disclosures hide them from roles.
       await expect(page.locator('header a[href="/products/fauward"]').first()).toBeAttached();
       await expect(page.locator('header a[href="/products/sob-autofix"]').first()).toBeAttached();
+      await expect(page.locator('header a[href="/products/askbridge"]').first()).toBeAttached();
       await expect(page.locator('header a[href="/products"]').first()).toBeAttached();
     }
   });
@@ -45,7 +48,7 @@ test.describe("Products", () => {
     await expect(page.locator('footer a[href="/products"]')).toHaveText("Products");
   });
 
-  test("/products shows the Fauward and SOB Autofix cards, each with its snapshot and page", async ({
+  test("/products shows the Fauward, SOB Autofix and Askbridge cards, each with its snapshot and page", async ({
     page,
   }) => {
     const response = await page.goto("/products");
@@ -71,10 +74,19 @@ test.describe("Products", () => {
       "href",
       "/products/sob-autofix",
     );
-    // The two cards in order, then the closing card.
+    await expect(main.getByRole("heading", { level: 2, name: "Askbridge" })).toHaveCount(1);
+    await expect(
+      main.getByRole("img", { name: /^Askbridge homepage: the headline beside an example chat/ }),
+    ).toBeVisible();
+    await expect(main.getByRole("link", { name: "View Askbridge" })).toHaveAttribute(
+      "href",
+      "/products/askbridge",
+    );
+    // The three cards in order, then the closing card.
     await expect(main.getByRole("heading", { level: 2 })).toHaveText([
       "Fauward",
       "SOB Autofix",
+      "Askbridge",
       /.+/,
     ]);
     await expectNoA11yViolations(page);
@@ -99,6 +111,25 @@ test.describe("Products", () => {
     ) as { "@graph": { "@type": string; url?: string }[] };
     const software = graph["@graph"].find((node) => node["@type"] === "SoftwareApplication");
     expect(software?.url).toBe("https://fauward.com");
+    await expectNoA11yViolations(page);
+    await expectNoHorizontalOverflowAt320(page);
+  });
+
+  test("/products/askbridge: the sentence, the snapshot, and askbridge.vitalos.co.uk in the same tab", async ({
+    page,
+  }) => {
+    const response = await page.goto("/products/askbridge");
+    expect(response?.status()).toBe(200);
+    await expect(page).toHaveTitle("Askbridge: AI Website Assistant and Live Chat | Vitalos");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Askbridge");
+    await expect(page.locator("main")).toContainText(
+      "Vitalos builds and operates Askbridge, an AI website assistant and live chat.",
+    );
+    const cta = page.getByRole("link", { name: "Open askbridge.vitalos.co.uk" });
+    await expect(cta).toHaveAttribute("href", "https://askbridge.vitalos.co.uk");
+    await expect(cta).toHaveAttribute("rel", "noopener");
+    await expect(cta).not.toHaveAttribute("target", /.+/);
+    await expect(cta).toHaveAttribute("data-product", "askbridge");
     await expectNoA11yViolations(page);
     await expectNoHorizontalOverflowAt320(page);
   });
