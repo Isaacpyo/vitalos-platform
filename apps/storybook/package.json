@@ -10,8 +10,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@storybook/addon-a11y": "10.6.1",
-    "@storybook/react-vite": "10.6.1",
+    "@storybook/addon-a11y": "10.6.2",
+    "@storybook/react-vite": "10.6.2",
     "@vitalos/design-tokens": "workspace:*",
     "@vitalos/relay-core": "workspace:*",
     "@vitalos/relay-widget": "workspace:*",
@@ -19,7 +19,7 @@
     "geist": "1.7.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "storybook": "10.6.1"
+    "storybook": "10.6.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
