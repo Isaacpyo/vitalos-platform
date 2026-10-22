@@ -53,6 +53,8 @@ PAGES = [
     "/careers/applications/",
     "/careers/settings/",
     "/content/sync/",
+    "/products/",
+    "/products/askbridge/",
     "/settings/content/",
 ]
 # Relay (apps/relay). Ids are the fixed sample conversation and team answer in apps/relay/fake.py.

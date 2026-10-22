@@ -1,0 +1,8 @@
+{% load ui %}
+{# Audited Open: POST with CSRF to our redirect view, which checks the permission again on the server. #}
+{% if can_open and product.superadmin_url %}
+  <form method="post" action="{% url 'products:open' product.key %}" class="inline" data-no-submit-overlay>
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm" data-testid="open-superadmin">{% icon "external-link" "h-4 w-4" %} Open {{ product.name }} Superadmin</button>
+  </form>
+{% endif %}

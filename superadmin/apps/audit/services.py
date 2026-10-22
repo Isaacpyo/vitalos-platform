@@ -116,6 +116,10 @@ ACTIONS = {
     "relay.settings_changed": "Changed Relay settings",
     "relay.availability_changed": "Changed Relay availability",
     "relay.preferences_changed": "Changed Relay notification preferences",
+    # Product Pipeline (ADR-044).
+    "products.superadmin_opened": "Opened a product superadmin from Product Pipeline",
+    "products.access_granted": "Granted Product Pipeline access",
+    "products.access_revoked": "Revoked Product Pipeline access",
 }
 
 

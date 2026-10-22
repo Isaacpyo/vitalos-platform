@@ -11,6 +11,7 @@ urlpatterns = [
     path("enquiries/", include("apps.enquiries.urls")),
     path("mail/", include("apps.email_templates.urls")),
     path("relay/", include("apps.relay.urls")),
+    path("products/", include("apps.products.urls")),
     path("audit/", include("apps.audit.urls")),
     path("insights/", include("apps.insights.urls")),
     path("content/", include("apps.content_sync.urls")),

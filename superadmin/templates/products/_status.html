@@ -1,0 +1,44 @@
+{% load ui %}
+{# Status facts for one product. Context: product, status (StatusResult), can_open, full (detail page). #}
+{# Counts and alerts appear only for a good, current answer and only to holders of the product permission. #}
+<dl class="divide-y divide-slate-100 text-sm dark:divide-slate-800" data-testid="product-facts">
+  <div class="flex items-center justify-between gap-4 py-2"><dt class="muted">Status</dt><dd>{% include "products/_state.html" %}</dd></div>
+  <div class="flex items-center justify-between gap-4 py-2">
+    <dt class="muted">Environment</dt>
+    <dd data-testid="product-environment">{% if status.ok %}<span class="env-badge {% if status.snapshot.environment == 'production' %}bg-mineral/15 text-mineral-700 dark:text-mineral-300{% else %}bg-amber-400/15 text-amber-800 dark:text-amber-200{% endif %}">{{ status.snapshot.environment_label }}</span>{% else %}<span class="muted">Unknown</span>{% endif %}</dd>
+  </div>
+  <div class="flex items-center justify-between gap-4 py-2">
+    <dt class="muted">{% if status.ok %}Checked{% else %}Last good check{% endif %}</dt>
+    <dd class="text-right" data-testid="product-checked">
+      {% if status.ok %}{{ status.snapshot.checked_at|date:"j M Y, H:i" }}
+      {% elif status.last_good %}{{ status.last_good.received_at|date:"j M Y, H:i" }}
+      {% else %}<span class="muted">None yet</span>{% endif %}
+    </dd>
+  </div>
+</dl>
+
+{% if status.state == "not_configured" %}
+  <p class="muted mt-3 text-sm" data-testid="product-note">Status not configured. Live status appears once the status token is set on this server{% if can_open %} (<code class="font-mono text-xs">{{ product.status_token_setting }}</code>){% endif %}.</p>
+{% elif not status.ok %}
+  <p class="muted mt-3 text-sm" data-testid="product-note">
+    Status unavailable. {% if status.last_good %}The last good check was at {{ status.last_good.received_at|date:"H:i" }} on {{ status.last_good.received_at|date:"j M Y" }}.{% else %}There has been no good check since this server started.{% endif %}
+    No figures are shown until {{ product.name }} answers again.{% if can_open and status.reason %} <span class="font-mono text-xs">({{ status.reason }})</span>{% endif %}
+  </p>
+{% elif can_open %}
+  {% with t=status.snapshot.tenants s=status.snapshot.subscriptions %}
+  <div class="mt-4 grid gap-3 sm:grid-cols-2" data-testid="product-counts">
+    <section class="rounded-md border border-slate-200 p-3 dark:border-slate-800" aria-labelledby="{{ product.key }}-tenants">
+      <h3 id="{{ product.key }}-tenants" class="kpi-label">Tenants</h3>
+      <p class="kpi-value" data-testid="tenants-total">{{ t.total }}</p>
+      <p class="muted text-xs" data-testid="tenants-breakdown">{{ t.active }} active · {{ t.trial }} on trial · {{ t.suspended }} suspended</p>
+    </section>
+    <section class="rounded-md border border-slate-200 p-3 dark:border-slate-800" aria-labelledby="{{ product.key }}-subscriptions">
+      <h3 id="{{ product.key }}-subscriptions" class="kpi-label">Active subscriptions</h3>
+      <p class="kpi-value" data-testid="subscriptions-active">{{ s.active }}</p>
+      <p class="muted text-xs" data-testid="subscriptions-breakdown">{{ s.trialing }} trialing · {{ s.pastDue }} past due</p>
+    </section>
+  </div>
+  {% endwith %}
+  {% if full %}{% with alerts=status.snapshot.alerts %}{% include "products/_alerts.html" with heading="Alerts" empty="No open alerts." %}{% endwith %}
+  {% else %}{% with alerts=status.snapshot.critical_alerts|slice:":3" %}{% include "products/_alerts.html" with heading="Critical alerts" empty="No critical alerts." total=status.snapshot.critical_alerts|length %}{% endwith %}{% endif %}
+{% endif %}

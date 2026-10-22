@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block title %}{{ product.name }} · Product Pipeline · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block">Operate</li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li><a href="{% url 'products:index' %}" class="muted hover:underline">Product Pipeline</a></li>
+  <li class="muted" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">{{ product.name }}</li>
+{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-center gap-4" data-testid="product-detail" data-product="{{ product.key }}">
+    <img src="{% static product.mark %}" alt="{{ product.name }} logo" width="64" height="52" class="h-13 w-16 shrink-0">
+    <div class="min-w-0 flex-1">
+      <h1 class="text-2xl font-bold">{{ product.name }} <span class="muted text-base font-normal">{{ product.endorsement }}</span></h1>
+      <p class="muted mt-0.5 text-sm">{{ product.summary }}</p>
+    </div>
+    {% include "products/_open.html" %}
+  </div>
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <section class="card p-5 lg:col-span-2" aria-labelledby="status-heading">
+      <h2 id="status-heading" class="font-semibold">Live status</h2>
+      <div class="mt-2">{% include "products/_status.html" with full=True %}</div>
+    </section>
+    <section class="card p-5 text-sm" aria-labelledby="access-heading">
+      <h2 id="access-heading" class="font-semibold">Access</h2>
+      {% if can_open %}
+        <p class="mt-2">Open {{ product.name }} Superadmin takes you to <span class="font-mono text-xs break-words" data-testid="superadmin-url">{{ product.superadmin_url }}</span>. Each visit is recorded in the audit trail.</p>
+        <p class="muted mt-2">{{ product.name }} runs its own sign-in and platform roles. Nothing from this admin is passed in the link, so sign in there with your {{ product.name }} account.</p>
+      {% else %}
+        <p class="muted mt-2" data-testid="no-open-permission">You can see this product's status. Tenant figures, alerts and the way into the {{ product.name }} Superadmin need the product permission. Ask a super admin.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}
