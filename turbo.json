@@ -2,6 +2,8 @@
   "$schema": "https://turbo.build/schema.json",
   "agentGuidance": false,
   "globalEnv": [
+    "ASKBRIDGE_ORIGIN",
+    "ASKBRIDGE_SITE_KEY",
     "BING_SITE_VERIFICATION",
     "CAREERS_SUBMIT_KEY_ID",
     "CAREERS_SUBMIT_SECRET",

@@ -30,6 +30,11 @@ export interface BuildCspInput {
    * ADR-038). Bare ws(s)/http(s) origins only.
    */
   connect?: readonly string[];
+  /**
+   * Origin of the Askbridge widget (ADR-045): allowed in `script-src`, `connect-src` and `img-src`.
+   * Also allows Turnstile (script and frame), which the widget may load. Bare https origin only.
+   */
+  askbridgeOrigin?: string;
 }
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
@@ -61,16 +66,27 @@ export function buildCsp(input: BuildCspInput): string {
   const scriptSrc = ["'self'"];
   if (!strict) scriptSrc.push("'unsafe-inline'");
   if (input.isDev) scriptSrc.push("'unsafe-eval'");
-  if (input.turnstile) scriptSrc.push(TURNSTILE_ORIGIN);
+  const askbridge = input.askbridgeOrigin ? assertCspOrigin(input.askbridgeOrigin) : undefined;
+  const turnstile = input.turnstile || Boolean(askbridge);
+  if (askbridge) scriptSrc.push(askbridge);
+  if (turnstile) scriptSrc.push(TURNSTILE_ORIGIN);
 
   const connectSrc = [
     "'self'",
     ...unique([
       ...(input.connectOrigins ?? []).map(assertCspOrigin),
       ...(input.connect ?? []).map(assertConnectOrigin),
+      ...(askbridge ? [askbridge] : []),
     ]),
   ];
-  const imgSrc = ["'self'", "data:", ...unique((input.imgOrigins ?? []).map(assertCspOrigin))];
+  const imgSrc = [
+    "'self'",
+    "data:",
+    ...unique([
+      ...(input.imgOrigins ?? []).map(assertCspOrigin),
+      ...(askbridge ? [askbridge] : []),
+    ]),
+  ];
 
   const frameAncestors = (input.frameAncestors ?? []).map(assertCspOrigin);
 
@@ -83,7 +99,7 @@ export function buildCsp(input: BuildCspInput): string {
     ["img-src", imgSrc],
     ["font-src", ["'self'"]],
     ["connect-src", connectSrc],
-    ["frame-src", input.turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],
+    ["frame-src", turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],
     ["object-src", ["'none'"]],
     ["base-uri", ["'self'"]],
     ["form-action", ["'self'"]],
