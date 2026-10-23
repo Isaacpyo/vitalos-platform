@@ -21,8 +21,8 @@ The site key is public by design: it is sent as a header and checked against the
 ## Decision
 
 1. **Two optional values in `@vitalos/config`.** `ASKBRIDGE_SITE_KEY` must match `^pk_[a-f0-9]{32}$` when set. `ASKBRIDGE_ORIGIN` is an https origin and defaults to `https://askbridge.vitalos.co.uk`. Both are non-secret and read at build time through `readBuildEnv().askbridge`, which is undefined when the key is unset. Invalid values fail the build, and errors never echo the value.
-2. **The key switches the assistant.** With the key set, the root layout renders one `next/script` tag (`src` from the origin, `data-site` from the key) and does not render `RelayLauncher`. With the key unset, the layout is exactly as before: Relay renders when `RELAY_ENABLED` is on.
-3. **`strategy="lazyOnload"`.** The hero image is the LCP element and the lab budgets (TBT, LCP) are tight (docs/seo/DECISIONS.md 15). The widget is a launcher that loads its panel on click, so nothing is lost by injecting it after the window load event and in idle time. `afterInteractive` would add script work during early interaction for no benefit.
+2. **The key switches the assistant.** With the key set, the root layout renders one plain `<script async>` tag (`src` from the origin, `data-site` from the key) and does not render `RelayLauncher`. With the key unset, the layout is exactly as before: Relay renders when `RELAY_ENABLED` is on.
+3. **A plain `<script async>`, not `next/script`.** `next/script` adds its loader to the site's own client bundles on every page, which breaks the first-party JS budgets (ADR-021) by a few hundred bytes. A server-rendered async script costs no first-party JS, never blocks parsing or the hero image (LCP, docs/seo/DECISIONS.md 15), and is the embed Askbridge documents. The widget is a small launcher that waits for `<body>` and loads its panel only on intent.
 4. **CSP, only when the key is set** (`buildCsp` input `askbridgeOrigin`, set from `apps/web/src/config/security-headers.ts`):
    - `script-src`: the Askbridge origin and `https://challenges.cloudflare.com`.
    - `connect-src`: the Askbridge origin.
