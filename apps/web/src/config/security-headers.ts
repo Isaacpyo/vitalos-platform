@@ -18,6 +18,8 @@ export interface SecurityHeaderOptions {
  * Per-environment decisions live here; `@vitalos/security` only builds strings:
  * - Turnstile origins only when both Turnstile keys are configured.
  * - The Relay realtime WebSocket origin only when Relay and its realtime key are configured.
+ * - The Askbridge origin (script, connect, img) and Turnstile (script, frame) only when
+ *   `ASKBRIDGE_SITE_KEY` is set, even if this site's own Turnstile keys are off (ADR-045).
  * - No other site may frame this one.
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
  * - The content media host (`CONTENT_MEDIA_HOST`) in `img-src` and the CV upload host
@@ -44,6 +46,8 @@ export function getSecurityHeaders(
     ),
     // Relay realtime pings (ADR-038): only when Relay is on and realtime is configured.
     connect: env.relayRealtimeOrigin ? [env.relayRealtimeOrigin] : [],
+    // Askbridge widget (ADR-045): its origin and Turnstile, only when the site key is set.
+    ...(env.askbridge ? { askbridgeOrigin: env.askbridge.origin } : {}),
   };
 
   const headers = buildSecurityHeaders({

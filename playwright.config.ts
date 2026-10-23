@@ -50,6 +50,11 @@ export const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 /** Signs admin API calls in the Relay specs (stands in for the Super Admin). Test-only. */
 export const RELAY_TEST_ADMIN_SECRET = "e2e-only-relay-admin-api-secret-not-a-secret";
 
+/** Askbridge e2e (ADR-045): a made-up key and an unresolvable origin, so nothing reaches the live service. */
+export const ASKBRIDGE_TEST_SITE_KEY = "pk_0123456789abcdef0123456789abcdef";
+export const ASKBRIDGE_TEST_ORIGIN = "https://askbridge.e2e.invalid";
+const askbridgeOn = process.env.E2E_ASKBRIDGE === "1";
+
 const web = "corepack pnpm --filter @vitalos/web exec next";
 const command = [
   process.env.E2E_SKIP_BUILD === "1" ? undefined : `${web} build`,
@@ -111,6 +116,10 @@ export default defineConfig({
       ENQUIRY_IP_HASH_SALT: "e2e-only-ip-hash-salt-not-a-secret",
       OUTBOX_DISPATCH_SECRET: "e2e-only-outbox-dispatch-secret-not-a-secret",
       EMAIL_PROVIDER: "none",
+      // Askbridge replaces Relay on the public site when its key is set (ADR-045). Off by default,
+      // so the main run covers Relay; E2E_ASKBRIDGE=1 builds the Askbridge variant (own CI job).
+      ASKBRIDGE_SITE_KEY: askbridgeOn ? ASKBRIDGE_TEST_SITE_KEY : "",
+      ASKBRIDGE_ORIGIN: askbridgeOn ? ASKBRIDGE_TEST_ORIGIN : "",
       // Vitalos Relay on, fully offline: in-memory store, deterministic mock model, no realtime,
       // no Super Admin webhook (events are recorded in memory). Test-only secrets.
       RELAY_ENABLED: process.env.E2E_RELAY ?? "true",
