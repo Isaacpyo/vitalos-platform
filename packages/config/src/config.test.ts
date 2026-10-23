@@ -543,6 +543,7 @@ describe("entries", () => {
     });
     expect(build.indexable).toBe(true);
     expect(Object.keys(build).sort()).toEqual([
+      "askbridge",
       "careersUploadOrigin",
       "contentApiOrigin",
       "contentMediaOrigin",
@@ -808,5 +809,54 @@ describe("Vitalos Relay", () => {
     const result = safeParseEnv({ ...prod, RELAY_ADMIN_API_SECRET: "short-secret-value" });
     expect(result.success).toBe(false);
     expect(JSON.stringify(result)).not.toContain("short-secret-value");
+  });
+});
+
+describe("Askbridge widget", () => {
+  const key = `pk_${"a1b2c3d4".repeat(4)}`;
+
+  it("is off by default and the origin defaults to the Askbridge host", () => {
+    const env = parseEnv({});
+    expect(env.askbridge).toEqual({
+      siteKey: undefined,
+      origin: "https://askbridge.vitalos.co.uk",
+    });
+    expect(readBuildEnv({}).askbridge).toBeUndefined();
+  });
+
+  it("treats blank values as unset", () => {
+    expect(
+      readBuildEnv({ ASKBRIDGE_SITE_KEY: "", ASKBRIDGE_ORIGIN: "" }).askbridge,
+    ).toBeUndefined();
+  });
+
+  it("exposes the key and origin to the build entry when the key is set", () => {
+    expect(readBuildEnv({ ASKBRIDGE_SITE_KEY: key }).askbridge).toEqual({
+      siteKey: key,
+      origin: "https://askbridge.vitalos.co.uk",
+    });
+    expect(
+      readBuildEnv({ ASKBRIDGE_SITE_KEY: key, ASKBRIDGE_ORIGIN: "https://ask.example.invalid/" })
+        .askbridge?.origin,
+    ).toBe("https://ask.example.invalid");
+  });
+
+  it.each(["pk_short", `pk_${"A".repeat(32)}`, `sk_${"a".repeat(32)}`, `pk_${"g".repeat(32)}`])(
+    "rejects the malformed site key %j",
+    (bad) => {
+      expect(issuePaths({ ASKBRIDGE_SITE_KEY: bad })).toContain("ASKBRIDGE_SITE_KEY");
+    },
+  );
+
+  it.each(["http://ask.example.invalid", "https://ask.example.invalid/path", "not a url"])(
+    "rejects the origin %j",
+    (bad) => {
+      expect(issuePaths({ ASKBRIDGE_ORIGIN: bad })).toContain("ASKBRIDGE_ORIGIN");
+    },
+  );
+
+  it("never echoes a bad key in the error", () => {
+    const result = safeParseEnv({ ASKBRIDGE_SITE_KEY: "pk_secretish" });
+    expect(JSON.stringify(result)).not.toContain("pk_secretish");
   });
 });

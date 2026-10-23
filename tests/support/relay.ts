@@ -74,3 +74,9 @@ export async function ask(page: Page, text: string) {
   });
   await expect(page.locator(".relay-answer").last().getByText("Was this helpful?")).toBeVisible();
 }
+
+/**
+ * Relay specs cover the public site with Askbridge off. When the server is built for the Askbridge
+ * variant (E2E_ASKBRIDGE=1, ADR-045) Relay does not render, so those specs skip themselves.
+ */
+export const askbridgeOn = process.env.E2E_ASKBRIDGE === "1";

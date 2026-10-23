@@ -6,6 +6,7 @@ import { readBuildEnv } from "@vitalos/config/build";
 import { readPublicEnv } from "@vitalos/config/public";
 import { RelayLauncher } from "@vitalos/relay-widget";
 import { seoSite } from "../src/features/seo/site";
+import { AskbridgeScript } from "../src/components/askbridge/askbridge-script";
 import { SiteAnalytics } from "../src/components/analytics/site-analytics";
 import "./globals.css";
 
@@ -42,8 +43,10 @@ export const metadata: Metadata = {
  * then falls back to system fonts. Source Serif 4 is not loaded yet (see token-reconciliation).
  */
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Vitalos Relay (ADR-035): rendered only when RELAY_ENABLED is on for this deployment.
-  const relay = readBuildEnv().relayEnabled;
+  // The public site's assistant is Askbridge when ASKBRIDGE_SITE_KEY is set (ADR-045). Otherwise
+  // Vitalos Relay (ADR-035) renders, only when RELAY_ENABLED is on for this deployment.
+  const { askbridge, relayEnabled } = readBuildEnv();
+  const relay = relayEnabled && !askbridge;
   const turnstileSiteKey = readPublicEnv().turnstileSiteKey;
   return (
     <html lang="en-GB" className={`${GeistSans.variable} ${geistMono.variable}`}>
@@ -53,6 +56,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </a>
         {children}
         <SiteAnalytics />
+        {askbridge && <AskbridgeScript siteKey={askbridge.siteKey} origin={askbridge.origin} />}
         {relay && (
           <RelayLauncher
             symbolSrc="/brand/vitalos-symbol.png"

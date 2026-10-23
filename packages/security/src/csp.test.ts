@@ -106,4 +106,34 @@ describe("buildCsp", () => {
       expect(() => buildCsp({ ...base, connectOrigins: [bad] }), bad).toThrow();
     }
   });
+
+  it("adds the Askbridge origin and Turnstile, and nothing else, when an Askbridge origin is given", () => {
+    const origin = "https://askbridge.example.com";
+    const csp = buildCsp({ ...base, askbridgeOrigin: origin });
+    expect(directive(csp, "script-src")).toBe(
+      `'self' 'unsafe-inline' ${origin} https://challenges.cloudflare.com`,
+    );
+    expect(directive(csp, "connect-src")).toBe(`'self' ${origin}`);
+    expect(directive(csp, "img-src")).toBe(`'self' data: ${origin}`);
+    expect(directive(csp, "frame-src")).toBe("https://challenges.cloudflare.com");
+    expect(directive(csp, "frame-ancestors")).toBe("'none'");
+    expect(directive(csp, "default-src")).toBe("'self'");
+    expect(directive(csp, "style-src")).toBe("'self' 'unsafe-inline'");
+    expect(directive(csp, "form-action")).toBe("'self'");
+  });
+
+  it("does not list Turnstile twice when the site's own Turnstile is also on", () => {
+    const csp = buildCsp({
+      isDev: false,
+      turnstile: true,
+      askbridgeOrigin: "https://a.example.com",
+    });
+    expect(directive(csp, "script-src")?.match(/challenges\.cloudflare\.com/g)).toHaveLength(1);
+  });
+
+  it("rejects an injected Askbridge origin", () => {
+    for (const bad of ["https://a.example.com; script-src *", "https://a.example.com/x", "*"]) {
+      expect(() => buildCsp({ ...base, askbridgeOrigin: bad }), bad).toThrow();
+    }
+  });
 });

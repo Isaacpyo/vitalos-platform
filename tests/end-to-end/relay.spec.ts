@@ -1,8 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, adminCall, ask, newId, openHandoffFromMenu, openRelay } from "../support/relay";
+import {
+  ADMIN,
+  adminCall,
+  ask,
+  askbridgeOn,
+  newId,
+  openHandoffFromMenu,
+  openRelay,
+} from "../support/relay";
 
 // Vitalos Relay visitor journeys (docs/relay, Phase 2-4 acceptance). The e2e server runs Relay with
 // the in-memory store and the deterministic mock model, so answers are stable and offline.
+
+// Relay is the public site's assistant only while Askbridge is off (ADR-045).
+test.skip(askbridgeOn, "Askbridge replaces Relay in this build");
 
 test.describe("Relay launcher and panel", () => {
   test("launcher opens the panel; Esc closes it and returns focus", async ({ page }) => {

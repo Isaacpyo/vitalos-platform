@@ -176,6 +176,14 @@ const rawSchema = z.object({
     .string()
     .regex(/^[A-Za-z0-9]{10,64}$/, "must be the token only, not the whole meta tag")
     .optional(),
+  // ---- Askbridge widget on the public site (ADR-045). Unset: Relay behaves as before. ----
+  ASKBRIDGE_SITE_KEY: z
+    .string()
+    .regex(/^pk_[a-f0-9]{32}$/, "must match pk_ followed by 32 lowercase hex characters")
+    .optional(),
+  ASKBRIDGE_ORIGIN: originUrl
+    .refine((value) => value.startsWith("https://"), { message: "must be an https origin" })
+    .optional(),
   // ---- Vitalos Relay (ADR-035 to ADR-038). Off unless RELAY_ENABLED=true. ----
   RELAY_ENABLED: booleanFlag,
   RELAY_STORE: z.enum(relayStores).optional(),
@@ -252,7 +260,11 @@ export interface Env {
     bingSiteVerification: string | undefined;
   };
   relay: RelayEnv;
+  /** Askbridge widget (ADR-045). `siteKey` is public by design; `origin` is always https. */
+  askbridge: { siteKey: string | undefined; origin: string };
 }
+
+export const DEFAULT_ASKBRIDGE_ORIGIN = "https://askbridge.vitalos.co.uk";
 
 export interface RelayEnv {
   enabled: boolean;
@@ -439,6 +451,10 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         bingSiteVerification: raw.BING_SITE_VERIFICATION,
       },
       relay: resolveRelay(raw, deployEnv, siteUrl ?? LOCAL_SITE_URL, supabaseConfigured),
+      askbridge: {
+        siteKey: raw.ASKBRIDGE_SITE_KEY,
+        origin: raw.ASKBRIDGE_ORIGIN ?? DEFAULT_ASKBRIDGE_ORIGIN,
+      },
     },
   };
 }

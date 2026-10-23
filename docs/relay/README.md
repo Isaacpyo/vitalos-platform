@@ -2,6 +2,8 @@
 
 Relay is the chat assistant on vitalos.co.uk. It answers questions from published Vitalos knowledge, cites its sources, and hands a conversation to a named person in the Super Admin.
 
+> **Superseded on the public site while the Askbridge key is set.** When `ASKBRIDGE_SITE_KEY` is set, vitalos.co.uk shows the Askbridge widget and does not render `RelayLauncher`, whatever `RELAY_ENABLED` says. Unset the key and redeploy to bring Relay back. The Relay packages and routes stay in the repo. See ADR-045.
+
 Design documents:
 
 - Decisions: `DECISIONS.md`.

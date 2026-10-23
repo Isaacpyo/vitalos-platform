@@ -22,6 +22,11 @@ export interface BuildEnv {
   relayEnabled: boolean;
   /** Realtime WebSocket origin (ws/wss) for CSP connect-src, when Relay realtime is configured. */
   relayRealtimeOrigin: string | undefined;
+  /**
+   * Askbridge widget (ADR-045): the public site key and the https origin that serves the script and
+   * its API. Both undefined when `ASKBRIDGE_SITE_KEY` is unset (Relay then renders as before).
+   */
+  askbridge: { siteKey: string; origin: string } | undefined;
   /** Search engine verification tokens for meta tags (public by design; docs/seo). */
   siteVerification: { google: string | undefined; bing: string | undefined };
 }
@@ -44,6 +49,9 @@ export function readBuildEnv(source: EnvSource = process.env): BuildEnv {
       features.relay && env.relay.realtimePublicKey && env.supabase.url
         ? new URL(env.supabase.url).origin.replace(/^http/, "ws")
         : undefined,
+    askbridge: env.askbridge.siteKey
+      ? { siteKey: env.askbridge.siteKey, origin: env.askbridge.origin }
+      : undefined,
     siteVerification: {
       google: env.search.googleSiteVerification,
       bing: env.search.bingSiteVerification,

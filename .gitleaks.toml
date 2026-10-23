@@ -17,4 +17,6 @@ regexes = [
   '''^meeting-reminder-(24-hours|1-hour)$''',
   # Placeholder idempotency UUID in an old EnquiryForm test.
   '''^6f0f6a6e-1b43-4d7e-9a53-0a6f2f6f4f10$''',
+  # Placeholder Askbridge site key in the e2e config (public key format, not a credential).
+  '''^pk_0123456789abcdef0123456789abcdef$''',
 ]

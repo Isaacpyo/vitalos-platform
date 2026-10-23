@@ -14,6 +14,7 @@ const baseEnv: BuildEnv = {
   contentApiOrigin: undefined,
   relayEnabled: false,
   relayRealtimeOrigin: undefined,
+  askbridge: undefined,
   siteVerification: { google: undefined, bing: undefined },
 };
 
@@ -34,6 +35,27 @@ describe("getSecurityHeaders", () => {
         "Content-Security-Policy",
       ) ?? "";
     expect(on).toContain("connect-src 'self' wss://project.supabase.co;");
+  });
+
+  it("allows the Askbridge origin and Turnstile only when the site key is set", () => {
+    const off = headersFor({}).get("Content-Security-Policy") ?? "";
+    expect(off).not.toContain("askbridge");
+    expect(off).not.toContain("challenges.cloudflare.com");
+    expect(off).toContain("frame-src 'none'");
+
+    const on =
+      headersFor({
+        askbridge: { siteKey: "pk_" + "a".repeat(32), origin: "https://askbridge.example.invalid" },
+      }).get("Content-Security-Policy") ?? "";
+    const origin = "https://askbridge.example.invalid";
+    const turnstile = "https://challenges.cloudflare.com";
+    expect(on).toContain(`script-src 'self' 'unsafe-inline' ${origin} ${turnstile};`);
+    expect(on).toContain(`connect-src 'self' ${origin};`);
+    expect(on).toContain(`img-src 'self' data: ${origin};`);
+    expect(on).toContain(`frame-src ${turnstile};`);
+    expect(on).toContain("frame-ancestors 'none'");
+    // The site's own Turnstile keys stay off: only the widget needs the Cloudflare origins.
+    expect(on).not.toContain("wss:");
   });
 
   it.each(["local", "preview", "staging"] as const)("noindexes %s", (deployEnv) => {
