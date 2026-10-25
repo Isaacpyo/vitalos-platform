@@ -13,3 +13,12 @@ Baseline recorded 2026-10-10: 13 high and 2 critical, counted as pnpm counts the
 | GHSA-vfj7-8cjw-p6xm                      | braces <=3.0.3              | eslint-config-next > @next/eslint-plugin-next > fast-glob@3.3.1 > micromatch > braces (lint time) | high     | Exception via `auditConfig.ignoreGhsas`. Lint time only with repo-controlled globs; nothing ships. No release since 3.0.3. `ignoreGhsas` applies to every path, so a future runtime dependency on braces would also be ignored until review; `tests/integration/audit-exceptions.test.ts` fails if braces appears on any route other than this one. | 2027-01-10        |
 
 Update 12 Oct 2026: removing Sanity (ADR-028) dropped the `sanity > @sanity/cli > @module-federation/dts-plugin` chain, so the `adm-zip` and `undici` overrides and the `@sanity/codegen` braces routes were deleted. Override publish dates (npm): brace-expansion 1.1.21 and 5.0.12 2026-09-14; tinypool 2.1.2 2026-08-23; sharp 0.35.5 2026-09-27; source-map-js 1.2.2 2026-09-30. The last two are younger than two weeks at the time of writing and are the only patched releases.
+
+Update 25 Oct 2026: three high advisories published after the last green `main` run turned `pnpm audit --audit-level high` red with no change to the tree.
+
+| Advisory            | Package                                  | Path                                                                                      | Severity | Resolution                                                                            | Owner review date |
+| ------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------- | ----------------- |
+| GHSA-mrhx-c7xc-m3w5 | zod <4.6.6                               | direct (web, config, validation, relay-core); lighthouse > puppeteer-core > chromium-bidi | high     | Direct pins 4.6.5 → 4.6.6; override `chromium-bidi>zod` to 4.6.6 (it asks for ^4.6.5) | 2027-01-25        |
+| GHSA-xjj6-f33q-929c | undici >=7.18.0 <7.30.1, >=8.0.0 <8.12.2 | vitest > jsdom > undici (test time)                                                       | high     | Overrides `undici@>=7.18.0 <7.30.1` to 7.30.1 and `undici@>=8.0.0 <8.12.2` to 8.12.2  | 2027-01-25        |
+
+Publish dates (npm): zod 4.6.6 2026-10-11; undici 7.30.1 and 8.12.2 2026-10-15 (younger than two weeks; the only patched releases). After this change: 0 high unignored.
