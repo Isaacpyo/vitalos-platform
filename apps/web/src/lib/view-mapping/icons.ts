@@ -79,7 +79,8 @@ export function iconFor(kind: IconKind, title: string): IconName {
 /**
  * Icons for the points of a lead page and the highlights of a case study (Website Build Pack,
  * 25 Oct 2026). Content names each point's subject with a `key` (the brief's Lucide names, as a
- * guide); this maps it onto the site's own set. An unknown key gets the neutral check.
+ * guide); this maps it onto the site's own set. An unknown key gets the neutral check; a test
+ * checks that every key in the drafted content is mapped.
  */
 const byPointKey: Readonly<Record<string, IconName>> = {
   inbox: "inbox",
@@ -102,7 +103,7 @@ const byPointKey: Readonly<Record<string, IconName>> = {
   lock: "lock",
   "file-lock": "file-lock",
   accessibility: "accessibility",
-  handshake: "users",
+  handshake: "handshake",
   car: "car",
   "user-x": "user-x",
   "user-round": "user-round",
@@ -111,6 +112,47 @@ const byPointKey: Readonly<Record<string, IconName>> = {
   receipt: "receipt",
   quote: "quote",
   code: "code",
+  // Revision 2 (Website Build Pack, 25 Oct 2026).
+  "building-2": "building",
+  cpu: "chip",
+  "chart-line": "chart",
+  "list-todo": "list-checks",
+  users: "users",
+  clock: "clock",
+  mail: "mail",
+  workflow: "workflow",
+  "user-check": "user-check",
+  "user-minus": "user-minus",
+  landmark: "landmark",
+  package: "package",
+  "file-pen": "file-pen",
+  "file-check": "file-check",
+  "file-x": "file-x",
+  "file-down": "file-down",
+  "file-question": "file-question",
+  tags: "tags",
+  route: "route",
+  history: "history",
+  "refresh-cw": "refresh-cw",
+  "scan-barcode": "scan-barcode",
+  thermometer: "thermometer",
+  "pen-line": "pen-line",
+  "badge-percent": "badge-percent",
+  "message-square": "message-square",
+  "layout-dashboard": "layout-dashboard",
+  network: "network",
+  calendar: "calendar",
+  "calendar-clock": "calendar-clock",
+  "git-branch": "git-branch",
+  "list-ordered": "list-ordered",
+  "list-checks": "list-checks",
+  briefcase: "briefcase",
+  clipboard: "clipboard",
+  "clipboard-check": "clipboard-check",
+  "folder-check": "folder-check",
+  "shield-question": "shield-question",
+  pill: "pill",
+  map: "map",
 };
 
 /** The icon for a point's subject key. */

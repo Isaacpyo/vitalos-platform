@@ -1,8 +1,8 @@
 /**
- * The Health & Care lead page (Website Build Pack, 25 Oct 2026, Part 2). Every word is the
- * owner's, word for word; British English; short points only (a heading, one line, then points of
- * eight words or fewer). Point `key`s name the subject (the brief's Lucide names, as a guide); the
- * web app maps them to the site's own icons.
+ * The Health & Care lead page (Website Build Pack, 25 Oct 2026, Part 2 revision 2). Every word is
+ * the owner's, word for word; British English. Points carry substance: an icon, a bold title of up
+ * to six words and one supporting line of up to 20 words. Point `key`s name the subject (the
+ * brief's Lucide names, as a guide); the web app maps them to the site's own icons.
  *
  * Unpublished (`draft`): production keeps the standard Health & Care page until the owner approves
  * this one. `[confirm …]` marks are deliberate, visible placeholders for the owner to resolve.
@@ -27,20 +27,76 @@ export const healthCareLanding: IndustryLandingView = {
   publishStatus: "draft",
   seo: seo(
     "Health & Care: consulting for clinics and NHS teams",
-    "Give care teams their time back. Less admin. Connected systems. NHS-ready evidence. Fixed-scope engagements for clinics, GP practices and NHS teams.",
+    "We help private clinics, GP practices and NHS teams cut admin, connect their systems and get NHS-ready. Fixed-scope engagements that end with something working.",
   ),
   eyebrow: "Health & Care",
   heading: "Give care teams their time back.",
-  lead: "Less admin. Connected systems. NHS-ready evidence.",
+  lead: "We help private clinics, GP practices and NHS teams cut admin, connect their systems and get NHS-ready. Fixed-scope engagements that end with something working.",
   primaryCta: auditCta,
   secondaryCta: { label: "See offers", href: "#offers", intent: "explore" },
+  proof: [
+    { key: "timer", text: "Two-week audit" },
+    { key: "user-check", text: "Human review on every AI output" },
+    { key: "badge-check", text: "Built for NHS assurance" },
+  ],
+  audiences: {
+    heading: "Who we work with",
+    points: [
+      {
+        key: "building-2",
+        title: "Private clinics and hospitals",
+        text: "Busy front desks, insurer billing and consultant letters.",
+      },
+      {
+        key: "stethoscope",
+        title: "GP practices and PCNs",
+        text: "Document workflow, referrals and coding across one site or many.",
+      },
+      {
+        key: "landmark",
+        title: "NHS trusts",
+        text: "Integration and assurance work, alongside suppliers already on NHS frameworks.",
+      },
+      {
+        key: "truck",
+        title: "Couriers, labs and pharmacies",
+        text: "Sample and medicine movements with a record at every handoff.",
+      },
+      {
+        key: "cpu",
+        title: "Health-tech suppliers",
+        text: "The DTAC, DSPT and clinical safety evidence NHS buyers ask for.",
+      },
+    ],
+  },
   painPoints: {
     heading: "Where the time goes",
     points: [
-      { key: "inbox", text: "Referrals and results piling up" },
-      { key: "file-text", text: "Letters typed after clinic" },
-      { key: "unplug", text: "Systems that don't talk" },
-      { key: "shield-check", text: "NHS evidence you don't have yet" },
+      {
+        key: "inbox",
+        title: "Inboxes and referrals pile up",
+        text: "Letters, results and referrals arrive by email, post and portal, and each is read, matched and filed by hand.",
+      },
+      {
+        key: "file-text",
+        title: "Letters written after hours",
+        text: "Clinic letters and GP updates get typed up once the clinic day ends.",
+      },
+      {
+        key: "unplug",
+        title: "Systems that don't talk",
+        text: "Practice, billing, lab and pharmacy systems need the same details keyed twice.",
+      },
+      {
+        key: "shield-check",
+        title: "NHS evidence takes weeks",
+        text: "DTAC, DSPT, DPIAs and safety cases are slow to build from nothing.",
+      },
+      {
+        key: "package",
+        title: "Samples and medicines on paper",
+        text: "Run sheets and signatures can't prove who had what, and when.",
+      },
     ],
   },
   offers: {
@@ -50,56 +106,195 @@ export const healthCareLanding: IndustryLandingView = {
       {
         key: "timer",
         title: "Clinic Admin Audit",
-        meta: "2 weeks",
-        text: "Find your admin hours. Automate the right ones.",
+        meta: "Short (2 weeks)",
+        text: "Find where admin hours go, and what to automate first.",
+        points: [
+          { key: "check", text: "Workflow map from arrival to filing" },
+          { key: "check", text: "Baseline minutes per document" },
+          { key: "check", text: "Ranked automation plan with review points" },
+        ],
+        note: "Clinics with a backlog, or an AI plan with no starting point",
         href: routes.offer("clinic-admin-audit"),
       },
       {
         key: "plug",
         title: "Systems Integration",
         meta: "Medium",
-        text: "Enter data once, everywhere.",
+        text: "Connect practice, billing, inbox and e-signature systems so details are entered once.",
+        points: [
+          { key: "check", text: "Integrated workflows" },
+          { key: "check", text: "Alerts when a sync fails" },
+          { key: "check", text: "Runbooks for your team" },
+        ],
+        note: "Teams re-keying the same data between systems",
         href: routes.offer("systems-integration"),
       },
       {
         key: "badge-check",
         title: "NHS Assurance Readiness",
         meta: "Short",
-        text: "DTAC, DSPT and safety case, ready.",
+        text: "Build the evidence NHS buyers ask for, before procurement does.",
+        points: [
+          { key: "check", text: "DTAC form with evidence" },
+          { key: "check", text: "NHS-template DPIA and DSPT submission" },
+          { key: "check", text: "DCB0129 safety case [confirm CSO]" },
+        ],
+        note: "Suppliers with an NHS pilot or tender in view",
         href: routes.offer("nhs-assurance-readiness"),
       },
       {
         key: "truck",
         title: "Medical Logistics Digitisation",
         meta: "Medium",
-        text: "Chain of custody, proof of delivery.",
+        text: "Give every sample and medicine movement a record that stands up to audit.",
+        points: [
+          { key: "check", text: "Your brand on Fauward" },
+          {
+            key: "check",
+            text: "Driver checks for samples, fridge lines and controlled drugs [confirm]",
+          },
+          { key: "check", text: "Custody and delivery records" },
+        ],
+        note: "Couriers, labs and pharmacy groups",
         href: routes.offer("medical-logistics-digitisation"),
       },
     ],
   },
-  steps: {
-    heading: "How it works",
+  automation: {
+    heading: "What we automate",
     points: [
-      { key: "search", title: "Assess", text: "Two-week audit, measured baseline" },
-      { key: "flask-conical", title: "Pilot", text: "One workflow, one team" },
-      { key: "rocket", title: "Roll out", text: "More teams, more sites" },
-      { key: "settings", title: "Operate", text: "We run and improve it" },
+      {
+        key: "inbox",
+        title: "Inbound documents",
+        text: "Read, matched to the patient, summarised and routed with a suggested next step.",
+        note: "Reviewed by the admin team.",
+      },
+      {
+        key: "file-pen",
+        title: "Clinic letters",
+        text: "Drafted from the clinician's notes, ready to edit and sign.",
+        note: "Reviewed by the clinician.",
+      },
+      {
+        key: "tags",
+        title: "Clinical and billing codes",
+        text: "SNOMED CT for NHS work, procedure codes for insurer invoices, suggested, never applied.",
+        note: "Reviewed by a coder or clinician.",
+      },
+      {
+        key: "receipt",
+        title: "Insurer invoices",
+        text: "Prepared from the record with codes attached, ready to check and send.",
+        note: "Reviewed by the billing team.",
+      },
+      {
+        key: "route",
+        title: "Referral tracking",
+        text: "Each referral followed from arrival to booked appointment, with overdue ones flagged.",
+        note: "Reviewed by the admin team.",
+      },
+    ],
+  },
+  steps: {
+    heading: "How an engagement runs",
+    points: [
+      {
+        key: "search",
+        title: "Assess",
+        meta: "Short (2 weeks)",
+        text: "We shadow the team, map each document's path and time the work.",
+        note: "A baseline and a ranked plan",
+      },
+      {
+        key: "flask-conical",
+        title: "Pilot",
+        meta: "Short",
+        text: "One workflow, one team, measured against the baseline.",
+        note: "Before-and-after figures and a go or no-go",
+      },
+      {
+        key: "rocket",
+        title: "Roll out",
+        meta: "Medium",
+        text: "More workflows, teams and sites, with training and runbooks.",
+        note: "A live service your team owns",
+      },
+      {
+        key: "settings",
+        title: "Operate",
+        meta: "Ongoing",
+        text: "We monitor, fix and improve it under Managed Services.",
+        note: "Regular service reviews",
+      },
     ],
   },
   guardrails: {
     heading: "AI that drafts. People who decide.",
-    does: [
-      { key: "check", text: "Reads and routes inbound documents" },
-      { key: "check", text: "Drafts letters for review" },
-      { key: "check", text: "Suggests codes for review" },
-    ],
-    doesNot: [
-      { key: "x", text: "No diagnosis" },
-      { key: "x", text: "No clinical triage" },
-      { key: "x", text: "No treatment advice" },
+    columns: [
+      {
+        heading: "What the agents do",
+        points: [
+          {
+            key: "check",
+            title: "Read and route",
+            text: "Inbound documents matched, summarised and sent to the right person.",
+          },
+          {
+            key: "check",
+            title: "Draft",
+            text: "Letters and summaries prepared for a clinician to edit.",
+          },
+          {
+            key: "check",
+            title: "Suggest",
+            text: "Codes and next steps proposed, never applied without approval.",
+          },
+        ],
+      },
+      {
+        heading: "What they never do",
+        points: [
+          { key: "x", title: "Diagnose", text: "No diagnostic suggestions in any output." },
+          {
+            key: "x",
+            title: "Triage clinically",
+            text: "Agents route by document type and sender; urgency stays a clinical call.",
+          },
+          {
+            key: "x",
+            title: "Advise on treatment",
+            text: "No treatment or follow-up recommendations.",
+          },
+        ],
+      },
+      {
+        heading: "How we keep it that way",
+        points: [
+          {
+            key: "file-check",
+            title: "Written intended purpose",
+            text: "Agreed with you before any deployment.",
+          },
+          {
+            key: "user-check",
+            title: "Review on every output",
+            text: "Nothing reaches a record or a patient unapproved.",
+          },
+          {
+            key: "history",
+            title: "Everything logged",
+            text: "What was suggested, and what the person changed.",
+          },
+          {
+            key: "refresh-cw",
+            title: "Re-checked on change",
+            text: "Every new feature is tested against the line.",
+          },
+        ],
+      },
     ],
     link: {
-      label: "Read the MHRA briefing",
+      label: "Read our briefing on the MHRA's July 2026 guidance",
       href: routes.insight("mhra-ai-scribe-guidance-clinic-admin"),
       intent: "read",
       insightSlug: "mhra-ai-scribe-guidance-clinic-admin",
@@ -107,33 +302,103 @@ export const healthCareLanding: IndustryLandingView = {
   },
   pilots: {
     heading: "In pilot: design partners wanted",
-    points: [
+    products: [
       {
         key: "bot",
+        meta: "Pilot",
         title: "Admin agents for clinics [confirm name]",
-        text: "Triage, letters, coding. Review built in.",
+        text: "Inbox triage, letter drafting and coding support, with review built in.",
+        points: [
+          { key: "inbox", text: "Triage across email, scanned post and portals" },
+          { key: "file-pen", text: "Letters drafted from notes" },
+          { key: "tags", text: "Codes suggested for review" },
+        ],
       },
       {
         key: "package-check",
+        meta: "Pilot",
         title: "Fauward for healthcare logistics",
-        text: "Samples, fridge lines, controlled drugs. [confirm features]",
+        text: "The logistics platform we built and run, extended for samples and medicines. [confirm features]",
+        points: [
+          { key: "scan-barcode", text: "Scan at every handoff" },
+          { key: "thermometer", text: "Fridge-line and sample checks" },
+          { key: "pen-line", text: "Dual signatures for controlled drugs" },
+        ],
       },
     ],
+    benefits: {
+      heading: "What design partners get [confirm all four]",
+      points: [
+        {
+          key: "handshake",
+          title: "Shaped around your workflow",
+          text: "Your team's needs set the pilot's priorities.",
+        },
+        { key: "badge-percent", title: "Founding terms", text: "Pricing held for early partners." },
+        {
+          key: "message-square",
+          title: "Direct line to the builders",
+          text: "Questions answered by the people writing the software.",
+        },
+        {
+          key: "chart-line",
+          title: "Measured results",
+          text: "Before-and-after figures you can take to your board.",
+        },
+      ],
+    },
+    ask: "What we ask: a named contact, short regular reviews, and permission to publish anonymised results.",
     cta: partnerCta,
   },
-  trust: {
-    heading: "Trust",
+  systems: {
+    heading: "Systems we work with",
     points: [
-      { key: "stethoscope", text: "Clinical safety officer [confirm]" },
-      { key: "shield-check", text: "DSPT support" },
-      { key: "lock", text: "UK data hosting [confirm]" },
-      { key: "file-lock", text: "DPIA for every deployment" },
-      { key: "badge-check", text: "Cyber Essentials [confirm]" },
-      { key: "accessibility", text: "WCAG 2.2 AA" },
+      { key: "layout-dashboard", text: "Practice management systems with APIs" },
+      { key: "mail", text: "Shared inboxes on Microsoft 365 and Google Workspace" },
+      { key: "receipt", text: "Insurer billing and invoicing" },
+      { key: "pen-line", text: "E-signature" },
+      { key: "flask-conical", text: "Lab and pharmacy systems" },
+      {
+        key: "network",
+        text: "NHS interfaces such as GP Connect and MESH, where your organisation has access",
+      },
+    ],
+    note: "We confirm access and data flows during the audit.",
+  },
+  trust: {
+    heading: "Trust and regulation",
+    points: [
+      {
+        key: "stethoscope",
+        title: "Clinical safety",
+        text: "DCB0129 safety cases reviewed by a qualified Clinical Safety Officer. [confirm partner]",
+      },
+      {
+        key: "shield-check",
+        title: "NHS data security",
+        text: "Help completing the Data Security and Protection Toolkit.",
+      },
+      {
+        key: "file-lock",
+        title: "Data protection",
+        text: "A DPIA and processor terms for every deployment; purpose, access and retention agreed first.",
+      },
+      {
+        key: "lock",
+        title: "UK hosting",
+        text: "Client data hosted in the UK by default. [confirm]",
+      },
+      {
+        key: "badge-check",
+        title: "Cyber Essentials",
+        text: "[confirm status before stating anything]",
+      },
+      { key: "accessibility", title: "Accessibility", text: "Services built to WCAG 2.2 AA." },
     ],
   },
   caseStudies: {
     heading: "Case studies",
+    fallbackSlugs: ["fauward-white-label-logistics-platform"],
     fallback: {
       key: "handshake",
       title: "Become a design partner",
@@ -145,27 +410,37 @@ export const healthCareLanding: IndustryLandingView = {
   faq: [
     {
       question: "Do your AI tools make clinical decisions?",
-      answer: "No. Your team approves every output.",
+      answer:
+        "No. They read, draft, route and suggest, and a member of your team approves every output before it reaches a record or a patient.",
     },
     {
-      question: "Do you work with the NHS?",
-      answer: "Yes: practices and PCNs directly, trusts with framework partners.",
+      question: "Can you work with NHS organisations?",
+      answer:
+        "Yes. GP practices and PCNs can contract with us directly; for trusts, we work alongside suppliers already on NHS frameworks.",
     },
     {
       question: "Which systems can you connect?",
-      answer: "Practice systems with APIs, inboxes, billing, e-signature, lab and pharmacy.",
+      answer:
+        "Practice systems with APIs, shared inboxes, insurer billing, e-signature, and lab or pharmacy systems. We confirm access during the audit.",
     },
     {
       question: "How long is the audit, and what does it cost?",
-      answer: "Two weeks. Pricing comes in a proposal.",
+      answer: "Two weeks. Pricing comes in a proposal once we understand your scope.",
     },
     {
-      question: "Do you move specimens or medicines?",
-      answer: "No. We build the software that records each step.",
+      question: "What happens to patient data?",
+      answer:
+        "It's processed under a data processing agreement and a DPIA, hosted in the UK [confirm], and used only for the agreed purpose.",
+    },
+    {
+      question: "Do you move samples or medicines?",
+      answer:
+        "No. We build the software couriers, labs and pharmacies use; packing and handling stay with them, and the software records each step.",
     },
   ],
   closing: {
     heading: "Have a clinic problem worth solving?",
+    line: "Tell us where the admin hours go. We'll come back with a scoped audit proposal.",
     primary: auditCta,
     secondary: { label: "Explore what we do", href: routes.whatWeDo(), intent: "explore" },
   },

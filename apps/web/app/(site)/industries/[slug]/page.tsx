@@ -14,7 +14,9 @@ import {
 import {
   IndustryLandingTemplate,
   hasLanding,
+  landingCaseStudy,
 } from "../../../../src/templates/industry/IndustryLandingTemplate";
+import { loadCaseStudy } from "../../../../src/templates/work/load";
 import { loadChromeContent } from "../../../../src/components/site-chrome/load";
 import {
   isInsightPublished,
@@ -50,11 +52,20 @@ export default async function IndustryPage({ params }: Props) {
   if (hasLanding(doc)) {
     const landing = doc.landing;
     const link = landing.guardrails.link;
-    const [chrome, insights, linkPublished] = await Promise.all([
+    // The industry's own case studies once one is published; until then the fallback stories
+    // this deployment serves (a missing or unpublished story is left out, never linked).
+    const fallback = doc.work.length === 0;
+    const [chrome, insights, linkPublished, fallbackStudies] = await Promise.all([
       loadChromeContent(),
       loadLatestTopicPosts(landing.insights.topicSlug),
       link ? isInsightPublished(link.insightSlug) : Promise.resolve(false),
+      fallback
+        ? Promise.all(landing.caseStudies.fallbackSlugs.map((slug) => loadCaseStudy(slug)))
+        : Promise.resolve([]),
     ]);
+    const caseStudies = fallback
+      ? fallbackStudies.flatMap((data) => (data ? [landingCaseStudy(data.study)] : []))
+      : doc.work.map(landingCaseStudy);
     return (
       <>
         <JsonLd
@@ -69,7 +80,8 @@ export default async function IndustryPage({ params }: Props) {
         <IndustryLandingTemplate
           industry={doc}
           offerSlugs={new Set(chrome.offers.map((offer) => offer.slug))}
-          caseStudies={doc.work}
+          caseStudies={caseStudies}
+          caseStudiesAreFallback={fallback}
           insights={insights}
           // Linked only once the briefing is published, so the page never links to a 404.
           showGuardrailLink={linkPublished}

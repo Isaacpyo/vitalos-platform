@@ -1,7 +1,7 @@
 import { ctas, isUnpublished, megaMenuColumns, routes } from "@vitalos/cms";
-import type { OfferView } from "@vitalos/cms";
+import type { LandingSection, OfferView } from "@vitalos/cms";
 import { Button, DefinitionList, FeatureGrid, Icon } from "@vitalos/ui";
-import type { DefinitionItem, IconName } from "@vitalos/ui";
+import type { DefinitionItem, IconName, SectionTone } from "@vitalos/ui";
 import { MediaSlot } from "../../components/media-slot";
 import { DraftNotice } from "../../components/placeholder-notice";
 import { PageMain } from "../../components/site-chrome/PageMain";
@@ -12,6 +12,7 @@ import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { toRows } from "../../lib/view-mapping/patterns";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
+import { FaqList, PointGrid, PointRows } from "../commercial/points";
 
 export interface OfferTemplateProps {
   offer: OfferView;
@@ -31,9 +32,21 @@ export function offerDuration(offer: Pick<OfferView, "durationCategory" | "durat
   return category && detail ? `${category} (${detail})` : (category ?? detail);
 }
 
-/** True for an offer in the points layout (Website Build Pack): short points instead of paragraphs. */
-export const usesPoints = (offer: OfferView): boolean =>
-  (offer.audiencePoints?.length ?? 0) > 0 || (offer.triggerPoints?.length ?? 0) > 0;
+/**
+ * True for an offer in the points layout (Website Build Pack, revision 2): headed sections of
+ * icon points in place of the engagement paragraphs and lists.
+ */
+export const usesPoints = (offer: OfferView): boolean => (offer.sections?.length ?? 0) > 0;
+
+/** A section's points: cards when every point has a title, otherwise a compact list of rows. */
+function SectionPoints({ section }: Readonly<{ section: LandingSection }>) {
+  const titled = section.points.every((point) => Boolean(point.title));
+  return titled ? (
+    <PointGrid points={section.points} />
+  ) : (
+    <PointRows points={section.points} columns={3} />
+  );
+}
 
 /** The offer's registered hero visual, if it has one (`offers.{slug}.visual`). */
 const visualSlot = (slug: string) => {
@@ -62,8 +75,10 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
  * Offer page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
  * compact dark hero with the offer's mark, the engagement summary as a definition list, what the
  * client receives, what is required from them, what is not included (rows), and where the offer
- * leads (icon cards), then the closing card. The call
- * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
+ * leads (icon cards), then the closing card. An offer in the points layout (Website Build Pack,
+ * revision 2) shows its own headed sections of icon points and a short FAQ instead of the summary
+ * and lists. The call to action starts the enquiry with this offer pre-selected unless the CMS
+ * supplies its own.
  */
 export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
   const cta = ctaToLink(offer.cta) ?? {
@@ -124,43 +139,43 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
                 />
               </Band>
             ) : null,
+          ...(offer.sections ?? []).map(
+            (section) =>
+              function SectionBand(tone: SectionTone) {
+                return section.points.length > 0 ? (
+                  <Band
+                    tone={tone}
+                    heading={section.heading}
+                    eyebrow={offer.title}
+                    intro={section.intro}
+                  >
+                    <SectionPoints section={section} />
+                  </Band>
+                ) : null;
+              },
+          ),
           (tone) =>
-            points && (offer.audiencePoints?.length ?? 0) > 0 ? (
-              <Band tone={tone} heading={structuralLabels.audience} eyebrow={offer.title}>
-                <FeatureGrid
-                  variant="rows"
-                  items={statements(offer.audiencePoints ?? [], "building")}
-                />
-              </Band>
-            ) : null,
-          (tone) =>
-            points && (offer.triggerPoints?.length ?? 0) > 0 ? (
-              <Band tone={tone} heading={structuralLabels.trigger} eyebrow={offer.title}>
-                <FeatureGrid
-                  variant="rows"
-                  items={statements(offer.triggerPoints ?? [], "target")}
-                />
-              </Band>
-            ) : null,
-          (tone) =>
-            offer.outputs.length > 0 ? (
+            !points && offer.outputs.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.outputs} eyebrow={offer.title}>
-                <FeatureGrid
-                  variant="rows"
-                  items={statements(offer.outputs, points ? "check" : undefined)}
-                />
+                <FeatureGrid variant="rows" items={statements(offer.outputs)} />
               </Band>
             ) : null,
           (tone) =>
-            offer.requirements.length > 0 ? (
+            !points && offer.requirements.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.requirements} eyebrow={offer.title}>
                 <FeatureGrid variant="rows" items={statements(offer.requirements, "users")} />
               </Band>
             ) : null,
           (tone) =>
-            offer.exclusions.length > 0 ? (
+            !points && offer.exclusions.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.exclusions} eyebrow={offer.title}>
                 <FeatureGrid variant="rows" items={statements(offer.exclusions, "minus")} />
+              </Band>
+            ) : null,
+          (tone) =>
+            (offer.faq?.length ?? 0) > 0 ? (
+              <Band tone={tone} heading={structuralLabels.faq} eyebrow={offer.title}>
+                <FaqList entries={offer.faq ?? []} />
               </Band>
             ) : null,
           (tone) =>

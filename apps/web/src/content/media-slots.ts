@@ -114,8 +114,8 @@ export const mediaSlots = [
     ratio: "16:9",
     size: [1600, 900],
     brief:
-      "A clinic front desk: real photography of a UK clinic's reception or admin area, used with the clinic's permission. No patients identifiable, no screens showing patient information. No stock or AI-generated imagery.",
-    alt: "A clinic front desk",
+      "A clinic front desk with the admin team: real photography of a UK clinic's reception or admin area, used with the clinic's permission. No patients identifiable, no screens showing patient information. No stock or AI-generated imagery.",
+    alt: "A clinic front desk with the admin team at work",
   },
   {
     id: "health-care.agents",
@@ -144,8 +144,8 @@ export const mediaSlots = [
     ratio: "16:9",
     size: [1600, 900],
     brief:
-      "A workflow map from a clinic admin audit: a diagram of how documents arrive, are handled and filed, with sample labels only.",
-    alt: "A workflow map of a clinic's admin, from referral to filing",
+      "A workflow map on a wall from a clinic admin audit: how documents arrive, are handled and filed, with sample labels only.",
+    alt: "A workflow map on a wall, tracing a clinic's documents from arrival to filing",
   },
   {
     id: "offers.nhs-assurance-readiness.visual",
@@ -154,8 +154,8 @@ export const mediaSlots = [
     ratio: "16:9",
     size: [1600, 900],
     brief:
-      "An evidence pack: the documents a supplier prepares for NHS assurance (DTAC form, DPIA, DSPT submission), shown as a diagram or a photograph of sample documents. No NHS logo or NHS identity.",
-    alt: "An NHS assurance evidence pack: DTAC form, DPIA and DSPT submission",
+      "An evidence pack checklist: the documents a supplier prepares for NHS assurance (DTAC form, DPIA, DSPT submission), shown as a checklist or a photograph of sample documents. No NHS logo or NHS identity.",
+    alt: "An evidence pack checklist for NHS assurance: DTAC form, DPIA and DSPT submission",
   },
   {
     id: "offers.medical-logistics-digitisation.visual",
@@ -164,8 +164,8 @@ export const mediaSlots = [
     ratio: "16:9",
     size: [1600, 900],
     brief:
-      "Fauward Go, the driver app, scanning a sample at collection, captured with sample data only.",
-    alt: "A driver scanning a sample with the Fauward driver app",
+      "A driver scanning a sample box with Fauward Go, the driver app, at collection, captured with sample data only.",
+    alt: "A driver scanning a sample box with the Fauward driver app",
   },
   {
     id: "work.visual",

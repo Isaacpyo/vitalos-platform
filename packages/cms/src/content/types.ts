@@ -256,12 +256,14 @@ export interface OfferView extends DocBase {
   practices: readonly PracticeSummary[];
   cta?: CtaView;
   /**
-   * The points layout (Website Build Pack, 25 Oct 2026): who it is for and the triggers as short
-   * points of eight words or fewer, rendered with icons instead of the engagement paragraphs. When
-   * present, `audience` and `trigger` still hold the same words as plain text for search and Relay.
+   * The points layout (Website Build Pack, revision 2): headed sections of icon points (a title
+   * and one line each) in place of the engagement paragraphs. When present, `audience`, `trigger`,
+   * `outputs`, `requirements` and `exclusions` still hold the same words as plain text for search,
+   * llms.txt and Relay.
    */
-  audiencePoints?: readonly string[];
-  triggerPoints?: readonly string[];
+  sections?: readonly LandingSection[];
+  /** Questions and answers shown on the page (FAQPage structured data). */
+  faq?: readonly { question: string; answer: string }[];
   /** A finer duration than the category, shown beside it, for example "2 weeks". */
   durationDetail?: string;
   /** Case studies that link to this offer. */
@@ -287,52 +289,81 @@ export interface IndustryView extends DocBase {
 }
 
 /**
- * One short point of a lead page: a line of eight words or fewer, or a card (title, line, an
- * optional short fact and link). `key` names the point's subject; the web app picks its icon by
- * it, so content never carries presentation.
+ * One point of a lead or offer page (Website Build Pack, revision 2): a bold title of up to six
+ * words and one supporting line of up to 20 words, or a line alone where the brief gives no
+ * title. `key` names the subject; the web app maps it to the site's own icons, so content never
+ * carries presentation.
  */
 export interface LandingPoint {
   key: string;
-  text: string;
+  /** Up to six words. */
   title?: string;
-  /** A short fact beside the title, for example a duration. */
+  /** One line of up to 20 words. */
+  text: string;
+  /** A short fact beside the title, for example a duration or a status chip. */
   meta?: string;
+  /** A closing note under the line, for example who reviews the output. */
+  note?: string;
+  /** Sub-points of a card, for example what an offer delivers. */
+  points?: readonly LandingPoint[];
   href?: string;
 }
 
-/** A headed group of points on a lead page. */
+/** A headed group of points on a lead or offer page. */
 export interface LandingSection {
   heading: string;
+  /** One- or two-line introduction under the heading. */
+  intro?: string;
   /** In-page anchor, when other links point at the section (for example "offers"). */
   anchor?: string;
   points: readonly LandingPoint[];
+  /** A line under the points, for example "We confirm access and data flows during the audit." */
+  note?: string;
 }
 
-/** The copy of an industry lead page: short points only (long text belongs in Insights). */
+/** The copy of an industry lead page: scannable points with substance (revision 2). */
 export interface IndustryLandingView {
   publishStatus?: PublishStatus;
   seo: SeoView;
   eyebrow: string;
   heading: string;
+  /** One or two lines. */
   lead: string;
   primaryCta: CtaView;
   secondaryCta: CtaView;
+  /** Proof chips under the hero buttons (icon and a few words each). */
+  proof: readonly LandingPoint[];
+  audiences: LandingSection;
   painPoints: LandingSection;
+  /** Offer cards: duration in `meta`, what you get in `points`, who it suits in `note`. */
   offers: LandingSection;
+  /** What the agents automate: each tile names who reviews it in `note`. */
+  automation: LandingSection;
+  /** Engagement steps: duration in `meta`, what happens in `text`, what you leave with in `note`. */
   steps: LandingSection;
-  /** What AI does (`does`) and never does (`doesNot`), with a link to the briefing on the line. */
+  /** What AI does, never does and how that is kept, in columns, with the briefing link. */
   guardrails: {
     heading: string;
-    does: readonly LandingPoint[];
-    doesNot: readonly LandingPoint[];
-    /** Shown in production only once the linked Insight is published. */
+    columns: readonly LandingSection[];
+    /** Shown only once the linked Insight is published. */
     link?: CtaView & { insightSlug: string };
   };
-  pilots: LandingSection & { cta: CtaView };
+  pilots: {
+    heading: string;
+    /** Product cards: status chip in `meta`, three points in `points`. */
+    products: readonly LandingPoint[];
+    benefits: LandingSection;
+    /** What design partners are asked for. */
+    ask: string;
+    cta: CtaView;
+  };
+  systems: LandingSection;
   trust: LandingSection;
   caseStudies: {
     heading: string;
-    /** The card shown while no case study of this industry is published. */
+    /** Case studies shown, when served, while no case study of this industry is published. */
+    fallbackSlugs: readonly string[];
+    /** The card shown beside them. */
     fallback: LandingPoint;
   };
   insights: {
@@ -341,7 +372,7 @@ export interface IndustryLandingView {
     topicSlug: string;
   };
   faq: readonly { question: string; answer: string }[];
-  closing: { heading: string; primary: CtaView; secondary: CtaView };
+  closing: { heading: string; line: string; primary: CtaView; secondary: CtaView };
 }
 
 /**
