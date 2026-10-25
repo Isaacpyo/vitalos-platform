@@ -6,7 +6,8 @@ import type {
   IndustryView,
   LandingPoint,
 } from "@vitalos/cms";
-import { Button, Icon, IconTile, RevealItem, TerminalCTA, TextLink } from "@vitalos/ui";
+import { Button, RevealItem, TerminalCTA, TextLink } from "@vitalos/ui";
+import { SubjectIcon, SubjectIconTile } from "@vitalos/ui/subject-icons";
 import { MediaSlot } from "../../components/media-slot";
 import { DraftNotice } from "../../components/placeholder-notice";
 import { PageMain } from "../../components/site-chrome/PageMain";
@@ -314,7 +315,7 @@ function ProofChips({ points }: Readonly<{ points: readonly LandingPoint[] }>) {
           key={`${point.key}-${index}`}
           className="inline-flex items-center gap-(--space-2) rounded-full border border-white/25 bg-white/10 px-(--space-4) py-(--space-2) text-small text-white"
         >
-          <Icon name={pointIcon(point.key)} size={16} />
+          <SubjectIcon name={pointIcon(point.key)} size={16} />
           <span>{point.text}</span>
         </li>
       ))}
@@ -336,7 +337,7 @@ function Pilots({ products }: Readonly<{ products: readonly LandingPoint[] }>) {
           >
             {slot ? <MediaSlot id={slot} sizes="(min-width: 768px) 45vw, 100vw" /> : null}
             <span className="flex items-start justify-between gap-(--space-3)">
-              <IconTile name={pointIcon(product.key)} />
+              <SubjectIconTile name={pointIcon(product.key)} />
               {product.meta ? <Chip>{product.meta}</Chip> : null}
             </span>
             <span className="block min-w-0">

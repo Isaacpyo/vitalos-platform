@@ -1,7 +1,6 @@
 import { isUnpublished, navLabels, routes } from "@vitalos/cms";
 import type { CaseStudyView } from "@vitalos/cms";
 import {
-  IconTile,
   MetaRow,
   OutcomeStats,
   RelatedContentRail,
@@ -9,6 +8,7 @@ import {
   Testimonial,
   isNonEmpty,
 } from "@vitalos/ui";
+import { SubjectIconTile } from "@vitalos/ui/subject-icons";
 import { DraftNotice, PlaceholderNotice } from "../../components/placeholder-notice";
 import { pointIcon } from "../../lib/view-mapping/icons";
 import { RichText } from "../../components/rich-text";
@@ -125,7 +125,7 @@ function Highlights({ study }: Readonly<{ study: CaseStudyView }>) {
           key={`${point.key}-${index}`}
           className="flex min-w-0 items-center gap-(--space-4) rounded-2xl border border-tone-border bg-tone-bg p-(--space-5) text-body-l font-semibold text-tone-heading"
         >
-          <IconTile name={pointIcon(point.key)} />
+          <SubjectIconTile name={pointIcon(point.key)} />
           <span className="min-w-0">{point.text}</span>
         </li>
       ))}

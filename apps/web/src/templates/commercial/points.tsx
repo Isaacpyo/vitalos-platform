@@ -1,5 +1,6 @@
 import type { LandingPoint } from "@vitalos/cms";
-import { Disclosure, Icon, IconTile, RevealItem } from "@vitalos/ui";
+import { Disclosure, Icon, RevealItem } from "@vitalos/ui";
+import { SubjectIcon, SubjectIconTile } from "@vitalos/ui/subject-icons";
 import { pointIcon } from "../../lib/view-mapping/icons";
 
 /**
@@ -92,7 +93,7 @@ export function PointCard({
       )}
     >
       <span className="flex items-start justify-between gap-(--space-3)">
-        <IconTile name={pointIcon(point.key)} />
+        <SubjectIconTile name={pointIcon(point.key)} />
         {point.meta ? <Chip>{point.meta}</Chip> : null}
         {number !== undefined && !point.meta ? (
           <span aria-hidden="true" className="font-mono text-small text-tone-muted">
@@ -169,7 +170,11 @@ export function SubPoints({ points }: Readonly<{ points: readonly LandingPoint[]
           key={`${sub.key}-${index}`}
           className="flex items-start gap-(--space-2) text-small text-tone-text"
         >
-          <Icon name={pointIcon(sub.key)} size={16} className="mt-0.5 shrink-0 text-tone-tile-fg" />
+          <SubjectIcon
+            name={pointIcon(sub.key)}
+            size={16}
+            className="mt-0.5 shrink-0 text-tone-tile-fg"
+          />
           <span className="min-w-0">{sub.text}</span>
         </li>
       ))}
@@ -200,7 +205,7 @@ export function PointRows({
           key={`${point.key}-${index}`}
           className="flex min-w-0 items-start gap-(--space-4) border-t border-tone-border py-(--space-4)"
         >
-          <IconTile name={pointIcon(point.key)} size="sm" />
+          <SubjectIconTile name={pointIcon(point.key)} size="sm" />
           <span className="block min-w-0">
             {point.title ? (
               <h3 className="m-0 text-body-l font-semibold text-balance text-tone-heading">

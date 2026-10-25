@@ -1,5 +1,6 @@
 import { brandName, industryNames, offerNames, practiceNames, solutionNames } from "@vitalos/cms";
 import type { IconName } from "@vitalos/ui";
+import type { SubjectIconName } from "@vitalos/ui/subject-icons";
 
 /**
  * Decorative subject icons for cards and rows (the owner comp's icon tiles, ADR-023). Icons are
@@ -79,10 +80,11 @@ export function iconFor(kind: IconKind, title: string): IconName {
 /**
  * Icons for the points of a lead page and the highlights of a case study (Website Build Pack,
  * 25 Oct 2026). Content names each point's subject with a `key` (the brief's Lucide names, as a
- * guide); this maps it onto the site's own set. An unknown key gets the neutral check; a test
+ * guide); this maps it onto the site's own set, drawn as server-only subject icons
+ * (`@vitalos/ui/subject-icons`) so they never ship in client JavaScript. An unknown key gets the neutral check; a test
  * checks that every key in the drafted content is mapped.
  */
-const byPointKey: Readonly<Record<string, IconName>> = {
+const byPointKey: Readonly<Record<string, SubjectIconName>> = {
   inbox: "inbox",
   "file-text": "document",
   unplug: "unplug",
@@ -156,4 +158,4 @@ const byPointKey: Readonly<Record<string, IconName>> = {
 };
 
 /** The icon for a point's subject key. */
-export const pointIcon = (key: string): IconName => byPointKey[key] ?? "check";
+export const pointIcon = (key: string): SubjectIconName => byPointKey[key] ?? "check";
