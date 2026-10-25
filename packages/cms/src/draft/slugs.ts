@@ -37,6 +37,10 @@ export const offerSlugs = [
   "engineering-rescue",
   "managed-engineering-application-care",
   "product-discovery",
+  // Health & Care offers (Website Build Pack, 25 Oct 2026); unpublished until approved.
+  "clinic-admin-audit",
+  "nhs-assurance-readiness",
+  "medical-logistics-digitisation",
 ] as const;
 export type OfferSlug = (typeof offerSlugs)[number];
 

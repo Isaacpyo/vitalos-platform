@@ -369,7 +369,8 @@ export interface components {
         | "engineering_note"
         | "guide"
         | "research_report"
-        | "case_derived_insight";
+        | "case_derived_insight"
+        | "news";
       label: string;
       plural: string;
       slug: components["schemas"]["Slug"];

@@ -124,6 +124,95 @@ const paths = {
   link: (
     <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66L11.5 6.8M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.46" />
   ),
+  // Added for the Health & Care pages (Website Build Pack, 25 Oct 2026), drawn on the same grid,
+  // stroke and caps. The brief names Lucide icons as a guide; these are this set's own drawings.
+  inbox: <path d="M3 13h5l1.5 3h5l1.5-3h5M3 13l3-8h12l3 8v7H3v-7Z" />,
+  plug: <path d="M9 3v4m6-4v4M7 7h10v4a5 5 0 0 1-10 0V7Zm5 9v5" />,
+  unplug: <path d="M9 3v4m6-4v4M7 7h10v4a5 5 0 0 1-10 0V7Zm5 9v5M3 3l18 18" />,
+  timer: (
+    <>
+      <circle cx="12" cy="13.5" r="7.5" />
+      <path d="M12 10v3.5l2.5 2M9.5 3h5M12 3v2.5" />
+    </>
+  ),
+  "badge-check": (
+    <path d="m12 3 2.2 1.6 2.7-.2.9 2.6L20 8.6l-.8 2.6.8 2.6-2.2 1.6-.9 2.6-2.7-.2L12 21l-2.2-1.6-2.7.2-.9-2.6L4 15.4l.8-2.6L4 10.2 6.2 8.6 7.1 6l2.7.2L12 3Zm-3 9 2 2 4-4" />
+  ),
+  truck: (
+    <>
+      <path d="M3 6h11v10H3V6Zm11 4h4l3 3.5V16h-7" />
+      <circle cx="7" cy="17.5" r="1.75" />
+      <circle cx="17" cy="17.5" r="1.75" />
+    </>
+  ),
+  rocket: (
+    <path d="M12 3c3.5 2 5 5.5 5 9l-2 4H9l-2-4c0-3.5 1.5-7 5-9Zm0 6.5h.01M9 16l-3 3v-4.5L7.5 13M15 16l3 3v-4.5L16.5 13M10.5 19.5h3" />
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <circle cx="12" cy="12" r="6.5" />
+      <path d="M12 3v2.5m0 13V21M3 12h2.5m13 0H21M5.6 5.6l1.8 1.8m9.2 9.2 1.8 1.8M5.6 18.4l1.8-1.8m9.2-9.2 1.8-1.8" />
+    </>
+  ),
+  bot: (
+    <>
+      <rect x="4" y="8" width="16" height="11" />
+      <path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5M2 12v3m20-3v3" />
+    </>
+  ),
+  "package-check": (
+    <path d="M3 7.5 12 3l9 4.5V12M3 7.5v9L12 21M3 7.5l9 4.5 9-4.5M12 12v9m3-3 2 2 4-4" />
+  ),
+  stethoscope: (
+    <>
+      <path d="M6 3H5v6a4 4 0 0 0 8 0V3h-1M9 13v2a5 5 0 0 0 10 0v-2" />
+      <circle cx="19" cy="11" r="2" />
+    </>
+  ),
+  "file-lock": (
+    <>
+      <path d="M11 21H6V3h8l4 4v4M14 3v4h4" />
+      <rect x="13" y="15" width="8" height="6" />
+      <path d="M15 15v-2a2 2 0 0 1 4 0v2" />
+    </>
+  ),
+  accessibility: (
+    <>
+      <circle cx="12" cy="4.5" r="1.5" />
+      <path d="m5 8 7 1.5L19 8m-7 1.5V14l-3.5 6.5M12 14l3.5 6.5" />
+    </>
+  ),
+  car: (
+    <>
+      <path d="M3 16v-4l2-5h14l2 5v4H3Zm0-4h18" />
+      <circle cx="7.5" cy="16.5" r="1.75" />
+      <circle cx="16.5" cy="16.5" r="1.75" />
+    </>
+  ),
+  "user-x": (
+    <>
+      <circle cx="9" cy="8" r="3.25" />
+      <path d="M3 20v-1.5A4.5 4.5 0 0 1 7.5 14h3a4.5 4.5 0 0 1 4.5 4.5V20M17 8l4 4m0-4-4 4" />
+    </>
+  ),
+  "user-round": (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </>
+  ),
+  palette: (
+    <path d="M12 3a9 9 0 0 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.4-1.3-1.8-1.3-3 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.5 17 3 12 3Zm-4.5 8h.01m1.99-4h.01m4.99 0h.01M17 10.5h.01" />
+  ),
+  smartphone: (
+    <>
+      <rect x="6.5" y="3" width="11" height="18" />
+      <path d="M11 17.5h2" />
+    </>
+  ),
+  receipt: <path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5-2 1.5-2.5-1.5L5 21V3Zm4 5h6m-6 4h6m-6 4h3" />,
+  quote: <path d="M4 12a6 6 0 0 1 4-5.5M4 12h5v5H4v-5Zm9 0a6 6 0 0 1 4-5.5M13 12h5v5h-5v-5Z" />,
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

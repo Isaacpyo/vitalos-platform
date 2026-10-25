@@ -67,7 +67,7 @@ describe("header model", () => {
     expect(open[0]?.links.map((l) => l.label)).toEqual([
       "About",
       "How We Work",
-      "Work",
+      "Case studies",
       "Insights",
       "All What We Do",
       "Careers",
@@ -429,5 +429,47 @@ describe("Insights and Careers in the chrome follow the admin's site state", () 
     expect(closed.open.insights).toBe(false);
     expect(closed.open.careers).toBe(false);
     expect(closed.open.work).toBe(gates.open.work);
+  });
+});
+
+describe("lead page navigation (Website Build Pack, 25 Oct 2026)", () => {
+  const healthCare = { id: "industry-health-care", slug: "health-care", title: "Health & Care" };
+
+  it("adds a top-level link after What We Do for a served lead page", () => {
+    const { items } = buildHeaderModel({
+      ...base,
+      industries: [healthCare],
+      leadPages: [healthCare],
+      gates: evaluateGates({ industries: 1 }),
+    });
+    expect(items.map((item) => item.label)).toEqual([
+      "What We Do",
+      "Health & Care",
+      "Who We Are",
+      "Support",
+    ]);
+    expect(items[1]).toEqual({
+      key: "industry-health-care",
+      label: "Health & Care",
+      href: "/industries/health-care",
+    });
+  });
+
+  it("adds nothing without a served lead page or while the Industries gate is closed", () => {
+    const labels = (content: ChromeContent) =>
+      buildHeaderModel(content).items.map((item) => item.label);
+    expect(labels({ ...base, gates: evaluateGates({ industries: 1 }) })).not.toContain(
+      "Health & Care",
+    );
+    expect(labels({ ...base, leadPages: [healthCare] })).not.toContain("Health & Care");
+  });
+});
+
+describe("active section of a lead page", () => {
+  it("marks the lead page's own link, and keeps Who We Are for other industries", () => {
+    const items = [{ key: "industry-health-care", href: "/industries/health-care" }];
+    expect(activeSectionForPath("/industries/health-care", items)).toBe("industry-health-care");
+    expect(activeSectionForPath("/industries/growth-technology", items)).toBe("who-we-are");
+    expect(activeSectionForPath("/industries/health-care")).toBe("who-we-are");
   });
 });

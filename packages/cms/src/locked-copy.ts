@@ -37,7 +37,7 @@ export const ctas = {
 export const navLabels = {
   whatWeDo: "What We Do",
   industries: "Industries",
-  work: "Work",
+  work: "Case studies",
   insights: "Insights",
   labs: "Labs",
   about: "About",
@@ -134,6 +134,10 @@ export const offerNames = [
   "Engineering Rescue",
   "Managed Engineering & Application Care",
   "Product Discovery",
+  // Health & Care offers (Website Build Pack, 25 Oct 2026).
+  "Clinic Admin Audit",
+  "NHS Assurance Readiness",
+  "Medical Logistics Digitisation",
 ] as const;
 
 /** Priority offers (names). Stage 10 §12 (Launch-critical pages, "Offers - priority"). */

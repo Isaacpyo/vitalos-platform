@@ -13,7 +13,16 @@ from apps.audit.models import AuditEvent
 from apps.content_sync import render
 from apps.content_sync.models import SiteSettings, SyncEvent
 from apps.insights import importing, services
-from apps.insights.models import Author, AuthorKind, CheckKey, EditorialCheck, Post, PostRevision, PostStatus
+from apps.insights.models import (
+    Author,
+    AuthorKind,
+    CheckKey,
+    EditorialCheck,
+    Post,
+    PostFormat,
+    PostRevision,
+    PostStatus,
+)
 
 from .content_helpers import (
     Contract,
@@ -299,7 +308,8 @@ def test_backdated_dates_appear_in_the_read_api_feed_and_sitemap(superadmin, bat
     ]
 
     posts = response_json(signed_get(client, "/api/content/v1/insights/posts"))
-    assert posts["featured"]["slug"] == "example-second-post"
+    # The newest post leads the index (the featured flag no longer pins an older one).
+    assert posts["featured"]["slug"] == "example-third-post"
 
     sitemap = response_json(signed_get(client, "/api/content/v1/sitemap"))
     entries = {entry["path"]: entry["lastModified"] for entry in sitemap["entries"]}
@@ -343,3 +353,37 @@ def test_the_vendored_batch_matches_the_docs_copy():
     assert names == sorted(path.name for path in REAL_BATCH.glob("*.md") if path.name != "IMPORT-REPORT.md")
     for name in names:
         assert (DOCS_BATCH / name).read_bytes() == (REAL_BATCH / name).read_bytes(), name
+
+
+HEALTH_BATCH = (
+    Path(__file__).resolve().parents[1] / "apps" / "insights" / "imports" / "insights-batch-3-health-care"
+)
+HEALTH_DOCS_BATCH = (
+    Path(__file__).resolve().parents[2] / "docs" / "content" / "imports" / "insights-batch-3-health-care"
+)
+
+
+def test_the_health_care_batch_validates_as_drafts(superadmin):
+    """Batch 3 (Website Build Pack, 25 Oct 2026) passes every check and plans four new drafts."""
+    items = importing.load(HEALTH_BATCH)
+    assert [item.slug for item in sorted(items, key=lambda item: item.file)] == [
+        "mhra-ai-scribe-guidance-clinic-admin",
+        "dtac-2026-nhs-suppliers",
+        "medical-delivery-software-chain-of-custody",
+        "vitalos-health-care-practice",
+    ]
+    assert importing.plan(items, PostStatus.DRAFT) == []
+    assert {item.action for item in items} == {"create draft"}
+    formats = {item.slug: item.format for item in items}
+    assert formats["vitalos-health-care-practice"] == PostFormat.NEWS
+    assert all(any(topic.name == "Health & Care" for topic in item.topics) for item in items)
+    assert not any(item.featured for item in items)
+
+
+def test_the_health_care_batch_matches_the_docs_copy():
+    if not HEALTH_DOCS_BATCH.is_dir():
+        pytest.skip("docs/ is not in this checkout (container build).")
+    names = sorted(path.name for path in HEALTH_DOCS_BATCH.glob("*.md"))
+    assert names == sorted(path.name for path in HEALTH_BATCH.glob("*.md"))
+    for name in names:
+        assert (HEALTH_DOCS_BATCH / name).read_bytes() == (HEALTH_BATCH / name).read_bytes(), name

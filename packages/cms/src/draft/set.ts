@@ -18,6 +18,8 @@ import type {
   SolutionView,
 } from "../content/types";
 import type { RoutePageKey } from "../routes";
+import { isUnpublished } from "../content/types";
+import type { PublishStatus } from "../content/types";
 import { caseStudyDrafts } from "./content/work";
 import { jobDrafts } from "./content/careers";
 import { insightDrafts } from "./content/insights";
@@ -227,12 +229,39 @@ export function buildDraftContentSet(): DraftContentSet {
       insightDrafts.filter((i) => i.authors.includes(d.slug)).map((i) => i.slug),
     ),
   }));
-  const caseStudies: CaseStudyView[] = caseStudyDrafts.map((d) => ({
-    ...strip(d),
-    id: draftId("caseStudy", d.slug),
-    practices: pick(practiceSummary, d.practices),
-    solutions: pick(solutionSummary, d.solutions),
-    industries: pick(industrySummary, d.industries),
+  const caseStudies: CaseStudyView[] = caseStudyDrafts.map((d) => {
+    const { offers: offerSlugs, ...rest } = strip(d);
+    return {
+      ...rest,
+      id: draftId("caseStudy", d.slug),
+      practices: pick(practiceSummary, d.practices),
+      solutions: pick(solutionSummary, d.solutions),
+      industries: pick(industrySummary, d.industries),
+      ...(offerSlugs && offerSlugs.length > 0
+        ? { offers: pick(offerSummary, inOrder(offerOrder, offerSlugs)) }
+        : {}),
+    };
+  });
+  // Each offer lists the case studies that link to it (never a placeholder scenario).
+  const offersWithWork: OfferView[] = offers.map((offer) => {
+    const work = caseStudies
+      .filter(
+        (study) =>
+          study.placeholder !== true && (study.offers ?? []).some((o) => o.slug === offer.slug),
+      )
+      .map((study) => summaryOf("caseStudy", study));
+    return work.length > 0 ? { ...offer, work } : offer;
+  });
+  // Each industry lists the case studies filed under it. Placeholder scenarios are never listed:
+  // the repo source drops them as documents, and a relation must not bring them back.
+  const industriesWithWork: IndustryView[] = industries.map((industry) => ({
+    ...industry,
+    work: caseStudies
+      .filter(
+        (study) =>
+          study.placeholder !== true && study.industries.some((i) => i.slug === industry.slug),
+      )
+      .map((study) => summaryOf("caseStudy", study)),
   }));
   const jobs: JobView[] = jobDrafts.map((d) => {
     return { ...omit(strip(d), "practice"), id: draftId("job", d.slug) };
@@ -262,9 +291,16 @@ export function buildDraftContentSet(): DraftContentSet {
   for (const [key, draft] of Object.entries(routePageDrafts)) {
     (routePages as Record<string, RoutePageViewFor<RoutePageKey>>)[key] = draft.view;
   }
-  /* A section index whose only content is placeholder content is not indexable either. */
-  const onlyPlaceholders = (list: readonly { placeholder?: true }[]) =>
-    list.length > 0 && list.every((doc) => doc.placeholder === true);
+  /*
+   * A section index whose only content is placeholder content is not indexable either. Unpublished
+   * documents (never served in production) do not count as content here.
+   */
+  const onlyPlaceholders = (
+    list: readonly { placeholder?: true; publishStatus?: PublishStatus }[],
+  ) => {
+    const published = list.filter((doc) => !isUnpublished(doc));
+    return published.length > 0 && published.every((doc) => doc.placeholder === true);
+  };
   const placeholderNoindexRoutes: RoutePageKey[] = [];
   for (const [key, list] of [
     ["work", caseStudies],
@@ -313,8 +349,8 @@ export function buildDraftContentSet(): DraftContentSet {
       documents: {
         practice: practices,
         solution: solutions,
-        offer: offers,
-        industry: industries,
+        offer: offersWithWork,
+        industry: industriesWithWork,
         caseStudy: caseStudies,
         insight: insights,
         person: people,

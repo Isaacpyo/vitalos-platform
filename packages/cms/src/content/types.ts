@@ -33,6 +33,19 @@ export type LabMaturity = (typeof labMaturities)[number];
 /** ISO 8601 date or date-time string. */
 export type IsoDate = string;
 
+/**
+ * Editorial status of a document (Website Build Pack, 25 Oct 2026). Absent means published, so
+ * every document that predates the field keeps its behaviour. The repo source serves only
+ * published documents in production; previews and local builds also serve drafts and approved
+ * documents, with a draft notice, so the owner can review them before approving publication.
+ */
+export const publishStatuses = ["draft", "approved", "published"] as const;
+export type PublishStatus = (typeof publishStatuses)[number];
+
+/** True for a document (or summary, or block) that is not yet published. */
+export const isUnpublished = (item: { publishStatus?: PublishStatus | undefined }): boolean =>
+  item.publishStatus !== undefined && item.publishStatus !== "published";
+
 /** Portable-text-like blocks; rendered by the web app's rich-text component. */
 export interface RichTextBlock {
   _type: string;
@@ -83,6 +96,11 @@ export interface StatView {
 export interface OutcomeMetricView extends StatView {
   context?: string;
   timeframe?: string;
+  /**
+   * Who verified the figure (Website Build Pack, 25 Oct 2026), for example "Clinic practice
+   * manager, in writing". A metric without a source and a verifier is never shown.
+   */
+  verifiedBy?: string;
 }
 
 export interface TestimonialView {
@@ -90,6 +108,8 @@ export interface TestimonialView {
   /** Required: no anonymous quotes. */
   attribution: string;
   role?: string;
+  /** Date the person gave written permission to publish the quote. Without it, it is never shown. */
+  permissionDate?: IsoDate;
 }
 
 /* ---------- Site chrome ---------- */
@@ -133,6 +153,8 @@ interface SummaryBase {
   summary?: string;
   /** Set only by the draft content source (ADR-025): illustrative placeholder content. */
   placeholder?: true;
+  /** Absent means published (see `PublishStatus`). */
+  publishStatus?: PublishStatus;
 }
 
 export type PracticeSummary = SummaryBase;
@@ -144,6 +166,7 @@ export interface OfferSummary extends SummaryBase {
 export interface CaseStudySummary extends SummaryBase {
   engagementBasis: EngagementBasis;
   clientLabel?: string;
+  kind?: CaseStudyKind;
 }
 export interface InsightSummary extends SummaryBase {
   format: string;
@@ -186,6 +209,8 @@ interface DocBase {
    * that must be replaced before launch. Never produced by the fixtures.
    */
   placeholder?: true;
+  /** Absent means published. Unpublished documents are never served in production. */
+  publishStatus?: PublishStatus;
   seo: SeoView;
   updatedAt?: IsoDate;
 }
@@ -230,6 +255,17 @@ export interface OfferView extends DocBase {
   solutions: readonly SolutionSummary[];
   practices: readonly PracticeSummary[];
   cta?: CtaView;
+  /**
+   * The points layout (Website Build Pack, 25 Oct 2026): who it is for and the triggers as short
+   * points of eight words or fewer, rendered with icons instead of the engagement paragraphs. When
+   * present, `audience` and `trigger` still hold the same words as plain text for search and Relay.
+   */
+  audiencePoints?: readonly string[];
+  triggerPoints?: readonly string[];
+  /** A finer duration than the category, shown beside it, for example "2 weeks". */
+  durationDetail?: string;
+  /** Case studies that link to this offer. */
+  work?: readonly CaseStudySummary[];
 }
 
 export interface IndustryView extends DocBase {
@@ -242,15 +278,101 @@ export interface IndustryView extends DocBase {
   work: readonly CaseStudySummary[];
   insights: readonly InsightSummary[];
   cta?: CtaView;
+  /**
+   * The industry's lead page (Website Build Pack, 25 Oct 2026). When present it replaces the
+   * standard industry page at the same URL. It carries its own `publishStatus`, so production
+   * keeps serving the standard page until the owner approves the lead page.
+   */
+  landing?: IndustryLandingView;
 }
 
-export type EngagementBasis = "contracted-by-vitalos" | "prior-team-experience";
+/**
+ * One short point of a lead page: a line of eight words or fewer, or a card (title, line, an
+ * optional short fact and link). `key` names the point's subject; the web app picks its icon by
+ * it, so content never carries presentation.
+ */
+export interface LandingPoint {
+  key: string;
+  text: string;
+  title?: string;
+  /** A short fact beside the title, for example a duration. */
+  meta?: string;
+  href?: string;
+}
+
+/** A headed group of points on a lead page. */
+export interface LandingSection {
+  heading: string;
+  /** In-page anchor, when other links point at the section (for example "offers"). */
+  anchor?: string;
+  points: readonly LandingPoint[];
+}
+
+/** The copy of an industry lead page: short points only (long text belongs in Insights). */
+export interface IndustryLandingView {
+  publishStatus?: PublishStatus;
+  seo: SeoView;
+  eyebrow: string;
+  heading: string;
+  lead: string;
+  primaryCta: CtaView;
+  secondaryCta: CtaView;
+  painPoints: LandingSection;
+  offers: LandingSection;
+  steps: LandingSection;
+  /** What AI does (`does`) and never does (`doesNot`), with a link to the briefing on the line. */
+  guardrails: {
+    heading: string;
+    does: readonly LandingPoint[];
+    doesNot: readonly LandingPoint[];
+    /** Shown in production only once the linked Insight is published. */
+    link?: CtaView & { insightSlug: string };
+  };
+  pilots: LandingSection & { cta: CtaView };
+  trust: LandingSection;
+  caseStudies: {
+    heading: string;
+    /** The card shown while no case study of this industry is published. */
+    fallback: LandingPoint;
+  };
+  insights: {
+    heading: string;
+    /** The Insights topic or sector whose latest posts are listed. */
+    topicSlug: string;
+  };
+  faq: readonly { question: string; answer: string }[];
+  closing: { heading: string; primary: CtaView; secondary: CtaView };
+}
+
+/**
+ * `vitalos-product`: a product Vitalos built and runs, told as a case study ("Built and run by
+ * Vitalos"; Website Build Pack, 25 Oct 2026).
+ */
+export type EngagementBasis = "contracted-by-vitalos" | "prior-team-experience" | "vitalos-product";
+
+/** A client engagement, or a product Vitalos built and runs. */
+export type CaseStudyKind = "client" | "product";
 
 export interface CaseStudyView extends DocBase {
   engagementBasis: EngagementBasis;
+  /** Absent means a client engagement. A product story carries basis `vitalos-product`. */
+  kind?: CaseStudyKind;
   clientDisplay: "named" | "anonymised";
   /** Present only when `clientDisplay` is "named" and permission evidence is verified. */
   clientName?: string;
+  /**
+   * Date of the client's written permission to be named. Without it the client is never named and
+   * no logo is shown, whatever `clientDisplay` says.
+   */
+  clientPermission?: IsoDate;
+  /** Three points of eight words or fewer above the story, each with an icon (by `key`). */
+  highlights?: readonly LandingPoint[];
+  /** What the case study's own visual shows; its draft alt text until the image exists. */
+  visual?: string;
+  /** Offers the work relates to (cross-links). */
+  offers?: readonly OfferSummary[];
+  /** Slugs of the Vitalos products involved (`products.ts`). */
+  products?: readonly string[];
   sector?: string;
   challenge?: RichText;
   approach?: RichText;

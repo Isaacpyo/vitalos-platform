@@ -31,6 +31,8 @@ class PostFormat(models.TextChoices):
     GUIDE = "guide", "Guide"
     RESEARCH_REPORT = "research_report", "Research report"
     CASE_DERIVED_INSIGHT = "case_derived_insight", "Case-derived insight"
+    # Company news (Website Build Pack, 25 Oct 2026), for example a practice launch.
+    NEWS = "news", "News"
 
 
 FORMAT_PLURALS = {
@@ -41,6 +43,7 @@ FORMAT_PLURALS = {
     PostFormat.GUIDE: "Guides",
     PostFormat.RESEARCH_REPORT: "Research reports",
     PostFormat.CASE_DERIVED_INSIGHT: "Case-derived insights",
+    PostFormat.NEWS: "News",
 }
 
 

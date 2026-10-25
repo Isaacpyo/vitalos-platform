@@ -19,6 +19,8 @@ type RedirectRules = Awaited<ReturnType<NonNullable<NextConfig["redirects"]>>>;
 export const sectionMoves: readonly { from: string; to: string }[] = [
   // Brief section 5.5: the blog is Insights.
   { from: "/blog", to: "/insights" },
+  // Website Build Pack (25 Oct 2026): case studies live at /work, under the label "Case studies".
+  { from: "/case-studies", to: "/work" },
 ];
 
 export function nextRedirects(): RedirectRules {

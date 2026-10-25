@@ -48,6 +48,10 @@ const byOffer: Readonly<Record<string, IconName>> = {
   [offerNames[10]]: "shield",
   [offerNames[11]]: "server",
   [offerNames[12]]: "target",
+  // Health & Care offers (Website Build Pack, 25 Oct 2026).
+  [offerNames[13]]: "timer",
+  [offerNames[14]]: "badge-check",
+  [offerNames[15]]: "truck",
 };
 
 const fallback: Readonly<Record<IconKind, IconName>> = {
@@ -71,3 +75,43 @@ export function iconFor(kind: IconKind, title: string): IconName {
   if (kind === "offer") return byOffer[name] ?? fallback.offer;
   return byName[name] ?? fallback[kind];
 }
+
+/**
+ * Icons for the points of a lead page and the highlights of a case study (Website Build Pack,
+ * 25 Oct 2026). Content names each point's subject with a `key` (the brief's Lucide names, as a
+ * guide); this maps it onto the site's own set. An unknown key gets the neutral check.
+ */
+const byPointKey: Readonly<Record<string, IconName>> = {
+  inbox: "inbox",
+  "file-text": "document",
+  unplug: "unplug",
+  "shield-check": "shield",
+  timer: "timer",
+  plug: "plug",
+  "badge-check": "badge-check",
+  truck: "truck",
+  search: "search",
+  "flask-conical": "flask",
+  rocket: "rocket",
+  settings: "settings",
+  check: "check",
+  x: "close",
+  bot: "bot",
+  "package-check": "package-check",
+  stethoscope: "stethoscope",
+  lock: "lock",
+  "file-lock": "file-lock",
+  accessibility: "accessibility",
+  handshake: "users",
+  car: "car",
+  "user-x": "user-x",
+  "user-round": "user-round",
+  palette: "palette",
+  smartphone: "smartphone",
+  receipt: "receipt",
+  quote: "quote",
+  code: "code",
+};
+
+/** The icon for a point's subject key. */
+export const pointIcon = (key: string): IconName => byPointKey[key] ?? "check";

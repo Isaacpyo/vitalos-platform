@@ -8,11 +8,23 @@ export const enquiryFormMessages = {
   unavailable: "We cannot receive enquiries online right now. Please contact us directly.",
 } as const;
 
-/** Reads the echo fields from a submission as plain strings. */
-export function echoValues(reader: { get(name: string): unknown }): EnquiryFormValues {
+/**
+ * Reads the echo fields from a submission as plain strings. The Health & Care needs are a group of
+ * checkboxes with one name: every ticked value is kept, comma-separated.
+ */
+export function echoValues(reader: {
+  get(name: string): unknown;
+  getAll?(name: string): unknown[];
+}): EnquiryFormValues {
   const values: EnquiryFormValues = {};
   for (const name of enquiryEchoFieldNames) {
-    const value = reader.get(name);
+    const value =
+      name === "healthcareNeeds" && reader.getAll
+        ? reader
+            .getAll(name)
+            .filter((item): item is string => typeof item === "string" && item !== "")
+            .join(",")
+        : reader.get(name);
     if (typeof value === "string" && value !== "") values[name] = value;
   }
   return values;

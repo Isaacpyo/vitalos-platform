@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { describeContentSourceContract } from "../content/testing/contract";
-import { createRepoContentSource, dropPlaceholders, repoContent } from "./index";
+import {
+  createRepoContentSource,
+  dropPlaceholders,
+  repoContent,
+  repoPreviewContent,
+  withoutUnpublished,
+} from "./index";
 
 const NOW = () => new Date("2026-10-12T12:00:00Z");
 const source = () => createRepoContentSource({ now: NOW });
@@ -114,5 +120,59 @@ describe("dropPlaceholders", () => {
       block("normal", "Contact: [to be confirmed]."),
     ]);
     expect(result.map((b) => b._key)).toEqual(["Kept", "Real text."]);
+  });
+});
+
+describe("unpublished documents (Website Build Pack, 25 Oct 2026)", () => {
+  const statusesIn = (value: unknown, out: string[] = []): string[] => {
+    if (Array.isArray(value)) value.forEach((item) => statusesIn(item, out));
+    else if (typeof value === "object" && value !== null) {
+      for (const [key, item] of Object.entries(value)) {
+        if (key === "publishStatus" && typeof item === "string") out.push(item);
+        else statusesIn(item, out);
+      }
+    }
+    return out;
+  };
+
+  it("production holds nothing unpublished, at any depth", () => {
+    expect(statusesIn(repoContent).filter((status) => status !== "published")).toEqual([]);
+  });
+
+  it("previews hold the drafts, unindexed, and production lists none of them", async () => {
+    const preview = createRepoContentSource({ now: NOW, includeUnpublished: true });
+    const production = source();
+    for (const kind of ["offer", "caseStudy"] as const) {
+      const drafts = repoPreviewContent.documents[kind].filter(
+        (doc) => doc.publishStatus !== undefined && doc.publishStatus !== "published",
+      );
+      for (const doc of drafts) {
+        expect(doc.seo.noindex, doc.slug).toBe(true);
+        expect(await preview.getDocument(kind, doc.slug), doc.slug).not.toBeNull();
+        expect(await production.getDocument(kind, doc.slug), doc.slug).toBeNull();
+      }
+    }
+    const sitemap = (await preview.getSitemapEntries()).map((entry) => entry.path);
+    for (const doc of repoPreviewContent.documents.offer) {
+      if (doc.publishStatus === "draft") expect(sitemap).not.toContain(`/offers/${doc.slug}`);
+    }
+  });
+
+  it("drops unpublished list members and fields, and keeps everything else", () => {
+    const value = {
+      title: "Kept",
+      landing: { publishStatus: "draft", heading: "Dropped" },
+      offers: [
+        { slug: "live" },
+        { slug: "published", publishStatus: "published" },
+        { slug: "approved", publishStatus: "approved" },
+      ],
+      nested: { items: [{ slug: "draft", publishStatus: "draft" }] },
+    };
+    expect(withoutUnpublished(value)).toEqual({
+      title: "Kept",
+      offers: [{ slug: "live" }, { slug: "published", publishStatus: "published" }],
+      nested: { items: [] },
+    });
   });
 });

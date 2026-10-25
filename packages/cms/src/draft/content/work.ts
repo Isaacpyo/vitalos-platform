@@ -8,28 +8,18 @@
  * them towards the Work gate only because they are flagged `placeholder`; the production rule
  * (verified evidence only) is unchanged.
  */
-import type { CaseStudyView } from "../../content/types";
 import { h2, p, richText, seo, ul } from "../build";
 import { cite, placeholderDrafted } from "../provenance";
-import type { DraftProvenance } from "../provenance";
 import { DRAFTED_ON } from "../slugs";
-import type { IndustrySlug, PracticeSlug, SolutionSlug } from "../slugs";
+import type { CaseStudyDraft } from "./draft-types";
+import { buildPackCaseStudyDrafts } from "./work-stories";
 
-export interface CaseStudyDraft extends Omit<
-  CaseStudyView,
-  "id" | "practices" | "solutions" | "industries"
-> {
-  placeholder: true;
-  practices: readonly PracticeSlug[];
-  solutions: readonly SolutionSlug[];
-  industries: readonly IndustrySlug[];
-  provenance: DraftProvenance;
-}
+export type { CaseStudyDraft } from "./draft-types";
 
 const omitted =
   "Illustrative scenario, not a real engagement (owner directive, 11 October 2026). No client, outcome, metric, testimonial or result is drafted; evidence stays pending. Replace with a real, permissioned case study, or delete, before launch.";
 
-export const caseStudyDrafts: readonly CaseStudyDraft[] = [
+const placeholderCaseStudyDrafts: readonly CaseStudyDraft[] = [
   {
     placeholder: true,
     slug: "connecting-field-and-warehouse-systems",
@@ -157,4 +147,10 @@ export const caseStudyDrafts: readonly CaseStudyDraft[] = [
       omitted,
     ),
   },
+];
+
+/** The placeholder scenarios, then the Website Build Pack stories (unpublished until approved). */
+export const caseStudyDrafts: readonly CaseStudyDraft[] = [
+  ...placeholderCaseStudyDrafts,
+  ...buildPackCaseStudyDrafts,
 ];

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ctas, routes } from "@vitalos/cms";
+import { isHealthcareIntent } from "@vitalos/validation/enquiry";
 import { Button, Container, PageHero, Section } from "@vitalos/ui";
 import { getContentSource } from "../../../../src/lib/cms/get-content-source";
 import { heroPhotograph } from "../../../../src/lib/view-mapping/hero-images";
@@ -30,8 +31,8 @@ export const metadata: Metadata = {
  */
 export default async function ThankYouPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ ref?: string | string[] }> }>) {
-  const [{ ref }, page] = await Promise.all([
+}: Readonly<{ searchParams: Promise<{ ref?: string | string[]; intent?: string | string[] }> }>) {
+  const [{ ref, intent }, page] = await Promise.all([
     searchParams,
     (await getContentSource()).getRoutePage("contact"),
   ]);
@@ -40,6 +41,12 @@ export default async function ThankYouPage({
     <main id="main" tabIndex={-1}>
       {/* An accepted enquiry (no reference or form content is sent). */}
       <TrackOnMount name="contact_submit" properties={{ outcome: "success", route: "/contact" }} />
+      {isHealthcareIntent(intent) ? (
+        <TrackOnMount
+          name="healthcare_enquiry_submit"
+          properties={{ outcome: "success", intent }}
+        />
+      ) : null}
       <PageHero
         tone="dark"
         size="title"

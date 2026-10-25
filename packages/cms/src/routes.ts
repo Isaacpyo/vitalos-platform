@@ -65,6 +65,9 @@ export const contactIntents = [
   "partnership",
   "careers",
   "general",
+  /** Health & Care lead capture (Website Build Pack, 25 Oct 2026). */
+  "healthcare-audit",
+  "healthcare-partner",
 ] as const;
 export type ContactIntent = (typeof contactIntents)[number];
 
@@ -120,9 +123,17 @@ export const routes = {
   careers: () => "/careers",
   job: (slug: string) => `/careers/${seg(slug)}`,
   contact: (intent?: ContactIntent) => (intent ? `/contact?intent=${intent}` : "/contact"),
-  /** Where an accepted enquiry lands (owner direction, 15 Oct 2026). Never indexed. */
-  contactThankYou: (reference?: string) =>
-    reference ? `/contact/thank-you?ref=${seg(reference)}` : "/contact/thank-you",
+  /**
+   * Where an accepted enquiry lands (owner direction, 15 Oct 2026). Never indexed. A Health & Care
+   * enquiry also carries its intent, so the receipt can count it (Website Build Pack).
+   */
+  contactThankYou: (reference?: string, intent?: ContactIntent) => {
+    const query = [
+      ...(reference ? [`ref=${seg(reference)}`] : []),
+      ...(intent ? [`intent=${intent}`] : []),
+    ].join("&");
+    return query ? `/contact/thank-you?${query}` : "/contact/thank-you";
+  },
   legal: (slug: LegalSlug) => `/legal/${slug}`,
   /** Products Vitalos builds and operates (owner direction, 17 Oct 2026). */
   products: () => "/products",

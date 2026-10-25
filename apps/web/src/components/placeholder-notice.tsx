@@ -52,3 +52,34 @@ export function PlaceholderNotice({ show }: Readonly<{ show: boolean }>) {
     </aside>
   );
 }
+
+/** The draft notice's visible text. Structural wording, not marketing copy (Website Build Pack). */
+export const draftNoticeText = {
+  label: "Draft notice",
+  title: "Draft, not published.",
+  detail:
+    "This is shown on previews only, for review. It will not appear on vitalos.co.uk until it is approved.",
+} as const;
+
+/**
+ * The notice on a page that is, or shows, an unpublished document (`publishStatus` draft or
+ * approved). Unpublished documents are served only outside production, so this never renders on
+ * the live site. Server-rendered, in the page flow, tokens only; nothing unless `show` is true.
+ */
+export function DraftNotice({ show }: Readonly<{ show: boolean }>) {
+  if (!show) return null;
+  return (
+    <aside
+      aria-label={draftNoticeText.label}
+      data-tone="dark"
+      data-draft-notice=""
+      className="bg-tone-bg text-tone-text"
+    >
+      <Container size="wide" className="py-(--space-3)">
+        <p className="m-0 text-small">
+          <strong>{draftNoticeText.title}</strong> {draftNoticeText.detail}
+        </p>
+      </Container>
+    </aside>
+  );
+}

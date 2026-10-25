@@ -1,4 +1,5 @@
 import type { EnquiryInputV2 } from "@vitalos/validation";
+import type { EnquiryDetailsRecord } from "../healthcare";
 
 /**
  * Enquiry domain model. No framework or provider imports: adapters implement the ports in
@@ -39,6 +40,8 @@ export interface EnquiryForNotification {
   offerSlug: string | undefined;
   sourcePath: string | undefined;
   receivedAt: string;
+  /** Server-derived tags and structured answers (Health & Care); absent or empty otherwise. */
+  details?: EnquiryDetailsRecord | undefined;
 }
 
 /** Mirrors the reference the database derives in `submit_enquiry`; used by in-memory adapters. */

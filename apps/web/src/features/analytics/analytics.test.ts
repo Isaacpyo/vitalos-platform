@@ -20,6 +20,8 @@ describe("analytics taxonomy", () => {
         "outbound_click",
         "primary_cta_click",
         "trust_enquiry_submit",
+        // Health & Care enquiries (Website Build Pack, 25 Oct 2026).
+        "healthcare_enquiry_submit",
       ].sort(),
     );
     expect(isAnalyticsEventName("page_view")).toBe(false);
@@ -95,5 +97,16 @@ describe("client analytics bundle", () => {
     const { readFileSync } = await import("node:fs");
     const source = readFileSync(new URL("./vercel-sink.ts", import.meta.url), "utf8");
     expect(source).not.toMatch(/^import (?!type )[^;]*from "(zod|\.\/events|\.\/sink)";/m);
+  });
+});
+
+describe("CTA ids", () => {
+  it("counts a Health & Care contact link as its own CTA, every other one as Talk to Vitalos", async () => {
+    const { ctaIdFor } = await import("../../components/analytics/site-analytics");
+    const url = (path: string) => new URL(path, "https://vitalos.co.uk");
+    expect(ctaIdFor(url("/contact?intent=healthcare-audit"))).toBe("healthcare-audit");
+    expect(ctaIdFor(url("/contact?intent=healthcare-partner&offer=x"))).toBe("healthcare-partner");
+    expect(ctaIdFor(url("/contact?intent=project"))).toBe("talk-to-vitalos");
+    expect(ctaIdFor(url("/contact"))).toBe("talk-to-vitalos");
   });
 });

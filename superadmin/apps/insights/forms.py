@@ -29,7 +29,9 @@ class PostForm(StyledFormMixin, forms.Form):
     topics = forms.MultipleChoiceField(required=False, widget=forms.CheckboxSelectMultiple)
     cover_alt = forms.CharField(label="Alt text", max_length=300, required=False)
     cover_caption = forms.CharField(label="Caption", max_length=300, required=False)
-    featured = forms.BooleanField(label="Featured on the Insights index", required=False)
+    featured = forms.BooleanField(
+        label="Featured (the Insights index now leads with the newest post instead)", required=False
+    )
     pin_home = forms.BooleanField(label="Pin to homepage", required=False)
     cta_label = forms.CharField(label="Label", max_length=80, required=False)
     cta_href = forms.CharField(label="Link", max_length=300, required=False)

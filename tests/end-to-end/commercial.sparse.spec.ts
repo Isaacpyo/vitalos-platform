@@ -33,7 +33,7 @@ test.describe("shell with every gate closed", () => {
     for (const label of ["What We Do", "Who We Are", "Support"]) {
       await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
-    for (const label of ["Industries", "Work", "Insights", "Labs"]) {
+    for (const label of ["Industries", "Case studies", "Insights", "Labs"]) {
       await expect(
         nav.getByRole("link", { name: label, exact: true, includeHidden: true }),
       ).toHaveCount(0);
@@ -46,7 +46,7 @@ test.describe("shell with every gate closed", () => {
   test("the footer omits gated sections, careers and any legal identity", async ({ page }) => {
     await page.goto("/");
     const footer = page.getByRole("contentinfo");
-    for (const label of ["Industries", "Work", "Insights", "Labs", "Careers"]) {
+    for (const label of ["Industries", "Case studies", "Insights", "Labs", "Careers"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toHaveCount(0);
     }
     // Site settings are empty: no invented company name, number, address or email.

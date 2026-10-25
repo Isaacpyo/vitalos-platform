@@ -32,6 +32,7 @@ export const postFormats = [
   "guide",
   "research_report",
   "case_derived_insight",
+  "news",
 ] as const;
 
 export const FormatChoice = z.strictObject({

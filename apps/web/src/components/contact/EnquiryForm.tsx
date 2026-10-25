@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   Checkbox,
   Field,
+  Icon,
   FormErrorSummary,
   Select,
   StatusMessage,
@@ -15,10 +16,22 @@ import {
   VisuallyHidden,
 } from "@vitalos/ui";
 import type { FormError } from "@vitalos/ui";
-import { enquiryFormFields, utmKeys } from "@vitalos/validation/enquiry";
+import {
+  enquiryFormFields,
+  healthcareNeeds,
+  healthcareOrganisationTypes,
+  isHealthcareIntent,
+  utmKeys,
+} from "@vitalos/validation/enquiry";
 import type { EnquiryFieldName, UtmKey } from "@vitalos/validation/enquiry";
 import { initialEnquiryFormState } from "../../features/enquiries/form-state";
 import type { EnquiryFormState, EnquiryFormValues } from "../../features/enquiries/form-state";
+import {
+  healthcareNeedLabels,
+  healthcareOrganisationTypeLabels,
+  noPatientInformationNotice,
+  preselectedNeeds,
+} from "../../features/enquiries/healthcare";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { timeframeOptions } from "./labels";
 import type { SelectOption } from "./labels";
@@ -61,6 +74,10 @@ const fieldIds = {
   goal: "enquiry-goal",
   timeframe: "enquiry-timeframe",
   consent: "enquiry-consent",
+  healthcareOrganisationType: "enquiry-healthcare-organisation-type",
+  healthcareSites: "enquiry-healthcare-sites",
+  healthcareSystems: "enquiry-healthcare-systems",
+  healthcareNeeds: "enquiry-healthcare-needs",
 } as const;
 
 /** Visible fields, in form order: the error summary lists errors in this order. */
@@ -70,15 +87,106 @@ const visibleFieldOrder = [
   "organisation",
   "role",
   "intent",
+  "healthcare",
   "goal",
   "timeframe",
   "consent",
-] as const satisfies readonly (keyof typeof fieldIds & EnquiryFieldName)[];
+] as const satisfies readonly ((keyof typeof fieldIds | "healthcare") & EnquiryFieldName)[];
+
+/** Where an error on the Health & Care block points: the group of needs. */
+const errorTarget = (name: (typeof visibleFieldOrder)[number]): string =>
+  name === "healthcare" ? fieldIds.healthcareNeeds : fieldIds[name];
 
 const FORM_ID = "enquiry-form";
 
 /** Two fields side by side from sm; stacked below. */
 const PAIR_CLASSES = "grid gap-(--space-6) sm:grid-cols-2";
+
+const goalHint = "Describe the problem or outcome in at least 20 characters.";
+
+/**
+ * The Health & Care questions (Website Build Pack, 25 Oct 2026, Part 2), shown with a Health &
+ * Care topic. All optional. The needs are a native checkbox group in a fieldset, so the legend
+ * names the group for assistive technology.
+ */
+function HealthcareFields({
+  values,
+  preselected,
+  error,
+}: Readonly<{
+  values: EnquiryFormValues;
+  preselected: readonly string[];
+  error: string | undefined;
+}>) {
+  const echoed = values.healthcareNeeds?.split(",").filter(Boolean);
+  const checked = new Set(echoed ?? preselected);
+  return (
+    <>
+      <div className={PAIR_CLASSES}>
+        <Field label="Organisation type" id={fieldIds.healthcareOrganisationType} optional>
+          <Select
+            name={enquiryFormFields.healthcareOrganisationType}
+            defaultValue={values.healthcareOrganisationType ?? ""}
+          >
+            <option value="">Choose a type</option>
+            {healthcareOrganisationTypes.map((value) => (
+              <option key={value} value={value}>
+                {healthcareOrganisationTypeLabels[value]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Number of sites" id={fieldIds.healthcareSites} optional>
+          <TextInput
+            name={enquiryFormFields.healthcareSites}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            step={1}
+            defaultValue={values.healthcareSites ?? ""}
+          />
+        </Field>
+      </div>
+      <fieldset
+        id={fieldIds.healthcareNeeds}
+        tabIndex={-1}
+        aria-describedby={error ? `${fieldIds.healthcareNeeds}-error` : undefined}
+        className="m-0 flex flex-col gap-(--space-3) border-0 p-0 outline-none"
+      >
+        <legend className="mb-(--space-3) p-0 text-body font-semibold text-tone-heading">
+          What do you need? <span className="font-normal text-tone-muted">(optional)</span>
+        </legend>
+        {error ? (
+          <p
+            id={`${fieldIds.healthcareNeeds}-error`}
+            className="m-0 flex items-start gap-(--space-2) text-small text-danger"
+          >
+            <Icon name="error" size={16} className="mt-0.5 shrink-0" />
+            {error}
+          </p>
+        ) : null}
+        <div className="grid gap-(--space-3) sm:grid-cols-2">
+          {healthcareNeeds.map((need) => (
+            <Checkbox
+              key={need}
+              id={`${fieldIds.healthcareNeeds}-${need}`}
+              name={enquiryFormFields.healthcareNeeds}
+              value={need}
+              defaultChecked={checked.has(need)}
+              label={healthcareNeedLabels[need]}
+            />
+          ))}
+        </div>
+      </fieldset>
+      <Field label="Systems you use today" id={fieldIds.healthcareSystems} optional>
+        <TextInput
+          name={enquiryFormFields.healthcareSystems}
+          defaultValue={values.healthcareSystems ?? ""}
+        />
+      </Field>
+    </>
+  );
+}
 
 const emailLink = (email: string) => (
   <a className="underline underline-offset-4" href={`mailto:${email}`}>
@@ -110,6 +218,9 @@ export function EnquiryFormView({
   privacyHref = "/legal/privacy",
 }: EnquiryFormViewProps) {
   const outcome = useRef<HTMLDivElement>(null);
+  // The topic as the visitor changes it: the Health & Care fields follow it (with JavaScript;
+  // without it they follow the topic the page opened with).
+  const [selectedIntent, setIntent] = useState<string | undefined>(undefined);
   const showsOutcome = state.status !== "idle" && state.status !== "invalid";
   useEffect(() => {
     // Move focus to the result message so keyboard and screen reader users land on it.
@@ -138,7 +249,7 @@ export function EnquiryFormView({
   for (const name of visibleFieldOrder) {
     const message = fieldErrors[name];
     if (message) {
-      summary.push({ fieldId: fieldIds[name], message });
+      summary.push({ fieldId: errorTarget(name), message });
       seen.add(name);
     }
   }
@@ -148,8 +259,11 @@ export function EnquiryFormView({
     if (message && !seen.has(name)) summary.push({ fieldId: FORM_ID, message });
   }
 
-  const intent = values.intent ?? prefill?.intent ?? "";
+  const initialIntent = values.intent ?? prefill?.intent ?? "";
   const offerSlug = values.offerSlug ?? prefill?.offerSlug;
+
+  const intent = selectedIntent ?? initialIntent;
+  const healthcare = isHealthcareIntent(intent);
 
   const outcomeMessage =
     state.status === "rejected" || state.status === "rate-limited" || state.status === "unavailable"
@@ -255,7 +369,11 @@ export function EnquiryFormView({
         required
         error={fieldErrors.intent}
       >
-        <Select name="intent" defaultValue={intent}>
+        <Select
+          name="intent"
+          defaultValue={initialIntent}
+          onChange={(event) => setIntent(event.currentTarget.value)}
+        >
           <option value="">Choose a topic</option>
           {intentOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -264,11 +382,30 @@ export function EnquiryFormView({
           ))}
         </Select>
       </Field>
+      {healthcare ? (
+        <HealthcareFields
+          values={values}
+          preselected={preselectedNeeds(intent, offerSlug)}
+          error={fieldErrors.healthcare}
+        />
+      ) : null}
       <Field
         label="What do you want to achieve?"
         id={fieldIds.goal}
         required
-        hint="Describe the problem or outcome in at least 20 characters."
+        hint={
+          healthcare ? (
+            <>
+              <span className="flex items-start gap-(--space-2) font-semibold text-tone-heading">
+                <Icon name="warning" size={16} className="mt-(--space-1) shrink-0" />
+                <span>{noPatientInformationNotice}</span>
+              </span>
+              <span className="mt-(--space-1) block">{goalHint}</span>
+            </>
+          ) : (
+            goalHint
+          )
+        }
         error={fieldErrors.goal}
       >
         <Textarea name="goal" rows={6} defaultValue={values.goal ?? ""} />

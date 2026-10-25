@@ -106,6 +106,78 @@ export const mediaSlots = [
     alt: "Askbridge homepage: the headline beside an example chat with numbered sources and a team member joining",
     mobile: { ratio: "5:7", size: [733, 1026] },
   },
+  // Health & Care (Website Build Pack, 25 Oct 2026). Unpublished until the owner approves the pages.
+  {
+    id: "health-care.hero",
+    page: "/industries/health-care",
+    section: "Hero",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "A clinic front desk: real photography of a UK clinic's reception or admin area, used with the clinic's permission. No patients identifiable, no screens showing patient information. No stock or AI-generated imagery.",
+    alt: "A clinic front desk",
+  },
+  {
+    id: "health-care.agents",
+    page: "/industries/health-care",
+    section: "In pilot: admin agents for clinics",
+    ratio: "4:3",
+    size: [1200, 900],
+    brief:
+      "The agent inbox screen of the admin agents for clinics, captured with sample data only (no real patient information).",
+    alt: "The admin agents' inbox screen, with sample documents waiting for review",
+  },
+  {
+    id: "health-care.fauward",
+    page: "/industries/health-care",
+    section: "In pilot: Fauward for healthcare logistics",
+    ratio: "4:3",
+    size: [1200, 900],
+    brief:
+      "Fauward Go, the driver app, scanning an item at collection, captured with sample data only.",
+    alt: "The Fauward driver app scanning an item at collection",
+  },
+  {
+    id: "offers.clinic-admin-audit.visual",
+    page: "/offers/clinic-admin-audit",
+    section: "Hero",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "A workflow map from a clinic admin audit: a diagram of how documents arrive, are handled and filed, with sample labels only.",
+    alt: "A workflow map of a clinic's admin, from referral to filing",
+  },
+  {
+    id: "offers.nhs-assurance-readiness.visual",
+    page: "/offers/nhs-assurance-readiness",
+    section: "Hero",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "An evidence pack: the documents a supplier prepares for NHS assurance (DTAC form, DPIA, DSPT submission), shown as a diagram or a photograph of sample documents. No NHS logo or NHS identity.",
+    alt: "An NHS assurance evidence pack: DTAC form, DPIA and DSPT submission",
+  },
+  {
+    id: "offers.medical-logistics-digitisation.visual",
+    page: "/offers/medical-logistics-digitisation",
+    section: "Hero",
+    ratio: "16:9",
+    size: [1600, 900],
+    brief:
+      "Fauward Go, the driver app, scanning a sample at collection, captured with sample data only.",
+    alt: "A driver scanning a sample with the Fauward driver app",
+  },
+  {
+    id: "work.visual",
+    page: "/work/[slug] (and its row on /work)",
+    section: "Hero (case study visual)",
+    ratio: "4:3",
+    size: [1200, 900],
+    brief:
+      "The case study's own visual, named in the case study entry (for example the booking flow on a phone). Real screenshots or photographs only, with the client's written permission for client work.",
+    alt: "{name}",
+    perItem: true,
+  },
 ] as const satisfies readonly MediaSlotEntry[];
 
 export type MediaSlotId = (typeof mediaSlots)[number]["id"];

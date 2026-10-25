@@ -183,7 +183,7 @@ test.describe("site shell", () => {
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Primary" });
     await nav.getByRole("button", { name: /Who We Are/ }).click();
-    for (const label of ["About", "Work", "All What We Do", "Industries"]) {
+    for (const label of ["About", "Case studies", "All What We Do", "Industries"]) {
       await expect(nav.getByRole("link", { name: label, exact: true }).first()).toBeVisible();
     }
     await expect(nav.getByRole("link", { name: "Example Industry (fixture)" })).toBeVisible();
@@ -276,7 +276,7 @@ test.describe("site shell", () => {
       await expect(footer.locator("details[open]")).toHaveCount(0);
       for (const heading of await footer.locator("summary").all()) await heading.click();
     }
-    for (const label of ["Industries", "Work", "Labs", "FAQ"]) {
+    for (const label of ["Industries", "Case studies", "Labs", "FAQ"]) {
       await expect(footer.getByRole("link", { name: label, exact: true })).toBeVisible();
     }
     // Insights and Careers are opened in the Super Admin (ADR-039); closed with no content API.

@@ -28,8 +28,17 @@ const sections: readonly { key: string; roots: readonly string[] }[] = [
 const under = (pathname: string, root: string) =>
   pathname === root || pathname.startsWith(`${root}/`);
 
-export function activeSectionForPath(pathname: string | null | undefined): string | undefined {
+/**
+ * The active menu for a path. A top-level link of its own (an industry lead page, Website Build
+ * Pack 25 Oct 2026) wins over the menu that would otherwise own the path.
+ */
+export function activeSectionForPath(
+  pathname: string | null | undefined,
+  items: readonly { key: string; href: string }[] = [],
+): string | undefined {
   if (!pathname) return undefined;
   const clean = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const own = items.find((item) => item.key.startsWith("industry-") && under(clean, item.href));
+  if (own) return own.key;
   return sections.find((section) => section.roots.some((root) => under(clean, root)))?.key;
 }

@@ -19,6 +19,6 @@ export function ActiveSectionHeader(
   props: Readonly<Omit<SiteHeaderProps, "activeSection" | "overlay">>,
 ) {
   const pathname = usePathname();
-  const activeSection = activeSectionForPath(pathname);
+  const activeSection = activeSectionForPath(pathname, props.items);
   return <SiteHeader {...props} {...(activeSection ? { activeSection } : {})} overlay />;
 }

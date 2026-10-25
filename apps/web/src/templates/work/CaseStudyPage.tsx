@@ -1,5 +1,7 @@
-import { navLabels, routes } from "@vitalos/cms";
+import { isUnpublished, navLabels, routes } from "@vitalos/cms";
+import type { CaseStudyView } from "@vitalos/cms";
 import {
+  IconTile,
   MetaRow,
   OutcomeStats,
   RelatedContentRail,
@@ -7,7 +9,8 @@ import {
   Testimonial,
   isNonEmpty,
 } from "@vitalos/ui";
-import { PlaceholderNotice } from "../../components/placeholder-notice";
+import { DraftNotice, PlaceholderNotice } from "../../components/placeholder-notice";
+import { pointIcon } from "../../lib/view-mapping/icons";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { ContentSection, PageBand, PageHeroBand } from "../institutional/layout";
@@ -40,7 +43,13 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
   return (
     <PageMain>
       <PageHeroBand
-        media={<MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />}
+        media={
+          study.visual ? (
+            <MediaSlot id="work.visual" item={study.slug} itemName={study.visual} priority />
+          ) : (
+            <MediaSlot id="work.case-study" item={study.slug} itemName={study.title} priority />
+          )
+        }
         crumbs={
           <Breadcrumbs
             jsonLd={!placeholder}
@@ -59,8 +68,10 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
         <MetaRow items={caseStudyFacts(study)} />
       </PageHeroBand>
       <PlaceholderNotice show={placeholder} />
+      <DraftNotice show={isUnpublished(study)} />
       <PageBand>
         <Stack gap={8}>
+          <Highlights study={study} />
           {metrics ? <OutcomeStats stats={metrics} aria-label={workLabels.outcome} /> : null}
 
           {hasRichText(study.challenge) ? (
@@ -94,5 +105,30 @@ export function CaseStudyPage({ data }: Readonly<{ data: CaseStudyData }>) {
       </PageBand>
       <ClosingBand />
     </PageMain>
+  );
+}
+
+/**
+ * The highlights strip above the story (Website Build Pack, 25 Oct 2026): three points of eight
+ * words or fewer, each with a decorative icon. The list is named for assistive technology.
+ */
+function Highlights({ study }: Readonly<{ study: CaseStudyView }>) {
+  const points = study.highlights ?? [];
+  if (points.length === 0) return null;
+  return (
+    <ul
+      aria-label={workLabels.highlights}
+      className="m-0 grid list-none grid-cols-1 gap-(--space-4) p-0 md:grid-cols-3"
+    >
+      {points.map((point, index) => (
+        <li
+          key={`${point.key}-${index}`}
+          className="flex min-w-0 items-center gap-(--space-4) rounded-2xl border border-tone-border bg-tone-bg p-(--space-5) text-body-l font-semibold text-tone-heading"
+        >
+          <IconTile name={pointIcon(point.key)} />
+          <span className="min-w-0">{point.text}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

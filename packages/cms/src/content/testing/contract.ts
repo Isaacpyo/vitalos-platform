@@ -204,7 +204,8 @@ export function describeContentSourceContract(
       }
       const keys = collectKeys(everything);
       for (const forbidden of forbiddenKeys) expect(keys.has(forbidden), forbidden).toBe(false);
-      expect(JSON.stringify(everything)).not.toContain("drafts.");
+      // A Sanity draft document id ("drafts.<id>"), not prose such as "AI that drafts. People ...".
+      expect(JSON.stringify(everything)).not.toMatch(/drafts\.[A-Za-z0-9]/);
     });
 
     it("accepts preview reads", async () => {

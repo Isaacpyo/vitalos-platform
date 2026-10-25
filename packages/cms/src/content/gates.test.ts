@@ -105,7 +105,7 @@ describe("navigation", () => {
     const open = evaluateGates({ work: 2, insights: 6, labs: 1, industries: 1, careers: 1 });
     expect(labels(filterNavByGates(sectionNav, open))).toEqual([
       "Industries",
-      "Work",
+      "Case studies",
       "Insights",
       "Labs",
       "About",

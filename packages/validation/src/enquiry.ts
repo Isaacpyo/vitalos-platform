@@ -18,8 +18,43 @@ export const enquiryIntents = [
   "partnership",
   "careers",
   "general",
+  /** Health & Care lead capture (Website Build Pack, 25 Oct 2026). */
+  "healthcare-audit",
+  "healthcare-partner",
 ] as const;
 export type EnquiryIntent = (typeof enquiryIntents)[number];
+
+/**
+ * Health & Care lead capture (Website Build Pack, 25 Oct 2026). The two healthcare intents carry
+ * an optional `healthcare` block; every healthcare enquiry is tagged `healthcare` on the server.
+ */
+export const healthcareIntents = ["healthcare-audit", "healthcare-partner"] as const;
+export type HealthcareIntent = (typeof healthcareIntents)[number];
+export const isHealthcareIntent = (value: unknown): value is HealthcareIntent =>
+  typeof value === "string" && (healthcareIntents as readonly string[]).includes(value);
+
+export const healthcareOrganisationTypes = [
+  "private-clinic-or-hospital",
+  "gp-practice-or-pcn",
+  "nhs-trust",
+  "courier-or-pharmacy",
+  "health-tech-supplier",
+  "other",
+] as const;
+export type HealthcareOrganisationType = (typeof healthcareOrganisationTypes)[number];
+
+export const healthcareNeeds = [
+  "inbox-and-referrals",
+  "letters",
+  "coding-and-billing",
+  "systems-integration",
+  "nhs-assurance",
+  "medical-logistics",
+  "design-partner",
+] as const;
+export type HealthcareNeed = (typeof healthcareNeeds)[number];
+
+export const HEALTHCARE_SITES_MAX = 10_000;
 
 /**
  * PROVISIONAL. Stage 8 section 20 asks for an "approximate urgency/timeframe" but does not fix
@@ -130,6 +165,35 @@ const utmSchema = z
     error: "UTM values are too long.",
   });
 
+const healthcareSchema = z
+  .object({
+    organisationType: z
+      .enum(healthcareOrganisationTypes, { error: "Choose an organisation type." })
+      .optional(),
+    sites: z
+      .number({ error: "Enter the number of sites as a whole number." })
+      .int({ error: "Enter the number of sites as a whole number." })
+      .min(1, { error: "Enter at least 1 site." })
+      .max(HEALTHCARE_SITES_MAX, { error: `Enter ${HEALTHCARE_SITES_MAX} sites or fewer.` })
+      .optional(),
+    needs: z
+      .array(z.enum(healthcareNeeds, { error: "Choose from the listed needs." }))
+      .max(healthcareNeeds.length)
+      .refine((needs) => new Set(needs).size === needs.length, {
+        error: "Choose each need once.",
+      })
+      .optional(),
+    systems: storableText({
+      max: 300,
+      singleLine: true,
+      required: "Enter the systems you use today.",
+      tooLong: "Keep the systems you use to 300 characters or fewer.",
+    }).optional(),
+  })
+  .strict();
+
+export type HealthcareDetails = z.infer<typeof healthcareSchema>;
+
 export interface EnquirySchemaOptions {
   /** Approved budget band identifiers. Empty (the default) means the field is not accepted. */
   budgetBands?: readonly string[];
@@ -208,8 +272,14 @@ export function createEnquirySchemaV2(options: EnquirySchemaOptions = {}) {
       turnstileToken: z.string().max(4096).optional(),
       /** Honeypot. Humans never see it; any value means automation. */
       website: z.literal("").optional(),
+      /** Health & Care details: only with a healthcare intent. */
+      healthcare: healthcareSchema.optional(),
     })
-    .strict();
+    .strict()
+    .refine((value) => value.healthcare === undefined || isHealthcareIntent(value.intent), {
+      error: "Health & Care details can only be sent with a Health & Care topic.",
+      path: ["healthcare"],
+    });
 }
 
 export const enquirySchemaV2 = createEnquirySchemaV2();
@@ -234,6 +304,7 @@ export const enquiryFieldNames = [
   "idempotencyKey",
   "turnstileToken",
   "website",
+  "healthcare",
 ] as const;
 export type EnquiryFieldName = (typeof enquiryFieldNames)[number];
 
@@ -248,6 +319,10 @@ export const enquiryEchoFieldNames = [
   "budgetRange",
   "intent",
   "offerSlug",
+  "healthcareOrganisationType",
+  "healthcareSites",
+  "healthcareSystems",
+  "healthcareNeeds",
 ] as const;
 export type EnquiryEchoFieldName = (typeof enquiryEchoFieldNames)[number];
 
@@ -255,10 +330,38 @@ export type EnquiryEchoFieldName = (typeof enquiryEchoFieldNames)[number];
 export const enquiryFormFields = {
   turnstileToken: "cf-turnstile-response",
   utm: (key: UtmKey) => `utm_${key}`,
+  healthcareOrganisationType: "healthcareOrganisationType",
+  healthcareSites: "healthcareSites",
+  /** One checkbox per need, all with this name. */
+  healthcareNeeds: "healthcareNeeds",
+  healthcareSystems: "healthcareSystems",
 } as const;
 
 interface FieldReader {
   get(name: string): unknown;
+  /** FormData and URLSearchParams have it; needed for the multi-select of needs. */
+  getAll?(name: string): unknown[];
+}
+
+/**
+ * The healthcare block from a form submission, or undefined when the visitor filled none of it.
+ * The number of sites stays a string when it is not a number, so the schema reports it.
+ */
+function healthcareFromForm(reader: FieldReader): Record<string, unknown> | undefined {
+  const organisationType = text(reader, enquiryFormFields.healthcareOrganisationType);
+  const rawSites = text(reader, enquiryFormFields.healthcareSites)?.trim();
+  const sites = rawSites === undefined || rawSites === "" ? undefined : Number(rawSites);
+  const needs = (reader.getAll?.(enquiryFormFields.healthcareNeeds) ?? []).filter(
+    (value): value is string => typeof value === "string" && value !== "",
+  );
+  const systems = text(reader, enquiryFormFields.healthcareSystems);
+  const block = {
+    ...(organisationType !== undefined ? { organisationType } : {}),
+    ...(sites !== undefined ? { sites: Number.isFinite(sites) ? sites : rawSites } : {}),
+    ...(needs.length > 0 ? { needs } : {}),
+    ...(systems !== undefined ? { systems } : {}),
+  };
+  return Object.keys(block).length > 0 ? block : undefined;
 }
 
 const text = (reader: FieldReader, name: string): string | undefined => {
@@ -298,6 +401,7 @@ export function enquiryInputFromForm(reader: FieldReader): Record<string, unknow
     idempotencyKey: text(reader, "idempotencyKey"),
     turnstileToken: text(reader, enquiryFormFields.turnstileToken),
     website: typeof website === "string" ? website : undefined,
+    healthcare: healthcareFromForm(reader),
   };
 }
 

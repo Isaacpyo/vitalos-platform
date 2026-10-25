@@ -33,6 +33,25 @@ export interface DraftProvenance {
    * dropped by the repo content source (ADR-028).
    */
   placeholder?: true;
+  /**
+   * Owner-supplied copy the document uses word for word, outside the strategy library: the brief
+   * and the part it comes from, for example "Website Build Pack (25 Oct 2026), Part 2".
+   */
+  brief?: string;
+}
+
+/** The Health & Care launch brief (owner, 25 October 2026): the source of its copy, word for word. */
+export const BUILD_PACK = "Vitalos Healthcare: Website Build Pack (25 Oct 2026)";
+
+/** Provenance for a document whose copy is owner-supplied in a brief, beside the strategy sections it rests on. */
+export function briefed(
+  sources: readonly DraftCitation[],
+  brief: string,
+  omitted?: string,
+): DraftProvenance {
+  return omitted === undefined
+    ? { status: DRAFT_STATUS, sources, brief }
+    : { status: DRAFT_STATUS, sources, brief, omitted };
 }
 
 /** A citation: `cite(3, "4.1 Core capabilities")`. */

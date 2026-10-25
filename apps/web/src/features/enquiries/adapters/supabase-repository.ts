@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { NewEnquiry, SubmittedEnquiry } from "../domain/enquiry";
+import { enquiryDetailsFor } from "../healthcare";
 import type { EnquiryRepository } from "../domain/ports";
 import { callRpc, EnquiryStoreError } from "./supabase-rpc";
 import type { RpcClient } from "./supabase-rpc";
@@ -28,6 +29,7 @@ export const toSubmitPayload = (enquiry: NewEnquiry): Record<string, unknown> =>
   correlationId: enquiry.correlationId,
   ipHash: enquiry.ipHash,
   idempotencyKey: enquiry.idempotencyKey,
+  details: enquiryDetailsFor(enquiry),
 });
 
 /** Stores the enquiry and its outbox event in one database transaction (`submit_enquiry`). */
