@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { isUnpublished, routes } from "@vitalos/cms";
-import { getEnv } from "@vitalos/config";
 import { JsonLd } from "../../../../src/components/json-ld";
 import {
   loadDetailPage,
@@ -21,7 +20,6 @@ import {
   isInsightPublished,
   loadLatestTopicPosts,
 } from "../../../../src/features/content/topic-insights";
-import { includesUnpublished } from "../../../../src/lib/cms/content-source-factory";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -73,8 +71,8 @@ export default async function IndustryPage({ params }: Props) {
           offerSlugs={new Set(chrome.offers.map((offer) => offer.slug))}
           caseStudies={doc.work}
           insights={insights}
-          // A preview links the briefing before it is published, so reviewers see where it leads.
-          showGuardrailLink={linkPublished || includesUnpublished(getEnv().deployEnv)}
+          // Linked only once the briefing is published, so the page never links to a 404.
+          showGuardrailLink={linkPublished}
         />
       </>
     );
