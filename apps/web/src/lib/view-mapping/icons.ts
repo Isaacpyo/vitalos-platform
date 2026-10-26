@@ -1,5 +1,6 @@
 import { brandName, industryNames, offerNames, practiceNames, solutionNames } from "@vitalos/cms";
 import type { IconName } from "@vitalos/ui";
+import type { SubjectIconName } from "@vitalos/ui/subject-icons";
 
 /**
  * Decorative subject icons for cards and rows (the owner comp's icon tiles, ADR-023). Icons are
@@ -48,6 +49,10 @@ const byOffer: Readonly<Record<string, IconName>> = {
   [offerNames[10]]: "shield",
   [offerNames[11]]: "server",
   [offerNames[12]]: "target",
+  // Health & Care offers (Website Build Pack, 25 Oct 2026).
+  [offerNames[13]]: "timer",
+  [offerNames[14]]: "badge-check",
+  [offerNames[15]]: "truck",
 };
 
 const fallback: Readonly<Record<IconKind, IconName>> = {
@@ -71,3 +76,86 @@ export function iconFor(kind: IconKind, title: string): IconName {
   if (kind === "offer") return byOffer[name] ?? fallback.offer;
   return byName[name] ?? fallback[kind];
 }
+
+/**
+ * Icons for the points of a lead page and the highlights of a case study (Website Build Pack,
+ * 25 Oct 2026). Content names each point's subject with a `key` (the brief's Lucide names, as a
+ * guide); this maps it onto the site's own set, drawn as server-only subject icons
+ * (`@vitalos/ui/subject-icons`) so they never ship in client JavaScript. An unknown key gets the neutral check; a test
+ * checks that every key in the drafted content is mapped.
+ */
+const byPointKey: Readonly<Record<string, SubjectIconName>> = {
+  inbox: "inbox",
+  "file-text": "document",
+  unplug: "unplug",
+  "shield-check": "shield",
+  timer: "timer",
+  plug: "plug",
+  "badge-check": "badge-check",
+  truck: "truck",
+  search: "search",
+  "flask-conical": "flask",
+  rocket: "rocket",
+  settings: "settings",
+  check: "check",
+  x: "close",
+  bot: "bot",
+  "package-check": "package-check",
+  stethoscope: "stethoscope",
+  lock: "lock",
+  "file-lock": "file-lock",
+  accessibility: "accessibility",
+  handshake: "handshake",
+  car: "car",
+  "user-x": "user-x",
+  "user-round": "user-round",
+  palette: "palette",
+  smartphone: "smartphone",
+  receipt: "receipt",
+  quote: "quote",
+  code: "code",
+  // Revision 2 (Website Build Pack, 25 Oct 2026).
+  "building-2": "building",
+  cpu: "chip",
+  "chart-line": "chart",
+  "list-todo": "list-checks",
+  users: "users",
+  clock: "clock",
+  mail: "mail",
+  workflow: "workflow",
+  "user-check": "user-check",
+  "user-minus": "user-minus",
+  landmark: "landmark",
+  package: "package",
+  "file-pen": "file-pen",
+  "file-check": "file-check",
+  "file-x": "file-x",
+  "file-down": "file-down",
+  "file-question": "file-question",
+  tags: "tags",
+  route: "route",
+  history: "history",
+  "refresh-cw": "refresh-cw",
+  "scan-barcode": "scan-barcode",
+  thermometer: "thermometer",
+  "pen-line": "pen-line",
+  "badge-percent": "badge-percent",
+  "message-square": "message-square",
+  "layout-dashboard": "layout-dashboard",
+  network: "network",
+  calendar: "calendar",
+  "calendar-clock": "calendar-clock",
+  "git-branch": "git-branch",
+  "list-ordered": "list-ordered",
+  "list-checks": "list-checks",
+  briefcase: "briefcase",
+  clipboard: "clipboard",
+  "clipboard-check": "clipboard-check",
+  "folder-check": "folder-check",
+  "shield-question": "shield-question",
+  pill: "pill",
+  map: "map",
+};
+
+/** The icon for a point's subject key. */
+export const pointIcon = (key: string): SubjectIconName => byPointKey[key] ?? "check";

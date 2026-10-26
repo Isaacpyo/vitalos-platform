@@ -217,12 +217,15 @@ def test_pagination_featured_and_filters(superadmin, client: Client):
             featured=index == 3,
         )
     first = response_json(signed_get(client, "/api/content/v1/insights/posts"))
-    assert first["featured"]["slug"] == "example-03"
+    # The lead is the newest post, whatever the "featured" flag says (Website Build Pack, 25 Oct
+    # 2026), so page 1 reads newest first.
+    assert first["featured"]["slug"] == "example-13"
     assert first["total"] == 14 and first["totalPages"] == 2 and len(first["items"]) == 12
     second = response_json(signed_get(client, "/api/content/v1/insights/posts?page=2"))
     assert second["featured"] is None and len(second["items"]) == 1
     slugs = [item["slug"] for item in first["items"] + second["items"]]
-    assert "example-03" not in slugs and len(set(slugs)) == 13
+    assert "example-13" not in slugs and len(set(slugs)) == 13
+    assert slugs == [f"example-{index:02d}" for index in range(12, -1, -1)]
     assert signed_get(client, "/api/content/v1/insights/posts?page=3").status_code == 404
     assert signed_get(client, "/api/content/v1/insights/posts?page=0").status_code == 404
     assert signed_get(client, "/api/content/v1/insights/posts?format=not-a-format").status_code == 404

@@ -8,7 +8,9 @@ import type {
   SocialLink,
 } from "@vitalos/email-layout";
 import type { EnquiryIntent, EnquiryTimeframe } from "@vitalos/validation/enquiry";
+import type { EnquiryForNotification } from "../domain/enquiry";
 import type { NotificationMessage } from "../domain/ports";
+import { healthcareNeedLabels, healthcareOrganisationTypeLabels } from "../healthcare";
 
 export { cleanLine, cleanMultiline, escapeHtml } from "@vitalos/email-layout";
 
@@ -64,6 +66,8 @@ export const intentLabels: Record<EnquiryIntent, string> = {
   partnership: "Partnership",
   careers: "Careers",
   general: "General enquiry",
+  "healthcare-audit": "Health & Care: an audit or engagement",
+  "healthcare-partner": "Health & Care: design partner",
 };
 
 /** Same wording as the form (`components/contact/labels.ts`); the bands are still provisional. */
@@ -172,6 +176,32 @@ interface EnquiryView {
   sourcePath: string;
   sourceUrl: string | undefined;
   goal: string;
+  /** Server-derived tags, for example "healthcare". */
+  tags: string[];
+  /** Health & Care answers as labelled rows (empty for other intents). */
+  healthcareRows: DetailRow[];
+}
+
+/** The Health & Care answers as rows: every answer the visitor gave, labelled as on the form. */
+function healthcareRowsOf(details: EnquiryForNotification["details"]): DetailRow[] {
+  const h = details?.healthcare;
+  if (!h) return [];
+  const organisationType = cleanLine(h.organisationType);
+  const needs = (h.needs ?? []).map((need) => labelFor(healthcareNeedLabels, cleanLine(need)));
+  const systems = cleanLine(h.systems);
+  return [
+    ...(organisationType
+      ? [
+          {
+            label: "Organisation type",
+            value: labelFor(healthcareOrganisationTypeLabels, organisationType),
+          },
+        ]
+      : []),
+    ...(typeof h.sites === "number" ? [{ label: "Number of sites", value: String(h.sites) }] : []),
+    ...(needs.length > 0 ? [{ label: "What they need", value: needs.join(", ") }] : []),
+    ...(systems ? [{ label: "Systems in use", value: systems }] : []),
+  ];
 }
 
 function toView(message: NotificationMessage): EnquiryView {
@@ -203,6 +233,8 @@ function toView(message: NotificationMessage): EnquiryView {
     sourcePath,
     sourceUrl: sourcePath ? sourcePageUrl(sourcePath) : undefined,
     goal: cleanMultiline(e.goal),
+    tags: (e.details?.tags ?? []).map((tag) => cleanLine(tag)).filter(Boolean),
+    healthcareRows: healthcareRowsOf(e.details),
   };
 }
 
@@ -213,7 +245,9 @@ export function buildSubject(message: NotificationMessage): string {
   const who = [truncate(v.name, 60) || "Name not provided", truncate(v.organisation, 60)]
     .filter(Boolean)
     .join(", ");
-  return `New enquiry: ${intent} · ${who} · ${v.reference}`;
+  // A tag leads the subject, so the inbox can filter on it ("[healthcare] New enquiry: ...").
+  const tags = v.tags.map((tag) => `[${truncate(tag, 20)}] `).join("");
+  return `${tags}New enquiry: ${intent} · ${who} · ${v.reference}`;
 }
 
 /** Inbox preview text: "Within 3 months · {first 80 characters of the goal}". */
@@ -262,6 +296,7 @@ export function buildDocument(message: NotificationMessage): EmailDocument {
     },
     ...(v.budgetRange ? [{ label: "Budget range", value: v.budgetRange }] : []),
     ...(v.offer ? [{ label: "Offer", value: v.offer }] : []),
+    ...(v.tags.length > 0 ? [{ label: "Tags", value: v.tags.join(", ") }] : []),
     { label: "Source page", value: v.sourceUrl ?? v.sourcePath, href: v.sourceUrl },
   ];
 
@@ -300,6 +335,12 @@ export function buildDocument(message: NotificationMessage): EmailDocument {
       { type: "details", rows: contactRows },
       { type: "section", text: "Enquiry details" },
       { type: "details", rows: enquiryRows },
+      ...(v.healthcareRows.length > 0
+        ? ([
+            { type: "section", text: "Health & Care details" },
+            { type: "details", rows: v.healthcareRows },
+          ] as const)
+        : []),
       { type: "section", text: "Meta" },
       { type: "details", rows: metaRows },
     ],

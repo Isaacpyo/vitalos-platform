@@ -152,7 +152,7 @@ test.describe("gated sections are reachable while their gates are open", () => {
     page,
   }) => {
     for (const [menu, label, path] of [
-      ["Who We Are", "Work", /\/work$/],
+      ["Who We Are", "Case studies", /\/work$/],
       ["What We Do", "Labs", /\/labs$/],
       ["Who We Are", "Industries", /\/industries$/],
     ] as const) {

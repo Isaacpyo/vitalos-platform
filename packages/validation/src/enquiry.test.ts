@@ -211,3 +211,70 @@ describe("enquiryInputFromForm", () => {
     expect(enquiryInputFromForm(form).website).toBe("https://spam.invalid");
   });
 });
+
+describe("Health & Care enquiries (Website Build Pack, 25 Oct 2026)", () => {
+  const healthcare = {
+    organisationType: "gp-practice-or-pcn",
+    sites: 3,
+    needs: ["inbox-and-referrals", "letters"],
+    systems: "Fixture practice system",
+  };
+
+  it("accepts both healthcare intents, with or without the healthcare block", () => {
+    for (const intent of ["healthcare-audit", "healthcare-partner"]) {
+      expect(enquirySchemaV2.safeParse({ ...valid, intent }).success, intent).toBe(true);
+      expect(enquirySchemaV2.safeParse({ ...valid, intent, healthcare }).success, intent).toBe(
+        true,
+      );
+    }
+  });
+
+  it("refuses the healthcare block with any other topic", () => {
+    expect(issuesFor({ ...valid, healthcare }).fieldErrors.healthcare).toMatch(/Health & Care/);
+  });
+
+  it("refuses unknown organisation types and needs, repeated needs, and bad site counts", () => {
+    const intent = "healthcare-audit";
+    for (const block of [
+      { organisationType: "hospital-ward" },
+      { needs: ["diagnosis"] },
+      { needs: ["letters", "letters"] },
+      { sites: 0 },
+      { sites: 2.5 },
+      { sites: 10_001 },
+      { sites: "three" },
+      { systems: "x".repeat(301) },
+      { unexpected: true },
+    ]) {
+      expect(enquirySchemaV2.safeParse({ ...valid, intent, healthcare: block }).success).toBe(
+        false,
+      );
+    }
+  });
+
+  it("reads the block from a form, with every ticked need", () => {
+    const form = new URLSearchParams({
+      ...Object.fromEntries(Object.entries(valid).map(([key, value]) => [key, String(value)])),
+      intent: "healthcare-audit",
+      consent: "on",
+      healthcareOrganisationType: "nhs-trust",
+      healthcareSites: "12",
+      healthcareSystems: "Fixture system",
+    });
+    form.append("healthcareNeeds", "letters");
+    form.append("healthcareNeeds", "nhs-assurance");
+    const body = enquiryInputFromForm(form);
+    expect(body.healthcare).toEqual({
+      organisationType: "nhs-trust",
+      sites: 12,
+      needs: ["letters", "nhs-assurance"],
+      systems: "Fixture system",
+    });
+    expect(enquirySchemaV2.safeParse(body).success).toBe(true);
+  });
+
+  it("leaves the block out when none of it is filled", () => {
+    const form = new URLSearchParams({ intent: "healthcare-partner" });
+    expect(enquiryInputFromForm(form).healthcare).toBeUndefined();
+  });
+});

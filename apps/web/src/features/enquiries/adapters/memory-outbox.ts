@@ -1,5 +1,6 @@
 import type { Clock, OutboxItem, OutboxStore } from "../domain/ports";
 import { systemClock } from "../domain/ports";
+import { enquiryDetailsFor } from "../healthcare";
 import type { MemoryEnquiryRepository, MemoryOutboxRow } from "./memory-repository";
 
 const LEASE_SECONDS = 300;
@@ -48,6 +49,7 @@ export class MemoryOutboxStore implements OutboxStore {
           offerSlug: enquiry.offerSlug,
           sourcePath: enquiry.sourcePath,
           receivedAt: enquiry.receivedAt.toISOString(),
+          details: enquiryDetailsFor(enquiry),
         },
       };
     });

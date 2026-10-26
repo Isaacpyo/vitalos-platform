@@ -75,6 +75,12 @@ export interface ChromeContent {
   offers: readonly OfferSummary[];
   /** Industries, for the Who We Are menu (shown while the Industries gate is open). */
   industries: readonly IndustrySummary[];
+  /**
+   * Industries whose lead page this deployment serves: each gets a top-level link after What We
+   * Do (Website Build Pack, 25 Oct 2026), while the Industries gate is open. Optional for callers
+   * that predate lead pages.
+   */
+  leadPages?: readonly IndustrySummary[];
   /** Lab assets, for the Labs column of What We Do (the lab types that have assets). */
   labAssets: readonly LabAssetSummary[];
   trustTopics: readonly TrustTopicSummary[];
@@ -332,13 +338,23 @@ export function buildHeaderModel(content: ChromeContent): HeaderModel {
     "who-we-are": { columns: buildWhoWeAreColumns(content), feature: whoWeAreFeature },
     support: { columns: buildSupportColumns(content) },
   };
-  const items = filterNavByGates(primaryNav, gates).map((item): SiteNavItem => {
+  const sections = filterNavByGates(primaryNav, gates).map((item): SiteNavItem => {
     const base = { key: item.key, label: item.label, href: item.href };
     const menu = menus[item.key];
     return menu && menu.columns.some((column) => column.links.length > 0)
       ? { ...base, menu }
       : base;
   });
+  const leadLinks: SiteNavItem[] = gates.open.industries
+    ? orderByLockedNames(content.leadPages ?? [], industryNames).flatMap((industry) => {
+        const href = hrefForSummary("industry", industry);
+        return href ? [{ key: `industry-${industry.slug}`, label: industry.title, href }] : [];
+      })
+    : [];
+  // The lead pages sit straight after What We Do.
+  const items = sections.flatMap((item) =>
+    item.key === "what-we-do" ? [item, ...leadLinks] : [item],
+  );
   const social = socialOf(content.settings);
   return {
     items,

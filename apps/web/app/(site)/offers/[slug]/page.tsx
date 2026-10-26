@@ -38,6 +38,7 @@ export default async function OfferPage({ params }: Props) {
           name: doc.title,
           description: doc.summary,
           serviceType: doc.title,
+          ...(doc.faq && doc.faq.length > 0 ? { faq: doc.faq } : {}),
           dateModified: doc.updatedAt,
         })}
       />

@@ -5,6 +5,7 @@ import { fullFixtureSet } from "@vitalos/cms/fixtures";
 import {
   caseStudyFacts,
   caseStudyRowProps,
+  isPublicCaseStudy,
   isVerifiedProof,
   namedClient,
   publishableTestimonial,
@@ -126,5 +127,66 @@ describe("related links", () => {
     expect(closed.some((link) => link.href.startsWith("/solutions/"))).toBe(true);
     const open = relatedLinks(named, evaluateGates({ industries: 1 }));
     expect(open.some((link) => link.href.startsWith("/industries/"))).toBe(true);
+  });
+});
+
+/** A copy of `value` without `key` (exact optional property types refuse `key: undefined`). */
+function without<T extends object, K extends keyof T>(value: T, key: K): Omit<T, K> {
+  const copy: Partial<T> = { ...value };
+  delete copy[key];
+  return copy as Omit<T, K>;
+}
+
+describe("Website Build Pack proof rules (Part 3)", () => {
+  it("names a client only with a recorded written permission", () => {
+    expect(namedClient(without(named, "clientPermission"))).toBeUndefined();
+    expect(namedClient({ ...named, clientPermission: " " })).toBeUndefined();
+    expect(namedClient(named)).toBe(named.clientName);
+  });
+
+  it("drops a metric without a verifier", () => {
+    const metric = named.metrics[0]!;
+    expect(verifiedMetrics({ ...named, metrics: [without(metric, "verifiedBy")] })).toBeUndefined();
+    expect(verifiedMetrics({ ...named, metrics: [{ ...metric, verifiedBy: " " }] })).toBe(
+      undefined,
+    );
+  });
+
+  it("withholds a quote without a permission date", () => {
+    const testimonial = without(named.testimonial!, "permissionDate");
+    expect(publishableTestimonial({ ...named, testimonial })).toBeUndefined();
+  });
+
+  it("labels a product story 'Built and run by Vitalos' and shows no client", () => {
+    const product: CaseStudyView = {
+      ...anonymised,
+      kind: "product",
+      engagementBasis: "vitalos-product",
+    };
+    const facts = caseStudyFacts(product);
+    expect(facts.find((fact) => fact.label === "Client")).toBeUndefined();
+    expect(facts.find((fact) => fact.label === "Engagement")?.value).toBe(
+      "Built and run by Vitalos",
+    );
+  });
+
+  it("gives an unpublished draft a page (previews only serve drafts), but not pending proof", () => {
+    expect(isPublicCaseStudy({ ...pending, publishStatus: "draft" })).toBe(true);
+    expect(isPublicCaseStudy(pending)).toBe(false);
+  });
+
+  it("links the products and offers a case study names", () => {
+    const links = relatedLinks(
+      {
+        ...anonymised,
+        products: ["fauward", "not-a-product"],
+        offers: [{ id: "o", slug: "systems-integration", title: "Systems Integration" }],
+      },
+      evaluateGates({}),
+    );
+    expect(links.map((link) => link.href)).toEqual(
+      expect.arrayContaining(["/products/fauward", "/offers/systems-integration"]),
+    );
+    expect(JSON.stringify(links)).not.toContain("not-a-product");
   });
 });

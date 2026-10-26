@@ -77,9 +77,10 @@ const draftFactory: ContentSourceFactory = async (config, loaders) => {
 /**
  * Repo-file content (ADR-028): the approved subset of the drafted content, stored in the repo. The
  * production content source. No fallback: asking for repo content and silently getting an empty site
- * would hide a packaging error.
+ * would hide a packaging error. Unpublished documents (`publishStatus` draft or approved) are served
+ * everywhere except production, so previews show them for review and production never does.
  */
-const repoFactory: ContentSourceFactory = async (_config, loaders) => {
+const repoFactory: ContentSourceFactory = async (config, loaders) => {
   const mod = await loaders.loadRepoModule();
   const create = mod["createRepoContentSource"];
   if (typeof create !== "function") {
@@ -87,8 +88,13 @@ const repoFactory: ContentSourceFactory = async (_config, loaders) => {
       "The repo content source is not available: @vitalos/cms/repo does not export createRepoContentSource.",
     );
   }
-  return (create as () => ContentSource)();
+  return (create as (options: { includeUnpublished: boolean }) => ContentSource)({
+    includeUnpublished: includesUnpublished(config.deployEnv),
+  });
 };
+
+/** Whether a deployment serves unpublished documents: every one except production. */
+export const includesUnpublished = (deployEnv: string): boolean => deployEnv !== "production";
 
 export const contentSourceFactories: Record<ContentSourceKind, ContentSourceFactory> = {
   empty: emptyFactory,

@@ -18,6 +18,8 @@ export const intentFallbackLabels: Record<ContactIntent, string> = {
   partnership: "A partnership",
   careers: "Careers",
   general: "Something else",
+  "healthcare-audit": "Health & Care: an audit or engagement",
+  "healthcare-partner": "Health & Care: design partner",
 };
 
 /**
@@ -36,11 +38,20 @@ export interface SelectOption {
   label: string;
 }
 
-export function buildIntentOptions(routes: readonly ContactRouteView[] = []): SelectOption[] {
-  return contactIntents.map((value) => ({
-    value,
-    label: routes.find((route) => route.intent === value)?.label ?? intentFallbackLabels[value],
-  }));
+/**
+ * The topics of the enquiry form. `exclude` leaves topics out, for example the Health & Care
+ * topics while their lead page is not published and the visitor did not arrive with one.
+ */
+export function buildIntentOptions(
+  routes: readonly ContactRouteView[] = [],
+  exclude: readonly ContactIntent[] = [],
+): SelectOption[] {
+  return contactIntents
+    .filter((value) => !exclude.includes(value))
+    .map((value) => ({
+      value,
+      label: routes.find((route) => route.intent === value)?.label ?? intentFallbackLabels[value],
+    }));
 }
 
 export const timeframeOptions: SelectOption[] = enquiryTimeframes.map((value) => ({

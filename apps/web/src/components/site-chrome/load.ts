@@ -34,6 +34,16 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
     source.listSummaries("legalPage"),
     getSiteStateOrClosed(),
   ]);
+  // Industries with a lead page this deployment serves (in production: a published one) get a
+  // top-level navigation link (Website Build Pack, 25 Oct 2026).
+  const leadPages = (
+    await Promise.all(
+      industries.map(async (summary) => {
+        const doc = await source.getDocument("industry", summary.slug);
+        return doc?.landing ? [summary] : [];
+      }),
+    )
+  ).flat();
   return {
     gates: withContentSections(chrome.gates, state),
     settings: chrome.settings,
@@ -41,6 +51,7 @@ export const loadChromeContent = cache(async (): Promise<ChromeContent> => {
     solutions,
     offers,
     industries,
+    leadPages,
     labAssets,
     trustTopics,
     legalPages,

@@ -13,6 +13,8 @@ import { parseContactSearchParams } from "../../../src/components/contact/contac
 import type { ContactSearchParams } from "../../../src/components/contact/contact-params";
 import { resolveContactPage } from "../../../src/components/contact/contact-view";
 import { buildIntentOptions } from "../../../src/components/contact/labels";
+import { loadChromeContent } from "../../../src/components/site-chrome/load";
+import { healthcareIntents, isHealthcareIntent } from "@vitalos/validation/enquiry";
 import { Breadcrumbs, homeCrumb } from "../../../src/templates/institutional/breadcrumbs";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,6 +49,12 @@ export default async function ContactPage({
     searchParams,
   ]);
   const prefill = parseContactSearchParams(query);
+  // The Health & Care topics appear once the Health & Care lead page is served (in production:
+  // published), or when the visitor arrives with one (Website Build Pack, 25 Oct 2026).
+  const healthcareTopicsShown =
+    isHealthcareIntent(prefill.intent) ||
+    (await loadChromeContent()).leadPages?.some((industry) => industry.slug === "health-care") ===
+      true;
   const turnstileSiteKey = features.turnstile ? env.turnstile.siteKey : undefined;
 
   return (
@@ -88,7 +96,10 @@ export default async function ContactPage({
                 sourcePath={SOURCE_PATH}
                 privacyNoticeVersion={form.privacyNoticeVersion}
                 idempotencyKey={crypto.randomUUID()}
-                intentOptions={buildIntentOptions(page?.routes)}
+                intentOptions={buildIntentOptions(
+                  page?.routes,
+                  healthcareTopicsShown ? [] : healthcareIntents,
+                )}
                 prefill={prefill}
                 turnstileSiteKey={turnstileSiteKey}
                 contactEmail={settings.contactEmail}

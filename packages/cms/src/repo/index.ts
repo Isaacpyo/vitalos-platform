@@ -6,7 +6,10 @@
 //      publication gates keep Leadership, Insights, Work and Careers closed;
 //   2. legal pages are only those in `./legal.ts` (the draft skeletons are never served);
 //   3. site settings carry the owner-published company facts (`./settings.ts`);
-//   4. any rich-text block that still holds a bracketed placeholder is dropped (`dropPlaceholders`).
+//   4. any rich-text block that still holds a bracketed placeholder is dropped (`dropPlaceholders`);
+//   5. unpublished documents (`publishStatus` draft or approved) and every reference to them are
+//      dropped in production; previews and local builds keep them, unindexed, for review
+//      (Website Build Pack, 25 Oct 2026).
 import { createFixtureSource } from "../content/fixture-source";
 import type { FixtureContentSourceOptions, FixtureSet } from "../content/fixture-source";
 import type { ContentSource } from "../content/source";
@@ -81,10 +84,68 @@ function buildRepoSet(): FixtureSet {
   };
 }
 
-/** The repo content set, built once. */
-export const repoContent: FixtureSet = buildRepoSet();
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/** An object marked draft or approved (see `PublishStatus`): not served in production. */
+const unpublished = (value: unknown): boolean =>
+  isObject(value) && (value["publishStatus"] === "draft" || value["publishStatus"] === "approved");
+
+/**
+ * A copy of `value` without anything unpublished: list members and object fields whose
+ * `publishStatus` is draft or approved are removed, at any depth. A published document therefore
+ * never links to, lists or counts a draft (an offer card, a case study row, a page section).
+ */
+export function withoutUnpublished<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.filter((item) => !unpublished(item)).map(withoutUnpublished) as T;
+  }
+  if (!isObject(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (!unpublished(item)) out[key] = withoutUnpublished(item);
+  }
+  return out as T;
+}
+
+/**
+ * Unpublished documents stay out of search engines even on a preview (previews are never indexed,
+ * this is the second line).
+ */
+function noindexUnpublished(set: FixtureSet): FixtureSet {
+  const documents = Object.fromEntries(
+    Object.entries(set.documents).map(([kind, list]) => [
+      kind,
+      (list as unknown as readonly Record<string, unknown>[]).map((doc) =>
+        unpublished(doc) && isObject(doc["seo"])
+          ? { ...doc, seo: { ...doc["seo"], noindex: true } }
+          : doc,
+      ),
+    ]),
+  ) as unknown as FixtureSet["documents"];
+  return { ...set, documents };
+}
+
+const fullRepoSet = buildRepoSet();
+
+/** The repo content set as production serves it: published documents only. Built once. */
+export const repoContent: FixtureSet = withoutUnpublished(fullRepoSet);
+
+/** The repo content set for previews and local builds: drafts included, unindexed. Built once. */
+export const repoPreviewContent: FixtureSet = noindexUnpublished(fullRepoSet);
+
+export interface RepoContentSourceOptions extends FixtureContentSourceOptions {
+  /**
+   * Serve draft and approved documents too (previews and local builds). Never in production: the
+   * content-source factory sets it from the deploy environment.
+   */
+  includeUnpublished?: boolean;
+}
 
 /** The repo `ContentSource`. Allowed in production. Placeholder case studies never count. */
-export function createRepoContentSource(options: FixtureContentSourceOptions = {}): ContentSource {
-  return createFixtureSource(repoContent, options);
+export function createRepoContentSource(options: RepoContentSourceOptions = {}): ContentSource {
+  const { includeUnpublished, ...rest } = options;
+  return includeUnpublished === true
+    ? createFixtureSource(repoPreviewContent, { ...rest, countUnpublishedCaseStudies: true })
+    : createFixtureSource(repoContent, rest);
 }

@@ -12,6 +12,18 @@ import { analyticsEnabled, vercelAnalyticsSink } from "../../features/analytics/
  */
 const productOf = (link: Element) => link.getAttribute("data-product") || undefined;
 
+/**
+ * The CTA a contact link stands for: a Health & Care intent (Website Build Pack, 25 Oct 2026) is
+ * its own CTA; every other contact link is "Talk to Vitalos". Only the fixed intent name is sent,
+ * never the query string.
+ */
+export function ctaIdFor(href: URL): string {
+  const intent = href.searchParams.get("intent");
+  return intent === "healthcare-audit" || intent === "healthcare-partner"
+    ? intent
+    : "talk-to-vitalos";
+}
+
 /** Page URLs are sent without their query string: a query can carry a reference or an intent. */
 const withoutQuery = <T extends { url: string }>(event: T): T => ({
   ...event,
@@ -44,7 +56,7 @@ export function SiteAnalytics() {
       }
       if (href.origin !== window.location.origin || href.pathname !== contact) return;
       vercelAnalyticsSink.track("primary_cta_click", {
-        ctaId: "talk-to-vitalos",
+        ctaId: ctaIdFor(href),
         route: window.location.pathname,
       });
     };

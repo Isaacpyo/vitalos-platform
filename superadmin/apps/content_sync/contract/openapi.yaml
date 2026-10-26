@@ -145,6 +145,7 @@ components:
               guide,
               research_report,
               case_derived_insight,
+              news,
             ]
         label: { type: string, maxLength: 80 }
         plural: { type: string, maxLength: 80 }

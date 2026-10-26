@@ -13,6 +13,7 @@ import { clean, paramsFromSummaries } from "./helpers";
 import type { ContentSource, GetDocumentArgs, ReadOpts, SlugFor } from "./source";
 import { hrefForDocument } from "../routes";
 import type { DocumentRef, LabType, RoutePageKey } from "../routes";
+import { isUnpublished } from "./types";
 import type {
   CaseStudySummary,
   DocKind,
@@ -21,6 +22,7 @@ import type {
   JobView,
   OfferSummary,
   PersonSummary,
+  PublishStatus,
   RoutePageViewFor,
   SiteChromeView,
   SiteSettingsView,
@@ -50,21 +52,31 @@ export interface FixtureContentSourceOptions {
    * and the repo source never do, so the production rule (verified evidence only) is unchanged.
    */
   countPlaceholderCaseStudies?: boolean;
+  /**
+   * Count unpublished case studies (`publishStatus` draft or approved) towards the Work gate, so a
+   * preview can show the section they would open. Only the repo source's preview set sets this;
+   * production never holds an unpublished document.
+   */
+  countUnpublishedCaseStudies?: boolean;
 }
 
-const base = (view: {
+interface BaseFields {
   id: string;
   slug: string;
   title: string;
   summary?: string;
   placeholder?: true;
-}) =>
-  clean<{ id: string; slug: string; title: string; summary?: string; placeholder?: true }>({
+  publishStatus?: PublishStatus;
+}
+
+const base = (view: BaseFields) =>
+  clean<BaseFields>({
     id: view.id,
     slug: view.slug,
     title: view.title,
     summary: view.summary,
     placeholder: view.placeholder,
+    publishStatus: view.publishStatus,
   });
 
 /** The summary a view would have been listed with. Used by the fixture source and fixture builders. */
@@ -84,6 +96,7 @@ export function summaryOf<K extends DocKind>(kind: K, view: ViewFor<K>): Summary
         ...base(study),
         engagementBasis: study.engagementBasis,
         clientLabel: study.clientDisplay === "named" ? study.clientName : study.sector,
+        kind: study.kind,
       }) as SummaryFor<K>;
     }
     case "insight": {
@@ -168,7 +181,8 @@ export function createFixtureSource(
       work: views("caseStudy").filter(
         (study) =>
           study.evidence.status === "verified" ||
-          (options.countPlaceholderCaseStudies === true && study.placeholder === true),
+          (options.countPlaceholderCaseStudies === true && study.placeholder === true) ||
+          (options.countUnpublishedCaseStudies === true && isUnpublished(study)),
       ).length,
       insights: views("insight").filter((insight) => insight.authors.length > 0).length,
       labs: views("labAsset").length,
@@ -236,6 +250,8 @@ export function createFixtureSource(
         for (const view of views(kind)) {
           const doc = view;
           if ("seo" in doc && doc.seo.noindex === true) continue;
+          // Unpublished documents are never listed, whatever the deployment (Website Build Pack).
+          if ("publishStatus" in doc && isUnpublished(doc)) continue;
           // A case study without verified evidence has no public page (the route answers 404).
           if (
             kind === "caseStudy" &&

@@ -276,8 +276,11 @@ const work: RoutePageDraft = {
     key: "work",
     heading: "Technology outcomes, not project theatre.",
     intro:
-      "Case studies of client work, published only with permission and evidence. Each says whether the work was contracted by Vitalos or reflects prior team experience.",
-    seo: seo("Work", "Case studies of client work, published with permission and evidence."),
+      "Case studies of client work, published only with permission and evidence. Each says whether the work was contracted by Vitalos, reflects prior team experience, or is a product Vitalos built and runs.",
+    seo: seo(
+      "Case studies",
+      "Case studies of client work and of products Vitalos built and runs, published with permission and evidence.",
+    ),
   },
   provenance: drafted(
     [cite(11, "19. Work index"), cite(10, "17. Work / case-study launch")],

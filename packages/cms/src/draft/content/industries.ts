@@ -6,7 +6,8 @@
 import { industryNames } from "../../locked-copy";
 import type { IndustryView } from "../../content/types";
 import { cta, seo } from "../build";
-import { cite, drafted } from "../provenance";
+import { BUILD_PACK, cite, drafted } from "../provenance";
+import { healthCareLanding } from "./health-care-landing";
 import type { DraftProvenance } from "../provenance";
 import type { IndustrySlug, OfferSlug, SolutionSlug } from "../slugs";
 
@@ -75,20 +76,25 @@ export const industryDrafts: readonly IndustryDraft[] = [
       "business-process-automation",
     ],
     cta: cta("Discuss a health & care challenge", "project"),
-    provenance: drafted(
-      [
-        verticals,
-        cite(2, "Health & Care"),
-        architecture,
-        production,
-        reputation,
-        cite(6, "11. Health & public-sector readiness"),
-        cite(3, "16.2 Early boundary examples"),
-        cite(5, "14.3 Privacy-by-design"),
-        cite(11, "18. Industry template"),
-      ],
-      "No sector clients, accreditations or outcomes: none are evidenced (Stage 10 §16). The DSPT and Cyber Essentials considerations are UK reference points as at September 2026 (Stage 6 §11); review them before publication.",
-    ),
+    landing: healthCareLanding,
+    provenance: {
+      // The lead page's copy is the owner's (`landing`), recorded beside the strategy sources.
+      brief: `${BUILD_PACK}, Part 2`,
+      ...drafted(
+        [
+          verticals,
+          cite(2, "Health & Care"),
+          architecture,
+          production,
+          reputation,
+          cite(6, "11. Health & public-sector readiness"),
+          cite(3, "16.2 Early boundary examples"),
+          cite(5, "14.3 Privacy-by-design"),
+          cite(11, "18. Industry template"),
+        ],
+        "No sector clients, accreditations or outcomes: none are evidenced (Stage 10 §16). The DSPT and Cyber Essentials considerations are UK reference points as at September 2026 (Stage 6 §11); review them before publication.",
+      ),
+    },
   },
   {
     slug: "retail-commerce-consumer",

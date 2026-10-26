@@ -381,3 +381,41 @@ describe("HTML constraints", () => {
     expect(sizes.filter((s) => s !== 1 && s !== 13).every((s) => s >= 14)).toBe(true);
   });
 });
+
+describe("Health & Care enquiries (Website Build Pack, 25 Oct 2026)", () => {
+  const healthcare = message({
+    intent: "healthcare-audit",
+    details: {
+      tags: ["healthcare"],
+      healthcare: {
+        organisationType: "gp-practice-or-pcn",
+        sites: 3,
+        needs: ["inbox-and-referrals", "letters"],
+        systems: "Fixture practice system",
+      },
+    },
+  });
+
+  it("leads the subject with the tag", () => {
+    expect(buildSubject(healthcare)).toMatch(
+      /^\[healthcare\] New enquiry: Health & Care: an audit or engagement · /,
+    );
+    expect(buildSubject(message())).toMatch(/^New enquiry: /);
+  });
+
+  it("lists the tag and every Health & Care answer, labelled as on the form", () => {
+    const text = buildTextBody(healthcare);
+    for (const expected of [
+      "Tags",
+      "healthcare",
+      "HEALTH & CARE DETAILS",
+      "GP practice or PCN",
+      "Number of sites",
+      "Inbox and referrals, Letters",
+      "Fixture practice system",
+    ]) {
+      expect(text).toContain(expected);
+    }
+    expect(buildTextBody(message())).not.toContain("HEALTH & CARE DETAILS");
+  });
+});

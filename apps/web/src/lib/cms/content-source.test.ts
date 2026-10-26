@@ -99,6 +99,20 @@ describe("resolveContentSource", () => {
     }
   });
 
+  it("asks for unpublished documents everywhere except production", async () => {
+    const createRepoContentSource = vi.fn().mockReturnValue(new EmptyContentSource());
+    for (const [deployEnv, includeUnpublished] of [
+      ["local", true],
+      ["preview", true],
+      ["staging", true],
+      ["production", false],
+    ] as const) {
+      const l = loaders({ loadRepoModule: vi.fn().mockResolvedValue({ createRepoContentSource }) });
+      await resolveContentSource(config({ kind: "repo", deployEnv }), l);
+      expect(createRepoContentSource).toHaveBeenLastCalledWith({ includeUnpublished });
+    }
+  });
+
   it("fails loudly (no empty fallback) when the repo module is missing", async () => {
     await expect(resolveContentSource(config({ kind: "repo" }), loaders())).rejects.toThrow(
       /createRepoContentSource/,

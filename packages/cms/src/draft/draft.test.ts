@@ -48,9 +48,11 @@ describe("publication gates in the draft source", () => {
     expect(plain.counts.work).toBe(0);
   });
 
-  it("drafts only placeholder case studies, insights, people and roles", () => {
+  it("drafts only placeholder case studies, insights, people and roles (besides unpublished stories)", () => {
     for (const kind of ["caseStudy", "insight", "person", "job"] as const) {
-      const list = set.documents[kind] as readonly { placeholder?: true }[];
+      const list = (
+        set.documents[kind] as readonly { placeholder?: true; publishStatus?: string }[]
+      ).filter((doc) => doc.publishStatus === undefined);
       expect(list.length, kind).toBeGreaterThan(0);
       expect(
         list.every((doc) => doc.placeholder === true),
@@ -59,7 +61,7 @@ describe("publication gates in the draft source", () => {
     }
     expect(set.documents.person).toHaveLength(3);
     expect(set.documents.insight).toHaveLength(6);
-    expect(set.documents.caseStudy).toHaveLength(2);
+    expect(set.documents.caseStudy).toHaveLength(5);
     expect(set.documents.job).toHaveLength(1);
     // The home page stays free of placeholder content.
     expect(set.home?.selectedWork).toEqual([]);
@@ -137,7 +139,7 @@ describe("placeholder content guardrails", () => {
   });
 
   it("case studies are anonymised scenarios with no outcome, metrics or testimonial", () => {
-    for (const study of set.documents.caseStudy) {
+    for (const study of set.documents.caseStudy.filter((s) => s.placeholder === true)) {
       expect(study.clientDisplay).toBe("anonymised");
       expect(study.clientName).toBeUndefined();
       expect(study.metrics).toEqual([]);
@@ -303,8 +305,8 @@ describe("document shapes", () => {
     }
   });
 
-  it("thirteen offers, none orphaned, none priced", () => {
-    expect(set.documents.offer).toHaveLength(13);
+  it("sixteen offers (three Health & Care, unpublished), none orphaned, none priced", () => {
+    expect(set.documents.offer).toHaveLength(16);
     for (const offer of set.documents.offer) {
       expect(offer.solutions.length + offer.practices.length).toBeGreaterThan(0);
       expect(offer.outputs.length).toBeGreaterThan(0);
@@ -374,5 +376,60 @@ describe("document shapes", () => {
 
   it("site settings hold only facts the specs state", () => {
     expect(Object.keys(set.settings)).toEqual(["defaultSeo"]);
+  });
+});
+
+describe("Website Build Pack case studies (Part 3)", () => {
+  const stories = () => set.documents.caseStudy.filter((study) => study.placeholder !== true);
+  const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
+
+  it("are the three stories, all unpublished drafts", () => {
+    expect(stories().map((study) => study.slug)).toEqual([
+      "doncaster-vehicle-workshop-booking",
+      "fauward-white-label-logistics-platform",
+      "askbridge-ai-website-assistant",
+    ]);
+    for (const study of stories()) expect(study.publishStatus, study.slug).toBe("draft");
+  });
+
+  it("label product stories as built and run by Vitalos, and client stories as engagements", () => {
+    for (const study of stories()) {
+      expect(study.kind === "product", study.slug).toBe(
+        study.engagementBasis === "vitalos-product",
+      );
+    }
+  });
+
+  it("name no client, and carry no metric or quote without its source, verifier or permission", () => {
+    for (const study of stories()) {
+      expect(study.clientDisplay, study.slug).toBe("anonymised");
+      expect(study.clientName, study.slug).toBeUndefined();
+      expect(study.clientPermission, study.slug).toBeUndefined();
+      for (const metric of study.metrics) {
+        expect(metric.source.trim(), study.slug).not.toBe("");
+        expect(metric.verifiedBy?.trim(), study.slug).toBeTruthy();
+      }
+      if (study.testimonial) expect(study.testimonial.permissionDate, study.slug).toBeTruthy();
+    }
+  });
+
+  it("have three highlights of eight words or fewer, a visual, a challenge, approach and outcome", () => {
+    for (const study of stories()) {
+      expect(study.highlights, study.slug).toHaveLength(3);
+      for (const point of study.highlights ?? []) {
+        expect(words(point.text), point.text).toBeLessThanOrEqual(8);
+      }
+      expect(study.visual, study.slug).toBeTruthy();
+      expect(study.challenge?.length, study.slug).toBeGreaterThan(0);
+      expect(study.approach?.length, study.slug).toBeGreaterThan(0);
+      expect(study.outcome?.length, study.slug).toBeGreaterThan(0);
+    }
+  });
+
+  it("link Fauward from the Medical Logistics Digitisation offer", () => {
+    const offer = set.documents.offer.find((o) => o.slug === "medical-logistics-digitisation");
+    expect(offer?.work?.map((study) => study.slug)).toEqual([
+      "fauward-white-label-logistics-platform",
+    ]);
   });
 });

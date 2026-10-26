@@ -80,6 +80,14 @@ const durationLabels: Readonly<Record<string, string>> = {
   ongoing: "Ongoing",
 };
 
+/** Headings of the Offers index groups, in the order they are shown. */
+export const durationGroups: readonly { category: string; heading: string }[] = [
+  { category: "short", heading: "Short engagements" },
+  { category: "medium", heading: "Medium engagements" },
+  { category: "long", heading: "Long engagements" },
+  { category: "ongoing", heading: "Ongoing services" },
+];
+
 /** Duration category as text. An unknown value is shown as authored rather than hidden or guessed. */
 export function durationLabel(category: string | undefined): string | undefined {
   const value = category?.trim();
@@ -91,6 +99,7 @@ export function durationLabel(category: string | undefined): string | undefined 
 const engagementLabels: Readonly<Record<EngagementBasis, string>> = {
   "contracted-by-vitalos": "Contracted by Vitalos",
   "prior-team-experience": "Prior team experience",
+  "vitalos-product": "Built and run by Vitalos",
 };
 
 export function engagementBasisLabel(basis: EngagementBasis): string {

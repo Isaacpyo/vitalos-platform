@@ -8,18 +8,12 @@
  * provisional (see `durationCategoryList`).
  */
 import { offerNames } from "../../locked-copy";
-import type { OfferView } from "../../content/types";
 import { cta, seo } from "../build";
 import { cite, drafted } from "../provenance";
-import type { DraftProvenance } from "../provenance";
-import type { OfferSlug, PracticeSlug, SolutionSlug } from "../slugs";
+import type { OfferDraft } from "./draft-types";
+import { healthCareOfferDrafts } from "./offers-health-care";
 
-export interface OfferDraft extends Omit<OfferView, "id" | "solutions" | "practices"> {
-  slug: OfferSlug;
-  solutions: readonly SolutionSlug[];
-  practices: readonly PracticeSlug[];
-  provenance: DraftProvenance;
-}
+export type { OfferDraft } from "./draft-types";
 
 const name = (title: (typeof offerNames)[number]) => title;
 
@@ -609,9 +603,13 @@ const padTo3 = (list: readonly string[], extra: readonly string[]): string[] => 
   return out;
 };
 
-export const offerDrafts: readonly OfferDraft[] = offers.map((offer) => ({
-  ...offer,
-  requirements: padTo3(offer.requirements, commonRequirements),
-  exclusions: padTo3(offer.exclusions, commonExclusions),
-  provenance: { ...offer.provenance, sources: [...offer.provenance.sources, ...sharedTerms] },
-}));
+export const offerDrafts: readonly OfferDraft[] = [
+  ...offers.map((offer) => ({
+    ...offer,
+    requirements: padTo3(offer.requirements, commonRequirements),
+    exclusions: padTo3(offer.exclusions, commonExclusions),
+    provenance: { ...offer.provenance, sources: [...offer.provenance.sources, ...sharedTerms] },
+  })),
+  // Owner-supplied points, used exactly as written: no shared requirements or exclusions added.
+  ...healthCareOfferDrafts,
+];

@@ -42,6 +42,20 @@ const claimedItem = z.object({
     offerSlug: nullToUndefined(z.string()),
     sourcePath: nullToUndefined(z.string()),
     receivedAt: z.string(),
+    // Stored as validated by the application (20261025090000); only shown, never acted on.
+    details: nullToUndefined(
+      z.object({
+        tags: z.array(z.string()).optional(),
+        healthcare: z
+          .object({
+            organisationType: z.string().optional(),
+            sites: z.number().optional(),
+            needs: z.array(z.string()).optional(),
+            systems: z.string().optional(),
+          })
+          .optional(),
+      }),
+    ),
   }),
 });
 

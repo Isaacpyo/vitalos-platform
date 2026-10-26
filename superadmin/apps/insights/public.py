@@ -303,8 +303,10 @@ def post_page(
     featured = None
     pool = filtered
     if unfiltered and filtered:
-        featured = next((s for s in filtered if s["featured"]), filtered[0])
-        pool = [s for s in filtered if s["id"] != featured["id"]]
+        # The lead card is the newest post, so the whole index reads newest first (Website Build
+        # Pack, 25 Oct 2026). The editorial "featured" flag no longer pins an older post above it.
+        featured = filtered[0]
+        pool = filtered[1:]
     total = len(filtered)
     total_pages = 0 if total == 0 else max(1, math.ceil(len(pool) / PAGE_SIZE))
     if page < 1 or page > max(total_pages, 1):

@@ -124,6 +124,24 @@ const paths = {
   link: (
     <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66L11.5 6.8M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.46" />
   ),
+  // Added for the Health & Care offers (Website Build Pack, 25 Oct 2026), drawn on the same grid,
+  // stroke and caps. They mark offers in the menus and showcases, so they stay in the core set.
+  timer: (
+    <>
+      <circle cx="12" cy="13.5" r="7.5" />
+      <path d="M12 10v3.5l2.5 2M9.5 3h5M12 3v2.5" />
+    </>
+  ),
+  "badge-check": (
+    <path d="m12 3 2.2 1.6 2.7-.2.9 2.6L20 8.6l-.8 2.6.8 2.6-2.2 1.6-.9 2.6-2.7-.2L12 21l-2.2-1.6-2.7.2-.9-2.6L4 15.4l.8-2.6L4 10.2 6.2 8.6 7.1 6l2.7.2L12 3Zm-3 9 2 2 4-4" />
+  ),
+  truck: (
+    <>
+      <path d="M3 6h11v10H3V6Zm11 4h4l3 3.5V16h-7" />
+      <circle cx="7" cy="17.5" r="1.75" />
+      <circle cx="17" cy="17.5" r="1.75" />
+    </>
+  ),
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;
@@ -141,7 +159,19 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name" | "child
   title?: string;
 }
 
-export function Icon({ name, size = 20, title, ...props }: IconProps) {
+export function Icon({ name, ...props }: IconProps) {
+  return <IconFrame {...props}>{paths[name]}</IconFrame>;
+}
+
+export interface IconFrameProps extends Omit<IconProps, "name"> {
+  children: ReactNode;
+}
+
+/**
+ * The set's SVG frame (grid, stroke, caps and accessible name) around any glyph. Exported for the
+ * server-only subject icons (`@vitalos/ui/subject-icons`), which draw on the same frame.
+ */
+export function IconFrame({ size = 20, title, children, ...props }: IconFrameProps) {
   const a11y = title
     ? ({ role: "img", "aria-label": title } as const)
     : ({ "aria-hidden": true, focusable: false } as const);
@@ -159,7 +189,7 @@ export function Icon({ name, size = 20, title, ...props }: IconProps) {
       {...a11y}
       {...props}
     >
-      {paths[name]}
+      {children}
     </svg>
   );
 }

@@ -35,7 +35,9 @@ describe("seed redirect map", () => {
       { source: "/terms", destination: "/legal/terms", statusCode: 308 },
       { source: "/about/leadership", destination: "/about", statusCode: 308 },
       { source: "/blog", destination: "/insights", statusCode: 308 },
+      { source: "/case-studies", destination: "/work", statusCode: 308 },
       { source: "/blog/:path+", destination: "/insights/:path+", statusCode: 308 },
+      { source: "/case-studies/:path+", destination: "/work/:path+", statusCode: 308 },
     ]);
   });
 

@@ -1,14 +1,18 @@
-import { ctas, megaMenuColumns, routes } from "@vitalos/cms";
-import type { OfferView } from "@vitalos/cms";
+import { ctas, isUnpublished, megaMenuColumns, routes } from "@vitalos/cms";
+import type { LandingSection, OfferView } from "@vitalos/cms";
 import { Button, DefinitionList, FeatureGrid, Icon } from "@vitalos/ui";
-import type { DefinitionItem, IconName } from "@vitalos/ui";
+import type { DefinitionItem, IconName, SectionTone } from "@vitalos/ui";
+import { MediaSlot } from "../../components/media-slot";
+import { DraftNotice } from "../../components/placeholder-notice";
 import { PageMain } from "../../components/site-chrome/PageMain";
+import { isMediaSlotId } from "../../content/media-slots";
 import { trail } from "../../lib/view-mapping/breadcrumbs";
 import { contactHref, ctaToLink } from "../../lib/view-mapping/hrefs";
 import { durationLabel, structuralLabels } from "../../lib/view-mapping/labels";
 import { iconFor } from "../../lib/view-mapping/icons";
 import { toRows } from "../../lib/view-mapping/patterns";
 import { Band, ClosingBand, PageIntro, renderBands } from "../commercial/bands";
+import { FaqList, PointGrid, PointRows } from "../commercial/points";
 
 export interface OfferTemplateProps {
   offer: OfferView;
@@ -21,6 +25,35 @@ export const offerTrail = (offer: Pick<OfferView, "title" | "slug">) =>
     { label: offer.title, path: routes.offer(offer.slug) },
   );
 
+/** The duration category's label, with the finer duration beside it when there is one. */
+export function offerDuration(offer: Pick<OfferView, "durationCategory" | "durationDetail">) {
+  const category = durationLabel(offer.durationCategory);
+  const detail = offer.durationDetail?.trim();
+  return category && detail ? `${category} (${detail})` : (category ?? detail);
+}
+
+/**
+ * True for an offer in the points layout (Website Build Pack, revision 2): headed sections of
+ * icon points in place of the engagement paragraphs and lists.
+ */
+export const usesPoints = (offer: OfferView): boolean => (offer.sections?.length ?? 0) > 0;
+
+/** A section's points: cards when every point has a title, otherwise a compact list of rows. */
+function SectionPoints({ section }: Readonly<{ section: LandingSection }>) {
+  const titled = section.points.every((point) => Boolean(point.title));
+  return titled ? (
+    <PointGrid points={section.points} />
+  ) : (
+    <PointRows points={section.points} columns={3} />
+  );
+}
+
+/** The offer's registered hero visual, if it has one (`offers.{slug}.visual`). */
+const visualSlot = (slug: string) => {
+  const id = `offers.${slug}.visual`;
+  return isMediaSlotId(id) ? id : undefined;
+};
+
 /**
  * The engagement summary: who it is for, the trigger, scope, duration category and next step.
  * There is deliberately no price (Stage 8 section 12): offers are proposal-led.
@@ -30,7 +63,7 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
     { term: structuralLabels.audience, description: offer.audience },
     { term: structuralLabels.trigger, description: offer.trigger },
     { term: structuralLabels.scope, description: offer.scope },
-    { term: structuralLabels.duration, description: durationLabel(offer.durationCategory) },
+    { term: structuralLabels.duration, description: offerDuration(offer) },
     { term: structuralLabels.nextStep, description: offer.nextStep },
   ];
   return items.filter(
@@ -42,16 +75,20 @@ export function engagementSummary(offer: OfferView): DefinitionItem[] {
  * Offer page (Stage 9 section 22) in the homepage's design (pages redesign, 15 Oct 2026): the
  * compact dark hero with the offer's mark, the engagement summary as a definition list, what the
  * client receives, what is required from them, what is not included (rows), and where the offer
- * leads (icon cards), then the closing card. The call
- * to action starts the enquiry with this offer pre-selected unless the CMS supplies its own.
+ * leads (icon cards), then the closing card. An offer in the points layout (Website Build Pack,
+ * revision 2) shows its own headed sections of icon points and a short FAQ instead of the summary
+ * and lists. The call to action starts the enquiry with this offer pre-selected unless the CMS
+ * supplies its own.
  */
 export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
   const cta = ctaToLink(offer.cta) ?? {
     label: ctas.primary,
     href: contactHref("offer", offer.slug),
   };
-  const summary = engagementSummary(offer);
-  const duration = durationLabel(offer.durationCategory);
+  const points = usesPoints(offer);
+  const summary = points ? [] : engagementSummary(offer);
+  const duration = offerDuration(offer);
+  const visual = visualSlot(offer.slug);
   const related = (kind: "solution" | "practice", items: OfferView["solutions"]) =>
     toRows(kind, items).map((row) => ({
       title: row.title,
@@ -78,12 +115,19 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
           </Button>
         }
         media={
-          <OfferMark
-            icon={iconFor("offer", offer.title)}
-            {...(duration ? { fact: { label: structuralLabels.duration, value: duration } } : {})}
-          />
+          visual ? (
+            <MediaSlot id={visual} priority />
+          ) : (
+            <OfferMark
+              icon={iconFor("offer", offer.title)}
+              {...(duration ? { fact: { label: structuralLabels.duration, value: duration } } : {})}
+            />
+          )
         }
-      />
+      >
+        {visual && duration ? <DurationFact value={duration} /> : null}
+      </PageIntro>
+      <DraftNotice show={isUnpublished(offer)} />
       {renderBands(
         [
           (tone) =>
@@ -95,22 +139,57 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
                 />
               </Band>
             ) : null,
+          ...(offer.sections ?? []).map(
+            (section) =>
+              function SectionBand(tone: SectionTone) {
+                return section.points.length > 0 ? (
+                  <Band
+                    tone={tone}
+                    heading={section.heading}
+                    eyebrow={offer.title}
+                    intro={section.intro}
+                  >
+                    <SectionPoints section={section} />
+                  </Band>
+                ) : null;
+              },
+          ),
           (tone) =>
-            offer.outputs.length > 0 ? (
+            !points && offer.outputs.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.outputs} eyebrow={offer.title}>
                 <FeatureGrid variant="rows" items={statements(offer.outputs)} />
               </Band>
             ) : null,
           (tone) =>
-            offer.requirements.length > 0 ? (
+            !points && offer.requirements.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.requirements} eyebrow={offer.title}>
                 <FeatureGrid variant="rows" items={statements(offer.requirements, "users")} />
               </Band>
             ) : null,
           (tone) =>
-            offer.exclusions.length > 0 ? (
+            !points && offer.exclusions.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.exclusions} eyebrow={offer.title}>
                 <FeatureGrid variant="rows" items={statements(offer.exclusions, "minus")} />
+              </Band>
+            ) : null,
+          (tone) =>
+            (offer.faq?.length ?? 0) > 0 ? (
+              <Band tone={tone} heading={structuralLabels.faq} eyebrow={offer.title}>
+                <FaqList entries={offer.faq ?? []} />
+              </Band>
+            ) : null,
+          (tone) =>
+            (offer.work?.length ?? 0) > 0 ? (
+              <Band tone={tone} heading={structuralLabels.work} eyebrow={offer.title}>
+                <FeatureGrid
+                  columns={2}
+                  items={(offer.work ?? []).map((study) => ({
+                    title: study.title,
+                    ...(study.summary ? { text: study.summary } : {}),
+                    icon: "document" as const,
+                    href: routes.caseStudy(study.slug),
+                  }))}
+                />
               </Band>
             ) : null,
           (tone) =>
@@ -138,6 +217,18 @@ export function OfferTemplate({ offer }: Readonly<OfferTemplateProps>) {
       )}
       <ClosingBand primary={cta} />
     </PageMain>
+  );
+}
+
+/** The typical duration under the hero lead, when a visual takes the mark's place. */
+function DurationFact({ value }: Readonly<{ value: string }>) {
+  return (
+    <p className="m-0 mt-(--space-5) inline-flex items-center gap-(--space-2) rounded-full border border-white/25 bg-white/10 px-(--space-4) py-(--space-2) text-small text-white">
+      <Icon name="clock" size={16} />
+      <span>
+        <span className="font-semibold">{structuralLabels.duration}:</span> {value}
+      </span>
+    </p>
   );
 }
 

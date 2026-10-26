@@ -42,6 +42,7 @@ export function fixtureMetric(label: string): OutcomeMetricView {
     source: `Fixture data, not a real measurement ${FIXTURE_LABEL}`,
     context: `Artificial example for layout testing ${FIXTURE_LABEL}`,
     timeframe: `Example period ${FIXTURE_LABEL}`,
+    verifiedBy: `Example verifier ${FIXTURE_LABEL}`,
     evidence: verifiedEvidence,
   };
 }

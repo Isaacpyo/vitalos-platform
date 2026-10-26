@@ -14,4 +14,7 @@ export const additionalRedirects: readonly RedirectRule[] = [
   // The Leadership page was removed (owner direction, 15 Oct 2026); its links go to About.
   { source: "/about/leadership", destination: routes.about(), status: 308 },
   { source: "/blog", destination: "/insights", status: 308 },
+  // Website Build Pack (25 Oct 2026): the case studies are the Work section, labelled "Case
+  // studies"; `/case-studies/{slug}` follows through `sectionMoves`.
+  { source: "/case-studies", destination: routes.work(), status: 308 },
 ];

@@ -1,6 +1,10 @@
-import { navLabels, routes } from "@vitalos/cms";
+import { isUnpublished, navLabels, routes } from "@vitalos/cms";
 import { CaseStudyRow, Stack } from "@vitalos/ui";
-import { PlaceholderNotice, hasPlaceholder } from "../../components/placeholder-notice";
+import {
+  DraftNotice,
+  PlaceholderNotice,
+  hasPlaceholder,
+} from "../../components/placeholder-notice";
 import { RichText } from "../../components/rich-text";
 import { Breadcrumbs, homeCrumb } from "../institutional/breadcrumbs";
 import { PageBand, PageHeroBand } from "../institutional/layout";
@@ -36,6 +40,7 @@ export function WorkIndex({ data }: Readonly<{ data: WorkIndexData }>) {
         lead={page?.intro}
       />
       <PlaceholderNotice show={placeholder} />
+      <DraftNotice show={studies.some(isUnpublished)} />
       <PageBand>
         <Stack gap={8}>
           <RichText value={page?.body} />

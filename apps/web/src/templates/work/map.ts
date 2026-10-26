@@ -1,4 +1,4 @@
-import { hrefForDocument, routes } from "@vitalos/cms";
+import { hrefForDocument, isUnpublished, productBySlug, productPath, routes } from "@vitalos/cms";
 import type {
   CaseStudyView,
   EngagementBasis,
@@ -23,17 +23,19 @@ import type { FilterDimension, FilterGroup } from "../institutional/list-filter-
  *
  * Proof rules enforced here, on top of the mappers in `@vitalos/cms` (Stage 10 §17):
  *  - only case studies with verified evidence are public Work;
- *  - a client is named only when the view says "named" AND carries a name; anonymised studies
- *    never show a name, even if one is present on the view;
- *  - metrics need a source and verified evidence, on the metric and on the case study;
- *  - a testimonial is shown only for a named client with verified evidence (an attributed quote
- *    would otherwise identify an anonymised client).
+ *  - a client is named only when the view says "named", carries a name AND records the date of
+ *    the client's written permission; anonymised studies never show a name, even if one is
+ *    present on the view;
+ *  - metrics need a source, a verifier and verified evidence, on the metric and on the case study;
+ *  - a testimonial is shown only for a named client with verified evidence and a recorded
+ *    permission date (an attributed quote would otherwise identify an anonymised client).
  */
 
 /** Stage 10 §17 (Evidence rule): contracted by Vitalos, or prior founder/team experience. */
 export const engagementBasisLabels: Record<EngagementBasis, string> = {
   "contracted-by-vitalos": "Contracted by Vitalos",
   "prior-team-experience": "Prior founder / team experience",
+  "vitalos-product": "Built and run by Vitalos",
 };
 
 /** Structural field labels (Stage 8 §14 table: Context, Client evidence). */
@@ -49,22 +51,26 @@ export const workLabels = {
   practice: "Practice",
   solution: "Solution",
   industry: "Industry",
+  offer: "Offer",
+  product: "Product",
+  highlights: "Highlights",
 } as const;
 
 export const isVerifiedProof = (study: CaseStudyView): boolean =>
   study.evidence.status === "verified";
 
 /**
- * Whether a case study has a public page and a place in the Work index: verified evidence, or an
- * illustrative placeholder scenario. Placeholders exist only in the draft content source (ADR-025),
- * which is rejected in production; no other source sets the flag.
+ * Whether a case study has a page and a place in the Work index: verified evidence, an
+ * illustrative placeholder scenario, or an unpublished draft. Placeholders exist only in the draft
+ * content source (ADR-025) and unpublished documents only outside production (Website Build Pack,
+ * 25 Oct 2026); production serves neither.
  */
 export const isPublicCaseStudy = (study: CaseStudyView): boolean =>
-  isVerifiedProof(study) || study.placeholder === true;
+  isVerifiedProof(study) || study.placeholder === true || isUnpublished(study);
 
 /** The named client, or undefined when the client is anonymised or unnamed. */
 export function namedClient(study: CaseStudyView): string | undefined {
-  if (study.clientDisplay !== "named") return undefined;
+  if (study.clientDisplay !== "named" || !study.clientPermission?.trim()) return undefined;
   const name = study.clientName?.trim();
   return name ? name : undefined;
 }
@@ -83,6 +89,7 @@ export function verifiedMetrics(study: CaseStudyView): NonEmptyArray<OutcomeStat
       (metric) =>
         metric.evidence?.status === "verified" &&
         metric.source.trim() !== "" &&
+        (metric.verifiedBy?.trim() ?? "") !== "" &&
         metric.value.trim() !== "" &&
         metric.descriptor.trim() !== "",
     )
@@ -99,7 +106,12 @@ export function verifiedMetrics(study: CaseStudyView): NonEmptyArray<OutcomeStat
 
 /** The testimonial, only for a named client with verified evidence. */
 export function publishableTestimonial(study: CaseStudyView): TestimonialView | undefined {
-  if (!study.testimonial || !isVerifiedProof(study) || namedClient(study) === undefined) {
+  if (
+    !study.testimonial ||
+    !isVerifiedProof(study) ||
+    namedClient(study) === undefined ||
+    !study.testimonial.permissionDate?.trim()
+  ) {
     return undefined;
   }
   return study.testimonial.quote.trim() !== "" && study.testimonial.attribution.trim() !== ""
@@ -109,11 +121,12 @@ export function publishableTestimonial(study: CaseStudyView): TestimonialView | 
 
 /** Labelled facts for a case study: client (named or "Anonymised"), engagement basis, sector. */
 export function caseStudyFacts(study: CaseStudyView): MetaItem[] {
-  const facts: MetaItem[] = [
-    { label: workLabels.client, value: namedClient(study) ?? workLabels.anonymisedClient },
-    { label: workLabels.engagement, value: engagementLabel(study) },
-  ];
-  return facts;
+  // A product story has no client: its engagement fact says it is built and run by Vitalos.
+  const client: MetaItem[] =
+    study.kind === "product"
+      ? []
+      : [{ label: workLabels.client, value: namedClient(study) ?? workLabels.anonymisedClient }];
+  return [...client, { label: workLabels.engagement, value: engagementLabel(study) }];
 }
 
 /** Props for one row of the Work index. */
@@ -175,5 +188,32 @@ export function relatedLinks(study: CaseStudyView, gates: PublicationGates): Rel
         eyebrow: workLabels.industry,
       }))
     : [];
-  return [...study.practices.map(practice), ...study.solutions.map(solution), ...industries];
+  const offers: RelatedLink[] = (study.offers ?? []).map((o) => ({
+    kind: "solution" as const,
+    title: o.title,
+    href: hrefForDocument({ kind: "offer", slug: o.slug }),
+    ...(o.summary ? { summary: o.summary } : {}),
+    eyebrow: workLabels.offer,
+  }));
+  const products: RelatedLink[] = (study.products ?? []).flatMap((slug) => {
+    const product = productBySlug(slug);
+    return product
+      ? [
+          {
+            kind: "practice" as const,
+            title: product.name,
+            href: productPath(product),
+            summary: product.summary,
+            eyebrow: workLabels.product,
+          },
+        ]
+      : [];
+  });
+  return [
+    ...products,
+    ...offers,
+    ...study.practices.map(practice),
+    ...study.solutions.map(solution),
+    ...industries,
+  ];
 }
