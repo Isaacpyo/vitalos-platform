@@ -15,6 +15,12 @@ class ProductAccess(models.Model):
         permissions = [
             ("view_product_pipeline", "Can view the Product Pipeline"),
             ("open_askbridge_superadmin", "Can see Askbridge details and open the Askbridge Superadmin"),
+            ("open_answerd_superadmin", "Can see Answerd details and open the Answerd Superadmin"),
+            (
+                "open_workforce_superadmin",
+                "Can see Vitalos Workforce details and open the Vitalos Workforce Superadmin",
+            ),
+            ("open_tipsignal_superadmin", "Can see TipSignal details and open the TipSignal Superadmin"),
         ]
 
     def __str__(self):
