@@ -25,7 +25,9 @@
     </section>
     <section class="card p-5 text-sm" aria-labelledby="access-heading">
       <h2 id="access-heading" class="font-semibold">Access</h2>
-      {% if can_open %}
+      {% if can_open and not product.superadmin_url %}
+        <p class="muted mt-2" data-testid="no-superadmin-url">{{ product.name }} has no superadmin address set on this server yet (<code class="font-mono text-xs">{{ product.superadmin_url_setting }}</code>), so there is nothing to open.</p>
+      {% elif can_open %}
         <p class="mt-2">Open {{ product.name }} Superadmin takes you to <span class="font-mono text-xs break-words" data-testid="superadmin-url">{{ product.superadmin_url }}</span>. Each visit is recorded in the audit trail.</p>
         <p class="muted mt-2">{{ product.name }} runs its own sign-in and platform roles. Nothing from this admin is passed in the link, so sign in there with your {{ product.name }} account.</p>
       {% else %}
