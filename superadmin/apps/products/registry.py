@@ -79,6 +79,48 @@ PRODUCTS: tuple[Product, ...] = (
         superadmin_url_setting="ASKBRIDGE_SUPERADMIN_URL",
         open_permission="products.open_askbridge_superadmin",
     ),
+    Product(
+        key="answerd",
+        name="Answerd",
+        endorsement="by Vitalos",
+        summary=(
+            "UK local-services app where every business picks up. Clickable prototype live; "
+            "the backend is being built on Vitalos Workforce."
+        ),
+        mark="products/answerd-mark.svg",
+        app_icon="products/answerd-app-icon.svg",
+        status_url_setting="ANSWERD_STATUS_URL",
+        status_token_setting="ANSWERD_STATUS_TOKEN",  # noqa: S106  # nosec B106
+        superadmin_url_setting="ANSWERD_SUPERADMIN_URL",
+        open_permission="products.open_answerd_superadmin",
+    ),
+    Product(
+        key="workforce",
+        name="Vitalos Workforce",
+        endorsement="",
+        summary=(
+            "AI role agents for UK SMEs that work a business's own inboxes and ask a person before "
+            "anything important. In build."
+        ),
+        mark="products/workforce-mark.svg",
+        app_icon="products/workforce-app-icon.svg",
+        status_url_setting="WORKFORCE_STATUS_URL",
+        status_token_setting="WORKFORCE_STATUS_TOKEN",  # noqa: S106  # nosec B106
+        superadmin_url_setting="WORKFORCE_SUPERADMIN_URL",
+        open_permission="products.open_workforce_superadmin",
+    ),
+    Product(
+        key="tipsignal",
+        name="TipSignal",
+        endorsement="",
+        summary="Football tips from a probability and decision engine, with a public, immutable track record.",
+        mark="products/tipsignal-mark.svg",
+        app_icon="products/tipsignal-app-icon.svg",
+        status_url_setting="TIPSIGNAL_STATUS_URL",
+        status_token_setting="TIPSIGNAL_STATUS_TOKEN",  # noqa: S106  # nosec B106
+        superadmin_url_setting="TIPSIGNAL_SUPERADMIN_URL",
+        open_permission="products.open_tipsignal_superadmin",
+    ),
 )
 
 
