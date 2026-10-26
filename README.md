@@ -34,15 +34,15 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 
 ## Documentation map
 
-| Topic | Where |
-| --- | --- |
-| Decisions | [`docs/adr/`](docs/adr/README.md) (indexed in its README) |
-| Architecture | `ARCHITECTURE.md`, `docs/architecture/` (containers, data ownership, dependency rules, enquiry sequence, environments, future services) |
-| Content and editorial | `docs/cms/editing-site-content.md` |
-| Delivery | `docs/delivery/launch-gates.md` |
-| Operations and runbooks | `docs/operations/` (local development, deployment, observability), `docs/runbooks/` (cutover, rollback, enquiry delivery failure) |
-| Security | `SECURITY.md`, `docs/security/` (threat model, secret management) |
-| Brand and SEO | `docs/brand/`, `docs/seo/REDIRECTS.md` |
+| Topic                   | Where                                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Decisions               | [`docs/adr/`](docs/adr/README.md) (indexed in its README)                                                                               |
+| Architecture            | `ARCHITECTURE.md`, `docs/architecture/` (containers, data ownership, dependency rules, enquiry sequence, environments, future services) |
+| Content and editorial   | `docs/cms/editing-site-content.md`                                                                                                      |
+| Delivery                | `docs/delivery/launch-gates.md`                                                                                                         |
+| Operations and runbooks | `docs/operations/` (local development, deployment, observability), `docs/runbooks/` (cutover, rollback, enquiry delivery failure)       |
+| Security                | `SECURITY.md`, `docs/security/` (threat model, secret management)                                                                       |
+| Brand and SEO           | `docs/brand/`, `docs/seo/REDIRECTS.md`                                                                                                  |
 
 ## Sources of truth
 
