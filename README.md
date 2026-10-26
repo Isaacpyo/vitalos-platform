@@ -1,24 +1,20 @@
 # Vitalos Platform
 
-Production-platform monorepo for **Vitalos: Technology Consulting, Engineering & Digital Transformation**. The immediate product is the replacement corporate website; the repository establishes boundaries for later applications and services without deploying premature distributed infrastructure.
+Monorepo for **[Vitalos](https://vitalos.co.uk): Technology Consulting, Engineering & Digital Transformation**. It runs the Vitalos website and sets clear boundaries for later applications and services, without deploying distributed infrastructure before it is needed.
 
-## Status (10 Oct 2026)
+## Status
 
-- Stage 0 foundation: done.
-- Stage 1 engineering build: complete on the `stage-1` integration branch, pending owner review and merge to `main`.
-- No launch gate is fully met; most remaining work is owner input (content, legal identity, provider accounts, brand approvals).
-- No production site, DNS, CMS dataset, database or deployment is changed by this repository.
-- Super Admin (`superadmin/`): Phase 1 and 1.5 built and tested; deployment to `admin.vitalos.co.uk` was pre-approved in the founder's build brief of 10 Oct 2026 (`superadmin/docs/DEPLOY.md`).
-
-Launch gates G0-G10: [`docs/delivery/launch-gates.md`](docs/delivery/launch-gates.md). Stage status, owner decisions, handoffs and the strategy library are kept privately, outside this public repository.
+- **Live at [vitalos.co.uk](https://vitalos.co.uk).** `main` deploys to production on Vercel; pull requests get preview deployments.
+- **Super Admin** (`superadmin/`): the internal Django admin for `admin.vitalos.co.uk`; see `superadmin/README.md` and `superadmin/docs/DEPLOY.md`.
+- **Launch gates G0–G10:** [`docs/delivery/launch-gates.md`](docs/delivery/launch-gates.md). Stage status, owner decisions, handoffs and the strategy library are kept privately, outside this public repository.
 
 ## What is in the repository
 
 - `apps/web`: server-first Next.js 16 site. All routes of the information architecture, an enquiry pipeline (Postgres record plus durable outbox, Turnstile, rate limiting), SEO, redirects, security headers and publication gates. Reads content through a `ContentSource` (`repo` in production; `draft`, `fixtures` and `empty` for development and tests).
 - `apps/storybook`: private component workbench (not deployed).
-- `packages/*`: `design-tokens`, `ui`, `cms` (routes, locked copy, gates, view models, repo content, drafts, fixtures), `config` (validated environment), `validation`, `security`, `observability`, `testing`, `email-layout` (shared email layout, ADR-030).
-- `supabase`: local PostgreSQL 17 configuration, three migrations and pgTAP tests.
-- `superadmin`: internal Django Super Admin for the Vitalos company architecture (`admin.vitalos.co.uk`); see `superadmin/README.md` and ADR-026.
+- `packages/*`: shared packages, including `design-tokens`, `ui`, `cms` (routes, locked copy, gates, view models, repo content, drafts, fixtures), `config` (validated environment), `validation`, `security`, `observability`, `testing` and `email-layout` (shared email layout, ADR-030).
+- `supabase`: local PostgreSQL 17 configuration, migrations and pgTAP tests.
+- `superadmin`: internal Django Super Admin for the Vitalos company architecture (ADR-026).
 - `tests`, `tooling`: Playwright, axe, budget and integration suites; check and helper scripts.
 - `infra`, `services`, `workers`: policy placeholders only; nothing is provisioned or extracted.
 
@@ -31,7 +27,7 @@ Install Node 24 LTS and enable Corepack. Every environment variable is optional 
 ```sh
 corepack enable
 corepack pnpm install --frozen-lockfile
-corepack pnpm dev:web          # http://localhost:3000
+corepack pnpm dev:web # http://localhost:3000
 ```
 
 Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build` and the relevant test suites. All commands, content sources, the local Supabase stack and the test matrix are in [`docs/operations/local-development.md`](docs/operations/local-development.md); contribution rules are in `CONTRIBUTING.md`.
@@ -40,7 +36,7 @@ Use `corepack pnpm check` before a pull request, plus `build`, `storybook:build`
 
 | Topic                   | Where                                                                                                                                   |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Decisions               | [`docs/adr/`](docs/adr/README.md) (ADR 001-022 indexed)                                                                                 |
+| Decisions               | [`docs/adr/`](docs/adr/README.md) (indexed in its README)                                                                               |
 | Architecture            | `ARCHITECTURE.md`, `docs/architecture/` (containers, data ownership, dependency rules, enquiry sequence, environments, future services) |
 | Content and editorial   | `docs/cms/editing-site-content.md`                                                                                                      |
 | Delivery                | `docs/delivery/launch-gates.md`                                                                                                         |
