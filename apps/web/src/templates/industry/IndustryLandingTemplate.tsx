@@ -1,4 +1,5 @@
 import { isUnpublished, routes } from "@vitalos/cms";
+import type { ReactNode } from "react";
 import type {
   CaseStudySummary,
   CtaView,
@@ -216,23 +217,31 @@ export function IndustryLandingTemplate({
           ),
           (tone) => (
             <Band tone={tone} heading={landing.pilots.heading}>
-              <Pilots products={landing.pilots.products} />
-              <h3 className="m-0 mt-(--space-8) text-h3 text-tone-heading">
-                {landing.pilots.benefits.heading}
-              </h3>
-              <div className="mt-(--space-5)">
-                <PointGrid points={landing.pilots.benefits.points} columns={4} />
-              </div>
-              <div className="mt-(--space-7) flex flex-col items-start gap-(--space-5) md:flex-row md:items-center md:justify-between">
-                <p className="m-0 max-w-(--container-content) text-body-l text-tone-text">
-                  {landing.pilots.ask}
-                </p>
-                {pilotCta ? (
-                  <Button href={pilotCta.href} variant="primary" size="lg" arrow>
-                    {pilotCta.label}
-                  </Button>
-                ) : null}
-              </div>
+              <Pilots
+                products={landing.pilots.products}
+                ask={
+                  <div className="flex flex-col items-start gap-(--space-5)">
+                    <p className="m-0 max-w-(--container-content) text-body-l text-tone-text">
+                      {landing.pilots.ask}
+                    </p>
+                    {pilotCta ? (
+                      <Button href={pilotCta.href} variant="primary" size="lg" arrow>
+                        {pilotCta.label}
+                      </Button>
+                    ) : null}
+                  </div>
+                }
+              />
+              {landing.pilots.benefits ? (
+                <>
+                  <h3 className="m-0 mt-(--space-8) text-h3 text-tone-heading">
+                    {landing.pilots.benefits.heading}
+                  </h3>
+                  <div className="mt-(--space-5)">
+                    <PointGrid points={landing.pilots.benefits.points} columns={4} />
+                  </div>
+                </>
+              ) : null}
             </Band>
           ),
           (tone) => (
@@ -323,34 +332,47 @@ function ProofChips({ points }: Readonly<{ points: readonly LandingPoint[] }>) {
   );
 }
 
-/** The products in pilot: a 4:3 visual, a status chip, the icon, title, line and three points. */
-function Pilots({ products }: Readonly<{ products: readonly LandingPoint[] }>) {
+/**
+ * The products in pilot: a 4:3 visual, a status chip, the icon, title, line and three points. The
+ * ask and its call to action sit beside a single product, or under two or more.
+ */
+function Pilots({
+  products,
+  ask,
+}: Readonly<{ products: readonly LandingPoint[]; ask: ReactNode }>) {
+  const single = products.length === 1;
   return (
-    <ul className="m-0 grid list-none grid-cols-1 gap-(--space-5) p-0 md:grid-cols-2">
-      {products.map((product, index) => {
-        const slot = pilotVisuals[product.key];
-        return (
-          <RevealItem
-            as="li"
-            key={`${product.key}-${index}`}
-            className="flex min-w-0 flex-col gap-(--space-5) rounded-2xl border border-tone-border bg-tone-bg p-(--space-5)"
-          >
-            {slot ? <MediaSlot id={slot} sizes="(min-width: 768px) 45vw, 100vw" /> : null}
-            <span className="flex items-start justify-between gap-(--space-3)">
-              <SubjectIconTile name={pointIcon(product.key)} />
-              {product.meta ? <Chip>{product.meta}</Chip> : null}
-            </span>
-            <span className="block min-w-0">
-              {product.title ? (
-                <h3 className="m-0 text-h3 text-balance text-tone-heading">{product.title}</h3>
-              ) : null}
-              <span className="mt-(--space-2) block text-body text-tone-text">{product.text}</span>
-            </span>
-            {product.points ? <SubPoints points={product.points} /> : null}
-          </RevealItem>
-        );
-      })}
-    </ul>
+    <>
+      <ul className="m-0 grid list-none grid-cols-1 gap-(--space-5) p-0 md:grid-cols-2">
+        {products.map((product, index) => {
+          const slot = pilotVisuals[product.key];
+          return (
+            <RevealItem
+              as="li"
+              key={`${product.key}-${index}`}
+              className="flex min-w-0 flex-col gap-(--space-5) rounded-2xl border border-tone-border bg-tone-bg p-(--space-5)"
+            >
+              {slot ? <MediaSlot id={slot} sizes="(min-width: 768px) 45vw, 100vw" /> : null}
+              <span className="flex items-start justify-between gap-(--space-3)">
+                <SubjectIconTile name={pointIcon(product.key)} />
+                {product.meta ? <Chip>{product.meta}</Chip> : null}
+              </span>
+              <span className="block min-w-0">
+                {product.title ? (
+                  <h3 className="m-0 text-h3 text-balance text-tone-heading">{product.title}</h3>
+                ) : null}
+                <span className="mt-(--space-2) block text-body text-tone-text">
+                  {product.text}
+                </span>
+              </span>
+              {product.points ? <SubPoints points={product.points} /> : null}
+            </RevealItem>
+          );
+        })}
+        {single ? <li className="flex min-w-0 items-center md:p-(--space-6)">{ask}</li> : null}
+      </ul>
+      {single ? null : <div className="mt-(--space-7)">{ask}</div>}
+    </>
   );
 }
 

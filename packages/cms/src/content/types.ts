@@ -352,7 +352,8 @@ export interface IndustryLandingView {
     heading: string;
     /** Product cards: status chip in `meta`, three points in `points`. */
     products: readonly LandingPoint[];
-    benefits: LandingSection;
+    /** What design partners get; omitted until the owner confirms the terms. */
+    benefits?: LandingSection;
     /** What design partners are asked for. */
     ask: string;
     cta: CtaView;

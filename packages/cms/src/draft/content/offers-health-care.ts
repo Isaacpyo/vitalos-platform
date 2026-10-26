@@ -1,14 +1,14 @@
 /**
  * The Health & Care offers (Website Build Pack, revision 2, 25 Oct 2026, Part 2 "Offer pages").
  * The copy is the owner's, word for word: headed sections of points, each with an icon key, a bold
- * title and one supporting line, then a three-question FAQ. All three are unpublished drafts until
- * the owner approves them, so production serves none of them and no published page links to them.
+ * title and one supporting line, then a three-question FAQ. Published: Temitope approved all three
+ * on 26 Oct 2026 (ADR-046).
  *
  * The plain-text fields (`audience`, `trigger`, `outputs`, `requirements`, `exclusions`) repeat
- * the same words for search, llms.txt and Relay. Items marked `[confirm …]` are deliberate, visible
- * placeholders for the owner to resolve before publication (a Clinical Safety Officer partner;
- * which Fauward healthcare features exist). No scope paragraph or next step is drafted: the brief
- * gives none, and nothing is invented.
+ * the same words for search, llms.txt and Relay. Claims the owner had not confirmed were removed
+ * before publication (a Clinical Safety Officer partner; Fauward's custody scans, driver checks,
+ * dual signatures and audit exports); add them back once confirmed. No scope paragraph or next
+ * step is drafted: the brief gives none, and nothing is invented.
  */
 import { routes } from "../../routes";
 import type { CtaView, LandingPoint, LandingSection } from "../../content/types";
@@ -131,11 +131,6 @@ const nhsCoverage = [
   ),
   point("shield-check", "DSPT", "Your submission prepared with evidence, ready for your sign-off."),
   point(
-    "stethoscope",
-    "Clinical safety",
-    "DCB0129 hazard log and safety case, reviewed by a qualified CSO. [confirm partner]",
-  ),
-  point(
     "accessibility",
     "Accessibility",
     "WCAG 2.2 AA checks and the Accessible Information Standard.",
@@ -193,22 +188,7 @@ const logisticsRules = [
 ];
 const logisticsSetup = [
   point("palette", "Your brand", "Portal and no-login tracking on your domain, colours and logo."),
-  point("scan-barcode", "Scan at every handoff", "Who had each item, where and when. [confirm]"),
-  point(
-    "list-checks",
-    "Checks in the driver app",
-    "Packaging, fridge-line and controlled-drug steps that can't be skipped. [confirm]",
-  ),
-  point(
-    "pen-line",
-    "Proof of delivery",
-    "Photo, signature or one-time code; dual signatures for controlled drugs. [confirm dual signatures]",
-  ),
-  point(
-    "file-down",
-    "Audit exports",
-    "Custody and delivery records per item, ready for a client or inspector. [confirm]",
-  ),
+  point("pen-line", "Proof of delivery", "Photo, signature or one-time code."),
   point("receipt", "Invoicing on delivery", "Invoices raised on delivery and reconciled."),
 ];
 const logisticsNeeds = [
@@ -226,7 +206,7 @@ export const healthCareOfferDrafts: readonly OfferDraft[] = [
   {
     slug: "clinic-admin-audit",
     title: "Clinic Admin Audit",
-    publishStatus: "draft",
+    publishStatus: "published",
     summary:
       "In two weeks, find out where your clinic's admin hours go and which steps are worth automating first.",
     seo: seo(
@@ -289,7 +269,7 @@ export const healthCareOfferDrafts: readonly OfferDraft[] = [
   {
     slug: "nhs-assurance-readiness",
     title: "NHS Assurance Readiness",
-    publishStatus: "draft",
+    publishStatus: "published",
     summary:
       "Build the evidence NHS buyers ask for before a procurement starts and the clock is running.",
     seo: seo(
@@ -334,13 +314,13 @@ export const healthCareOfferDrafts: readonly OfferDraft[] = [
     provenance: briefed(
       sources,
       brief,
-      "Clinical safety stays marked [confirm partner] until a Clinical Safety Officer partner is confirmed; remove it otherwise.",
+      "Clinical safety (a DCB0129 safety case reviewed by a CSO) is left out until a Clinical Safety Officer partner is confirmed.",
     ),
   },
   {
     slug: "medical-logistics-digitisation",
     title: "Medical Logistics Digitisation",
-    publishStatus: "draft",
+    publishStatus: "published",
     summary:
       "Give every sample and medicine movement a record that stands up to an audit, under your own brand.",
     seo: seo(
@@ -384,7 +364,7 @@ export const healthCareOfferDrafts: readonly OfferDraft[] = [
     provenance: briefed(
       sources,
       brief,
-      "Fauward healthcare features stay marked [confirm] until the owner confirms which exist.",
+      "Custody scans, driver checks, dual signatures and audit exports are left out until the owner confirms Fauward has them.",
     ),
   },
 ];

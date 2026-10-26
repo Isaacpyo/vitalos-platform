@@ -139,6 +139,24 @@ describe("unpublished documents (Website Build Pack, 25 Oct 2026)", () => {
     expect(statusesIn(repoContent).filter((status) => status !== "published")).toEqual([]);
   });
 
+  it("serves the approved Health & Care lead page and offers in production (26 Oct 2026)", async () => {
+    const production = source();
+    const industry = await production.getDocument("industry", "health-care");
+    expect(industry?.landing?.publishStatus).toBe("published");
+    expect(industry?.landing?.seo.noindex).not.toBe(true);
+    const sitemap = (await production.getSitemapEntries()).map((entry) => entry.path);
+    for (const slug of [
+      "clinic-admin-audit",
+      "nhs-assurance-readiness",
+      "medical-logistics-digitisation",
+    ]) {
+      const offer = await production.getDocument("offer", slug);
+      expect(offer?.publishStatus, slug).toBe("published");
+      expect(offer?.work ?? [], slug).toEqual([]);
+      expect(sitemap, slug).toContain(`/offers/${slug}`);
+    }
+  });
+
   it("previews hold the drafts, unindexed, and production lists none of them", async () => {
     const preview = createRepoContentSource({ now: NOW, includeUnpublished: true });
     const production = source();

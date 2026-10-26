@@ -40,7 +40,7 @@ const sections: LandingSection[] = [
   landing.automation,
   landing.steps,
   ...landing.guardrails.columns,
-  landing.pilots.benefits,
+  ...(landing.pilots.benefits ? [landing.pilots.benefits] : []),
   landing.systems,
   landing.trust,
 ];

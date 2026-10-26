@@ -4,8 +4,10 @@
  * to six words and one supporting line of up to 20 words. Point `key`s name the subject (the
  * brief's Lucide names, as a guide); the web app maps them to the site's own icons.
  *
- * Unpublished (`draft`): production keeps the standard Health & Care page until the owner approves
- * this one. `[confirm …]` marks are deliberate, visible placeholders for the owner to resolve.
+ * Published: Temitope approved the page on 26 Oct 2026 (ADR-046). Every claim the owner had not
+ * confirmed was removed before publication rather than published with its `[confirm]` mark: the
+ * Clinical Safety Officer partner, UK hosting, Cyber Essentials, the Fauward healthcare features
+ * (its pilot card and driver checks) and the design-partner benefits. Add them back once confirmed.
  */
 import { routes } from "../../routes";
 import type { CtaView, IndustryLandingView } from "../../content/types";
@@ -24,7 +26,7 @@ const partnerCta: CtaView = {
 };
 
 export const healthCareLanding: IndustryLandingView = {
-  publishStatus: "draft",
+  publishStatus: "published",
   seo: seo(
     "Health & Care: consulting for clinics and NHS teams",
     "We help private clinics, GP practices and NHS teams cut admin, connect their systems and get NHS-ready. Fixed-scope engagements that end with something working.",
@@ -137,7 +139,6 @@ export const healthCareLanding: IndustryLandingView = {
         points: [
           { key: "check", text: "DTAC form with evidence" },
           { key: "check", text: "NHS-template DPIA and DSPT submission" },
-          { key: "check", text: "DCB0129 safety case [confirm CSO]" },
         ],
         note: "Suppliers with an NHS pilot or tender in view",
         href: routes.offer("nhs-assurance-readiness"),
@@ -149,10 +150,6 @@ export const healthCareLanding: IndustryLandingView = {
         text: "Give every sample and medicine movement a record that stands up to audit.",
         points: [
           { key: "check", text: "Your brand on Fauward" },
-          {
-            key: "check",
-            text: "Driver checks for samples, fridge lines and controlled drugs [confirm]",
-          },
           { key: "check", text: "Custody and delivery records" },
         ],
         note: "Couriers, labs and pharmacy groups",
@@ -306,7 +303,7 @@ export const healthCareLanding: IndustryLandingView = {
       {
         key: "bot",
         meta: "Pilot",
-        title: "Admin agents for clinics [confirm name]",
+        title: "Admin agents for clinics",
         text: "Inbox triage, letter drafting and coding support, with review built in.",
         points: [
           { key: "inbox", text: "Triage across email, scanned post and portals" },
@@ -314,39 +311,7 @@ export const healthCareLanding: IndustryLandingView = {
           { key: "tags", text: "Codes suggested for review" },
         ],
       },
-      {
-        key: "package-check",
-        meta: "Pilot",
-        title: "Fauward for healthcare logistics",
-        text: "The logistics platform we built and run, extended for samples and medicines. [confirm features]",
-        points: [
-          { key: "scan-barcode", text: "Scan at every handoff" },
-          { key: "thermometer", text: "Fridge-line and sample checks" },
-          { key: "pen-line", text: "Dual signatures for controlled drugs" },
-        ],
-      },
     ],
-    benefits: {
-      heading: "What design partners get [confirm all four]",
-      points: [
-        {
-          key: "handshake",
-          title: "Shaped around your workflow",
-          text: "Your team's needs set the pilot's priorities.",
-        },
-        { key: "badge-percent", title: "Founding terms", text: "Pricing held for early partners." },
-        {
-          key: "message-square",
-          title: "Direct line to the builders",
-          text: "Questions answered by the people writing the software.",
-        },
-        {
-          key: "chart-line",
-          title: "Measured results",
-          text: "Before-and-after figures you can take to your board.",
-        },
-      ],
-    },
     ask: "What we ask: a named contact, short regular reviews, and permission to publish anonymised results.",
     cta: partnerCta,
   },
@@ -369,11 +334,6 @@ export const healthCareLanding: IndustryLandingView = {
     heading: "Trust and regulation",
     points: [
       {
-        key: "stethoscope",
-        title: "Clinical safety",
-        text: "DCB0129 safety cases reviewed by a qualified Clinical Safety Officer. [confirm partner]",
-      },
-      {
         key: "shield-check",
         title: "NHS data security",
         text: "Help completing the Data Security and Protection Toolkit.",
@@ -382,16 +342,6 @@ export const healthCareLanding: IndustryLandingView = {
         key: "file-lock",
         title: "Data protection",
         text: "A DPIA and processor terms for every deployment; purpose, access and retention agreed first.",
-      },
-      {
-        key: "lock",
-        title: "UK hosting",
-        text: "Client data hosted in the UK by default. [confirm]",
-      },
-      {
-        key: "badge-check",
-        title: "Cyber Essentials",
-        text: "[confirm status before stating anything]",
       },
       { key: "accessibility", title: "Accessibility", text: "Services built to WCAG 2.2 AA." },
     ],
@@ -430,7 +380,7 @@ export const healthCareLanding: IndustryLandingView = {
     {
       question: "What happens to patient data?",
       answer:
-        "It's processed under a data processing agreement and a DPIA, hosted in the UK [confirm], and used only for the agreed purpose.",
+        "It's processed under a data processing agreement and a DPIA, and used only for the agreed purpose.",
     },
     {
       question: "Do you move samples or medicines?",

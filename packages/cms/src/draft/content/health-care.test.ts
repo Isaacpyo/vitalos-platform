@@ -37,7 +37,7 @@ const landingPoints: Located[] = [
     landing.automation,
     landing.steps,
     ...landing.guardrails.columns,
-    landing.pilots.benefits,
+    ...(landing.pilots.benefits ? [landing.pilots.benefits] : []),
     landing.systems,
     landing.trust,
   ].flatMap((section) => located(section.heading, section.points)),
@@ -55,8 +55,18 @@ describe("Health & Care copy (revision 2)", () => {
   it("gives every point an icon key and a supporting line", () => {
     for (const { where, point } of all) {
       expect(point.key.trim(), where).not.toBe("");
-      // A line may be a placeholder alone (Cyber Essentials: "[confirm status …]").
       expect(point.text.trim(), where).not.toBe("");
+    }
+  });
+
+  it("publishes no [confirm] placeholder: an unconfirmed claim stays out of published copy", () => {
+    const published = [
+      ...(landing.publishStatus === "published" ? [landing] : []),
+      ...healthCareOfferDrafts.filter((offer) => offer.publishStatus === "published"),
+    ];
+    expect(published.length).toBeGreaterThan(0);
+    for (const doc of published) {
+      expect(JSON.stringify(doc)).not.toMatch(/\[confirm/i);
     }
   });
 
@@ -81,7 +91,7 @@ describe("Health & Care copy (revision 2)", () => {
       landing.automation,
       landing.steps,
       ...landing.guardrails.columns,
-      landing.pilots.benefits,
+      ...(landing.pilots.benefits ? [landing.pilots.benefits] : []),
       landing.trust,
     ].flatMap((section) =>
       section.points.flatMap((point, index) =>
