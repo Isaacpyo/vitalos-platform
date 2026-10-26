@@ -6,6 +6,8 @@ from config import content_validation
 
 from .base import *  # noqa: F403
 from .base import (
+    ANSWERD_STATUS_URL,
+    ANSWERD_SUPERADMIN_URL,
     ASKBRIDGE_STATUS_URL,
     ASKBRIDGE_SUPERADMIN_URL,
     ATTACHMENTS_STORAGE,
@@ -21,6 +23,10 @@ from .base import (
     RELAY_WEBHOOK_SECRET,
     RESEND_API_KEY,
     SENTRY_DSN,
+    TIPSIGNAL_STATUS_URL,
+    TIPSIGNAL_SUPERADMIN_URL,
+    WORKFORCE_STATUS_URL,
+    WORKFORCE_SUPERADMIN_URL,
     env,
 )
 
@@ -57,6 +63,12 @@ if RELAY_API_BASE_URL:
 for _name, _url in (
     ("ASKBRIDGE_STATUS_URL", ASKBRIDGE_STATUS_URL),
     ("ASKBRIDGE_SUPERADMIN_URL", ASKBRIDGE_SUPERADMIN_URL),
+    ("ANSWERD_STATUS_URL", ANSWERD_STATUS_URL),
+    ("ANSWERD_SUPERADMIN_URL", ANSWERD_SUPERADMIN_URL),
+    ("WORKFORCE_STATUS_URL", WORKFORCE_STATUS_URL),
+    ("WORKFORCE_SUPERADMIN_URL", WORKFORCE_SUPERADMIN_URL),
+    ("TIPSIGNAL_STATUS_URL", TIPSIGNAL_STATUS_URL),
+    ("TIPSIGNAL_SUPERADMIN_URL", TIPSIGNAL_SUPERADMIN_URL),
 ):
     if _url and not _url.startswith("https://"):
         raise ImproperlyConfigured(f"{_name} must be https in production.")
