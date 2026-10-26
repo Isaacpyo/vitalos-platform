@@ -195,6 +195,22 @@ ASKBRIDGE_STATUS_TOKEN = env("ASKBRIDGE_STATUS_TOKEN", default="")
 ASKBRIDGE_SUPERADMIN_URL = env(
     "ASKBRIDGE_SUPERADMIN_URL", default="https://askbridge.vitalos.co.uk/superadmin"
 ).strip()
+# Answerd, Vitalos Workforce and TipSignal have no ADR-044 status endpoint yet: their status URLs and tokens
+# default to empty ("Status not configured", no request). Set them once each product serves the contract.
+ANSWERD_STATUS_URL = env("ANSWERD_STATUS_URL", default="").strip()
+ANSWERD_STATUS_TOKEN = env("ANSWERD_STATUS_TOKEN", default="")
+# The Answerd admin console is the clickable prototype's for now (answerd-demo, demo data only).
+ANSWERD_SUPERADMIN_URL = env(
+    "ANSWERD_SUPERADMIN_URL", default="https://answerd-demo.vitalos.co.uk/admin"
+).strip()
+WORKFORCE_STATUS_URL = env("WORKFORCE_STATUS_URL", default="").strip()
+WORKFORCE_STATUS_TOKEN = env("WORKFORCE_STATUS_TOKEN", default="")
+# Empty until Workforce has a deployed superadmin; no Open button is shown without an address.
+WORKFORCE_SUPERADMIN_URL = env("WORKFORCE_SUPERADMIN_URL", default="").strip()
+TIPSIGNAL_STATUS_URL = env("TIPSIGNAL_STATUS_URL", default="").strip()
+TIPSIGNAL_STATUS_TOKEN = env("TIPSIGNAL_STATUS_TOKEN", default="")
+# The TipSignal admin is reachable only over Tailscale; set an https address here if one is published.
+TIPSIGNAL_SUPERADMIN_URL = env("TIPSIGNAL_SUPERADMIN_URL", default="").strip()
 # Forgot-password emails only make sense when mail can actually be delivered (or locally).
 PASSWORD_RESET_ENABLED = env.bool(
     "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"

@@ -385,6 +385,84 @@ def test_audit_trail_reads_the_open_event(client_for, superadmin, askbridge, see
     )
 
 
+# --- Answerd, Vitalos Workforce and TipSignal ------------------------------------------------------
+
+OTHER_PRODUCTS = ("answerd", "workforce", "tipsignal")
+
+
+@pytest.fixture
+def no_other_superadmins(settings):
+    """The three newer products with no superadmin address (as Workforce and TipSignal ship)."""
+    settings.ANSWERD_SUPERADMIN_URL = ""
+    settings.WORKFORCE_SUPERADMIN_URL = ""
+    settings.TIPSIGNAL_SUPERADMIN_URL = ""
+
+
+def test_pipeline_lists_every_product(client_for, superadmin, askbridge, seeded):
+    body = page(client_for, superadmin)
+    for key in ("askbridge", *OTHER_PRODUCTS):
+        assert f'data-product="{key}"' in body and f"products/{key}-app-icon" in body
+        assert f"/products/{key}/" in body
+    assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body
+
+
+def test_products_without_a_status_endpoint_make_no_request(client_for, superadmin, askbridge, seeded):
+    page(client_for, superadmin)
+    for key in OTHER_PRODUCTS:
+        detail = page(client_for, superadmin, f"/products/{key}/")
+        assert "Status not configured" in detail and 'data-testid="product-counts"' not in detail
+    # Only Askbridge has a status endpoint and token, so it is the only product ever asked.
+    assert askbridge.calls and {call["url"] for call in askbridge.calls} == {STATUS_URL}
+
+
+def test_no_open_button_without_a_superadmin_address(
+    client_for, superadmin, askbridge, no_other_superadmins, seeded
+):
+    for key in OTHER_PRODUCTS:
+        detail = page(client_for, superadmin, f"/products/{key}/")
+        assert 'data-testid="open-superadmin"' not in detail and f"/products/{key}/open/" not in detail
+        assert 'data-testid="no-superadmin-url"' in detail
+        assert client_for(superadmin).post(f"/products/{key}/open/").status_code == 404
+    index = page(client_for, superadmin)
+    for key in OTHER_PRODUCTS:
+        assert f"/products/{key}/open/" not in index
+    assert not AuditEvent.objects.filter(action="products.superadmin_opened").exists()
+
+
+def test_answerd_open_redirects_to_its_superadmin_with_audit(
+    client_for, superadmin, askbridge, settings, seeded
+):
+    settings.ANSWERD_SUPERADMIN_URL = "https://answerd.example.test/admin"
+    detail = page(client_for, superadmin, "/products/answerd/")
+    assert 'action="/products/answerd/open/"' in detail
+    response = client_for(superadmin).post("/products/answerd/open/")
+    assert response.status_code == 302 and response["Location"] == "https://answerd.example.test/admin"
+    event = AuditEvent.objects.get(action="products.superadmin_opened")
+    assert event.entity_id == "answerd" and event.summary == "Opened the Answerd Superadmin"
+
+
+def test_each_product_has_its_own_open_permission(
+    client_for, askbridge_operator, askbridge, settings, seeded
+):
+    settings.ANSWERD_SUPERADMIN_URL = "https://answerd.example.test/admin"
+    assert client_for(askbridge_operator).post("/products/answerd/open/").status_code == 403
+    detail = page(client_for, askbridge_operator, "/products/answerd/")
+    assert 'data-testid="no-open-permission"' in detail
+    grant(askbridge_operator, "open_answerd_superadmin")
+    operator = type(askbridge_operator).objects.get(pk=askbridge_operator.pk)
+    assert client_for(operator).post("/products/answerd/open/").status_code == 302
+
+
+def test_product_access_command_knows_the_new_products(viewer, seeded):
+    out = io.StringIO()
+    for codename in ("open_answerd_superadmin", "open_workforce_superadmin", "open_tipsignal_superadmin"):
+        call_command("product_access", "--email", viewer.email, "--grant", codename, stdout=out)
+    viewer = type(viewer).objects.get(pk=viewer.pk)
+    assert viewer.has_perm("products.open_tipsignal_superadmin") and viewer.has_perm(
+        "products.open_workforce_superadmin"
+    )
+
+
 # --- product_access command ---------------------------------------------------------------------------
 
 
