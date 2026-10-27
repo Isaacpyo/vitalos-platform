@@ -1,0 +1,115 @@
+{
+  "title": "Confirm your email",
+  "preheader": "Use the code in this email to finish signing up.",
+  "headerLabel": "Account",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Your verification code"
+    },
+    {
+      "type": "text",
+      "text": "Enter this code on the sign-up page."
+    },
+    {
+      "type": "code",
+      "code": " 482 913 ",
+      "expiry": "The code expires in 10 minutes and works once."
+    },
+    {
+      "type": "steps",
+      "title": "What happens next",
+      "items": [
+        "We read your enquiry.",
+        "",
+        "We reply within the time you chose.",
+        "We book a call."
+      ]
+    },
+    {
+      "type": "steps",
+      "items": [
+        "Only one step, no title."
+      ]
+    },
+    {
+      "type": "section",
+      "text": "Updates"
+    },
+    {
+      "type": "items",
+      "items": [
+        {
+          "tag": "New enquiry",
+          "title": "Website rebuild for Example Care Group",
+          "summary": "Alex Example wrote:\nWe need a new site by spring.",
+          "meta": "VIT-EXAMPLE-01 · 26 Oct 2026, 09:12",
+          "href": "https://admin.vitalos.co.uk/enquiries/1/"
+        },
+        {
+          "title": "No link, no tag",
+          "href": "javascript:alert(1)"
+        },
+        {
+          "title": ""
+        }
+      ]
+    },
+    {
+      "type": "stats",
+      "items": [
+        {
+          "value": "3",
+          "label": "New"
+        },
+        {
+          "value": "Overdue",
+          "label": "Status"
+        },
+        {
+          "value": "",
+          "label": "Missing value"
+        }
+      ]
+    },
+    {
+      "type": "stats",
+      "items": [
+        {
+          "value": "12",
+          "label": "Applications"
+        },
+        {
+          "value": "2",
+          "label": "Roles"
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "code": ""
+    }
+  ],
+  "footer": {
+    "social": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/company/vitalos",
+        "contentId": "social-linkedin"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com/vitalos",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": "Vitalos Technologies Limited",
+      "companyNumber": "16696895",
+      "registeredOffice": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+      "website": "https://vitalos.co.uk",
+      "supportEmail": "support@vitalos.co.uk"
+    },
+    "notice": "Change these emails in Settings."
+  }
+}

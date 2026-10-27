@@ -13,7 +13,9 @@ NAMES = sorted(path.name.removesuffix(".input.json") for path in FIXTURES.glob("
 
 
 def test_fixtures_exist():
-    assert {"all-blocks", "hostile-and-missing", "internal-notice"} <= set(NAMES)
+    assert {"all-blocks", "hostile-and-missing", "internal-notice", "new-blocks", "correspondence"} <= set(
+        NAMES
+    )
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -40,3 +42,28 @@ def test_force_theme():
     assert "@media all{" in layout.force_theme(html, "dark")
     assert "@media not all{" in layout.force_theme(html, "light")
     assert layout.force_theme(html, "system") == html
+
+
+def _fixture(name):
+    return json.loads((FIXTURES / f"{name}.input.json").read_text(encoding="utf-8"))
+
+
+def test_code_never_in_subject_or_preheader():
+    doc = _fixture("new-blocks")
+    with pytest.raises(ValueError, match="subject or preheader"):
+        layout.render_email({**doc, "title": "Your code is 482913"})
+    with pytest.raises(ValueError, match="subject or preheader"):
+        layout.render_email({**doc, "preheader": "Code 482913"})
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        {"type": "badge", "items": ["New"]},
+        {"type": "button", "label": "Go", "url": "https://vitalos.co.uk"},
+        {"type": "heading", "text": "Hi"},
+    ],
+)
+def test_correspondence_refuses_other_blocks(block):
+    with pytest.raises(ValueError, match="Correspondence email cannot use"):
+        layout.render_email({**_fixture("correspondence"), "blocks": [block]})

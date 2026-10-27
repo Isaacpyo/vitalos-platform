@@ -1,0 +1,49 @@
+{
+  "mode": "correspondence",
+  "title": "Re: Website rebuild [VIT-EXAMPLE-01]",
+  "preheader": "Thanks for the details.",
+  "headerLabel": "",
+  "blocks": [
+    {
+      "type": "text",
+      "text": "Hi Alex,\n\nThanks for the details. We can start on Monday."
+    },
+    {
+      "type": "quote",
+      "text": "When could you start?"
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "text",
+      "text": "Vitalos Support\nsupport@vitalos.co.uk"
+    }
+  ],
+  "footer": {
+    "social": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/company/vitalos",
+        "contentId": "social-linkedin"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com/vitalos",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": "Vitalos Technologies Limited",
+      "companyNumber": "16696895",
+      "registeredOffice": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+      "website": "https://vitalos.co.uk",
+      "supportEmail": "support@vitalos.co.uk"
+    },
+    "notice": "Ignored in correspondence.",
+    "unsubscribe": {
+      "reason": "Ignored too.",
+      "url": "https://vitalos.co.uk/u"
+    }
+  }
+}

@@ -687,3 +687,78 @@ def test_crlf_is_stored_as_lf(client_for, superadmin, library):
     assert template.description == "Used when\nsomething happens"
     assert "\r" not in str(template.content())
     assert "\r" not in str(template.versions.first().content)
+
+
+# --- New blocks: code, steps, items and figures -----------------------------------------------------
+
+
+def test_new_blocks_round_trip_through_the_editor_and_render(client_for, superadmin, library):
+    template = _template()
+    data = _form_data(
+        template,
+        **{
+            "block-count": "5",
+            "block-0-type": "code",
+            "block-0-code": "{{reference}}",
+            "block-0-expiry": "The code expires in 10 minutes.",
+            "block-1-type": "steps",
+            "block-1-title": "What happens next",
+            "block-1-items": "We read it.\r\nWe reply.",
+            "block-2-type": "items",
+            "block-2-items": "New | Example Care Group | A new site | 26 Oct | https://vitalos.co.uk/x\r\n | Only a title",
+            "block-3-type": "stats",
+            "block-3-items": "3 | New\r\nOverdue | Status",
+            "block-4-type": "signature",
+        },
+    )
+    response = client_for(superadmin).post(f"/mail/templates/{template.pk}/", data)
+    assert response.status_code == 302, response.content.decode()[:2000]
+    blocks = _template().blocks
+    assert blocks[0] == {"type": "code", "code": "{{reference}}", "expiry": "The code expires in 10 minutes."}
+    assert blocks[1] == {"type": "steps", "title": "What happens next", "items": ["We read it.", "We reply."]}
+    assert blocks[2]["items"] == [
+        {
+            "tag": "New",
+            "title": "Example Care Group",
+            "summary": "A new site",
+            "meta": "26 Oct",
+            "href": "https://vitalos.co.uk/x",
+        },
+        {"title": "Only a title"},
+    ]
+    assert blocks[3]["items"] == [{"value": "3", "label": "New"}, {"value": "Overdue", "label": "Status"}]
+    rendered = render_content(_template().content(), {"reference": "VIT-EXAMPLE-01"}, key=template.key)
+    assert "VIT-EXAMPLE-01" in rendered.email.text and "1. We read it." in rendered.email.text
+    assert "[New] Example Care Group" in rendered.email.text and "Status: Overdue" in rendered.email.text
+    editor = client_for(superadmin).get(f"/mail/templates/{template.pk}/").content.decode()
+    assert "New | Example Care Group | A new site | 26 Oct | https://vitalos.co.uk/x" in editor
+    assert "3 | New" in editor
+
+
+@pytest.mark.parametrize(
+    ("block", "message"),
+    [
+        ({"type": "code", "code": ""}, "needs a code"),
+        ({"type": "code", "code": "{{reference}}"}, "must not appear in the subject"),
+        ({"type": "steps", "items": ["1", "2", "3", "4", "5"]}, "1 to 4 steps"),
+        ({"type": "steps", "items": []}, "1 to 4 steps"),
+        ({"type": "items", "items": [{"title": ""}]}, "each with a title"),
+        ({"type": "stats", "items": [{"value": "1", "label": "One"}]}, "2 to 4 figures"),
+        ({"type": "stats", "items": [{"value": "1", "label": ""}, {"value": "2", "label": "x"}]}, "2 to 4"),
+    ],
+)
+def test_new_block_validation(block, message):
+    content = {
+        "category": "enquiries",
+        "kind": "transactional",
+        "subject": "Your reference {{reference}}",
+        "blocks": [block],
+    }
+    assert any(message in error for error in services.content_errors(content))
+
+
+def test_every_block_type_is_in_the_palette():
+    from apps.email_templates.forms import BLOCK_LABELS, new_block
+
+    assert set(BLOCK_LABELS) == set(services.BLOCK_TYPES)
+    assert all(new_block(kind)["type"] == kind for kind in BLOCK_LABELS)

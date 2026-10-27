@@ -35,7 +35,21 @@ from .rendering import RenderedTemplate, preview_html, render_content, sample_va
 from .variables import VARIABLES, Variable, names_in
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
-BLOCK_TYPES = ("heading", "section", "text", "button", "badge", "quote", "details", "divider", "signature")
+BLOCK_TYPES = (
+    "heading",
+    "section",
+    "text",
+    "button",
+    "badge",
+    "quote",
+    "details",
+    "divider",
+    "signature",
+    "code",
+    "steps",
+    "items",
+    "stats",
+)
 TEST_DOMAIN = "@vitalos.co.uk"
 TEST_SENDS_PER_HOUR = 10
 
@@ -71,7 +85,30 @@ def content_errors(content: dict) -> list[str]:
             errors.append(f"Block {index} has an unknown type.")
         elif kind == "button" and not (block.get("label") and block.get("url")):
             errors.append(f"Block {index} (button) needs a label and a link.")
+        else:
+            errors += _new_block_errors(index, kind, block, content)
     return errors
+
+
+def _new_block_errors(index: int, kind: str, block: dict, content: dict) -> list[str]:
+    """Rules for the code, steps, items and stats blocks (ADR-030 status note, October 2026)."""
+    items = block.get("items") or []
+    if kind == "code":
+        code = (block.get("code") or "").strip()
+        if not code:
+            return [f"Block {index} (code) needs a code or a variable."]
+        visible = f"{content.get('subject') or ''}\n{content.get('preheader') or ''}"
+        if code in visible:
+            return [f"Block {index} (code): the code must not appear in the subject or preheader."]
+    elif kind == "steps" and not 1 <= len([i for i in items if str(i).strip()]) <= 4:
+        return [f"Block {index} (steps) needs 1 to 4 steps."]
+    elif kind == "items" and (not items or any(not (i.get("title") or "").strip() for i in items)):
+        return [f"Block {index} (item list) needs at least one item, each with a title."]
+    elif kind == "stats" and (
+        not 2 <= len(items) <= 4 or any(not (i.get("value") and i.get("label")) for i in items)
+    ):
+        return [f"Block {index} (figures) needs 2 to 4 figures, each with a value and a label."]
+    return []
 
 
 def _snapshot(template: EmailTemplate, *, user, note: str) -> None:

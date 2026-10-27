@@ -34,6 +34,25 @@ export interface DetailRow {
   missing?: string | undefined;
 }
 
+/** One entry in an `items` list: a digest row, an alert line or a newsletter story. */
+export interface ListItem {
+  /** A short pill above the title (e.g. "New enquiry", "Possible duplicate"). */
+  tag?: string | undefined;
+  title: string;
+  /** One or two lines of summary. */
+  summary?: string | undefined;
+  /** A small muted line (e.g. "From Alex Example · 26 Oct 2026, 09:12"). */
+  meta?: string | undefined;
+  /** Links the title (`https:` or `mailto:` only). */
+  href?: string | undefined;
+}
+
+/** One figure in a `stats` block. A status is always written as a word, never a colour alone. */
+export interface Stat {
+  value: string;
+  label: string;
+}
+
 export type Block =
   | { type: "heading"; text: string; missing?: string | undefined }
   | { type: "section"; text: string }
@@ -43,7 +62,17 @@ export type Block =
   | { type: "quote"; text: string; missing?: string | undefined }
   | { type: "details"; rows: DetailRow[] }
   | { type: "divider" }
-  | { type: "signature"; name: string; title?: string | undefined };
+  | { type: "signature"; name: string; title?: string | undefined }
+  /** A verification code. It must never appear in the subject or preheader. */
+  | { type: "code"; code: string; expiry?: string | undefined; missing?: string | undefined }
+  /** "What happens next": 1 to 4 numbered steps, with an optional title. */
+  | { type: "steps"; title?: string | undefined; items: string[] }
+  | { type: "items"; items: ListItem[] }
+  /** 2 to 4 figures with labels. */
+  | { type: "stats"; items: Stat[] };
+
+/** The block types a correspondence email (a person writing to a person) may use. */
+export const CORRESPONDENCE_BLOCKS: readonly Block["type"][] = ["text", "quote", "divider", "signature"];
 
 export interface SocialLink {
   label: string;
@@ -70,9 +99,15 @@ export interface FooterInput {
 }
 
 export interface EmailDocument {
+  /**
+   * `correspondence`: a person writing to a person (an inbox reply). No header band, label or
+   * badges; body paragraphs and a signature; a compact footer with the company facts only.
+   */
+  mode?: "standard" | "correspondence" | undefined;
   /** The `<title>`, normally the subject. */
   title: string;
   preheader: string;
+  /** The header pill. Not shown in correspondence mode. */
   headerLabel: string;
   blocks: Block[];
   footer: FooterInput;
@@ -259,6 +294,94 @@ function blockHtml(block: Block): string {
         title: title ? fill("signature_title", { text: e(title) }) : "",
       });
     }
+    case "code": {
+      const code = cleanCode(block.code);
+      const expiry = cleanLine(block.expiry);
+      const box = fill("code_box", {
+        code: code ? e(code) : missingHtml(block.missing ?? NOT_PROVIDED),
+      });
+      return expiry ? `${box}\n${fill("code_expiry", { text: e(expiry) })}` : box;
+    }
+    case "steps": {
+      const title = cleanLine(block.title);
+      const rows = stepItems(block)
+        .map((text, index) =>
+          fill("step_row", { pad: index === 0 ? "0" : "8", number: String(index + 1), text: e(text) }),
+        )
+        .join("\n");
+      const steps = fill("steps", { rows });
+      return title ? `${fill("section", { text: e(title) })}\n${steps}` : steps;
+    }
+    case "items": {
+      const rows = block.items
+        .map((item) => fill("item_row", { content: listItemHtml(item) }))
+        .join("\n");
+      return fill("items", { rows });
+    }
+    case "stats": {
+      const width = String(Math.floor(100 / Math.max(block.items.length, 1)));
+      const cells = block.items
+        .map((stat, index) => {
+          const value = cleanLine(stat.value);
+          return fill("stat_cell", {
+            width,
+            edge: index === 0 ? "0" : "1",
+            value: value ? e(value) : missingHtml(NOT_PROVIDED),
+            label: e(cleanLine(stat.label)),
+          });
+        })
+        .join("");
+      return fill("stats", { cells });
+    }
+  }
+}
+
+/** A code is shown without spaces, so it copies as one string. */
+function cleanCode(code: string | undefined): string {
+  return cleanLine(code).replace(/\s+/g, "");
+}
+
+function stepItems(block: Extract<Block, { type: "steps" }>): string[] {
+  return block.items.map((item) => cleanLine(item)).filter((item) => item);
+}
+
+function listItemHtml(item: ListItem): string {
+  const parts: string[] = [];
+  const tag = cleanLine(item.tag);
+  if (tag) parts.push(fill("item_tag", { text: e(tag) }));
+  const title = cleanLine(item.title);
+  const href = cleanLine(item.href);
+  if (!title) {
+    parts.push(fill("item_title", { text: missingHtml(NOT_PROVIDED) }));
+  } else if (href && isSafeUrl(href)) {
+    parts.push(fill("item_title_link", { href: e(href), text: e(title) }));
+  } else {
+    parts.push(fill("item_title", { text: e(title) }));
+  }
+  const summary = cleanMultiline(item.summary);
+  if (summary) parts.push(fill("item_summary", { text: e(summary).replace(/\n/g, "<br>\n") }));
+  const meta = cleanLine(item.meta);
+  if (meta) parts.push(fill("item_meta", { text: e(meta) }));
+  return parts.join("");
+}
+
+/**
+ * Rules a document must meet before it renders: a verification code never appears in the subject
+ * or preheader (both show in notifications and inbox lists), and correspondence uses only the
+ * correspondence blocks.
+ */
+export function checkDocument(doc: EmailDocument): void {
+  const visible = `${cleanLine(doc.title)}\n${cleanLine(doc.preheader)}`;
+  for (const block of doc.blocks) {
+    if (block.type === "code") {
+      const code = cleanCode(block.code);
+      if (code && visible.includes(code)) {
+        throw new Error("A verification code must not appear in the subject or preheader.");
+      }
+    }
+    if (doc.mode === "correspondence" && !CORRESPONDENCE_BLOCKS.includes(block.type)) {
+      throw new Error(`Correspondence email cannot use a ${block.type} block.`);
+    }
   }
 }
 
@@ -291,7 +414,11 @@ function pickFilled(company: CompanyFacts): CompanyFacts {
 
 const displayUrl = (url: string) => url.replace(/^https:\/\//i, "").replace(/\/$/, "");
 
-function footerHtml(footer: FooterInput): { html: string; images: InlineImage[] } {
+function footerHtml(
+  footer: FooterInput,
+  compact = false,
+): { html: string; images: InlineImage[] } {
+  if (compact) return { html: companyFooterHtml(footer.company, "16"), images: [] };
   const rows: string[] = [];
   const images: InlineImage[] = [];
   const notice = cleanMultiline(footer.notice);
@@ -313,23 +440,7 @@ function footerHtml(footer: FooterInput): { html: string; images: InlineImage[] 
     rows.push(fill("footer_social", { links }));
   }
 
-  const lines = companyLines(footer.company);
-  const filled = pickFilled(footer.company);
-  const website = filled.website ?? "";
-  const support = filled.supportEmail ?? "";
-  const websiteHtml =
-    website && isSafeUrl(website)
-      ? fill("footer_link", { href: e(website), text: e(displayUrl(website)) })
-      : e(website || COMPANY_PLACEHOLDERS.website);
-  const supportHtml = support
-    ? fill("footer_link", { href: e(`mailto:${support}`), text: e(support) })
-    : e(COMPANY_PLACEHOLDERS.supportEmail);
-  rows.push(
-    fill("footer_text", {
-      pad: social.length > 0 ? "8" : "16",
-      text: `${e(lines.company)}<br>${e(lines.office)}<br>${websiteHtml} · ${supportHtml}`,
-    }),
-  );
+  rows.push(companyFooterHtml(footer.company, social.length > 0 ? "8" : "16"));
 
   if (footer.unsubscribe) {
     const reason = cleanLine(footer.unsubscribe.reason);
@@ -342,7 +453,30 @@ function footerHtml(footer: FooterInput): { html: string; images: InlineImage[] 
   return { html: rows.join("\n"), images };
 }
 
+function companyFooterHtml(company: CompanyFacts, pad: string): string {
+  const lines = companyLines(company);
+  const filled = pickFilled(company);
+  const website = filled.website ?? "";
+  const support = filled.supportEmail ?? "";
+  const websiteHtml =
+    website && isSafeUrl(website)
+      ? fill("footer_link", { href: e(website), text: e(displayUrl(website)) })
+      : e(website || COMPANY_PLACEHOLDERS.website);
+  const supportHtml = support
+    ? fill("footer_link", { href: e(`mailto:${support}`), text: e(support) })
+    : e(COMPANY_PLACEHOLDERS.supportEmail);
+  return fill("footer_text", {
+    pad,
+    text: `${e(lines.company)}<br>${e(lines.office)}<br>${websiteHtml} · ${supportHtml}`,
+  });
+}
+
+const CARD_EDGE = "border-top:0;border-radius:0 0 12px 12px;";
+const CARD_EDGE_ALONE = "border-radius:12px;";
+
 export function renderHtml(doc: EmailDocument): { html: string; images: InlineImage[] } {
+  checkDocument(doc);
+  const correspondence = doc.mode === "correspondence";
   const body = doc.blocks
     .map((block, index) =>
       fill("row", {
@@ -351,19 +485,23 @@ export function renderHtml(doc: EmailDocument): { html: string; images: InlineIm
       }),
     )
     .join("\n");
-  const footer = footerHtml(doc.footer);
+  const footer = footerHtml(doc.footer, correspondence);
   const html = fill("shell", {
     title: e(cleanLine(doc.title)),
     style_blocks: STYLE_BLOCKS.map((css) => fill("style", { css })).join("\n"),
     preheader: e(cleanLine(doc.preheader)) + PREHEADER_PAD,
-    header: fill("header", {
-      logo: imageHtml(inlineImages.logo, "Vitalos"),
-      label: e(cleanLine(doc.headerLabel)),
-    }),
+    header: correspondence
+      ? ""
+      : fill("header", {
+          logo: imageHtml(inlineImages.logo, "Vitalos"),
+          label: e(cleanLine(doc.headerLabel)),
+        }),
+    card_edge: correspondence ? CARD_EDGE_ALONE : CARD_EDGE,
     body,
     footer: footer.html,
   });
-  return { html, images: [inlineImages.logo, ...footer.images] };
+  const images = correspondence ? footer.images : [inlineImages.logo, ...footer.images];
+  return { html, images };
 }
 
 function detailText(row: DetailRow): string[] {
@@ -412,24 +550,49 @@ function blockText(block: Block): string {
         .filter(Boolean)
         .concat("Vitalos Technologies")
         .join("\n");
+    case "code": {
+      const code = cleanCode(block.code) || (block.missing ?? NOT_PROVIDED);
+      const expiry = cleanLine(block.expiry);
+      return expiry ? `${code}\n${expiry}` : code;
+    }
+    case "steps": {
+      const title = cleanLine(block.title);
+      const steps = stepItems(block).map((text, index) => `${index + 1}. ${text}`);
+      return (title ? [title.toUpperCase(), ...steps] : steps).join("\n");
+    }
+    case "items":
+      return block.items.map(listItemText).join("\n\n");
+    case "stats":
+      return block.items
+        .map((stat) => `${cleanLine(stat.label)}: ${cleanLine(stat.value) || NOT_PROVIDED}`)
+        .join("\n");
   }
 }
 
-function footerText(footer: FooterInput): string {
+function listItemText(item: ListItem): string {
+  const tag = cleanLine(item.tag);
+  const title = cleanLine(item.title) || NOT_PROVIDED;
+  const href = cleanLine(item.href);
+  return [
+    tag ? `[${tag}] ${title}` : title,
+    cleanMultiline(item.summary),
+    cleanLine(item.meta),
+    href && isSafeUrl(href) ? href : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function footerText(footer: FooterInput, compact = false): string {
   const parts: string[] = ["--"];
+  if (compact) return parts.concat(companyText(footer.company)).join("\n");
   const notice = cleanMultiline(footer.notice);
   if (notice) parts.push(notice, "");
   const social = footer.social.filter((s) => imageById(s.contentId) && isSafeUrl(cleanLine(s.url)));
   if (social.length > 0) {
     parts.push(...social.map((s) => `${cleanLine(s.label)}: ${cleanLine(s.url)}`), "");
   }
-  const lines = companyLines(footer.company);
-  const filled = pickFilled(footer.company);
-  parts.push(
-    lines.company,
-    lines.office,
-    `${filled.website ? displayUrl(filled.website) : COMPANY_PLACEHOLDERS.website} · ${filled.supportEmail ?? COMPANY_PLACEHOLDERS.supportEmail}`,
-  );
+  parts.push(...companyText(footer.company));
   if (footer.unsubscribe) {
     const url = cleanLine(footer.unsubscribe.url);
     parts.push(
@@ -443,14 +606,32 @@ function footerText(footer: FooterInput): string {
   return parts.join("\n");
 }
 
+function companyText(company: CompanyFacts): string[] {
+  const lines = companyLines(company);
+  const filled = pickFilled(company);
+  return [
+    lines.company,
+    lines.office,
+    `${filled.website ? displayUrl(filled.website) : COMPANY_PLACEHOLDERS.website} · ${filled.supportEmail ?? COMPANY_PLACEHOLDERS.supportEmail}`,
+  ];
+}
+
 /** The plain-text part: every block, in the same order as the HTML. */
 export function renderText(doc: EmailDocument): string {
-  const chunks: string[] = [`VITALOS · ${cleanLine(doc.headerLabel).toUpperCase()}`];
+  checkDocument(doc);
+  const correspondence = doc.mode === "correspondence";
+  const chunks: string[] = correspondence
+    ? []
+    : [`VITALOS · ${cleanLine(doc.headerLabel).toUpperCase()}`];
   doc.blocks.forEach((block, index) => {
+    if (index === 0 && correspondence) {
+      chunks.push(blockText(block));
+      return;
+    }
     const separator = doc.blocks[index - 1]?.type === "section" ? "\n" : "\n\n";
     chunks.push(separator, blockText(block));
   });
-  chunks.push("\n\n", footerText(doc.footer));
+  chunks.push("\n\n", footerText(doc.footer, correspondence));
   return chunks.join("");
 }
 

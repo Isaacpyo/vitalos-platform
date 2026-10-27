@@ -113,6 +113,31 @@ def _layout_block(block: dict, values: dict[str, str]) -> dict:
                 item["href"] = merged
             rows.append(item)
         return {"type": "details", "rows": rows}
+    if kind == "code":
+        out = {"type": "code", "code": merge(block.get("code", ""), values)}
+        if block.get("expiry"):
+            out["expiry"] = merge(block["expiry"], values)
+        return out
+    if kind == "steps":
+        out = {"type": "steps", "items": [merge(item, values) for item in block.get("items", [])]}
+        if block.get("title"):
+            out["title"] = merge(block["title"], values)
+        return out
+    if kind == "items":
+        return {
+            "type": "items",
+            "items": [
+                {key: merge(value, values) for key, value in item.items()} for item in block.get("items", [])
+            ],
+        }
+    if kind == "stats":
+        return {
+            "type": "stats",
+            "items": [
+                {"value": merge(item.get("value", ""), values), "label": merge(item.get("label", ""), values)}
+                for item in block.get("items", [])
+            ],
+        }
     if kind == "divider":
         return {"type": "divider"}
     if kind == "signature":

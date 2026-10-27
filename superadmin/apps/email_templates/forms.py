@@ -15,6 +15,10 @@ BLOCK_CHOICES = (
     ("badge", "Badges"),
     ("quote", "Quote"),
     ("details", "Details"),
+    ("steps", "Steps"),
+    ("items", "Item list"),
+    ("stats", "Figures"),
+    ("code", "Code"),
     ("section", "Section title"),
     ("divider", "Divider"),
     ("signature", "Signature"),
@@ -56,6 +60,22 @@ class TemplateForm(StyledFormMixin, forms.Form):
 
 def _lines(value: str) -> list[str]:
     return [line.strip() for line in (value or "").replace("\r", "").split("\n") if line.strip()]
+
+
+def _cells(line: str, count: int) -> list[str]:
+    cells = [cell.strip() for cell in line.split("|")]
+    return (cells + [""] * count)[:count]
+
+
+def _list_items(value: str) -> list[dict]:
+    """``Tag | Title | Summary | Meta | Link`` per line; empty cells are left out."""
+    keys = ("tag", "title", "summary", "meta", "href")
+    return [{k: v for k, v in zip(keys, _cells(line, 5), strict=True) if v} for line in _lines(value)]
+
+
+def _stats(value: str) -> list[dict]:
+    """``Value | Label`` per line."""
+    return [dict(zip(("value", "label"), _cells(line, 2), strict=True)) for line in _lines(value)]
 
 
 def _rows(value: str) -> list[list[str]]:
@@ -109,6 +129,20 @@ def blocks_from_post(data) -> list[dict]:
             blocks.append({"type": "badge", "items": _lines(data.get(prefix + "items", ""))[:3]})
         elif kind == "details":
             blocks.append({"type": "details", "rows": _rows(data.get(prefix + "rows", ""))})
+        elif kind == "code":
+            block = {"type": "code", "code": data.get(prefix + "code", "")}
+            if data.get(prefix + "expiry", ""):
+                block["expiry"] = data.get(prefix + "expiry", "")
+            blocks.append(block)
+        elif kind == "steps":
+            block = {"type": "steps", "items": _lines(data.get(prefix + "items", ""))}
+            if data.get(prefix + "title", ""):
+                block["title"] = data.get(prefix + "title", "")
+            blocks.append(block)
+        elif kind == "items":
+            blocks.append({"type": "items", "items": _list_items(data.get(prefix + "items", ""))})
+        elif kind == "stats":
+            blocks.append({"type": "stats", "items": _stats(data.get(prefix + "items", ""))})
         elif kind in ("divider", "signature"):
             blocks.append({"type": kind})
     return blocks
@@ -127,6 +161,10 @@ def new_block(kind: str) -> dict | None:
         "details": {"type": "details", "rows": []},
         "divider": {"type": "divider"},
         "signature": {"type": "signature"},
+        "code": {"type": "code", "code": "", "expiry": ""},
+        "steps": {"type": "steps", "title": "What happens next", "items": []},
+        "items": {"type": "items", "items": []},
+        "stats": {"type": "stats", "items": []},
     }[kind]
 
 
@@ -158,6 +196,17 @@ def block_rows(blocks: list[dict]) -> list[dict]:
     out = []
     for i, block in enumerate(blocks):
         rows = block.get("rows", [])
+        items = block.get("items", [])
+        kind = block.get("type", "")
+        if kind == "items":
+            items_text = "\n".join(
+                " | ".join(i.get(k, "") for k in ("tag", "title", "summary", "meta", "href")).rstrip(" |")
+                for i in items
+            )
+        elif kind == "stats":
+            items_text = "\n".join(f"{i.get('value', '')} | {i.get('label', '')}" for i in items)
+        else:
+            items_text = "\n".join(items)
         out.append(
             {
                 "index": i,
@@ -167,7 +216,10 @@ def block_rows(blocks: list[dict]) -> list[dict]:
                 "muted": block.get("tone") == "muted",
                 "label": block.get("label", ""),
                 "url": block.get("url", ""),
-                "items": "\n".join(block.get("items", [])),
+                "items": items_text,
+                "title": block.get("title", ""),
+                "code": block.get("code", ""),
+                "expiry": block.get("expiry", ""),
                 "rows": "\n".join(
                     f"{r.get('label', '')} | {r.get('value', '')}"
                     if isinstance(r, dict)

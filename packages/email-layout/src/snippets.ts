@@ -35,7 +35,7 @@ export const snippets = {
 <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;font-family:${FONT};">
 [[header]]
-<tr><td bgcolor="${L.surface}" class="v-card v-pad" style="padding:24px;background-color:${L.surface};border:1px solid ${L.rule};border-top:0;border-radius:0 0 12px 12px;">
+<tr><td bgcolor="${L.surface}" class="v-card v-pad" style="padding:24px;background-color:${L.surface};border:1px solid ${L.rule};[[card_edge]]">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;font-family:${FONT};">
 [[body]]
 </table>
@@ -131,6 +131,47 @@ export const snippets = {
   signature: `<p class="v-t" style="margin:0;font-size:16px;line-height:24px;color:${L.text};">Kind regards,<br><strong class="v-h" style="color:${L.heading};">[[name]]</strong>[[title]]<br>Vitalos Technologies</p>`,
 
   signature_title: `<br><span class="v-m" style="color:${L.muted};">[[text]]</span>`,
+
+  // A verification code: large monospace, one text node so it copies cleanly.
+  code_box: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+<tr><td align="center" class="v-code v-rule" style="padding:16px 12px;background-color:${L.codeBg};border:1px solid ${L.rule};border-radius:8px;"><span class="v-h" style="font-family:${MONO};font-size:32px;line-height:40px;font-weight:700;letter-spacing:6px;color:${L.heading};-webkit-user-select:all;user-select:all;${WRAP}">[[code]]</span></td></tr>
+</table>`,
+
+  code_expiry: `<p class="v-m" style="margin:8px 0 0;font-size:14px;line-height:20px;color:${L.muted};text-align:center;">[[text]]</p>`,
+
+  steps: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;font-family:${FONT};">
+[[rows]]
+</table>`,
+
+  // `pad` is the space above the step in px: 0 for the first, 8 after.
+  step_row: `<tr>
+<td valign="top" width="36" style="width:36px;padding:[[pad]]px 0 0;"><span class="v-b-intent" style="display:inline-block;width:22px;height:22px;border:1px solid ${L.intentBorder};border-radius:999px;background-color:${L.intentBg};color:${L.intentText};font-size:14px;line-height:22px;font-weight:700;text-align:center;">[[number]]</span></td>
+<td valign="top" class="v-t" style="padding:[[pad]]px 0 0;font-size:16px;line-height:24px;color:${L.text};${WRAP}">[[text]]</td>
+</tr>`,
+
+  // A list of linked entries (digests, multi-item alerts, newsletters), ruled above and below.
+  items: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="v-rule" style="width:100%;font-family:${FONT};border-bottom:1px solid ${L.rule};">
+[[rows]]
+</table>`,
+
+  item_row: `<tr><td class="v-rule" style="padding:12px 0;border-top:1px solid ${L.rule};${WRAP}">[[content]]</td></tr>`,
+
+  item_tag: `<div style="padding:0 0 4px;"><span class="v-b-intent" style="display:inline-block;padding:2px 8px;border:1px solid ${L.intentBorder};border-radius:999px;background-color:${L.intentBg};color:${L.intentText};font-size:14px;line-height:20px;font-weight:600;">[[text]]</span></div>`,
+
+  item_title: `<p class="v-h" style="margin:0;font-size:16px;line-height:24px;font-weight:700;color:${L.heading};">[[text]]</p>`,
+
+  item_title_link: `<p style="margin:0;font-size:16px;line-height:24px;font-weight:700;"><a href="[[href]]" class="v-link" style="color:${L.link};text-decoration:underline;">[[text]]</a></p>`,
+
+  item_summary: `<p class="v-t" style="margin:4px 0 0;font-size:16px;line-height:24px;color:${L.text};">[[text]]</p>`,
+
+  item_meta: `<p class="v-m" style="margin:4px 0 0;font-size:14px;line-height:20px;color:${L.muted};">[[text]]</p>`,
+
+  stats: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="v-rule" style="width:100%;font-family:${FONT};border:1px solid ${L.rule};border-collapse:separate;border-radius:8px;">
+<tr>[[cells]]</tr>
+</table>`,
+
+  // `edge` is 0 for the first figure and 1 after it (a rule between figures).
+  stat_cell: `<td valign="top" width="[[width]]%" class="v-rule" style="width:[[width]]%;padding:12px;border-left:[[edge]]px solid ${L.rule};${WRAP}"><p class="v-h" style="margin:0;font-size:24px;line-height:30px;font-weight:700;color:${L.heading};">[[value]]</p><p class="v-m" style="margin:4px 0 0;font-size:14px;line-height:20px;color:${L.muted};">[[label]]</p></td>`,
 
   footer_text: `<tr><td class="v-m v-pad" style="padding:[[pad]]px 24px 0;font-family:${FONT};font-size:14px;line-height:20px;color:${L.muted};">[[text]]</td></tr>`,
 
