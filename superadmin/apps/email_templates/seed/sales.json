@@ -6,8 +6,8 @@
     "kind": "transactional",
     "description": "A personal first reply from a consultant to a new enquiry, proposing a short call.",
     "header_label": "Your enquiry",
-    "subject": "Your enquiry: a few thoughts and next steps",
-    "preheader": "A personal reply from {{sender_name}}, with a suggested way forward.",
+    "subject": "Your enquiry: a suggested next step",
+    "preheader": "A personal reply to what you shared about {{organisation}}.",
     "reason": null,
     "blocks": [
       {
@@ -36,7 +36,7 @@
     "blocks": [
       {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nFollowing our recent exchange, I would like to invite you to a discovery call. The aim is simple: to understand where {{organisation}} is today, what you want to change, and whether we are the right people to help.\n\nWe would usually cover:\n- the business problem and why it matters now\n- the systems, data and people involved\n- constraints such as timing, budget and governance\n- what a sensible first step could look like\n\nYou are welcome to bring colleagues who will be close to the decision or the work. Please choose a time that suits you."
+        "text": "Hi {{first_name}},\n\nFollowing our recent exchange, I would like to invite you to a discovery call. The aim is simple: to understand where {{organisation}} is today, what you want to change, and whether we are the right people to help.\n\nWe would usually cover:\n- The business problem and why it matters now\n- The systems, data and people involved\n- Constraints such as timing, budget and governance\n- What a sensible first step could look like\n\nYou are welcome to bring colleagues who will be close to the decision or the work. Choose a time that suits you below."
       },
       { "type": "button", "label": "Choose a time", "url": "{{meeting_link}}" },
       { "type": "signature" }
@@ -118,7 +118,7 @@
     "blocks": [
       {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nBefore we go into the detail of {{organisation}}'s systems and plans, it is sensible to have a non-disclosure agreement in place. That way you can share what we need with confidence, and both sides are clear on how that information is handled.\n\nThe agreement is ready to review and sign through the secure link below. If your organisation prefers to use its own template, that is absolutely fine; send it over and we will review it promptly."
+        "text": "Hi {{first_name}},\n\nBefore we go into the detail of {{organisation}}'s systems and plans, it is sensible to have a non-disclosure agreement in place. That way you can share what we need with confidence, and both sides are clear on how that information is handled.\n\nThe agreement is ready to review and sign through the secure link below. If your organisation prefers to use its own template, that is fine; send it over and we will review it promptly."
       },
       {
         "type": "details",
@@ -149,7 +149,7 @@
     "blocks": [
       {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nThank you for the time you and your colleagues have given us. Our proposal is ready, and you can read it through the secure link below.\n\nWe have kept it practical. It sets out:\n- our understanding of your objectives and constraints\n- the approach we recommend, and why\n- scope, phasing and what we would need from your team\n- commercials and the assumptions behind them\n\nWhere we have made an assumption, we have said so. If anything does not match your understanding, that is exactly what we want to hear."
+        "text": "Hi {{first_name}},\n\nThank you for the time you and your colleagues have given us. Our proposal is ready, and you can read it through the secure link below.\n\nWe have kept it practical. It sets out:\n- Our understanding of your objectives and constraints\n- The approach we recommend, and why\n- Scope, phasing and what we would need from your team\n- Commercials and the assumptions behind them\n\nWhere we have made an assumption, we have said so. If anything does not match your understanding, that is exactly what we want to hear."
       },
       {
         "type": "details",
@@ -245,15 +245,23 @@
     "category": "sales",
     "kind": "transactional",
     "description": "Thanks a client for accepting a proposal and sets out the steps between now and kick-off.",
-    "header_label": "Thank you",
+    "header_label": "Proposal accepted",
     "subject": "Thank you for choosing Vitalos",
     "preheader": "What happens between now and kick-off, and who to contact in the meantime.",
     "reason": null,
     "blocks": [
-      { "type": "heading", "text": "Thank you, {{first_name}}" },
       {
         "type": "text",
-        "text": "Thank you for confirming that {{organisation}} would like to go ahead. We appreciate the trust that decision represents, and we take it seriously.\n\nWhat happens next:\n- We will send the contract and statement of work for signature shortly.\n- Once signed, we will agree a kick-off date and confirm who will be involved on both sides.\n- Before kick-off, we will share a short list of what we need from your team, such as contacts, existing documentation and any access arranged through your own tooling."
+        "text": "Hi {{first_name}},\n\nThank you for confirming that {{organisation}} would like to go ahead. We appreciate the trust that decision represents, and we take it seriously."
+      },
+      {
+        "type": "steps",
+        "title": "What happens next",
+        "items": [
+          "We will send the contract and statement of work for signature shortly.",
+          "Once signed, we will agree a kick-off date and confirm who will be involved on both sides.",
+          "Before kick-off, we will share a short list of what we need from your team, such as contacts, existing documentation and any access arranged through your own tooling."
+        ]
       },
       {
         "type": "details",
@@ -264,7 +272,7 @@
       },
       {
         "type": "text",
-        "text": "I remain your point of contact until kick-off, so just reply here if anything comes up. We are looking forward to getting started!"
+        "text": "I remain your point of contact until kick-off, so reply here if anything comes up. We look forward to getting started."
       },
       { "type": "signature" }
     ]
@@ -306,17 +314,15 @@
     "category": "sales",
     "kind": "transactional",
     "description": "Confirms receipt of the signed contract, shares a copy and sets out the steps towards kick-off.",
-    "header_label": "Signed",
+    "header_label": "Contract signed",
     "subject": "Signed and confirmed: {{project_name}}",
     "preheader": "A copy for your records, and the next steps towards kick-off.",
     "reason": null,
     "blocks": [
-      { "type": "heading", "text": "We are ready to begin" },
       {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nThank you. We have received the signed contract for {{project_name}}, and a copy of the signed agreement is available for your records through the link below.\n\nNext steps:"
+        "text": "Hi {{first_name}},\n\nThank you. We have received the signed contract for {{project_name}}, and we are ready to begin. A copy of the signed agreement is available for your records through the link below.\n\nNext steps:\n\n{{next_steps}}"
       },
-      { "type": "quote", "text": "{{next_steps}}" },
       {
         "type": "details",
         "rows": [
