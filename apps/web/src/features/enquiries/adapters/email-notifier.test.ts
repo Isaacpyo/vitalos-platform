@@ -88,6 +88,7 @@ describe("request shapes", () => {
     expect(Object.keys(body).sort()).toEqual([
       "Attachments",
       "From",
+      "Headers",
       "HtmlBody",
       "ReplyTo",
       "Subject",
@@ -112,6 +113,12 @@ describe("request shapes", () => {
       ReplyTo: "person@example.invalid",
       Subject: `New enquiry: New project · Example Person (fixture), Example Organisation (fixture) · ${referenceFromId(id)}`,
     });
+    expect(body.Headers).toEqual([
+      { Name: "Auto-Submitted", Value: "auto-generated" },
+      { Name: "X-Auto-Response-Suppress", Value: "All" },
+      { Name: "X-Vitalos-Notification", Value: "web.enquiry-notification" },
+      { Name: "X-Vitalos-Reference", Value: referenceFromId(id) },
+    ]);
     expect(body.TextBody).toContain("Clearly artificial non-production enquiry");
     expect(body.HtmlBody).toMatch(/^<!DOCTYPE html>/);
     expect(body.HtmlBody).toContain("Clearly artificial non-production enquiry");
@@ -130,6 +137,7 @@ describe("request shapes", () => {
     expect(Object.keys(body).sort()).toEqual([
       "attachments",
       "from",
+      "headers",
       "html",
       "reply_to",
       "subject",
@@ -150,6 +158,12 @@ describe("request shapes", () => {
       subject: `New enquiry: New project · Example Person (fixture), Example Organisation (fixture) · ${referenceFromId(id)}`,
     });
     expect(body.html).toEqual(expect.stringContaining("Reply to Example"));
+    expect(body.headers).toEqual({
+      "Auto-Submitted": "auto-generated",
+      "X-Auto-Response-Suppress": "All",
+      "X-Vitalos-Notification": "web.enquiry-notification",
+      "X-Vitalos-Reference": referenceFromId(id),
+    });
   });
 });
 

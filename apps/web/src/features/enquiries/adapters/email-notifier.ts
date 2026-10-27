@@ -25,6 +25,10 @@ import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-
  * - Everything else (401/403 authentication, 400/422 validation, other 4xx): permanent.
  * - A message of kind `acknowledgement` (a customer receipt, not approved by the owner) is never
  *   sent: permanent failure.
+ *
+ * Headers: every notification is automated mail (`Auto-Submitted`, RFC 3834) and names itself with
+ * `X-Vitalos-Notification` plus the enquiry's `X-Vitalos-Reference`, so the Super Admin inbox files it
+ * as the enquiry it describes instead of as mail from support@ (ADR-046).
  */
 
 export interface EmailNotifierOptions {
@@ -39,6 +43,17 @@ export interface EmailNotifierOptions {
 }
 
 export const DEFAULT_EMAIL_TIMEOUT_MS = 10_000;
+
+export const NOTIFICATION_KIND = "web.enquiry-notification";
+
+export function notificationHeaders(reference: string): Record<string, string> {
+  return {
+    "Auto-Submitted": "auto-generated",
+    "X-Auto-Response-Suppress": "All",
+    "X-Vitalos-Notification": NOTIFICATION_KIND,
+    "X-Vitalos-Reference": cleanLine(reference),
+  };
+}
 
 interface ProviderRequest {
   url: string;
@@ -56,6 +71,8 @@ interface EmailContent {
   inlineImages: InlineImage[];
   replyTo: string | undefined;
   idempotencyKey: string;
+  /** Extra message headers (not HTTP headers). */
+  headers: Record<string, string>;
 }
 
 abstract class EmailNotifier implements Notifier {
@@ -95,6 +112,7 @@ abstract class EmailNotifier implements Notifier {
       inlineImages: rendered.inlineImages,
       replyTo: SIMPLE_ADDRESS.test(workEmail) ? workEmail : undefined,
       idempotencyKey: message.idempotencyKey,
+      headers: notificationHeaders(message.enquiry.reference),
     });
 
     let response: Response;
@@ -173,6 +191,7 @@ export class PostmarkNotifier extends EmailNotifier {
           ContentType: img.contentType,
           ContentID: `cid:${img.contentId}`,
         })),
+        Headers: Object.entries(c.headers).map(([Name, Value]) => ({ Name, Value })),
         ...(c.replyTo ? { ReplyTo: c.replyTo } : {}),
       },
     };
@@ -202,6 +221,7 @@ export class ResendNotifier extends EmailNotifier {
           content_type: img.contentType,
           content_id: img.contentId,
         })),
+        headers: c.headers,
         ...(c.replyTo ? { reply_to: c.replyTo } : {}),
       },
     };
