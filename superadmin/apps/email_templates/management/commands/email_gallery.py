@@ -23,6 +23,7 @@ from types import SimpleNamespace
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.test.utils import override_settings
 from django.utils import timezone
 
 from apps.mailer import layout
@@ -116,8 +117,6 @@ def library_entries() -> list[dict]:
 
 
 def _code_entries() -> list[dict]:
-    from django.conf import settings
-
     from apps.accounts.services import password_email
     from apps.careers import alerts as careers
     from apps.careers import config as careers_config
@@ -125,7 +124,6 @@ def _code_entries() -> list[dict]:
     from apps.enquiries.models import Enquiry, Message, OutboundNotification
     from apps.relay import emails as relay
 
-    settings.APP_BASE_URL = BASE_URL
     render = layout.render_email
     entries = []
     now = timezone.now()
@@ -402,6 +400,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # Links in the gallery (unsubscribe, buttons) use the production origin, for this command only.
+        with override_settings(APP_BASE_URL=BASE_URL):
+            self._handle(options)
+
+    def _handle(self, options):
         out = Path(options["out"]).resolve()
         entries = [] if options["imports_only"] else library_entries() + code_entries()
         for directory in options["imports"]:
