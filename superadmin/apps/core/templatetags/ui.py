@@ -199,6 +199,7 @@ _TONES = {
     "pending": "amber",
     "resolved": "green",
     "spam": "slate",
+    "automated": "slate",
     "urgent": "red",
     "high": "amber",
     # business modes

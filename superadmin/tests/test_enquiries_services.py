@@ -106,6 +106,11 @@ def test_reply_threads_and_is_stored(agent, mailoutbox):
     html, mimetype = sent.alternatives[0]
     assert mimetype == "text/html"
     assert "&lt;Jane&gt;" in html
+    # Correspondence mode: no header band or logo, one signature, the compact company footer.
+    assert "cid:vitalos-logo" not in html and sent.attachments == []
+    assert sent.body.startswith("Thanks <Jane>.") and sent.body.count("Kind regards") == 1
+    assert "X-Vitalos-Notification" not in sent.extra_headers and "Auto-Submitted" not in sent.extra_headers
+    assert message.html_body_raw == html and message.text_body == sent.body
     assert message.direction == Message.Direction.OUTBOUND
     assert message.provider == Message.Provider.LOG
     assert message.delivery_status == "logged"
@@ -164,6 +169,12 @@ def test_reply_attachments_are_checked(agent, mailoutbox):
     bad = SimpleUploadedFile("quote2.pdf", b"MZ\x90\x00 not a pdf", content_type="application/pdf")
     message = services.send_reply(enquiry, body_text="Attached.", actor=agent, files=[good, bad])
     assert [name for name, _, _ in mailoutbox[0].attachments] == ["quote.pdf"]
+    mime = mailoutbox[0].message()
+    assert mime.get_content_type() == "multipart/mixed"
+    assert [part.get_content_type() for part in mime.iter_parts()] == [
+        "multipart/alternative",
+        "application/pdf",
+    ]
     stored = Attachment.objects.get(message=message, filename="quote.pdf")
     assert storages["attachments"].exists(stored.storage_key)
     refused = Attachment.objects.get(message=message, filename="quote2.pdf")

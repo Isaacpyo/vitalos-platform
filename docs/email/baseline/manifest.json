@@ -1,0 +1,867 @@
+[
+  {
+    "slug": "library-client-welcome",
+    "name": "Welcome new client",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Welcome to Vitalos, Alex",
+    "text": "library-client-welcome.txt",
+    "html": "library-client-welcome.html"
+  },
+  {
+    "slug": "library-kickoff-meeting-scheduling",
+    "name": "Kickoff meeting scheduling",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Scheduling the kickoff for Example Care Group website",
+    "text": "library-kickoff-meeting-scheduling.txt",
+    "html": "library-kickoff-meeting-scheduling.html"
+  },
+  {
+    "slug": "library-kickoff-agenda-and-preparation",
+    "name": "Kickoff agenda and preparation",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Kickoff agenda and what we need from you",
+    "text": "library-kickoff-agenda-and-preparation.txt",
+    "html": "library-kickoff-agenda-and-preparation.html"
+  },
+  {
+    "slug": "library-system-access-request",
+    "name": "System access request",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Access we need for Example Care Group website",
+    "text": "library-system-access-request.txt",
+    "html": "library-system-access-request.html"
+  },
+  {
+    "slug": "library-project-plan-shared",
+    "name": "Project plan shared",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Project plan for Example Care Group website",
+    "text": "library-project-plan-shared.txt",
+    "html": "library-project-plan-shared.html"
+  },
+  {
+    "slug": "library-project-status-update",
+    "name": "Project status update",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Example Care Group website: status update",
+    "text": "library-project-status-update.txt",
+    "html": "library-project-status-update.html"
+  },
+  {
+    "slug": "library-milestone-completed",
+    "name": "Milestone completed",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Milestone complete: Design sign-off",
+    "text": "library-milestone-completed.txt",
+    "html": "library-milestone-completed.html"
+  },
+  {
+    "slug": "library-change-request-raised",
+    "name": "Change request raised",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Change request CR-EXAMPLE-01 for your review",
+    "text": "library-change-request-raised.txt",
+    "html": "library-change-request-raised.html"
+  },
+  {
+    "slug": "library-change-request-approved",
+    "name": "Change request approved",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Change CR-EXAMPLE-01 approved: next steps",
+    "text": "library-change-request-approved.txt",
+    "html": "library-change-request-approved.html"
+  },
+  {
+    "slug": "library-uat-sign-off-request",
+    "name": "Acceptance testing and sign-off request",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Ready for acceptance testing: Design sign-off",
+    "text": "library-uat-sign-off-request.txt",
+    "html": "library-uat-sign-off-request.html"
+  },
+  {
+    "slug": "library-go-live-announcement",
+    "name": "Go-live announcement",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Example Care Group website is live",
+    "text": "library-go-live-announcement.txt",
+    "html": "library-go-live-announcement.html"
+  },
+  {
+    "slug": "library-project-handover-and-close",
+    "name": "Project handover and close",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Handover and close for Example Care Group website",
+    "text": "library-project-handover-and-close.txt",
+    "html": "library-project-handover-and-close.html"
+  },
+  {
+    "slug": "library-support-and-maintenance-offer",
+    "name": "Support and maintenance offer",
+    "repo": "vitalos-platform",
+    "category": "delivery",
+    "state": "layout",
+    "subject": "Keeping Example Care Group website healthy after handover",
+    "text": "library-support-and-maintenance-offer.txt",
+    "html": "library-support-and-maintenance-offer.html"
+  },
+  {
+    "slug": "library-enquiry-received",
+    "name": "Enquiry received: internal notification",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "New enquiry: a new website · Alex Example, Example Care Group · VIT-EXAMPLE-01",
+    "text": "library-enquiry-received.txt",
+    "html": "library-enquiry-received.html"
+  },
+  {
+    "slug": "library-enquiry-acknowledgement",
+    "name": "Enquiry acknowledgement",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "We have your enquiry (VIT-EXAMPLE-01)",
+    "text": "library-enquiry-acknowledgement.txt",
+    "html": "library-enquiry-acknowledgement.html"
+  },
+  {
+    "slug": "library-meeting-booked-confirmation",
+    "name": "Meeting booked confirmation",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Confirmed: our call on Thursday 29 October 2026, 10:00",
+    "text": "library-meeting-booked-confirmation.txt",
+    "html": "library-meeting-booked-confirmation.html"
+  },
+  {
+    "slug": "library-meeting-reminder-24-hours",
+    "name": "Meeting reminder: 24 hours before",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Tomorrow: our call at Thursday 29 October 2026, 10:00",
+    "text": "library-meeting-reminder-24-hours.txt",
+    "html": "library-meeting-reminder-24-hours.html"
+  },
+  {
+    "slug": "library-meeting-reminder-1-hour",
+    "name": "Meeting reminder: 1 hour before",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Starting soon: our call at Thursday 29 October 2026, 10:00",
+    "text": "library-meeting-reminder-1-hour.txt",
+    "html": "library-meeting-reminder-1-hour.html"
+  },
+  {
+    "slug": "library-meeting-rescheduled",
+    "name": "Meeting rescheduled",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Our call has moved to Thursday 29 October 2026, 10:00",
+    "text": "library-meeting-rescheduled.txt",
+    "html": "library-meeting-rescheduled.html"
+  },
+  {
+    "slug": "library-meeting-cancelled",
+    "name": "Meeting cancelled",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Our call on Thursday 29 October 2026, 10:00 is cancelled",
+    "text": "library-meeting-cancelled.txt",
+    "html": "library-meeting-cancelled.html"
+  },
+  {
+    "slug": "library-missed-meeting-follow-up",
+    "name": "Missed meeting follow-up",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Sorry we missed each other, Alex",
+    "text": "library-missed-meeting-follow-up.txt",
+    "html": "library-missed-meeting-follow-up.html"
+  },
+  {
+    "slug": "library-user-invite",
+    "name": "Client portal or admin user invite",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "You are invited to your Vitalos account",
+    "text": "library-user-invite.txt",
+    "html": "library-user-invite.html"
+  },
+  {
+    "slug": "library-password-reset",
+    "name": "Password reset",
+    "repo": "vitalos-platform",
+    "category": "enquiries",
+    "state": "layout",
+    "subject": "Reset your Vitalos password",
+    "text": "library-password-reset.txt",
+    "html": "library-password-reset.html"
+  },
+  {
+    "slug": "library-quote-sent",
+    "name": "Quote sent",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Your quote Q-EXAMPLE-01 from Vitalos",
+    "text": "library-quote-sent.txt",
+    "html": "library-quote-sent.html"
+  },
+  {
+    "slug": "library-invoice-sent",
+    "name": "Invoice sent",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Invoice INV-EXAMPLE-01 from Vitalos",
+    "text": "library-invoice-sent.txt",
+    "html": "library-invoice-sent.html"
+  },
+  {
+    "slug": "library-payment-reminder-friendly",
+    "name": "Payment reminder: friendly",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Friendly reminder: invoice INV-EXAMPLE-01",
+    "text": "library-payment-reminder-friendly.txt",
+    "html": "library-payment-reminder-friendly.html"
+  },
+  {
+    "slug": "library-payment-reminder-overdue",
+    "name": "Payment reminder: overdue",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Invoice INV-EXAMPLE-01 is now overdue",
+    "text": "library-payment-reminder-overdue.txt",
+    "html": "library-payment-reminder-overdue.html"
+  },
+  {
+    "slug": "library-payment-reminder-final-notice",
+    "name": "Payment reminder: final notice",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Final notice: invoice INV-EXAMPLE-01",
+    "text": "library-payment-reminder-final-notice.txt",
+    "html": "library-payment-reminder-final-notice.html"
+  },
+  {
+    "slug": "library-payment-received-receipt",
+    "name": "Payment received",
+    "repo": "vitalos-platform",
+    "category": "finance",
+    "state": "layout",
+    "subject": "Payment received for invoice INV-EXAMPLE-01",
+    "text": "library-payment-received-receipt.txt",
+    "html": "library-payment-received-receipt.html"
+  },
+  {
+    "slug": "library-internal-new-lead-assigned",
+    "name": "New lead assigned",
+    "repo": "vitalos-platform",
+    "category": "internal",
+    "state": "layout",
+    "subject": "New lead assigned: Example Care Group",
+    "text": "library-internal-new-lead-assigned.txt",
+    "html": "library-internal-new-lead-assigned.html"
+  },
+  {
+    "slug": "library-internal-proposal-activity",
+    "name": "Proposal viewed or accepted",
+    "repo": "vitalos-platform",
+    "category": "internal",
+    "state": "layout",
+    "subject": "Proposal activity: Example Care Group",
+    "text": "library-internal-proposal-activity.txt",
+    "html": "library-internal-proposal-activity.html"
+  },
+  {
+    "slug": "library-internal-payment-received",
+    "name": "Payment received",
+    "repo": "vitalos-platform",
+    "category": "internal",
+    "state": "layout",
+    "subject": "Payment received: INV-EXAMPLE-01",
+    "text": "library-internal-payment-received.txt",
+    "html": "library-internal-payment-received.html"
+  },
+  {
+    "slug": "library-internal-task-due",
+    "name": "Task or follow-up due",
+    "repo": "vitalos-platform",
+    "category": "internal",
+    "state": "layout",
+    "subject": "Task due: Send the proposal",
+    "text": "library-internal-task-due.txt",
+    "html": "library-internal-task-due.html"
+  },
+  {
+    "slug": "library-marketing-newsletter",
+    "name": "Newsletter",
+    "repo": "vitalos-platform",
+    "category": "marketing",
+    "state": "layout",
+    "subject": "Vitalos update: notes on technology and delivery",
+    "text": "library-marketing-newsletter.txt",
+    "html": "library-marketing-newsletter.html"
+  },
+  {
+    "slug": "library-marketing-announcement",
+    "name": "Company or service announcement",
+    "repo": "vitalos-platform",
+    "category": "marketing",
+    "state": "layout",
+    "subject": "News from Vitalos: Website rebuild",
+    "text": "library-marketing-announcement.txt",
+    "html": "library-marketing-announcement.html"
+  },
+  {
+    "slug": "library-marketing-event-invite",
+    "name": "Webinar or event invitation",
+    "repo": "vitalos-platform",
+    "category": "marketing",
+    "state": "layout",
+    "subject": "You are invited: Example event",
+    "text": "library-marketing-event-invite.txt",
+    "html": "library-marketing-event-invite.html"
+  },
+  {
+    "slug": "library-marketing-event-reminder",
+    "name": "Event reminder",
+    "repo": "vitalos-platform",
+    "category": "marketing",
+    "state": "layout",
+    "subject": "Reminder: Example event is coming up",
+    "text": "library-marketing-event-reminder.txt",
+    "html": "library-marketing-event-reminder.html"
+  },
+  {
+    "slug": "library-marketing-seasonal-thanks",
+    "name": "Seasonal thanks",
+    "repo": "vitalos-platform",
+    "category": "marketing",
+    "state": "layout",
+    "subject": "Thank you from everyone at Vitalos",
+    "text": "library-marketing-seasonal-thanks.txt",
+    "html": "library-marketing-seasonal-thanks.html"
+  },
+  {
+    "slug": "library-outreach-cold-introduction",
+    "name": "Cold introduction",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "A short introduction from Vitalos",
+    "text": "library-outreach-cold-introduction.txt",
+    "html": "library-outreach-cold-introduction.html"
+  },
+  {
+    "slug": "library-outreach-cold-follow-up-1",
+    "name": "Cold follow-up 1",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "Following up on my note to Example Care Group",
+    "text": "library-outreach-cold-follow-up-1.txt",
+    "html": "library-outreach-cold-follow-up-1.html"
+  },
+  {
+    "slug": "library-outreach-cold-follow-up-2",
+    "name": "Cold follow-up 2",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "A different angle for Example Care Group",
+    "text": "library-outreach-cold-follow-up-2.txt",
+    "html": "library-outreach-cold-follow-up-2.html"
+  },
+  {
+    "slug": "library-outreach-closing-the-loop",
+    "name": "Closing the loop",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "Closing the loop on my earlier emails",
+    "text": "library-outreach-closing-the-loop.txt",
+    "html": "library-outreach-closing-the-loop.html"
+  },
+  {
+    "slug": "library-outreach-warm-referral-introduction",
+    "name": "Warm referral introduction",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "A mutual contact suggested we speak",
+    "text": "library-outreach-warm-referral-introduction.txt",
+    "html": "library-outreach-warm-referral-introduction.html"
+  },
+  {
+    "slug": "library-outreach-partner-alliance",
+    "name": "Partner or alliance outreach",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "Exploring a partnership with Example Care Group",
+    "text": "library-outreach-partner-alliance.txt",
+    "html": "library-outreach-partner-alliance.html"
+  },
+  {
+    "slug": "library-outreach-event-meeting-follow-up",
+    "name": "Event or meeting follow-up",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "Good to meet you at Example event",
+    "text": "library-outreach-event-meeting-follow-up.txt",
+    "html": "library-outreach-event-meeting-follow-up.html"
+  },
+  {
+    "slug": "library-outreach-linkedin-connection-follow-up",
+    "name": "LinkedIn connection follow-up",
+    "repo": "vitalos-platform",
+    "category": "outreach",
+    "state": "layout",
+    "subject": "Thanks for connecting on LinkedIn",
+    "text": "library-outreach-linkedin-connection-follow-up.txt",
+    "html": "library-outreach-linkedin-connection-follow-up.html"
+  },
+  {
+    "slug": "library-client-feedback-survey",
+    "name": "Feedback survey",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "How did we do on Example Care Group website?",
+    "text": "library-client-feedback-survey.txt",
+    "html": "library-client-feedback-survey.html"
+  },
+  {
+    "slug": "library-testimonial-case-study-request",
+    "name": "Testimonial or case study request",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "Would you share a few words about our work?",
+    "text": "library-testimonial-case-study-request.txt",
+    "html": "library-testimonial-case-study-request.html"
+  },
+  {
+    "slug": "library-client-referral-request",
+    "name": "Referral request",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "Do you know someone we could help?",
+    "text": "library-client-referral-request.txt",
+    "html": "library-client-referral-request.html"
+  },
+  {
+    "slug": "library-contract-renewal-reminder",
+    "name": "Contract renewal reminder",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "Your agreement is due for renewal on 1 January 2027",
+    "text": "library-contract-renewal-reminder.txt",
+    "html": "library-contract-renewal-reminder.html"
+  },
+  {
+    "slug": "library-contract-ending-offboarding",
+    "name": "Contract ending and offboarding",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "Closing our agreement: next steps",
+    "text": "library-contract-ending-offboarding.txt",
+    "html": "library-contract-ending-offboarding.html"
+  },
+  {
+    "slug": "library-client-thank-you-anniversary",
+    "name": "Thank you or project anniversary",
+    "repo": "vitalos-platform",
+    "category": "retention",
+    "state": "layout",
+    "subject": "A note of thanks, Alex",
+    "text": "library-client-thank-you-anniversary.txt",
+    "html": "library-client-thank-you-anniversary.html"
+  },
+  {
+    "slug": "library-new-lead-first-response",
+    "name": "New lead: first response",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Your enquiry: a few thoughts and next steps",
+    "text": "library-new-lead-first-response.txt",
+    "html": "library-new-lead-first-response.html"
+  },
+  {
+    "slug": "library-discovery-call-invite",
+    "name": "Discovery call invite",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "An invitation to a discovery call",
+    "text": "library-discovery-call-invite.txt",
+    "html": "library-discovery-call-invite.html"
+  },
+  {
+    "slug": "library-discovery-call-summary",
+    "name": "Discovery call summary and next steps",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Summary of our discovery call and next steps",
+    "text": "library-discovery-call-summary.txt",
+    "html": "library-discovery-call-summary.html"
+  },
+  {
+    "slug": "library-requirements-questionnaire-request",
+    "name": "Requirements questionnaire request",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "A short questionnaire to shape our proposal",
+    "text": "library-requirements-questionnaire-request.txt",
+    "html": "library-requirements-questionnaire-request.html"
+  },
+  {
+    "slug": "library-nda-request",
+    "name": "NDA request",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "An NDA for your review before we go further",
+    "text": "library-nda-request.txt",
+    "html": "library-nda-request.html"
+  },
+  {
+    "slug": "library-proposal-sent",
+    "name": "Proposal sent",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Our proposal for Example Care Group",
+    "text": "library-proposal-sent.txt",
+    "html": "library-proposal-sent.html"
+  },
+  {
+    "slug": "library-proposal-follow-up-day-3",
+    "name": "Proposal follow-up: day 3",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Any early questions on our proposal?",
+    "text": "library-proposal-follow-up-day-3.txt",
+    "html": "library-proposal-follow-up-day-3.html"
+  },
+  {
+    "slug": "library-proposal-follow-up-day-7",
+    "name": "Proposal follow-up: day 7",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Checking in on our proposal",
+    "text": "library-proposal-follow-up-day-7.txt",
+    "html": "library-proposal-follow-up-day-7.html"
+  },
+  {
+    "slug": "library-revised-proposal",
+    "name": "Revised proposal",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Revised proposal for Example Care Group",
+    "text": "library-revised-proposal.txt",
+    "html": "library-revised-proposal.html"
+  },
+  {
+    "slug": "library-proposal-accepted-thank-you",
+    "name": "Proposal accepted: thank you",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Thank you for choosing Vitalos",
+    "text": "library-proposal-accepted-thank-you.txt",
+    "html": "library-proposal-accepted-thank-you.html"
+  },
+  {
+    "slug": "library-contract-sent-for-signature",
+    "name": "Contract or SOW sent for signature",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Ready for signature: Example Care Group website",
+    "text": "library-contract-sent-for-signature.txt",
+    "html": "library-contract-sent-for-signature.html"
+  },
+  {
+    "slug": "library-contract-signed-confirmation",
+    "name": "Contract signed confirmation",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Signed and confirmed: Example Care Group website",
+    "text": "library-contract-signed-confirmation.txt",
+    "html": "library-contract-signed-confirmation.html"
+  },
+  {
+    "slug": "library-closed-lost-polite-close",
+    "name": "Closed-lost: polite close",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Thank you for considering Vitalos",
+    "text": "library-closed-lost-polite-close.txt",
+    "html": "library-closed-lost-polite-close.html"
+  },
+  {
+    "slug": "library-dormant-lead-re-engagement",
+    "name": "Dormant lead re-engagement",
+    "repo": "vitalos-platform",
+    "category": "sales",
+    "state": "layout",
+    "subject": "Picking up where we left off",
+    "text": "library-dormant-lead-re-engagement.txt",
+    "html": "library-dormant-lead-re-engagement.html"
+  },
+  {
+    "slug": "library-service-intro-consulting",
+    "name": "Service introduction: Consulting",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Vitalos Consulting: clarity before costly execution",
+    "text": "library-service-intro-consulting.txt",
+    "html": "library-service-intro-consulting.html"
+  },
+  {
+    "slug": "library-service-case-study-consulting",
+    "name": "Case study share: Consulting",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "A consulting case study you may find useful",
+    "text": "library-service-case-study-consulting.txt",
+    "html": "library-service-case-study-consulting.html"
+  },
+  {
+    "slug": "library-service-follow-up-consulting",
+    "name": "Post-enquiry follow-up: Consulting",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Your Vitalos Consulting enquiry: next steps",
+    "text": "library-service-follow-up-consulting.txt",
+    "html": "library-service-follow-up-consulting.html"
+  },
+  {
+    "slug": "library-service-intro-engineering",
+    "name": "Service introduction: Engineering",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Vitalos Engineering: dependable production software",
+    "text": "library-service-intro-engineering.txt",
+    "html": "library-service-intro-engineering.html"
+  },
+  {
+    "slug": "library-service-case-study-engineering",
+    "name": "Case study share: Engineering",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "An engineering case study you may find useful",
+    "text": "library-service-case-study-engineering.txt",
+    "html": "library-service-case-study-engineering.html"
+  },
+  {
+    "slug": "library-service-follow-up-engineering",
+    "name": "Post-enquiry follow-up: Engineering",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Your Vitalos Engineering enquiry: next steps",
+    "text": "library-service-follow-up-engineering.txt",
+    "html": "library-service-follow-up-engineering.html"
+  },
+  {
+    "slug": "library-service-intro-ai-data",
+    "name": "Service introduction: AI & Data",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Vitalos AI & Data: from opportunity to production",
+    "text": "library-service-intro-ai-data.txt",
+    "html": "library-service-intro-ai-data.html"
+  },
+  {
+    "slug": "library-service-case-study-ai-data",
+    "name": "Case study share: AI & Data",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "An AI and data case study you may find useful",
+    "text": "library-service-case-study-ai-data.txt",
+    "html": "library-service-case-study-ai-data.html"
+  },
+  {
+    "slug": "library-service-follow-up-ai-data",
+    "name": "Post-enquiry follow-up: AI & Data",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Your Vitalos AI & Data enquiry: next steps",
+    "text": "library-service-follow-up-ai-data.txt",
+    "html": "library-service-follow-up-ai-data.html"
+  },
+  {
+    "slug": "library-service-intro-experience",
+    "name": "Service introduction: Experience",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Vitalos Experience: products people find easy to use",
+    "text": "library-service-intro-experience.txt",
+    "html": "library-service-intro-experience.html"
+  },
+  {
+    "slug": "library-service-case-study-experience",
+    "name": "Case study share: Experience",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "A digital experience case study you may find useful",
+    "text": "library-service-case-study-experience.txt",
+    "html": "library-service-case-study-experience.html"
+  },
+  {
+    "slug": "library-service-follow-up-experience",
+    "name": "Post-enquiry follow-up: Experience",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Your Vitalos Experience enquiry: next steps",
+    "text": "library-service-follow-up-experience.txt",
+    "html": "library-service-follow-up-experience.html"
+  },
+  {
+    "slug": "library-service-intro-managed-services",
+    "name": "Service introduction: Managed Services",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Vitalos Managed Services: steady, supported systems",
+    "text": "library-service-intro-managed-services.txt",
+    "html": "library-service-intro-managed-services.html"
+  },
+  {
+    "slug": "library-service-case-study-managed-services",
+    "name": "Case study share: Managed Services",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "A managed services case study you may find useful",
+    "text": "library-service-case-study-managed-services.txt",
+    "html": "library-service-case-study-managed-services.html"
+  },
+  {
+    "slug": "library-service-follow-up-managed-services",
+    "name": "Post-enquiry follow-up: Managed Services",
+    "repo": "vitalos-platform",
+    "category": "service",
+    "state": "layout",
+    "subject": "Your Vitalos Managed Services enquiry: next steps",
+    "text": "library-service-follow-up-managed-services.txt",
+    "html": "library-service-follow-up-managed-services.html"
+  },
+  {
+    "slug": "enquiry-alert-single",
+    "name": "Enquiry alert: one update",
+    "repo": "vitalos-platform",
+    "category": "enquiries-system",
+    "state": "plain-text",
+    "subject": "New enquiry: VIT-0001 Website rebuild for our care homes",
+    "text": "enquiry-alert-single.txt"
+  },
+  {
+    "slug": "enquiry-alert-several",
+    "name": "Enquiry alert: several updates",
+    "repo": "vitalos-platform",
+    "category": "enquiries-system",
+    "state": "plain-text",
+    "subject": "3 enquiry updates",
+    "text": "enquiry-alert-several.txt"
+  },
+  {
+    "slug": "enquiry-digest",
+    "name": "Enquiries daily digest",
+    "repo": "vitalos-platform",
+    "category": "enquiries-system",
+    "state": "plain-text",
+    "subject": "Enquiries digest: 3 updates",
+    "text": "enquiry-digest.txt"
+  },
+  {
+    "slug": "account-password-link",
+    "name": "Set your password",
+    "repo": "vitalos-platform",
+    "category": "account",
+    "state": "plain-text",
+    "subject": "Set your Vitalos Super Admin password",
+    "text": "account-password-link.txt"
+  },
+  {
+    "slug": "inbox-reply",
+    "name": "Inbox reply",
+    "repo": "vitalos-platform",
+    "category": "enquiries-system",
+    "state": "bare-html",
+    "subject": "Re: Website rebuild for our care homes [VIT-0001]",
+    "text": "inbox-reply.txt",
+    "html": "inbox-reply.html"
+  },
+  {
+    "slug": "careers-hiring-alert",
+    "name": "Careers hiring-team alert",
+    "repo": "vitalos-platform",
+    "category": "careers",
+    "state": "plain-text",
+    "subject": "2 new applications: Example role",
+    "text": "careers-hiring-alert.txt"
+  }
+]

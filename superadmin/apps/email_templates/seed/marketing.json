@@ -4,20 +4,37 @@
     "name": "Newsletter",
     "category": "marketing",
     "kind": "marketing",
-    "description": "Periodic update to subscribers summarising how Vitalos helps; edit or replace the sections before each send.",
+    "description": "Periodic update to subscribers summarising how Vitalos helps; edit or replace the stories before each send.",
     "header_label": "Newsletter",
     "subject": "Vitalos update: notes on technology and delivery",
     "preheader": "A short read on deciding well, delivering well and keeping systems healthy.",
-    "reason": "You are receiving this because you subscribed to Vitalos updates at vitalos.co.uk.",
+    "reason": "You are receiving this because you agreed to receive email updates from Vitalos.",
     "blocks": [
       { "type": "heading", "text": "Notes from Vitalos" },
       { "type": "text", "text": "Hi {{first_name}},\n\nA few short notes on how we approach technology work, and where our practices can help." },
-      { "type": "heading", "text": "Decide before you build" },
-      { "type": "text", "text": "The most expensive technology mistakes are usually made before any code is written. Vitalos Consulting helps leaders reach clear transformation choices, a realistic roadmap and a sound architecture before committing significant budget." },
-      { "type": "heading", "text": "AI and data with firm foundations" },
-      { "type": "text", "text": "Useful AI depends on good data and careful operation. Vitalos AI & Data works from identifying the right opportunities, through the foundations, to running solutions responsibly in production." },
-      { "type": "heading", "text": "Look after what you rely on" },
-      { "type": "text", "text": "Software keeps delivering value only if it is maintained. Vitalos Engineering and Vitalos Managed Services build, modernise and support production systems so they stay reliable and keep improving." },
+      {
+        "type": "items",
+        "items": [
+          {
+            "tag": "Consulting",
+            "title": "Decide before you build",
+            "summary": "The most expensive technology mistakes are usually made before any code is written. Vitalos Consulting helps leaders reach clear choices, a realistic roadmap and a sound architecture before they commit significant budget.",
+            "href": "https://vitalos.co.uk/what-we-do/consulting"
+          },
+          {
+            "tag": "AI & Data",
+            "title": "AI and data with firm foundations",
+            "summary": "Useful AI depends on good data and careful operation. Vitalos AI & Data works from finding the right opportunities, through the foundations, to running solutions responsibly in production.",
+            "href": "https://vitalos.co.uk/what-we-do/ai-data"
+          },
+          {
+            "tag": "Managed Services",
+            "title": "Look after what you rely on",
+            "summary": "Software keeps delivering value only if it is maintained. Vitalos Engineering and Vitalos Managed Services build, modernise and support production systems so they stay reliable and keep improving.",
+            "href": "https://vitalos.co.uk/what-we-do/managed-services"
+          }
+        ]
+      },
       { "type": "button", "label": "Visit vitalos.co.uk", "url": "https://vitalos.co.uk" },
       { "type": "text", "text": "If any of this is relevant to your work, just reply. We would be glad to hear from you." },
       { "type": "signature" }
@@ -32,12 +49,12 @@
     "header_label": "Announcement",
     "subject": "News from Vitalos: {{offer}}",
     "preheader": "What is new, who it is for, and where to find the details.",
-    "reason": "You are receiving this because you subscribed to Vitalos updates at vitalos.co.uk.",
+    "reason": "You are receiving this because you agreed to receive email updates from Vitalos.",
     "blocks": [
       { "type": "heading", "text": "Something new from Vitalos" },
       { "type": "badge", "items": ["{{service}}", "{{offer}}"] },
-      { "type": "text", "text": "Hi {{first_name}},\n\nWe wanted to let you know that {{offer}} is now available as part of {{service}}.\n\nAs with all our work, it begins with understanding your situation and priorities, so that what we recommend fits your organisation rather than a template. The page below explains who it is for, what is involved and how to get started." },
-      { "type": "button", "label": "Find out more", "url": "{{action_link}}" },
+      { "type": "text", "text": "Hi {{first_name}},\n\n{{offer}} is now available as part of {{service}}.\n\nLike all our work, it starts with understanding your situation and priorities, so that what we recommend fits your organisation rather than a template. The linked page explains who it is for, what is involved and how to get started." },
+      { "type": "button", "label": "Read the details", "url": "{{action_link}}" },
       { "type": "text", "text": "If you have questions, or would like to talk about whether it fits your plans, just reply to this email." },
       { "type": "signature" }
     ]
@@ -51,13 +68,13 @@
     "header_label": "Invitation",
     "subject": "You are invited: {{event_name}}",
     "preheader": "Join us on {{event_date}}. Details and registration are inside.",
-    "reason": "You are receiving this because you subscribed to Vitalos updates or event invitations at vitalos.co.uk.",
+    "reason": "You are receiving this because you agreed to receive email updates or event invitations from Vitalos.",
     "blocks": [
       { "type": "heading", "text": "Join us at {{event_name}}" },
-      { "type": "text", "text": "Hi {{first_name}},\n\nWe would be glad to have you join us for {{event_name}} on {{event_date}}.\n\nThe event page sets out the agenda, format and how to take part. Registering takes a moment, and you can always let us know later if your plans change." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nWe would be glad to have you join us for {{event_name}} on {{event_date}}.\n\nThe event page sets out the agenda, the format and how to take part. If your plans change after you register, just let us know." },
       { "type": "details", "rows": [["Event", "{{event_name}}"], ["Date", "{{event_date}}"]] },
       { "type": "button", "label": "Reserve your place", "url": "{{event_link}}" },
-      { "type": "text", "text": "If you are unable to attend, there is no need to reply. We hope to see you there." },
+      { "type": "text", "text": "If you cannot attend, there is no need to reply. We hope to see you there." },
       { "type": "signature" }
     ]
   },
@@ -72,11 +89,11 @@
     "preheader": "Everything you need to join us on {{event_date}}.",
     "reason": "You are receiving this because you registered for {{event_name}} with Vitalos.",
     "blocks": [
-      { "type": "heading", "text": "See you soon, {{first_name}}" },
-      { "type": "text", "text": "This is a quick reminder that {{event_name}} takes place on {{event_date}}. We are looking forward to it.\n\nThe event page has the joining details and anything you may want to look at beforehand." },
+      { "type": "heading", "text": "See you soon" },
+      { "type": "text", "text": "Hi {{first_name}},\n\nA quick reminder that {{event_name}} takes place on {{event_date}}. We look forward to seeing you.\n\nThe event page has the joining details and anything you may want to read beforehand." },
       { "type": "details", "rows": [["Event", "{{event_name}}"], ["Date", "{{event_date}}"]] },
-      { "type": "button", "label": "View event details", "url": "{{event_link}}" },
-      { "type": "text", "text": "If your plans have changed and you can no longer attend, a quick reply to let us know would be appreciated. Thank you." },
+      { "type": "button", "label": "View the event details", "url": "{{event_link}}" },
+      { "type": "text", "text": "If you can no longer attend, please reply to let us know. Thank you." },
       { "type": "signature" }
     ]
   },
@@ -89,10 +106,10 @@
     "header_label": "Thank you",
     "subject": "Thank you from everyone at Vitalos",
     "preheader": "A short note of thanks as the year draws to a close.",
-    "reason": "You are receiving this because you have worked with Vitalos or subscribed to our updates at vitalos.co.uk.",
+    "reason": "You are receiving this because you have worked with Vitalos or agreed to receive our email updates.",
     "blocks": [
-      { "type": "heading", "text": "Thank you, {{first_name}}" },
-      { "type": "text", "text": "As the year draws to a close, we wanted to pause and say thank you.\n\nWhether we have worked together, talked through an idea or simply kept in touch, we appreciate the time and trust you have given us. Every conversation helps us understand the challenges organisations face and how we can be more useful.\n\nWe hope the weeks ahead bring some well-earned rest, and we look forward to staying in touch in the new year." },
+      { "type": "heading", "text": "Thank you for this year" },
+      { "type": "text", "text": "Hi {{first_name}},\n\nAs the year draws to a close, we wanted to pause and say thank you.\n\nWhether we have worked together, talked through an idea or kept in touch, we appreciate the time and trust you have given us. Every conversation helps us understand the challenges organisations face and how we can be more useful.\n\nWe hope the weeks ahead bring some well-earned rest, and we look forward to staying in touch in the new year." },
       { "type": "signature" }
     ]
   }

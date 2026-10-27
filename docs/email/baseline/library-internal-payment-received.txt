@@ -1,0 +1,22 @@
+VITALOS · PAYMENT
+
+Hi Sam,
+
+A payment has been recorded against invoice INV-EXAMPLE-01. Please reconcile it, mark the invoice paid and confirm the client receipt has gone out.
+
+Organisation: Example Care Group
+Invoice: INV-EXAMPLE-01
+Amount: £1,000.00
+Project: Example Care Group website
+
+Open invoice: https://admin.vitalos.co.uk
+
+--
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+Instagram: https://www.instagram.com/vitalos
+Facebook: https://www.facebook.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { contrastRatio } from "@vitalos/design-tokens";
 import { describe, expect, it } from "vitest";
 import { inlineImages } from "./images";
-import { COMPANY_PLACEHOLDERS, renderEmail } from "./render";
+import { COMPANY_PLACEHOLDERS, checkDocument, renderEmail } from "./render";
 import type { EmailDocument } from "./render";
 import { layoutSpec } from "./spec";
 import { emailTheme } from "./theme";
@@ -123,6 +123,82 @@ const fixtures: Record<string, EmailDocument> = {
       company,
     },
   },
+  "new-blocks": {
+    title: "Confirm your email",
+    preheader: "Use the code in this email to finish signing up.",
+    headerLabel: "Account",
+    blocks: [
+      { type: "heading", text: "Your verification code" },
+      { type: "text", text: "Enter this code on the sign-up page." },
+      { type: "code", code: " 482 913 ", expiry: "The code expires in 10 minutes and works once." },
+      {
+        type: "steps",
+        title: "What happens next",
+        items: [
+          "We read your enquiry.",
+          "",
+          "We reply within the time you chose.",
+          "We book a call.",
+        ],
+      },
+      { type: "steps", items: ["Only one step, no title."] },
+      { type: "section", text: "Updates" },
+      {
+        type: "items",
+        items: [
+          {
+            tag: "New enquiry",
+            title: "Website rebuild for Example Care Group",
+            summary: "Alex Example wrote:\nWe need a new site by spring.",
+            meta: "VIT-EXAMPLE-01 · 26 Oct 2026, 09:12",
+            href: "https://admin.vitalos.co.uk/enquiries/1/",
+          },
+          { title: "No link, no tag", href: "javascript:alert(1)" },
+          { title: "" },
+        ],
+      },
+      {
+        type: "stats",
+        items: [
+          { value: "3", label: "New" },
+          { value: "Overdue", label: "Status" },
+          { value: "", label: "Missing value" },
+        ],
+      },
+      {
+        type: "stats",
+        items: [
+          { value: "12", label: "Applications" },
+          { value: "2", label: "Roles" },
+        ],
+      },
+      { type: "code", code: "" },
+    ],
+    footer: {
+      social: [],
+      company,
+      notice: "You get this because you created an Askbridge account.",
+      product: "Askbridge by Vitalos",
+    },
+  },
+  correspondence: {
+    mode: "correspondence",
+    title: "Re: Website rebuild [VIT-EXAMPLE-01]",
+    preheader: "Thanks for the details.",
+    headerLabel: "",
+    blocks: [
+      { type: "text", text: "Hi Alex,\n\nThanks for the details. We can start on Monday." },
+      { type: "quote", text: "When could you start?" },
+      { type: "divider" },
+      { type: "text", text: "Vitalos Support\nsupport@vitalos.co.uk" },
+    ],
+    footer: {
+      social,
+      company,
+      notice: "Ignored in correspondence.",
+      unsubscribe: { reason: "Ignored too.", url: "https://vitalos.co.uk/u" },
+    },
+  },
 };
 
 describe("golden fixtures (shared with the Super Admin renderer)", () => {
@@ -214,6 +290,72 @@ describe("rendering", () => {
   });
 });
 
+describe("new blocks and correspondence mode", () => {
+  const blocks = renderEmail(fixtures["new-blocks"]!);
+  const letter = renderEmail(fixtures.correspondence!);
+
+  it("code: one text node without spaces, never in the subject or preheader", () => {
+    expect(blocks.html).toMatch(/user-select:all;[^"]*">482913<\/span>/);
+    expect(blocks.text).toContain("482913\nThe code expires in 10 minutes and works once.");
+    const leak = { ...fixtures["new-blocks"]!, title: "Your code is 482913" };
+    expect(() => renderEmail(leak)).toThrow(/subject or preheader/);
+    const leakPreheader = { ...fixtures["new-blocks"]!, preheader: "Code 482 913" };
+    expect(() => checkDocument(leakPreheader)).not.toThrow();
+    expect(() => checkDocument({ ...leakPreheader, preheader: "Code 482913" })).toThrow();
+  });
+
+  it("steps: numbered, empty items dropped, plain text numbered", () => {
+    expect(blocks.text).toContain(
+      "WHAT HAPPENS NEXT\n1. We read your enquiry.\n2. We reply within the time you chose.\n3. We book a call.",
+    );
+    expect(blocks.html).toContain(">3</span></td>");
+    expect(blocks.html).not.toContain(">4</span></td>");
+  });
+
+  it("items: safe links only, tags, summary and meta in both parts", () => {
+    expect(blocks.html).toContain('href="https://admin.vitalos.co.uk/enquiries/1/"');
+    expect(blocks.html).not.toContain("javascript:");
+    expect(blocks.text).toContain(
+      "[New enquiry] Website rebuild for Example Care Group\nAlex Example wrote:\nWe need a new site by spring.\nVIT-EXAMPLE-01 · 26 Oct 2026, 09:12\nhttps://admin.vitalos.co.uk/enquiries/1/",
+    );
+  });
+
+  it("stats: equal columns, words for status, Not provided for a missing value", () => {
+    expect(blocks.html).toContain('width="33%"');
+    expect(blocks.html).toContain('width="50%"');
+    expect(blocks.text).toContain("New: 3\nStatus: Overdue\nMissing value: Not provided");
+  });
+
+  it("product line sits right above the company facts in both parts", () => {
+    expect(blocks.html).toContain("Askbridge by Vitalos<br>Vitalos Technologies Limited");
+    expect(blocks.text).toContain(
+      "Askbridge by Vitalos\nVitalos Technologies Limited, company number 16696895",
+    );
+  });
+
+  it("correspondence: no header, label, logo, social, notice or unsubscribe", () => {
+    expect(letter.html).not.toContain("cid:vitalos-logo");
+    expect(letter.inlineImages).toEqual([]);
+    expect(letter.html).not.toContain("Ignored");
+    expect(letter.html).toContain("border-radius:12px;");
+    expect(letter.text.startsWith("Hi Alex,")).toBe(true);
+    expect(letter.text).not.toContain("VITALOS ·");
+    expect(letter.text).toContain("--\nVitalos Technologies Limited, company number 16696895");
+    expect(letter.text).not.toMatch(/Unsubscribe|LinkedIn/);
+  });
+
+  it("correspondence refuses blocks a letter does not have", () => {
+    for (const block of [
+      { type: "badge", items: ["New"] },
+      { type: "button", label: "Go", url: "https://vitalos.co.uk" },
+      { type: "heading", text: "Hi" },
+    ] as const) {
+      const doc = { ...fixtures.correspondence!, blocks: [block] };
+      expect(() => renderEmail(doc as EmailDocument)).toThrow(/Correspondence email cannot use/);
+    }
+  });
+});
+
 describe("inline images", () => {
   it("match the PNG files in ../assets at twice the display size", () => {
     for (const img of Object.values(inlineImages)) {
@@ -243,6 +385,9 @@ describe("contrast (WCAG AA, 4.5:1 for text) in both themes", () => {
     ["hintText", "hintBg"],
     ["headText", "headBg"],
     ["headLabelText", "headLabelBg"],
+    // New blocks: code box, step numbers and item tags, item titles and meta, stat figures.
+    ["heading", "codeBg"],
+    ["muted", "surface"],
   ] as const;
 
   for (const [themeName, theme] of Object.entries(emailTheme)) {

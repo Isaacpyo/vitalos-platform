@@ -4,7 +4,6 @@ Views and API handlers call these functions; they never change enquiry models di
 """
 
 import email.utils
-import html
 import logging
 import re
 import uuid
@@ -13,7 +12,6 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import storages
-from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import Max
@@ -21,6 +19,8 @@ from django.utils import timezone
 
 from apps.accounts.roles import is_superadmin
 from apps.audit.services import record
+from apps.mailer import layout
+from apps.mailer.messages import build_message
 
 from . import attachments, selectors, sla
 from .models import Attachment, CannedResponse, Enquiry, EnquiryNote, InboxSettings, Message, Tag
@@ -62,7 +62,7 @@ def _require_superadmin(actor) -> None:
 def create_enquiry(
     *, subject, from_name, from_email, to_email, source, snippet, status=Enquiry.Status.NEW
 ) -> Enquiry:
-    """Allocate the next VIT- number and create the enquiry. Spam gets no SLA target."""
+    """Allocate the next VIT- number and create the enquiry. Spam and automated mail get no SLA target."""
     InboxSettings.load()
     inbox = InboxSettings.objects.select_for_update().get(pk=1)
     highest = Enquiry.objects.aggregate(highest=Max("number"))["highest"] or 0
@@ -81,7 +81,9 @@ def create_enquiry(
         snippet=(snippet or "")[:300],
         created_at=now,
         last_message_at=now,
-        sla_due_at=None if status == Enquiry.Status.SPAM else sla.due_at(now, inbox.sla_first_response_hours),
+        sla_due_at=None
+        if status in (Enquiry.Status.SPAM, Enquiry.Status.AUTOMATED)
+        else sla.due_at(now, inbox.sla_first_response_hours),
     )
 
 
@@ -398,9 +400,25 @@ def _references(parent) -> list[str]:
     return ids
 
 
-def _html_paragraphs(text: str) -> str:
-    blocks = [block for block in re.split(r"\n\s*\n", text.strip()) if block.strip()]
-    return "".join(f"<p>{html.escape(block).replace(chr(10), '<br>')}</p>" for block in blocks)
+def reply_document(subject: str, body_text: str, signature: str = "") -> dict:
+    """An inbox reply as a letter: correspondence mode, the body, the inbox signature and the compact
+    company footer (ADR-030). The signature is a text block, so "Kind regards" is never doubled."""
+    from apps.email_templates.rendering import company_footer
+
+    facts, _social = company_footer()
+    blocks = [{"type": "text", "text": body_text}]
+    signature = (signature or "").strip()
+    if signature:
+        blocks.append({"type": "text", "text": signature})
+    first_line = next((line.strip() for line in body_text.splitlines() if line.strip()), "")
+    return {
+        "mode": "correspondence",
+        "title": subject,
+        "preheader": layout.truncate(first_line, 100),
+        "headerLabel": "",
+        "blocks": blocks,
+        "footer": {"social": [], "company": facts},
+    }
 
 
 def _check_uploads(files) -> list[attachments.Checked]:
@@ -447,24 +465,23 @@ def send_reply(enquiry, *, body_text, actor, files=(), resolve=False, request=No
     if parent is not None:
         headers["In-Reply-To"] = parent.message_id_header
         headers["References"] = " ".join(references)
-    signature = (inbox.signature or "").strip()
-    text = body_text + (f"\n\n{signature}" if signature else "")
-    html_body = _html_paragraphs(body_text) + (_html_paragraphs(signature) if signature else "")
     subject = reply_subject(enquiry)
     checked = _check_uploads(files)
+    rendered = layout.render_email(reply_document(subject, body_text, inbox.signature))
+    text = rendered.text
+    html_body = rendered.html
 
-    outgoing = EmailMultiAlternatives(
+    outgoing = build_message(
+        rendered,
         subject=subject,
-        body=text,
-        from_email=settings.SUPPORT_FROM_HEADER,
         to=[enquiry.from_email],
+        from_email=settings.SUPPORT_FROM_HEADER,
         reply_to=[settings.SUPPORT_MAILBOX],
         headers=headers,
+        attachments=[
+            (item.filename, item.data, item.content_type) for item in checked if not item.refused_reason
+        ],
     )
-    outgoing.attach_alternative(html_body, "text/html")
-    for item in checked:
-        if not item.refused_reason:
-            outgoing.attach(item.filename, item.data, item.content_type)
 
     resend = settings.EMAIL_TRANSPORT == "resend"
     failed = False
@@ -637,7 +654,14 @@ def export_enquiry(enquiry, actor, request) -> dict:
 
 
 def update_inbox_settings(
-    *, sla_first_response_hours, signature, retention_months, spam_retention_days, actor, request=None
+    *,
+    sla_first_response_hours,
+    signature,
+    retention_months,
+    spam_retention_days,
+    actor,
+    automated_senders=None,
+    request=None,
 ) -> InboxSettings:
     _require_superadmin(actor)
     errors = {}
@@ -650,6 +674,12 @@ def update_inbox_settings(
     signature = (signature or "").strip()
     if len(signature) > 2000:
         errors["signature"] = "Keep the signature under 2000 characters."
+    senders = None
+    if automated_senders is not None:
+        senders = [line.strip().lower() for line in automated_senders.splitlines() if line.strip()]
+        bad = [line for line in senders if "@" not in line or " " in line]
+        if bad or len(senders) > 200:
+            errors["automated_senders"] = "One address or @domain per line, up to 200."
     if errors:
         raise ValidationError(errors)
     with transaction.atomic():
@@ -659,6 +689,8 @@ def update_inbox_settings(
         inbox.signature = signature
         inbox.retention_months = int(retention_months)
         inbox.spam_retention_days = int(spam_retention_days)
+        if senders is not None:
+            inbox.automated_senders = "\n".join(senders)
         inbox.save()
         record(
             "enquiries.updated",

@@ -1,0 +1,9 @@
+New enquiry: VIT-0001
+Subject: Website rebuild for our care homes
+From: Alex Example <alex@example-care.example>
+
+Hello, this is Alex Example. We would like to talk about website rebuild for our care homes. Could you tell us how you would approach it and what you need from us?
+
+Open: https://admin.vitalos.co.uk/enquiries/VIT-0001/
+
+Change these emails in Enquiries → Notification settings.

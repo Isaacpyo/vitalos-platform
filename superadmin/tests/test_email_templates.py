@@ -687,3 +687,223 @@ def test_crlf_is_stored_as_lf(client_for, superadmin, library):
     assert template.description == "Used when\nsomething happens"
     assert "\r" not in str(template.content())
     assert "\r" not in str(template.versions.first().content)
+
+
+# --- New blocks: code, steps, items and figures -----------------------------------------------------
+
+
+def test_new_blocks_round_trip_through_the_editor_and_render(client_for, superadmin, library):
+    template = _template()
+    data = _form_data(
+        template,
+        **{
+            "block-count": "5",
+            "block-0-type": "code",
+            "block-0-code": "{{reference}}",
+            "block-0-expiry": "The code expires in 10 minutes.",
+            "block-1-type": "steps",
+            "block-1-title": "What happens next",
+            "block-1-items": "We read it.\r\nWe reply.",
+            "block-2-type": "items",
+            "block-2-items": "New | Example Care Group | A new site | 26 Oct | https://vitalos.co.uk/x\r\n | Only a title",
+            "block-3-type": "stats",
+            "block-3-items": "3 | New\r\nOverdue | Status",
+            "block-4-type": "signature",
+        },
+    )
+    response = client_for(superadmin).post(f"/mail/templates/{template.pk}/", data)
+    assert response.status_code == 302, response.content.decode()[:2000]
+    blocks = _template().blocks
+    assert blocks[0] == {"type": "code", "code": "{{reference}}", "expiry": "The code expires in 10 minutes."}
+    assert blocks[1] == {"type": "steps", "title": "What happens next", "items": ["We read it.", "We reply."]}
+    assert blocks[2]["items"] == [
+        {
+            "tag": "New",
+            "title": "Example Care Group",
+            "summary": "A new site",
+            "meta": "26 Oct",
+            "href": "https://vitalos.co.uk/x",
+        },
+        {"title": "Only a title"},
+    ]
+    assert blocks[3]["items"] == [{"value": "3", "label": "New"}, {"value": "Overdue", "label": "Status"}]
+    rendered = render_content(_template().content(), {"reference": "VIT-EXAMPLE-01"}, key=template.key)
+    assert "VIT-EXAMPLE-01" in rendered.email.text and "1. We read it." in rendered.email.text
+    assert "[New] Example Care Group" in rendered.email.text and "Status: Overdue" in rendered.email.text
+    editor = client_for(superadmin).get(f"/mail/templates/{template.pk}/").content.decode()
+    assert "New | Example Care Group | A new site | 26 Oct | https://vitalos.co.uk/x" in editor
+    assert "3 | New" in editor
+
+
+@pytest.mark.parametrize(
+    ("block", "message"),
+    [
+        ({"type": "code", "code": ""}, "needs a code"),
+        ({"type": "code", "code": "{{reference}}"}, "must not appear in the subject"),
+        ({"type": "steps", "items": ["1", "2", "3", "4", "5"]}, "1 to 4 steps"),
+        ({"type": "steps", "items": []}, "1 to 4 steps"),
+        ({"type": "items", "items": [{"title": ""}]}, "each with a title"),
+        ({"type": "stats", "items": [{"value": "1", "label": "One"}]}, "2 to 4 figures"),
+        ({"type": "stats", "items": [{"value": "1", "label": ""}, {"value": "2", "label": "x"}]}, "2 to 4"),
+    ],
+)
+def test_new_block_validation(block, message):
+    content = {
+        "category": "enquiries",
+        "kind": "transactional",
+        "subject": "Your reference {{reference}}",
+        "blocks": [block],
+    }
+    assert any(message in error for error in services.content_errors(content))
+
+
+def test_every_block_type_is_in_the_palette():
+    from apps.email_templates.forms import BLOCK_LABELS, new_block
+
+    assert set(BLOCK_LABELS) == set(services.BLOCK_TYPES)
+    assert all(new_block(kind)["type"] == kind for kind in BLOCK_LABELS)
+
+
+# --- Review rules (docs/email/REVIEW.md) ------------------------------------------------------------
+
+
+def test_review_rules_flag_each_problem(db):
+    from apps.email_templates.review import review_problems
+
+    item = {
+        "key": "example",
+        "category": "outreach",
+        "kind": "outreach",
+        "header_label": "A Very Long Label",
+        "subject": "An Unusually Capitalised Subject Line That Is Far Too Long For Any Inbox Today",
+        "preheader": "Short",
+        "reason": "",
+        "blocks": [
+            {"type": "text", "text": "Hello Temitope! A magic {{nope}} offer."},
+            {"type": "button", "label": "One", "url": "http://example.test"},
+            {"type": "button", "label": "Two", "url": "{{meeting_link}}"},
+        ],
+    }
+    found = "\n".join(review_problems(item))
+    for expected in (
+        "subject is",
+        "not sentence case",
+        "preheader is 5 characters",
+        "header label has 4 words",
+        "2 buttons",
+        "button 'One' has no https",
+        "without a reason line",
+        "exclamation mark",
+        "banned words ['magic']",
+        "hard-coded person",
+        "unknown variables ['nope']",
+    ):
+        assert expected in found, expected
+
+
+def test_review_command_reports_the_library(library):
+    out = io.StringIO()
+    call_command("review_email_templates", stdout=out)
+    assert "81 templates, 0 seed problems" in out.getvalue()
+
+
+def test_email_gallery_renders_every_email_without_storing_anything(library, tmp_path):
+    from apps.enquiries.models import Enquiry
+
+    out = io.StringIO()
+    call_command("email_gallery", "--out", str(tmp_path), stdout=out)
+    manifest = __import__("json").loads((tmp_path / "manifest.json").read_text())
+    slugs = {entry["slug"] for entry in manifest}
+    assert {"enquiry-alert-single", "enquiry-digest", "inbox-reply", "account-password-link"} <= slugs
+    assert {"careers-hiring-alert", "relay-digest", "library-client-welcome"} <= slugs
+    assert all(entry["state"] == "layout" for entry in manifest)
+    assert not Enquiry.objects.exists()  # fixtures were rolled back
+    page = (tmp_path / "emails" / "enquiry-alert-single.html").read_text()
+    assert "cid:" not in page and "../assets/vitalos-logo-white.png" in page
+    assert "@media all{" in (tmp_path / "emails" / "enquiry-alert-single.dark.html").read_text()
+    assert 'data-filter="repo"' in (tmp_path / "index.html").read_text()
+
+
+# --- Reviewed seed content reaches existing templates (update_seeded_templates) ----------------------
+
+
+def _seed_with(monkeypatch, key, **changes):
+    items = services.load_seed()
+    for item in items:
+        if item["key"] == key:
+            item.update(changes)
+    monkeypatch.setattr(services, "load_seed", lambda: items)
+    return items
+
+
+def test_seed_hash_is_set_when_seeding(library):
+    from apps.email_templates.models import content_hash
+
+    template = _template()
+    assert template.seed_hash and template.seed_hash == content_hash(template.content())
+
+
+def test_unedited_templates_are_updated_with_a_version_and_keep_their_status(library, monkeypatch):
+    template = _template()
+    template.status = Status.ACTIVE
+    template.save()
+    _seed_with(monkeypatch, "proposal-sent", subject="Your proposal for {{project_name}} is ready")
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 1, create 0, 80 unchanged, 0 skipped" in out.getvalue()
+    template = _template()
+    assert template.subject == "Your proposal for {{project_name}} is ready"
+    assert template.status == Status.ACTIVE and template.version == 2
+    assert template.versions.first().note == "Updated from the repository (email review, Oct 2026)"
+    assert AuditEvent.objects.filter(action="email_templates.seed_updated").exists()
+    # Idempotent: a second run changes nothing.
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 0, create 0, 81 unchanged" in out.getvalue() and _template().version == 2
+
+
+def test_templates_edited_in_the_admin_are_skipped_and_listed(library, monkeypatch, superadmin):
+    template = _template()
+    services.update_template(
+        template,
+        content={**template.content(), "subject": "Edited by a person"},
+        status="draft",
+        user=superadmin,
+    )
+    _seed_with(monkeypatch, "proposal-sent", subject="Reviewed in the repository")
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 0, create 0, 80 unchanged, 1 skipped" in out.getvalue()
+    assert "skipped: proposal-sent" in out.getvalue()
+    assert _template().subject == "Edited by a person"
+
+
+def test_new_seed_templates_are_created_and_dry_run_writes_nothing(library, monkeypatch):
+    items = _seed_with(monkeypatch, "proposal-sent", subject="Reviewed in the repository")
+    items.append({**items[0], "key": "brand-new-template", "name": "Brand new"})
+    out = io.StringIO()
+    call_command("update_seeded_templates", "--dry-run", stdout=out)
+    assert "Dry run: would update 1, Dry run: would create 1" in out.getvalue()
+    assert not EmailTemplate.objects.filter(key="brand-new-template").exists()
+    assert _template().version == 1
+    call_command("update_seeded_templates", stdout=io.StringIO())
+    created = EmailTemplate.objects.get(key="brand-new-template")
+    assert created.seeded and created.status == Status.DRAFT and created.seed_hash
+
+
+def test_seed_hash_backfill_reads_the_seeded_snapshot(library):
+    import importlib
+
+    from django.apps import apps as django_apps
+
+    migration = importlib.import_module("apps.email_templates.migrations.0002_seed_hash")
+    EmailTemplate.objects.update(seed_hash="")
+    edited = _template()
+    edited.subject = "Edited later"
+    edited.save()
+    migration.backfill(django_apps, None)
+    from apps.email_templates.models import content_hash
+
+    edited = _template()
+    assert edited.seed_hash == content_hash(edited.versions.get(number=1).content)
+    assert edited.seed_hash != content_hash(edited.content())  # so the update command will skip it

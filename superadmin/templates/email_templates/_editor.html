@@ -54,6 +54,25 @@
               {% elif block.type == "details" %}
                 <label class="field-label" for="block-{{ block.index }}-rows">Rows, one per line: Label | Value</label>
                 <textarea id="block-{{ block.index }}-rows" name="block-{{ block.index }}-rows" rows="4" class="{{ input_class }} font-mono">{{ block.rows }}</textarea>
+              {% elif block.type == "code" %}
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <div><label class="field-label" for="block-{{ block.index }}-code">Code</label><input type="text" id="block-{{ block.index }}-code" name="block-{{ block.index }}-code" value="{{ block.code }}" class="{{ input_class }} font-mono"></div>
+                  <div><label class="field-label" for="block-{{ block.index }}-expiry">Expiry line</label><input type="text" id="block-{{ block.index }}-expiry" name="block-{{ block.index }}-expiry" value="{{ block.expiry }}" class="{{ input_class }}" placeholder="The code expires in 10 minutes."></div>
+                </div>
+                <p class="field-help">Shown large, in one piece so it copies cleanly. Never put the code in the subject or preheader.</p>
+              {% elif block.type == "steps" %}
+                <label class="field-label" for="block-{{ block.index }}-title">Title</label>
+                <input type="text" id="block-{{ block.index }}-title" name="block-{{ block.index }}-title" value="{{ block.title }}" class="{{ input_class }}">
+                <label class="field-label mt-2" for="block-{{ block.index }}-items">Steps, one per line (1 to 4)</label>
+                <textarea id="block-{{ block.index }}-items" name="block-{{ block.index }}-items" rows="4" class="{{ input_class }}">{{ block.items }}</textarea>
+              {% elif block.type == "items" %}
+                <label class="field-label" for="block-{{ block.index }}-items">Items, one per line: Tag | Title | Summary | Meta | Link</label>
+                <textarea id="block-{{ block.index }}-items" name="block-{{ block.index }}-items" rows="4" class="{{ input_class }} font-mono">{{ block.items }}</textarea>
+                <p class="field-help">Only the title is required. Leave a cell empty to skip it.</p>
+              {% elif block.type == "stats" %}
+                <label class="field-label" for="block-{{ block.index }}-items">Figures, one per line: Value | Label (2 to 4)</label>
+                <textarea id="block-{{ block.index }}-items" name="block-{{ block.index }}-items" rows="4" class="{{ input_class }} font-mono">{{ block.items }}</textarea>
+                <p class="field-help">Write a status as a word (Overdue, Paid), never as a colour alone.</p>
               {% elif block.type == "divider" %}
                 <p class="muted text-sm">A thin rule between sections.</p>
               {% elif block.type == "signature" %}

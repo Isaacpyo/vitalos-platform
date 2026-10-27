@@ -419,6 +419,9 @@ def test_hiring_team_alerts_are_deduplicated_per_role(
         and "https://admin.example.test/careers/applications/" in internal[0].body
     )
     assert "token" not in internal[0].body and "candidate@example.test" not in internal[0].body
+    html = internal[0].alternatives[0][0]
+    assert "New application: Example role (fixture)</h1>" in html and ">Review applications</a>" in html
+    assert internal[0].extra_headers["X-Vitalos-Notification"] == "careers.application-alert"
     assert CareersAlertEmail.objects.count() == 1
     assert alerts.flush(timezone.now()) == 0  # the second application waits for the window
     sent = alerts.flush(timezone.now() + timedelta(minutes=11))

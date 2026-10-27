@@ -1,0 +1,8 @@
+New applications for Example role:
+
+- Alex Example, received 27 Oct 2026 08:45
+  https://admin.vitalos.co.uk/careers/applications/00000000-0000-0000-0000-000000000001/
+- Sam Example, received 27 Oct 2026 08:45 (possible duplicate)
+  https://admin.vitalos.co.uk/careers/applications/00000000-0000-0000-0000-000000000002/
+
+Open them in the Super Admin.

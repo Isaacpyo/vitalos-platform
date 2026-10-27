@@ -33,3 +33,16 @@ A third application that sends email; a decision to merge the website and Super 
 ## Status note (12 October 2026): Super Admin side
 
 The Super Admin now renders every email template with `superadmin/apps/mailer/layout.py`, which passes the golden fixtures byte for byte. The email template library (Mail > Email templates, SuperAdmin only) stores templates and versions in PostgreSQL, seeds 81 templates from `superadmin/apps/email_templates/seed/`, reads footer facts from Settings > Company and sends inline images as CID attachments (`superadmin/docs/DECISIONS.md` 78 to 88). A muted text block right under a heading keeps the 4px subtitle gap; any other text under a heading now has 12px.
+
+## Status note (27 October 2026): new blocks and correspondence mode
+
+The email audit (`docs/email/`) added four blocks and one mode, each in `render.ts` and `snippets.ts`, mirrored in `layout.py`, with golden fixtures (`new-blocks`, `correspondence`), AA tests and a plain-text form. They use only existing colour roles and dark classes; spec version 2.
+
+- **`code`**: a verification code in 32px monospace as one text node without spaces (it copies cleanly), in a ruled code box, with an optional expiry line. The renderer refuses a document whose subject or preheader contains the code.
+- **`steps`**: 1 to 4 numbered steps with an optional title ("What happens next").
+- **`items`**: linked entries (tag, title, summary, meta, link) for digests, multi-item alerts and newsletters.
+- **`stats`**: 2 to 4 figures with labels in equal columns. A status is written as a word.
+- **Footer product line** (`footer.product`): a line right above the company facts, e.g. "Askbridge by Vitalos" (decision E2).
+- **Correspondence mode** (`mode: "correspondence"`): a person writing to a person (inbox replies). No header band, label, logo or badges; only text, quote, divider and signature blocks; a compact footer with the company facts and no social icons, notice or unsubscribe line. The shell's card corners come from a new `[[card_edge]]` slot, so every existing fixture is unchanged.
+
+The Super Admin editor offers all four blocks (Steps, Item list, Figures, Code) with validation: steps 1 to 4, figures 2 to 4 with value and label, items each with a title, and a code that is never in the subject or preheader.

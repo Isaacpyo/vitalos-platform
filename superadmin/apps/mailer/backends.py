@@ -28,6 +28,9 @@ FORWARDED_HEADERS = (
     "References",
     "Auto-Submitted",
     "X-Auto-Response-Suppress",
+    # Names the platform's own system emails, so inbound ingestion recognises them (ADR-046).
+    "X-Vitalos-Notification",
+    "X-Vitalos-Reference",
     # One-click unsubscribe for marketing and outreach email (RFC 8058).
     "List-Unsubscribe",
     "List-Unsubscribe-Post",

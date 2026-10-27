@@ -63,13 +63,23 @@ class TagsForm(forms.Form):
 class InboxSettingsForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = InboxSettings
-        fields = ["sla_first_response_hours", "signature", "retention_months", "spam_retention_days"]
+        fields = [
+            "sla_first_response_hours",
+            "signature",
+            "retention_months",
+            "spam_retention_days",
+            "automated_senders",
+        ]
         labels = {
             "sla_first_response_hours": "First-response target (working hours)",
             "retention_months": "Keep resolved enquiries for (months)",
             "spam_retention_days": "Keep spam for (days)",
+            "automated_senders": "Booking and notification senders",
         }
-        widgets = {"signature": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "signature": forms.Textarea(attrs={"rows": 4}),
+            "automated_senders": forms.Textarea(attrs={"rows": 4}),
+        }
 
 
 class CannedResponseForm(StyledFormMixin, forms.ModelForm):

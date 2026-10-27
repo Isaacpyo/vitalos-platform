@@ -6,9 +6,10 @@ generate; never edit that file by hand. ``tests/test_email_layout.py`` renders t
 ``email-layout/fixtures`` and requires byte-identical output, so a change to the TypeScript renderer
 must be repeated here (ADR-030).
 
-A document is a dict: ``title``, ``preheader``, ``headerLabel``, ``blocks`` (list of block dicts) and
-``footer`` (``notice``, ``social``, ``company``, ``unsubscribe``), using the same keys as the
-TypeScript types. Values are plain text: they are cleaned and escaped here.
+A document is a dict: ``mode`` (optional, ``"correspondence"`` for a person-to-person reply), ``title``,
+``preheader``, ``headerLabel``, ``blocks`` (list of block dicts) and ``footer`` (``notice``, ``social``,
+``company``, ``unsubscribe``), using the same keys as the TypeScript types. Values are plain text: they are
+cleaned and escaped here.
 """
 
 from __future__ import annotations
@@ -32,6 +33,12 @@ _LEAD = re.compile(f"^[{_JS_WS}]+")
 _TRAIL = re.compile(f"[{_JS_WS}]+$")
 _SAFE_URL = re.compile(f"^(https://|mailto:)[^{_JS_WS}\"'<>`]+\\Z", re.IGNORECASE)
 _SLOT = re.compile(r"\[\[([a-z_]+)\]\]")
+_JS_SPACE = re.compile(f"[{_JS_WS}]+")
+
+#: The block types a correspondence email (a person writing to a person) may use.
+CORRESPONDENCE_BLOCKS = ("text", "quote", "divider", "signature")
+CARD_EDGE = "border-top:0;border-radius:0 0 12px 12px;"
+CARD_EDGE_ALONE = "border-radius:12px;"
 
 
 @cache
@@ -246,7 +253,88 @@ def _block_html(block: dict) -> str:
                 "title": fill("signature_title", {"text": e(title)}) if title else "",
             },
         )
+    if kind == "code":
+        code = _clean_code(block.get("code"))
+        expiry = clean_line(block.get("expiry"))
+        box = fill("code_box", {"code": e(code) if code else _missing_html(_missing(block.get("missing")))})
+        return f"{box}\n{fill('code_expiry', {'text': e(expiry)})}" if expiry else box
+    if kind == "steps":
+        title = clean_line(block.get("title"))
+        rows = "\n".join(
+            fill("step_row", {"pad": "0" if index == 0 else "8", "number": str(index + 1), "text": e(text)})
+            for index, text in enumerate(_step_items(block))
+        )
+        steps = fill("steps", {"rows": rows})
+        return f"{fill('section', {'text': e(title)})}\n{steps}" if title else steps
+    if kind == "items":
+        rows = "\n".join(
+            fill("item_row", {"content": _list_item_html(item)}) for item in block.get("items", [])
+        )
+        return fill("items", {"rows": rows})
+    if kind == "stats":
+        stats = block.get("items", [])
+        width = str(100 // max(len(stats), 1))
+        cells = []
+        for index, stat in enumerate(stats):
+            value = clean_line(stat.get("value"))
+            cells.append(
+                fill(
+                    "stat_cell",
+                    {
+                        "width": width,
+                        "edge": "0" if index == 0 else "1",
+                        "value": e(value) if value else _missing_html(not_provided()),
+                        "label": e(clean_line(stat.get("label"))),
+                    },
+                )
+            )
+        return fill("stats", {"cells": "".join(cells)})
     raise ValueError(f"Unknown block type: {kind!r}")
+
+
+def _clean_code(code: str | None) -> str:
+    """A code is shown without spaces, so it copies as one string."""
+    return _JS_SPACE.sub("", clean_line(code))
+
+
+def _step_items(block: dict) -> list[str]:
+    return [text for text in (clean_line(item) for item in block.get("items", [])) if text]
+
+
+def _list_item_html(item: dict) -> str:
+    parts = []
+    tag = clean_line(item.get("tag"))
+    if tag:
+        parts.append(fill("item_tag", {"text": e(tag)}))
+    title = clean_line(item.get("title"))
+    href = clean_line(item.get("href"))
+    if not title:
+        parts.append(fill("item_title", {"text": _missing_html(not_provided())}))
+    elif href and is_safe_url(href):
+        parts.append(fill("item_title_link", {"href": e(href), "text": e(title)}))
+    else:
+        parts.append(fill("item_title", {"text": e(title)}))
+    summary = clean_multiline(item.get("summary"))
+    if summary:
+        parts.append(fill("item_summary", {"text": e(summary).replace("\n", "<br>\n")}))
+    meta = clean_line(item.get("meta"))
+    if meta:
+        parts.append(fill("item_meta", {"text": e(meta)}))
+    return "".join(parts)
+
+
+def check_document(doc: dict) -> None:
+    """A verification code never appears in the subject or preheader (both show in notifications and
+    inbox lists), and correspondence uses only the correspondence blocks."""
+    visible = f"{clean_line(doc.get('title'))}\n{clean_line(doc.get('preheader'))}"
+    correspondence = doc.get("mode") == "correspondence"
+    for block in doc.get("blocks", []):
+        if block["type"] == "code":
+            code = _clean_code(block.get("code"))
+            if code and code in visible:
+                raise ValueError("A verification code must not appear in the subject or preheader.")
+        if correspondence and block["type"] not in CORRESPONDENCE_BLOCKS:
+            raise ValueError(f"Correspondence email cannot use a {block['type']} block.")
 
 
 def _block_pad(block: dict, previous: dict | None) -> int:
@@ -291,10 +379,31 @@ def _social(footer: dict) -> list[dict]:
 _UNSUBSCRIBE_FALLBACK = "Unsubscribe: reply to this email with the word unsubscribe"
 
 
-def _footer_html(footer: dict) -> tuple[str, list[dict]]:
+def _company_footer_html(footer: dict, pad: str) -> str:
+    company = footer.get("company", {})
+    product = clean_line(footer.get("product"))
+    placeholders = spec()["companyPlaceholders"]
+    company_line, office_line = _company_lines(company)
+    filled = _pick_filled(company)
+    website = filled.get("website", "")
+    support = filled.get("supportEmail", "")
+    if website and is_safe_url(website):
+        website_html = fill("footer_link", {"href": e(website), "text": e(_display_url(website))})
+    else:
+        website_html = e(website or placeholders["website"])
+    if support:
+        support_html = fill("footer_link", {"href": e(f"mailto:{support}"), "text": e(support)})
+    else:
+        support_html = e(placeholders["supportEmail"])
+    lines = f"{e(company_line)}<br>{e(office_line)}<br>{website_html} · {support_html}"
+    return fill("footer_text", {"pad": pad, "text": f"{e(product)}<br>{lines}" if product else lines})
+
+
+def _footer_html(footer: dict, compact: bool = False) -> tuple[str, list[dict]]:
+    if compact:
+        return _company_footer_html(footer, "16"), []
     rows: list[str] = []
     images: list[dict] = []
-    placeholders = spec()["companyPlaceholders"]
     notice = clean_multiline(footer.get("notice"))
     if notice:
         rows.append(fill("footer_text", {"pad": "16", "text": e(notice)}))
@@ -315,27 +424,7 @@ def _footer_html(footer: dict) -> tuple[str, list[dict]]:
             )
         rows.append(fill("footer_social", {"links": "".join(links)}))
 
-    company_line, office_line = _company_lines(footer.get("company", {}))
-    filled = _pick_filled(footer.get("company", {}))
-    website = filled.get("website", "")
-    support = filled.get("supportEmail", "")
-    if website and is_safe_url(website):
-        website_html = fill("footer_link", {"href": e(website), "text": e(_display_url(website))})
-    else:
-        website_html = e(website or placeholders["website"])
-    if support:
-        support_html = fill("footer_link", {"href": e(f"mailto:{support}"), "text": e(support)})
-    else:
-        support_html = e(placeholders["supportEmail"])
-    rows.append(
-        fill(
-            "footer_text",
-            {
-                "pad": "8" if social else "16",
-                "text": f"{e(company_line)}<br>{e(office_line)}<br>{website_html} · {support_html}",
-            },
-        )
-    )
+    rows.append(_company_footer_html(footer, "8" if social else "16"))
 
     unsubscribe = footer.get("unsubscribe")
     if unsubscribe:
@@ -351,6 +440,8 @@ def _footer_html(footer: dict) -> tuple[str, list[dict]]:
 
 
 def render_html(doc: dict) -> tuple[str, list[dict]]:
+    check_document(doc)
+    correspondence = doc.get("mode") == "correspondence"
     blocks = doc.get("blocks", [])
     body = "\n".join(
         fill(
@@ -362,7 +453,7 @@ def render_html(doc: dict) -> tuple[str, list[dict]]:
         )
         for index, block in enumerate(blocks)
     )
-    footer, footer_images = _footer_html(doc.get("footer", {}))
+    footer, footer_images = _footer_html(doc.get("footer", {}), correspondence)
     s = spec()
     logo = s["images"]["logo"]
     html = fill(
@@ -371,15 +462,18 @@ def render_html(doc: dict) -> tuple[str, list[dict]]:
             "title": e(clean_line(doc.get("title"))),
             "style_blocks": "\n".join(fill("style", {"css": css}) for css in s["styleBlocks"]),
             "preheader": e(clean_line(doc.get("preheader"))) + s["preheaderPad"],
-            "header": fill(
+            "header": ""
+            if correspondence
+            else fill(
                 "header",
                 {"logo": _image_html(logo, "Vitalos"), "label": e(clean_line(doc.get("headerLabel")))},
             ),
+            "card_edge": CARD_EDGE_ALONE if correspondence else CARD_EDGE,
             "body": body,
             "footer": footer,
         },
     )
-    return html, [logo, *footer_images]
+    return html, (footer_images if correspondence else [logo, *footer_images])
 
 
 def _detail_text(row: dict) -> list[str]:
@@ -421,26 +515,63 @@ def _block_text(block: dict) -> str:
     if kind == "signature":
         lines = ["Kind regards,", clean_line(block.get("name")) or "Vitalos", clean_line(block.get("title"))]
         return "\n".join([line for line in lines if line] + ["Vitalos Technologies"])
+    if kind == "code":
+        code = _clean_code(block.get("code")) or _missing(block.get("missing"))
+        expiry = clean_line(block.get("expiry"))
+        return f"{code}\n{expiry}" if expiry else code
+    if kind == "steps":
+        title = clean_line(block.get("title"))
+        steps = [f"{index + 1}. {text}" for index, text in enumerate(_step_items(block))]
+        return "\n".join([title.upper(), *steps] if title else steps)
+    if kind == "items":
+        return "\n\n".join(_list_item_text(item) for item in block.get("items", []))
+    if kind == "stats":
+        return "\n".join(
+            f"{clean_line(stat.get('label'))}: {clean_line(stat.get('value')) or not_provided()}"
+            for stat in block.get("items", [])
+        )
     raise ValueError(f"Unknown block type: {kind!r}")
 
 
-def _footer_text(footer: dict) -> str:
+def _list_item_text(item: dict) -> str:
+    tag = clean_line(item.get("tag"))
+    title = clean_line(item.get("title")) or not_provided()
+    href = clean_line(item.get("href"))
+    lines = [
+        f"[{tag}] {title}" if tag else title,
+        clean_multiline(item.get("summary")),
+        clean_line(item.get("meta")),
+        href if href and is_safe_url(href) else "",
+    ]
+    return "\n".join(line for line in lines if line)
+
+
+def _company_text(footer: dict) -> list[str]:
+    company = footer.get("company", {})
+    product = clean_line(footer.get("product"))
     placeholders = spec()["companyPlaceholders"]
+    company_line, office_line = _company_lines(company)
+    filled = _pick_filled(company)
+    website = _display_url(filled["website"]) if filled.get("website") else placeholders["website"]
+    lines = [
+        company_line,
+        office_line,
+        f"{website} · {filled.get('supportEmail', placeholders['supportEmail'])}",
+    ]
+    return [product, *lines] if product else lines
+
+
+def _footer_text(footer: dict, compact: bool = False) -> str:
     parts = ["--"]
+    if compact:
+        return "\n".join(parts + _company_text(footer))
     notice = clean_multiline(footer.get("notice"))
     if notice:
         parts += [notice, ""]
     social = _social(footer)
     if social:
         parts += [f"{link['label']}: {link['url']}" for link in social] + [""]
-    company_line, office_line = _company_lines(footer.get("company", {}))
-    filled = _pick_filled(footer.get("company", {}))
-    website = _display_url(filled["website"]) if filled.get("website") else placeholders["website"]
-    parts += [
-        company_line,
-        office_line,
-        f"{website} · {filled.get('supportEmail', placeholders['supportEmail'])}",
-    ]
+    parts += _company_text(footer)
     unsubscribe = footer.get("unsubscribe")
     if unsubscribe:
         url = clean_line(unsubscribe.get("url"))
@@ -454,12 +585,17 @@ def _footer_text(footer: dict) -> str:
 
 def render_text(doc: dict) -> str:
     """The plain-text part: every block, in the same order as the HTML."""
-    chunks = [f"VITALOS · {clean_line(doc.get('headerLabel')).upper()}"]
+    check_document(doc)
+    correspondence = doc.get("mode") == "correspondence"
+    chunks = [] if correspondence else [f"VITALOS · {clean_line(doc.get('headerLabel')).upper()}"]
     blocks = doc.get("blocks", [])
     for index, block in enumerate(blocks):
+        if index == 0 and correspondence:
+            chunks.append(_block_text(block))
+            continue
         separator = "\n" if index and blocks[index - 1]["type"] == "section" else "\n\n"
         chunks += [separator, _block_text(block)]
-    chunks += ["\n\n", _footer_text(doc.get("footer", {}))]
+    chunks += ["\n\n", _footer_text(doc.get("footer", {}), correspondence)]
     return "".join(chunks)
 
 

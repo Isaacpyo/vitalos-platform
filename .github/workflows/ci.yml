@@ -67,6 +67,8 @@ jobs:
           restore-keys: turbo-quality-
       - run: pnpm check:security
       - run: pnpm format:check
+      - name: Email guard (only the mailer modules call a mail API; AGENTS.md, Email)
+        run: pnpm check:email
       - name: Lint and typecheck (affected packages on pull requests)
         if: steps.changes.outputs.static == 'true'
         run: pnpm turbo run lint typecheck ${{ steps.changes.outputs.full != 'true' && '--affected' || '' }}

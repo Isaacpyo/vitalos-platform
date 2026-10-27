@@ -8,15 +8,18 @@ from apps.accounts.roles import SERVICE_LEAD, SUPERADMIN, has_role
 from .models import Enquiry
 
 OPEN_STATUSES = (Enquiry.Status.NEW, Enquiry.Status.OPEN, Enquiry.Status.PENDING)
+#: Kept out of "All" and the open counts: spam, and machine mail (ADR-046).
+SET_ASIDE = (Enquiry.Status.SPAM, Enquiry.Status.AUTOMATED)
 
 # Filter key -> (label, queryset filter). "mine" is resolved per user.
 FILTERS = {
-    "all": ("All", ~Q(status=Enquiry.Status.SPAM)),
+    "all": ("All", ~Q(status__in=SET_ASIDE)),
     "unassigned": ("Unassigned", Q(assignee__isnull=True, status__in=OPEN_STATUSES)),
     "mine": ("Mine", Q(status__in=OPEN_STATUSES)),
     "open": ("New and open", Q(status__in=(Enquiry.Status.NEW, Enquiry.Status.OPEN))),
     "pending": ("Pending", Q(status=Enquiry.Status.PENDING)),
     "resolved": ("Resolved", Q(status=Enquiry.Status.RESOLVED)),
+    "automated": ("Automated", Q(status=Enquiry.Status.AUTOMATED)),
     "spam": ("Spam", Q(status=Enquiry.Status.SPAM)),
 }
 MAX_QUERY = 100

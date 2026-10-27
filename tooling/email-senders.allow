@@ -1,0 +1,4 @@
+# Files allowed to use a mail API outside the mailer modules (tooling/scripts/check-email-senders.mjs).
+# One per line: <path> | <reason>. Keep this short; prefer sending through the mailer.
+superadmin/apps/enquiries/providers.py | Reads received mail from Resend's receiving API (api.resend.com/emails/receiving); it sends nothing.
+superadmin/config/settings/base.py | Holds the RESEND_API_URL setting the mailer backend reads; it sends nothing.

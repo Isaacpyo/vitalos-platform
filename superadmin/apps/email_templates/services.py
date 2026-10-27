@@ -30,14 +30,31 @@ from .models import (
     Kind,
     ManagedBy,
     Status,
+    content_hash,
 )
 from .rendering import RenderedTemplate, preview_html, render_content, sample_values, unsubscribe_url
 from .variables import VARIABLES, Variable, names_in
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
-BLOCK_TYPES = ("heading", "section", "text", "button", "badge", "quote", "details", "divider", "signature")
+BLOCK_TYPES = (
+    "heading",
+    "section",
+    "text",
+    "button",
+    "badge",
+    "quote",
+    "details",
+    "divider",
+    "signature",
+    "code",
+    "steps",
+    "items",
+    "stats",
+)
 TEST_DOMAIN = "@vitalos.co.uk"
 TEST_SENDS_PER_HOUR = 10
+SEEDED_NOTE = "Seeded from the repository"
+UPDATED_NOTE = "Updated from the repository (email review, Oct 2026)"
 
 
 def require_superadmin(user) -> None:
@@ -71,7 +88,30 @@ def content_errors(content: dict) -> list[str]:
             errors.append(f"Block {index} has an unknown type.")
         elif kind == "button" and not (block.get("label") and block.get("url")):
             errors.append(f"Block {index} (button) needs a label and a link.")
+        else:
+            errors += _new_block_errors(index, kind, block, content)
     return errors
+
+
+def _new_block_errors(index: int, kind: str, block: dict, content: dict) -> list[str]:
+    """Rules for the code, steps, items and stats blocks (ADR-030 status note, October 2026)."""
+    items = block.get("items") or []
+    if kind == "code":
+        code = (block.get("code") or "").strip()
+        if not code:
+            return [f"Block {index} (code) needs a code or a variable."]
+        visible = f"{content.get('subject') or ''}\n{content.get('preheader') or ''}"
+        if code in visible:
+            return [f"Block {index} (code): the code must not appear in the subject or preheader."]
+    elif kind == "steps" and not 1 <= len([i for i in items if str(i).strip()]) <= 4:
+        return [f"Block {index} (steps) needs 1 to 4 steps."]
+    elif kind == "items" and (not items or any(not (i.get("title") or "").strip() for i in items)):
+        return [f"Block {index} (item list) needs at least one item, each with a title."]
+    elif kind == "stats" and (
+        not 2 <= len(items) <= 4 or any(not (i.get("value") and i.get("label")) for i in items)
+    ):
+        return [f"Block {index} (figures) needs 2 to 4 figures, each with a value and a label."]
+    return []
 
 
 def _snapshot(template: EmailTemplate, *, user, note: str) -> None:
@@ -189,7 +229,7 @@ def latest_enquiry():
 
     return (
         Enquiry.objects.filter(anonymised_at__isnull=True)
-        .exclude(status="spam")
+        .exclude(status__in=("spam", "automated"))
         .order_by("-created_at")
         .first()
     )
@@ -287,7 +327,7 @@ def recent_enquiries(limit: int = RECENT_ENQUIRIES) -> list:
 
     return list(
         Enquiry.objects.filter(anonymised_at__isnull=True)
-        .exclude(status="spam")
+        .exclude(status__in=("spam", "automated"))
         .order_by("-created_at")[:limit]
     )
 
@@ -297,7 +337,11 @@ def enquiry_for_prefill(pk):
 
     if not str(pk or "").isdigit():
         return None
-    return Enquiry.objects.filter(pk=int(pk), anonymised_at__isnull=True).exclude(status="spam").first()
+    return (
+        Enquiry.objects.filter(pk=int(pk), anonymised_at__isnull=True)
+        .exclude(status__in=("spam", "automated"))
+        .first()
+    )
 
 
 def use_defaults(user) -> dict[str, str]:
@@ -479,9 +523,80 @@ def seed_library(user=None) -> int:
             value = item.get(name)
             setattr(template, name, value if value is not None else "")
         template.blocks = item.get("blocks", [])
+        template.seed_hash = content_hash(template.content())
         template.save()
-        _snapshot(template, user=user, note="Seeded from the repository")
+        _snapshot(template, user=user, note=SEEDED_NOTE)
         created += 1
     if created:
         record("email_templates.seeded", actor=user, summary=f"{created} templates")
     return created
+
+
+def _seed_content(item: dict) -> dict:
+    """A seed item's content fields as ``seed_library`` stores them."""
+    content = {name: item.get(name) if item.get(name) is not None else "" for name in CONTENT_FIELDS}
+    content["blocks"] = item.get("blocks", [])
+    return content
+
+
+@dataclass
+class SeedUpdate:
+    created: int = 0
+    updated: list[str] = field(default_factory=list)
+    unchanged: int = 0
+    #: Edited in the admin (or not from the seed): never overwritten.
+    skipped: list[str] = field(default_factory=list)
+
+
+@transaction.atomic
+def update_seeded_templates(*, dry_run: bool = False, user=None) -> SeedUpdate:
+    """Bring unedited seeded templates up to date with the seed files, and create missing ones.
+
+    A template is updated only while its content hash equals its ``seed_hash``, so nobody has changed it
+    in the admin. Each update writes a version snapshot and moves ``seed_hash``; ``status`` is unchanged.
+    """
+    items = load_seed()
+    problems = seed_problems(items)
+    if problems:
+        raise ValidationError(problems)
+    result = SeedUpdate()
+    existing = {template.key: template for template in EmailTemplate.objects.select_for_update()}
+    for item in items:
+        template = existing.get(item["key"])
+        if template is None:
+            result.created += 1
+            continue
+        new = _seed_content(item)
+        new_hash = content_hash(new)
+        if (
+            not template.seeded
+            or not template.seed_hash
+            or content_hash(template.content()) != template.seed_hash
+        ):
+            if content_hash(template.content()) != new_hash:
+                result.skipped.append(template.key)
+            else:
+                result.unchanged += 1
+            continue
+        if new_hash == template.seed_hash:
+            result.unchanged += 1
+            continue
+        result.updated.append(template.key)
+        if dry_run:
+            continue
+        for name, value in new.items():
+            setattr(template, name, value)
+        template.version += 1
+        template.seed_hash = new_hash
+        template.updated_by = user
+        template.save()
+        _snapshot(template, user=user, note=UPDATED_NOTE)
+    if not dry_run:
+        result.created = seed_library(user)
+        if result.updated:
+            record(
+                "email_templates.seed_updated",
+                actor=user,
+                summary=f"{len(result.updated)} templates updated from the repository",
+            )
+    return result

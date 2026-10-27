@@ -1,8 +1,9 @@
 """Inbound mail: parse raw MIME and file it into an enquiry.
 
 Order of work: parse → dedupe on Message-ID → detect auto-replies and bounces (RFC 3834) → sanitise
-→ thread (In-Reply-To/References, then a [VIT-0001] subject token from the same sender) → store the
-message and attachments → audit → queue notifications.
+→ thread (In-Reply-To/References, then a [VIT-0001] subject token from the same sender) → classify a
+new thread (a person, a form relay, our own notification or automated mail: ``automated.py``, ADR-046)
+→ store the message and attachments → audit → queue notifications (people and form relays only).
 """
 
 import email
@@ -19,7 +20,7 @@ from django.utils import timezone
 
 from apps.audit.services import record
 
-from . import attachments, notifications, services
+from . import attachments, automated, notifications, services
 from .models import Attachment, Enquiry, InboxSettings, Message
 from .sanitise import sanitise_html
 
@@ -32,7 +33,8 @@ MESSAGE_ID = re.compile(r"<[^<>\s]+>")
 KEPT_HEADERS = (
     "Date", "Message-ID", "In-Reply-To", "References", "Reply-To", "Auto-Submitted", "Precedence",
     "List-Id", "List-Unsubscribe", "X-Autoreply", "X-Autorespond", "Return-Path", "Content-Type",
-    "Authentication-Results",
+    "Authentication-Results", automated.NOTIFICATION_HEADER, automated.REFERENCE_HEADER,
+    automated.FORM_HEADER,
 )  # fmt: skip
 NULL_SENDERS = ("mailer-daemon@", "postmaster@")
 
@@ -173,33 +175,72 @@ def ingest(raw: bytes, *, provider: str, envelope_to: str = "") -> tuple[Message
         return existing, False
     try:
         with transaction.atomic():
-            message, enquiry, is_new = _store(parsed, provider=provider, envelope_to=envelope_to)
+            message, enquiry, event = _store(parsed, provider=provider, envelope_to=envelope_to)
     except IntegrityError:
         # A concurrent delivery of the same Message-ID won the race.
         return Message.objects.filter(message_id_header=parsed.message_id).first(), False
     inbox = InboxSettings.load()
     InboxSettings.objects.filter(pk=inbox.pk).update(last_inbound_at=timezone.now())
-    if not parsed.is_auto:
-        event = "new_enquiry" if is_new else "customer_reply"
+    if event:
         notifications.queue(event, enquiry)
     return message, True
 
 
+def _linked(classification: automated.Classification) -> Enquiry | None:
+    """The enquiry an own notification or a repeated website notification describes, if filed already."""
+    reference = classification.reference
+    if not reference:
+        return None
+    if classification.kind == automated.OWN:
+        number = reference.upper().removeprefix("VIT-")
+        return Enquiry.objects.filter(number=int(number)).first() if number.isdigit() else None
+    if classification.kind == automated.FORM:
+        match = (
+            Message.objects.filter(**{f"headers_json__{automated.REFERENCE_HEADER}": reference})
+            .select_related("enquiry")
+            .first()
+        )
+        return match.enquiry if match else None
+    return None
+
+
 def _store(parsed: ParsedEmail, *, provider: str, envelope_to: str):
+    """Store the message. Returns (message, enquiry, event to notify or None)."""
     enquiry = _thread(parsed)
     is_new = enquiry is None
     now = timezone.now()
     text = parsed.text or ""
+    is_auto = parsed.is_auto
+    event = None if parsed.is_auto else "customer_reply"
+    reason = "Reply on a thread"
     if is_new:
-        enquiry = services.create_enquiry(
-            subject=parsed.subject,
-            from_name=parsed.from_name,
+        classification = automated.classify(
             from_email=parsed.from_email,
-            to_email=(envelope_to or (parsed.to[0] if parsed.to else "")),
-            source=Enquiry.Source.EMAIL,
-            snippet=_snippet(text) or _snippet(re.sub(r"<[^>]+>", " ", parsed.html)),
-            status=Enquiry.Status.SPAM if parsed.is_auto else Enquiry.Status.NEW,
+            headers=parsed.headers,
+            is_auto=parsed.is_auto,
+            senders=InboxSettings.load().automated_sender_list(),
         )
+        reason = classification.reason
+        linked = _linked(classification)
+        if linked is not None:
+            # Already filed: keep this copy on that enquiry, quietly, without changing its state.
+            enquiry, is_new, is_auto, event = linked, False, True, None
+            reason = f"{classification.reason}, linked to {linked.ref}"
+        else:
+            person = classification.kind == automated.FORM
+            web = person and parsed.headers.get(automated.NOTIFICATION_HEADER) == automated.WEB_NOTIFICATION
+            set_aside = classification.kind in (automated.OWN, automated.AUTOMATED)
+            enquiry = services.create_enquiry(
+                subject=parsed.subject,
+                from_name=classification.person_name if person else parsed.from_name,
+                from_email=classification.person_email if person else parsed.from_email,
+                to_email=(envelope_to or (parsed.to[0] if parsed.to else "")),
+                source=Enquiry.Source.WEB_FORM if web else Enquiry.Source.EMAIL,
+                snippet=_snippet(text) or _snippet(re.sub(r"<[^>]+>", " ", parsed.html)),
+                status=Enquiry.Status.AUTOMATED if set_aside else Enquiry.Status.NEW,
+            )
+            is_auto = set_aside
+            event = None if set_aside else "new_enquiry"
     message = Message.objects.create(
         enquiry=enquiry,
         direction=Message.Direction.INBOUND,
@@ -216,7 +257,7 @@ def _store(parsed: ParsedEmail, *, provider: str, envelope_to: str):
         html_body_sanitised=sanitise_html(parsed.html),
         headers_json=parsed.headers,
         provider=provider,
-        is_auto=parsed.is_auto,
+        is_auto=is_auto,
         created_at=now,
     )
     total = 0
@@ -234,7 +275,7 @@ def _store(parsed: ParsedEmail, *, provider: str, envelope_to: str):
             refused_reason=checked.refused_reason
             or ("" if attachments.storage_enabled() else "Not stored: object storage is not configured"),
         )
-    if not is_new:
+    if reason == "Reply on a thread":
         services.on_inbound_reply(enquiry, message, bounce=parsed.is_bounce)
     record(
         "enquiries.received",
@@ -243,6 +284,7 @@ def _store(parsed: ParsedEmail, *, provider: str, envelope_to: str):
         summary=f"{'New enquiry' if is_new else 'Reply'} from {parsed.from_email}",
         actor_email=parsed.from_email,
         provider=provider,
-        auto=parsed.is_auto,
+        auto=is_auto,
+        classification=reason,
     )
-    return message, enquiry, is_new
+    return message, enquiry, event

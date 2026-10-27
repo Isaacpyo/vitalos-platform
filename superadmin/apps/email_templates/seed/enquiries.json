@@ -80,7 +80,7 @@
     "name": "Enquiry acknowledgement",
     "category": "enquiries",
     "kind": "transactional",
-    "description": "Sent to the enquirer straight after they submit the website form, confirming receipt and explaining what happens next.",
+    "description": "For the enquirer after they submit the website form, confirming receipt and explaining what happens next.",
     "header_label": "Enquiry received",
     "subject": "We have your enquiry ({{reference}})",
     "preheader": "What happens next, and how to reach us in the meantime.",
@@ -92,7 +92,20 @@
       },
       {
         "type": "text",
-        "text": "Thank you for getting in touch with Vitalos. Your enquiry has reached us, and a senior member of the team will read it properly before replying, rather than sending you a standard pack.\n\nWhat happens next:\n- We review what you have shared and think about where we could genuinely help.\n- We reply shortly, either with a few clarifying questions or a suggested time to talk.\n- If a conversation makes sense, the first call is about understanding your situation, not selling to you.\n\nFor your records, this is what you told us:"
+        "text": "Thank you for getting in touch with Vitalos. A senior member of the team will read your enquiry properly before replying, rather than sending you a standard pack."
+      },
+      {
+        "type": "steps",
+        "title": "What happens next",
+        "items": [
+          "We read what you have shared and think about where we could genuinely help.",
+          "We reply with a few clarifying questions or a suggested time to talk.",
+          "If a conversation makes sense, the first call is about understanding your situation, not selling to you."
+        ]
+      },
+      {
+        "type": "text",
+        "text": "For your records, this is what you told us:"
       },
       {
         "type": "quote",
@@ -120,13 +133,13 @@
         ]
       },
       {
-        "type": "text",
-        "text": "If you would rather pick a time to talk now, you are welcome to book a call. Otherwise, simply reply to this email and quote your reference if anything changes in the meantime."
-      },
-      {
         "type": "button",
         "label": "Book a call",
         "url": "{{meeting_link}}"
+      },
+      {
+        "type": "text",
+        "text": "You are welcome to book a call now rather than wait for our reply. If anything changes in the meantime, reply to this email and quote your reference."
       },
       {
         "type": "signature"
@@ -139,7 +152,7 @@
     "category": "enquiries",
     "kind": "transactional",
     "description": "Sent when a call has been booked, confirming the time, the joining link and how to change it.",
-    "header_label": "Meeting booked",
+    "header_label": "Call booked",
     "subject": "Confirmed: our call on {{meeting_time}}",
     "preheader": "Joining details, what to expect, and how to change the time if you need to.",
     "reason": null,
@@ -150,7 +163,7 @@
       },
       {
         "type": "text",
-        "text": "Thank you for making time to speak with us. The details are below; it is worth adding them to your calendar so the call does not get lost in a busy week.\n\nTo make the most of the time:\n- Come with the problem as you see it today. There is no need to prepare slides.\n- Feel free to invite colleagues who will be close to the decision or the work.\n- If a document would help explain the context, reply with it beforehand. Nothing confidential is needed at this stage."
+        "text": "Thank you for making time to speak with us. The details are below; add them to your calendar so the call does not get lost in a busy week.\n\nTo make the most of the time:\n- Come with the problem as you see it today. There is no need to prepare slides.\n- Invite colleagues who will be close to the decision or the work.\n- If a document would help explain the context, reply with it beforehand. Nothing confidential is needed at this stage."
       },
       {
         "type": "details",
@@ -166,6 +179,10 @@
           [
             "Reference",
             "{{reference}}"
+          ],
+          [
+            "Change the time",
+            "{{reschedule_link}}"
           ]
         ]
       },
@@ -176,12 +193,7 @@
       },
       {
         "type": "text",
-        "text": "If the time no longer works, you can choose another slot whenever suits you."
-      },
-      {
-        "type": "button",
-        "label": "Choose another time",
-        "url": "{{reschedule_link}}"
+        "text": "If the time no longer works, choose another with the link above or reply to this email."
       },
       {
         "type": "signature"
@@ -193,8 +205,8 @@
     "name": "Meeting reminder: 24 hours before",
     "category": "enquiries",
     "kind": "transactional",
-    "description": "Sent automatically 24 hours before a booked call as a reminder with the joining link.",
-    "header_label": "Reminder",
+    "description": "Reminder to send 24 hours before a booked call, with the joining link.",
+    "header_label": "Call reminder",
     "subject": "Tomorrow: our call at {{meeting_time}}",
     "preheader": "Your joining link is inside, plus an easy way to move the call if plans have changed.",
     "reason": null,
@@ -205,7 +217,7 @@
       },
       {
         "type": "text",
-        "text": "A quick reminder that we are due to speak tomorrow. The details are below.\n\nIf you have a spare moment beforehand, it helps to think about what a good outcome would look like for {{organisation}}, and whether anything has changed since we were last in touch. We will take care of the rest."
+        "text": "A quick reminder that we are due to speak tomorrow. The details are below.\n\nIf you have a moment beforehand, think about what a good outcome would look like for {{organisation}}, and whether anything has changed since we were last in touch. We will take care of the rest."
       },
       {
         "type": "details",
@@ -221,6 +233,10 @@
           [
             "Reference",
             "{{reference}}"
+          ],
+          [
+            "Change the time",
+            "{{reschedule_link}}"
           ]
         ]
       },
@@ -231,12 +247,7 @@
       },
       {
         "type": "text",
-        "text": "If your plans have changed, that is no problem. Choose a new time, or simply reply to this email and we will sort it out."
-      },
-      {
-        "type": "button",
-        "label": "Choose another time",
-        "url": "{{reschedule_link}}"
+        "text": "If your plans have changed, that is no problem. Choose a new time with the link above, or reply to this email and we will sort it out."
       },
       {
         "type": "signature"
@@ -248,8 +259,8 @@
     "name": "Meeting reminder: 1 hour before",
     "category": "enquiries",
     "kind": "transactional",
-    "description": "Sent automatically one hour before a booked call with the joining link.",
-    "header_label": "Starting soon",
+    "description": "Reminder to send one hour before a booked call, with the joining link.",
+    "header_label": "Call reminder",
     "subject": "Starting soon: our call at {{meeting_time}}",
     "preheader": "Your joining link is inside. Reply if you are running late.",
     "reason": null,
@@ -260,7 +271,7 @@
       },
       {
         "type": "text",
-        "text": "Our call starts in about an hour. You can join using the button below whenever you are ready."
+        "text": "Our call starts in about an hour. The joining link is below."
       },
       {
         "type": "details",
@@ -282,7 +293,7 @@
       },
       {
         "type": "text",
-        "text": "Running late, or something urgent has come up? Just reply to this email and we will adjust."
+        "text": "Running late, or has something urgent come up? Reply to this email and we will adjust."
       },
       {
         "type": "signature"
@@ -295,7 +306,7 @@
     "category": "enquiries",
     "kind": "transactional",
     "description": "Sent when a booked call moves to a new time, confirming the new details and replacing the old ones.",
-    "header_label": "Rescheduled",
+    "header_label": "Call rescheduled",
     "subject": "Our call has moved to {{meeting_time}}",
     "preheader": "Updated details are inside. The previous time no longer applies.",
     "reason": null,
@@ -306,7 +317,7 @@
       },
       {
         "type": "text",
-        "text": "Thank you for your flexibility. Our call has moved, and the updated details are below. Please update your calendar and disregard the earlier time."
+        "text": "Thank you for your flexibility. Our call has moved; the updated details are below. Please update your calendar and disregard the earlier time."
       },
       {
         "type": "details",
@@ -349,7 +360,7 @@
     "category": "enquiries",
     "kind": "transactional",
     "description": "Sent when a booked call is cancelled, confirming the cancellation and offering a way to rebook.",
-    "header_label": "Cancelled",
+    "header_label": "Call cancelled",
     "subject": "Our call on {{meeting_time}} is cancelled",
     "preheader": "Nothing further is needed from you. Here is how to book a new time if you want one.",
     "reason": null,
@@ -360,7 +371,7 @@
       },
       {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nThis confirms that our call has been cancelled, so you can remove it from your calendar.\n\nIf you would still like to talk, you are welcome to book a new time whenever it suits you. If your priorities have shifted, that is fine too. Your enquiry stays on record under the reference below, and you can pick it up again at any point by replying to this email."
+        "text": "Hi {{first_name}},\n\nThis confirms that our call has been cancelled, so you can remove it from your calendar.\n\nIf you would still like to talk, book a new time whenever it suits you. If your priorities have shifted, that is fine too. Your enquiry stays on record under the reference below, and you can pick it up again at any point by replying to this email."
       },
       {
         "type": "details",
@@ -392,13 +403,17 @@
     "kind": "transactional",
     "description": "Sent after a booked call where the other person did not join, offering an easy way to rebook.",
     "header_label": "Missed call",
-    "subject": "Sorry we missed each other, {{first_name}}",
+    "subject": "Sorry we missed each other",
     "preheader": "No problem at all. Choose a new time that works better for you.",
     "reason": null,
     "blocks": [
       {
+        "type": "heading",
+        "text": "Let us find another time"
+      },
+      {
         "type": "text",
-        "text": "Hi {{first_name}},\n\nWe were set up to speak at {{meeting_time}} but did not manage to connect. Diaries move and inboxes fill up, so please do not worry about it.\n\nIf you would still like to talk, choose a time that suits you below. If now is not the right moment, a quick reply saying so is perfectly fine, and we will not keep chasing."
+        "text": "Hi {{first_name}},\n\nWe were due to speak at {{meeting_time}} but did not manage to connect. Diaries move and inboxes fill up, so please do not worry about it.\n\nIf you would still like to talk, choose a new time below. If now is not the right moment, a quick reply saying so is fine, and we will not keep chasing."
       },
       {
         "type": "button",
@@ -417,7 +432,7 @@
     "kind": "transactional",
     "description": "Sent when someone is given access to the Vitalos client portal or admin console and needs to accept the invitation.",
     "header_label": "Invitation",
-    "subject": "You are invited to your Vitalos account",
+    "subject": "You have been invited to a Vitalos account",
     "preheader": "Accept the invitation to set up your sign-in. The link is personal to you.",
     "reason": null,
     "blocks": [
@@ -427,7 +442,7 @@
       },
       {
         "type": "text",
-        "text": "{{sender_name}} has invited you to a Vitalos account for {{organisation}}. Use the button below to accept the invitation and set up your sign-in.\n\nThe link is personal to you, so please do not forward it."
+        "text": "{{sender_name}} has invited you to a Vitalos account for {{organisation}}. Accept the invitation to set up your sign-in.\n\nThe link is personal to you, so please do not forward it."
       },
       {
         "type": "details",

@@ -71,6 +71,12 @@ export class ResendVisitorMailer implements VisitorMailer {
           subject: input.subject,
           html: input.html,
           text: input.text,
+          // Automated mail, named so the Super Admin inbox recognises it if it comes back (ADR-046).
+          headers: {
+            "Auto-Submitted": "auto-generated",
+            "X-Auto-Response-Suppress": "All",
+            "X-Vitalos-Notification": "relay.visitor-email",
+          },
           attachments: inlineImages.map((img) => ({
             filename: img.filename,
             content: img.base64,
