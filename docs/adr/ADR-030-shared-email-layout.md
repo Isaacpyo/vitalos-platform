@@ -42,6 +42,7 @@ The email audit (`docs/email/`) added four blocks and one mode, each in `render.
 - **`steps`**: 1 to 4 numbered steps with an optional title ("What happens next").
 - **`items`**: linked entries (tag, title, summary, meta, link) for digests, multi-item alerts and newsletters.
 - **`stats`**: 2 to 4 figures with labels in equal columns. A status is written as a word.
+- **Footer product line** (`footer.product`): a line right above the company facts, e.g. "Askbridge by Vitalos" (decision E2).
 - **Correspondence mode** (`mode: "correspondence"`): a person writing to a person (inbox replies). No header band, label, logo or badges; only text, quote, divider and signature blocks; a compact footer with the company facts and no social icons, notice or unsubscribe line. The shell's card corners come from a new `[[card_edge]]` slot, so every existing fixture is unchanged.
 
 The Super Admin editor offers all four blocks (Steps, Item list, Figures, Code) with validation: steps 1 to 4, figures 2 to 4 with value and label, items each with a title, and a code that is never in the subject or preheader.

@@ -134,7 +134,12 @@ const fixtures: Record<string, EmailDocument> = {
       {
         type: "steps",
         title: "What happens next",
-        items: ["We read your enquiry.", "", "We reply within the time you chose.", "We book a call."],
+        items: [
+          "We read your enquiry.",
+          "",
+          "We reply within the time you chose.",
+          "We book a call.",
+        ],
       },
       { type: "steps", items: ["Only one step, no title."] },
       { type: "section", text: "Updates" },
@@ -160,10 +165,21 @@ const fixtures: Record<string, EmailDocument> = {
           { value: "", label: "Missing value" },
         ],
       },
-      { type: "stats", items: [{ value: "12", label: "Applications" }, { value: "2", label: "Roles" }] },
+      {
+        type: "stats",
+        items: [
+          { value: "12", label: "Applications" },
+          { value: "2", label: "Roles" },
+        ],
+      },
       { type: "code", code: "" },
     ],
-    footer: { social, company, notice: "Change these emails in Settings." },
+    footer: {
+      social: [],
+      company,
+      notice: "You get this because you created an Askbridge account.",
+      product: "Askbridge by Vitalos",
+    },
   },
   correspondence: {
     mode: "correspondence",
@@ -308,6 +324,13 @@ describe("new blocks and correspondence mode", () => {
     expect(blocks.html).toContain('width="33%"');
     expect(blocks.html).toContain('width="50%"');
     expect(blocks.text).toContain("New: 3\nStatus: Overdue\nMissing value: Not provided");
+  });
+
+  it("product line sits right above the company facts in both parts", () => {
+    expect(blocks.html).toContain("Askbridge by Vitalos<br>Vitalos Technologies Limited");
+    expect(blocks.text).toContain(
+      "Askbridge by Vitalos\nVitalos Technologies Limited, company number 16696895",
+    );
   });
 
   it("correspondence: no header, label, logo, social, notice or unsubscribe", () => {

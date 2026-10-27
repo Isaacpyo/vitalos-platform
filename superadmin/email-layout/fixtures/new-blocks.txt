@@ -35,11 +35,9 @@ Roles: 2
 Not provided
 
 --
-Change these emails in Settings.
+You get this because you created an Askbridge account.
 
-LinkedIn: https://www.linkedin.com/company/vitalos
-X: https://x.com/vitalos
-
+Askbridge by Vitalos
 Vitalos Technologies Limited, company number 16696895
 Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
 vitalos.co.uk · support@vitalos.co.uk

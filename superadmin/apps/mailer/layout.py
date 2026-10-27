@@ -379,7 +379,9 @@ def _social(footer: dict) -> list[dict]:
 _UNSUBSCRIBE_FALLBACK = "Unsubscribe: reply to this email with the word unsubscribe"
 
 
-def _company_footer_html(company: dict, pad: str) -> str:
+def _company_footer_html(footer: dict, pad: str) -> str:
+    company = footer.get("company", {})
+    product = clean_line(footer.get("product"))
     placeholders = spec()["companyPlaceholders"]
     company_line, office_line = _company_lines(company)
     filled = _pick_filled(company)
@@ -393,15 +395,13 @@ def _company_footer_html(company: dict, pad: str) -> str:
         support_html = fill("footer_link", {"href": e(f"mailto:{support}"), "text": e(support)})
     else:
         support_html = e(placeholders["supportEmail"])
-    return fill(
-        "footer_text",
-        {"pad": pad, "text": f"{e(company_line)}<br>{e(office_line)}<br>{website_html} · {support_html}"},
-    )
+    lines = f"{e(company_line)}<br>{e(office_line)}<br>{website_html} · {support_html}"
+    return fill("footer_text", {"pad": pad, "text": f"{e(product)}<br>{lines}" if product else lines})
 
 
 def _footer_html(footer: dict, compact: bool = False) -> tuple[str, list[dict]]:
     if compact:
-        return _company_footer_html(footer.get("company", {}), "16"), []
+        return _company_footer_html(footer, "16"), []
     rows: list[str] = []
     images: list[dict] = []
     notice = clean_multiline(footer.get("notice"))
@@ -424,7 +424,7 @@ def _footer_html(footer: dict, compact: bool = False) -> tuple[str, list[dict]]:
             )
         rows.append(fill("footer_social", {"links": "".join(links)}))
 
-    rows.append(_company_footer_html(footer.get("company", {}), "8" if social else "16"))
+    rows.append(_company_footer_html(footer, "8" if social else "16"))
 
     unsubscribe = footer.get("unsubscribe")
     if unsubscribe:
@@ -546,29 +546,32 @@ def _list_item_text(item: dict) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def _company_text(company: dict) -> list[str]:
+def _company_text(footer: dict) -> list[str]:
+    company = footer.get("company", {})
+    product = clean_line(footer.get("product"))
     placeholders = spec()["companyPlaceholders"]
     company_line, office_line = _company_lines(company)
     filled = _pick_filled(company)
     website = _display_url(filled["website"]) if filled.get("website") else placeholders["website"]
-    return [
+    lines = [
         company_line,
         office_line,
         f"{website} · {filled.get('supportEmail', placeholders['supportEmail'])}",
     ]
+    return [product, *lines] if product else lines
 
 
 def _footer_text(footer: dict, compact: bool = False) -> str:
     parts = ["--"]
     if compact:
-        return "\n".join(parts + _company_text(footer.get("company", {})))
+        return "\n".join(parts + _company_text(footer))
     notice = clean_multiline(footer.get("notice"))
     if notice:
         parts += [notice, ""]
     social = _social(footer)
     if social:
         parts += [f"{link['label']}: {link['url']}" for link in social] + [""]
-    parts += _company_text(footer.get("company", {}))
+    parts += _company_text(footer)
     unsubscribe = footer.get("unsubscribe")
     if unsubscribe:
         url = clean_line(unsubscribe.get("url"))

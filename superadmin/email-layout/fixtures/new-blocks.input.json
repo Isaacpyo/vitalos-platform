@@ -91,18 +91,7 @@
     }
   ],
   "footer": {
-    "social": [
-      {
-        "label": "LinkedIn",
-        "url": "https://www.linkedin.com/company/vitalos",
-        "contentId": "social-linkedin"
-      },
-      {
-        "label": "X",
-        "url": "https://x.com/vitalos",
-        "contentId": "social-x"
-      }
-    ],
+    "social": [],
     "company": {
       "legalName": "Vitalos Technologies Limited",
       "companyNumber": "16696895",
@@ -110,6 +99,7 @@
       "website": "https://vitalos.co.uk",
       "supportEmail": "support@vitalos.co.uk"
     },
-    "notice": "Change these emails in Settings."
+    "notice": "You get this because you created an Askbridge account.",
+    "product": "Askbridge by Vitalos"
   }
 }

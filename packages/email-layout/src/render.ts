@@ -72,7 +72,12 @@ export type Block =
   | { type: "stats"; items: Stat[] };
 
 /** The block types a correspondence email (a person writing to a person) may use. */
-export const CORRESPONDENCE_BLOCKS: readonly Block["type"][] = ["text", "quote", "divider", "signature"];
+export const CORRESPONDENCE_BLOCKS: readonly Block["type"][] = [
+  "text",
+  "quote",
+  "divider",
+  "signature",
+];
 
 export interface SocialLink {
   label: string;
@@ -93,6 +98,8 @@ export interface FooterInput {
   /** A line above everything else, e.g. the internal-notification note. */
   notice?: string | undefined;
   social: SocialLink[];
+  /** A product line right above the company facts, e.g. "Askbridge by Vitalos". */
+  product?: string | undefined;
   company: CompanyFacts;
   /** Marketing and outreach only (UK GDPR/PECR): why they get it, and how to stop. */
   unsubscribe?: { reason: string; url: string } | undefined;
@@ -306,7 +313,11 @@ function blockHtml(block: Block): string {
       const title = cleanLine(block.title);
       const rows = stepItems(block)
         .map((text, index) =>
-          fill("step_row", { pad: index === 0 ? "0" : "8", number: String(index + 1), text: e(text) }),
+          fill("step_row", {
+            pad: index === 0 ? "0" : "8",
+            number: String(index + 1),
+            text: e(text),
+          }),
         )
         .join("\n");
       const steps = fill("steps", { rows });
@@ -414,11 +425,8 @@ function pickFilled(company: CompanyFacts): CompanyFacts {
 
 const displayUrl = (url: string) => url.replace(/^https:\/\//i, "").replace(/\/$/, "");
 
-function footerHtml(
-  footer: FooterInput,
-  compact = false,
-): { html: string; images: InlineImage[] } {
-  if (compact) return { html: companyFooterHtml(footer.company, "16"), images: [] };
+function footerHtml(footer: FooterInput, compact = false): { html: string; images: InlineImage[] } {
+  if (compact) return { html: companyFooterHtml(footer, "16"), images: [] };
   const rows: string[] = [];
   const images: InlineImage[] = [];
   const notice = cleanMultiline(footer.notice);
@@ -440,7 +448,7 @@ function footerHtml(
     rows.push(fill("footer_social", { links }));
   }
 
-  rows.push(companyFooterHtml(footer.company, social.length > 0 ? "8" : "16"));
+  rows.push(companyFooterHtml(footer, social.length > 0 ? "8" : "16"));
 
   if (footer.unsubscribe) {
     const reason = cleanLine(footer.unsubscribe.reason);
@@ -453,7 +461,9 @@ function footerHtml(
   return { html: rows.join("\n"), images };
 }
 
-function companyFooterHtml(company: CompanyFacts, pad: string): string {
+function companyFooterHtml(footer: FooterInput, pad: string): string {
+  const company = footer.company;
+  const product = cleanLine(footer.product);
   const lines = companyLines(company);
   const filled = pickFilled(company);
   const website = filled.website ?? "";
@@ -467,7 +477,7 @@ function companyFooterHtml(company: CompanyFacts, pad: string): string {
     : e(COMPANY_PLACEHOLDERS.supportEmail);
   return fill("footer_text", {
     pad,
-    text: `${e(lines.company)}<br>${e(lines.office)}<br>${websiteHtml} · ${supportHtml}`,
+    text: `${product ? `${e(product)}<br>` : ""}${e(lines.company)}<br>${e(lines.office)}<br>${websiteHtml} · ${supportHtml}`,
   });
 }
 
@@ -585,14 +595,14 @@ function listItemText(item: ListItem): string {
 
 function footerText(footer: FooterInput, compact = false): string {
   const parts: string[] = ["--"];
-  if (compact) return parts.concat(companyText(footer.company)).join("\n");
+  if (compact) return parts.concat(companyText(footer)).join("\n");
   const notice = cleanMultiline(footer.notice);
   if (notice) parts.push(notice, "");
   const social = footer.social.filter((s) => imageById(s.contentId) && isSafeUrl(cleanLine(s.url)));
   if (social.length > 0) {
     parts.push(...social.map((s) => `${cleanLine(s.label)}: ${cleanLine(s.url)}`), "");
   }
-  parts.push(...companyText(footer.company));
+  parts.push(...companyText(footer));
   if (footer.unsubscribe) {
     const url = cleanLine(footer.unsubscribe.url);
     parts.push(
@@ -606,10 +616,12 @@ function footerText(footer: FooterInput, compact = false): string {
   return parts.join("\n");
 }
 
-function companyText(company: CompanyFacts): string[] {
-  const lines = companyLines(company);
-  const filled = pickFilled(company);
+function companyText(footer: FooterInput): string[] {
+  const product = cleanLine(footer.product);
+  const lines = companyLines(footer.company);
+  const filled = pickFilled(footer.company);
   return [
+    ...(product ? [product] : []),
     lines.company,
     lines.office,
     `${filled.website ? displayUrl(filled.website) : COMPANY_PLACEHOLDERS.website} · ${filled.supportEmail ?? COMPANY_PLACEHOLDERS.supportEmail}`,
