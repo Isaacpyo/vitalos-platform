@@ -107,11 +107,11 @@ def test_subject_token_threads_only_for_the_same_sender(post, owner):
     assert post(other).json()["ref"] == "VIT-0002"
 
 
-def test_auto_reply_is_flagged_as_spam_without_notifications(post, owner, mailoutbox):
+def test_auto_reply_is_filed_as_automated_without_notifications(post, owner, mailoutbox):
     response = post(eml("auto_reply.eml"))
     assert response.status_code == 200
     enquiry = Enquiry.objects.get()
-    assert enquiry.status == Enquiry.Status.SPAM
+    assert enquiry.status == Enquiry.Status.AUTOMATED
     assert enquiry.sla_due_at is None
     assert enquiry.messages.get().is_auto
     assert not OutboundNotification.objects.exists()
@@ -135,9 +135,9 @@ def test_bounce_adds_a_note_and_does_not_reopen(post, owner):
     assert not OutboundNotification.objects.exists()
 
 
-def test_bounce_without_a_thread_is_spam(post, owner):
+def test_bounce_without_a_thread_is_automated(post, owner):
     post(eml("bounce.eml"))
-    assert Enquiry.objects.get().status == Enquiry.Status.SPAM
+    assert Enquiry.objects.get().status == Enquiry.Status.AUTOMATED
 
 
 def test_html_is_sanitised(post, owner):

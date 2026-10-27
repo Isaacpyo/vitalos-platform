@@ -62,7 +62,7 @@ def _require_superadmin(actor) -> None:
 def create_enquiry(
     *, subject, from_name, from_email, to_email, source, snippet, status=Enquiry.Status.NEW
 ) -> Enquiry:
-    """Allocate the next VIT- number and create the enquiry. Spam gets no SLA target."""
+    """Allocate the next VIT- number and create the enquiry. Spam and automated mail get no SLA target."""
     InboxSettings.load()
     inbox = InboxSettings.objects.select_for_update().get(pk=1)
     highest = Enquiry.objects.aggregate(highest=Max("number"))["highest"] or 0
@@ -81,7 +81,9 @@ def create_enquiry(
         snippet=(snippet or "")[:300],
         created_at=now,
         last_message_at=now,
-        sla_due_at=None if status == Enquiry.Status.SPAM else sla.due_at(now, inbox.sla_first_response_hours),
+        sla_due_at=None
+        if status in (Enquiry.Status.SPAM, Enquiry.Status.AUTOMATED)
+        else sla.due_at(now, inbox.sla_first_response_hours),
     )
 
 
@@ -652,7 +654,14 @@ def export_enquiry(enquiry, actor, request) -> dict:
 
 
 def update_inbox_settings(
-    *, sla_first_response_hours, signature, retention_months, spam_retention_days, actor, request=None
+    *,
+    sla_first_response_hours,
+    signature,
+    retention_months,
+    spam_retention_days,
+    actor,
+    automated_senders=None,
+    request=None,
 ) -> InboxSettings:
     _require_superadmin(actor)
     errors = {}
@@ -665,6 +674,12 @@ def update_inbox_settings(
     signature = (signature or "").strip()
     if len(signature) > 2000:
         errors["signature"] = "Keep the signature under 2000 characters."
+    senders = None
+    if automated_senders is not None:
+        senders = [line.strip().lower() for line in automated_senders.splitlines() if line.strip()]
+        bad = [line for line in senders if "@" not in line or " " in line]
+        if bad or len(senders) > 200:
+            errors["automated_senders"] = "One address or @domain per line, up to 200."
     if errors:
         raise ValidationError(errors)
     with transaction.atomic():
@@ -674,6 +689,8 @@ def update_inbox_settings(
         inbox.signature = signature
         inbox.retention_months = int(retention_months)
         inbox.spam_retention_days = int(spam_retention_days)
+        if senders is not None:
+            inbox.automated_senders = "\n".join(senders)
         inbox.save()
         record(
             "enquiries.updated",

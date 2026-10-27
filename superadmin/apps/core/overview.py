@@ -77,7 +77,7 @@ def open_count_at(moment: datetime) -> int:
     """Approximate open backlog at ``moment`` from creation and resolution times (spam excluded)."""
     return (
         Enquiry.objects.filter(created_at__lte=moment)
-        .exclude(status=Enquiry.Status.SPAM)
+        .exclude(status__in=(Enquiry.Status.SPAM, Enquiry.Status.AUTOMATED))
         .exclude(resolved_at__lte=moment)
         .exclude(status=Enquiry.Status.RESOLVED, resolved_at__isnull=True)
         .count()

@@ -226,7 +226,7 @@ def latest_enquiry():
 
     return (
         Enquiry.objects.filter(anonymised_at__isnull=True)
-        .exclude(status="spam")
+        .exclude(status__in=("spam", "automated"))
         .order_by("-created_at")
         .first()
     )
@@ -324,7 +324,7 @@ def recent_enquiries(limit: int = RECENT_ENQUIRIES) -> list:
 
     return list(
         Enquiry.objects.filter(anonymised_at__isnull=True)
-        .exclude(status="spam")
+        .exclude(status__in=("spam", "automated"))
         .order_by("-created_at")[:limit]
     )
 
@@ -334,7 +334,11 @@ def enquiry_for_prefill(pk):
 
     if not str(pk or "").isdigit():
         return None
-    return Enquiry.objects.filter(pk=int(pk), anonymised_at__isnull=True).exclude(status="spam").first()
+    return (
+        Enquiry.objects.filter(pk=int(pk), anonymised_at__isnull=True)
+        .exclude(status__in=("spam", "automated"))
+        .first()
+    )
 
 
 def use_defaults(user) -> dict[str, str]:

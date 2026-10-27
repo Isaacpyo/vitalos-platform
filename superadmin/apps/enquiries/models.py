@@ -29,6 +29,8 @@ class Enquiry(models.Model):
         PENDING = "pending", "Pending customer"
         RESOLVED = "resolved", "Resolved"
         SPAM = "spam", "Spam"
+        # Machine mail (notifications, bookings, auto-replies): stored and searchable, no alert, no SLA.
+        AUTOMATED = "automated", "Automated"
 
     class Priority(models.TextChoices):
         LOW = "low", "Low"
@@ -168,6 +170,12 @@ class CannedResponse(models.Model):
         return self.title
 
 
+#: Booking and notification senders whose mail is never an enquiry (ADR-046). Editable in Settings > Email.
+DEFAULT_AUTOMATED_SENDERS = "\n".join(
+    ("hello@cal.com", "calendar-notification@google.com", "notifications@calendly.com")
+)
+
+
 class InboxSettings(models.Model):
     """Singleton (pk=1): reference counter, SLA, signature, retention and inbound health."""
 
@@ -181,6 +189,12 @@ class InboxSettings(models.Model):
     )
     retention_months = models.PositiveIntegerField(default=24)
     spam_retention_days = models.PositiveIntegerField(default=30)
+    automated_senders = models.TextField(
+        blank=True,
+        default=DEFAULT_AUTOMATED_SENDERS,
+        help_text="One per line: an address (hello@cal.com) or a whole domain (@cal.com). Their mail is "
+        "filed under Automated, with no alert and no response target.",
+    )
     last_inbound_at = models.DateTimeField(null=True, blank=True)
     last_inbound_error = models.CharField(max_length=300, blank=True)
     last_inbound_error_at = models.DateTimeField(null=True, blank=True)
@@ -192,6 +206,9 @@ class InboxSettings(models.Model):
 
     def __str__(self):
         return "Inbox settings"
+
+    def automated_sender_list(self) -> list[str]:
+        return [line.strip().lower() for line in (self.automated_senders or "").splitlines() if line.strip()]
 
     @classmethod
     def load(cls) -> "InboxSettings":

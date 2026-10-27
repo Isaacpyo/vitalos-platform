@@ -165,7 +165,7 @@ def queue(event, enquiry, *, actor=None) -> int:
     """Tell the right people about ``event`` on ``enquiry``. Returns the number of emails queued."""
     if event not in Event.values:
         raise ValueError(f"Unknown enquiry event {event!r}")
-    if enquiry.status == enquiry.Status.SPAM:
+    if enquiry.status in (enquiry.Status.SPAM, enquiry.Status.AUTOMATED):
         return 0
     audience = [user for user in _audience(event, enquiry) if actor is None or user.pk != actor.pk]
     sender = enquiry.from_name or enquiry.from_email
@@ -309,12 +309,15 @@ def build_email(rows, *, digest: bool, now=None) -> tuple[str, dict]:
 
 def _send(user, rows, *, digest: bool) -> None:
     subject, doc = build_email(rows, digest=digest)
+    single = not digest and len(rows) == 1
     system.send(
         doc,
         kind="enquiries.digest" if digest else "enquiries.update",
         subject=subject,
         to=[user.email],
         from_email=settings.NOTIFY_FROM_HEADER,
+        # If this alert ever lands in support@, the inbox links it to the enquiry (ADR-046).
+        headers={"X-Vitalos-Reference": rows[0].enquiry.ref} if single else None,
     )
 
 
