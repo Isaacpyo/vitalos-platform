@@ -121,7 +121,7 @@
     "preheader": "A brief hello, a little about Vitalos, and no pressure to reply.",
     "reason": "We are contacting you because we recently connected on LinkedIn. You can opt out at any time.",
     "blocks": [
-      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for accepting my connection on LinkedIn. I thought a short email would be a better introduction than a long message there.\n\nI work at Vitalos, a UK technology consulting, engineering and digital transformation company. We help organisations with technology strategy, production software, AI and data, digital experiences and the ongoing care of the systems they rely on.\n\nIf any of that overlaps with what you are focused on at {{organisation}}, I would be glad to have a short conversation. If not, I am happy simply to stay connected." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you for accepting my connection request on LinkedIn. I thought a short email would be a better introduction than a long message there.\n\nI work at Vitalos, a UK technology consulting, engineering and digital transformation company. We help organisations with technology strategy, production software, AI and data, digital experiences and the ongoing care of the systems they rely on.\n\nIf any of that overlaps with what you are focused on at {{organisation}}, I would be glad to have a short conversation. If not, I am happy simply to stay connected." },
       { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
       { "type": "signature" }
     ]
