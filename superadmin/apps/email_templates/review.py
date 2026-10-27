@@ -48,7 +48,13 @@ def _texts(item: dict) -> list[str]:
     return [str(text) for text in out]
 
 
+#: Proper names of more than one word (practices and products), allowed capitalised mid-subject.
+PROPER_PHRASES = ("Managed Services", "AI & Data", "Super Admin")
+
+
 def _not_sentence_case(subject: str) -> bool:
+    for phrase in PROPER_PHRASES:
+        subject = subject.replace(phrase, "x")
     words = VARIABLE.sub("x", subject).split()[1:]
     capitalised = [
         word
