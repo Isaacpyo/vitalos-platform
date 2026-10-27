@@ -1,7 +1,7 @@
 """Telling people about applications (brief 7.5).
 
 - The hiring team: an in-app notification for each new application ("{Name} applied for {role}") and an
-  internal email through the existing mailer, deduplicated to one email per role per 10 minutes that
+  internal email on the shared layout (``apps.mailer.system``), deduplicated to one email per role per 10 minutes that
   lists every new application in the window. Links go to the admin (never a login token). Recipients
   are the careers notification recipients, else every active super admin; outside the ``log`` transport
   only ``@vitalos.co.uk`` addresses are emailed. Emails count towards RESEND_DAILY_LIMIT with the
@@ -15,14 +15,15 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMessage
 from django.db import transaction
 from django.db.models import Q, Sum
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateformat import format as date_format
 
 from apps.accounts.roles import SUPERADMIN
 from apps.audit.services import record
-from apps.mailer import layout
+from apps.mailer import layout, system
 from apps.mailer.messages import build_message
 from apps.notifications.services import notify
 
@@ -74,6 +75,36 @@ def emails_sent_today(now) -> int:
     return enquiry_emails(now) + careers + candidate
 
 
+def alert_email(rows, role_title: str) -> tuple[str, dict]:
+    """Subject and layout document for one hiring-team alert (also used by the email gallery)."""
+    subject = (
+        f"New application: {role_title}" if len(rows) == 1 else f"{len(rows)} new applications: {role_title}"
+    )
+    url = settings.APP_BASE_URL + reverse("careers:applications")
+    items = [
+        {
+            "tag": "Possible duplicate" if row.duplicate_of_id else "",
+            "title": intake.single_line(row.name),
+            "meta": f"Received {date_format(timezone.localtime(row.created_at), 'j M Y, H:i')}",
+            "href": f"{settings.APP_BASE_URL}{detail_url(row.pk)}",
+        }
+        for row in rows
+    ]
+    doc = {
+        "title": subject,
+        "preheader": f"Open {'it' if len(rows) == 1 else 'them'} in the Super Admin to review.",
+        "headerLabel": "Careers",
+        "blocks": [
+            {"type": "heading", "text": subject},
+            {"type": "items", "items": items},
+            {"type": "button", "label": "Open applications", "url": url},
+            system.link_fallback(url),
+        ],
+        "footer": system.footer("You get this because you are on the careers notification list."),
+    }
+    return subject, doc
+
+
 def application_received(application_id) -> None:
     application = Application.objects.select_related("role").filter(pk=application_id).first()
     if application is None:
@@ -118,32 +149,17 @@ def flush(now=None) -> int:
             role_title = (
                 intake.single_line(rows[0].role.title) if rows[0].role else "Speculative applications"
             )
-            subject = (
-                f"New application: {role_title}"
-                if len(rows) == 1
-                else f"{len(rows)} new applications: {role_title}"
-            )
-            lines = [
-                f"- {intake.single_line(row.name)}, received {timezone.localtime(row.created_at):%d %b %Y %H:%M}"
-                f"{' (possible duplicate)' if row.duplicate_of_id else ''}\n"
-                f"  {settings.APP_BASE_URL}{detail_url(row.pk)}"
-                for row in rows
-            ]
-            body = (
-                f"New applications for {role_title}:\n\n"
-                + "\n".join(lines)
-                + "\n\nOpen them in the Super Admin."
-            )
+            subject, doc = alert_email(rows, role_title)
             delivered = 0
             for address in to:
                 try:
-                    EmailMessage(
-                        subject=subject[:200],
-                        body=body,
-                        from_email=sender(),
+                    system.send(
+                        doc,
+                        kind="careers.application-alert",
+                        subject=subject,
                         to=[address],
-                        headers={"Auto-Submitted": "auto-generated", "X-Auto-Response-Suppress": "All"},
-                    ).send(fail_silently=False)
+                        from_email=sender(),
+                    )
                     delivered += 1
                 except Exception:  # noqa: BLE001 - one recipient must not stop the others
                     logger.warning("Careers alert email failed", extra={"role_id": str(role_id)})
@@ -200,7 +216,7 @@ def send_candidate_email(application: Application, kind: str, *, actor, request=
         subject=email["subject"][:200],
         to=[application.email],
         from_email=sender(),
-        headers={"Auto-Submitted": "auto-generated"},
+        headers={"Auto-Submitted": "auto-generated", system.NOTIFICATION_HEADER: f"careers.candidate-{kind}"},
     )
     message.send(fail_silently=False)
     ApplicationEvent.objects.create(

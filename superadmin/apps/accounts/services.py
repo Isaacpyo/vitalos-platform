@@ -174,6 +174,35 @@ def setup_link(user, base_url: str, *, request=None, actor=None, reason="setup_l
 RESET_LIMIT_PER_HOUR = 3
 
 
+def password_email(link: str) -> tuple[str, dict]:
+    """Subject and layout document for the set-a-password email (also used by the email gallery)."""
+    from apps.mailer import system
+
+    subject = "Set your Vitalos Super Admin password"
+    doc = {
+        "title": subject,
+        "preheader": "Use the link within 30 minutes. It works once.",
+        "headerLabel": "Account",
+        "blocks": [
+            {"type": "heading", "text": "Set your password"},
+            {
+                "type": "text",
+                "text": "Someone asked to set a new password for this Vitalos Super Admin account.",
+            },
+            {"type": "button", "label": "Set a new password", "url": link},
+            system.link_fallback(link),
+            {"type": "details", "rows": [{"label": "Link expires", "value": "30 minutes, works once"}]},
+            {
+                "type": "text",
+                "tone": "muted",
+                "text": "If this was not you, ignore this email. Your password has not changed.",
+            },
+        ],
+        "footer": system.footer(),
+    }
+    return subject, doc
+
+
 def request_password_reset(email: str, request) -> bool:
     """Email a one-time link if ``email`` is an active account and the hourly limit allows it.
 
@@ -182,10 +211,10 @@ def request_password_reset(email: str, request) -> bool:
     from datetime import timedelta
 
     from django.conf import settings
-    from django.core.mail import send_mail
     from django.utils import timezone
 
     from apps.audit.models import AuditEvent
+    from apps.mailer import system
 
     since = timezone.now() - timedelta(hours=1)
     recent = AuditEvent.objects.filter(
@@ -196,15 +225,12 @@ def request_password_reset(email: str, request) -> bool:
     if user is None or recent >= RESET_LIMIT_PER_HOUR:
         return False
     link = setup_link(user, settings.APP_BASE_URL, request=request)
-    send_mail(
-        subject="Set your Vitalos Super Admin password",
-        message=(
-            "Someone asked to set a new password for this Vitalos Super Admin account.\n\n"
-            f"Use this link within 30 minutes. It works once:\n{link}\n\n"
-            "If this was not you, ignore this email. Your password has not changed."
-        ),
+    subject, doc = password_email(link)
+    system.send(
+        doc,
+        kind="accounts.password-link",
+        subject=subject,
+        to=[user.email],
         from_email=settings.NOTIFY_FROM_HEADER,
-        recipient_list=[user.email],
-        fail_silently=False,
     )
     return True
