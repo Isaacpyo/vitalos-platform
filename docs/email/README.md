@@ -9,7 +9,7 @@ Every email Vitalos and its products send renders on one layout: `@vitalos/email
 | `REVIEW.md`                                     | The template review checklist                                                                  |
 | `COPY-CHANGES.md`                               | Every copy change: email, field, before, after, reason                                         |
 | `REPORT.md`                                     | The audit report                                                                               |
-| `baseline/`                                     | The emails as they were sent before the audit (HTML and plain text)                            |
+| `baseline/`                                     | The emails as they were sent before the audit (`.html`, and plain text as `.text`)             |
 | `contact-sheets/before`, `contact-sheets/after` | One sheet per category, light and dark at 600px                                                |
 
 ## Commands

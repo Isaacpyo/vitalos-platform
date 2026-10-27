@@ -6,7 +6,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Welcome to Vitalos, Alex",
-    "text": "library-client-welcome.txt",
+    "text": "library-client-welcome.text",
     "html": "library-client-welcome.html"
   },
   {
@@ -16,7 +16,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Scheduling the kickoff for Example Care Group website",
-    "text": "library-kickoff-meeting-scheduling.txt",
+    "text": "library-kickoff-meeting-scheduling.text",
     "html": "library-kickoff-meeting-scheduling.html"
   },
   {
@@ -26,7 +26,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Kickoff agenda and what we need from you",
-    "text": "library-kickoff-agenda-and-preparation.txt",
+    "text": "library-kickoff-agenda-and-preparation.text",
     "html": "library-kickoff-agenda-and-preparation.html"
   },
   {
@@ -36,7 +36,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Access we need for Example Care Group website",
-    "text": "library-system-access-request.txt",
+    "text": "library-system-access-request.text",
     "html": "library-system-access-request.html"
   },
   {
@@ -46,7 +46,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Project plan for Example Care Group website",
-    "text": "library-project-plan-shared.txt",
+    "text": "library-project-plan-shared.text",
     "html": "library-project-plan-shared.html"
   },
   {
@@ -56,7 +56,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Example Care Group website: status update",
-    "text": "library-project-status-update.txt",
+    "text": "library-project-status-update.text",
     "html": "library-project-status-update.html"
   },
   {
@@ -66,7 +66,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Milestone complete: Design sign-off",
-    "text": "library-milestone-completed.txt",
+    "text": "library-milestone-completed.text",
     "html": "library-milestone-completed.html"
   },
   {
@@ -76,7 +76,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Change request CR-EXAMPLE-01 for your review",
-    "text": "library-change-request-raised.txt",
+    "text": "library-change-request-raised.text",
     "html": "library-change-request-raised.html"
   },
   {
@@ -86,7 +86,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Change CR-EXAMPLE-01 approved: next steps",
-    "text": "library-change-request-approved.txt",
+    "text": "library-change-request-approved.text",
     "html": "library-change-request-approved.html"
   },
   {
@@ -96,7 +96,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Ready for acceptance testing: Design sign-off",
-    "text": "library-uat-sign-off-request.txt",
+    "text": "library-uat-sign-off-request.text",
     "html": "library-uat-sign-off-request.html"
   },
   {
@@ -106,7 +106,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Example Care Group website is live",
-    "text": "library-go-live-announcement.txt",
+    "text": "library-go-live-announcement.text",
     "html": "library-go-live-announcement.html"
   },
   {
@@ -116,7 +116,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Handover and close for Example Care Group website",
-    "text": "library-project-handover-and-close.txt",
+    "text": "library-project-handover-and-close.text",
     "html": "library-project-handover-and-close.html"
   },
   {
@@ -126,7 +126,7 @@
     "category": "delivery",
     "state": "layout",
     "subject": "Keeping Example Care Group website healthy after handover",
-    "text": "library-support-and-maintenance-offer.txt",
+    "text": "library-support-and-maintenance-offer.text",
     "html": "library-support-and-maintenance-offer.html"
   },
   {
@@ -136,7 +136,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "New enquiry: a new website · Alex Example, Example Care Group · VIT-EXAMPLE-01",
-    "text": "library-enquiry-received.txt",
+    "text": "library-enquiry-received.text",
     "html": "library-enquiry-received.html"
   },
   {
@@ -146,7 +146,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "We have your enquiry (VIT-EXAMPLE-01)",
-    "text": "library-enquiry-acknowledgement.txt",
+    "text": "library-enquiry-acknowledgement.text",
     "html": "library-enquiry-acknowledgement.html"
   },
   {
@@ -156,7 +156,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Confirmed: our call on Thursday 29 October 2026, 10:00",
-    "text": "library-meeting-booked-confirmation.txt",
+    "text": "library-meeting-booked-confirmation.text",
     "html": "library-meeting-booked-confirmation.html"
   },
   {
@@ -166,7 +166,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Tomorrow: our call at Thursday 29 October 2026, 10:00",
-    "text": "library-meeting-reminder-24-hours.txt",
+    "text": "library-meeting-reminder-24-hours.text",
     "html": "library-meeting-reminder-24-hours.html"
   },
   {
@@ -176,7 +176,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Starting soon: our call at Thursday 29 October 2026, 10:00",
-    "text": "library-meeting-reminder-1-hour.txt",
+    "text": "library-meeting-reminder-1-hour.text",
     "html": "library-meeting-reminder-1-hour.html"
   },
   {
@@ -186,7 +186,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Our call has moved to Thursday 29 October 2026, 10:00",
-    "text": "library-meeting-rescheduled.txt",
+    "text": "library-meeting-rescheduled.text",
     "html": "library-meeting-rescheduled.html"
   },
   {
@@ -196,7 +196,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Our call on Thursday 29 October 2026, 10:00 is cancelled",
-    "text": "library-meeting-cancelled.txt",
+    "text": "library-meeting-cancelled.text",
     "html": "library-meeting-cancelled.html"
   },
   {
@@ -206,7 +206,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Sorry we missed each other, Alex",
-    "text": "library-missed-meeting-follow-up.txt",
+    "text": "library-missed-meeting-follow-up.text",
     "html": "library-missed-meeting-follow-up.html"
   },
   {
@@ -216,7 +216,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "You are invited to your Vitalos account",
-    "text": "library-user-invite.txt",
+    "text": "library-user-invite.text",
     "html": "library-user-invite.html"
   },
   {
@@ -226,7 +226,7 @@
     "category": "enquiries",
     "state": "layout",
     "subject": "Reset your Vitalos password",
-    "text": "library-password-reset.txt",
+    "text": "library-password-reset.text",
     "html": "library-password-reset.html"
   },
   {
@@ -236,7 +236,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Your quote Q-EXAMPLE-01 from Vitalos",
-    "text": "library-quote-sent.txt",
+    "text": "library-quote-sent.text",
     "html": "library-quote-sent.html"
   },
   {
@@ -246,7 +246,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Invoice INV-EXAMPLE-01 from Vitalos",
-    "text": "library-invoice-sent.txt",
+    "text": "library-invoice-sent.text",
     "html": "library-invoice-sent.html"
   },
   {
@@ -256,7 +256,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Friendly reminder: invoice INV-EXAMPLE-01",
-    "text": "library-payment-reminder-friendly.txt",
+    "text": "library-payment-reminder-friendly.text",
     "html": "library-payment-reminder-friendly.html"
   },
   {
@@ -266,7 +266,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Invoice INV-EXAMPLE-01 is now overdue",
-    "text": "library-payment-reminder-overdue.txt",
+    "text": "library-payment-reminder-overdue.text",
     "html": "library-payment-reminder-overdue.html"
   },
   {
@@ -276,7 +276,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Final notice: invoice INV-EXAMPLE-01",
-    "text": "library-payment-reminder-final-notice.txt",
+    "text": "library-payment-reminder-final-notice.text",
     "html": "library-payment-reminder-final-notice.html"
   },
   {
@@ -286,7 +286,7 @@
     "category": "finance",
     "state": "layout",
     "subject": "Payment received for invoice INV-EXAMPLE-01",
-    "text": "library-payment-received-receipt.txt",
+    "text": "library-payment-received-receipt.text",
     "html": "library-payment-received-receipt.html"
   },
   {
@@ -296,7 +296,7 @@
     "category": "internal",
     "state": "layout",
     "subject": "New lead assigned: Example Care Group",
-    "text": "library-internal-new-lead-assigned.txt",
+    "text": "library-internal-new-lead-assigned.text",
     "html": "library-internal-new-lead-assigned.html"
   },
   {
@@ -306,7 +306,7 @@
     "category": "internal",
     "state": "layout",
     "subject": "Proposal activity: Example Care Group",
-    "text": "library-internal-proposal-activity.txt",
+    "text": "library-internal-proposal-activity.text",
     "html": "library-internal-proposal-activity.html"
   },
   {
@@ -316,7 +316,7 @@
     "category": "internal",
     "state": "layout",
     "subject": "Payment received: INV-EXAMPLE-01",
-    "text": "library-internal-payment-received.txt",
+    "text": "library-internal-payment-received.text",
     "html": "library-internal-payment-received.html"
   },
   {
@@ -326,7 +326,7 @@
     "category": "internal",
     "state": "layout",
     "subject": "Task due: Send the proposal",
-    "text": "library-internal-task-due.txt",
+    "text": "library-internal-task-due.text",
     "html": "library-internal-task-due.html"
   },
   {
@@ -336,7 +336,7 @@
     "category": "marketing",
     "state": "layout",
     "subject": "Vitalos update: notes on technology and delivery",
-    "text": "library-marketing-newsletter.txt",
+    "text": "library-marketing-newsletter.text",
     "html": "library-marketing-newsletter.html"
   },
   {
@@ -346,7 +346,7 @@
     "category": "marketing",
     "state": "layout",
     "subject": "News from Vitalos: Website rebuild",
-    "text": "library-marketing-announcement.txt",
+    "text": "library-marketing-announcement.text",
     "html": "library-marketing-announcement.html"
   },
   {
@@ -356,7 +356,7 @@
     "category": "marketing",
     "state": "layout",
     "subject": "You are invited: Example event",
-    "text": "library-marketing-event-invite.txt",
+    "text": "library-marketing-event-invite.text",
     "html": "library-marketing-event-invite.html"
   },
   {
@@ -366,7 +366,7 @@
     "category": "marketing",
     "state": "layout",
     "subject": "Reminder: Example event is coming up",
-    "text": "library-marketing-event-reminder.txt",
+    "text": "library-marketing-event-reminder.text",
     "html": "library-marketing-event-reminder.html"
   },
   {
@@ -376,7 +376,7 @@
     "category": "marketing",
     "state": "layout",
     "subject": "Thank you from everyone at Vitalos",
-    "text": "library-marketing-seasonal-thanks.txt",
+    "text": "library-marketing-seasonal-thanks.text",
     "html": "library-marketing-seasonal-thanks.html"
   },
   {
@@ -386,7 +386,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "A short introduction from Vitalos",
-    "text": "library-outreach-cold-introduction.txt",
+    "text": "library-outreach-cold-introduction.text",
     "html": "library-outreach-cold-introduction.html"
   },
   {
@@ -396,7 +396,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "Following up on my note to Example Care Group",
-    "text": "library-outreach-cold-follow-up-1.txt",
+    "text": "library-outreach-cold-follow-up-1.text",
     "html": "library-outreach-cold-follow-up-1.html"
   },
   {
@@ -406,7 +406,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "A different angle for Example Care Group",
-    "text": "library-outreach-cold-follow-up-2.txt",
+    "text": "library-outreach-cold-follow-up-2.text",
     "html": "library-outreach-cold-follow-up-2.html"
   },
   {
@@ -416,7 +416,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "Closing the loop on my earlier emails",
-    "text": "library-outreach-closing-the-loop.txt",
+    "text": "library-outreach-closing-the-loop.text",
     "html": "library-outreach-closing-the-loop.html"
   },
   {
@@ -426,7 +426,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "A mutual contact suggested we speak",
-    "text": "library-outreach-warm-referral-introduction.txt",
+    "text": "library-outreach-warm-referral-introduction.text",
     "html": "library-outreach-warm-referral-introduction.html"
   },
   {
@@ -436,7 +436,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "Exploring a partnership with Example Care Group",
-    "text": "library-outreach-partner-alliance.txt",
+    "text": "library-outreach-partner-alliance.text",
     "html": "library-outreach-partner-alliance.html"
   },
   {
@@ -446,7 +446,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "Good to meet you at Example event",
-    "text": "library-outreach-event-meeting-follow-up.txt",
+    "text": "library-outreach-event-meeting-follow-up.text",
     "html": "library-outreach-event-meeting-follow-up.html"
   },
   {
@@ -456,7 +456,7 @@
     "category": "outreach",
     "state": "layout",
     "subject": "Thanks for connecting on LinkedIn",
-    "text": "library-outreach-linkedin-connection-follow-up.txt",
+    "text": "library-outreach-linkedin-connection-follow-up.text",
     "html": "library-outreach-linkedin-connection-follow-up.html"
   },
   {
@@ -466,7 +466,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "How did we do on Example Care Group website?",
-    "text": "library-client-feedback-survey.txt",
+    "text": "library-client-feedback-survey.text",
     "html": "library-client-feedback-survey.html"
   },
   {
@@ -476,7 +476,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "Would you share a few words about our work?",
-    "text": "library-testimonial-case-study-request.txt",
+    "text": "library-testimonial-case-study-request.text",
     "html": "library-testimonial-case-study-request.html"
   },
   {
@@ -486,7 +486,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "Do you know someone we could help?",
-    "text": "library-client-referral-request.txt",
+    "text": "library-client-referral-request.text",
     "html": "library-client-referral-request.html"
   },
   {
@@ -496,7 +496,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "Your agreement is due for renewal on 1 January 2027",
-    "text": "library-contract-renewal-reminder.txt",
+    "text": "library-contract-renewal-reminder.text",
     "html": "library-contract-renewal-reminder.html"
   },
   {
@@ -506,7 +506,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "Closing our agreement: next steps",
-    "text": "library-contract-ending-offboarding.txt",
+    "text": "library-contract-ending-offboarding.text",
     "html": "library-contract-ending-offboarding.html"
   },
   {
@@ -516,7 +516,7 @@
     "category": "retention",
     "state": "layout",
     "subject": "A note of thanks, Alex",
-    "text": "library-client-thank-you-anniversary.txt",
+    "text": "library-client-thank-you-anniversary.text",
     "html": "library-client-thank-you-anniversary.html"
   },
   {
@@ -526,7 +526,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Your enquiry: a few thoughts and next steps",
-    "text": "library-new-lead-first-response.txt",
+    "text": "library-new-lead-first-response.text",
     "html": "library-new-lead-first-response.html"
   },
   {
@@ -536,7 +536,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "An invitation to a discovery call",
-    "text": "library-discovery-call-invite.txt",
+    "text": "library-discovery-call-invite.text",
     "html": "library-discovery-call-invite.html"
   },
   {
@@ -546,7 +546,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Summary of our discovery call and next steps",
-    "text": "library-discovery-call-summary.txt",
+    "text": "library-discovery-call-summary.text",
     "html": "library-discovery-call-summary.html"
   },
   {
@@ -556,7 +556,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "A short questionnaire to shape our proposal",
-    "text": "library-requirements-questionnaire-request.txt",
+    "text": "library-requirements-questionnaire-request.text",
     "html": "library-requirements-questionnaire-request.html"
   },
   {
@@ -566,7 +566,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "An NDA for your review before we go further",
-    "text": "library-nda-request.txt",
+    "text": "library-nda-request.text",
     "html": "library-nda-request.html"
   },
   {
@@ -576,7 +576,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Our proposal for Example Care Group",
-    "text": "library-proposal-sent.txt",
+    "text": "library-proposal-sent.text",
     "html": "library-proposal-sent.html"
   },
   {
@@ -586,7 +586,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Any early questions on our proposal?",
-    "text": "library-proposal-follow-up-day-3.txt",
+    "text": "library-proposal-follow-up-day-3.text",
     "html": "library-proposal-follow-up-day-3.html"
   },
   {
@@ -596,7 +596,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Checking in on our proposal",
-    "text": "library-proposal-follow-up-day-7.txt",
+    "text": "library-proposal-follow-up-day-7.text",
     "html": "library-proposal-follow-up-day-7.html"
   },
   {
@@ -606,7 +606,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Revised proposal for Example Care Group",
-    "text": "library-revised-proposal.txt",
+    "text": "library-revised-proposal.text",
     "html": "library-revised-proposal.html"
   },
   {
@@ -616,7 +616,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Thank you for choosing Vitalos",
-    "text": "library-proposal-accepted-thank-you.txt",
+    "text": "library-proposal-accepted-thank-you.text",
     "html": "library-proposal-accepted-thank-you.html"
   },
   {
@@ -626,7 +626,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Ready for signature: Example Care Group website",
-    "text": "library-contract-sent-for-signature.txt",
+    "text": "library-contract-sent-for-signature.text",
     "html": "library-contract-sent-for-signature.html"
   },
   {
@@ -636,7 +636,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Signed and confirmed: Example Care Group website",
-    "text": "library-contract-signed-confirmation.txt",
+    "text": "library-contract-signed-confirmation.text",
     "html": "library-contract-signed-confirmation.html"
   },
   {
@@ -646,7 +646,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Thank you for considering Vitalos",
-    "text": "library-closed-lost-polite-close.txt",
+    "text": "library-closed-lost-polite-close.text",
     "html": "library-closed-lost-polite-close.html"
   },
   {
@@ -656,7 +656,7 @@
     "category": "sales",
     "state": "layout",
     "subject": "Picking up where we left off",
-    "text": "library-dormant-lead-re-engagement.txt",
+    "text": "library-dormant-lead-re-engagement.text",
     "html": "library-dormant-lead-re-engagement.html"
   },
   {
@@ -666,7 +666,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Vitalos Consulting: clarity before costly execution",
-    "text": "library-service-intro-consulting.txt",
+    "text": "library-service-intro-consulting.text",
     "html": "library-service-intro-consulting.html"
   },
   {
@@ -676,7 +676,7 @@
     "category": "service",
     "state": "layout",
     "subject": "A consulting case study you may find useful",
-    "text": "library-service-case-study-consulting.txt",
+    "text": "library-service-case-study-consulting.text",
     "html": "library-service-case-study-consulting.html"
   },
   {
@@ -686,7 +686,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Your Vitalos Consulting enquiry: next steps",
-    "text": "library-service-follow-up-consulting.txt",
+    "text": "library-service-follow-up-consulting.text",
     "html": "library-service-follow-up-consulting.html"
   },
   {
@@ -696,7 +696,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Vitalos Engineering: dependable production software",
-    "text": "library-service-intro-engineering.txt",
+    "text": "library-service-intro-engineering.text",
     "html": "library-service-intro-engineering.html"
   },
   {
@@ -706,7 +706,7 @@
     "category": "service",
     "state": "layout",
     "subject": "An engineering case study you may find useful",
-    "text": "library-service-case-study-engineering.txt",
+    "text": "library-service-case-study-engineering.text",
     "html": "library-service-case-study-engineering.html"
   },
   {
@@ -716,7 +716,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Your Vitalos Engineering enquiry: next steps",
-    "text": "library-service-follow-up-engineering.txt",
+    "text": "library-service-follow-up-engineering.text",
     "html": "library-service-follow-up-engineering.html"
   },
   {
@@ -726,7 +726,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Vitalos AI & Data: from opportunity to production",
-    "text": "library-service-intro-ai-data.txt",
+    "text": "library-service-intro-ai-data.text",
     "html": "library-service-intro-ai-data.html"
   },
   {
@@ -736,7 +736,7 @@
     "category": "service",
     "state": "layout",
     "subject": "An AI and data case study you may find useful",
-    "text": "library-service-case-study-ai-data.txt",
+    "text": "library-service-case-study-ai-data.text",
     "html": "library-service-case-study-ai-data.html"
   },
   {
@@ -746,7 +746,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Your Vitalos AI & Data enquiry: next steps",
-    "text": "library-service-follow-up-ai-data.txt",
+    "text": "library-service-follow-up-ai-data.text",
     "html": "library-service-follow-up-ai-data.html"
   },
   {
@@ -756,7 +756,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Vitalos Experience: products people find easy to use",
-    "text": "library-service-intro-experience.txt",
+    "text": "library-service-intro-experience.text",
     "html": "library-service-intro-experience.html"
   },
   {
@@ -766,7 +766,7 @@
     "category": "service",
     "state": "layout",
     "subject": "A digital experience case study you may find useful",
-    "text": "library-service-case-study-experience.txt",
+    "text": "library-service-case-study-experience.text",
     "html": "library-service-case-study-experience.html"
   },
   {
@@ -776,7 +776,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Your Vitalos Experience enquiry: next steps",
-    "text": "library-service-follow-up-experience.txt",
+    "text": "library-service-follow-up-experience.text",
     "html": "library-service-follow-up-experience.html"
   },
   {
@@ -786,7 +786,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Vitalos Managed Services: steady, supported systems",
-    "text": "library-service-intro-managed-services.txt",
+    "text": "library-service-intro-managed-services.text",
     "html": "library-service-intro-managed-services.html"
   },
   {
@@ -796,7 +796,7 @@
     "category": "service",
     "state": "layout",
     "subject": "A managed services case study you may find useful",
-    "text": "library-service-case-study-managed-services.txt",
+    "text": "library-service-case-study-managed-services.text",
     "html": "library-service-case-study-managed-services.html"
   },
   {
@@ -806,7 +806,7 @@
     "category": "service",
     "state": "layout",
     "subject": "Your Vitalos Managed Services enquiry: next steps",
-    "text": "library-service-follow-up-managed-services.txt",
+    "text": "library-service-follow-up-managed-services.text",
     "html": "library-service-follow-up-managed-services.html"
   },
   {
@@ -816,7 +816,7 @@
     "category": "enquiries-system",
     "state": "plain-text",
     "subject": "New enquiry: VIT-0001 Website rebuild for our care homes",
-    "text": "enquiry-alert-single.txt"
+    "text": "enquiry-alert-single.text"
   },
   {
     "slug": "enquiry-alert-several",
@@ -825,7 +825,7 @@
     "category": "enquiries-system",
     "state": "plain-text",
     "subject": "3 enquiry updates",
-    "text": "enquiry-alert-several.txt"
+    "text": "enquiry-alert-several.text"
   },
   {
     "slug": "enquiry-digest",
@@ -834,7 +834,7 @@
     "category": "enquiries-system",
     "state": "plain-text",
     "subject": "Enquiries digest: 3 updates",
-    "text": "enquiry-digest.txt"
+    "text": "enquiry-digest.text"
   },
   {
     "slug": "account-password-link",
@@ -843,7 +843,7 @@
     "category": "account",
     "state": "plain-text",
     "subject": "Set your Vitalos Super Admin password",
-    "text": "account-password-link.txt"
+    "text": "account-password-link.text"
   },
   {
     "slug": "inbox-reply",
@@ -852,7 +852,7 @@
     "category": "enquiries-system",
     "state": "bare-html",
     "subject": "Re: Website rebuild for our care homes [VIT-0001]",
-    "text": "inbox-reply.txt",
+    "text": "inbox-reply.text",
     "html": "inbox-reply.html"
   },
   {
@@ -862,6 +862,6 @@
     "category": "careers",
     "state": "plain-text",
     "subject": "2 new applications: Example role",
-    "text": "careers-hiring-alert.txt"
+    "text": "careers-hiring-alert.text"
   }
 ]
