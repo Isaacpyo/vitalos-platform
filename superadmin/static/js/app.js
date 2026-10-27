@@ -493,6 +493,13 @@
     field.dispatchEvent(new Event("input", { bubbles: true }));
   });
 
+  // Plain form posts that need a confirm (no inline handlers: the CSP allows only nonced scripts).
+  document.addEventListener("submit", function (event) {
+    var form = event.target;
+    var message = form.getAttribute && form.getAttribute("data-confirm");
+    if (message && !window.confirm(message)) event.preventDefault();
+  });
+
   // Use template: confirm a send with the recipient as typed now (the panel may not have caught up yet).
   document.addEventListener("htmx:confirm", function (event) {
     var button = event.target;

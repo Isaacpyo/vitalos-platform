@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "apps.architecture",
     "apps.enquiries",
     "apps.email_templates",
+    "apps.outreach",
     "apps.relay",
     "apps.products",
     "apps.api",

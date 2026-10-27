@@ -17,3 +17,5 @@ python-json-logger>=3
 sentry-sdk
 nh3
 django-storages[s3]
+openpyxl
+defusedxml

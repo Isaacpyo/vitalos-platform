@@ -406,6 +406,11 @@ def _use_render(template: EmailTemplate, values: Mapping[str, str], recipient: s
     )
 
 
+def render_for(template: EmailTemplate, values: Mapping[str, str], recipient: str) -> UsePackage:
+    """The template rendered for one recipient, with their signed unsubscribe link (Mail > Outreach)."""
+    return _use_render(template, values, recipient)
+
+
 def preview_use(
     template: EmailTemplate, *, user, values: Mapping[str, str], recipient: str = ""
 ) -> UsePackage:
