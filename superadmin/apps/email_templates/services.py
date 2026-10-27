@@ -30,6 +30,7 @@ from .models import (
     Kind,
     ManagedBy,
     Status,
+    content_hash,
 )
 from .rendering import RenderedTemplate, preview_html, render_content, sample_values, unsubscribe_url
 from .variables import VARIABLES, Variable, names_in
@@ -52,6 +53,8 @@ BLOCK_TYPES = (
 )
 TEST_DOMAIN = "@vitalos.co.uk"
 TEST_SENDS_PER_HOUR = 10
+SEEDED_NOTE = "Seeded from the repository"
+UPDATED_NOTE = "Updated from the repository (email review, Oct 2026)"
 
 
 def require_superadmin(user) -> None:
@@ -520,9 +523,80 @@ def seed_library(user=None) -> int:
             value = item.get(name)
             setattr(template, name, value if value is not None else "")
         template.blocks = item.get("blocks", [])
+        template.seed_hash = content_hash(template.content())
         template.save()
-        _snapshot(template, user=user, note="Seeded from the repository")
+        _snapshot(template, user=user, note=SEEDED_NOTE)
         created += 1
     if created:
         record("email_templates.seeded", actor=user, summary=f"{created} templates")
     return created
+
+
+def _seed_content(item: dict) -> dict:
+    """A seed item's content fields as ``seed_library`` stores them."""
+    content = {name: item.get(name) if item.get(name) is not None else "" for name in CONTENT_FIELDS}
+    content["blocks"] = item.get("blocks", [])
+    return content
+
+
+@dataclass
+class SeedUpdate:
+    created: int = 0
+    updated: list[str] = field(default_factory=list)
+    unchanged: int = 0
+    #: Edited in the admin (or not from the seed): never overwritten.
+    skipped: list[str] = field(default_factory=list)
+
+
+@transaction.atomic
+def update_seeded_templates(*, dry_run: bool = False, user=None) -> SeedUpdate:
+    """Bring unedited seeded templates up to date with the seed files, and create missing ones.
+
+    A template is updated only while its content hash equals its ``seed_hash``, so nobody has changed it
+    in the admin. Each update writes a version snapshot and moves ``seed_hash``; ``status`` is unchanged.
+    """
+    items = load_seed()
+    problems = seed_problems(items)
+    if problems:
+        raise ValidationError(problems)
+    result = SeedUpdate()
+    existing = {template.key: template for template in EmailTemplate.objects.select_for_update()}
+    for item in items:
+        template = existing.get(item["key"])
+        if template is None:
+            result.created += 1
+            continue
+        new = _seed_content(item)
+        new_hash = content_hash(new)
+        if (
+            not template.seeded
+            or not template.seed_hash
+            or content_hash(template.content()) != template.seed_hash
+        ):
+            if content_hash(template.content()) != new_hash:
+                result.skipped.append(template.key)
+            else:
+                result.unchanged += 1
+            continue
+        if new_hash == template.seed_hash:
+            result.unchanged += 1
+            continue
+        result.updated.append(template.key)
+        if dry_run:
+            continue
+        for name, value in new.items():
+            setattr(template, name, value)
+        template.version += 1
+        template.seed_hash = new_hash
+        template.updated_by = user
+        template.save()
+        _snapshot(template, user=user, note=UPDATED_NOTE)
+    if not dry_run:
+        result.created = seed_library(user)
+        if result.updated:
+            record(
+                "email_templates.seed_updated",
+                actor=user,
+                summary=f"{len(result.updated)} templates updated from the repository",
+            )
+    return result

@@ -1,5 +1,8 @@
 """Email templates: the branded library under Mail, with version history and an opt-out list."""
 
+import hashlib
+import json
+
 from django.conf import settings
 from django.db import models
 
@@ -53,6 +56,15 @@ CONTENT_FIELDS = (
 )
 
 
+def content_hash(content: dict) -> str:
+    """A stable hash of a template's content fields (``CONTENT_FIELDS``), for telling whether it was edited."""
+    canonical = {name: content.get(name) if content.get(name) is not None else "" for name in CONTENT_FIELDS}
+    if canonical["blocks"] == "":
+        canonical["blocks"] = []
+    raw = json.dumps(canonical, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 class EmailTemplate(models.Model):
     key = models.SlugField(max_length=100, unique=True)
     name = models.CharField(max_length=120)
@@ -73,6 +85,9 @@ class EmailTemplate(models.Model):
     blocks = models.JSONField(default=list, blank=True)
     managed_by = models.CharField(max_length=10, choices=ManagedBy.choices, default=ManagedBy.LIBRARY)
     seeded = models.BooleanField(default=False)
+    # Hash of the content last loaded from the repository's seed files. While the template's own
+    # content hash still equals it, nobody has edited it in the admin and a reviewed seed may update it.
+    seed_hash = models.CharField(max_length=64, blank=True)
     version = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

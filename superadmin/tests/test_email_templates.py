@@ -822,3 +822,88 @@ def test_email_gallery_renders_every_email_without_storing_anything(library, tmp
     assert "cid:" not in page and "../assets/vitalos-logo-white.png" in page
     assert "@media all{" in (tmp_path / "emails" / "enquiry-alert-single.dark.html").read_text()
     assert 'data-filter="repo"' in (tmp_path / "index.html").read_text()
+
+
+# --- Reviewed seed content reaches existing templates (update_seeded_templates) ----------------------
+
+
+def _seed_with(monkeypatch, key, **changes):
+    items = services.load_seed()
+    for item in items:
+        if item["key"] == key:
+            item.update(changes)
+    monkeypatch.setattr(services, "load_seed", lambda: items)
+    return items
+
+
+def test_seed_hash_is_set_when_seeding(library):
+    from apps.email_templates.models import content_hash
+
+    template = _template()
+    assert template.seed_hash and template.seed_hash == content_hash(template.content())
+
+
+def test_unedited_templates_are_updated_with_a_version_and_keep_their_status(library, monkeypatch):
+    template = _template()
+    template.status = Status.ACTIVE
+    template.save()
+    _seed_with(monkeypatch, "proposal-sent", subject="Your proposal for {{project_name}} is ready")
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 1, create 0, 80 unchanged, 0 skipped" in out.getvalue()
+    template = _template()
+    assert template.subject == "Your proposal for {{project_name}} is ready"
+    assert template.status == Status.ACTIVE and template.version == 2
+    assert template.versions.first().note == "Updated from the repository (email review, Oct 2026)"
+    assert AuditEvent.objects.filter(action="email_templates.seed_updated").exists()
+    # Idempotent: a second run changes nothing.
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 0, create 0, 81 unchanged" in out.getvalue() and _template().version == 2
+
+
+def test_templates_edited_in_the_admin_are_skipped_and_listed(library, monkeypatch, superadmin):
+    template = _template()
+    services.update_template(
+        template,
+        content={**template.content(), "subject": "Edited by a person"},
+        status="draft",
+        user=superadmin,
+    )
+    _seed_with(monkeypatch, "proposal-sent", subject="Reviewed in the repository")
+    out = io.StringIO()
+    call_command("update_seeded_templates", stdout=out)
+    assert "update 0, create 0, 80 unchanged, 1 skipped" in out.getvalue()
+    assert "skipped: proposal-sent" in out.getvalue()
+    assert _template().subject == "Edited by a person"
+
+
+def test_new_seed_templates_are_created_and_dry_run_writes_nothing(library, monkeypatch):
+    items = _seed_with(monkeypatch, "proposal-sent", subject="Reviewed in the repository")
+    items.append({**items[0], "key": "brand-new-template", "name": "Brand new"})
+    out = io.StringIO()
+    call_command("update_seeded_templates", "--dry-run", stdout=out)
+    assert "Dry run: would update 1, Dry run: would create 1" in out.getvalue()
+    assert not EmailTemplate.objects.filter(key="brand-new-template").exists()
+    assert _template().version == 1
+    call_command("update_seeded_templates", stdout=io.StringIO())
+    created = EmailTemplate.objects.get(key="brand-new-template")
+    assert created.seeded and created.status == Status.DRAFT and created.seed_hash
+
+
+def test_seed_hash_backfill_reads_the_seeded_snapshot(library):
+    import importlib
+
+    from django.apps import apps as django_apps
+
+    migration = importlib.import_module("apps.email_templates.migrations.0002_seed_hash")
+    EmailTemplate.objects.update(seed_hash="")
+    edited = _template()
+    edited.subject = "Edited later"
+    edited.save()
+    migration.backfill(django_apps, None)
+    from apps.email_templates.models import content_hash
+
+    edited = _template()
+    assert edited.seed_hash == content_hash(edited.versions.get(number=1).content)
+    assert edited.seed_hash != content_hash(edited.content())  # so the update command will skip it
