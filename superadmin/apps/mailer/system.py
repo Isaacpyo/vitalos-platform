@@ -35,7 +35,11 @@ def footer(notice: str = "") -> dict:
 
 def link_fallback(url: str) -> dict:
     """A muted line under a button, for clients that do not show the button."""
-    return {"type": "text", "tone": "muted", "text": f"If the button does not work, open this link: {url}"}
+    return {
+        "type": "text",
+        "tone": "muted",
+        "text": f"If the button does not work, copy this link into your browser: {url}",
+    }
 
 
 def message(

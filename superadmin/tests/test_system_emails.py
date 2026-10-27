@@ -24,7 +24,10 @@ def test_password_email_is_on_the_layout(make_user, mailoutbox, reset_ready):
     assert "30 minutes, works once" in html and "If this was not you" in html
     link = next(line for line in sent.body.splitlines() if line.startswith("Set a new password: "))
     assert link.startswith("Set a new password: https://admin.example.test/account/set-password/")
-    assert "If the button does not work, open this link: https://admin.example.test/" in sent.body
+    assert (
+        "If the button does not work, copy this link into your browser: https://admin.example.test/"
+        in sent.body
+    )
     assert all(part.get_content_disposition() == "inline" for part in sent.attachments)
 
 
@@ -54,7 +57,7 @@ def test_careers_alert_lists_each_application_and_flags_duplicates(db, settings)
     text = layout.render_email(doc).text
     assert "Alex Example\nReceived " in text and "[Possible duplicate] Sam Example" in text
     assert f"https://admin.example.test/careers/applications/{rows[0].pk}/" in text
-    assert "Open applications: https://admin.example.test/careers/applications/" in text
+    assert "Review applications: https://admin.example.test/careers/applications/" in text
 
 
 def test_inline_images_and_files_nest_as_mixed_related_alternative(db):

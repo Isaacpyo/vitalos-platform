@@ -92,15 +92,17 @@ def alert_email(rows, role_title: str) -> tuple[str, dict]:
     ]
     doc = {
         "title": subject,
-        "preheader": f"Open {'it' if len(rows) == 1 else 'them'} in the Super Admin to review.",
+        "preheader": f"Review {'it' if len(rows) == 1 else 'them'} in the Super Admin.",
         "headerLabel": "Careers",
         "blocks": [
             {"type": "heading", "text": subject},
             {"type": "items", "items": items},
-            {"type": "button", "label": "Open applications", "url": url},
+            {"type": "button", "label": "Review applications", "url": url},
             system.link_fallback(url),
         ],
-        "footer": system.footer("You get this because you are on the careers notification list."),
+        "footer": system.footer(
+            "You get this as a careers notification recipient. Change who gets these emails in Careers › Settings."
+        ),
     }
     return subject, doc
 

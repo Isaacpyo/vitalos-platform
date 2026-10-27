@@ -94,7 +94,7 @@ def test_new_enquiry_goes_to_the_owner_at_once(owner, colleague, mailoutbox):
     # Only the layout's inline images: no file attachments.
     assert sent.attachments and all(part.get_content_disposition() == "inline" for part in sent.attachments)
     html = sent.alternatives[0][0]
-    assert "New enquiry: VIT-0001" in html and ">Open enquiry</a>" in html
+    assert "New enquiry: VIT-0001" in html and ">Open the enquiry</a>" in html
     assert "Change these emails in Enquiries › Notification settings." in html
     assert sent.body.startswith("VITALOS · ENQUIRIES")
     assert "VIT-0001" in sent.subject
@@ -205,7 +205,7 @@ def test_digest_goes_once_a_day_from_eight(owner, mailoutbox):
     assert notifications.send_digests(datetime(2026, 10, 12, 7, 59, tzinfo=LONDON)) == 0
     assert notifications.send_digests(datetime(2026, 10, 12, 8, 0, tzinfo=LONDON)) == 1
     assert mailoutbox[0].subject.startswith("Enquiries digest")
-    assert "Enquiries digest, " in mailoutbox[0].alternatives[0][0]
+    assert "Daily enquiries digest, " in mailoutbox[0].alternatives[0][0]
     assert mailoutbox[0].extra_headers["X-Vitalos-Notification"] == "enquiries.digest"
     assert mailoutbox[0].extra_headers["Auto-Submitted"] == "auto-generated"
     _row(owner, enquiry, datetime(2026, 10, 12, 9, 0, tzinfo=LONDON), mode=DIGEST)

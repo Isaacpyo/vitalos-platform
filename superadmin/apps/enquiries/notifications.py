@@ -254,7 +254,7 @@ def _single_document(row) -> dict:
                     {"label": "Channel", "value": channel},
                 ],
             },
-            {"type": "button", "label": "Open enquiry", "url": url},
+            {"type": "button", "label": "Open the enquiry", "url": url},
             system.link_fallback(url),
         ],
         "footer": system.footer(SETTINGS_NOTICE),
@@ -298,7 +298,7 @@ def build_email(rows, *, digest: bool, now=None) -> tuple[str, dict]:
     if digest:
         day = date_format(timezone.localtime(now or timezone.now()), "j F Y")
         subject = f"Enquiries digest: {len(rows)} update{'s' if len(rows) != 1 else ''}"
-        return subject, _list_document(rows, f"Enquiries digest, {day}")
+        return subject, _list_document(rows, f"Daily enquiries digest, {day}")
     if len(rows) == 1:
         row = rows[0]
         subject = f"{TITLES[row.event]}: {row.enquiry.ref} {row.enquiry.subject or ''}".strip()

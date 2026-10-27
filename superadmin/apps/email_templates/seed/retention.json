@@ -7,11 +7,12 @@
     "description": "Sent after a project or milestone closes to ask the client for candid feedback and a recommendation score.",
     "header_label": "Feedback",
     "subject": "How did we do on {{project_name}}?",
-    "preheader": "A short survey that takes a few minutes. Honest answers are the most useful.",
+    "preheader": "A short survey on what worked and what did not. Honest answers help us most.",
     "reason": null,
     "blocks": [
-      { "type": "text", "text": "Hi {{first_name}},\n\nNow that {{project_name}} has wrapped up, I would value your view on how we did: what worked, what did not, and how likely you would be to recommend Vitalos to a colleague.\n\nThe survey is short. Candid feedback is the most useful kind, including anything we could have done better, and it directly shapes how we work with {{organisation}} and others.\n\nYour responses are used only to improve our work and will not be published without your permission." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nNow that {{project_name}} has finished, I would value your view of how we did: what worked, what did not, and how likely you would be to recommend Vitalos to a colleague.\n\nThe survey is short. Candid answers help us most, including anything we could have done better, and they shape how we work with {{organisation}} and others." },
       { "type": "button", "label": "Share your feedback", "url": "{{action_link}}" },
+      { "type": "text", "text": "We use your answers only to improve our work, and we will not publish them without your permission." },
       { "type": "signature" }
     ]
   },
@@ -26,7 +27,8 @@
     "preheader": "Only if you are comfortable. Nothing is published without your written approval.",
     "reason": null,
     "blocks": [
-      { "type": "text", "text": "Hi {{first_name}},\n\nI hope {{project_name}} continues to serve {{organisation}} well. If you were happy with how we worked together, would you be willing to provide a short testimonial, or help us write a case study about the project?\n\nIt could be a few sentences in your own words, or a short conversation that we turn into a draft for you to edit.\n\nNothing will be published without your written approval of the final wording, including how {{organisation}} and any individuals are named. You can ask us to keep it anonymous, or simply decline; either is completely fine.\n\nIf you are open to it, just reply to this email." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nI hope {{project_name}} continues to serve {{organisation}} well. If you were happy with how we worked together, would you give us a short testimonial, or help us write a case study about the project?\n\nIt could be a few sentences in your own words, or a short conversation that we turn into a draft for you to edit.\n\nNothing will be published without your written approval of the final wording, including how {{organisation}} and any individuals are named. You can ask us to keep it anonymous, or decline; either is fine." },
+      { "type": "text", "text": "If you are open to it, just reply to this email." },
       { "type": "signature" }
     ]
   },
@@ -34,14 +36,15 @@
     "key": "client-referral-request",
     "name": "Referral request",
     "category": "retention",
-    "kind": "transactional",
+    "kind": "marketing",
     "description": "Sent to an existing or recent client to ask, without pressure, whether they know someone we could help.",
     "header_label": "Introductions",
     "subject": "Do you know someone we could help?",
     "preheader": "Only if a colleague or contact has a challenge we are well placed to support.",
-    "reason": null,
+    "reason": "You are receiving this because you have worked with Vitalos.",
     "blocks": [
-      { "type": "text", "text": "Hi {{first_name}},\n\nThank you again for working with us on {{project_name}}. Introductions from people who have seen how we work first-hand mean a great deal to us.\n\nIf you know a colleague or contact facing a challenge in technology strategy, software engineering, AI and data, digital experience or ongoing support, I would be grateful for an introduction. A short email connecting us is plenty. We will take it from there with care, and we will not add anyone to a mailing list.\n\nThere is no expectation at all, and thank you for considering it." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nThank you again for working with us on {{project_name}}. Introductions from people who have seen our work first-hand mean a great deal to us.\n\nIf you know a colleague or contact facing a challenge in technology strategy, software engineering, AI and data, digital experience or ongoing support, I would be grateful for an introduction. A short email connecting us is enough. We will take it from there with care, and we will not add anyone to a mailing list." },
+      { "type": "text", "text": "There is no expectation, and thank you for considering it." },
       { "type": "signature" }
     ]
   },
@@ -56,9 +59,10 @@
     "preheader": "A chance to review what is working and agree any changes beforehand.",
     "reason": null,
     "blocks": [
-      { "type": "text", "text": "Hi {{first_name}},\n\nYour current agreement with Vitalos for {{service}} is due for renewal on {{renewal_date}}. Before then, it would be useful to review how things are going and whether the scope still fits the priorities of {{organisation}}.\n\nIn a short review we can:\n- look back at what has been delivered\n- discuss what is changing in your organisation\n- agree any adjustments before renewal\n\nIf you would like to make changes, or decide not to renew, please let us know before the renewal date so we can plan accordingly." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nYour agreement with Vitalos for {{service}} is due for renewal on {{renewal_date}}. Before then, it would help to review how things are going and whether the scope still fits the priorities of {{organisation}}.\n\nIn a short review we can:\n- look back at what has been delivered\n- discuss what is changing in your organisation\n- agree any changes before renewal" },
       { "type": "details", "rows": [["Agreement", "{{service}}"], ["Renewal date", "{{renewal_date}}"]] },
       { "type": "button", "label": "Book a review", "url": "{{action_link}}" },
+      { "type": "text", "text": "If you would like to make changes, or decide not to renew, please tell us before the renewal date so we can plan." },
       { "type": "signature" }
     ]
   },
@@ -74,8 +78,9 @@
     "reason": null,
     "blocks": [
       { "type": "heading", "text": "Thank you, {{first_name}}" },
-      { "type": "text", "text": "As agreed, our engagement with {{organisation}} for {{service}} is coming to an end. Thank you for the trust you have placed in us.\n\nTo make the transition clean, we will work with you on:\n- handover of documentation, knowledge and open items\n- return or deletion of any data we hold, as you instruct\n- removal of all Vitalos access to your systems, which we recommend your team confirms\n\nThe linked plan sets out the steps and timing. Please review it and tell us who should be our contact for offboarding. If your needs change in future, we would be glad to hear from you." },
-      { "type": "button", "label": "View offboarding plan", "url": "{{document_link}}" },
+      { "type": "text", "text": "As agreed, our engagement with {{organisation}} for {{service}} is coming to an end. We are grateful for the trust you have placed in us.\n\nTo make the transition clean, we will work with you on:\n- handover of documentation, knowledge and open items\n- return or deletion of any data we hold, as you instruct\n- removal of all Vitalos access to your systems, which we recommend your team confirms\n\nThe linked plan sets out the steps and timing. Please review it and tell us who should be our contact for offboarding." },
+      { "type": "button", "label": "Review the offboarding plan", "url": "{{document_link}}" },
+      { "type": "text", "text": "If your needs change in future, we would be glad to hear from you." },
       { "type": "signature" }
     ]
   },
@@ -86,12 +91,12 @@
     "kind": "transactional",
     "description": "Sent on a project anniversary or after a significant piece of work to thank the client, with no sales ask.",
     "header_label": "Thank you",
-    "subject": "A note of thanks, {{first_name}}",
+    "subject": "A note of thanks",
     "preheader": "Marking the anniversary of {{project_name}}, with no agenda attached.",
     "reason": null,
     "blocks": [
       { "type": "heading", "text": "Looking back with thanks" },
-      { "type": "text", "text": "Hi {{first_name}},\n\nIt is the anniversary of when we began working together on {{project_name}}, and I wanted to take a moment to say thank you. Work like this depends on the people on your side as much as on ours, and your team's openness and clear decisions made it better.\n\nI hope it continues to serve {{organisation}} well. If there is anything you would like us to look at, or you would simply like to share how things have gone since, I would be glad to hear from you. Otherwise, this email needs no reply." },
+      { "type": "text", "text": "Hi {{first_name}},\n\nIt is the anniversary of the start of our work together on {{project_name}}, and I wanted to say thank you. Work like this depends on the people on your side as much as on ours.\n\nI hope it continues to serve {{organisation}} well. If you would like to tell us how things have gone since, I would be glad to hear from you. Otherwise, this email needs no reply." },
       { "type": "signature" }
     ]
   }
