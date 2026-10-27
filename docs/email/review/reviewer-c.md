@@ -4,13 +4,13 @@
 
 ## Results
 
-| Check | Before | After |
-|---|---|---|
-| `review_email_templates --category retention --category marketing` | 11 templates, 0 seed problems, 0 review findings | 11 templates, 0 seed problems, 0 review findings |
-| Label notes from the command | retention and marketing each use several labels | unchanged, on purpose (see below) |
-| Templates changed | | retention 6 of 6, marketing 5 of 5 |
-| Moved emails changed | | Functions edited: `link_fallback`, `_single_document`, `build_email` (digest heading), `alert_email`. Unchanged: `_list_document`, `SETTINGS_NOTICE`, `password_email`, `reply_document`. Emails affected: 5 of 6 (all but the inbox reply, some only through `link_fallback`) |
-| Super Admin tests | | 821 passed, 1 skipped (PostgreSQL only) |
+| Check                                                              | Before                                           | After                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review_email_templates --category retention --category marketing` | 11 templates, 0 seed problems, 0 review findings | 11 templates, 0 seed problems, 0 review findings                                                                                                                                                                                                                               |
+| Label notes from the command                                       | retention and marketing each use several labels  | unchanged, on purpose (see below)                                                                                                                                                                                                                                              |
+| Templates changed                                                  |                                                  | retention 6 of 6, marketing 5 of 5                                                                                                                                                                                                                                             |
+| Moved emails changed                                               |                                                  | Functions edited: `link_fallback`, `_single_document`, `build_email` (digest heading), `alert_email`. Unchanged: `_list_document`, `SETTINGS_NOTICE`, `password_email`, `reply_document`. Emails affected: 5 of 6 (all but the inbox reply, some only through `link_fallback`) |
+| Super Admin tests                                                  |                                                  | 821 passed, 1 skipped (PostgreSQL only)                                                                                                                                                                                                                                        |
 
 The command's mechanical rules already passed, so most changes come from the person-checked rules: category block order, PECR kind and reason lines, fallbacks that read badly, claims no source supports, and plain text.
 

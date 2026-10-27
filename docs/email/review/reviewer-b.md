@@ -50,10 +50,10 @@ None were added: no new copy needs a fact the sources do not give. Two existing 
 
 Listed only; nothing was archived, deleted or merged.
 
-| Template(s) | Reason | Suggestion |
-|---|---|---|
+| Template(s)                                                                                                | Reason                                                                                                                           | Suggestion                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `client-welcome` (delivery), with `proposal-accepted-thank-you` and `contract-signed-confirmation` (sales) | Three emails sent around signature each set out "what happens before kickoff". A client who signs may get all three within days. | Owner to choose the sequence. If the welcome is kept as the hand-off to the delivery lead, cut the next-steps lists from the sales emails, or retire `proposal-accepted-thank-you`. |
-| `service-case-study-consulting`, `-engineering`, `-ai-data`, `-experience`, `-managed-services` | Near-identical copy with only the practice word changed. | Optional: keep one generic case-study share using `{{service}}` and retire four. The reason lines differ slightly, so the owner should decide. |
+| `service-case-study-consulting`, `-engineering`, `-ai-data`, `-experience`, `-managed-services`            | Near-identical copy with only the practice word changed.                                                                         | Optional: keep one generic case-study share using `{{service}}` and retire four. The reason lines differ slightly, so the owner should decide.                                      |
 
 Also, **do not activate the five case-study templates until a verified case study exists**. `packages/cms/src/content/gates.ts` drops placeholder case studies, and none is verified yet. With no title, the `case_study_title` fallback reads "might be of interest: a recent project."
 
