@@ -1,5 +1,6 @@
 """The content tick (ADR-042): promote due scheduled posts, close expired roles, deliver pending sync
-events and held-back application alerts, and once a day run retention and purge orphaned uploads.
+events and held-back application alerts, send one paced outreach email when one is due, and once a day
+run retention and purge orphaned uploads.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed
 ``POST /api/content/v1/tick`` and opportunistically, at most once a minute, in a background thread.
@@ -41,6 +42,12 @@ def next_due_at(now=None):
             at=Min("next_attempt_at")
         )["at"],
     ]
+    try:
+        from apps.outreach.services import next_due as outreach_next_due
+
+        candidates.append(outreach_next_due(now))
+    except Exception:  # noqa: BLE001 - outreach must never stop the content schedule
+        logger.exception("Outreach next-due check failed")
     values = [value for value in candidates if value is not None]
     return min(values) if values else None
 
@@ -66,6 +73,13 @@ def run(now=None) -> dict:
         alerts.flush(now)  # application alert emails held back by the 10-minute window
     except Exception:  # noqa: BLE001 - mail must never stop the tick
         logger.exception("Careers alert flush failed")
+    outreach = 0
+    try:
+        from apps.outreach.services import send_due
+
+        outreach = send_due(now)  # one paced outreach email, when one is due (DECISIONS 124)
+    except Exception:  # noqa: BLE001 - mail must never stop the tick
+        logger.exception("Outreach send failed")
     state = TickState.load()
     daily = {}
     if _daily_due(state, now):
@@ -89,8 +103,11 @@ def run(now=None) -> dict:
     TickState.objects.filter(pk=state.pk).update(
         last_finished_at=timezone.now(), last_result={**result, **daily}
     )
-    if promoted or closed or delivered:
-        logger.info("Content tick", extra={"promoted": promoted, "closed": closed, "delivered": delivered})
+    if promoted or closed or delivered or outreach:
+        logger.info(
+            "Content tick",
+            extra={"promoted": promoted, "closed": closed, "delivered": delivered, "outreach": outreach},
+        )
     return result
 
 

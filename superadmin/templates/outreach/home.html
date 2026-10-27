@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Outreach · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-semibold">Outreach</h1>
+      <p class="muted mt-1 max-w-3xl text-sm">Load leads exported from Notion and send them an outreach template, one at a time: weekdays 09:00 to 17:00 London time, 3 to 8 minutes apart, up to the daily limit. Each address is emailed once, ever; anyone who unsubscribed is skipped. Outreach goes only through the outreach mailbox, never Resend.</p>
+    </div>
+    <form method="post" action="{% url 'outreach:export' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary" data-testid="outreach-export">{% icon "download" "h-4 w-4" %} Sent list (CSV)</button></form>
+  </div>
+
+  {% if not mailbox_ready %}
+    <div class="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100" role="note" data-testid="outreach-no-mailbox">
+      <strong>No outreach mailbox yet.</strong>
+      {% if sends_for_real %}Start stays off until one is set up (OUTREACH_SMTP_*, Super Admin docs, email setup step 13). Resend's acceptable use policy forbids cold email, and one Resend account carries every other Vitalos email.{% else %}This server only writes emails to the log (EMAIL_TRANSPORT=log): nothing leaves.{% endif %}
+    </div>
+  {% endif %}
+  {% if current.last_error %}
+    <div class="mt-4 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200" role="alert" data-testid="outreach-last-error">{{ current.last_error }}</div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5" data-testid="outreach-counts">
+    <div class="card p-4"><p class="muted text-xs">Queue</p><p class="mt-1 text-2xl font-semibold" data-testid="count-queued">{{ counts.queued }}</p></div>
+    <div class="card p-4"><p class="muted text-xs">Sent today</p><p class="mt-1 text-2xl font-semibold">{{ counts.today }} <span class="muted text-sm font-normal">of {{ current.daily_cap }}</span></p></div>
+    <div class="card p-4"><p class="muted text-xs">Sent in all</p><p class="mt-1 text-2xl font-semibold">{{ counts.sent }}</p></div>
+    <div class="card p-4"><p class="muted text-xs">Failed</p><p class="mt-1 text-2xl font-semibold">{{ counts.failed }}</p></div>
+    <div class="card p-4"><p class="muted text-xs">Removed</p><p class="mt-1 text-2xl font-semibold">{{ counts.removed }}</p></div>
+  </div>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="card p-5" aria-labelledby="run-heading">
+      <h2 id="run-heading" class="font-semibold">Sending</h2>
+      <p class="mt-1 text-sm" data-testid="outreach-state">
+        {% if current.paused %}<strong>Paused.</strong> Nothing is sent until you press Start.
+        {% elif next_due %}<strong>Running.</strong> Next email <time datetime="{{ next_due|date:'c' }}">{{ next_due|date:"D j M, H:i" }}</time>{% if current.started_by %}, sent as {{ current.started_by.get_full_name|default:current.started_by.email }}{% endif %}{% if mailbox %} from {{ mailbox }}{% endif %}.
+        {% else %}<strong>Running</strong>, with nothing queued.{% endif %}
+      </p>
+      <p class="muted mt-1 text-xs">The admin's per-minute tick sends each email{% if last_tick %}; it last ran <time datetime="{{ last_tick|date:'c' }}">{{ last_tick|date:"j M, H:i" }}</time>{% endif %}.</p>
+
+      <form method="post" action="{% url 'outreach:settings' %}" class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
+        {% csrf_token %}
+        <div>
+          <label for="outreach-template" class="field-label">Template</label>
+          <select id="outreach-template" name="template" class="{{ input_class }}">
+            {% for template in templates %}<option value="{{ template.pk }}" {% if template.pk == current.template_id %}selected{% endif %}>{{ template.name }}{% if template.status == "draft" %} (draft){% endif %}</option>{% empty %}<option value="">No outreach templates</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="outreach-cap" class="field-label">Per day</label>
+          <input id="outreach-cap" name="daily_cap" type="number" min="1" max="{{ daily_cap_max }}" value="{{ current.daily_cap }}" class="{{ input_class }}">
+        </div>
+        <button type="submit" class="btn btn-secondary">Save</button>
+      </form>
+      {% if current.template %}<p class="muted mt-2 text-xs">Check it first: <a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'email_templates:use' current.template.pk %}">preview “{{ current.template.name }}”</a>. Start low (about 15 a day) and raise it slowly.</p>{% endif %}
+
+      <div class="mt-4 flex flex-wrap items-center gap-2">
+        {% if current.paused %}
+          <form method="post" action="{% url 'outreach:start' %}" data-confirm="Start sending? Up to {{ current.daily_cap }} emails a day go to the queue, one at a time.">{% csrf_token %}
+            <button type="submit" class="btn btn-primary" data-testid="outreach-start" {% if problems %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Start</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'outreach:pause' %}">{% csrf_token %}<button type="submit" class="btn btn-primary" data-testid="outreach-pause">Pause</button></form>
+        {% endif %}
+      </div>
+      {% if problems and current.paused %}<ul class="mt-2 list-disc space-y-0.5 pl-5 text-xs text-amber-800 dark:text-amber-200" data-testid="outreach-problems">{% for problem in problems %}<li>{{ problem }}</li>{% endfor %}</ul>{% endif %}
+    </section>
+
+    <section class="card p-5" aria-labelledby="load-heading">
+      <h2 id="load-heading" class="font-semibold">Load leads from Notion</h2>
+      <p class="muted mt-1 text-sm">In Notion, open the Vitalos Leads database (or a view of it), then ••• › Export › Markdown &amp; CSV. Upload the .csv from the zip, or the same file saved from Excel as .xlsx. Columns used: Email (needed), Contact name, Business, Entity type, Status, No website and Lead ID. Up to {{ max_rows }} rows.</p>
+      <form method="post" action="{% url 'outreach:upload' %}" enctype="multipart/form-data" class="mt-4 space-y-3">
+        {% csrf_token %}
+        <div>
+          <label for="outreach-file" class="field-label">Export file</label>
+          <input id="outreach-file" type="file" name="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="block w-full text-sm" data-testid="outreach-file">
+        </div>
+        <fieldset class="space-y-1.5 text-sm">
+          <legend class="field-label">Only load leads that are</legend>
+          <label class="flex items-start gap-2"><input type="checkbox" name="corporate_only" checked class="mt-0.5"> <span>Limited companies, LLPs and PLCs <span class="muted">(the ICO treats sole traders and partnerships as individuals, who must have agreed to marketing email first)</span></span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" name="only_new" checked class="mt-0.5"> <span>Status “New” <span class="muted">(not yet contacted)</span></span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" name="no_website_only" class="mt-0.5"> <span>Ticked “No website”</span></label>
+        </fieldset>
+        <button type="submit" class="btn btn-secondary">{% icon "upload" "h-4 w-4" %} Load into the queue</button>
+      </form>
+      <p class="muted mt-3 text-xs">Contact names with several directors give no first name, so the email opens “Hi there,”.</p>
+    </section>
+  </div>
+
+  <section class="mt-6" aria-labelledby="queue-heading">
+    <div class="flex flex-wrap items-end justify-between gap-2">
+      <h2 id="queue-heading" class="font-semibold">Queue <span class="muted text-sm font-normal">(next {{ queued|length }} of {{ counts.queued }})</span></h2>
+      {% if counts.queued %}<form method="post" action="{% url 'outreach:clear' %}" data-confirm="Remove all {{ counts.queued }} from the queue? They will not be emailed, and loading them again skips them.">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove all</button></form>{% endif %}
+    </div>
+    <div class="card mt-2 overflow-x-auto">
+      <table class="table-base">
+        <thead><tr><th scope="col">Business</th><th scope="col">Greeting</th><th scope="col">Email</th><th scope="col">Entity</th><th scope="col">Lead</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for contact in queued %}
+            <tr data-testid="queued-row">
+              <td>{{ contact.business|default:"—" }}</td>
+              <td class="whitespace-nowrap">Hi {{ contact.first_name|default:"there" }},</td>
+              <td class="font-mono text-xs">{{ contact.email }}</td>
+              <td class="whitespace-nowrap">{{ contact.entity_type|default:"—" }}</td>
+              <td>{{ contact.lead_ref|default:"—" }}</td>
+              <td class="text-right"><form method="post" action="{% url 'outreach:remove' contact.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" aria-label="Remove {{ contact.business|default:contact.email }} from the queue">Remove</button></form></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="muted text-sm">Nothing queued. Load a Notion export above.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mt-6" aria-labelledby="history-heading">
+    <h2 id="history-heading" class="font-semibold">Sent, failed and removed <span class="muted text-sm font-normal">(latest {{ history|length }})</span></h2>
+    <div class="card mt-2 overflow-x-auto">
+      <table class="table-base">
+        <thead><tr><th scope="col">Business</th><th scope="col">Email</th><th scope="col">Status</th><th scope="col">Sent</th><th scope="col">Note</th></tr></thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for contact in history %}
+            <tr>
+              <td>{{ contact.business|default:"—" }}</td>
+              <td class="font-mono text-xs">{{ contact.email }}</td>
+              <td>{{ contact.get_status_display }}</td>
+              <td class="whitespace-nowrap">{% if contact.sent_at %}<time datetime="{{ contact.sent_at|date:'c' }}">{{ contact.sent_at|date:"j M, H:i" }}</time>{% else %}—{% endif %}</td>
+              <td class="muted text-xs">{{ contact.note }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="muted text-sm">Nothing sent yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

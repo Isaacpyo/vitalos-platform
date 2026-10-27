@@ -67,6 +67,15 @@ NAV_ITEMS = (
                 ("/mail/templates",),
                 permission="apps.accounts.roles.is_superadmin",
             ),
+            NavItem(
+                "outreach",
+                "Outreach",
+                "outreach:home",
+                "send",
+                "Operate",
+                ("/mail/outreach",),
+                permission="apps.accounts.roles.is_superadmin",
+            ),
         ),
     ),
     NavItem(

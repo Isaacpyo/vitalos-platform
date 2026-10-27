@@ -35,3 +35,7 @@ The Super Admin runs on Azure Container Apps, scaled to zero, inside the free gr
 - Scheduled posts and closing dates are applied within about a minute when the Worker runs. They take effect within the TTL in the worst case, and at once for anyone reading the read API.
 - `nextDueAt` is read from the website's cached site state, which is refreshed by every sync event and by the TTL. A retry that becomes due while the website is down is noticed within the TTL.
 - Revisit if the admin gets an always-on replica (then a Container Apps job or an in-process scheduler is simpler).
+
+## Status note (27 Oct 2026)
+
+The tick also sends Mail › Outreach email (ADR-051): at most one per run, only when the outreach queue's `next_due` has passed, and only on weekdays from 09:00 to 17:00 London time. That time feeds `nextDueAt`, so the Worker wakes the admin for outreach only during sending hours, about every 3 to 8 minutes, and never while the queue is paused or empty.
