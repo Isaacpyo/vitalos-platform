@@ -55,3 +55,29 @@ def test_careers_alert_lists_each_application_and_flags_duplicates(db, settings)
     assert "Alex Example\nReceived " in text and "[Possible duplicate] Sam Example" in text
     assert f"https://admin.example.test/careers/applications/{rows[0].pk}/" in text
     assert "Open applications: https://admin.example.test/careers/applications/" in text
+
+
+def test_inline_images_and_files_nest_as_mixed_related_alternative(db):
+    from apps.mailer import layout
+    from apps.mailer.messages import build_message
+
+    doc = {
+        "title": "T",
+        "preheader": "P",
+        "headerLabel": "Test",
+        "blocks": [],
+        "footer": {"social": [], "company": {}},
+    }
+    mime = build_message(
+        layout.render_email(doc),
+        subject="T",
+        to=["alex@example.test"],
+        from_email="Vitalos <notifications@vitalos.co.uk>",
+        attachments=[("note.txt", b"hello", "text/plain")],
+    ).message()
+    assert mime.get_content_type() == "multipart/mixed"
+    related, note = list(mime.iter_parts())
+    assert related.get_content_type() == "multipart/related" and note.get_filename() == "note.txt"
+    alternative, logo = list(related.iter_parts())
+    assert [p.get_content_type() for p in alternative.iter_parts()] == ["text/plain", "text/html"]
+    assert logo["Content-ID"] == "<vitalos-logo>" and logo.get_content_disposition() == "inline"

@@ -4,7 +4,6 @@ Views and API handlers call these functions; they never change enquiry models di
 """
 
 import email.utils
-import html
 import logging
 import re
 import uuid
@@ -13,7 +12,6 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import storages
-from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.db import transaction
 from django.db.models import Max
@@ -21,6 +19,8 @@ from django.utils import timezone
 
 from apps.accounts.roles import is_superadmin
 from apps.audit.services import record
+from apps.mailer import layout
+from apps.mailer.messages import build_message
 
 from . import attachments, selectors, sla
 from .models import Attachment, CannedResponse, Enquiry, EnquiryNote, InboxSettings, Message, Tag
@@ -398,9 +398,25 @@ def _references(parent) -> list[str]:
     return ids
 
 
-def _html_paragraphs(text: str) -> str:
-    blocks = [block for block in re.split(r"\n\s*\n", text.strip()) if block.strip()]
-    return "".join(f"<p>{html.escape(block).replace(chr(10), '<br>')}</p>" for block in blocks)
+def reply_document(subject: str, body_text: str, signature: str = "") -> dict:
+    """An inbox reply as a letter: correspondence mode, the body, the inbox signature and the compact
+    company footer (ADR-030). The signature is a text block, so "Kind regards" is never doubled."""
+    from apps.email_templates.rendering import company_footer
+
+    facts, _social = company_footer()
+    blocks = [{"type": "text", "text": body_text}]
+    signature = (signature or "").strip()
+    if signature:
+        blocks.append({"type": "text", "text": signature})
+    first_line = next((line.strip() for line in body_text.splitlines() if line.strip()), "")
+    return {
+        "mode": "correspondence",
+        "title": subject,
+        "preheader": layout.truncate(first_line, 100),
+        "headerLabel": "",
+        "blocks": blocks,
+        "footer": {"social": [], "company": facts},
+    }
 
 
 def _check_uploads(files) -> list[attachments.Checked]:
@@ -447,24 +463,23 @@ def send_reply(enquiry, *, body_text, actor, files=(), resolve=False, request=No
     if parent is not None:
         headers["In-Reply-To"] = parent.message_id_header
         headers["References"] = " ".join(references)
-    signature = (inbox.signature or "").strip()
-    text = body_text + (f"\n\n{signature}" if signature else "")
-    html_body = _html_paragraphs(body_text) + (_html_paragraphs(signature) if signature else "")
     subject = reply_subject(enquiry)
     checked = _check_uploads(files)
+    rendered = layout.render_email(reply_document(subject, body_text, inbox.signature))
+    text = rendered.text
+    html_body = rendered.html
 
-    outgoing = EmailMultiAlternatives(
+    outgoing = build_message(
+        rendered,
         subject=subject,
-        body=text,
-        from_email=settings.SUPPORT_FROM_HEADER,
         to=[enquiry.from_email],
+        from_email=settings.SUPPORT_FROM_HEADER,
         reply_to=[settings.SUPPORT_MAILBOX],
         headers=headers,
+        attachments=[
+            (item.filename, item.data, item.content_type) for item in checked if not item.refused_reason
+        ],
     )
-    outgoing.attach_alternative(html_body, "text/html")
-    for item in checked:
-        if not item.refused_reason:
-            outgoing.attach(item.filename, item.data, item.content_type)
 
     resend = settings.EMAIL_TRANSPORT == "resend"
     failed = False
