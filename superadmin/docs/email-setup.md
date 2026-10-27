@@ -232,6 +232,19 @@ export async function POST(request: Request) {
 
 Before shipping it the owner must approve the privacy notice wording and retention (v2026-10 is approved; 24 months), and set the two variables in Vercel for Preview and Production.
 
+## 13. Outreach mailbox (needs approval: it costs money)
+
+Outreach templates (kind Outreach, such as `outreach-small-business-free-plan`) are cold email. Resend's acceptable use policy forbids it ("You are prohibited from sending unsolicited messages of any kind, including cold outreach, purchased lists, or scraped contact data", resend.com/legal/acceptable-use, read 27 Oct 2026). Because every other Vitalos email goes through the same Resend account, **Send** on an outreach template is refused while `EMAIL_TRANSPORT=resend` until an outreach mailbox is set up. Copy and Download .eml still work, so you can send from your own mail client.
+
+To turn it on:
+
+1. Get a mailbox that allows SMTP sending as you, for example Google Workspace or Microsoft 365 on `vitalos.co.uk`, or, better for reputation, on a separate outreach domain. This costs money, so it needs the owner's approval. Add that provider's SPF and DKIM records (a DNS change, so this also needs approval).
+2. Create an app password for the mailbox.
+3. Set `OUTREACH_SMTP_HOST`, `OUTREACH_SMTP_PORT` (465 for implicit TLS, 587 for STARTTLS) and `OUTREACH_SMTP_USER` as Container Apps variables. Store `OUTREACH_SMTP_PASSWORD` as a secret. The user is also the From address and the Reply-To.
+4. Send one outreach email to your own address from **Use template** and check the headers: SPF, DKIM and DMARC should all show `pass`.
+
+Keep outreach volume low and steady (start at about 15 a day). A complaint rate above 0.3% at Gmail gets the mailbox's mail filtered.
+
 ## Rollback
 
 Needs approval.

@@ -915,6 +915,22 @@
   },
   {
     "repo": "vitalos-platform",
+    "file": "superadmin/apps/email_templates/seed/outreach.json",
+    "email": "Library: Small business: free one-page plan (outreach-small-business-free-plan)",
+    "trigger": "Sent by a person from Mail › Email templates (Use: send, copy, .eml; or test send)",
+    "audience": "Varies",
+    "sender": "The founder (signed-in admin), or notifications@ for tests",
+    "reply_to": "The sender",
+    "kind": "outreach",
+    "gate": "status Draft until activated; managed_by library",
+    "state_before": "layout",
+    "state_after": "layout",
+    "in_scope": true,
+    "defects": [],
+    "notes": "label 'Introduction'; blocks ['text', 'text', 'text']; variables ['first_name']; founder-only"
+  },
+  {
+    "repo": "vitalos-platform",
     "file": "superadmin/apps/email_templates/seed/retention.json",
     "email": "Library: Feedback survey (client-feedback-survey)",
     "trigger": "Sent by a person from Mail › Email templates (Use, test send, .eml)",

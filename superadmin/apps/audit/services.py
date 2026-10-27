@@ -41,6 +41,7 @@ ACTIONS = {
     "email_templates.unarchived": "Restored an archived email template",
     "email_templates.version_restored": "Restored an email template version",
     "email_templates.test_sent": "Sent a test email",
+    "email_templates.sent": "Sent an email from a template",
     "email_templates.seeded": "Seeded the email template library",
     "email_templates.unsubscribed": "Unsubscribed from Vitalos email",
     "insights.post_created": "Created an Insights post",

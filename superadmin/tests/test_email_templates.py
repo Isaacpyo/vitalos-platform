@@ -14,6 +14,7 @@ from apps.audit.models import AuditEvent
 from apps.email_templates import services
 from apps.email_templates.models import Category, EmailSuppression, EmailTemplate, Kind, Status
 from apps.email_templates.rendering import read_unsubscribe_token, render_content, unsubscribe_url
+from apps.email_templates.review import FOUNDER_ONLY
 from apps.email_templates.variables import VARIABLES, merge, validate
 from apps.enquiries.models import Enquiry
 from apps.mailer.backends import ResendEmailBackend
@@ -70,13 +71,25 @@ def _form_data(template, **overrides):
 def test_seed_files_are_valid_and_complete():
     items = services.load_seed()
     assert services.seed_problems(items) == []
-    assert len(items) == 81
+    assert len(items) == 82
     assert {item["category"] for item in items} == set(Category.values)
     for item in items:
         if item["kind"] in (Kind.OUTREACH, Kind.MARKETING):
             assert item["reason"], item["key"]
-        if item["kind"] != Kind.INTERNAL:
+        if item["kind"] != Kind.INTERNAL and item["key"] not in FOUNDER_ONLY:
             assert item["blocks"][-1]["type"] == "signature", item["key"]
+
+
+def test_founder_outreach_template_keeps_the_founders_wording(library):
+    template = _template("outreach-small-business-free-plan")
+    assert template.kind == Kind.OUTREACH and template.status == Status.DRAFT and template.reason
+    rendered = render_content(template.content(), {}, key=template.key, recipient="ada@example.test")
+    text = rendered.email.text
+    assert "Hi there," in text and "Best,\nTemitope Agbola\nFounder, Vitalos Technologies" in text
+    assert "Reply “no” and I won’t contact you again." in text
+    named = render_content(template.content(), {"first_name": "Ada"}, key=template.key)
+    assert "Hi Ada," in named.email.text
+    assert [v.name for v in services.use_variables(template)] == ["first_name"]
 
 
 def test_every_seed_renders_with_fallbacks_and_no_unknown_variables(library):
@@ -89,7 +102,7 @@ def test_every_seed_renders_with_fallbacks_and_no_unknown_variables(library):
 
 
 def test_seed_command_is_idempotent_and_never_overwrites(library, owner):
-    assert library.count() == 81
+    assert library.count() == 82
     assert set(library.values_list("status", flat=True)) == {Status.DRAFT}
     template = _template()
     assert template.version == 1 and template.versions.get().note == "Seeded from the repository"
@@ -97,7 +110,7 @@ def test_seed_command_is_idempotent_and_never_overwrites(library, owner):
         template, content={**template.content(), "subject": "Edited"}, status="active", user=owner
     )
     call_command("seed_email_templates", stdout=io.StringIO())
-    assert EmailTemplate.objects.count() == 81
+    assert EmailTemplate.objects.count() == 82
     assert _template().subject == "Edited"
 
 
@@ -160,7 +173,7 @@ def test_mail_dropdown_groups_enquiries_and_templates(client_for, superadmin, le
 def test_list_search_and_filters(client_for, superadmin, library):
     client = client_for(superadmin)
     body = client.get("/mail/templates/").content.decode()
-    assert "81 of 81 templates" in body and "Last edited" in body and "Edited by" in body
+    assert "82 of 82 templates" in body and "Last edited" in body and "Edited by" in body
     body = client.get("/mail/templates/?q=proposal&category=sales", **HX).content.decode()
     assert 'data-template="proposal-sent"' in body and 'data-template="invoice-sent"' not in body
     services.set_archived(_template(), True, user=superadmin)
@@ -420,7 +433,7 @@ def test_use_page_is_superadmin_only(client_for, viewer, lead, library):
     for user in (viewer, lead):
         client = client_for(user)
         assert client.get(_use_url(template)).status_code == 403
-        for name in ("preview/", "prefill/", "payload/", "eml/"):
+        for name in ("preview/", "prefill/", "payload/", "eml/", "send/"):
             assert _use_post(client, template, name, action="copy_email").status_code == 403
         assert client.get(_use_url(template, "frame/")).status_code == 403
     assert not AuditEvent.objects.filter(action="email_templates.used").exists()
@@ -433,6 +446,15 @@ def test_use_page_lists_the_variables_the_template_uses(client_for, owner, libra
     assert 'name="var-first_name"' in html and 'name="recipient"' in html
     assert 'data-testid="empty-variables"' in html
     assert 'name="var-unsubscribe_link"' not in html
+
+
+def test_use_page_details_are_optional(client_for, owner, library):
+    html = client_for(owner).get(_use_url(_template())).content.decode()
+    assert "Every detail is optional" in html
+    assert html.count("(optional)") >= len(services.use_variables(_template()))
+    assert "Left empty, the email says “there”." in html
+    assert "data-empty" not in html and "Not ready to send" not in html
+    assert 'name="var-first_name"' in html and "required" not in html.split('name="var-first_name"')[1][:200]
 
 
 def test_entry_points_on_the_list_and_the_editor_hide_for_archived(client_for, owner, library):
@@ -452,7 +474,7 @@ def test_archived_templates_cannot_be_used(client_for, owner, library):
     services.set_archived(template, True, user=owner)
     client = client_for(owner)
     assert client.get(_use_url(template)).status_code == 302
-    for name in ("preview/", "prefill/", "payload/", "eml/"):
+    for name in ("preview/", "prefill/", "payload/", "eml/", "send/"):
         assert _use_post(client, template, name, action="copy_email").status_code == 409
     assert client.get(_use_url(template, "frame/")).status_code == 404
     assert not AuditEvent.objects.filter(action="email_templates.used").exists()
@@ -467,8 +489,8 @@ def test_preview_substitutes_values_and_flags_the_empty_ones(client_for, owner, 
         data["var-invoice_number"] = "INV-42"
     html = _use_post(client, template, "preview/", **data).content.decode()
     assert "Hi Ada" in html
-    assert 'data-testid="empty-variables"' in html and "Not ready to send" in html
-    assert "fallbacks such as" in html
+    assert 'data-testid="empty-variables"' in html and "optional detail" in html
+    assert "Not ready to send" not in html
     frame = client.get(_use_url(template, "frame/")).content.decode()
     assert "Ada" in frame
 
@@ -625,8 +647,106 @@ def test_an_invalid_recipient_is_refused(client_for, owner, library):
 def test_use_endpoints_only_accept_post(client_for, owner, library):
     client = client_for(owner)
     template = _template()
-    for name in ("preview/", "prefill/", "payload/", "eml/"):
+    for name in ("preview/", "prefill/", "payload/", "eml/", "send/"):
         assert client.get(_use_url(template, name)).status_code == 405
+
+
+# --- Use a template: send ---------------------------------------------------------------------------
+
+
+def test_send_emails_the_recipient_from_the_signed_in_admin(client_for, owner, library, mailoutbox, settings):
+    settings.EMAIL_TRANSPORT = "resend"
+    template = _template("invoice-sent")
+    response = _use_post(
+        client_for(owner), template, "send/", recipient="Ada@Example.test", **{"var-first_name": "Ada"}
+    )
+    assert response.status_code == 200
+    html = response.content.decode()
+    assert 'data-testid="use-sent"' in html and "Sent to ada@example.test" in html
+    assert "vsa-toast" in response["HX-Trigger"]
+    [message] = mailoutbox
+    assert message.to == ["ada@example.test"]
+    assert message.from_email == "Temitope Agbola <owner@vitalos.co.uk>"
+    assert message.reply_to == ["owner@vitalos.co.uk"]
+    assert "Hi Ada" in message.body and "[Test]" not in message.subject
+    assert message.extra_headers["Message-ID"].endswith("@vitalos.co.uk>")
+    # A person sends it: not marked as automated mail (ADR-046), not a draft.
+    assert "Auto-Submitted" not in message.extra_headers and "X-Unsent" not in message.extra_headers
+    assert "X-Vitalos-Notification" not in message.extra_headers
+    event = AuditEvent.objects.get(action="email_templates.sent")
+    dump = " ".join(str(v) for v in (event.summary, event.metadata, event.entity_id, event.actor_email))
+    assert template.name in event.summary and "ada@example.test" not in dump.lower()
+
+
+def test_send_says_so_when_mail_transport_is_off(client_for, owner, library, mailoutbox, settings):
+    settings.EMAIL_TRANSPORT = "log"
+    response = _use_post(client_for(owner), _template("invoice-sent"), "send/", recipient="ada@example.test")
+    assert "Not delivered" in response.content.decode() and len(mailoutbox) == 1
+
+
+def test_send_needs_a_recipient(client_for, owner, library, mailoutbox):
+    template = _template("invoice-sent")
+    page = _use_post(client_for(owner), template, "preview/").content.decode()
+    assert 'data-testid="send-email"' in page
+    assert "disabled" in page.split('data-testid="send-email"')[1].split(">")[0]
+    html = _use_post(client_for(owner), template, "send/").content.decode()
+    assert 'data-testid="use-send-error"' in html and "recipient" in html
+    assert mailoutbox == [] and not AuditEvent.objects.filter(action="email_templates.sent").exists()
+
+
+def test_send_outreach_carries_unsubscribe_and_refuses_suppressed(client_for, owner, library, mailoutbox):
+    template = _template("outreach-small-business-free-plan")
+    client = client_for(owner)
+    EmailSuppression.objects.create(email="gone@example.test")
+    html = _use_post(client, template, "send/", recipient="gone@example.test").content.decode()
+    assert "unsubscribed" in html and mailoutbox == []
+    _use_post(client, template, "send/", recipient="ada@example.test")
+    [message] = mailoutbox
+    assert "/mail/unsubscribe/" in message.extra_headers["List-Unsubscribe"]
+    assert message.extra_headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
+    assert "Hi there," in message.body and message.subject == "A free one-page plan for your business"
+
+
+def test_send_refuses_a_repeat_within_two_minutes(client_for, owner, library, mailoutbox):
+    client = client_for(owner)
+    template = _template("invoice-sent")
+    _use_post(client, template, "send/", recipient="ada@example.test")
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "a moment ago" in html and len(mailoutbox) == 1
+    _use_post(client, template, "send/", recipient="grace@example.test")
+    assert len(mailoutbox) == 2
+
+
+def test_send_is_limited_per_hour(client_for, owner, library, mailoutbox, monkeypatch):
+    monkeypatch.setattr(services, "USE_SENDS_PER_HOUR", 2)
+    client = client_for(owner)
+    template = _template("invoice-sent")
+    for n in range(3):
+        html = _use_post(client, template, "send/", recipient=f"person{n}@example.test").content.decode()
+    assert "emails an hour" in html and len(mailoutbox) == 2
+
+
+def test_send_needs_a_vitalos_sender(client_for, make_user, library, mailoutbox):
+    outsider = make_user(SUPERADMIN, email="someone@example.test", full_name="Some One")
+    html = _use_post(client_for(outsider), _template("invoice-sent"), "send/", recipient="a@example.test")
+    assert "@vitalos.co.uk address" in html.content.decode() and mailoutbox == []
+
+
+def test_a_failed_send_is_reported_and_can_be_retried(client_for, owner, library, mailoutbox, monkeypatch):
+    from apps.mailer.messages import RelatedEmailMessage
+
+    def fail(self, fail_silently=False):
+        raise OSError("provider down")
+
+    monkeypatch.setattr(RelatedEmailMessage, "send", fail)
+    client = client_for(owner)
+    template = _template("invoice-sent")
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "could not be sent" in html
+    assert not AuditEvent.objects.filter(action="email_templates.sent").exists()
+    monkeypatch.undo()
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert 'data-testid="use-sent"' in html and len(mailoutbox) == 1
 
 
 # --- Line endings from the editor ---------------------------------------------------------------------
@@ -804,7 +924,7 @@ def test_review_rules_flag_each_problem(db):
 def test_review_command_reports_the_library(library):
     out = io.StringIO()
     call_command("review_email_templates", stdout=out)
-    assert "81 templates, 0 seed problems" in out.getvalue()
+    assert "82 templates, 0 seed problems" in out.getvalue()
 
 
 def test_email_gallery_renders_every_email_without_storing_anything(library, tmp_path):
@@ -850,7 +970,7 @@ def test_unedited_templates_are_updated_with_a_version_and_keep_their_status(lib
     _seed_with(monkeypatch, "proposal-sent", subject="Your proposal for {{project_name}} is ready")
     out = io.StringIO()
     call_command("update_seeded_templates", stdout=out)
-    assert "update 1, create 0, 80 unchanged, 0 skipped" in out.getvalue()
+    assert "update 1, create 0, 81 unchanged, 0 skipped" in out.getvalue()
     template = _template()
     assert template.subject == "Your proposal for {{project_name}} is ready"
     assert template.status == Status.ACTIVE and template.version == 2
@@ -859,7 +979,7 @@ def test_unedited_templates_are_updated_with_a_version_and_keep_their_status(lib
     # Idempotent: a second run changes nothing.
     out = io.StringIO()
     call_command("update_seeded_templates", stdout=out)
-    assert "update 0, create 0, 81 unchanged" in out.getvalue() and _template().version == 2
+    assert "update 0, create 0, 82 unchanged" in out.getvalue() and _template().version == 2
 
 
 def test_templates_edited_in_the_admin_are_skipped_and_listed(library, monkeypatch, superadmin):
@@ -873,7 +993,7 @@ def test_templates_edited_in_the_admin_are_skipped_and_listed(library, monkeypat
     _seed_with(monkeypatch, "proposal-sent", subject="Reviewed in the repository")
     out = io.StringIO()
     call_command("update_seeded_templates", stdout=out)
-    assert "update 0, create 0, 80 unchanged, 1 skipped" in out.getvalue()
+    assert "update 0, create 0, 81 unchanged, 1 skipped" in out.getvalue()
     assert "skipped: proposal-sent" in out.getvalue()
     assert _template().subject == "Edited by a person"
 
@@ -907,3 +1027,59 @@ def test_seed_hash_backfill_reads_the_seeded_snapshot(library):
     edited = _template()
     assert edited.seed_hash == content_hash(edited.versions.get(number=1).content)
     assert edited.seed_hash != content_hash(edited.content())  # so the update command will skip it
+
+
+# --- Use a template: outreach goes only through the outreach mailbox ---------------------------------
+
+
+def test_outreach_send_is_refused_on_resend_without_a_mailbox(
+    client_for, owner, library, mailoutbox, settings
+):
+    settings.EMAIL_TRANSPORT = "resend"
+    settings.OUTREACH_SMTP_HOST = ""
+    template = _template("outreach-small-business-free-plan")
+    client = client_for(owner)
+    page = _use_post(client, template, "preview/", recipient="ada@example.test").content.decode()
+    assert 'data-testid="send-unavailable"' in page and "acceptable use policy" in page
+    assert "disabled" in page.split('data-testid="send-email"')[1].split(">")[0]
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "acceptable use policy" in html and mailoutbox == []
+    assert not AuditEvent.objects.filter(action="email_templates.sent").exists()
+    # Transactional email still goes through Resend.
+    _use_post(client, _template("invoice-sent"), "send/", recipient="ada@example.test")
+    assert len(mailoutbox) == 1
+
+
+def test_outreach_send_goes_through_the_mailbox_from_that_address(
+    client_for, owner, library, mailoutbox, settings, monkeypatch
+):
+    settings.EMAIL_TRANSPORT = "resend"
+    from django.core.mail.backends.locmem import EmailBackend
+
+    settings.OUTREACH_SMTP_HOST = "smtp.example.test"
+    settings.OUTREACH_SMTP_USER = "temitope@vitalos.co.uk"
+    monkeypatch.setattr(services, "outreach_connection", EmailBackend)
+    template = _template("outreach-small-business-free-plan")
+    client = client_for(owner)
+    page = _use_post(client, template, "preview/", recipient="ada@example.test").content.decode()
+    assert 'data-use-from="temitope@vitalos.co.uk"' in page and "send-unavailable" not in page
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "Sent to ada@example.test" in html
+    [message] = mailoutbox
+    assert message.from_email == "Temitope Agbola <temitope@vitalos.co.uk>"
+    assert message.reply_to == ["temitope@vitalos.co.uk"]
+    assert "List-Unsubscribe" in message.extra_headers
+
+
+def test_outreach_connection_is_smtp_over_tls_when_configured(settings):
+    from apps.mailer.backends import outreach_connection
+
+    settings.OUTREACH_SMTP_HOST = ""
+    assert outreach_connection() is None
+    settings.OUTREACH_SMTP_HOST, settings.OUTREACH_SMTP_USER = "smtp.example.test", "t@vitalos.co.uk"
+    settings.OUTREACH_SMTP_PORT = 465
+    implicit = outreach_connection()
+    assert implicit.host == "smtp.example.test" and implicit.use_ssl and not implicit.use_tls
+    settings.OUTREACH_SMTP_PORT = 587
+    starttls = outreach_connection()
+    assert starttls.use_tls and not starttls.use_ssl

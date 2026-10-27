@@ -32,7 +32,7 @@ A third application that sends email; a decision to merge the website and Super 
 
 ## Status note (12 October 2026): Super Admin side
 
-The Super Admin now renders every email template with `superadmin/apps/mailer/layout.py`, which passes the golden fixtures byte for byte. The email template library (Mail > Email templates, SuperAdmin only) stores templates and versions in PostgreSQL, seeds 81 templates from `superadmin/apps/email_templates/seed/`, reads footer facts from Settings > Company and sends inline images as CID attachments (`superadmin/docs/DECISIONS.md` 78 to 88). A muted text block right under a heading keeps the 4px subtitle gap; any other text under a heading now has 12px.
+The Super Admin now renders every email template with `superadmin/apps/mailer/layout.py`, which passes the golden fixtures byte for byte. The email template library (Mail > Email templates, SuperAdmin only) stores templates and versions in PostgreSQL, seeds the library templates (82 as of 27 Oct 2026) from `superadmin/apps/email_templates/seed/`, reads footer facts from Settings > Company and sends inline images as CID attachments (`superadmin/docs/DECISIONS.md` 78 to 88). A muted text block right under a heading keeps the 4px subtitle gap; any other text under a heading now has 12px.
 
 ## Status note (27 October 2026): new blocks and correspondence mode
 

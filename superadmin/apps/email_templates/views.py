@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
@@ -339,7 +341,9 @@ def _archived_response(template) -> HttpResponse:
     return HttpResponse(f"“{template.name}” is archived and cannot be used.", status=409)
 
 
-def _use_context(request, template, values, recipient, *, enquiry_id="", error="") -> dict:
+def _use_context(
+    request, template, values, recipient, *, enquiry_id="", error="", send_error="", sent=None
+) -> dict:
     """Preview and form state for the Use page. Also parks the values in the session for the frame."""
     package = services.preview_use(template, user=request.user, values=values, recipient=recipient)
     state = _preview_state(request)
@@ -355,7 +359,6 @@ def _use_context(request, template, values, recipient, *, enquiry_id="", error="
         {
             "variable": variable,
             "value": values.get(variable.name, ""),
-            "empty": not values.get(variable.name) and bool(variable.fallback),
         }
         for variable in services.use_variables(template)
     ]
@@ -367,6 +370,10 @@ def _use_context(request, template, values, recipient, *, enquiry_id="", error="
         "enquiries": services.recent_enquiries(),
         "enquiry_id": str(enquiry_id),
         "error": error,
+        "send_error": send_error,
+        "send_unavailable": services.send_unavailable(template),
+        "send_from": services.send_from(template, request.user),
+        "sent": sent,
         "use_mode": True,
         "input_class": INPUT,
         "preview_url": reverse("email_templates:use_preview", args=[template.pk]),
@@ -481,6 +488,39 @@ def use_payload(request, pk):
         return JsonResponse({"error": " ".join(exc.messages)}, status=400)
     response = JsonResponse({"subject": package.subject, "html": package.html, "text": package.text})
     response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@role_required(SUPERADMIN)
+@require_POST
+@never_cache
+def use_send(request, pk):
+    """HTMX: sends the email to the recipient from the signed-in admin, then re-renders the panel."""
+    template = _use_template(request, pk)
+    if not services.can_use(template):
+        return _archived_response(template)
+    values = services.clean_values(template, request.POST)
+    recipient, error = _safe_recipient(request.POST.get("recipient", ""))
+    send_error, sent = "", None
+    if not error:
+        try:
+            delivered = services.send_use(
+                template, user=request.user, values=values, recipient=recipient, request=request
+            )
+        except ValidationError as exc:
+            send_error = " ".join(exc.messages)
+        else:
+            sent = {"recipient": recipient, "delivered": delivered}
+    context = _use_context(
+        request, template, values, recipient, error=error, send_error=send_error, sent=sent
+    )
+    # 200 even when refused: htmx swaps only 2xx, and the panel carries the reason.
+    response = render(request, "email_templates/_use_panel.html", context)
+    if sent:
+        message = (
+            f"Sent to {recipient}." if sent["delivered"] else "Not delivered: email sending is off here."
+        )
+        response["HX-Trigger"] = json.dumps({"vsa-toast": {"message": message}})
     return response
 
 

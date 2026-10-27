@@ -4,15 +4,14 @@
     <input id="use-recipient" name="recipient" type="email" value="{{ recipient }}" autocomplete="off" spellcheck="false"
            class="{{ input_class }}" aria-describedby="use-recipient-help" data-testid="use-recipient"
            {% if template.needs_opt_out %}required aria-required="true"{% endif %}>
-    <p id="use-recipient-help" class="field-help">{% if template.needs_opt_out %}Needed to copy or download: the footer unsubscribe link is signed for this address.{% else %}Goes in the To line of a downloaded .eml draft.{% endif %}</p>
+    <p id="use-recipient-help" class="field-help">{% if template.needs_opt_out %}Needed to send, copy or download: the footer unsubscribe link is signed for this address.{% else %}Needed to send. Goes in the To line of a downloaded .eml draft.{% endif %}</p>
   </div>
   {% for field in fields %}
     <div>
-      <label for="var-{{ field.variable.name }}" class="field-label">{{ field.variable.description }} <span class="muted font-mono text-xs font-normal">{% templatetag openvariable %}{{ field.variable.name }}{% templatetag closevariable %}</span></label>
+      <label for="var-{{ field.variable.name }}" class="field-label">{{ field.variable.description }} <span class="muted font-normal">(optional)</span> <span class="muted font-mono text-xs font-normal">{% templatetag openvariable %}{{ field.variable.name }}{% templatetag closevariable %}</span></label>
       <input id="var-{{ field.variable.name }}" name="var-{{ field.variable.name }}" type="text" value="{{ field.value }}" maxlength="1000" autocomplete="off"
-             class="{{ input_class }} data-[empty=true]:border-amber-500 data-[empty=true]:bg-amber-50 dark:data-[empty=true]:bg-amber-400/10"
-             data-use-field data-empty="{% if field.empty %}true{% else %}false{% endif %}" aria-describedby="hint-{{ field.variable.name }}">
-      <p id="hint-{{ field.variable.name }}" class="field-help text-amber-800 dark:text-amber-200" data-use-hint {% if not field.empty %}hidden{% endif %}>Empty: the email shows “{{ field.variable.fallback }}”.</p>
+             class="{{ input_class }}" {% if field.variable.fallback %}aria-describedby="hint-{{ field.variable.name }}"{% endif %}>
+      {% if field.variable.fallback %}<p id="hint-{{ field.variable.name }}" class="field-help">Left empty, the email says “{{ field.variable.fallback }}”.</p>{% endif %}
     </div>
   {% empty %}
     <p class="muted text-sm">This template has no merge variables to fill in.</p>

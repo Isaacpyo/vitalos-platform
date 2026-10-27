@@ -125,5 +125,21 @@
       { "type": "button", "label": "Book a short call", "url": "{{meeting_link}}" },
       { "type": "signature" }
     ]
+  },
+  {
+    "key": "outreach-small-business-free-plan",
+    "name": "Small business: free one-page plan",
+    "category": "outreach",
+    "kind": "outreach",
+    "description": "The founder's first email to a small business, offering a free one-page plan to improve its online presence. Signed by Temitope, so only the founder sends it.",
+    "header_label": "Introduction",
+    "subject": "A free one-page plan for your business",
+    "preheader": "Practical ideas to help more customers find you online. No cost or obligation.",
+    "reason": "We are contacting you because we help small businesses like yours get found online. You can opt out at any time.",
+    "blocks": [
+      { "type": "text", "text": "Hi {{first_name}},\n\nI’m Temitope, founder of Vitalos Technologies, a UK technology company helping small businesses get found online and turn more enquiries into customers.\n\nWe build professional websites, set up Google Business Profiles and make it easier for customers to book or get in touch. We also help simplify everyday admin, so you can spend more time running your business.\n\nYou work directly with me, and I handle the setup.\n\nWould you be interested in a free, one-page plan with practical ideas to improve your business’s online presence? It’s yours to use, whether we work together or not. There’s no cost or obligation.\n\nJust reply “yes” with your business name and I’ll take a look and send it over." },
+      { "type": "text", "text": "Best,\nTemitope Agbola\nFounder, Vitalos Technologies\nvitalos.co.uk" },
+      { "type": "text", "tone": "muted", "text": "Prefer no further emails? Reply “no” and I won’t contact you again." }
+    ]
   }
 ]

@@ -3,14 +3,23 @@
   <div class="mb-3 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200" role="alert" data-testid="use-error">{{ error }}</div>
 {% endif %}
 
+{% if sent %}
+  <div class="mb-3 rounded-md bg-mineral/10 p-3 text-sm text-mineral-700 dark:text-mineral-300" role="status" data-testid="use-sent">
+    {% if sent.delivered %}<strong>Sent to {{ sent.recipient }}.</strong> It went from {{ send_from }}; replies come back there.{% else %}<strong>Not delivered.</strong> Email sending is off on this server (EMAIL_TRANSPORT is not resend), so nothing left the platform.{% endif %}
+  </div>
+{% endif %}
+{% if send_error %}
+  <div class="mb-3 rounded-md bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200" role="alert" data-testid="use-send-error">{{ send_error }}</div>
+{% endif %}
+
 {% if package.needs_recipient %}
   <div class="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-100" role="status" data-testid="needs-recipient">
-    <strong>Add the recipient's email address.</strong> Copy and download stay off until you do, because this email carries a personal unsubscribe link. The preview shows a placeholder link.
+    <strong>Add the recipient's email address.</strong> Send, copy and download stay off until you do, because this email carries a personal unsubscribe link. The preview shows a placeholder link.
   </div>
 {% endif %}
 {% if package.empty %}
-  <div class="mb-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-400/10 dark:text-amber-100" role="status" data-testid="empty-variables">
-    <p><strong>Not ready to send.</strong> {{ package.empty|length }} detail{{ package.empty|length|pluralize }} still empty, so fallbacks such as “{{ package.empty.0.1 }}” are in the email.</p>
+  <div class="muted mb-3 rounded-md border border-slate-200 p-3 text-sm dark:border-slate-700" role="status" data-testid="empty-variables">
+    <p>{{ package.empty|length }} optional detail{{ package.empty|length|pluralize }} left empty. The email uses {{ package.empty|length|pluralize:"its,their" }} fallback{{ package.empty|length|pluralize }}:</p>
     <ul class="mt-2 space-y-0.5 font-mono text-xs">
       {% for name, fallback in package.empty %}<li>{{ name }} → “{{ fallback }}”</li>{% endfor %}
     </ul>
@@ -21,12 +30,16 @@
 
 <div class="card mb-3 flex flex-wrap items-center gap-2 p-3" role="group" aria-label="Use this email">
   {% with blocked=package.needs_recipient %}
+    <button type="button" class="btn btn-primary" data-testid="send-email" data-use-send data-use-from="{{ send_from }}"
+            hx-post="{% url 'email_templates:use_send' template.pk %}" hx-include="#use-form" hx-target="#use-panel" hx-swap="innerHTML"
+            hx-disabled-elt="this" {% if blocked or error or not recipient or send_unavailable %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Send email</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_subject" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %}>Copy subject</button>
-    <button type="button" class="btn btn-primary" data-use-copy="copy_email" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %} data-testid="copy-email">Copy email</button>
+    <button type="button" class="btn btn-secondary" data-use-copy="copy_email" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %} data-testid="copy-email">Copy email</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_text" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %}>Copy plain text</button>
     <button type="submit" form="use-form" class="btn btn-secondary" data-testid="download-eml" {% if blocked or error %}disabled{% endif %}>{% icon "download" "h-4 w-4" %} Download .eml</button>
   {% endwith %}
-  <p class="muted w-full text-xs">Copy email keeps the layout when you paste into Gmail or Outlook. The .eml opens as an unsent draft from {{ user.email }}.</p>
+  {% if send_unavailable %}<p class="w-full text-xs text-amber-800 dark:text-amber-200" data-testid="send-unavailable">Send is off for this template: {{ send_unavailable }}</p>{% endif %}
+  <p class="muted w-full text-xs">Send email sends it now from {{ send_from }}, after you confirm; replies come back to that address. Copy email keeps the layout when you paste into Gmail or Outlook. The .eml opens as an unsent draft from {{ user.email }}.</p>
 </div>
 
 {% include "email_templates/_preview.html" %}
