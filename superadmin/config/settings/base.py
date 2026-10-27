@@ -161,6 +161,13 @@ NOTIFY_FROM = env("NOTIFY_FROM", default="notifications@vitalos.co.uk")
 NOTIFY_FROM_HEADER = f"Vitalos Admin <{NOTIFY_FROM}>"
 DEFAULT_FROM_EMAIL = NOTIFY_FROM_HEADER
 SERVER_EMAIL = NOTIFY_FROM_HEADER
+# Outreach (cold) email never goes through Resend: its acceptable use policy forbids cold outreach,
+# and a suspension would stop every other Vitalos email. It goes through a real mailbox over SMTP
+# instead; with no mailbox set, outreach sends are refused while EMAIL_TRANSPORT=resend (DECISIONS 120).
+OUTREACH_SMTP_HOST = env("OUTREACH_SMTP_HOST", default="")
+OUTREACH_SMTP_PORT = env.int("OUTREACH_SMTP_PORT", default=465)
+OUTREACH_SMTP_USER = env("OUTREACH_SMTP_USER", default="").strip()
+OUTREACH_SMTP_PASSWORD = env("OUTREACH_SMTP_PASSWORD", default="")
 SUPPORT_MAILBOX = env("SUPPORT_MAILBOX", default="support@vitalos.co.uk")
 SUPPORT_FROM_HEADER = f"Vitalos Support <{SUPPORT_MAILBOX}>"
 NOTIFY_OWNER_EMAIL = env("NOTIFY_OWNER_EMAIL", default=PRIMARY_OWNER_EMAIL or "admin@vitalos.co.uk")

@@ -49,6 +49,28 @@ def _html_part(message) -> str | None:
     return None
 
 
+def outreach_connection():
+    """An SMTP connection to the outreach mailbox (OUTREACH_SMTP_*), or None when it is not set up.
+
+    Outreach (cold) email never goes through Resend, whose acceptable use policy forbids it.
+    """
+    from django.core.mail.backends.smtp import EmailBackend as SMTPBackend
+
+    if not (settings.OUTREACH_SMTP_HOST and settings.OUTREACH_SMTP_USER):
+        return None
+    port = settings.OUTREACH_SMTP_PORT
+    return SMTPBackend(
+        host=settings.OUTREACH_SMTP_HOST,
+        port=port,
+        username=settings.OUTREACH_SMTP_USER,
+        password=settings.OUTREACH_SMTP_PASSWORD,
+        use_ssl=port == 465,
+        use_tls=port != 465,
+        timeout=20,
+        fail_silently=False,
+    )
+
+
 class LogEmailBackend(BaseEmailBackend):
     """Development and test transport: records that a message would have been sent."""
 

@@ -371,6 +371,8 @@ def _use_context(
         "enquiry_id": str(enquiry_id),
         "error": error,
         "send_error": send_error,
+        "send_unavailable": services.send_unavailable(template),
+        "send_from": services.send_from(template, request.user),
         "sent": sent,
         "use_mode": True,
         "input_class": INPUT,

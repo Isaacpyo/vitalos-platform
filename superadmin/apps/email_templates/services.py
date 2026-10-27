@@ -20,6 +20,7 @@ from django.utils.text import slugify
 
 from apps.accounts.roles import is_superadmin
 from apps.audit.services import record
+from apps.mailer.backends import outreach_connection
 from apps.mailer.layout import clean_line
 from apps.mailer.messages import build_message
 
@@ -459,10 +460,13 @@ def _check_use(template: EmailTemplate, recipient: str) -> None:
             )
 
 
-def _message(template: EmailTemplate, package: UsePackage, *, user, headers: dict[str, str], **kwargs):
-    """The email from the signed-in user, to the recipient if given."""
+def _message(
+    template: EmailTemplate, package: UsePackage, *, user, headers: dict[str, str], sender="", **kwargs
+):
+    """The email from the signed-in user (or ``sender``, under their name), to the recipient if given."""
     name = clean_line(user.get_full_name() or "")
-    sender = formataddr(("" if name == user.email else name, user.email))
+    address = sender or user.email
+    sender = formataddr(("" if name == user.email else name, address))
     headers = dict(headers)
     if template.needs_opt_out:
         headers["List-Unsubscribe"] = f"<{unsubscribe_url(package.recipient, template.key)}>"
@@ -482,6 +486,27 @@ def eml_message(template: EmailTemplate, package: UsePackage, *, user):
     return _message(template, package, user=user, headers={"X-Unsent": "1"})
 
 
+OUTREACH_NEEDS_MAILBOX = (
+    "Outreach email is not sent through the platform's email provider: Resend's acceptable use policy "
+    "forbids cold outreach, and a suspension would stop every Vitalos email. Set up the outreach mailbox "
+    "(OUTREACH_SMTP_*), or download the .eml and send it from your own mailbox."
+)
+
+
+def send_unavailable(template: EmailTemplate) -> str:
+    """Why Send is off for this template on this server, or "" when it can send."""
+    if template.kind == Kind.OUTREACH and settings.EMAIL_TRANSPORT == "resend" and not outreach_connection():
+        return OUTREACH_NEEDS_MAILBOX
+    return ""
+
+
+def send_from(template: EmailTemplate, user) -> str:
+    """The address Send uses: the outreach mailbox for outreach, otherwise the signed-in admin."""
+    if template.kind == Kind.OUTREACH and outreach_connection() is not None:
+        return settings.OUTREACH_SMTP_USER
+    return user.email
+
+
 def send_use(
     template: EmailTemplate, *, user, values: Mapping[str, str], recipient: str, request=None
 ) -> bool:
@@ -489,9 +514,10 @@ def send_use(
 
     The rules for copying apply (archived, outreach recipient, unsubscribed), plus: a recipient is always
     needed, the sender's address must be on the Vitalos sending domain, sends are limited per hour and a
-    repeat of the same send within two minutes is refused. A person sends it, so it carries no
-    Auto-Submitted header (ADR-046 is for automated mail); replies go to the sender. The audit event
-    never holds the recipient's address. Returns True if it left the platform (EMAIL_TRANSPORT=resend).
+    repeat of the same send within two minutes is refused. Outreach goes only through the outreach
+    mailbox (OUTREACH_SMTP_*), From that mailbox, never through Resend. A person sends it, so it carries
+    no Auto-Submitted header (ADR-046 is for automated mail); replies go to the sender. The audit event
+    never holds the recipient's address. Returns True if it left the platform.
     """
     require_superadmin(user)
     if not recipient:
@@ -500,6 +526,10 @@ def send_use(
     if not sender.endswith(TEST_DOMAIN):
         raise ValidationError(f"Email is sent from your own address, which must be a {TEST_DOMAIN} address.")
     _check_use(template, recipient)
+    unavailable = send_unavailable(template)
+    if unavailable:
+        raise ValidationError(unavailable)
+    connection = outreach_connection() if template.kind == Kind.OUTREACH else None
     counter = f"email-templates:sends:{user.pk}"
     cache.add(counter, 0, timeout=3600)
     if cache.incr(counter) > USE_SENDS_PER_HOUR:
@@ -511,15 +541,20 @@ def send_use(
     if not cache.add(guard, 1, timeout=RESEND_GUARD_SECONDS):
         raise ValidationError("You sent this email to this recipient a moment ago. It was not sent again.")
     package = _use_render(template, values, recipient)
+    mailbox = send_from(template, user)
     message = _message(
         template,
         package,
         user=user,
+        sender=mailbox,
         headers={"Message-ID": make_msgid(domain="vitalos.co.uk")},
-        reply_to=[user.email],
+        reply_to=[mailbox],
     )
     try:
-        message.send(fail_silently=False)
+        if connection is not None:
+            connection.send_messages([message])
+        else:
+            message.send(fail_silently=False)
     except Exception:  # noqa: BLE001 - any transport failure is reported to the sender
         cache.delete(guard)
         logger.warning("Template send failed", extra={"template": template.key}, exc_info=True)
@@ -533,7 +568,7 @@ def send_use(
         entity=template,
         summary=f"{template.name} (v{template.version})",
     )
-    return settings.EMAIL_TRANSPORT == "resend"
+    return connection is not None or settings.EMAIL_TRANSPORT == "resend"
 
 
 def unsubscribe(email: str, template_key: str, request=None) -> None:

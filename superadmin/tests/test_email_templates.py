@@ -1027,3 +1027,59 @@ def test_seed_hash_backfill_reads_the_seeded_snapshot(library):
     edited = _template()
     assert edited.seed_hash == content_hash(edited.versions.get(number=1).content)
     assert edited.seed_hash != content_hash(edited.content())  # so the update command will skip it
+
+
+# --- Use a template: outreach goes only through the outreach mailbox ---------------------------------
+
+
+def test_outreach_send_is_refused_on_resend_without_a_mailbox(
+    client_for, owner, library, mailoutbox, settings
+):
+    settings.EMAIL_TRANSPORT = "resend"
+    settings.OUTREACH_SMTP_HOST = ""
+    template = _template("outreach-small-business-free-plan")
+    client = client_for(owner)
+    page = _use_post(client, template, "preview/", recipient="ada@example.test").content.decode()
+    assert 'data-testid="send-unavailable"' in page and "acceptable use policy" in page
+    assert "disabled" in page.split('data-testid="send-email"')[1].split(">")[0]
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "acceptable use policy" in html and mailoutbox == []
+    assert not AuditEvent.objects.filter(action="email_templates.sent").exists()
+    # Transactional email still goes through Resend.
+    _use_post(client, _template("invoice-sent"), "send/", recipient="ada@example.test")
+    assert len(mailoutbox) == 1
+
+
+def test_outreach_send_goes_through_the_mailbox_from_that_address(
+    client_for, owner, library, mailoutbox, settings, monkeypatch
+):
+    settings.EMAIL_TRANSPORT = "resend"
+    from django.core.mail.backends.locmem import EmailBackend
+
+    settings.OUTREACH_SMTP_HOST = "smtp.example.test"
+    settings.OUTREACH_SMTP_USER = "temitope@vitalos.co.uk"
+    monkeypatch.setattr(services, "outreach_connection", EmailBackend)
+    template = _template("outreach-small-business-free-plan")
+    client = client_for(owner)
+    page = _use_post(client, template, "preview/", recipient="ada@example.test").content.decode()
+    assert 'data-use-from="temitope@vitalos.co.uk"' in page and "send-unavailable" not in page
+    html = _use_post(client, template, "send/", recipient="ada@example.test").content.decode()
+    assert "Sent to ada@example.test" in html
+    [message] = mailoutbox
+    assert message.from_email == "Temitope Agbola <temitope@vitalos.co.uk>"
+    assert message.reply_to == ["temitope@vitalos.co.uk"]
+    assert "List-Unsubscribe" in message.extra_headers
+
+
+def test_outreach_connection_is_smtp_over_tls_when_configured(settings):
+    from apps.mailer.backends import outreach_connection
+
+    settings.OUTREACH_SMTP_HOST = ""
+    assert outreach_connection() is None
+    settings.OUTREACH_SMTP_HOST, settings.OUTREACH_SMTP_USER = "smtp.example.test", "t@vitalos.co.uk"
+    settings.OUTREACH_SMTP_PORT = 465
+    implicit = outreach_connection()
+    assert implicit.host == "smtp.example.test" and implicit.use_ssl and not implicit.use_tls
+    settings.OUTREACH_SMTP_PORT = 587
+    starttls = outreach_connection()
+    assert starttls.use_tls and not starttls.use_ssl

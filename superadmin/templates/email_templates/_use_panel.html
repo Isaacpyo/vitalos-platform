@@ -5,7 +5,7 @@
 
 {% if sent %}
   <div class="mb-3 rounded-md bg-mineral/10 p-3 text-sm text-mineral-700 dark:text-mineral-300" role="status" data-testid="use-sent">
-    {% if sent.delivered %}<strong>Sent to {{ sent.recipient }}.</strong> It went from {{ user.email }}; replies come back to you.{% else %}<strong>Not delivered.</strong> Email sending is off on this server (EMAIL_TRANSPORT is not resend), so nothing left the platform.{% endif %}
+    {% if sent.delivered %}<strong>Sent to {{ sent.recipient }}.</strong> It went from {{ send_from }}; replies come back there.{% else %}<strong>Not delivered.</strong> Email sending is off on this server (EMAIL_TRANSPORT is not resend), so nothing left the platform.{% endif %}
   </div>
 {% endif %}
 {% if send_error %}
@@ -30,15 +30,16 @@
 
 <div class="card mb-3 flex flex-wrap items-center gap-2 p-3" role="group" aria-label="Use this email">
   {% with blocked=package.needs_recipient %}
-    <button type="button" class="btn btn-primary" data-testid="send-email" data-use-send data-use-from="{{ user.email }}"
+    <button type="button" class="btn btn-primary" data-testid="send-email" data-use-send data-use-from="{{ send_from }}"
             hx-post="{% url 'email_templates:use_send' template.pk %}" hx-include="#use-form" hx-target="#use-panel" hx-swap="innerHTML"
-            hx-disabled-elt="this" {% if blocked or error or not recipient %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Send email</button>
+            hx-disabled-elt="this" {% if blocked or error or not recipient or send_unavailable %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Send email</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_subject" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %}>Copy subject</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_email" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %} data-testid="copy-email">Copy email</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_text" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %}>Copy plain text</button>
     <button type="submit" form="use-form" class="btn btn-secondary" data-testid="download-eml" {% if blocked or error %}disabled{% endif %}>{% icon "download" "h-4 w-4" %} Download .eml</button>
   {% endwith %}
-  <p class="muted w-full text-xs">Send email sends it now from {{ user.email }}, after you confirm; replies come back to you. Copy email keeps the layout when you paste into Gmail or Outlook. The .eml opens as an unsent draft from {{ user.email }}.</p>
+  {% if send_unavailable %}<p class="w-full text-xs text-amber-800 dark:text-amber-200" data-testid="send-unavailable">Send is off for this template: {{ send_unavailable }}</p>{% endif %}
+  <p class="muted w-full text-xs">Send email sends it now from {{ send_from }}, after you confirm; replies come back to that address. Copy email keeps the layout when you paste into Gmail or Outlook. The .eml opens as an unsent draft from {{ user.email }}.</p>
 </div>
 
 {% include "email_templates/_preview.html" %}
