@@ -1,0 +1,69 @@
+# Copy changes: reviewer (c)
+
+Scope: seed categories `retention` and `marketing` (`superadmin/apps/email_templates/seed/{retention,marketing}.json`) and the system emails moved onto the layout (`apps/enquiries/notifications.py`, `apps/accounts/services.py`, `apps/careers/alerts.py`, `apps/enquiries/services.py`, `apps/mailer/system.py`). Review notes are in `docs/email/review/reviewer-c.md`.
+
+"Opening text", "closing text" and so on name the block. `{{name}}` is a merge variable.
+
+## Retention
+
+| Email (key or function) | Field | Before | After | Reason |
+|---|---|---|---|---|
+| client-feedback-survey | preheader | A short survey that takes a few minutes. Honest answers are the most useful. | A short survey on what worked and what did not. Honest answers help us most. | "Takes a few minutes" is a time claim no source gives; the new line says what the survey covers. |
+| client-feedback-survey | opening text | Now that {{project_name}} has wrapped up, I would value your view on how we did: … | Now that {{project_name}} has finished, I would value your view of how we did: … | Plainer, less colloquial. |
+| client-feedback-survey | opening text | The survey is short. Candid feedback is the most useful kind, including anything we could have done better, and it directly shapes how we work with {{organisation}} and others. | The survey is short. Candid answers help us most, including anything we could have done better, and they shape how we work with {{organisation}} and others. | Tighter; "directly" overstated. |
+| client-feedback-survey | blocks | text, button, signature (privacy line inside the opening text) | text, button, closing text, signature | Category order: closing text after the button. |
+| client-feedback-survey | closing text | Your responses are used only to improve our work and will not be published without your permission. | We use your answers only to improve our work, and we will not publish them without your permission. | Active voice; same promise. |
+| testimonial-case-study-request | opening text | … would you be willing to provide a short testimonial, or help us write a case study about the project? | … would you give us a short testimonial, or help us write a case study about the project? | Shorter. |
+| testimonial-case-study-request | opening text | You can ask us to keep it anonymous, or simply decline; either is completely fine. | You can ask us to keep it anonymous, or decline; either is fine. | Filler words removed. |
+| testimonial-case-study-request | blocks | text, signature | text, closing text ("If you are open to it, just reply to this email."), signature | Category order; wording of the closing line unchanged. |
+| client-referral-request | kind | transactional | marketing | It promotes our services (it lists the five practice areas) and asks for new business, so under PECR it is direct marketing: it needs a reason line and the unsubscribe link. |
+| client-referral-request | reason | (none) | You are receiving this because you have worked with Vitalos. | Required for marketing; true for every intended recipient (existing or recent clients, per the description). |
+| client-referral-request | opening text | Introductions from people who have seen how we work first-hand mean a great deal to us. | Introductions from people who have seen our work first-hand mean a great deal to us. | Shorter. |
+| client-referral-request | opening text | A short email connecting us is plenty. | A short email connecting us is enough. | Plainer. |
+| client-referral-request | closing text | There is no expectation at all, and thank you for considering it. (inside the opening text) | There is no expectation, and thank you for considering it. (own block) | Filler removed; category order. |
+| contract-renewal-reminder | opening text | Your current agreement with Vitalos for {{service}} … it would be useful to review … | Your agreement with Vitalos for {{service}} … it would help to review … | Shorter. |
+| contract-renewal-reminder | opening text | - agree any adjustments before renewal | - agree any changes before renewal | Plainer; matches "agree any changes" in the preheader. |
+| contract-renewal-reminder | blocks | text (with the closing paragraph), details, button, signature | text, details, button, closing text, signature | The "tell us before the renewal date" line now follows the button, as the category order asks. |
+| contract-renewal-reminder | closing text | … please let us know before the renewal date so we can plan accordingly. | … please tell us before the renewal date so we can plan. | Shorter. |
+| contract-ending-offboarding | opening text | Thank you for the trust you have placed in us. | We are grateful for the trust you have placed in us. | The heading already says "Thank you"; avoids saying it twice in two lines. |
+| contract-ending-offboarding | button label | View offboarding plan | Review the offboarding plan | Matches the request in the text ("Please review it"); verb phrase with article, as elsewhere. |
+| contract-ending-offboarding | blocks | heading, text (with the closing sentence), button, signature | heading, text, button, closing text, signature | Category order; "If your needs change in future, we would be glad to hear from you." unchanged. |
+| client-thank-you-anniversary | subject | A note of thanks, {{first_name}} | A note of thanks | With the fallback the old subject read "A note of thanks, there". |
+| client-thank-you-anniversary | opening text | It is the anniversary of when we began working together on {{project_name}}, and I wanted to take a moment to say thank you. Work like this depends on the people on your side as much as on ours, and your team's openness and clear decisions made it better. | It is the anniversary of the start of our work together on {{project_name}}, and I wanted to say thank you. Work like this depends on the people on your side as much as on ours. | Removes a claim about the client's team that the template cannot know is true for every client; shorter. |
+| client-thank-you-anniversary | closing paragraph | If there is anything you would like us to look at, or you would simply like to share how things have gone since, I would be glad to hear from you. | If you would like to tell us how things have gone since, I would be glad to hear from you. | Removes the soft sales ask, so the email matches its description ("with no sales ask") and preheader ("no agenda attached") and stays transactional. |
+
+## Marketing
+
+| Email (key or function) | Field | Before | After | Reason |
+|---|---|---|---|---|
+| marketing-newsletter | reason | You are receiving this because you subscribed to Vitalos updates at vitalos.co.uk. | You are receiving this because you agreed to receive email updates from Vitalos. | vitalos.co.uk has no sign-up form for updates, so the old line was not true. See review note on consent. |
+| marketing-newsletter | blocks | heading, text, then three heading + text pairs, button, text, signature | heading, text, items (three stories), button, closing text, signature | A newsletter's stories as an item list: tag, title, summary and a link each; category order. |
+| marketing-newsletter | items[0] | heading "Decide before you build"; text "… Vitalos Consulting helps leaders reach clear transformation choices, a realistic roadmap and a sound architecture before committing significant budget." | tag "Consulting"; title unchanged; summary "… Vitalos Consulting helps leaders reach clear choices, a realistic roadmap and a sound architecture before they commit significant budget."; link https://vitalos.co.uk/what-we-do/consulting | Tighter; links to the live practice page. |
+| marketing-newsletter | items[1] | heading "AI and data with firm foundations"; text "… Vitalos AI & Data works from identifying the right opportunities, …" | tag "AI & Data"; title unchanged; summary "… Vitalos AI & Data works from finding the right opportunities, …"; link https://vitalos.co.uk/what-we-do/ai-data | Plainer verb; links to the practice page. |
+| marketing-newsletter | items[2] | heading "Look after what you rely on"; text unchanged | tag "Managed Services"; title and summary unchanged; link https://vitalos.co.uk/what-we-do/managed-services | Links to the practice page. |
+| marketing-newsletter | description | … edit or replace the sections before each send. | … edit or replace the stories before each send. | Matches the new item list. |
+| marketing-announcement | reason | You are receiving this because you subscribed to Vitalos updates at vitalos.co.uk. | You are receiving this because you agreed to receive email updates from Vitalos. | As for the newsletter. |
+| marketing-announcement | opening text | We wanted to let you know that {{offer}} is now available as part of {{service}}. | {{offer}} is now available as part of {{service}}. | Leads with the news. |
+| marketing-announcement | opening text | As with all our work, it begins with understanding … so that what we recommend fits your organisation rather than a template. The page below explains … | Like all our work, it starts with understanding … so that what we recommend fits your organisation rather than a template. The linked page explains … | "Below" is wrong in plain text, where the link comes after. |
+| marketing-announcement | button label | Find out more | Read the details | A specific verb phrase; matches "where to find the details" in the preheader. |
+| marketing-event-invite | reason | You are receiving this because you subscribed to Vitalos updates or event invitations at vitalos.co.uk. | You are receiving this because you agreed to receive email updates or event invitations from Vitalos. | No sign-up form on vitalos.co.uk; see the newsletter. |
+| marketing-event-invite | opening text | The event page sets out the agenda, format and how to take part. Registering takes a moment, and you can always let us know later if your plans change. | The event page sets out the agenda, the format and how to take part. If your plans change after you register, just let us know. | "Registering takes a moment" is a claim about a page we do not control. |
+| marketing-event-invite | closing text | If you are unable to attend, there is no need to reply. | If you cannot attend, there is no need to reply. | Plainer. |
+| marketing-event-reminder | heading | See you soon, {{first_name}} | See you soon | With the fallback the old heading read "See you soon, there". |
+| marketing-event-reminder | opening text | This is a quick reminder that {{event_name}} takes place on {{event_date}}. We are looking forward to it. … anything you may want to look at beforehand. | Hi {{first_name}}, / A quick reminder that {{event_name}} takes place on {{event_date}}. We look forward to seeing you. … anything you may want to read beforehand. | Greeting moved into the text, as in the rest of the category; tighter. |
+| marketing-event-reminder | button label | View event details | View the event details | Consistent with the other labels ("Read the details", "Review the offboarding plan"). |
+| marketing-event-reminder | closing text | If your plans have changed and you can no longer attend, a quick reply to let us know would be appreciated. Thank you. | If you can no longer attend, please reply to let us know. Thank you. | Shorter, direct. |
+| marketing-seasonal-thanks | reason | You are receiving this because you have worked with Vitalos or subscribed to our updates at vitalos.co.uk. | You are receiving this because you have worked with Vitalos or agreed to receive our email updates. | No sign-up form on vitalos.co.uk. |
+| marketing-seasonal-thanks | heading | Thank you, {{first_name}} | Thank you for this year | With the fallback the old heading read "Thank you, there". |
+| marketing-seasonal-thanks | opening text | As the year draws to a close, … / Whether we have worked together, talked through an idea or simply kept in touch, … | Hi {{first_name}}, / As the year draws to a close, … / Whether we have worked together, talked through an idea or kept in touch, … | Greeting moved into the text, as in the rest of the category; filler removed. |
+
+## Emails moved onto the layout
+
+| Email (key or function) | Field | Before | After | Reason |
+|---|---|---|---|---|
+| `mailer.system.link_fallback` (enquiry alerts, digest, password link, hiring alert) | text | If the button does not work, open this link: {url} | If the button does not work, copy this link into your browser: {url} | The line is for readers whose client does not show the button; the URL in a muted text block is not a link in our HTML, so "open" may not be possible but copying is. |
+| `enquiries.notifications._single_document` | button label | Open enquiry | Open the enquiry | "Open enquiry" also reads as a status (an enquiry that is open). Matches "Open the inbox". |
+| `enquiries.notifications.build_email` (digest) | heading | Enquiries digest, {day} | Daily enquiries digest, {day} | Keeps the fact from the old digest's intro ("Your daily summary of enquiry activity."), which the move dropped. Subject unchanged. |
+| `careers.alerts.alert_email` | button label | Open applications | Review applications | "Open applications" also reads as "applications that are open". |
+| `careers.alerts.alert_email` | preheader | Open it / them in the Super Admin to review. | Review it / them in the Super Admin. | Shorter; the old line ended on a dangling "to review". |
+| `careers.alerts.alert_email` | footer notice | You get this because you are on the careers notification list. | You get this as a careers notification recipient. Change who gets these emails in Careers › Settings. | When no list is chosen every super admin gets the alert, so "on the list" was not always true. Adds where to change it, as the enquiry notice does (Careers › Settings is the "Who hears about new applications" field). |
