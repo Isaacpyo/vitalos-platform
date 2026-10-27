@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "email:gallery": "NODE_OPTIONS=--conditions=react-server tsx scripts/email-gallery.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
@@ -56,6 +57,7 @@
     "openapi-typescript": "7.13.0",
     "prettier": "3.9.10",
     "tailwindcss": "4.3.3",
+    "tsx": "4.23.13",
     "typescript": "6.0.3",
     "vitest": "5.0.3"
   }

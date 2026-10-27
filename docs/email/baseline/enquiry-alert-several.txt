@@ -1,0 +1,29 @@
+New enquiry: VIT-0001
+Subject: Website rebuild for our care homes
+From: Alex Example <alex@example-care.example>
+
+Hello, this is Alex Example. We would like to talk about website rebuild for our care homes. Could you tell us how you would approach it and what you need from us?
+
+Open: https://admin.vitalos.co.uk/enquiries/VIT-0001/
+
+----
+
+Customer replied: VIT-0002
+Subject: Support for our tenant portal
+From: Sam Example <sam@example-housing.example>
+
+Hello, this is Sam Example. We would like to talk about support for our tenant portal. Could you tell us how you would approach it and what you need from us?
+
+Open: https://admin.vitalos.co.uk/enquiries/VIT-0002/
+
+----
+
+Assigned to you: VIT-0003
+Subject: Data dashboard for governors
+From: Jo Example <jo@example-school.example>
+
+Hello, this is Jo Example. We would like to talk about data dashboard for governors. Could you tell us how you would approach it and what you need from us?
+
+Open: https://admin.vitalos.co.uk/enquiries/VIT-0003/
+
+Change these emails in Enquiries → Notification settings.

@@ -762,3 +762,63 @@ def test_every_block_type_is_in_the_palette():
 
     assert set(BLOCK_LABELS) == set(services.BLOCK_TYPES)
     assert all(new_block(kind)["type"] == kind for kind in BLOCK_LABELS)
+
+
+# --- Review rules (docs/email/REVIEW.md) ------------------------------------------------------------
+
+
+def test_review_rules_flag_each_problem(db):
+    from apps.email_templates.review import review_problems
+
+    item = {
+        "key": "example",
+        "category": "outreach",
+        "kind": "outreach",
+        "header_label": "A Very Long Label",
+        "subject": "An Unusually Capitalised Subject Line That Is Far Too Long For Any Inbox Today",
+        "preheader": "Short",
+        "reason": "",
+        "blocks": [
+            {"type": "text", "text": "Hello Temitope! A magic {{nope}} offer."},
+            {"type": "button", "label": "One", "url": "http://example.test"},
+            {"type": "button", "label": "Two", "url": "{{meeting_link}}"},
+        ],
+    }
+    found = "\n".join(review_problems(item))
+    for expected in (
+        "subject is",
+        "not sentence case",
+        "preheader is 5 characters",
+        "header label has 4 words",
+        "2 buttons",
+        "button 'One' has no https",
+        "without a reason line",
+        "exclamation mark",
+        "banned words ['magic']",
+        "hard-coded person",
+        "unknown variables ['nope']",
+    ):
+        assert expected in found, expected
+
+
+def test_review_command_reports_the_library(library):
+    out = io.StringIO()
+    call_command("review_email_templates", stdout=out)
+    assert "81 templates, 0 seed problems" in out.getvalue()
+
+
+def test_email_gallery_renders_every_email_without_storing_anything(library, tmp_path):
+    from apps.enquiries.models import Enquiry
+
+    out = io.StringIO()
+    call_command("email_gallery", "--out", str(tmp_path), stdout=out)
+    manifest = __import__("json").loads((tmp_path / "manifest.json").read_text())
+    slugs = {entry["slug"] for entry in manifest}
+    assert {"enquiry-alert-single", "enquiry-digest", "inbox-reply", "account-password-link"} <= slugs
+    assert {"careers-hiring-alert", "relay-digest", "library-client-welcome"} <= slugs
+    assert all(entry["state"] == "layout" for entry in manifest)
+    assert not Enquiry.objects.exists()  # fixtures were rolled back
+    page = (tmp_path / "emails" / "enquiry-alert-single.html").read_text()
+    assert "cid:" not in page and "../assets/vitalos-logo-white.png" in page
+    assert "@media all{" in (tmp_path / "emails" / "enquiry-alert-single.dark.html").read_text()
+    assert 'data-filter="repo"' in (tmp_path / "index.html").read_text()

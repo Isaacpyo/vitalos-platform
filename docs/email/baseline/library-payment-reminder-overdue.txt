@@ -1,0 +1,31 @@
+VITALOS · OVERDUE
+
+Hi Alex,
+
+Our records show that invoice INV-EXAMPLE-01 for £1,000.00, due on 30 November 2026, has not yet been paid. It is now 7 days overdue.
+
+If you have paid in the last few days, thank you; please send the remittance details so we can match the payment. If something is holding it up, reply and tell us, and we will work through it with you.
+
+Otherwise, we would be grateful if you could arrange payment as soon as possible.
+
+Invoice: INV-EXAMPLE-01
+Amount: £1,000.00
+Due date: 30 November 2026
+Days overdue: 7
+
+View invoice: https://vitalos.co.uk/contact?document=example
+
+Kind regards,
+Sam Example
+Delivery Lead
+Vitalos Technologies
+
+--
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+Instagram: https://www.instagram.com/vitalos
+Facebook: https://www.facebook.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk

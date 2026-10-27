@@ -1,0 +1,32 @@
+VITALOS · SIGN-OFF
+
+Hi Alex,
+
+Design sign-off for Example Care Group website is ready for user acceptance testing. This is your team's opportunity to confirm that what we have built works for the people who will use it, in the way you expect.
+
+The linked test pack explains:
+- what is in scope for testing, with suggested scenarios
+- how to report issues and how we will prioritise them
+- what sign-off means and who should give it
+
+Please complete testing and confirm sign-off by the date below. If you find issues, we will fix those within scope and agree the rest with you before asking for sign-off again.
+
+Milestone: Design sign-off
+Sign-off requested by: 30 November 2026
+
+Open the test pack: https://vitalos.co.uk/contact?document=example
+
+Kind regards,
+Sam Example
+Delivery Lead
+Vitalos Technologies
+
+--
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+Instagram: https://www.instagram.com/vitalos
+Facebook: https://www.facebook.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk

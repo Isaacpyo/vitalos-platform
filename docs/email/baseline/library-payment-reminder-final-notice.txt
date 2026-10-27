@@ -1,0 +1,31 @@
+VITALOS · FINAL NOTICE
+
+Hi Alex,
+
+Despite our earlier reminders, invoice INV-EXAMPLE-01 for £1,000.00 remains unpaid. It was due on 30 November 2026 and is now 7 days overdue.
+
+We value our relationship with Example Care Group and would much rather resolve this directly. Please arrange payment, or reply to let us know when it will be made or whether there is a query we need to address.
+
+If we do not hear from you, we may need to pause work and refer the matter on.
+
+Invoice: INV-EXAMPLE-01
+Amount: £1,000.00
+Due date: 30 November 2026
+Days overdue: 7
+
+View invoice: https://vitalos.co.uk/contact?document=example
+
+Kind regards,
+Sam Example
+Delivery Lead
+Vitalos Technologies
+
+--
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+Instagram: https://www.instagram.com/vitalos
+Facebook: https://www.facebook.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk
