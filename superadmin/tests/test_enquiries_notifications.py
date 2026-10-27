@@ -90,7 +90,13 @@ def test_new_enquiry_goes_to_the_owner_at_once(owner, colleague, mailoutbox):
     assert sent.to == ["owner@example.test"]
     assert sent.from_email == "Vitalos Admin <notifications@vitalos.co.uk>"
     assert sent.extra_headers["Auto-Submitted"] == "auto-generated"
-    assert sent.attachments == []
+    assert sent.extra_headers["X-Vitalos-Notification"] == "enquiries.update"
+    # Only the layout's inline images: no file attachments.
+    assert sent.attachments and all(part.get_content_disposition() == "inline" for part in sent.attachments)
+    html = sent.alternatives[0][0]
+    assert "New enquiry: VIT-0001" in html and ">Open enquiry</a>" in html
+    assert "Change these emails in Enquiries › Notification settings." in html
+    assert sent.body.startswith("VITALOS · ENQUIRIES")
     assert "VIT-0001" in sent.subject
     assert "Jane Customer <jane@customer.example>" in sent.body
     assert f"https://admin.example.test{enquiry.get_absolute_url()}" in sent.body
@@ -159,6 +165,9 @@ def test_bursts_within_two_minutes_coalesce(owner, mailoutbox):
     combined = mailoutbox[1]
     assert combined.subject == "2 enquiry updates"
     assert "VIT-0002" in combined.body and "VIT-0003" in combined.body
+    html = combined.alternatives[0][0]
+    assert "2 enquiry updates</h1>" in html and ">Open the inbox</a>" in html
+    assert html.count('class="v-rule" style="padding:12px 0;border-top') == 2
     assert not OutboundNotification.objects.filter(sent_at__isnull=True).exists()
 
 
@@ -196,6 +205,8 @@ def test_digest_goes_once_a_day_from_eight(owner, mailoutbox):
     assert notifications.send_digests(datetime(2026, 10, 12, 7, 59, tzinfo=LONDON)) == 0
     assert notifications.send_digests(datetime(2026, 10, 12, 8, 0, tzinfo=LONDON)) == 1
     assert mailoutbox[0].subject.startswith("Enquiries digest")
+    assert "Enquiries digest, " in mailoutbox[0].alternatives[0][0]
+    assert mailoutbox[0].extra_headers["X-Vitalos-Notification"] == "enquiries.digest"
     assert mailoutbox[0].extra_headers["Auto-Submitted"] == "auto-generated"
     _row(owner, enquiry, datetime(2026, 10, 12, 9, 0, tzinfo=LONDON), mode=DIGEST)
     assert notifications.send_digests(datetime(2026, 10, 12, 10, 0, tzinfo=LONDON)) == 0

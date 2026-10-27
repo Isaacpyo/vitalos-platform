@@ -5,7 +5,8 @@ Email rules (protecting the Resend free tier of 100 emails a day, which replies 
   coalesced into one email.
 - At most 20 instant emails per recipient per hour; overflow rolls into the 08:00 daily digest.
 - At 80 emails in a day a warning is logged; at RESEND_DAILY_LIMIT remaining instants roll to digest.
-Emails carry ``Auto-Submitted: auto-generated`` (RFC 3834) and never include attachments.
+Emails render on the shared layout (ADR-030), carry ``Auto-Submitted: auto-generated`` (RFC 3834) and
+``X-Vitalos-Notification`` (ADR-046), and never include file attachments (only the layout's inline images).
 """
 
 import json
@@ -17,12 +18,14 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.mail import EmailMessage
 from django.db import transaction
 from django.db.models import Max
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateformat import format as date_format
 
 from apps.audit.services import record
+from apps.mailer import system
 from apps.notifications.models import Notification
 from apps.notifications.services import notify
 
@@ -40,7 +43,10 @@ HOURLY_CAP = 20
 DAILY_WARNING = 80
 DIGEST_HOUR = 8
 SNIPPET_LENGTH = 300
+ITEM_SUMMARY_LENGTH = 160
 SLACK_TIMEOUT = 5
+SETTINGS_NOTICE = "Change these emails in Enquiries › Notification settings."
+CHANNELS = {"email": "Email", "web_form": "Website form"}
 
 KINDS = {
     Event.NEW_ENQUIRY: Notification.Kind.ENQUIRY_NEW,
@@ -218,38 +224,98 @@ def _latest_text(enquiry) -> str:
     return " ".join((text or "").split())[:SNIPPET_LENGTH]
 
 
-def _item(row) -> str:
+def _sender(enquiry) -> str:
+    return f"{enquiry.from_name} <{enquiry.from_email}>" if enquiry.from_name else enquiry.from_email
+
+
+def _received(enquiry) -> str:
+    return date_format(timezone.localtime(enquiry.created_at), "D j M Y, H:i")
+
+
+def _single_document(row) -> dict:
     enquiry = row.enquiry
-    sender = f"{enquiry.from_name} <{enquiry.from_email}>" if enquiry.from_name else enquiry.from_email
-    return (
-        f"{TITLES[row.event]}: {enquiry.ref}\n"
-        f"Subject: {enquiry.subject or '(no subject)'}\n"
-        f"From: {sender}\n\n"
-        f"{_latest_text(enquiry)}\n\n"
-        f"Open: {settings.APP_BASE_URL}{enquiry.get_absolute_url()}\n"
-    )
+    url = f"{settings.APP_BASE_URL}{enquiry.get_absolute_url()}"
+    channel = CHANNELS.get(enquiry.source, enquiry.source)
+    return {
+        "title": f"{TITLES[row.event]}: {enquiry.ref}",
+        "preheader": f"From {enquiry.from_name or enquiry.from_email}: {enquiry.subject or '(no subject)'}",
+        "headerLabel": "Enquiries",
+        "blocks": [
+            {"type": "heading", "text": f"{TITLES[row.event]}: {enquiry.ref}"},
+            {"type": "text", "tone": "muted", "text": enquiry.subject or "(no subject)"},
+            {"type": "badge", "items": [enquiry.from_name or enquiry.from_email, channel]},
+            {"type": "quote", "text": _latest_text(enquiry), "missing": "No message text"},
+            {
+                "type": "details",
+                "rows": [
+                    {"label": "Reference", "value": enquiry.ref, "code": True},
+                    {"label": "From", "value": _sender(enquiry), "href": f"mailto:{enquiry.from_email}"},
+                    {"label": "Received", "value": _received(enquiry)},
+                    {"label": "Channel", "value": channel},
+                ],
+            },
+            {"type": "button", "label": "Open enquiry", "url": url},
+            system.link_fallback(url),
+        ],
+        "footer": system.footer(SETTINGS_NOTICE),
+    }
+
+
+def _list_item(row) -> dict:
+    enquiry = row.enquiry
+    summary = _latest_text(enquiry)
+    if len(summary) > ITEM_SUMMARY_LENGTH:
+        summary = summary[: ITEM_SUMMARY_LENGTH - 1].rstrip() + "…"
+    return {
+        "tag": TITLES[row.event],
+        "title": f"{enquiry.ref}: {enquiry.subject or '(no subject)'}",
+        "summary": summary,
+        "meta": f"From {_sender(enquiry)} · {_received(enquiry)}",
+        "href": f"{settings.APP_BASE_URL}{enquiry.get_absolute_url()}",
+    }
+
+
+def _list_document(rows, heading: str) -> dict:
+    refs = list(dict.fromkeys(row.enquiry.ref for row in rows))
+    shown = ", ".join(refs[:3]) + (f" and {len(refs) - 3} more" if len(refs) > 3 else "")
+    url = settings.APP_BASE_URL + reverse("enquiries:inbox")
+    return {
+        "title": heading,
+        "preheader": f"Updates on {shown}",
+        "headerLabel": "Enquiries",
+        "blocks": [
+            {"type": "heading", "text": heading},
+            {"type": "items", "items": [_list_item(row) for row in rows]},
+            {"type": "button", "label": "Open the inbox", "url": url},
+            system.link_fallback(url),
+        ],
+        "footer": system.footer(SETTINGS_NOTICE),
+    }
+
+
+def build_email(rows, *, digest: bool, now=None) -> tuple[str, dict]:
+    """Subject and layout document for one notification email (also used by the email gallery)."""
+    if digest:
+        day = date_format(timezone.localtime(now or timezone.now()), "j F Y")
+        subject = f"Enquiries digest: {len(rows)} update{'s' if len(rows) != 1 else ''}"
+        return subject, _list_document(rows, f"Enquiries digest, {day}")
+    if len(rows) == 1:
+        row = rows[0]
+        subject = f"{TITLES[row.event]}: {row.enquiry.ref} {row.enquiry.subject or ''}".strip()
+        return subject, _single_document(row)
+    subject = f"{len(rows)} enquiry updates"
+    return subject, _list_document(rows, subject)
 
 
 def _send(user, rows, *, digest: bool) -> None:
-    if digest:
-        subject = f"Enquiries digest: {len(rows)} update{'s' if len(rows) != 1 else ''}"
-        intro = "Your daily summary of enquiry activity.\n\n"
-    elif len(rows) == 1:
-        row = rows[0]
-        subject = f"{TITLES[row.event]}: {row.enquiry.ref} {row.enquiry.subject or ''}".strip()
-        intro = ""
-    else:
-        subject = f"{len(rows)} enquiry updates"
-        intro = ""
-    body = intro + "\n----\n\n".join(_item(row) for row in rows)
-    body += "\nChange these emails in Enquiries → Notification settings.\n"
-    EmailMessage(
-        subject=subject[:200],
-        body=body,
-        from_email=settings.NOTIFY_FROM_HEADER,
+    subject, doc = build_email(rows, digest=digest)
+    system.send(
+        doc,
+        kind="enquiries.digest" if digest else "enquiries.update",
+        subject=subject,
         to=[user.email],
-        headers={"Auto-Submitted": "auto-generated", "X-Auto-Response-Suppress": "All"},
-    ).send(fail_silently=False)
+        from_email=settings.NOTIFY_FROM_HEADER,
+    )
 
 
 def _deliver(user, rows, now, *, digest: bool) -> bool:
