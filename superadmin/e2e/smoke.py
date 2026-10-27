@@ -269,7 +269,7 @@ class Smoke:
         expect(self.page.get_by_test_id("bell")).to_be_visible()
 
     def use_template(self) -> None:
-        """Mail > Email templates > Use: fill a detail, see the live preview and the not-ready warning."""
+        """Mail > Email templates > Use: fill a detail, see the live preview, the fallback note and Send."""
         self.page.goto(self.url("/mail/templates/?q=proposal-sent"))
         link = self.page.get_by_test_id("use-template").first
         if link.count() == 0:
@@ -284,8 +284,9 @@ class Smoke:
         self.page.get_by_label("Recipient's first name").fill("Smoke")
         self.wait_htmx()
         expect(self.page.get_by_test_id("empty-variables")).to_be_visible()
-        self.check("Use template preview re-renders and warns about empty details", True)
+        self.check("Use template preview re-renders and lists the empty optional details", True)
         expect(self.page.get_by_test_id("download-eml")).to_be_enabled()
+        expect(self.page.get_by_test_id("send-email")).to_be_enabled()  # not clicked: the smoke sends no mail
         self.shot("17-use-template")
 
     def cleanup(self, names: dict[str, str], project: str, kpi: str, password: str) -> None:

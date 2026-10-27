@@ -493,14 +493,21 @@
     field.dispatchEvent(new Event("input", { bubbles: true }));
   });
 
-  // Use template: highlight a detail as soon as it is emptied (the server re-checks on every preview).
-  document.addEventListener("input", function (event) {
-    var field = event.target;
-    if (!field.matches || !field.matches("[data-use-field]")) return;
-    var empty = field.value.trim() === "";
-    field.setAttribute("data-empty", empty ? "true" : "false");
-    var hint = document.getElementById(field.getAttribute("aria-describedby"));
-    if (hint && hint.hasAttribute("data-use-hint")) hint.hidden = !empty;
+  // Use template: confirm a send with the recipient as typed now (the panel may not have caught up yet).
+  document.addEventListener("htmx:confirm", function (event) {
+    var button = event.target;
+    if (!button.matches || !button.matches("[data-use-send]")) return;
+    event.preventDefault();
+    var field = document.getElementById("use-recipient");
+    var recipient = field ? field.value.trim() : "";
+    if (!recipient) {
+      useStatus("Add the recipient's email address to send.", true);
+      return;
+    }
+    var from = button.getAttribute("data-use-from");
+    if (window.confirm("Send this email to " + recipient + " now, from " + from + "?")) {
+      event.detail.issueRequest(true);
+    }
   });
 
   // Use template: copy buttons. The server renders the email for this recipient (and audits it);

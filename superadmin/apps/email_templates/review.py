@@ -28,8 +28,9 @@ PROPER_NOUNS = {
     "Sunday", "January", "February", "March", "April", "May", "June", "July", "August", "September",
     "October", "November", "December", "Microsoft", "Google", "Zoom", "Teams",
 }  # fmt: skip
-#: Templates only the founder sends, which may sign with a fixed name.
-FOUNDER_ONLY: set[str] = set()
+#: Templates only the founder sends, which may sign with a fixed name (a text sign-off, not the
+#: signature block, which signs as whoever is signed in).
+FOUNDER_ONLY: set[str] = {"outreach-small-business-free-plan"}
 HARD_CODED_PEOPLE = re.compile(r"\b(Temitope|Agbola)\b")
 EMOJI = re.compile("[\U0001f300-\U0001faff☀-➿]")
 VARIABLE = re.compile(r"\{\{\s*[a-zA-Z_][a-zA-Z0-9_]*\s*\}\}")

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from email.utils import formataddr
+from email.utils import formataddr, make_msgid
 from pathlib import Path
 
 from django.conf import settings
@@ -34,6 +36,8 @@ from .models import (
 )
 from .rendering import RenderedTemplate, preview_html, render_content, sample_values, unsubscribe_url
 from .variables import VARIABLES, Variable, names_in
+
+logger = logging.getLogger("superadmin.mail")
 
 SEED_DIR = Path(__file__).resolve().parent / "seed"
 BLOCK_TYPES = (
@@ -276,6 +280,9 @@ def send_test(template: EmailTemplate, *, user, request=None) -> str:
 VALUE_MAX_LENGTH = 1000
 RECENT_ENQUIRIES = 25
 USE_ACTIONS = ("copy_subject", "copy_email", "copy_text", "download_eml")
+USE_SENDS_PER_HOUR = 60
+#: A second send of the same template to the same recipient within this window is refused (double click).
+RESEND_GUARD_SECONDS = 120
 _CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _USE_FIELDS = ("subject", "preheader", "reason", "footer_notice", "blocks")
 
@@ -293,7 +300,8 @@ class UsePackage:
 
     @property
     def ready(self) -> bool:
-        return not self.empty and not self.needs_recipient
+        """Every detail is optional: an empty one shows its fallback. Only a missing recipient blocks."""
+        return not self.needs_recipient
 
     @property
     def subject(self) -> str:
@@ -424,6 +432,19 @@ def prepare_use(
     require_superadmin(user)
     if action not in USE_ACTIONS:
         raise ValidationError("Unknown action.")
+    _check_use(template, recipient)
+    package = _use_render(template, values, recipient)
+    record(
+        "email_templates.used",
+        request=request,
+        actor=user,
+        entity=template,
+        summary=f"{template.name} (v{template.version}): {action}",
+    )
+    return package
+
+
+def _check_use(template: EmailTemplate, recipient: str) -> None:
     if not can_use(template):
         raise ValidationError("Archived templates cannot be used. Unarchive it first.")
     if template.needs_opt_out:
@@ -436,22 +457,13 @@ def prepare_use(
             raise ValidationError(
                 "This recipient has unsubscribed from outreach and marketing email. Do not send it to them."
             )
-    package = _use_render(template, values, recipient)
-    record(
-        "email_templates.used",
-        request=request,
-        actor=user,
-        entity=template,
-        summary=f"{template.name} (v{template.version}): {action}",
-    )
-    return package
 
 
-def eml_message(template: EmailTemplate, package: UsePackage, *, user):
-    """An unsent draft for Outlook or Apple Mail: from the signed-in user, to the recipient if given."""
+def _message(template: EmailTemplate, package: UsePackage, *, user, headers: dict[str, str], **kwargs):
+    """The email from the signed-in user, to the recipient if given."""
     name = clean_line(user.get_full_name() or "")
     sender = formataddr(("" if name == user.email else name, user.email))
-    headers = {"X-Unsent": "1"}
+    headers = dict(headers)
     if template.needs_opt_out:
         headers["List-Unsubscribe"] = f"<{unsubscribe_url(package.recipient, template.key)}>"
         headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
@@ -461,7 +473,67 @@ def eml_message(template: EmailTemplate, package: UsePackage, *, user):
         to=[package.recipient] if package.recipient else [],
         from_email=sender,
         headers=headers,
+        **kwargs,
     )
+
+
+def eml_message(template: EmailTemplate, package: UsePackage, *, user):
+    """An unsent draft for Outlook or Apple Mail: from the signed-in user, to the recipient if given."""
+    return _message(template, package, user=user, headers={"X-Unsent": "1"})
+
+
+def send_use(
+    template: EmailTemplate, *, user, values: Mapping[str, str], recipient: str, request=None
+) -> bool:
+    """Sends the filled-in template to one recipient, from the signed-in admin's own address.
+
+    The rules for copying apply (archived, outreach recipient, unsubscribed), plus: a recipient is always
+    needed, the sender's address must be on the Vitalos sending domain, sends are limited per hour and a
+    repeat of the same send within two minutes is refused. A person sends it, so it carries no
+    Auto-Submitted header (ADR-046 is for automated mail); replies go to the sender. The audit event
+    never holds the recipient's address. Returns True if it left the platform (EMAIL_TRANSPORT=resend).
+    """
+    require_superadmin(user)
+    if not recipient:
+        raise ValidationError("Add the recipient's email address to send.")
+    sender = (user.email or "").strip().lower()
+    if not sender.endswith(TEST_DOMAIN):
+        raise ValidationError(f"Email is sent from your own address, which must be a {TEST_DOMAIN} address.")
+    _check_use(template, recipient)
+    counter = f"email-templates:sends:{user.pk}"
+    cache.add(counter, 0, timeout=3600)
+    if cache.incr(counter) > USE_SENDS_PER_HOUR:
+        raise ValidationError(
+            f"You can send {USE_SENDS_PER_HOUR} emails an hour from templates. Try again later."
+        )
+    digest = hashlib.sha256(recipient.encode()).hexdigest()[:24]
+    guard = f"email-templates:sent:{user.pk}:{template.pk}:{digest}"
+    if not cache.add(guard, 1, timeout=RESEND_GUARD_SECONDS):
+        raise ValidationError("You sent this email to this recipient a moment ago. It was not sent again.")
+    package = _use_render(template, values, recipient)
+    message = _message(
+        template,
+        package,
+        user=user,
+        headers={"Message-ID": make_msgid(domain="vitalos.co.uk")},
+        reply_to=[user.email],
+    )
+    try:
+        message.send(fail_silently=False)
+    except Exception:  # noqa: BLE001 - any transport failure is reported to the sender
+        cache.delete(guard)
+        logger.warning("Template send failed", extra={"template": template.key}, exc_info=True)
+        raise ValidationError(
+            "The email could not be sent. Try again, or download the .eml and send it yourself."
+        ) from None
+    record(
+        "email_templates.sent",
+        request=request,
+        actor=user,
+        entity=template,
+        summary=f"{template.name} (v{template.version})",
+    )
+    return settings.EMAIL_TRANSPORT == "resend"
 
 
 def unsubscribe(email: str, template_key: str, request=None) -> None:

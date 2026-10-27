@@ -20,6 +20,7 @@ urlpatterns = [
     path("templates/<int:pk>/use/frame/", views.use_frame, name="use_frame"),
     path("templates/<int:pk>/use/payload/", views.use_payload, name="use_payload"),
     path("templates/<int:pk>/use/eml/", views.use_eml, name="use_eml"),
+    path("templates/<int:pk>/use/send/", views.use_send, name="use_send"),
     path("templates/<int:pk>/archive/", views.template_archive, name="archive"),
     path("templates/<int:pk>/send-test/", views.template_send_test, name="send_test"),
     path("unsubscribe/<str:token>/", views.unsubscribe, name="unsubscribe"),
