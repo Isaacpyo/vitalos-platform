@@ -31,6 +31,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:boundaries": "dependency-cruiser --config dependency-cruiser.cjs apps packages services workers",
+    "check:email": "node tooling/scripts/check-email-senders.mjs",
     "check:raw-colours": "node tooling/scripts/check-raw-colours.mjs",
     "media:slots": "node tooling/scripts/media-slots.mjs && prettier --write docs/design/IMAGE-SLOTS.md",
     "media:product-snapshot": "node tooling/scripts/product-snapshot.mjs",

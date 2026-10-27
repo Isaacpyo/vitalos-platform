@@ -10,6 +10,12 @@
 - Production changes listed under "Pre-authorized production actions" need no approval. Everything else in production follows the stop list in Autonomy.
 - Editorial content lives in the repo (packages/cms/src/repo, ADR-028); PostgreSQL owns operational records; controlled evidence stays out of the public site.
 
+## Email
+
+- Every email renders on the shared layout (`@vitalos/email-layout`, ADR-030; Python mirror `superadmin/apps/mailer/layout.py`). Change the look only in `packages/email-layout`, mirror it in `layout.py` and regenerate the golden fixtures with `vitest run -u`; never hand-edit `superadmin/email-layout/`.
+- Only the mailer modules call a mail API (`tooling/scripts/check-email-senders.mjs`, run in CI): the Super Admin sends through `apps.mailer` (`system.send` for automated mail), the website through its notifier adapter, Relay through `relay-core`'s mailer. A justified exception goes in `tooling/email-senders.allow` with a reason.
+- Automated email carries `Auto-Submitted: auto-generated` and `X-Vitalos-Notification: <kind>` (ADR-046). Test sends go only to `@vitalos.co.uk` addresses. See `docs/email/README.md`.
+
 ## Autonomy
 
 - Finish tasks end to end. Do not hand back setup steps you can do yourself; when one step is blocked, do everything around it and report the exact blocker.

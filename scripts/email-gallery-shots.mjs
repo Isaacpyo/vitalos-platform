@@ -48,15 +48,21 @@ for (const scheme of ["light", "dark"]) {
 }
 
 const escape = (value) =>
-  String(value).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  String(value).replace(
+    /[&<>"]/g,
+    (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
+  );
 const categories = [...new Set(manifest.map((entry) => entry.category))].sort();
 const sheetPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 for (const category of categories) {
   const entries = manifest.filter((entry) => entry.category === category);
-  const shot = (entry, scheme) => pathToFileURL(join(gallery, "shots", `${entry.slug}.${scheme}.600.png`)).href;
+  const shot = (entry, scheme) =>
+    pathToFileURL(join(gallery, "shots", `${entry.slug}.${scheme}.600.png`)).href;
   const cells = entries
     .map(
-      (entry) => `<figure><figcaption><b>${escape(entry.name)}</b><br>${escape(entry.subject)}</figcaption>
+      (
+        entry,
+      ) => `<figure><figcaption><b>${escape(entry.name)}</b><br>${escape(entry.subject)}</figcaption>
 <div class="pair"><div class="crop"><img src="${shot(entry, "light")}"></div><div class="crop"><img src="${shot(entry, "dark")}"></div></div></figure>`,
     )
     .join("");

@@ -58,6 +58,8 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - name: Ruff
         run: ruff check . && ruff format --check .
+      - name: Email guard (only the mailer modules call a mail API; AGENTS.md, Email)
+        run: node ../tooling/scripts/check-email-senders.mjs
       - name: Migrations are up to date
         run: python manage.py makemigrations --check --dry-run
         env:
