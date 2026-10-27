@@ -14,7 +14,7 @@
       { "type": "badge", "items": ["{{service}}", "{{timeframe}}"] },
       { "type": "details", "rows": [["Name", "{{full_name}}"], ["Organisation", "{{organisation}}"], ["Role", "{{role}}"], ["Email", "{{email}}"], ["Reference", "{{reference}}"], ["Intent", "{{intent}}"], ["Budget", "{{budget_range}}"], ["Source", "{{source_page}}"], ["Received", "{{received_at}}"]] },
       { "type": "quote", "text": "{{goal}}" },
-      { "type": "button", "label": "Open lead", "url": "{{admin_link}}" }
+      { "type": "button", "label": "Open the lead", "url": "{{admin_link}}" }
     ]
   },
   {
@@ -30,7 +30,7 @@
     "blocks": [
       { "type": "text", "text": "Hi {{assignee_name}},\n\n{{full_name}} at {{organisation}} has viewed or accepted the proposal for {{project_name}}. The record shows which, and when.\n\n- If viewed: follow up while it is fresh.\n- If accepted: start the contract and onboarding steps." },
       { "type": "details", "rows": [["Contact", "{{full_name}}"], ["Organisation", "{{organisation}}"], ["Project", "{{project_name}}"], ["Reference", "{{reference}}"]] },
-      { "type": "button", "label": "Open record", "url": "{{admin_link}}" }
+      { "type": "button", "label": "Open the record", "url": "{{admin_link}}" }
     ]
   },
   {
@@ -46,7 +46,7 @@
     "blocks": [
       { "type": "text", "text": "Hi {{assignee_name}},\n\nA payment has been recorded against invoice {{invoice_number}}. Please reconcile it, mark the invoice paid and confirm the client receipt has gone out." },
       { "type": "details", "rows": [["Organisation", "{{organisation}}"], ["Invoice", "{{invoice_number}}"], ["Amount", "{{amount}}"], ["Project", "{{project_name}}"]] },
-      { "type": "button", "label": "Open invoice", "url": "{{admin_link}}" }
+      { "type": "button", "label": "Open the invoice", "url": "{{admin_link}}" }
     ]
   },
   {
@@ -62,7 +62,7 @@
     "blocks": [
       { "type": "text", "text": "Hi {{assignee_name}},\n\nThe task below is due. Please complete it, or update the due date so the pipeline stays accurate." },
       { "type": "details", "rows": [["Task", "{{task_name}}"], ["Due", "{{task_due}}"], ["Organisation", "{{organisation}}"], ["Reference", "{{reference}}"]] },
-      { "type": "button", "label": "Open task", "url": "{{admin_link}}" }
+      { "type": "button", "label": "Open the task", "url": "{{admin_link}}" }
     ]
   }
 ]
