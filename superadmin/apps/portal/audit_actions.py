@@ -18,6 +18,8 @@ PORTAL_ACTIONS = {
     "portal.challenge_linked": "Linked an opportunity to the client portal",
     "portal.challenge_shared": "Shared a challenge with the customer",
     "portal.challenge_updated": "Edited a portal challenge",
+    "portal.stage_synced": "Updated the customer-visible journey stage to match the opportunity",
+    "portal.project_from_proposal": "Created an unpublished portal project from an approved proposal",
     "portal.brief_saved": "Saved a brief version",
     "portal.brief_proposed": "Proposed a brief version to the customer",
     "portal.brief_reviewed": "Customer reviewed a proposed brief",

@@ -32,6 +32,7 @@ class QueueItem:
     evidence: str = ""
     overdue: bool = False
     state: str = ""
+    source: str = ""
 
 
 @dataclass
@@ -184,6 +185,29 @@ def work_queue(today: date | None = None) -> list[Group]:
             )
         )
 
+    # Blocked: AI tasks that stopped moving (a dead worker or a task nobody picked up). The tick recovers
+    # them on its next run; until then they are visible here, with a retry.
+    now = timezone.now()
+    stale = (
+        live.filter(state=DraftState.RUNNING, lease_expires_at__lt=now)
+        | live.filter(state=DraftState.QUEUED, updated_at__lt=now - STALE_QUEUED)
+    ).order_by("updated_at")
+    blocked.total += stale.count()
+    for draft in stale[:PER_GROUP]:
+        opp = draft.opportunity
+        blocked.items.append(
+            QueueItem(
+                title=f"{draft.get_kind_display()} v{draft.version} looks stuck",
+                detail=f"{opp.ref} {opp.title}" if opp else "Enquiry preview",
+                url=_tab(opp, draft.kind) if opp else reverse("aidata:brief_preview", args=[draft.pk]),
+                action="Retry or continue without AI",
+                opportunity=opp,
+                owner=_owner(opp) if opp else "",
+                evidence=f"{draft.get_state_display()} since {draft.updated_at:%-d %b %H:%M} without finishing; the original text is kept.",
+                state="stale",
+            )
+        )
+
     # Next: next actions that are due, overdue first.
     open_stages = selectors.ACTIVE_STAGES
     due = (
@@ -210,7 +234,26 @@ def work_queue(today: date | None = None) -> list[Group]:
                 evidence=f"{opp.get_stage_display()}",
             )
         )
+    _add_portal_items(today, decide, blocked, nxt)
     return [decide, prepared, blocked, nxt]
+
+
+#: A queued task nobody has started after this long is shown as stuck.
+STALE_QUEUED = timedelta(minutes=10)
+#: Portal items always get this many rows, even when AI items have filled the group.
+PORTAL_ROWS = 4
+
+
+def _add_portal_items(today, decide: Group, blocked: Group, nxt: Group) -> None:
+    """Real client-portal records: customer answers, change requests, decisions, overdue customer items and
+    failed portal emails. Each row links to the staff page where it is handled."""
+    from apps.portal import continuity
+
+    found = continuity.queue_items(today)
+    for group, rows in ((decide, found.decide), (blocked, found.blocked), (nxt, found.next)):
+        group.total += len(rows)
+        for row in rows[:PORTAL_ROWS]:
+            group.items.append(QueueItem(source="Client portal", **row))
 
 
 def timeline(opportunity: Opportunity, limit: int = 60) -> list[dict]:

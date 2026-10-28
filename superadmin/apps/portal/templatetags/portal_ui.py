@@ -116,11 +116,12 @@ def admin_url(name, *args):
 @register.simple_tag
 def portal_panel(opportunity):
     """Staff-only summary for the opportunity workspace: the linked challenge and what is awaiting the customer."""
-    from .. import staff_selectors
+    from .. import continuity, staff_selectors
     from ..models import InformationRequest
 
     challenge = staff_selectors.challenge_for_opportunity(opportunity)
     waiting = 0
+    status = proposal = project = None
     if challenge is not None:
         waiting = (
             InformationRequest.objects.filter(
@@ -128,4 +129,14 @@ def portal_panel(opportunity):
             ).count()
             + challenge.briefs.filter(status="proposed").count()
         )
-    return {"challenge": challenge, "waiting": waiting}
+        status = continuity.challenge_status(challenge)
+        proposal = continuity.approved_proposal(opportunity)
+        project = continuity.project_from_proposal(challenge)
+    return {
+        "challenge": challenge,
+        "waiting": waiting,
+        "status": status,
+        "difference": status["difference"] if status else None,
+        "approved_proposal": proposal,
+        "proposal_project": project,
+    }

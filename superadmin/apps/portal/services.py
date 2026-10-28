@@ -29,8 +29,8 @@ from apps.accounts.roles import user_roles
 from apps.audit.services import record
 from apps.core.http import client_ip
 
+from . import continuity, notifications, selectors
 from . import files as portal_files
-from . import notifications, selectors
 from .models import (
     Approval,
     BriefReview,
@@ -348,24 +348,31 @@ def link_challenge(
             submitted_at=opportunity.created_at,
             created_by=actor,
         )
+        # An APPROVED workspace brief (and only that) is carried over, as a DRAFT version: the original
+        # words as customer statements, the approved fields tagged agreed fact or AI suggestion. Without
+        # one the first version holds the two parsed customer fields, as before.
+        carried = continuity.carried_brief_segments(opportunity)
         segments = []
-        if challenge.submitted_problem:
-            segments.append(
-                {"id": "s1", "text": challenge.submitted_problem, "provenance": "customer_statement"}
-            )
-        if challenge.submitted_outcome:
-            segments.append(
-                {
-                    "id": f"s{len(segments) + 1}",
-                    "text": challenge.submitted_outcome,
-                    "provenance": "customer_statement",
-                }
-            )
+        if carried is None:
+            if challenge.submitted_problem:
+                segments.append(
+                    {"id": "s1", "text": challenge.submitted_problem, "provenance": "customer_statement"}
+                )
+            if challenge.submitted_outcome:
+                segments.append(
+                    {
+                        "id": f"s{len(segments) + 1}",
+                        "text": challenge.submitted_outcome,
+                        "provenance": "customer_statement",
+                    }
+                )
         BriefVersion.objects.create(
             challenge=challenge,
             number=1,
-            summary="Starting point: what you told us",
-            segments=segments,
+            summary="Starting point: what you told us"
+            if carried is None
+            else "What you told us, and the brief we prepared",
+            segments=segments if carried is None else carried,
             created_by=actor,
         )
     record(

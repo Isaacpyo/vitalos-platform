@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load ui aidata_ui static %}
+{% load ui aidata_ui portal_ui static %}
 {% block title %}{{ opportunity.ref }} · Pipeline · AI & Data · Vitalos Super Admin{% endblock %}
 {% block scripts %}<script src="{% static 'js/aidata.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
 {% block main_width %}max-w-[90rem]{% endblock %}
@@ -31,14 +31,18 @@
   {% include "aidata/_nav.html" with section="pipeline" %}
 
   {# Responsibility strip: who, what next, what is blocked, what the customer has to do. #}
+  {% portal_panel opportunity as strip %}
   <section class="aid-surface mt-4 grid gap-3 p-3 text-sm sm:grid-cols-2 xl:grid-cols-4" aria-label="Responsibility and next steps" data-testid="status-strip">
     <div><p class="aid-eyebrow">Responsible</p><p class="font-medium">{{ opportunity.owner.email|default:"Unassigned" }}</p></div>
     <div><p class="aid-eyebrow">Next action</p><p class="font-medium">{{ opportunity.next_action|default:"None set" }}</p>{% if opportunity.next_action_due %}<p class="text-xs {% if opportunity.next_action_due < today %}font-semibold text-aid-error{% else %}aid-muted{% endif %}">{% if opportunity.next_action_due < today %}Overdue, {% endif %}due {{ opportunity.next_action_due|date:"j M Y" }}</p>{% endif %}</div>
     <div><p class="aid-eyebrow">Blocked</p>
       {% if proposal_blocked and opportunity.stage == "qualified" %}<p class="font-medium text-aid-error">{{ proposal_blocked.0 }}</p>
       {% elif brief and brief.state == "failed" or pack and pack.state == "failed" or proposal and proposal.state == "failed" %}<p class="font-medium text-aid-error">An AI task failed. Retry it or continue without AI.</p>
+      {% elif strip.status.blocked %}{% for line in strip.status.blocked %}<p class="font-medium text-aid-error">{{ line }}</p>{% endfor %}
       {% else %}<p class="font-medium">Nothing is blocking this.</p>{% endif %}</div>
-    <div><p class="aid-eyebrow">Customer needs to</p><p class="aid-muted">Nothing tracked here yet. Customer actions appear once the client portal is connected.</p></div>
+    <div><p class="aid-eyebrow">Customer needs to</p>
+      {% if strip.status %}{% for line in strip.status.customer_todo %}<p class="font-medium" data-testid="strip-customer">{{ line }}</p>{% empty %}<p class="aid-muted">Nothing is waiting on them.</p>{% endfor %}
+      {% else %}<p class="aid-muted">Not linked to the client portal, so nothing is tracked for the customer.</p>{% endif %}</div>
   </section>
 
   <nav class="aid-tabs mt-4" aria-label="Opportunity workspace">

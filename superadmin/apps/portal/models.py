@@ -282,6 +282,9 @@ class Project(models.Model):
     target_date = models.DateField(null=True, blank=True)
     published_at = models.DateTimeField(null=True, blank=True)
     internal_notes = models.TextField(blank=True)
+    # The approved ``aidata.Draft`` (proposal) this project was prefilled from; makes the action idempotent.
+    # A plain number, not a foreign key: the portal never depends on the workspace's tables.
+    source_proposal_id = models.PositiveIntegerField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -542,6 +545,8 @@ class InformationResponse(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="+")
     body = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
+    # Set when a staff member opens the challenge workspace: drives the "answer not yet read" work queue item.
+    staff_seen_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["created_at", "id"]
