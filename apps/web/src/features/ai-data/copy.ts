@@ -29,8 +29,16 @@ export const navItems = [
 
 export const hero = {
   eyebrow: "Applied AI & Data Engineering",
-  title: "From AI potential to production reality.",
-  lead: "We work alongside your team to design, engineer and operate intelligent systems that solve real business problems.",
+  title: "AI that takes work off your team's hands.",
+  lead: "We design, build and operate intelligent systems that turn repetitive business work into reliable, reviewable workflows.",
+  primaryCta: "Explore your workflow",
+  secondaryCta: "Try a working example",
+  /** Business model, stated plainly. No prices. */
+  facts: [
+    "Customer-funded engineering: scoped stages, each with a fixed fee agreed in writing.",
+    "A person reviews every exception. Nothing is posted or sent on its own.",
+    "Every demonstration here uses synthetic data and says so.",
+  ],
 } as const;
 
 /** Plain-English outcomes (blueprint 5.6). Statements of intent, not measured results. */
@@ -103,6 +111,10 @@ export interface Offer {
   title: string;
   /** One line for the home page. */
   short: string;
+  /** The customer's need, in their words. */
+  need: string;
+  /** Concrete deliverables for the home page. */
+  deliverables: readonly string[];
   purpose: string;
   youGet: readonly string[];
   /** What the offer is not: the honest boundary. */
@@ -115,6 +127,13 @@ export const offers: readonly Offer[] = [
     key: "ai-opportunity-assessment",
     title: aiDataOfferLabels["ai-opportunity-assessment"],
     short: "Decide whether one workflow is worth improving, and how.",
+    need: "We think this work could be automated, but we do not know if it is worth it.",
+    deliverables: [
+      "A map of how the work is done today",
+      "A value estimate from your own volumes",
+      "A feasibility view, including data and security questions",
+      "A recommended next step, which may be not to use AI",
+    ],
     purpose:
       "Find out whether and how one specific workflow can be improved, before you spend on building anything.",
     youGet: [
@@ -129,6 +148,13 @@ export const offers: readonly Offer[] = [
     key: "ai-proof-of-value",
     title: aiDataOfferLabels["ai-proof-of-value"],
     short: "Test the critical part of a workflow on your own data.",
+    need: "We want proof it works on our documents before we commit to building it.",
+    deliverables: [
+      "A bounded, working demonstration on data you authorise",
+      "An evaluation report against measures agreed first",
+      "The technical risks and a running-cost estimate",
+      "A recommendation on whether to go to production",
+    ],
     purpose:
       "Test the part of the workflow that matters most, on data you authorise, against success measures agreed at the start.",
     youGet: [
@@ -143,6 +169,13 @@ export const offers: readonly Offer[] = [
     key: "production-ai-engineering",
     title: aiDataOfferLabels["production-ai-engineering"],
     short: "Build an approved workflow into your real environment.",
+    need: "The approach is proven. We need it working inside the systems our team uses.",
+    deliverables: [
+      "An integrated application or service with sign-in and access controls",
+      "Evaluation evidence before launch",
+      "Deployment and rollback procedures",
+      "Monitoring and a documented handover",
+    ],
     purpose:
       "Implement an approved workflow in your real operating environment, with the controls it needs.",
     youGet: [
@@ -158,6 +191,12 @@ export const offers: readonly Offer[] = [
     key: "managed-ai-operations",
     title: aiDataOfferLabels["managed-ai-operations"],
     short: "Keep a live system monitored, maintained and improving.",
+    need: "It is live. We need it to stay accurate, secure and improving as things change.",
+    deliverables: [
+      "Defined support coverage and incident procedures",
+      "Regular reports on quality, usage and cost",
+      "Agreed maintenance and bounded improvement work",
+    ],
     purpose: "Operate, monitor, maintain and improve a system once it is live.",
     youGet: [
       "Defined support coverage and incident procedures",

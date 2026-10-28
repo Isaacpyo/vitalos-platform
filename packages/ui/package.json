@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./interactive": "./src/interactive/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -13,6 +15,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@base-ui/react": "1.9.0",
     "motion": "14.1.0"
   },
   "peerDependencies": {

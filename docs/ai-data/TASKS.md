@@ -25,3 +25,11 @@ Customer-dependent tasks (VAD-011 onward) are never marked done without real evi
 | VAD-017 | Offer Managed AI Operations                     | Support accepted or declined, scope recorded         | Not started     | Scope template ready after W4                                                                                                                                                                                                                                            |
 | VAD-018 | Review reusable assets and IP rights            | Asset classification and maturity documented         | Not started     | Core modules start at reuse level R2 at most                                                                                                                                                                                                                             |
 | VAD-019 | Evaluate initial product opportunity            | Go/validate/reject decision documented               | Not started     | Needs repeated customer evidence                                                                                                                                                                                                                                         |
+
+## Marketing experience (W5, 28 Oct 2026)
+
+Redesign of the public pages (ADR-054), not a customer-dependent task: no evidence is claimed beyond what the pages show.
+
+- Done: home (hero walkthrough, workflow explorer, use cases, reconciliation preview, discover/prove/build/operate, offers by need), demonstrator (three synthetic samples, source beside results, evidence, who does what, Evidence section), solutions and approach refreshed; Base UI foundation in `@vitalos/ui/interactive`; funnel events (`workflow_started` first).
+- Honesty: every demonstration is labelled synthetic and scripted, not live AI; AC-14 (live provider) is still not run; no prices, customers or results added.
+- Later: the guided brief and enquiry events (separate workstream), real customer evidence (VAD-011 onward), a live-model demonstration only after AI_DATA_LLM_API_KEY is set and AC-14 has run.
