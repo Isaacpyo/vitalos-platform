@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime as dt
 
 from django.conf import settings
-from django.db.models import Max, Q
+from django.db.models import Exists, Max, OuterRef, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -284,7 +284,9 @@ def thread_for(member, challenge, *, milestone=None, deliverable=None):
 
 def files(member, challenge=None, project=None):
     qs = File.objects.select_related("challenge", "project").filter(
-        challenge__in=challenges(member), visibility=FileVisibility.CUSTOMER
+        Exists(FileVersion.objects.filter(file=OuterRef("pk"), customer_visible=True)),
+        challenge__in=challenges(member),
+        visibility=FileVisibility.CUSTOMER,
     )
     if challenge is not None:
         qs = qs.filter(challenge=challenge)
@@ -297,8 +299,16 @@ def get_file(member, pk):
     return get_object_or_404(files(member), pk=pk)
 
 
+def file_versions(member, file):
+    """The versions of a visible file that staff have made visible to the customer, newest first."""
+    get_file(member, file.pk)
+    return FileVersion.objects.filter(file=file, customer_visible=True)
+
+
 def get_file_version(member, pk):
-    version = get_object_or_404(FileVersion.objects.select_related("file__challenge"), pk=pk)
+    version = get_object_or_404(
+        FileVersion.objects.select_related("file__challenge"), pk=pk, customer_visible=True
+    )
     get_file(member, version.file_id)
     return version
 

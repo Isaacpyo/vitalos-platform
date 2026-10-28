@@ -130,3 +130,69 @@ def test_l3_review_brief_uses_fresh_status(world):
     BriefVersion.objects.filter(pk=stale.pk).update(status=BriefStatus.AGREED)
     with pytest.raises(services.PortalError, match="not waiting"):
         services.review_brief(world.approver, stale, accept=False, comment="late")
+
+
+# --- M3: file versions ----------------------------------------------------------------------------------------
+
+
+def test_m3_customer_cannot_append_to_a_staff_file(world):
+    from apps.portal.models import FileVersion
+    from tests.portal_helpers import upload
+
+    staff_file = world.shared_file.file  # staff upload, customer-visible
+    before = FileVersion.objects.filter(file=staff_file).count()
+    with pytest.raises(services.PortalError, match="Not available"):
+        services.upload_customer_file(world.contrib, world.ch_a, upload("evil.pdf"), file=staff_file)
+    response = c(world.contrib).post(
+        "/portal/files/upload/",
+        {"challenge": world.ch_a.pk, "file_id": staff_file.pk, "file": upload("evil.pdf")},
+    )
+    assert response.status_code == 302
+    assert FileVersion.objects.filter(file=staff_file).count() == before
+
+
+def test_m3_customer_can_append_to_their_own_file(world):
+    from tests.portal_helpers import upload
+
+    first = services.upload_customer_file(world.contrib, world.ch_a, upload("mine.pdf"))
+    second = services.upload_customer_file(world.contrib, world.ch_a, upload("mine2.pdf"), file=first.file)
+    assert second.file_id == first.file_id and second.number == 2 and second.customer_visible
+
+
+def test_m3_sharing_a_deliverable_exposes_only_the_pinned_file_version(world):
+    from django.http import Http404
+
+    from apps.portal import files as portal_files
+    from tests.portal_helpers import upload
+
+    internal = services.upload_staff_file(world.ch_a, upload("draft.pdf"), actor=world.staff, title="Report")
+    assert internal.customer_visible is False
+    pinned = services._add_file_version(
+        internal.file,
+        portal_files.check("final.pdf", "application/pdf", upload("x.pdf").read()),
+        user=world.staff,
+        organisation_id=world.org_a.pk,
+    )
+    v2 = services.create_version(world.deliv_a, actor=world.staff, summary="With file", file_version=pinned)
+    services.share_version(v2, actor=world.staff)
+    pinned.refresh_from_db()
+    internal.refresh_from_db()
+    assert pinned.customer_visible is True and internal.customer_visible is False
+    with pytest.raises(Http404):
+        selectors.get_file_version(world.contrib, internal.pk)
+    assert selectors.get_file_version(world.contrib, pinned.pk).pk == pinned.pk
+    assert [v.pk for v in selectors.file_versions(world.contrib, internal.file)] == [pinned.pk]
+    client = c(world.contrib)
+    assert client.get(f"/portal/files/versions/{internal.pk}/download/").status_code == 404
+    page = client.get(f"/portal/files/{internal.file_id}/").content.decode()
+    assert "draft.pdf" not in page and "final.pdf" in page
+
+
+def test_m3_staff_making_a_file_visible_shares_its_current_versions(world):
+    from tests.portal_helpers import upload
+
+    version = services.upload_staff_file(world.ch_a, upload("later.pdf"), actor=world.staff, title="Later")
+    assert version.customer_visible is False
+    services.set_file_visibility(version.file, "customer", actor=world.staff)
+    version.refresh_from_db()
+    assert version.customer_visible is True

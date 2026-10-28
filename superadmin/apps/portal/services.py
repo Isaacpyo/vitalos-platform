@@ -710,7 +710,9 @@ def share_version(version: DeliverableVersion, *, actor, request=None) -> None:
             deliverable.published_at = _now()
             deliverable.save(update_fields=["published_at"])
         if version.file_version_id:
+            # Only the pinned file version becomes visible; earlier or later versions stay internal.
             File.objects.filter(pk=version.file_version.file_id).update(visibility=FileVisibility.CUSTOMER)
+            FileVersion.objects.filter(pk=version.file_version_id).update(customer_visible=True)
         version.shared_at = _now()
         version.withdrawn_at = None
         version.save(update_fields=["shared_at", "withdrawn_at"])
@@ -1254,7 +1256,9 @@ def review_change(
 # --- Files --------------------------------------------------------------------------------------------------------------------
 
 
-def _add_file_version(file: File, checked, *, user, organisation_id: int) -> FileVersion:
+def _add_file_version(
+    file: File, checked, *, user, organisation_id: int, customer_visible: bool = False
+) -> FileVersion:
     key = portal_files.store(organisation_id, checked)
     if checked.refused_reason:
         raise PortalError(checked.refused_reason)
@@ -1270,6 +1274,7 @@ def _add_file_version(file: File, checked, *, user, organisation_id: int) -> Fil
         upload_status=status,
         reason="" if key else "File storage is not configured, so the file's contents were not kept.",
         uploaded_by=user,
+        customer_visible=customer_visible,
     )
 
 
@@ -1310,9 +1315,16 @@ def upload_customer_file(
                 uploaded_by_customer=True,
                 created_by=member.user,
             )
-        elif file.challenge_id != challenge.pk or file.visibility != FileVisibility.CUSTOMER:
+        elif (
+            file.challenge_id != challenge.pk
+            or file.visibility != FileVisibility.CUSTOMER
+            or not file.uploaded_by_customer
+        ):
+            # A customer may add a version only to a file a customer uploaded, never to one staff published.
             raise PortalError("Not available.")
-        version = _add_file_version(file, checked, user=member.user, organisation_id=member.organisation_id)
+        version = _add_file_version(
+            file, checked, user=member.user, organisation_id=member.organisation_id, customer_visible=True
+        )
     event(
         challenge,
         "file",
@@ -1363,7 +1375,13 @@ def upload_staff_file(
             retention_note=retention_note[:300],
             created_by=actor,
         )
-        version = _add_file_version(file, checked, user=actor, organisation_id=challenge.organisation_id)
+        version = _add_file_version(
+            file,
+            checked,
+            user=actor,
+            organisation_id=challenge.organisation_id,
+            customer_visible=visibility == FileVisibility.CUSTOMER,
+        )
     record(
         "portal.file_uploaded", request=request, actor=actor, entity=file, summary=f"{checked.filename}"[:250]
     )
@@ -1376,6 +1394,9 @@ def set_file_visibility(file: File, visibility: str, *, actor, request=None) -> 
     if file.visibility != visibility:
         file.visibility = visibility
         file.save(update_fields=["visibility"])
+        if visibility == FileVisibility.CUSTOMER:
+            # Explicit staff action on the whole file: its versions up to now become visible.
+            file.versions.update(customer_visible=True)
         record(
             "portal.file_visibility",
             request=request,

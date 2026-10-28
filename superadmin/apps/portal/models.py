@@ -668,6 +668,10 @@ class FileVersion(models.Model):
     reason = models.CharField(max_length=200, blank=True)
     uploaded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
+    # Per-version visibility: a customer sees a version of a shared file only when this is set (customer
+    # uploads, a version pinned to a shared deliverable, or a staff "share this file" action), never because
+    # an earlier or later internal version of the same file exists.
+    customer_visible = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-number"]
