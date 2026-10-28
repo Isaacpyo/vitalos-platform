@@ -1,0 +1,33 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ file.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'files' %}">Files</a> / {{ challenge.title }}</p>
+  <div class="page-head"><div><h1>{{ file.title }}</h1>{% if file.retention_note %}<p class="lede">Retention: {{ file.retention_note }}</p>{% endif %}</div></div>
+  <div class="grid grid--main">
+    <section class="card" aria-labelledby="v-h">
+      <h2 id="v-h">Versions</h2>
+      <ul class="list mt-1">
+        {% for v in versions %}
+          <li>
+            <strong>Version {{ v.number }}</strong> {% badge v.upload_status v.get_upload_status_display %}<br>
+            {{ v.original_name }} · {{ v.size|filesizeformat }} · {{ v.created_at|date:"j M Y, H:i" }}
+            {% if v.reason %}<br><span class="muted small">{{ v.reason }}</span>{% endif %}
+            {% if v.upload_status == "stored" %}<br><a class="btn btn--secondary btn--sm mt-1" href="{% purl 'file_download' pk=v.pk %}">Download</a>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% if member.can_comment and not preview %}
+      <aside class="card">
+        <h2>Upload a new version</h2>
+        <form method="post" action="{% purl 'file_upload' %}" enctype="multipart/form-data" class="mt-1" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="challenge" value="{{ file.challenge_id }}"><input type="hidden" name="file_id" value="{{ file.pk }}">
+          <div class="field"><label for="nv-file">File</label><input class="p-file" type="file" id="nv-file" name="file" required></div>
+          <button class="btn" type="submit">Upload version</button>
+        </form>
+      </aside>
+    {% endif %}
+  </div>
+{% endblock %}

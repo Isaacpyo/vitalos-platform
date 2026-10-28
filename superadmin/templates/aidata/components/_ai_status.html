@@ -1,0 +1,18 @@
+{% load aidata_ui %}{% comment %}
+  AI availability banner. Context: availability (apps.aidata.ai.Availability), compact (optional).
+  Honest in every state: live, simulated (a test double, never presented as a live model) and unavailable
+  (with the reason and what still works).
+{% endcomment %}
+{% if availability.kind == "live" %}
+  <p class="aid-chip aid-chip-ok" data-testid="ai-status" data-ai="live">{% aid_icon "chip" "h-3.5 w-3.5" %} AI available</p>
+{% elif availability.kind == "simulated" %}
+  <div class="aid-banner aid-banner-warn" role="status" data-testid="ai-status" data-ai="simulated">
+    {% aid_icon "flask" "mt-0.5 h-4 w-4 shrink-0" %}
+    <p><strong>Simulated AI.</strong> Responses come from a local test double, not a live model. They show how the workspace behaves; they say nothing about model quality.</p>
+  </div>
+{% else %}
+  <div class="aid-banner aid-banner-info" role="status" data-testid="ai-status" data-ai="off">
+    {% aid_icon "info" "mt-0.5 h-4 w-4 shrink-0" %}
+    <p><strong>AI is unavailable.</strong> {{ availability.reason }} {% if not compact %}Everything still works without it: briefs are read by rules, discovery questions come from the offer templates, and every field can be written by hand. Output is labelled so you can tell.{% endif %}</p>
+  </div>
+{% endif %}

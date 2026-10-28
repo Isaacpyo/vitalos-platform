@@ -1,0 +1,92 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ project.name }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'challenges' %}">Challenges</a> / <a href="{% purl 'challenge' pk=challenge.pk %}">{{ challenge.title }}</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Project</p>
+      <h1>{{ project.name }}</h1>
+      <p class="lede">{% badge project.status project.get_status_display %}{% if project.target_date %} Target date {{ project.target_date|date:"j M Y" }}. Dates are targets and can change; Vitalos tells you when they do.{% endif %}</p>
+    </div>
+    <div class="row">
+      <a class="btn btn--secondary btn--sm" href="{% purl 'project_export' pk=project.pk %}">Download summary (CSV)</a>
+      {% if member.can_comment and not preview %}<a class="btn btn--secondary btn--sm" href="{% purl 'change_new' pk=project.pk %}">Request a change</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="grid grid--main">
+    <div class="stack">
+      <section class="card{% if needs %} card--attention{% endif %}" aria-labelledby="need-h" data-testid="what-we-need">
+        <div class="card__head"><h2 id="need-h">What we need from you</h2>{% if needs %}<span class="badge badge--warn">{{ needs|length }}</span>{% endif %}</div>
+        {% include "portal/_actions.html" with actions=needs %}
+      </section>
+
+      {% if project.summary %}<section class="card" aria-labelledby="sum-h"><h2 id="sum-h">Summary</h2><p class="prose mt-1">{{ project.summary }}</p></section>{% endif %}
+
+      <section class="card" aria-labelledby="ms-h">
+        <h2 id="ms-h">Milestones</h2>
+        <p class="muted small">A status and a target date for each step. We do not show a percentage complete, because it would not tell you anything true.</p>
+        <ol class="timeline mt-2" data-testid="timeline">
+          {% for m in milestones %}
+            <li data-status="{{ m.status }}">
+              <h3><a href="{% purl 'milestone' pk=m.pk %}">{{ m.title }}</a> {% badge m.status m.get_status_display %}</h3>
+              <p class="muted small">{% if m.status == "complete" and m.completed_on %}Completed {{ m.completed_on|date:"j M Y" }}{% elif m.target_date %}Target {{ m.target_date|date:"j M Y" }}{% else %}No date set{% endif %}{% if m.description %} · {{ m.description }}{% endif %}</p>
+            </li>
+          {% empty %}
+            <li class="muted">No milestones have been published yet.</li>
+          {% endfor %}
+        </ol>
+      </section>
+
+      <section class="card" aria-labelledby="del-h">
+        <h2 id="del-h">Deliverables</h2>
+        <ul class="list">
+          {% for row in deliverables %}
+            <li>
+              <a href="{% purl 'deliverable' pk=row.deliverable.pk %}"><strong>{{ row.deliverable.title }}</strong></a>
+              {% if row.version %}<span class="muted small"> version {{ row.version.number }}</span> {% badge row.state %}{% else %}<span class="muted small"> not shared yet</span>{% endif %}
+              {% if row.deliverable.description %}<br><span class="muted small">{{ row.deliverable.description }}</span>{% endif %}
+            </li>
+          {% empty %}
+            <li class="muted">No deliverables have been shared yet.</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% if project.agreed_scope %}
+        <section class="card" aria-labelledby="scope-h">
+          <h2 id="scope-h">Agreed scope</h2>
+          <div class="prose mt-1" data-testid="agreed-scope">{{ project.agreed_scope }}</div>
+          <p class="help mt-1">Scope changes only through the agreed change process. Use "Request a change" to ask.</p>
+        </section>
+      {% endif %}
+
+      <section class="card" aria-labelledby="upd-h">
+        <h2 id="upd-h">Updates</h2>
+        <ul class="list">{% for u in updates %}<li><a href="{% purl 'update' pk=u.pk %}"><strong>{{ u.title }}</strong></a> <span class="muted small">{{ u.published_at|date:"j M Y" }}</span><p class="prose small">{{ u.body|truncatechars:200 }}</p></li>{% empty %}<li class="muted">No updates yet.</li>{% endfor %}</ul>
+      </section>
+    </div>
+
+    <aside class="stack" aria-label="Responsibilities">
+      <section class="card" aria-labelledby="resp-h">
+        <h2 id="resp-h">Who is responsible</h2>
+        <ul class="list">{% for i in responsibilities %}<li>{{ i.text }}<br><span class="badge badge--neutral">{{ i.get_party_display }}</span></li>{% empty %}<li class="muted">None published.</li>{% endfor %}</ul>
+      </section>
+      <section class="card" aria-labelledby="dep-h">
+        <h2 id="dep-h">Dependencies</h2>
+        <ul class="list">{% for i in dependencies %}<li>{{ i.text }}<br><span class="badge badge--neutral">{{ i.get_party_display }}</span>{% if i.due_date %} <span class="muted small">due {{ i.due_date|date:"j M Y" }}</span>{% endif %}{% if i.is_done %} {% badge "complete" "Done" %}{% endif %}</li>{% empty %}<li class="muted">None published.</li>{% endfor %}</ul>
+      </section>
+      {% if blockers %}
+        <section class="card card--attention" aria-labelledby="blk-h"><h2 id="blk-h">Blockers</h2>
+          <ul class="list">{% for i in blockers %}<li>{{ i.text }}<br><span class="muted small">Responsible: {{ i.get_party_display }}</span></li>{% endfor %}</ul></section>
+      {% endif %}
+      {% if changes %}
+        <section class="card" aria-labelledby="chg-h"><h2 id="chg-h">Change requests</h2>
+          <ul class="list">{% for c in changes %}<li><a href="{% purl 'change' pk=c.pk %}">{{ c.title }}</a> {% badge c.status c.get_status_display %}</li>{% endfor %}</ul></section>
+      {% endif %}
+      {% for s in services %}{% include "portal/_service_card.html" %}{% endfor %}
+      {% include "portal/_assistant_buttons.html" with items=assistant_items %}
+    </aside>
+  </div>
+{% endblock %}

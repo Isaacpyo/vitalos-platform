@@ -39,6 +39,10 @@ flowchart LR
 
 Super Admin owns the internal company architecture records; they are classified Public/Internal/Confidential/Restricted, archived rather than deleted and fully history-tracked. Public clients have no table privileges.
 
+## Client portal records
+
+The client portal (ADR-056, `apps.portal` in the Super Admin) keeps customer-facing project data in the Super Admin PostgreSQL database: organisations, memberships, challenges (linked to `aidata.Opportunity`, which keeps the original submission), brief versions, projects, milestones, deliverable versions, approvals, change requests, questions, discussion, updates, files (private object storage, metadata in PostgreSQL), notifications with delivery records and manually reported service status. Every record has an explicit publication state; internal-only fields are never rendered to customers, searched, emailed, exported or given to the AI. Approvals, organisation and audit records are decision evidence and are not deleted by cascade. No customer data is held by the website.
+
 ## What the repo content never holds
 
 Prices; evidence itself; client names or logos without verified permission; certifications that are not verified, scoped, dated and current; HTML, CSS or class names; enquiry data. The repo source additionally drops placeholder documents and any text still containing a bracketed placeholder (ADR-028).

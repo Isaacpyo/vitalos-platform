@@ -1,0 +1,17 @@
+{% extends "portal/auth/shell.html" %}
+{% block title %}This link no longer works · Vitalos client portal{% endblock %}
+{% block body %}
+  <h1>This link no longer works</h1>
+  {% if what == 'invitation' %}
+    <p class="mt-2">
+      {% if state == 'used' %}This invitation has already been used. If you have set a password, sign in.
+      {% elif state == 'expired' %}This invitation has expired. Invitations work for a limited time.
+      {% else %}This invitation is no longer valid.{% endif %}
+    </p>
+    <p class="muted">Ask your Vitalos contact to send a new invitation.</p>
+  {% else %}
+    <p class="mt-2">Password links work once and expire after 30 minutes.</p>
+    <p class="muted">You can ask for a new link from the sign-in page.</p>
+  {% endif %}
+  <a href="{% url 'portal:login' %}" class="btn btn--secondary w-full mt-2">Go to sign in</a>
+{% endblock %}

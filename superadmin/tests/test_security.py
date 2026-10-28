@@ -99,7 +99,7 @@ def test_production_settings_are_hardened():
         "import django;django.setup();from django.conf import settings as s;"
         "assert not s.DEBUG;assert s.SECURE_SSL_REDIRECT;assert s.SESSION_COOKIE_SECURE and s.CSRF_COOKIE_SECURE;"
         "assert s.SECURE_HSTS_SECONDS>=31536000;assert s.SESSION_COOKIE_AGE==28800;"
-        "assert s.ALLOWED_HOSTS==['admin.vitalos.co.uk'];assert s.SECURE_PROXY_SSL_HEADER;"
+        "assert s.ALLOWED_HOSTS==['admin.vitalos.co.uk','portal.vitalos.co.uk'];assert s.SECURE_PROXY_SSL_HEADER;"
         "assert 'Manifest' in s.STORAGES['staticfiles']['BACKEND'];"
         "db=s.DATABASES['default'];assert db['CONN_MAX_AGE']==0 and db['CONN_HEALTH_CHECKS'];"
         "assert db['DISABLE_SERVER_SIDE_CURSORS'];print('ok')"

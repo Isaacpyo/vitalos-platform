@@ -206,7 +206,7 @@ export function Panel({
     <Tag
       id={id}
       className={cx(
-        "flex min-w-0 flex-col gap-(--space-4) rounded-lg border border-aid-border bg-aid-surface p-(--space-5) md:p-(--space-6)",
+        "flex min-w-0 flex-col gap-(--space-4) rounded-xl border border-aid-border bg-aid-surface p-(--space-5) transition-[border-color,box-shadow] duration-(--duration-feedback) ease-(--ease-standard) hover:border-aid-line hover:shadow-floating md:p-(--space-6)",
         className,
       )}
     >

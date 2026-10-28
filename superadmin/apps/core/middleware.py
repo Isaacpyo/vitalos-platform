@@ -12,10 +12,12 @@ access_logger = logging.getLogger("superadmin.access")
 _REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 # One-time set-password links carry a token in the path; never write it to the logs.
 _SECRET_PATH_RE = re.compile(r"^(/account/set-password/)[^/]+/[^/]+/?$")
+# Client portal invitation and password-reset links also carry a one-time token (ADR-056).
+_PORTAL_SECRET_RE = re.compile(r"^((?:/portal)?/(?:invitation|reset)/)[^/]+(?:/[^/]+)?/?$")
 
 
 def loggable_path(path: str) -> str:
-    return _SECRET_PATH_RE.sub(r"\1[redacted]/", path)
+    return _PORTAL_SECRET_RE.sub(r"\1[redacted]/", _SECRET_PATH_RE.sub(r"\1[redacted]/", path))
 
 
 class HealthCheckMiddleware:

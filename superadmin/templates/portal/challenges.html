@@ -1,0 +1,18 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Challenges · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Your challenges</h1><p class="lede">Each challenge is something you asked Vitalos to help with. It keeps your original words and the full conversation.</p></div></div>
+  <div class="grid grid--2">
+    {% for c in challenges %}
+      <a class="card card--link" href="{% purl 'challenge' pk=c.pk %}">
+        <p class="eyebrow">Submitted {{ c.submitted_at|date:"j M Y" }}</p>
+        <h2>{{ c.title }}</h2>
+        <p class="mt-1"><span class="badge badge--info">{{ c.get_journey_stage_display }}</span></p>
+        {% if c.status_note %}<p class="muted small mt-1">{{ c.status_note }}</p>{% endif %}
+      </a>
+    {% empty %}
+      <div class="empty"><h3>No challenges shared yet</h3><p>Vitalos shares a challenge with you once it has been set up for your organisation.</p></div>
+    {% endfor %}
+  </div>
+{% endblock %}

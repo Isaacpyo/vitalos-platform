@@ -1,0 +1,131 @@
+{% load aidata_ui %}
+<div class="space-y-6">
+  {# 1. Discovery questions #}
+  <section id="questions" aria-labelledby="q-heading">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <h2 id="q-heading" class="aid-title">1. Questions for the discovery call</h2>
+      {% if questions %}<div class="flex flex-wrap items-center gap-2">{% state_chip questions.state %}<span class="aid-chip aid-chip-neutral">{{ questions.get_mode_display }}{% if questions.simulated %}: simulated{% endif %}</span></div>{% endif %}
+    </div>
+    {% if questions and questions.is_active or questions and questions.state == "failed" %}
+      {% include "aidata/components/_task_status.html" with draft=questions execution=execution|get_item:questions.pk polling=questions.is_active availability=availability %}
+    {% elif questions %}
+      <form method="post" action="{% url 'aidata:draft_save' questions.pk %}" class="aid-card" data-once>
+        {% csrf_token %}
+        <ol class="divide-y divide-aid-border">
+          {% for q in questions.payload.questions %}
+            <li class="px-4 py-3">
+              <label for="a-{{ q.id }}" class="aid-label !text-sm">{{ forloop.counter }}. {{ q.question }}</label>
+              {% if q.why %}<p class="aid-muted text-xs">Why ask: {{ q.why }}</p>{% endif %}
+              <textarea id="a-{{ q.id }}" name="a_{{ q.id }}" rows="2" class="aid-input mt-1" maxlength="2000" {% if questions.is_locked %}readonly{% endif %}>{{ q.answer }}</textarea>
+            </li>
+          {% endfor %}
+        </ol>
+        {% if can_act and not questions.is_locked %}<div class="flex justify-end border-t border-aid-border px-4 py-3"><button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon "check" %} Save answers</button></div>{% endif %}
+      </form>
+      {% if questions.fallback_reason %}<p class="aid-help">From the offer templates, not AI: {{ questions.fallback_reason }}</p>{% elif questions.mode == "rules" %}<p class="aid-help">From the offer templates for {{ opportunity.get_offer_display|default:"all offers" }}. No AI was used.</p>{% endif %}
+    {% else %}
+      {% url 'aidata:pipeline' as _p %}
+      {% include "aidata/components/_empty_state.html" with icon="question" title="No questions prepared yet" body="Prepare tailored questions for the discovery call. With AI off they come from the offer templates, so this always works." %}
+    {% endif %}
+    {% if can_act %}
+      <form method="post" action="{% url 'aidata:questions_start' opportunity.ref %}" class="mt-3 flex flex-wrap gap-2" data-once>{% csrf_token %}
+        <input type="hidden" name="key" value="{{ key }}">
+        {% if availability.available %}<button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "spark" %} {% if questions %}Prepare a new set with AI{% else %}Prepare questions with AI{% endif %}</button>{% endif %}
+        <button type="submit" name="mode" value="rules" class="aid-btn {% if availability.available %}aid-btn-secondary{% else %}aid-btn-primary{% endif %}">{% aid_icon "list" %} {% if questions %}Use the offer template{% else %}Prepare from the offer template{% endif %}</button>
+      </form>
+    {% endif %}
+  </section>
+
+  {# 2. Meeting notes to discovery pack #}
+  <section id="pack" aria-labelledby="pack-heading">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <h2 id="pack-heading" class="aid-title">2. Discovery pack</h2>
+      {% if pack %}<div class="flex flex-wrap items-center gap-2">{% state_chip pack.state %}<span class="aid-chip aid-chip-neutral">Version {{ pack.version }} · {{ pack.get_mode_display }}{% if pack.simulated %}: simulated{% endif %}</span></div>{% endif %}
+    </div>
+
+    {% if not pack or pack.state == "rejected" %}
+      {% if can_act %}
+        {% url 'aidata:discovery_start' opportunity.ref as start_url %}
+        {% include "aidata/components/_composer.html" with action=start_url key=key availability=availability id="notes-text" field="notes" heading="Paste the meeting notes" hint="Turned into a draft workflow map, requirements, assumptions, unknowns and acceptance criteria that you review and correct before approving." rows=8 min=20 submit_label="Prepare the pack with AI" %}
+        <form method="post" action="{% url 'aidata:discovery_start' opportunity.ref %}" class="mt-3" data-once>{% csrf_token %}<input type="hidden" name="key" value="{{ key }}m"><input type="hidden" name="manual" value="1"><button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon "pencil" %} Write the pack by hand instead</button></form>
+      {% endif %}
+    {% else %}
+      {% if pack.is_active or pack.state == "failed" %}
+        {% include "aidata/components/_task_status.html" with draft=pack execution=execution|get_item:pack.pk polling=pack.is_active availability=availability %}
+      {% endif %}
+      {% if pack.state == "draft" or pack.state == "reviewed" or pack.state == "approved" %}
+        {% if pack.fallback_reason %}<div class="aid-banner aid-banner-info mb-3" role="status">{% aid_icon "info" "mt-0.5 h-4 w-4 shrink-0" %}<p>AI was not used: {{ pack.fallback_reason }} The notes were read by rules, which finds fewer items; add what is missing.</p></div>{% endif %}
+        {% for warning in pack.warnings %}<div class="aid-banner aid-banner-warn mb-3" role="status" data-testid="warning">{% aid_icon "warning" "mt-0.5 h-4 w-4 shrink-0" %}<p>{{ warning }}</p></div>{% endfor %}
+        {% if pack_view.contradictions %}<div class="aid-banner aid-banner-warn mb-3" role="status" data-testid="contradictions">{% aid_icon "flag" "mt-0.5 h-4 w-4 shrink-0" %}<div><p class="font-semibold">The notes seem to disagree with themselves</p><ul class="list-disc pl-4">{% for c in pack_view.contradictions %}<li>{{ c }}</li>{% endfor %}</ul></div></div>{% endif %}
+        {% if pack.state == "approved" %}<div class="aid-banner aid-banner-ok mb-3" role="status"><p>{% aid_icon "success" "mr-1 inline h-4 w-4" %}Approved. This version is kept as history and cannot be edited; use Revise to make version {{ pack.version|add:1 }}.</p></div>{% endif %}
+
+        <div class="aid-split" data-split>
+          {% if pack.source_text %}
+            {% include "aidata/components/_source_panel.html" with segments=pack_segments label=pack.source_label %}
+          {% else %}
+            <div class="aid-surface p-4 text-sm"><p class="font-semibold">Written by hand</p><p class="aid-muted">There are no notes behind this pack. Add the workflow, requirements and acceptance criteria yourself.</p></div>
+          {% endif %}
+          <div class="aid-split-handle" role="separator" aria-orientation="vertical" aria-label="Resize notes and pack panels" aria-valuemin="25" aria-valuemax="75" aria-valuenow="46" tabindex="0"></div>
+
+          <form method="post" action="{% url 'aidata:draft_save' pack.pk %}" class="aid-card min-w-0" data-once data-testid="pack-form">
+            {% csrf_token %}
+            <div class="space-y-5 p-4">
+              <div><label for="pk-summary" class="aid-label">Summary</label><textarea id="pk-summary" name="summary" rows="2" class="aid-input" maxlength="600" {% if pack.is_locked %}readonly{% endif %}>{{ pack_view.summary }}</textarea></div>
+
+              <fieldset>
+                <legend class="aid-label !text-sm">Workflow map (in order)</legend>
+                <p class="aid-help !mt-0">Actor, system, input and output are blank when the notes do not say.</p>
+                <div id="steps" class="mt-2 space-y-2">
+                  {% for step in pack_view.workflow_steps %}
+                    <div data-row class="aid-surface p-2.5">
+                      <div class="flex items-center gap-2"><span class="aid-chip aid-chip-neutral">Step {{ forloop.counter }}</span>
+                        {% if step.start != None and not pack.is_locked %}<button type="button" class="aid-btn aid-btn-quiet" data-show-evidence="workflow_steps.{{ forloop.counter }}" data-evidence-scope="[data-source]">{% aid_icon "eye" %} Show source</button>{% endif %}
+                        {% if not pack.is_locked %}<span class="ml-auto flex gap-1"><button type="button" class="aid-btn aid-btn-quiet" data-row-up aria-label="Move step up">{% aid_icon "chevron-down" "h-4 w-4 rotate-180" %}</button><button type="button" class="aid-btn aid-btn-quiet" data-row-down aria-label="Move step down">{% aid_icon "chevron-down" %}</button><button type="button" class="aid-btn aid-btn-quiet" data-row-remove aria-label="Remove step">{% aid_icon "close" %}</button></span>{% endif %}
+                      </div>
+                      <input type="hidden" name="step_span" value="{% if step.start != None %}{{ step.start }}:{{ step.end }}{% endif %}">
+                      <div class="mt-1.5 grid gap-2 sm:grid-cols-2">
+                        <div><label class="aid-label">Actor</label><input name="step_actor" class="aid-input" value="{{ step.actor }}" {% if pack.is_locked %}readonly{% endif %}></div>
+                        <div><label class="aid-label">System</label><input name="step_system" class="aid-input" value="{{ step.system }}" {% if pack.is_locked %}readonly{% endif %}></div>
+                        <div class="sm:col-span-2"><label class="aid-label">What happens</label><input name="step_action" class="aid-input" value="{{ step.action }}" {% if pack.is_locked %}readonly{% endif %}></div>
+                        <div><label class="aid-label">Input</label><input name="step_input" class="aid-input" value="{{ step.input }}" {% if pack.is_locked %}readonly{% endif %}></div>
+                        <div><label class="aid-label">Output</label><input name="step_output" class="aid-input" value="{{ step.output }}" {% if pack.is_locked %}readonly{% endif %}></div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+                {% if not pack.is_locked %}<button type="button" class="aid-btn aid-btn-secondary mt-2" data-add-row="steps">{% aid_icon "plus" %} Add a step</button>{% endif %}
+              </fieldset>
+
+              {% for kind, prefix, label in pack_sections %}
+                <fieldset>
+                  <legend class="aid-label !text-sm">{{ label }}</legend>
+                  <div id="list-{{ prefix }}" class="mt-1 space-y-1.5">
+                    {% for item in pack_view|get_item:kind %}
+                      <div data-row class="flex items-start gap-2">
+                        <input type="hidden" name="{{ prefix }}_span" value="{% if item.start != None %}{{ item.start }}:{{ item.end }}{% endif %}">
+                        <input name="{{ prefix }}_text" class="aid-input" value="{{ item.text }}" aria-label="{{ label }} item {{ forloop.counter }}" {% if pack.is_locked %}readonly{% endif %}>
+                        {% if item.start != None %}<button type="button" class="aid-btn aid-btn-quiet shrink-0" data-show-evidence="{{ kind }}.{{ forloop.counter }}" data-evidence-scope="[data-source]" aria-label="Show source for item {{ forloop.counter }}">{% aid_icon "eye" %}</button>{% endif %}
+                        {% if not pack.is_locked %}<button type="button" class="aid-btn aid-btn-quiet shrink-0" data-row-remove aria-label="Remove item">{% aid_icon "close" %}</button>{% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                  {% if not pack.is_locked %}<button type="button" class="aid-btn aid-btn-quiet mt-1" data-add-row="list-{{ prefix }}">{% aid_icon "plus" %} Add</button>{% endif %}
+                </fieldset>
+              {% endfor %}
+              {% for c in pack_view.contradictions %}<input type="hidden" name="contradiction" value="{{ c }}">{% endfor %}
+            </div>
+            {% if can_act and not pack.is_locked %}<div class="flex flex-wrap items-center justify-between gap-2 border-t border-aid-border px-4 py-3"><p class="aid-help !mt-0">Saving sends a reviewed pack back to draft.</p><button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "check" %} Save corrections</button></div>{% endif %}
+          </form>
+        </div>
+
+        <div class="mt-4">{% include "aidata/components/_review_card.html" with draft=pack blockers=pack_blockers can_act=can_act approve_label="Approve discovery" noun="discovery pack" key=key %}</div>
+      {% endif %}
+    {% endif %}
+
+    {% if groups.discovery.history %}
+      <details class="mt-4"><summary class="cursor-pointer text-sm font-medium text-aid-link">Earlier versions ({{ groups.discovery.history|length }})</summary>
+        <ul class="mt-2 space-y-1 text-sm">{% for d in groups.discovery.history %}<li class="flex flex-wrap items-center gap-2"><span>v{{ d.version }}</span>{% state_chip d.state %}<span class="aid-muted text-xs">{{ d.get_mode_display }} · {{ d.created_at|date:"j M Y" }}{% if d.decided_by %} · {{ d.decided_by.email }}{% endif %}</span></li>{% endfor %}</ul>
+      </details>
+    {% endif %}
+  </section>
+</div>

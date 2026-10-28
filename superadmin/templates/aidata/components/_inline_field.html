@@ -1,0 +1,24 @@
+{% load aidata_ui %}{% comment %}
+  One brief field edited in place. Context: opportunity, name, label, error, saved, raw, field_kind, sectors.
+  Saves with HTMX, answers with the new state, and the server sends a toast. Works as a normal form without JS.
+{% endcomment %}
+{% with value=opportunity|get_attr:name %}
+<form id="field-{{ name }}" method="post" action="{% url 'aidata:inline_field' opportunity.ref name %}" class="py-2"
+      hx-post="{% url 'aidata:inline_field' opportunity.ref name %}" hx-target="#field-{{ name }}" hx-swap="outerHTML" data-inline-save>
+  {% csrf_token %}
+  <label for="in-{{ name }}" class="aid-label">{{ label }}{% if not value and not error %} <span class="aid-chip aid-chip-warn ml-1">{% aid_icon "flag" "h-3 w-3" %} Blank</span>{% endif %}</label>
+  {% if field_kind == "area" %}
+    <textarea id="in-{{ name }}" name="value" rows="3" class="aid-input" {% if error %}aria-invalid="true" aria-describedby="err-{{ name }}"{% endif %}>{% if error %}{{ raw }}{% else %}{{ value }}{% endif %}</textarea>
+  {% elif field_kind == "select" %}
+    <select id="in-{{ name }}" name="value" class="aid-input"><option value="">Not known</option>{% for key, text in sectors %}<option value="{{ key }}"{% if key == value %} selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+  {% elif field_kind == "date" %}
+    <input id="in-{{ name }}" name="value" type="date" class="aid-input" value="{% if value %}{{ value|date:'Y-m-d' }}{% endif %}">
+  {% else %}
+    <input id="in-{{ name }}" name="value" type="text" class="aid-input" value="{% if error %}{{ raw }}{% else %}{{ value }}{% endif %}" {% if error %}aria-invalid="true" aria-describedby="err-{{ name }}"{% endif %}>
+  {% endif %}
+  <div class="mt-1 flex items-center gap-3">
+    <button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon "check" %} Save</button>
+    <span class="{% if error %}aid-error{% else %}aid-help{% endif %}" data-save-status id="err-{{ name }}" role="status">{% if error %}{{ error }}{% elif saved %}Saved just now{% endif %}</span>
+  </div>
+</form>
+{% endwith %}

@@ -116,6 +116,7 @@ def build_gateway(provider: ModelProvider, ai: AiSettings | None = None, **kwarg
 SETTINGS_FIELDS = (
     "enabled",
     "model_path_enabled",
+    "brief_assist_enabled",
     "daily_run_cap",
     "monthly_budget_gbp",
     "max_calls_per_run",

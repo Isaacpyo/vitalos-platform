@@ -78,7 +78,7 @@ test("a complete submission without the security check is not accepted, and keep
 
 test("the demonstrator carries its labels and an evaluation section", async ({ page }) => {
   await page.goto("/ai-data/demonstrator");
-  for (const label of ["Synthetic data", "Illustrative example", "Not a product"]) {
+  for (const label of ["Synthetic data", "Scripted example", "Not a product"]) {
     await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
   }
   // Pending until a real evaluation run writes demonstrator-report.json; then the results table.

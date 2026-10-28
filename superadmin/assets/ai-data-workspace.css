@@ -1,0 +1,200 @@
+/*
+ * AI & Data workspace components (ADR-055). Colours come from the shared tokens (ai-data-tokens.css, generated
+ * from packages/design-tokens): bg-aid-*, text-aid-*, border-aid-*. Motion is 200 ms at most and off under
+ * prefers-reduced-motion (the base layer already shortens every transition).
+ */
+@layer components {
+  .aid-ws {
+    @apply text-aid-text;
+  }
+  .aid-card {
+    @apply rounded-md border border-aid-border bg-aid-bg shadow-xs;
+  }
+  .aid-surface {
+    @apply rounded-md border border-aid-border bg-aid-surface;
+  }
+  .aid-title {
+    @apply font-display text-lg font-semibold text-aid-heading;
+  }
+  .aid-eyebrow {
+    @apply font-mono text-[11px] tracking-wider text-aid-eyebrow uppercase;
+  }
+  .aid-muted {
+    @apply text-aid-muted;
+  }
+  .aid-btn {
+    @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 text-sm
+      font-medium whitespace-nowrap select-none disabled:cursor-not-allowed disabled:opacity-50 md:min-h-9;
+    transition:
+      background-color var(--aid-motion-feedback) var(--aid-ease),
+      border-color var(--aid-motion-feedback) var(--aid-ease),
+      transform var(--aid-motion-feedback) var(--aid-ease);
+  }
+  .aid-btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .aid-btn-primary {
+    @apply bg-aid-action text-aid-action-text hover:bg-aid-action-hover;
+  }
+  .aid-btn-secondary {
+    @apply border-aid-control-border bg-aid-control-bg text-aid-text hover:bg-aid-surface;
+  }
+  .aid-btn-quiet {
+    @apply text-aid-link hover:bg-aid-surface hover:text-aid-link-hover;
+  }
+  .aid-btn-danger {
+    @apply border-aid-error text-aid-error hover:bg-aid-error-bg;
+  }
+  .aid-btn[aria-busy="true"],
+  .htmx-request.aid-btn {
+    @apply cursor-progress opacity-70;
+  }
+  .aid-input {
+    @apply block min-h-10 w-full rounded-md border border-aid-control-border bg-aid-control-bg px-3 py-2 text-sm
+      text-aid-text placeholder:text-aid-muted disabled:bg-aid-surface md:min-h-9;
+  }
+  .aid-input[readonly] {
+    @apply bg-aid-surface;
+  }
+  .aid-input[aria-invalid="true"] {
+    @apply border-aid-error;
+  }
+  .aid-label {
+    @apply mb-1 block text-xs font-semibold text-aid-heading;
+  }
+  .aid-help {
+    @apply mt-1 text-xs text-aid-muted;
+  }
+  .aid-error {
+    @apply mt-1 text-xs font-medium text-aid-error;
+  }
+  .aid-chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  .aid-chip-ok {
+    @apply bg-aid-ok-bg text-aid-ok;
+  }
+  .aid-chip-warn {
+    @apply bg-aid-warn-bg text-aid-warn;
+  }
+  .aid-chip-error {
+    @apply bg-aid-error-bg text-aid-error;
+  }
+  .aid-chip-info {
+    @apply bg-aid-info-bg text-aid-info;
+  }
+  .aid-chip-neutral {
+    @apply bg-aid-chip-bg text-aid-chip-text;
+  }
+  .aid-banner {
+    @apply flex gap-3 rounded-md border px-3 py-2 text-sm;
+  }
+  .aid-banner-ok {
+    @apply border-aid-ok/30 bg-aid-ok-bg text-aid-ok;
+  }
+  .aid-banner-warn {
+    @apply border-aid-warn/30 bg-aid-warn-bg text-aid-warn;
+  }
+  .aid-banner-error {
+    @apply border-aid-error/30 bg-aid-error-bg text-aid-error;
+  }
+  .aid-banner-info {
+    @apply border-aid-info/30 bg-aid-info-bg text-aid-info;
+  }
+  .aid-tabs {
+    @apply flex gap-1 overflow-x-auto border-b border-aid-border;
+  }
+  .aid-tab {
+    @apply -mb-px inline-flex min-h-10 items-center gap-1.5 border-b-2 border-transparent px-3 text-sm font-medium
+      whitespace-nowrap text-aid-muted hover:text-aid-heading;
+  }
+  .aid-tab[aria-current="page"] {
+    @apply border-aid-accent text-aid-heading;
+  }
+  .aid-row {
+    @apply flex flex-wrap items-start gap-x-3 gap-y-1 border-t border-aid-border px-3 py-2.5 first:border-t-0;
+  }
+  /* A span of the source text a suggestion quotes. Colour is never the only cue: underline plus a label. */
+  .aid-mark {
+    @apply rounded-sm bg-aid-info-bg px-0.5 text-aid-text underline decoration-aid-accent decoration-2
+      underline-offset-2;
+  }
+  .aid-mark[data-active="true"] {
+    @apply bg-aid-warn-bg outline outline-2 outline-aid-accent;
+  }
+  .aid-source {
+    @apply font-mono text-[13px] leading-relaxed break-words whitespace-pre-wrap;
+  }
+  /* Resizable split panels: columns on large screens (keyboard-resizable handle), stacked below. */
+  .aid-split {
+    @apply grid gap-4 lg:gap-0;
+  }
+  @media (min-width: 1024px) {
+    .aid-split {
+      grid-template-columns: minmax(16rem, var(--split, 46%)) 1rem minmax(18rem, 1fr);
+    }
+  }
+  .aid-split-handle {
+    @apply hidden cursor-col-resize items-center justify-center rounded-sm text-aid-muted hover:bg-aid-surface lg:flex;
+    touch-action: none;
+  }
+  .aid-split-handle::before {
+    content: "";
+    @apply h-10 w-0.5 rounded-full bg-aid-line;
+  }
+  .aid-split-handle:focus-visible {
+    @apply bg-aid-info-bg;
+  }
+  .aid-skeleton {
+    @apply rounded-md bg-aid-surface;
+    background-image: linear-gradient(90deg, transparent, rgb(127 135 148 / 0.18), transparent);
+    background-size: 200% 100%;
+    animation: aid-shimmer 1.4s linear infinite;
+  }
+  @keyframes aid-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aid-skeleton {
+      animation: none;
+    }
+  }
+  /* Native <dialog> as a centred modal or a right-hand drawer. */
+  dialog.aid-dialog {
+    @apply w-[min(32rem,calc(100vw-2rem))] rounded-md border border-aid-border bg-aid-bg p-0 text-aid-text;
+    box-shadow: var(--aid-shadow-floating);
+    margin: auto;
+  }
+  dialog.aid-drawer {
+    @apply m-0 ml-auto h-dvh max-h-dvh w-[min(26rem,100vw)] rounded-none rounded-l-md;
+  }
+  dialog.aid-dialog::backdrop {
+    background: rgb(10 12 15 / 0.55);
+  }
+  dialog.aid-dialog[open] {
+    animation: aid-reveal var(--aid-motion-reveal) var(--aid-ease);
+  }
+  @keyframes aid-reveal {
+    from {
+      transform: translateY(4px);
+    }
+    to {
+      transform: none;
+    }
+  }
+  /* Native popover: shown inline where the Popover API is not supported (nothing is lost). */
+  [popover].aid-popover {
+    @apply m-0 max-w-xs rounded-md border border-aid-border bg-aid-bg p-3 text-xs text-aid-text;
+    box-shadow: var(--aid-shadow-floating);
+  }
+  @supports selector(:popover-open) {
+    [popover].aid-popover:not(:popover-open) {
+      display: none;
+    }
+  }
+}

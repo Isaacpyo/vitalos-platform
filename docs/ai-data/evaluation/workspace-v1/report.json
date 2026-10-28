@@ -1,0 +1,200 @@
+{
+  "cases": 22,
+  "dataset": "workspace-v1",
+  "fingerprint": "468d982106c844b2c2eccbd8cb8f4bfca53d847051912f273bc4d5cae7c6fb92",
+  "gate": [
+    {
+      "criterion": "every case passes",
+      "passed": true
+    },
+    {
+      "criterion": "every category has at least one case",
+      "passed": true
+    },
+    {
+      "criterion": "the three workspace prompts and the proposal are all covered",
+      "passed": true
+    }
+  ],
+  "label": "RELIABILITY ONLY. Model responses are hand-written test doubles. This shows the controls around the model work; it is not evidence of live model quality, and no live recordings exist.",
+  "passed": 22,
+  "passed_gate": true,
+  "results": [
+    {
+      "category": "contradictory",
+      "failures": [],
+      "id": "discovery-contradictory-notes-surface-the-conflict",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "incomplete",
+      "failures": [],
+      "id": "discovery-incomplete-notes-invent-nothing",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "injection",
+      "failures": [],
+      "id": "discovery-injection-in-notes",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "invalid_json",
+      "failures": [],
+      "id": "discovery-invalid-json",
+      "outcome": "invalid_output",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "provider_failure",
+      "failures": [],
+      "id": "discovery-provider-timeout-rules-still-reads-notes",
+      "outcome": "timeout",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "unsupported",
+      "failures": [],
+      "id": "discovery-unsupported-steps-and-requirements-dropped",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "discovery_pack"
+    },
+    {
+      "category": "contradictory",
+      "failures": [],
+      "id": "extract-contradictory-text",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "incomplete",
+      "failures": [],
+      "id": "extract-incomplete-model-returns-nothing",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "incomplete",
+      "failures": [],
+      "id": "extract-incomplete-no-contact",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "injection",
+      "failures": [],
+      "id": "extract-injection-delimiter-and-instructions",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "injection",
+      "failures": [],
+      "id": "extract-injection-model-obeys-adds-forbidden-keys",
+      "outcome": "invalid_output",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "invalid_json",
+      "failures": [],
+      "id": "extract-invalid-json",
+      "outcome": "invalid_output",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "provider_failure",
+      "failures": [],
+      "id": "extract-provider-rejected",
+      "outcome": "rejected",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "provider_failure",
+      "failures": [],
+      "id": "extract-provider-timeout",
+      "outcome": "timeout",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "provider_failure",
+      "failures": [],
+      "id": "extract-provider-unavailable",
+      "outcome": "unavailable",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "invalid_json",
+      "failures": [],
+      "id": "extract-schema-invalid-enum",
+      "outcome": "invalid_output",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "unsupported",
+      "failures": [],
+      "id": "extract-unsupported-name-not-in-quote",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "unsupported",
+      "failures": [],
+      "id": "extract-unsupported-organisation-and-claim",
+      "outcome": "success",
+      "passed": true,
+      "prompt": "brief_extract"
+    },
+    {
+      "category": "injection",
+      "failures": [],
+      "id": "proposal-adversarial-discovery-text-is-data",
+      "outcome": "built",
+      "passed": true,
+      "prompt": "proposal"
+    },
+    {
+      "category": "incomplete",
+      "failures": [],
+      "id": "proposal-unknowns-become-dependencies-not-promises",
+      "outcome": "built",
+      "passed": true,
+      "prompt": "proposal"
+    },
+    {
+      "category": "provider_failure",
+      "failures": [],
+      "id": "questions-provider-unavailable-templates-used",
+      "outcome": "unavailable",
+      "passed": true,
+      "prompt": "discovery_questions"
+    },
+    {
+      "category": "invalid_json",
+      "failures": [],
+      "id": "questions-schema-invalid-too-few",
+      "outcome": "invalid_output",
+      "passed": true,
+      "prompt": "discovery_questions"
+    }
+  ]
+}

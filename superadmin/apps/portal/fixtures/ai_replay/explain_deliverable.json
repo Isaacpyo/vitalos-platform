@@ -1,0 +1,22 @@
+{
+  "_readme": "SIMULATED demonstration fixture, hand-written for the synthetic Northwind Synthetic Ltd seed data (portal_seed_demo). It is not output from a live model. Points cite records by their visible label.",
+  "label": "simulated",
+  "summary": "The Prototype findings report describes what the matching prototype matched and what it could not.",
+  "points": [
+    {
+      "text": "Version 2 explains the exceptions: two missing ledger lines and one duplicate invoice.",
+      "cite": [
+        "Version 2"
+      ]
+    },
+    {
+      "text": "It belongs to the Prototype review milestone.",
+      "cite": [
+        "Milestone: Prototype review"
+      ]
+    }
+  ],
+  "gaps": [
+    "The example figures in the preview are synthetic demonstration data."
+  ]
+}

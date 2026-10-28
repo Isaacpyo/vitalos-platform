@@ -1,0 +1,10 @@
+{% extends "portaladmin/_preview_shell.html" %}
+{% block preview_note %}{% if version.is_shared %}This version is shared and visible.{% else %}This version is not shared: invisible to the customer, and nothing can be approved yet.{% endif %}{% endblock %}
+{% block preview_body %}
+  <div class="page-head"><div><p class="eyebrow">Deliverable</p><h1>{{ deliverable.title }}</h1>{% if deliverable.description %}<p class="lede">{{ deliverable.description }}</p>{% endif %}</div></div>
+  <section class="card"><h2>Version {{ version.number }}</h2>
+    {% if version.summary %}<p><strong>{{ version.summary }}</strong></p>{% endif %}
+    {% if version.body %}<div class="preview-text mt-1">{{ version.body }}</div>{% else %}<p class="muted mt-1">No preview text was written for this version.</p>{% endif %}
+    <p class="muted small mt-1">Approval would apply to this version only{% if version.is_contractual %}; contractual acceptance by an authorised signatory is a separate action{% endif %}.</p>
+  </section>
+{% endblock %}

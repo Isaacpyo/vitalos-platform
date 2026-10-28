@@ -1,0 +1,31 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Search · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Search</h1><p class="lede">Searches only what has been shared with you.</p></div></div>
+  {% if not searched %}
+    <div class="empty"><h3>Type at least two characters</h3><p>Use the search box in the header.</p></div>
+  {% elif not results %}
+    <div class="empty" data-testid="no-results"><h3>No results for "{{ q }}"</h3><p>Check the spelling, or try a shorter word.</p></div>
+  {% else %}
+    <div class="stack" data-testid="results">
+      {% for group, rows in results.items %}
+        <section class="card"><h2>{{ group }}</h2>
+          <ul class="list mt-1">
+            {% for r in rows %}
+              <li>
+                {% if group == "Challenges" %}<a href="{% purl 'challenge' pk=r.pk %}">{{ r.title }}</a>
+                {% elif group == "Projects" %}<a href="{% purl 'project' pk=r.pk %}">{{ r.name }}</a>
+                {% elif group == "Deliverables" %}<a href="{% purl 'deliverable' pk=r.pk %}">{{ r.title }}</a>
+                {% elif group == "Updates" %}<a href="{% purl 'update' pk=r.pk %}">{{ r.title }}</a>
+                {% elif group == "Questions" %}<a href="{% purl 'question' pk=r.pk %}">{{ r.question }}</a>
+                {% elif group == "Discussion" %}<a href="{% purl 'challenge' pk=r.thread.challenge_id %}#discussion">{{ r.body|truncatechars:120 }}</a>
+                {% else %}<a href="{% purl 'file' pk=r.pk %}">{{ r.title }}</a>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock %}

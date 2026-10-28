@@ -1,0 +1,6 @@
+{% extends "portaladmin/_preview_shell.html" %}
+{% block preview_note %}{% if update.status == "published" %}This update is already published.{% else %}This draft update is invisible to the customer until you publish it.{% endif %}{% endblock %}
+{% block preview_body %}
+  <div class="page-head"><div><p class="eyebrow">Update{% if update.published_at %} · {{ update.published_at|date:"j M Y" }}{% endif %}</p><h1>{{ update.title }}</h1></div></div>
+  <article class="card"><div class="prose">{{ update.body }}</div></article>
+{% endblock %}

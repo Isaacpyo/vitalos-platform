@@ -87,10 +87,38 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, launch milestone delivered._
+_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered. For the connected experience (marketing, admin workspace, client portal), see `experience/PROGRESS.md`._
 
-- `main` at `ed64d58` (PR #102, squash-merged). All CI green on `main`: CI, Super Admin (PostgreSQL tests, evaluation gate, container smoke), CodeQL, secret scan.
-- Website: production deployment `vitalos-platform-cefs1uag8` (Vercel, READY). `/ai-data`, `/solutions`, `/approach`, `/demonstrator`, `/contact` answer 200, are in the sitemap, carry the security headers and no `noindex`; thank-you is `noindex`. **Merging to `main` did not create a Vercel deployment** (no Git-triggered deployments in the last day; see runbook §1), so production was deployed from a clean checkout of `main` with `vercel deploy --prod`.
-- Super Admin: `Super Admin deploy` run for `ed64d58` succeeded; `/healthz/` 200; every `/ai-data/` page redirects anonymous users to sign-in.
-- Not verified in production: a real enquiry end to end (Turnstile human check needs a person) and the support@ → Super Admin email route (no access to Cloudflare Email Routing settings).
-- Next actions (owner): see "External prerequisites" in `commercial/20-first-sale-readiness.md` and the completion report; first, one test enquiry from a `@vitalos.co.uk` address at `/ai-data/contact`, then confirm it appears as an opportunity (stage New) and close it as Lost with reason "test".
+_Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery workspace (ADR-055): paste an enquiry, review an evidence-linked brief, discovery pack, proposal draft with human approval, assistant, durable AI tasks, signed website brief-assist endpoint (off by default), shared tokens. Live provider still off; no live model-quality evidence. Next (owner): website client signs `assist`, key and switches, live evaluation, retention schedule. Tasks WS-001 to WS-007 in TASKS.md.
+
+- `main` at `162f58e` (vitalos-technologies/vitalos-platform#104, squash-merged after every check passed on its head).
+- **Website** (Vercel deployed from the merge; the Git integration is reconnected):
+  - `vitalos.co.uk/pay` and `/pay/thank-you` answer 200 and are `noindex`.
+  - The `/pay` form posts to `https://admin.vitalos.co.uk/pay/checkout/`. Only `/pay` has the wider CSP, `form-action 'self' https://admin.vitalos.co.uk https://checkout.stripe.com`; `/contact` keeps `'self'`.
+  - The "See the demonstrator" button is gone from the AI & Data thank-you page.
+- **Super Admin** (`Super Admin deploy` for `162f58e` succeeded):
+  - `/healthz/` returns 200.
+  - `/billing/` redirects to sign-in.
+  - `GET /pay/checkout/` and `GET /api/webhooks/stripe/` return 405.
+  - A POST with an unknown invoice returns 303 to `vitalos.co.uk/pay?...&error=not-found`.
+- **AC-14 (live provider) is blocked.** The `AI & Data live evaluation` run 40735552845 stopped before any model call, so nothing was spent: neither `AI_DATA_LLM_API_KEY` nor the organisation's `ANTHROPIC_API_KEY` reaches this repository's `production` environment. Owner step: either give `vitalos-platform` access to the organisation secret `ANTHROPIC_API_KEY`, or add `AI_DATA_LLM_API_KEY` as a `production` environment secret. Then re-run the workflow with `confirm=LIVE`.
+- **Billing owner steps** (ADR-053; `superadmin/apps/billing/README.md`):
+  - Create a restricted key in Vitalos's own Stripe account and store it as `BILLING_STRIPE_SECRET_KEY`.
+  - Add a webhook to `https://admin.vitalos.co.uk/api/webhooks/stripe/` for `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`, and store its signing secret as `BILLING_STRIPE_WEBHOOK_SECRET`.
+  - Set `TURNSTILE_SECRET_KEY` as a `production` secret, with the same value as on Vercel, so that `/pay/checkout/` verifies the human check. Without it, only the honeypot and rate limits apply.
+  - Review Billing › Settings.
+- **Still not verified in production:** a real enquiry end to end, a live Stripe payment, and the live model path.
+
+## Client portal (ADR-056)
+
+Workstream W8, 28 Oct 2026. A customer portal inside the Super Admin (`apps.portal`) that follows the journey Submitted challenge, Discovery, Assessment, Proposal, Active project, Handover, Managed operations, keeping the original opportunity and its discussion attached.
+
+- **Where:** `https://portal.vitalos.co.uk` (owner decision; only portal URLs are served on that host). `/portal/` path mounting is local preview only. Staff tools are at `/client-portal/` and a "Client portal" panel sits in the opportunity workspace.
+- **Access:** staff invite members (single-use, expiring, hashed token through `apps.mailer`); roles viewer, contributor, approver, authorised signatory; axes lockout; optional TOTP. An enquiry never creates access.
+- **Visibility:** explicit publication per record, scoped selectors, internal fields never rendered, searched, emailed, exported or sent to the AI. Deliverable approvals are version-specific; change requests are request-only with a review trail.
+- **AI:** six read-only activities through `apps.aicore` with a deterministic, labelled fallback (today's production state: no model).
+- **Not built (later phases):** live monitoring integrations (status is manual, labelled, goes stale), contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation administration.
+- **Owner steps before customers use it:** DNS record and Azure custom-domain binding for `portal.vitalos.co.uk`; a private bucket and `PORTAL_FILES_BUCKET` for file uploads; optional `PORTAL_HOST` / `PORTAL_ENABLED` variables (see `superadmin/apps/portal/README.md`).
+- **Checkpoint:** implemented and tested in the worktree branch (see the task register, PORTAL-01 to PORTAL-12). Not deployed; nothing is exposed until the custom domain resolves to the app. The owner approved `portal.vitalos.co.uk` on 28 Oct 2026; `superadmin/deploy/azure/deploy.sh` creates the DNS records and the managed certificate on the first deploy after merge.
+
+- **W5 note (28 Oct 2026):** the public pages were redesigned as AI work surfaces (ADR-054): scripted, labelled hero walkthrough, workflow explorer with the four shared topic slugs, reconciliation preview and a usable demonstrator with three synthetic samples. Base UI 1.9.0 is wrapped in `@vitalos/ui/interactive` and loaded on demand. Home JavaScript +9.2 KB gzip (budget raised to 222,000 B with reasons in `tests/performance/budgets.json`). Not changed: `/ai-data/contact`, the brief, the Super Admin.

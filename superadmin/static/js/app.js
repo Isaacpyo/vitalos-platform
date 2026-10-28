@@ -398,7 +398,7 @@
 
   document.addEventListener("vsa-close-modal", closeModal);
   document.addEventListener("vsa-toast", function (event) {
-    showToast(event.detail && event.detail.message);
+    showToast(event.detail && event.detail.message, event.detail && event.detail.tone);
   });
 
   document.addEventListener("keydown", function (event) {

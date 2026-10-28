@@ -1,0 +1,6 @@
+{% extends "portaladmin/_preview_shell.html" %}
+{% block preview_note %}{% if draft %}This brief is a draft: invisible to the customer until you propose it.{% else %}This brief version is visible to the customer.{% endif %}{% endblock %}
+{% block preview_body %}
+  <div class="page-head"><div><p class="eyebrow">{{ challenge.title }}</p><h1>Brief version {{ brief.number }}</h1>{% if brief.change_note %}<p class="lede">What changed: {{ brief.change_note }}</p>{% endif %}</div></div>
+  <section class="card">{% include "portal/_brief.html" %}</section>
+{% endblock %}

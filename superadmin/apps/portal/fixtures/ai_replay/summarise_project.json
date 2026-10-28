@@ -1,0 +1,42 @@
+{
+  "_readme": "SIMULATED demonstration fixture, hand-written for the synthetic Northwind Synthetic Ltd seed data (portal_seed_demo). It is not output from a live model. Points cite records by their visible label.",
+  "label": "simulated",
+  "summary": "The Invoice matching pilot is active. The first milestone is complete and the prototype review is waiting for you.",
+  "points": [
+    {
+      "text": "The pilot is active and has one completed milestone, Data received.",
+      "cite": [
+        "Project: Invoice matching pilot",
+        "Milestone: Data received"
+      ]
+    },
+    {
+      "text": "The Prototype review milestone is waiting for you.",
+      "cite": [
+        "Milestone: Prototype review"
+      ]
+    },
+    {
+      "text": "You are asked to provide a sample ledger export, and to answer which ledger system you export from.",
+      "cite": [
+        "Dependency (Customer): Provide a sample ledger export",
+        "Question: Which ledger system do you export from?"
+      ]
+    },
+    {
+      "text": "The latest update says most sample invoices were matched automatically.",
+      "cite": [
+        "Update: Week 2: sample data checked"
+      ]
+    },
+    {
+      "text": "Version 2 of the Prototype findings report is available for review.",
+      "cite": [
+        "Deliverable: Prototype findings report"
+      ]
+    }
+  ],
+  "gaps": [
+    "Only the dates shown on the milestones are known; the pilot go-live date is a target."
+  ]
+}

@@ -1,0 +1,28 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Questions · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Questions</h1><p class="lede">Things Vitalos has asked you. Answering them keeps your project moving.</p></div></div>
+  <div class="grid grid--main">
+    <div class="stack">
+      <section class="card{% if open_questions %} card--attention{% endif %}" aria-labelledby="open-h">
+        <h2 id="open-h">Waiting for your answer</h2>
+        <ul class="list mt-1" data-testid="open-questions">
+          {% for q in open_questions %}
+            <li>
+              <a href="{% purl 'question' pk=q.pk %}"><strong>{{ q.question }}</strong></a>
+              <br><span class="muted small">{{ q.challenge.title }}{% if q.due_date %} · due {{ q.due_date|date:"j M Y" }}{% if q.due_date < today %} <span class="badge badge--danger">Overdue</span>{% endif %}{% endif %}</span>
+            </li>
+          {% empty %}
+            <li class="empty"><h3>No open questions</h3><p>You have answered everything Vitalos has asked.</p></li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="done-h">
+        <h2 id="done-h">Answered and closed</h2>
+        <ul class="list mt-1">{% for q in done_questions %}<li><a href="{% purl 'question' pk=q.pk %}">{{ q.question }}</a> {% badge q.status q.get_status_display %}</li>{% empty %}<li class="muted">None yet.</li>{% endfor %}</ul>
+      </section>
+    </div>
+    <aside>{% include "portal/_assistant_buttons.html" with items=assistant_items %}</aside>
+  </div>
+{% endblock %}

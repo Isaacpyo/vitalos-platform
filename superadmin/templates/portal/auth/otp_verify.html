@@ -1,0 +1,11 @@
+{% extends "portal/auth/shell.html" %}
+{% block title %}Verify · Vitalos client portal{% endblock %}
+{% block body %}
+  <h1>Enter your code</h1>
+  <p class="muted mt-1 mb-2">Open your authenticator app and enter the 6-digit code.</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "portal/_fields.html" %}
+    <button type="submit" class="btn w-full">Verify</button>
+  </form>
+{% endblock %}

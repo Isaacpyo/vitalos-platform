@@ -1,0 +1,20 @@
+{# Discussion. Context: messages_list. Staff are shown by first name only, never by email. #}
+{% load portal_ui %}
+<ul class="messages" data-testid="messages">
+  {% for m in messages_list %}
+    <li class="message{% if m.author_is_staff %} message--staff{% endif %}">
+      <span class="avatar" aria-hidden="true">{% if m.author_is_staff %}V{% else %}{{ m.author|person:False|initials }}{% endif %}</span>
+      <div>
+        <div class="message__meta"><strong>{{ m.author|person:m.author_is_staff }}</strong> · {{ m.created_at|date:"j M Y, H:i" }}{% if m.thread.deliverable_id %} · on a deliverable{% elif m.thread.milestone_id %} · on a milestone{% endif %}</div>
+        <div class="message__body">{{ m.body }}</div>
+        {% for f in m.files.all %}
+          {% for v in f.versions.all %}
+            {% if v.upload_status == "stored" %}<a class="small" href="{% purl 'file_download' pk=v.pk %}">Download {{ v.original_name }}</a>{% else %}<span class="small muted">{{ v.original_name }} ({{ v.get_upload_status_display }})</span>{% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </li>
+  {% empty %}
+    <li class="empty"><h3>No messages yet</h3><p>Start the conversation below. Vitalos is notified.</p></li>
+  {% endfor %}
+</ul>

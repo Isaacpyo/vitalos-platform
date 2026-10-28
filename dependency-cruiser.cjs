@@ -68,6 +68,14 @@ module.exports = {
       from: { path: "^(apps|packages|services|workers)/", pathNot: "^packages/ui/" },
       to: { path: pkg("motion|framer-motion|motion-dom|motion-utils") },
     },
+    {
+      name: "base-ui-only-in-ui",
+      comment:
+        "Base UI (@base-ui/react) is wrapped as owned components in @vitalos/ui/interactive (ADR-054): apps and other packages use those wrappers, so tokens, focus, motion and CSP rules stay in one place and no second primitive system appears.",
+      severity: "error",
+      from: { path: "^(apps|packages|services|workers)/", pathNot: "^packages/ui/" },
+      to: { path: pkg("@base-ui/react|@base-ui-components/react") },
+    },
   ],
   options: {
     doNotFollow: { path: "node_modules" },

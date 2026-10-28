@@ -1,0 +1,22 @@
+{% load aidata_ui %}
+<section aria-labelledby="activity-heading" class="aid-card max-w-4xl">
+  <header class="border-b border-aid-border px-4 py-3">
+    <h2 id="activity-heading" class="aid-title !text-base">Activity</h2>
+    <p class="aid-help !mt-0">AI or rules preparation is shown apart from decisions made by people. Prompts, model answers and pasted text are not recorded here.</p>
+  </header>
+  {% if timeline %}
+    <ol class="divide-y divide-aid-border" data-testid="timeline">
+      {% for row in timeline %}
+        <li class="flex gap-3 px-4 py-3">
+          <span class="mt-0.5 shrink-0 {% if row.kind == 'preparation' %}text-aid-info{% else %}text-aid-ok{% endif %}">{% if row.kind == "preparation" %}{% aid_icon "chip" "h-5 w-5" %}{% else %}{% aid_icon "users" "h-5 w-5" %}{% endif %}</span>
+          <div class="min-w-0">
+            <p class="text-sm"><span class="aid-chip {% if row.kind == 'preparation' %}aid-chip-info{% else %}aid-chip-ok{% endif %} mr-1">{% if row.kind == "preparation" %}Prepared by AI or rules{% else %}Human decision or action{% endif %}</span>{{ row.summary }}</p>
+            <p class="aid-muted text-xs">{{ row.who }} · {{ row.at|date:"j M Y, H:i" }}</p>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="aid-muted px-4 py-4 text-sm">No activity recorded yet.</p>
+  {% endif %}
+</section>

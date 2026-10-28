@@ -1,0 +1,17 @@
+{% extends "portal/auth/shell.html" %}
+{% block title %}Forgot your password · Vitalos client portal{% endblock %}
+{% block body %}
+  <h1>Forgot your password?</h1>
+  {% if sent %}
+    <p class="notice mt-2" role="status">If that address belongs to a portal member, a link to set a new password is on its way. It works once and expires in 30 minutes.</p>
+    <a class="btn btn--secondary w-full mt-2" href="{% url 'portal:login' %}">Back to sign in</a>
+  {% else %}
+    <p class="muted mt-1 mb-2">Enter the email address you were invited with.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include "portal/_fields.html" %}
+      <button type="submit" class="btn w-full">Send me a link</button>
+    </form>
+    <p class="mt-2 center small"><a href="{% url 'portal:login' %}">Back to sign in</a></p>
+  {% endif %}
+{% endblock %}
