@@ -68,4 +68,12 @@ Axe (WCAG 2.2 AA) on every AI & Data template and, in a separate scripted pass, 
 
 ## Guided brief (appended by its own workstream)
 
-_Reserved. The brief workstream appends its decisions here; do not edit the sections above for it._
+**W6, 28 Oct 2026.** `/ai-data/contact` is now a guided brief (describe, 2 to 4 questions, editable cards, share) with the simple form one click away. Working record: `docs/ai-data/engineering/guided-brief.md`.
+
+- **Same enquiry path.** The brief is shared through the existing `submitAiDataEnquiryAction` (same validation, limits, Turnstile, honeypot, idempotency and ADR-019 headers). It maps to `problem`, `currentProcess` and `desiredOutcome`, with a `[vitalos-brief v1 ...]` marker and fixed-prefix lines, so Super Admin intake is unchanged. One idempotency key per brief; the share button is disabled while pending.
+- **AI is opt-in and server-side only.** An explicit toggle with a plain data-use explanation precedes any send. Two Server Actions call `POST /api/ai-data/brief-assist/`, signed with the existing scheme v1 (new scope `assist`, read key), `visitor_ref` an HMAC of the IP with `ENQUIRY_IP_HASH_SALT`, 20 s timeout, per-IP limit. Every failure falls back to a deterministic checklist that is labelled "no AI used".
+- **Provenance is always shown:** "You said", "Suggested by AI", "Suggested from our checklist", "Edited by you".
+- **Config:** optional `BRIEF_ASSIST_BASE_URL` (falls back to `CONTENT_API_BASE_URL`), so e2e can use a fake without enabling the content proxy.
+- **Foundation use:** `Skeleton` and `CopyButton` from `@vitalos/ui/interactive` (neither loads Base UI). Popover, Dialog and Toast were not used on this route: inline `aria-live` feedback, native `<details>` for the data-use text and a link switch replace them, which keeps Base UI (about 27 KB gzip) off the route's first load. The guided brief is rendered after hydration (`JsOnly`) and a no-script fallback shows the simple form (`@media (scripting: ...)`).
+- **Events:** `brief_started`, `brief_ai_opt_in`, `brief_questions_answered`, `brief_completed`, `brief_shared`, `simple_form_submitted`, in their own block; the Vercel sink now forwards numbers and booleans too.
+- **Budget:** `/ai-data/contact` first-party JavaScript 238,453 B before (from the table above) and 253,980 B after (+15,527), under the 257,000 B budget with 3,020 B headroom. Lazy-loading the brief with `next/dynamic` was tried and measured worse (256,977 B) because the chunk loads straight after hydration, so it was dropped. The budget file is unchanged.

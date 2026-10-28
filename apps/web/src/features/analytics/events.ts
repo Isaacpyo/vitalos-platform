@@ -31,6 +31,9 @@ const workflowTopic = z.enum([
 /** Where on the AI & Data pages a demonstration event came from. */
 const demoSurface = z.enum(["hero", "preview", "demonstrator", "expanded"]);
 
+/** The guided brief's topic: a shared workflow slug, or "none" when it was not started from one. */
+const briefTopic = z.enum([...workflowTopic.options, "none"]);
+
 const outcome = z.enum(["success", "validation_error", "rejected", "error"]);
 
 export const analyticsEventSchemas = {
@@ -63,6 +66,28 @@ export const analyticsEventSchemas = {
     ctaId: z.enum(["explore-workflow", "try-example", "open-expanded-demo", "prepare-brief"]),
     route,
   }),
+
+  // --- Guided brief on /ai-data/contact (W6). Counts, enums and booleans only: never the
+  // visitor's text. Funnel: brief_started, brief_completed, brief_shared. ---
+  /** The visitor started describing a workflow. `topic` is a shared topic slug or "none". */
+  brief_started: z.strictObject({ topic: briefTopic }),
+  /** The AI opt-in was switched on or off. */
+  brief_ai_opt_in: z.strictObject({ enabled: z.boolean() }),
+  /** Follow-up questions answered, and where the questions came from. */
+  brief_questions_answered: z.strictObject({
+    count: z.number().int().min(0).max(6),
+    source: z.enum(["ai", "checklist"]),
+  }),
+  /** The brief was drafted and shown for review. */
+  brief_completed: z.strictObject({
+    source: z.enum(["ai", "checklist"]),
+    cardsKept: z.number().int().min(0).max(5),
+    cardsEdited: z.number().int().min(0).max(5),
+  }),
+  /** The brief was shared as an enquiry (reported on the receipt page). */
+  brief_shared: z.strictObject({ source: z.enum(["ai", "checklist"]) }),
+  /** The conventional form was submitted successfully. */
+  simple_form_submitted: z.strictObject({ route }),
 } as const;
 
 export type AnalyticsEventName = keyof typeof analyticsEventSchemas;

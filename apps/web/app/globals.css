@@ -85,3 +85,28 @@ main > :last-child {
     padding-bottom: calc(var(--section-default) + 3rem);
   }
 }
+
+/* Guided brief step change (W6, ADR-024): a short upward settle. Transform only, no opacity on
+   text; the reduced-motion rule above shortens it to nothing. */
+@keyframes aid-step-in {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* Guided brief progressive enhancement (W6): the server HTML of /ai-data/contact holds a no-script
+   fallback (the simple form) and a JavaScript-only placeholder; the media feature picks the right
+   one before any script runs. The fallback is removed from the DOM after hydration. */
+@media (scripting: enabled) {
+  .aid-no-js-only {
+    display: none;
+  }
+}
+@media (scripting: none) {
+  .aid-needs-js {
+    display: none;
+  }
+}

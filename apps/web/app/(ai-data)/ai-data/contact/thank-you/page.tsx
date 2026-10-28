@@ -3,6 +3,7 @@ import { routes } from "@vitalos/cms";
 import { TrackOnMount } from "../../../../../src/components/analytics/track-on-mount";
 import { AiDataPage } from "../../../../../src/components/ai-data/chrome";
 import { ArrowLink, Band, Eyebrow } from "../../../../../src/components/ai-data/primitives";
+import { SharedBriefReceipt } from "../../../../../src/components/ai-data/brief/SharedBriefReceipt";
 import { RichText } from "../../../../../src/components/rich-text";
 import { getContentSource } from "../../../../../src/lib/cms/get-content-source";
 
@@ -48,6 +49,7 @@ export default async function AiDataThankYouPage({
             </p>
           ) : null}
           {page?.successMessage ? <p className="m-0 text-aid-text">{page.successMessage}</p> : null}
+          {reference ? <SharedBriefReceipt reference={reference} /> : null}
           <div className="pt-(--space-2)">
             <ArrowLink href={routes.aiData.home()}>Back to Vitalos AI &amp; Data</ArrowLink>
           </div>

@@ -14,8 +14,15 @@ import type { AnalyticsSink } from "./sink";
  */
 export const analyticsEnabled = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER === "vercel";
 
-const flat = (properties: object): properties is Record<string, string> =>
-  Object.values(properties).every((value) => typeof value === "string" && value.length <= 200);
+type Flat = Record<string, string | number | boolean>;
+
+const flat = (properties: object): properties is Flat =>
+  Object.values(properties).every(
+    (value) =>
+      typeof value === "boolean" ||
+      (typeof value === "number" && Number.isFinite(value)) ||
+      (typeof value === "string" && value.length <= 200),
+  );
 
 export const vercelAnalyticsSink: AnalyticsSink = {
   track<E extends AnalyticsEventName>(name: E, properties: AnalyticsEventProperties<E>) {

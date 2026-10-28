@@ -27,6 +27,13 @@ describe("analytics taxonomy", () => {
         "demo_stage_viewed",
         "demo_evidence_expanded",
         "ai_data_cta_click",
+        // Guided brief on /ai-data/contact (W6): counts, enums and booleans only.
+        "brief_ai_opt_in",
+        "brief_completed",
+        "brief_questions_answered",
+        "brief_shared",
+        "brief_started",
+        "simple_form_submitted",
       ].sort(),
     );
     expect(isAnalyticsEventName("page_view")).toBe(false);

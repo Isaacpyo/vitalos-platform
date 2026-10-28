@@ -66,3 +66,11 @@ Redesign of the public pages (ADR-054), not a customer-dependent task: no eviden
 - Done: home (hero walkthrough, workflow explorer, use cases, reconciliation preview, discover/prove/build/operate, offers by need), demonstrator (three synthetic samples, source beside results, evidence, who does what, Evidence section), solutions and approach refreshed; Base UI foundation in `@vitalos/ui/interactive`; funnel events (`workflow_started` first).
 - Honesty: every demonstration is labelled synthetic and scripted, not live AI; AC-14 (live provider) is still not run; no prices, customers or results added.
 - Later: the guided brief and enquiry events (separate workstream), real customer evidence (VAD-011 onward), a live-model demonstration only after AI_DATA_LLM_API_KEY is set and AC-14 has run.
+
+## Guided brief (W6, 28 Oct 2026)
+
+Website-side work for VAD-003 (landing page and enquiry flow); not a customer-dependent task.
+
+- Done: guided brief on `/ai-data/contact` (describe, checklist or AI questions, editable cards with provenance, share through the existing enquiry action, receipt with copy), simple form one click away, brief serialisation v1 documented, funnel events (`brief_started`, `brief_completed`, `brief_shared`), unit and e2e tests, screenshots.
+- Honesty: checklist output is labelled "no AI used"; AI output is labelled a suggestion and is only requested after an explicit opt-in; no live provider was called (the e2e uses a local fake).
+- Later: enable "Website brief assist" in the Super Admin once a provider key exists (then verify one live round trip), a Super Admin view of the `[vitalos-brief]` marker in intake, a shared (database-backed) limiter if more than one web instance is run.

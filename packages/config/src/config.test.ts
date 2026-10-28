@@ -636,6 +636,7 @@ describe("content API (Insights and Careers)", () => {
       mediaOrigin: undefined,
       uploadOrigin: undefined,
       tickSecret: undefined,
+      briefAssistBaseUrl: undefined,
     });
     expect(deriveFeatures(env).content).toBe(false);
   });
