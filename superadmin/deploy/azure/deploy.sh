@@ -72,8 +72,9 @@ DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
 # Client portal host (ADR-056). The app serves only the portal URLs on it; the custom-domain binding is separate.
 PORTAL_HOST_NAME="${PORTAL_HOST:-portal.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
-# Client portal host (ADR-056, approved by the owner 28 Oct 2026); PORTAL_DOMAIN="" skips it.
-PORTAL_DOMAIN="${PORTAL_DOMAIN-portal.vitalos.co.uk}"
+# The portal host gets its own DNS records and managed certificate on the same app (owner approved
+# portal.vitalos.co.uk on 28 Oct 2026). PORTAL_DOMAIN="" skips the binding; it follows PORTAL_HOST otherwise.
+PORTAL_DOMAIN="${PORTAL_DOMAIN-$PORTAL_HOST_NAME}"
 ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:?BOOTSTRAP_ADMIN_EMAIL is required (the bootstrap admin sign-in email)}"
 CPU="0.25"
 MEMORY="0.5Gi"
