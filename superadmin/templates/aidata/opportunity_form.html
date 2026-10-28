@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}New opportunity · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'aidata:pipeline' %}" class="hover:underline">AI &amp; Data / Pipeline</a></p>
+  <h1 class="mt-1 text-2xl font-semibold">New opportunity</h1>
+  <p class="muted mt-1 max-w-3xl text-sm">For referrals, outbound and partner leads. Website enquiries become opportunities on their own, or with "Create opportunity" on the enquiry.</p>
+  {% include "aidata/_nav.html" with section="pipeline" %}
+  <form method="post" class="card mt-6 max-w-4xl p-5" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="mb-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% include "aidata/_field.html" with field=form.title span="full" %}
+      {% include "aidata/_field.html" with field=form.organisation %}
+      {% include "aidata/_field.html" with field=form.sector %}
+      {% include "aidata/_field.html" with field=form.source %}
+      {% include "aidata/_field.html" with field=form.offer %}
+      {% include "aidata/_field.html" with field=form.owner %}
+      {% include "aidata/_field.html" with field=form.estimated_value %}
+      {% include "aidata/_field.html" with field=form.contact_name %}
+      {% include "aidata/_field.html" with field=form.contact_role %}
+      {% include "aidata/_field.html" with field=form.contact_email span="full" %}
+      {% include "aidata/_field.html" with field=form.next_action %}
+      {% include "aidata/_field.html" with field=form.next_action_due %}
+      {% include "aidata/_field.html" with field=form.problem_summary span="full" %}
+    </div>
+    <p class="muted mt-4 text-xs">Dates, scores, the customer-visible summary and internal notes are on the opportunity page once it exists.</p>
+    <div class="mt-5 flex justify-end gap-2">
+      <a href="{% url 'aidata:pipeline' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% icon "plus" "h-4 w-4" %} Create opportunity</button>
+    </div>
+  </form>
+{% endblock %}

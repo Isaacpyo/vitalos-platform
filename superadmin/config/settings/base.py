@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.content_sync",
     "apps.insights",
     "apps.careers",
+    "apps.aidata",
 ]
 
 MIDDLEWARE = [

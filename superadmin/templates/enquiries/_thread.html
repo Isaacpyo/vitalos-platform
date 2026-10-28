@@ -37,6 +37,13 @@
           {% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% icon "mail" "h-4 w-4" %} Mark unread</button>
         </form>
         <a href="{% url 'enquiries:export' enquiry.ref %}" class="btn btn-ghost btn-sm" download>{% icon "download" "h-4 w-4" %} Export</a>
+        {% if opportunity %}
+          <a href="{{ opportunity.get_absolute_url }}" class="btn btn-secondary btn-sm" data-testid="enquiry-opportunity">{% icon "sparkles" "h-4 w-4" %} Opportunity {{ opportunity.ref }}</a>
+        {% else %}
+          <form method="post" action="{% url 'aidata:from_enquiry' enquiry.ref %}">
+            {% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm" data-testid="create-opportunity">{% icon "sparkles" "h-4 w-4" %} Create opportunity</button>
+          </form>
+        {% endif %}
       </div>
     </div>
 

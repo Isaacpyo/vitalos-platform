@@ -1,0 +1,11 @@
+{# AI & Data sub-navigation. Context: section (overview, pipeline, offers, budget). #}
+<div class="mt-4 border-b border-slate-200 dark:border-slate-800">
+  <nav aria-label="AI & Data sections" class="flex gap-1 overflow-x-auto overflow-y-hidden">
+    {% url 'aidata:overview' as overview_url %}{% url 'aidata:pipeline' as pipeline_url %}{% url 'aidata:offers' as offers_url %}{% url 'aidata:budget' as budget_url %}
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'overview' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ overview_url }}" {% if section == 'overview' %}aria-current="page"{% endif %}>Overview</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'pipeline' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ pipeline_url }}" {% if section == 'pipeline' %}aria-current="page"{% endif %}>Pipeline</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'offers' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ offers_url }}" {% if section == 'offers' %}aria-current="page"{% endif %}>Offers</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'budget' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ budget_url }}" {% if section == 'budget' %}aria-current="page"{% endif %}>Budget</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/ai-data/demonstrator/">Demonstrator</a>
+  </nav>
+</div>

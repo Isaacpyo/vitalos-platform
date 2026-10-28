@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Edit {{ price.name }} · Offers · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'aidata:offers' %}" class="hover:underline">AI &amp; Data / Offers</a></p>
+  <h1 class="mt-1 text-2xl font-semibold">Edit {{ price.name }}</h1>
+  {% include "aidata/_nav.html" with section="offers" %}
+  <p class="mt-4 max-w-2xl rounded-md border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" role="note">{{ banner }} Mark a price "Validated" only with evidence from real customers.</p>
+  <form method="post" class="card mt-4 max-w-2xl p-5" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" with form=form %}
+    <div class="mt-5 flex justify-end gap-2">
+      <a href="{% url 'aidata:offers' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% icon "check" "h-4 w-4" %} Save</button>
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load ui aidata_ui %}
+{% block title %}Offers · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">AI &amp; Data</p>
+  <h1 class="mt-1 text-2xl font-semibold">Offers</h1>
+  {% include "aidata/_nav.html" with section="offers" %}
+
+  <div class="mt-4 flex gap-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" role="note" data-testid="prices-banner">
+    {% icon "alert" "h-5 w-5 shrink-0" %}
+    <div>
+      <p class="font-semibold">{{ banner }}</p>
+      <p class="mt-1">The website says fees are fixed and agreed in writing before work starts (AID-006). An opportunity with an offer and no estimate takes the offer's proposed price as its estimated value.</p>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 md:grid-cols-2">
+    {% for row in prices %}
+      {% with price=row.price %}
+        <section class="card flex flex-col p-5" aria-labelledby="offer-{{ price.key }}" data-offer="{{ price.key }}">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 id="offer-{{ price.key }}" class="font-semibold">{{ price.name }}</h2>
+              <p class="muted font-mono text-xs">{{ price.key }}</p>
+            </div>
+            <span class="{% if price.status == 'validated' %}{{ 'ok'|budget_badge }}{% else %}{{ 'warn'|budget_badge }}{% endif %} shrink-0">{{ price.get_status_display }}</span>
+          </div>
+          <p class="mt-4 text-2xl font-semibold tabular" data-testid="price">{{ row.label }}</p>
+          <p class="muted text-xs">{{ price.get_basis_display }} · proposed, excluding VAT</p>
+          {% if price.notes %}<p class="mt-3 text-sm whitespace-pre-wrap">{{ price.notes }}</p>{% endif %}
+          <div class="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
+            <p class="muted text-xs">Updated {{ price.updated_at|date:"j M Y" }}{% if price.updated_by %} by {{ price.updated_by.email }}{% endif %}</p>
+            {% if can_edit %}<a class="btn btn-secondary btn-sm" href="{% url 'aidata:offer_edit' price.key %}">{% icon "edit" "h-4 w-4" %} Edit</a>{% endif %}
+          </div>
+        </section>
+      {% endwith %}
+    {% empty %}
+      <p class="muted">No offers are set up.</p>
+    {% endfor %}
+  </div>
+  {% if not can_edit %}<p class="muted mt-4 text-xs">Only a super admin can change prices.</p>{% endif %}
+{% endblock %}

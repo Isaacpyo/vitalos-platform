@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load ui aidata_ui %}
+{% block title %}Pipeline · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">AI &amp; Data</p>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Pipeline</h1>
+    <a href="{% url 'aidata:opportunity_new' %}" class="btn btn-primary btn-sm">{% icon "plus" "h-4 w-4" %} New opportunity</a>
+  </div>
+  {% include "aidata/_nav.html" with section="pipeline" %}
+
+  <nav class="mt-4 flex gap-1 overflow-x-auto pb-1" aria-label="Stage">
+    {% for item in stage_tabs %}
+      <a class="tab" href="?{% if base_query %}{{ base_query }}&amp;{% endif %}stage={{ item.stage }}" {% if item.stage == stage %}aria-current="page"{% endif %} data-stage-tab="{{ item.stage|default:'all' }}">{{ item.label }} <span class="ml-1 text-xs tabular-nums opacity-80">{{ item.count }}</span></a>
+    {% endfor %}
+  </nav>
+
+  <form method="get" role="search" class="card mt-3 grid gap-3 p-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
+    <input type="hidden" name="stage" value="{{ stage }}">
+    <div class="lg:min-w-56 lg:flex-1">
+      <label for="opp-search" class="field-label">Search</label>
+      <input id="opp-search" type="search" name="q" value="{{ query }}" placeholder="Title, organisation or OPP-0001" autocomplete="off"
+             class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm placeholder:text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-400">
+    </div>
+    <div>
+      <label for="opp-owner" class="field-label">Owner</label>
+      <select id="opp-owner" name="owner" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+        <option value="">Anyone</option>
+        <option value="none" {% if owner == "none" %}selected{% endif %}>No owner</option>
+        {% for person in owners %}<option value="{{ person.pk }}" {% if person.pk|stringformat:'s' == owner %}selected{% endif %}>{{ person.email }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="opp-sector" class="field-label">Sector</label>
+      <select id="opp-sector" name="sector" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+        <option value="">All sectors</option>
+        {% for value, label in sectors %}<option value="{{ value }}" {% if value == sector %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <label class="flex items-center gap-2 text-sm font-medium sm:pb-2"><input type="checkbox" name="overdue" value="1" {% if overdue %}checked{% endif %} class="h-4 w-4 rounded border-slate-300"> Overdue only <span class="muted">({{ overdue_count }})</span></label>
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-secondary">Filter</button>
+      <a href="{% url 'aidata:pipeline' %}" class="btn btn-ghost">Clear</a>
+    </div>
+  </form>
+
+  {# Wide screens: one table. Small screens: the same rows as stacked cards. #}
+  <div class="card mt-3 hidden overflow-x-auto md:block">
+    <table class="table-base" data-testid="pipeline-table">
+      <caption class="sr-only">Opportunities</caption>
+      <thead><tr><th scope="col">Opportunity</th><th scope="col">Stage</th><th scope="col">Owner</th><th scope="col">Next action</th><th scope="col">Score</th><th scope="col" class="text-right">Estimate</th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for item in rows %}
+          {% with result=item.scorecard %}
+            <tr data-opportunity="{{ item.ref }}">
+              <td class="max-w-80">
+                <a href="{{ item.get_absolute_url }}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ item.title }}</a>
+                <span class="muted block text-xs"><span class="font-mono">{{ item.ref }}</span>{% if item.organisation %} · {{ item.organisation }}{% endif %}{% if item.sector %} · {{ item.get_sector_display }}{% endif %}</span>
+              </td>
+              <td class="whitespace-nowrap"><span class="{{ item.stage|stage_badge }}">{{ item.get_stage_display }}</span></td>
+              <td class="whitespace-nowrap">{{ item.owner.email|default:"—" }}</td>
+              <td class="max-w-72">
+                {{ item.next_action|default:"—" }}
+                {% if item.next_action_due %}
+                  <span class="block text-xs {% if item.next_action_due < today and not item.is_closed %}font-medium text-rose-700 dark:text-rose-300{% else %}muted{% endif %}">{% if item.next_action_due < today and not item.is_closed %}Overdue · {% endif %}Due {{ item.next_action_due|date:"j M Y" }}</span>
+                {% endif %}
+              </td>
+              <td class="whitespace-nowrap"><span class="tabular">{% if result.score is not None %}{{ result.score }}{% else %}—{% endif %}</span> <span class="{{ result.band|band_badge }}">{{ result.label }}</span></td>
+              <td class="tabular whitespace-nowrap text-right">{{ item.estimated_value|gbp }}</td>
+            </tr>
+          {% endwith %}
+        {% empty %}
+          <tr><td colspan="6" class="muted py-10 text-center">No opportunities here.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="mt-3 space-y-2 md:hidden" data-testid="pipeline-cards">
+    {% for item in rows %}
+      {% with result=item.scorecard %}
+        <li class="card p-4" data-opportunity="{{ item.ref }}">
+          <div class="flex items-start justify-between gap-2">
+            <a href="{{ item.get_absolute_url }}" class="min-w-0 font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ item.title }}</a>
+            <span class="{{ item.stage|stage_badge }} shrink-0 whitespace-nowrap">{{ item.get_stage_display }}</span>
+          </div>
+          <p class="muted mt-0.5 text-xs"><span class="font-mono">{{ item.ref }}</span>{% if item.organisation %} · {{ item.organisation }}{% endif %}</p>
+          <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+            <div class="col-span-2"><dt class="sr-only">Next action</dt><dd>{{ item.next_action|default:"No next action" }}{% if item.next_action_due %} <span class="text-xs {% if item.next_action_due < today and not item.is_closed %}font-medium text-rose-700 dark:text-rose-300{% else %}muted{% endif %}">· {% if item.next_action_due < today and not item.is_closed %}Overdue, {% endif %}due {{ item.next_action_due|date:"j M" }}</span>{% endif %}</dd></div>
+            <div><dt class="muted text-xs">Owner</dt><dd class="truncate">{{ item.owner.email|default:"—" }}</dd></div>
+            <div><dt class="muted text-xs">Score</dt><dd>{% if result.score is not None %}{{ result.score }}{% else %}—{% endif %} <span class="{{ result.band|band_badge }}">{{ result.label }}</span></dd></div>
+          </dl>
+        </li>
+      {% endwith %}
+    {% empty %}
+      <li class="card muted p-6 text-center text-sm">No opportunities here.</li>
+    {% endfor %}
+  </ul>
+  {% if rows|length >= 200 %}<p class="muted mt-2 text-xs">Showing the first 200. Narrow the filters to see more.</p>{% endif %}
+{% endblock %}
