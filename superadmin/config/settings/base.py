@@ -461,6 +461,13 @@ AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)
 # Development only (ADR-055): answer workspace AI actions with a labelled local test double instead of a live
 # model. Ignored unless DEBUG is on, so it can never stand in for a live provider in production.
 AI_DATA_SIMULATED_PROVIDER = env.bool("AI_DATA_SIMULATED_PROVIDER", default=False)
+# Share of the daily run cap (AI settings, "Live model runs per day") that public and customer workflows may use,
+# in percent, rounded down. Website brief assist (aidata.brief_*) and the portal assistant (portal.*) can be
+# triggered by people outside the company, so each is held to its own share and staff workflows keep the rest.
+AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT = env.int("AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT", default=30)
+AI_DATA_PORTAL_DAILY_SHARE_PERCENT = env.int("AI_DATA_PORTAL_DAILY_SHARE_PERCENT", default=30)
+# Assistant answers one portal member may request per hour before they get the compiled (non-AI) answer.
+PORTAL_AI_PER_MEMBER_PER_HOUR = env.int("PORTAL_AI_PER_MEMBER_PER_HOUR", default=10)
 
 # Billing (apps.billing): invoices, payments and Stripe. Both Stripe values are secrets: set them only in the
 # platform's secret store. With no key everything works except Stripe calls (the UI says "Stripe is not

@@ -15,7 +15,7 @@
             <thead><tr><th scope="col">File</th><th scope="col">Latest version</th><th scope="col">Status</th><th scope="col">Added</th></tr></thead>
             <tbody>
               {% for f in g.files %}
-                {% with v=f.versions.all.0 %}
+                {% with v=f.shown_versions.0 %}
                   <tr>
                     <th scope="row"><a href="{% purl 'file' pk=f.pk %}">{{ f.title }}</a>{% if f.project %}<br><span class="muted small">{{ f.project.name }}</span>{% endif %}</th>
                     <td>{{ v.original_name }}<br><span class="muted small">v{{ v.number }} · {{ v.size|filesizeformat }}</span></td>

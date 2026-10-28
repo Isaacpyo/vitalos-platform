@@ -9,6 +9,7 @@ from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.aidata import selectors as aidata_selectors
@@ -72,7 +73,13 @@ PUBLISHABLE = {
 
 
 def _back(request, default):
-    return HttpResponseRedirect(request.POST.get("next") or default)
+    """Redirect to the page the form came from, but only to this site (never a caller-chosen external URL)."""
+    target = request.POST.get("next") or ""
+    if not target or not url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        target = default
+    return HttpResponseRedirect(target)
 
 
 def _page(request, form, *, title, back, back_label, submit="Save", intro="", multipart=False, danger=False):

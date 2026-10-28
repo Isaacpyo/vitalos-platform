@@ -6,6 +6,10 @@ The guard refuses a call when, in this order:
 2. the input is longer than ``max_input_chars``;
 3. this run has already made ``max_calls_per_run`` calls (retries count as calls);
 4. this is the run's first call and ``daily_run_cap`` runs have already used the model today;
+4b. this is the run's first call and its workflow has a share of the daily cap (``workflow_shares``, a
+   workflow prefix mapped to a percentage) that is already used: public and customer-facing workflows
+   can never take the whole pool, so staff workflows keep headroom (outcome ``limit_exceeded``,
+   limit ``workflow_daily_cap``);
 5. the monthly budget is used up, or this call's worst-case cost would take the month over it.
 
 A cloud budget alert is not a cap: these checks are what stops spend. ``UsageLedger`` supplies spend
@@ -55,7 +59,7 @@ class ExecutionLimits:
 class UsageLedger(Protocol):
     def spent_this_month_gbp(self) -> Decimal: ...
 
-    def model_runs_today(self) -> int: ...
+    def model_runs_today(self, workflow_prefix: str = "") -> int: ...
 
 
 @dataclass
@@ -68,8 +72,8 @@ class InMemoryUsage:
     def spent_this_month_gbp(self) -> Decimal:
         return self.spent_gbp
 
-    def model_runs_today(self) -> int:
-        return self.runs_today
+    def model_runs_today(self, workflow_prefix: str = "") -> int:
+        return self.runs_today  # the offline ledger does not split runs by workflow
 
     def add(self, cost_gbp: Decimal, *, new_run: bool) -> None:
         self.spent_gbp += Decimal(cost_gbp)
@@ -102,11 +106,25 @@ ALLOW = GuardDecision(allowed=True)
 
 class LimitGuard:
     def __init__(
-        self, limits: ExecutionLimits, usage: UsageLedger, enabled: Callable[[], bool] | bool = True
+        self,
+        limits: ExecutionLimits,
+        usage: UsageLedger,
+        enabled: Callable[[], bool] | bool = True,
+        workflow_shares: dict[str, int] | None = None,
     ):
         self.limits = limits
         self.usage = usage
         self._enabled = enabled
+        self.workflow_shares = dict(workflow_shares or {})
+
+    def workflow_cap(self, workflow: str) -> tuple[str, int] | None:
+        """(prefix, run cap today) for the workflow's share of the daily cap, or None when it has none.
+        The cap rounds down, so a share can never reach the whole pool."""
+        for prefix, percent in self.workflow_shares.items():
+            if workflow.startswith(prefix):
+                percent = min(100, max(0, int(percent)))
+                return prefix, (self.limits.daily_run_cap * percent) // 100
+        return None
 
     def enabled(self) -> bool:
         return bool(self._enabled() if callable(self._enabled) else self._enabled)
@@ -138,6 +156,15 @@ class LimitGuard:
                 "daily_run_cap",
                 f"The daily cap of {limits.daily_run_cap} model runs has been reached.",
             )
+        if not ctx.started_model and (share := self.workflow_cap(ctx.workflow)) is not None:
+            prefix, cap = share
+            if self.usage.model_runs_today(prefix) >= cap:
+                return GuardDecision(
+                    False,
+                    "limit_exceeded",
+                    "workflow_daily_cap",
+                    f"The daily share of {cap} model runs for this workflow has been reached.",
+                )
         spent = Decimal(self.usage.spent_this_month_gbp())
         budget = Decimal(limits.monthly_budget_gbp)
         if spent >= budget or spent + Decimal(worst_case_gbp) > budget:

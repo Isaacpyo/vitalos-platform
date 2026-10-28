@@ -42,6 +42,22 @@ def limits(ai: AiSettings | None = None) -> ExecutionLimits:
     )
 
 
+#: Workflow prefix -> setting holding its share (percent) of the daily run cap. Brief assist is callable by
+#: anyone who can reach the website; the portal assistant by any customer member. Both are capped so staff
+#: workflows always keep headroom.
+WORKFLOW_SHARE_SETTINGS = {
+    "aidata.brief_": "AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT",
+    "portal.": "AI_DATA_PORTAL_DAILY_SHARE_PERCENT",
+}
+
+
+def workflow_shares() -> dict[str, int]:
+    return {
+        prefix: min(100, max(0, int(getattr(settings, name, 30))))
+        for prefix, name in WORKFLOW_SHARE_SETTINGS.items()
+    }
+
+
 def _month_start():
     now = timezone.localtime()
     return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -62,14 +78,12 @@ class DbUsage:
         total = ModelExecution.objects.filter(created_at__gte=_month_start()).aggregate(total=Sum("cost_gbp"))
         return total["total"] or Decimal("0")
 
-    def model_runs_today(self) -> int:
-        return (
-            ModelExecution.objects.filter(created_at__gte=_day_start(), simulated=False, attempts__gt=0)
-            .exclude(run_ref="")
-            .values("run_ref")
-            .distinct()
-            .count()
-        )
+    def model_runs_today(self, workflow_prefix: str = "") -> int:
+        """Live runs today; with ``workflow_prefix`` only those of workflows starting with it."""
+        rows = ModelExecution.objects.filter(created_at__gte=_day_start(), simulated=False, attempts__gt=0)
+        if workflow_prefix:
+            rows = rows.filter(workflow__startswith=workflow_prefix)
+        return rows.exclude(run_ref="").values("run_ref").distinct().count()
 
 
 def record_execution(result: GatewayResult) -> ModelExecution:
@@ -109,7 +123,7 @@ def live_provider_status() -> tuple[ModelProvider | None, str]:
 
 def build_gateway(provider: ModelProvider, ai: AiSettings | None = None, **kwargs) -> ModelGateway:
     ai = ai or AiSettings.load()
-    guard = LimitGuard(limits(ai), DbUsage(), enabled=lambda: is_enabled())
+    guard = LimitGuard(limits(ai), DbUsage(), enabled=lambda: is_enabled(), workflow_shares=workflow_shares())
     return ModelGateway(provider, guard, recorders=[record_execution], **kwargs)
 
 

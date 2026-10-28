@@ -18,7 +18,7 @@
         {% endfor %}
       </ul>
     </section>
-    {% if member.can_comment and not preview %}
+    {% if member.can_comment and not preview and file.uploaded_by_customer %}
       <aside class="card">
         <h2>Upload a new version</h2>
         <form method="post" action="{% purl 'file_upload' %}" enctype="multipart/form-data" class="mt-1" novalidate>

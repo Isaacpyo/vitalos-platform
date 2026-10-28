@@ -668,6 +668,10 @@ class FileVersion(models.Model):
     reason = models.CharField(max_length=200, blank=True)
     uploaded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
+    # Per-version visibility: a customer sees a version of a shared file only when this is set (customer
+    # uploads, a version pinned to a shared deliverable, or a staff "share this file" action), never because
+    # an earlier or later internal version of the same file exists.
+    customer_visible = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-number"]
@@ -738,6 +742,13 @@ class Event(models.Model):
     challenge = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name="events")
     project = models.ForeignKey(
         Project, null=True, blank=True, on_delete=models.CASCADE, related_name="events"
+    )
+    # Optional exact targets, so the feed can hide an event once the thing it names is withdrawn or unpublished.
+    version = models.ForeignKey(
+        "DeliverableVersion", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
+    )
+    milestone = models.ForeignKey(
+        "Milestone", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
     )
     kind = models.CharField(max_length=40)
     summary = models.CharField(max_length=300)

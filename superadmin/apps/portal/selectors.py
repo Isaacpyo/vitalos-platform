@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime as dt
 
 from django.conf import settings
-from django.db.models import Max, Q
+from django.db.models import Exists, Max, OuterRef, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -41,6 +41,19 @@ from .models import (
     Thread,
     Update,
 )
+
+
+def _pk(value) -> int:
+    """A primary key from untrusted input (a POST field or query string). Anything that is not a plain
+    positive integer that fits the database column is a 404, exactly like a record that does not exist."""
+    try:
+        number = int(str(value).strip())
+    except (TypeError, ValueError):
+        raise Http404 from None
+    if not 0 < number < 2**63:
+        raise Http404
+    return number
+
 
 # --- Membership ---------------------------------------------------------------------------------------------------
 
@@ -81,7 +94,7 @@ def challenges(member):
 
 
 def get_challenge(member, pk):
-    return get_object_or_404(challenges(member), pk=pk)
+    return get_object_or_404(challenges(member), pk=_pk(pk))
 
 
 def briefs(member, challenge):
@@ -95,7 +108,7 @@ def briefs(member, challenge):
 def get_brief(member, pk):
     brief = get_object_or_404(
         BriefVersion.objects.select_related("challenge").exclude(status=BriefStatus.DRAFT),
-        pk=pk,
+        pk=_pk(pk),
         proposed_at__isnull=False,
     )
     if brief.challenge.organisation_id != member.organisation_id or brief.challenge.shared_at is None:
@@ -121,7 +134,7 @@ def projects(member):
 
 
 def get_project(member, pk):
-    return get_object_or_404(projects(member), pk=pk)
+    return get_object_or_404(projects(member), pk=_pk(pk))
 
 
 def milestones(member, project=None):
@@ -132,7 +145,7 @@ def milestones(member, project=None):
 
 
 def get_milestone(member, pk):
-    return get_object_or_404(milestones(member).select_related("project__challenge"), pk=pk)
+    return get_object_or_404(milestones(member).select_related("project__challenge"), pk=_pk(pk))
 
 
 def items(member, project):
@@ -151,7 +164,7 @@ def deliverables(member, project=None):
 
 
 def get_deliverable(member, pk):
-    return get_object_or_404(deliverables(member), pk=pk)
+    return get_object_or_404(deliverables(member), pk=_pk(pk))
 
 
 def versions(member, deliverable):
@@ -165,7 +178,7 @@ def versions(member, deliverable):
 def get_version(member, pk):
     version = get_object_or_404(
         DeliverableVersion.objects.select_related("deliverable__project__challenge", "file_version__file"),
-        pk=pk,
+        pk=_pk(pk),
         shared_at__isnull=False,
         withdrawn_at__isnull=True,
     )
@@ -182,17 +195,25 @@ def decisions(version):
     return list(Approval.objects.filter(version=version).order_by("created_at", "id"))
 
 
-def version_state(version) -> str:
-    """approved, changes_requested, superseded or pending: from this version's own decisions only."""
-    rows = Approval.objects.filter(version=version, kind=Approval.Kind.REVIEW)
-    if rows.filter(decision=Approval.Decision.APPROVED).exists():
-        return "approved"
-    newer = DeliverableVersion.objects.filter(
+def has_newer_version(version) -> bool:
+    """True when a newer version of the same deliverable is shared and not withdrawn."""
+    return DeliverableVersion.objects.filter(
         deliverable_id=version.deliverable_id,
         number__gt=version.number,
         shared_at__isnull=False,
         withdrawn_at__isnull=True,
     ).exists()
+
+
+def version_state(version) -> str:
+    """approved, changes_requested, superseded or pending: from this version's own decisions only.
+
+    This is the display state. Whether a decision may still be recorded is ``has_newer_version``, which the
+    services check separately so that an approved version that was later superseded accepts nothing more."""
+    rows = Approval.objects.filter(version=version, kind=Approval.Kind.REVIEW)
+    if rows.filter(decision=Approval.Decision.APPROVED).exists():
+        return "approved"
+    newer = has_newer_version(version)
     if rows.filter(decision=Approval.Decision.CHANGES).exists():
         return "superseded" if newer else "changes_requested"
     return "superseded" if newer else "pending"
@@ -215,7 +236,7 @@ def information_requests(member, challenge=None):
 
 
 def get_information_request(member, pk):
-    return get_object_or_404(information_requests(member), pk=pk)
+    return get_object_or_404(information_requests(member), pk=_pk(pk))
 
 
 def change_requests(member, project=None):
@@ -226,7 +247,7 @@ def change_requests(member, project=None):
 
 
 def get_change_request(member, pk):
-    return get_object_or_404(change_requests(member), pk=pk)
+    return get_object_or_404(change_requests(member), pk=_pk(pk))
 
 
 def updates(member, challenge=None, project=None):
@@ -241,7 +262,7 @@ def updates(member, challenge=None, project=None):
 
 
 def get_update(member, pk):
-    return get_object_or_404(updates(member), pk=pk)
+    return get_object_or_404(updates(member), pk=_pk(pk))
 
 
 # --- Discussion -------------------------------------------------------------------------------------------------------
@@ -257,7 +278,7 @@ def threads(member, challenge=None):
 
 
 def get_thread(member, pk):
-    return get_object_or_404(threads(member), pk=pk)
+    return get_object_or_404(threads(member), pk=_pk(pk))
 
 
 def messages(member, thread):
@@ -276,7 +297,9 @@ def thread_for(member, challenge, *, milestone=None, deliverable=None):
 
 def files(member, challenge=None, project=None):
     qs = File.objects.select_related("challenge", "project").filter(
-        challenge__in=challenges(member), visibility=FileVisibility.CUSTOMER
+        Exists(FileVersion.objects.filter(file=OuterRef("pk"), customer_visible=True)),
+        challenge__in=challenges(member),
+        visibility=FileVisibility.CUSTOMER,
     )
     if challenge is not None:
         qs = qs.filter(challenge=challenge)
@@ -286,11 +309,19 @@ def files(member, challenge=None, project=None):
 
 
 def get_file(member, pk):
-    return get_object_or_404(files(member), pk=pk)
+    return get_object_or_404(files(member), pk=_pk(pk))
+
+
+def file_versions(member, file):
+    """The versions of a visible file that staff have made visible to the customer, newest first."""
+    get_file(member, file.pk)
+    return FileVersion.objects.filter(file=file, customer_visible=True)
 
 
 def get_file_version(member, pk):
-    version = get_object_or_404(FileVersion.objects.select_related("file__challenge"), pk=pk)
+    version = get_object_or_404(
+        FileVersion.objects.select_related("file__challenge"), pk=_pk(pk), customer_visible=True
+    )
     get_file(member, version.file_id)
     return version
 
@@ -303,7 +334,7 @@ def services(member):
 
 
 def get_service(member, pk):
-    return get_object_or_404(services(member), pk=pk)
+    return get_object_or_404(services(member), pk=_pk(pk))
 
 
 def latest_report(service):
@@ -341,9 +372,25 @@ def notifications(user):
 
 
 def events(member, challenge=None, project=None, since=None):
+    """Activity the customer may see. An event stays in the table when staff unpublish or withdraw the thing
+    it names, so it is filtered here, on read: the feed, the dashboard and the AI "what changed" source all
+    use this one function and never show a record that is no longer visible."""
     qs = Event.objects.filter(challenge__in=challenges(member)).filter(
         Q(project__isnull=True) | Q(project__in=projects(member))
     )
+    qs = qs.exclude(
+        Q(version__isnull=False)
+        & (Q(version__shared_at__isnull=True) | Q(version__withdrawn_at__isnull=False))
+    ).exclude(Q(milestone__isnull=False) & Q(milestone__published_at__isnull=True))
+    gated = {
+        "deliverable": deliverables(member),
+        "question": information_requests(member),
+        "update": updates(member),
+        "file": files(member),
+    }
+    for url_name, visible in gated.items():
+        ids = list(visible.values_list("pk", flat=True))
+        qs = qs.exclude(Q(url_name=url_name) & ~Q(url_kwargs__pk__in=ids))
     if challenge is not None:
         qs = qs.filter(challenge=challenge)
     if project is not None:

@@ -469,7 +469,7 @@ def _rows(post, prefix: str, names: tuple[str, ...]) -> list[dict]:
         row = {name: (columns[name][index] if index < len(columns[name]) else "") for name in names}
         span = spans[index] if index < len(spans) else ""
         start, _, end = span.partition(":")
-        if start.isdigit() and end.isdigit():
+        if start.isascii() and end.isascii() and start.isdigit() and end.isdigit():
             row.update({"start": int(start), "end": int(end), "quote": ""})
         rows.append(row)
     return rows

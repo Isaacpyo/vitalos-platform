@@ -100,10 +100,14 @@ def event(
     customer=False,
     url_name="",
     url_kwargs=None,
+    version=None,
+    milestone=None,
 ) -> Event:
     return Event.objects.create(
         challenge=challenge,
         project=project,
+        version=version,
+        milestone=milestone,
         kind=kind,
         summary=summary[:300],
         actor_is_customer=customer,
@@ -495,6 +499,18 @@ def propose_brief(brief: BriefVersion, *, actor, request=None) -> None:
     )
 
 
+def _lock_brief(brief: BriefVersion) -> BriefVersion:
+    """Lock the brief row and re-check, on the fresh row, that it is still the proposed version under review."""
+    fresh = BriefVersion.objects.select_for_update().select_related("challenge").get(pk=brief.pk)
+    if fresh.status != BriefStatus.PROPOSED:
+        raise PortalError("This brief is not waiting for review.")
+    if BriefVersion.objects.filter(
+        challenge_id=fresh.challenge_id, number__gt=fresh.number, proposed_at__isnull=False
+    ).exists():
+        raise PortalError("A newer brief has been proposed. Please review the latest version.")
+    return fresh
+
+
 def review_brief(
     member: Membership, brief: BriefVersion, *, accept: bool, comment: str, request=None
 ) -> BriefReview:
@@ -510,6 +526,7 @@ def review_brief(
     if not accept and not member.can_comment:
         raise PortalError("Your role is read-only.")
     with transaction.atomic():
+        brief = _lock_brief(brief)
         review = BriefReview.objects.create(
             brief=brief,
             user=member.user,
@@ -615,6 +632,7 @@ def save_milestone(
             "milestone",
             f"Milestone '{milestone.title}': {milestone.get_status_display()}",
             project=project,
+            milestone=milestone,
             url_name="project",
             url_kwargs={"pk": project.pk},
         )
@@ -680,11 +698,14 @@ def share_version(version: DeliverableVersion, *, actor, request=None) -> None:
             "Publish the project (and share its challenge) before sharing a deliverable version."
         )
     with transaction.atomic():
+        Deliverable.objects.select_for_update().get(pk=deliverable.pk)
         if deliverable.published_at is None:
             deliverable.published_at = _now()
             deliverable.save(update_fields=["published_at"])
         if version.file_version_id:
+            # Only the pinned file version becomes visible; earlier or later versions stay internal.
             File.objects.filter(pk=version.file_version.file_id).update(visibility=FileVisibility.CUSTOMER)
+            FileVersion.objects.filter(pk=version.file_version_id).update(customer_visible=True)
         version.shared_at = _now()
         version.withdrawn_at = None
         version.save(update_fields=["shared_at", "withdrawn_at"])
@@ -693,6 +714,7 @@ def share_version(version: DeliverableVersion, *, actor, request=None) -> None:
         "deliverable_shared",
         f"{deliverable.title}: version {version.number} is ready to review",
         project=project,
+        version=version,
         url_name="deliverable",
         url_kwargs={"pk": deliverable.pk},
     )
@@ -971,11 +993,21 @@ def _version_for_decision(member: Membership, version: DeliverableVersion) -> No
         or deliverable.project.published_at is None
     ):
         raise PortalError("Not available.")
-    if selectors.version_state(version) == "superseded":
+    if selectors.has_newer_version(version):
         raise PortalError(
             "A newer version has been shared. Decisions are recorded against the version you are reviewing, "
             "so please review the latest version."
         )
+
+
+def _lock_version(member: Membership, version: DeliverableVersion) -> DeliverableVersion:
+    """Inside a transaction: lock the deliverable (which also serialises ``share_version`` and
+    ``withdraw_version``), reload the version and re-run the checks on the fresh rows, so a decision never
+    lands on a version that a concurrent request has just superseded or withdrawn."""
+    Deliverable.objects.select_for_update().get(pk=version.deliverable_id)
+    fresh = DeliverableVersion.objects.select_related("deliverable__project__challenge").get(pk=version.pk)
+    _version_for_decision(member, fresh)
+    return fresh
 
 
 def approve_version(member: Membership, version: DeliverableVersion, *, comment="", request=None) -> Approval:
@@ -987,6 +1019,7 @@ def approve_version(member: Membership, version: DeliverableVersion, *, comment=
     comment = _clean_text(comment, field="Comment", required=False, limit=2000)
     try:
         with transaction.atomic():
+            version = _lock_version(member, version)
             approval = Approval.objects.create(
                 version=version,
                 kind=Approval.Kind.REVIEW,
@@ -1017,17 +1050,23 @@ def request_version_changes(
             "This version is already approved. Ask Vitalos for a new version if something must change."
         )
     comment = _clean_text(comment, field="What needs to change", limit=2000)
-    approval = Approval.objects.create(
-        version=version,
-        kind=Approval.Kind.REVIEW,
-        decision=Approval.Decision.CHANGES,
-        user=member.user,
-        user_email=member.user.email,
-        user_name=member.user.full_name,
-        role=member.role,
-        comment=comment,
-        ip=client_ip(request) or None if request is not None else None,
-    )
+    with transaction.atomic():
+        version = _lock_version(member, version)
+        if selectors.version_state(version) == "approved":
+            raise PortalError(
+                "This version is already approved. Ask Vitalos for a new version if something must change."
+            )
+        approval = Approval.objects.create(
+            version=version,
+            kind=Approval.Kind.REVIEW,
+            decision=Approval.Decision.CHANGES,
+            user=member.user,
+            user_email=member.user.email,
+            user_name=member.user.full_name,
+            role=member.role,
+            comment=comment,
+            ip=client_ip(request) or None if request is not None else None,
+        )
     _decision_side_effects(member, version, approval, "asked for changes to")
     return approval
 
@@ -1048,6 +1087,7 @@ def accept_contract(
     )
     try:
         with transaction.atomic():
+            version = _lock_version(member, version)
             approval = Approval.objects.create(
                 version=version,
                 kind=Approval.Kind.CONTRACTUAL,
@@ -1074,6 +1114,7 @@ def _decision_side_effects(member, version, approval, verb: str, contract=False)
         "decision",
         summary,
         project=project,
+        version=version,
         actor=member.user,
         customer=True,
         url_name="deliverable",
@@ -1210,7 +1251,9 @@ def review_change(
 # --- Files --------------------------------------------------------------------------------------------------------------------
 
 
-def _add_file_version(file: File, checked, *, user, organisation_id: int) -> FileVersion:
+def _add_file_version(
+    file: File, checked, *, user, organisation_id: int, customer_visible: bool = False
+) -> FileVersion:
     key = portal_files.store(organisation_id, checked)
     if checked.refused_reason:
         raise PortalError(checked.refused_reason)
@@ -1226,6 +1269,7 @@ def _add_file_version(file: File, checked, *, user, organisation_id: int) -> Fil
         upload_status=status,
         reason="" if key else "File storage is not configured, so the file's contents were not kept.",
         uploaded_by=user,
+        customer_visible=customer_visible,
     )
 
 
@@ -1266,9 +1310,16 @@ def upload_customer_file(
                 uploaded_by_customer=True,
                 created_by=member.user,
             )
-        elif file.challenge_id != challenge.pk or file.visibility != FileVisibility.CUSTOMER:
+        elif (
+            file.challenge_id != challenge.pk
+            or file.visibility != FileVisibility.CUSTOMER
+            or not file.uploaded_by_customer
+        ):
+            # A customer may add a version only to a file a customer uploaded, never to one staff published.
             raise PortalError("Not available.")
-        version = _add_file_version(file, checked, user=member.user, organisation_id=member.organisation_id)
+        version = _add_file_version(
+            file, checked, user=member.user, organisation_id=member.organisation_id, customer_visible=True
+        )
     event(
         challenge,
         "file",
@@ -1319,7 +1370,13 @@ def upload_staff_file(
             retention_note=retention_note[:300],
             created_by=actor,
         )
-        version = _add_file_version(file, checked, user=actor, organisation_id=challenge.organisation_id)
+        version = _add_file_version(
+            file,
+            checked,
+            user=actor,
+            organisation_id=challenge.organisation_id,
+            customer_visible=visibility == FileVisibility.CUSTOMER,
+        )
     record(
         "portal.file_uploaded", request=request, actor=actor, entity=file, summary=f"{checked.filename}"[:250]
     )
@@ -1332,6 +1389,9 @@ def set_file_visibility(file: File, visibility: str, *, actor, request=None) -> 
     if file.visibility != visibility:
         file.visibility = visibility
         file.save(update_fields=["visibility"])
+        if visibility == FileVisibility.CUSTOMER:
+            # Explicit staff action on the whole file: its versions up to now become visible.
+            file.versions.update(customer_visible=True)
         record(
             "portal.file_visibility",
             request=request,

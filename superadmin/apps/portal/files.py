@@ -18,7 +18,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import storages
 
-from apps.enquiries.attachments import ALLOWED
+from apps.enquiries.attachments import ALLOWED, OLE
 
 MAX_BYTES = 10 * 1024 * 1024
 # Office archives: the part directory every genuine file of that type has, and the macro parts we refuse.
@@ -30,6 +30,15 @@ _OFFICE_DIR = {
 _REFUSED_PARTS = ("vbaproject.bin", "macros/", "activex/")
 _EXT_ALIASES = {"jpg": {"jpg", "jpeg"}, "txt": {"txt", "text", "md"}, "csv": {"csv"}}
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9._ ()\-]+")
+
+
+# The enquiries app still accepts .doc and .xls; the portal does not, because those OLE containers can carry
+# macros and objects that the portal's archive checks cannot inspect.
+_LEGACY_TYPES = {"application/msword", "application/vnd.ms-excel"}
+_LEGACY_MESSAGE = (
+    "Older Word and Excel files (.doc, .xls) are not accepted because they can carry macros. "
+    "Save the file as .docx or .xlsx, or as a PDF, and upload that."
+)
 
 
 @dataclass
@@ -76,6 +85,8 @@ def check(filename: str, declared_type: str, data: bytes) -> Checked:
         result.refused_reason = "The file is empty"
     elif len(data) > MAX_BYTES:
         result.refused_reason = f"Larger than {MAX_BYTES // (1024 * 1024)} MB"
+    elif content_type in _LEGACY_TYPES or data.startswith(OLE) or name.lower().endswith((".doc", ".xls")):
+        result.refused_reason = _LEGACY_MESSAGE
     elif content_type not in ALLOWED:
         result.refused_reason = "This file type is not accepted"
     else:

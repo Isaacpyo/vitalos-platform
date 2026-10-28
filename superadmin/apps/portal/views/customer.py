@@ -7,6 +7,7 @@ from __future__ import annotations
 import csv
 
 from django.contrib import messages
+from django.db.models import Prefetch
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -364,7 +365,7 @@ def deliverable(request, ctx, pk):
     all_versions = list(selectors.versions(m, d))
     chosen = None
     wanted = request.GET.get("v", "")
-    if wanted.isdigit():
+    if wanted.isascii() and wanted.isdigit():
         chosen = next((v for v in all_versions if v.number == int(wanted)), None)
     version = chosen or (all_versions[0] if all_versions else None)
     state = selectors.version_state(version) if version else ""
@@ -405,7 +406,10 @@ def deliverable(request, ctx, pk):
             "messages_list": _display_messages(m, ch, deliverable=d),
             "message_form": MessageForm(),
             "file": version.file_version
-            if version and version.file_version_id and version.file_version.file.visibility == "customer"
+            if version
+            and version.file_version_id
+            and version.file_version.customer_visible
+            and version.file_version.file.visibility == "customer"
             else None,
             "assistant_items": _ai_items(("explain_deliverable", "deliverable", d.pk)),
         },
@@ -567,7 +571,17 @@ def files(request, ctx):
     m = ctx.member
     groups = []
     for ch in selectors.challenges(m):
-        fs = selectors.files(m, ch).prefetch_related("versions").select_related("project")
+        fs = (
+            selectors.files(m, ch)
+            .prefetch_related(
+                Prefetch(
+                    "versions",
+                    queryset=FileVersion.objects.filter(customer_visible=True),
+                    to_attr="shown_versions",
+                )
+            )
+            .select_related("project")
+        )
         groups.append({"challenge": ch, "files": fs, "upload_form": UploadForm(initial={"challenge": ch.pk})})
     return show(
         request,
@@ -632,7 +646,7 @@ def file(request, ctx, pk):
         "portal/file.html",
         {
             "file": f,
-            "versions": f.versions.all(),
+            "versions": selectors.file_versions(ctx.member, f),
             "challenge": f.challenge,
             "upload_form": UploadForm(initial={"challenge": f.challenge_id, "file_id": f.pk}),
         },
