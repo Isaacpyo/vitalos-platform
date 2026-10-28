@@ -21,4 +21,6 @@ regexes = [
   '''^pk_0123456789abcdef0123456789abcdef$''',
   # Dummy AI & Data model key in the demonstrator view test that proves a key is never rendered.
   '''^sk-secret-NEVER-RENDER-123456$''',
+  # sessionStorage key names for the AI & Data guided brief draft and receipt (not credentials).
+  '''^vitalos\.aid\.brief(\.shared)?\.v1$''',
 ]
