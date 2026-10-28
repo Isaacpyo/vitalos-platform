@@ -371,9 +371,24 @@ def notifications(user):
 
 
 def events(member, challenge=None, project=None, since=None):
+    """Activity the customer may see. An event stays in the table when staff unpublish or withdraw the thing
+    it names, so it is filtered here, on read: the feed, the dashboard and the AI "what changed" source all
+    use this one function and never show a record that is no longer visible."""
     qs = Event.objects.filter(challenge__in=challenges(member)).filter(
         Q(project__isnull=True) | Q(project__in=projects(member))
     )
+    qs = qs.exclude(
+        Q(version__isnull=False) & (Q(version__shared_at__isnull=True) | Q(version__withdrawn_at__isnull=False))
+    ).exclude(Q(milestone__isnull=False) & Q(milestone__published_at__isnull=True))
+    gated = {
+        "deliverable": deliverables(member),
+        "question": information_requests(member),
+        "update": updates(member),
+        "file": files(member),
+    }
+    for url_name, visible in gated.items():
+        ids = list(visible.values_list("pk", flat=True))
+        qs = qs.exclude(Q(url_name=url_name) & ~Q(url_kwargs__pk__in=ids))
     if challenge is not None:
         qs = qs.filter(challenge=challenge)
     if project is not None:

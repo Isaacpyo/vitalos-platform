@@ -100,10 +100,14 @@ def event(
     customer=False,
     url_name="",
     url_kwargs=None,
+    version=None,
+    milestone=None,
 ) -> Event:
     return Event.objects.create(
         challenge=challenge,
         project=project,
+        version=version,
+        milestone=milestone,
         kind=kind,
         summary=summary[:300],
         actor_is_customer=customer,
@@ -640,6 +644,7 @@ def save_milestone(
             "milestone",
             f"Milestone '{milestone.title}': {milestone.get_status_display()}",
             project=project,
+            milestone=milestone,
             url_name="project",
             url_kwargs={"pk": project.pk},
         )
@@ -721,6 +726,7 @@ def share_version(version: DeliverableVersion, *, actor, request=None) -> None:
         "deliverable_shared",
         f"{deliverable.title}: version {version.number} is ready to review",
         project=project,
+        version=version,
         url_name="deliverable",
         url_kwargs={"pk": deliverable.pk},
     )
@@ -1120,6 +1126,7 @@ def _decision_side_effects(member, version, approval, verb: str, contract=False)
         "decision",
         summary,
         project=project,
+        version=version,
         actor=member.user,
         customer=True,
         url_name="deliverable",

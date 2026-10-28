@@ -743,6 +743,13 @@ class Event(models.Model):
     project = models.ForeignKey(
         Project, null=True, blank=True, on_delete=models.CASCADE, related_name="events"
     )
+    # Optional exact targets, so the feed can hide an event once the thing it names is withdrawn or unpublished.
+    version = models.ForeignKey(
+        "DeliverableVersion", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
+    )
+    milestone = models.ForeignKey(
+        "Milestone", null=True, blank=True, on_delete=models.CASCADE, related_name="events"
+    )
     kind = models.CharField(max_length=40)
     summary = models.CharField(max_length=300)
     actor_is_customer = models.BooleanField(default=False)

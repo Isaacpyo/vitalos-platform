@@ -243,3 +243,51 @@ def test_l1_unicode_digit_version_query_is_not_a_500(world):
     client = c(world.contrib)
     client.raise_request_exception = False
     assert client.get(f"/portal/deliverables/{world.deliv_a.pk}/?v=\u00b2").status_code == 200
+
+
+# --- L2: events about records that are no longer visible are not shown ---------------------------------------
+
+
+def _feed(world):
+    return [e.summary for e in selectors.events(world.contrib)]
+
+
+def test_l2_unpublishing_a_deliverable_hides_its_events(world):
+    assert any("Prototype report" in s for s in _feed(world))
+    services.set_published(world.deliv_a, False, actor=world.staff)
+    assert not any("Prototype report" in s for s in _feed(world))
+    client = c(world.contrib)
+    assert "Prototype report: version 1 is ready" not in client.get("/portal/activity/").content.decode()
+    assert "Prototype report: version 1 is ready" not in client.get("/portal/").content.decode()
+    services.set_published(world.deliv_a, True, actor=world.staff)
+    assert any("Prototype report" in s for s in _feed(world))
+
+
+def test_l2_withdrawing_a_version_hides_only_that_versions_events(world):
+    v2 = _second_version(world)
+    assert any("version 2 is ready" in s for s in _feed(world))
+    services.withdraw_version(v2, actor=world.staff)
+    feed = _feed(world)
+    assert not any("version 2" in s for s in feed)
+    assert any("version 1 is ready" in s for s in feed)
+
+
+def test_l2_unpublishing_a_milestone_hides_its_events(world):
+    services.save_milestone(world.project_a, actor=world.staff, milestone=world.ms2, status="complete")
+    assert any("Prototype review" in s for s in _feed(world))
+    services.set_published(world.ms2, False, actor=world.staff)
+    assert not any("Prototype review" in s for s in _feed(world))
+
+
+def test_l2_unpublishing_a_question_hides_its_events(world):
+    assert any("ledger system" in s for s in _feed(world))
+    services.set_published(world.q_a, False, actor=world.staff)
+    assert not any("ledger system" in s for s in _feed(world))
+
+
+def test_l2_ai_what_changed_context_excludes_hidden_events(world):
+    from apps.portal import ai
+
+    services.set_published(world.deliv_a, False, actor=world.staff)
+    sources = ai.build_context("what_changed", world.contrib)
+    assert "Prototype report" not in " ".join(str(s) for s in sources)
