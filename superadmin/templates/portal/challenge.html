@@ -20,7 +20,7 @@
       <section class="card" aria-labelledby="sub-h">
         <h2 id="sub-h">What you told us</h2>
         <p class="muted small">Your original submission, kept as you wrote it.</p>
-        <div class="prose mt-1" data-testid="submitted-problem">{{ challenge.submitted_problem|default:"No problem description was recorded." }}</div>
+        <div class="prose mt-1" data-testid="submitted-problem">{% if challenge.submitted_problem %}{{ challenge.submitted_problem|linebreaksbr }}{% else %}Your challenge is described in the brief below.{% endif %}</div>
         {% if challenge.submitted_outcome %}<h3 class="mt-2">The outcome you want</h3><div class="prose mt-1">{{ challenge.submitted_outcome }}</div>{% endif %}
       </section>
 

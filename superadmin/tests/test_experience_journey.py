@@ -196,7 +196,8 @@ def test_ac1_to_ac12_the_connected_experience(db, mailoutbox):
     page = customer.get(f"/portal/challenges/{challenge.pk}/").content.decode()
     for label in ("Your words", "AI suggestion", "Agreed fact"):
         assert label in page
-    assert MARKER in page  # the customer's own submission, unchanged
+    # The customer's own words, unchanged; the website's machine marker and checklist suggestions are not theirs.
+    assert MARKER not in page and "You said: We match supplier statements" in page
     assert edited in page
     for hidden in (FIELD_NOTE, UNAPPROVED, *INTERNAL.values(), "ai-proof-of-value", "1500", "Score"):
         assert hidden not in page, hidden

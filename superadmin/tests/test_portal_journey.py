@@ -43,9 +43,15 @@ def test_first_release_journey(db, mailoutbox):
     )
     assert linked.status_code == 302
     challenge = opp.portal_challenge
-    assert (
-        challenge.submitted_problem == "We re-key supplier invoices by hand."
-    )  # carried over, nothing re-entered
+    # No source enquiry: nothing is shown as the customer's own words; the problem travels, unretyped, as
+    # Vitalos's wording in the first (draft) brief version.
+    assert challenge.submitted_problem == ""
+    first = challenge.briefs.get(number=1).segments
+    assert first[0] == {
+        "id": "s1",
+        "text": "The problem: We re-key supplier invoices by hand.",
+        "provenance": "agreed_fact",
+    }
     assert (
         "Client portal" in operator.get(opp.get_absolute_url()).content.decode()
         and "Open portal workspace" in operator.get(opp.get_absolute_url()).content.decode()
@@ -100,8 +106,8 @@ def test_first_release_journey(db, mailoutbox):
     )
     page = customer.get(f"/portal/challenges/{challenge.pk}/").content.decode()
     assert (
-        "We re-key supplier invoices by hand." in page and "Your words" in page
-    )  # original words, provenance-tagged
+        "We re-key supplier invoices by hand." in page and "Agreed fact" in page
+    )  # no source enquiry: Vitalos's wording, provenance-tagged, never presented as "Your words"
     assert INTERNAL["opp_internal"] not in page
     review = customer.post(
         f"/portal/challenges/{challenge.pk}/briefs/{brief.pk}/review/", {"decision": "accept"}
