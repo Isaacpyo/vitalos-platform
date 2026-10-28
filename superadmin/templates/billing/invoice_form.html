@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static ui billing_ui %}
+{% block title %}{% if invoice %}Edit draft{% else %}New invoice{% endif %} · Billing · Vitalos Super Admin{% endblock %}
+{% block scripts %}<script src="{% static 'js/billing-editor.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'billing:invoices' %}" class="hover:underline">Billing / Invoices</a></p>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-2xl font-semibold">{% if invoice %}Edit draft invoice{% else %}New invoice{% endif %}</h1>
+    {% if invoice %}<a href="{{ invoice.get_absolute_url }}" class="btn btn-secondary btn-sm">Back to draft</a>{% endif %}
+  </div>
+  {% include "billing/_nav.html" with section="invoices" %}
+
+  <form method="post" class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]" novalidate data-testid="invoice-editor" data-invoice-editor data-vat-rate="{% if conf.vat_registered %}{{ conf.default_vat_rate }}{% else %}0{% endif %}">
+    {% csrf_token %}
+    <div class="min-w-0 space-y-6">
+      {% if form.non_field_errors or formset.non_form_errors %}
+        <div class="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          {% for error in formset.non_form_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      <section class="card p-5" aria-labelledby="billto-heading">
+        <h2 id="billto-heading" class="font-semibold">Bill to</h2>
+        {% if opportunity %}<p class="muted mt-1 text-xs">For <a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{{ opportunity.get_absolute_url }}">{{ opportunity.ref }} {{ opportunity.title }}</a></p>{% endif %}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          {% include "aidata/_field.html" with field=form.bill_to_name %}
+          {% include "aidata/_field.html" with field=form.bill_to_organisation %}
+          {% include "aidata/_field.html" with field=form.bill_to_email span="full" %}
+          {% include "aidata/_field.html" with field=form.bill_to_address span="full" %}
+        </div>
+      </section>
+
+      <section class="card p-5" aria-labelledby="lines-heading">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="lines-heading" class="font-semibold">Lines</h2>
+          <p class="muted text-xs">Amounts in pounds. Line total = quantity × unit price, rounded to the penny.</p>
+        </div>
+        {{ formset.management_form }}
+        <div class="mt-4 space-y-3" data-testid="line-rows">
+          <div class="hidden gap-3 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid md:grid-cols-[minmax(0,1fr)_5.5rem_7.5rem_6.5rem_3.5rem] dark:text-slate-400" aria-hidden="true">
+            <span>Description</span><span>Qty</span><span>Unit price (£)</span><span class="text-right">Amount</span><span class="text-right">Remove</span>
+          </div>
+          {% for line in formset %}
+            <fieldset class="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-[minmax(0,1fr)_5.5rem_7.5rem_6.5rem_3.5rem] md:items-start md:border-0 md:p-1 dark:border-slate-800" data-line="{{ forloop.counter0 }}">
+              <legend class="sr-only">Line {{ forloop.counter }}</legend>
+              <div>
+                <label for="{{ line.description.id_for_label }}" class="field-label md:sr-only">Description</label>
+                {{ line.description }}
+                {% for error in line.description.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+              </div>
+              <div>
+                <label for="{{ line.quantity.id_for_label }}" class="field-label md:sr-only">Quantity</label>
+                {{ line.quantity }}
+                {% for error in line.quantity.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+              </div>
+              <div>
+                <label for="{{ line.unit_price.id_for_label }}" class="field-label md:sr-only">Unit price (£)</label>
+                {{ line.unit_price }}
+                {% for error in line.unit_price.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+              </div>
+              <p class="tabular flex justify-between text-sm md:block md:pt-2 md:text-right"><span class="muted md:sr-only">Amount</span><span data-line-amount>—</span></p>
+              <label class="flex items-center gap-2 text-sm md:justify-end md:pt-2">{{ line.DELETE }} <span class="md:sr-only">Remove this line</span></label>
+            </fieldset>
+          {% endfor %}
+        </div>
+        <div class="mt-3 flex justify-start">
+          <button type="submit" name="add_lines" value="1" class="btn btn-ghost btn-sm">{% icon "plus" "h-4 w-4" %} Save and add more lines</button>
+        </div>
+      </section>
+
+      <section class="card p-5" aria-label="Notes and terms">
+        {% include "aidata/_field.html" with field=form.notes %}
+      </section>
+    </div>
+
+    <aside class="min-w-0 space-y-4" aria-label="Totals and actions">
+      <section class="card p-5 xl:sticky xl:top-20" aria-labelledby="totals-heading">
+        <h2 id="totals-heading" class="font-semibold">Totals</h2>
+        <dl class="mt-3 space-y-2 text-sm" data-testid="live-totals">
+          <div class="flex justify-between"><dt class="muted">Subtotal</dt><dd class="tabular" data-preview-subtotal>{% if live %}{{ live.subtotal|pence }}{% else %}£0.00{% endif %}</dd></div>
+          {% if conf.vat_registered %}<div class="flex justify-between"><dt class="muted">VAT {{ conf.default_vat_rate|floatformat:"-2" }}%</dt><dd class="tabular" data-preview-vat>{% if live %}{{ live.vat|pence }}{% else %}£0.00{% endif %}</dd></div>{% endif %}
+          <div class="flex justify-between border-t border-slate-200 pt-2 font-semibold dark:border-slate-800"><dt>Total</dt><dd class="tabular" data-preview-total>{% if live %}{{ live.total|pence }}{% else %}£0.00{% endif %}</dd></div>
+        </dl>
+        <p class="muted mt-2 text-xs">A preview as you type. The server works out the totals when you save.</p>
+        <p class="mt-3 rounded-md bg-slate-50 p-2 text-xs text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          {% if conf.vat_registered %}VAT at {{ conf.default_vat_rate|floatformat:"-2" }}% is added (VAT number {{ conf.vat_number }}).{% else %}Not VAT registered: no VAT is charged or shown.{% endif %}
+          Payment due {{ conf.payment_terms_days }} days after issue.
+        </p>
+        <div class="mt-4 grid gap-2">
+          <button type="submit" name="save" value="1" class="btn btn-secondary">{% icon "check" "h-4 w-4" %} Save draft</button>
+          <button type="submit" name="issue" value="1" class="btn btn-primary">{% icon "send" "h-4 w-4" %} Save and issue</button>
+        </div>
+        <p class="muted mt-2 text-xs">Issuing allocates the invoice number, locks the lines and creates the Stripe payment link when Stripe is configured. Nothing is emailed.</p>
+      </section>
+    </aside>
+  </form>
+{% endblock %}

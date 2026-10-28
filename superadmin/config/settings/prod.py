@@ -11,6 +11,7 @@ from .base import (
     ASKBRIDGE_STATUS_URL,
     ASKBRIDGE_SUPERADMIN_URL,
     ATTACHMENTS_STORAGE,
+    BILLING_PUBLIC_SITE_URL,
     CAREERS_CV_BUCKET,
     CAREERS_CV_STORAGE,
     CONTENT_MEDIA_BUCKET,
@@ -72,6 +73,9 @@ for _name, _url in (
 ):
     if _url and not _url.startswith("https://"):
         raise ImproperlyConfigured(f"{_name} must be https in production.")
+# Billing: customers are sent back to the public payment pages, which must be https.
+if not BILLING_PUBLIC_SITE_URL.startswith("https://"):
+    raise ImproperlyConfigured("BILLING_PUBLIC_SITE_URL must be https in production.")
 # In production the reset email is offered only when it can actually be delivered.
 PASSWORD_RESET_ENABLED = env.bool("PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log")
 

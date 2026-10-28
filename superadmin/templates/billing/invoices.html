@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load ui billing_ui %}
+{% block title %}Invoices · Billing · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Billing</p>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Invoices</h1>
+    <a href="{% url 'billing:invoice_new' %}" class="btn btn-primary btn-sm" data-testid="new-invoice">{% icon "plus" "h-4 w-4" %} New invoice</a>
+  </div>
+  {% include "billing/_nav.html" with section="invoices" %}
+
+  <dl class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="billing-totals">
+    <div class="kpi"><dt class="kpi-label">Outstanding</dt><dd class="kpi-value tabular">{{ totals.outstanding_pence|pence }}</dd><dd class="muted text-xs">{{ totals.outstanding_count }} open invoice{{ totals.outstanding_count|pluralize }}</dd></div>
+    <div class="kpi"><dt class="kpi-label">Overdue</dt><dd class="kpi-value tabular {% if totals.overdue_count %}text-rose-700 dark:text-rose-300{% endif %}">{{ totals.overdue_pence|pence }}</dd><dd class="muted text-xs">{{ totals.overdue_count }} past due date</dd></div>
+    <div class="kpi"><dt class="kpi-label">Drafts</dt><dd class="kpi-value tabular">{{ totals.draft_count }}</dd><dd class="muted text-xs">Not yet issued</dd></div>
+    <div class="kpi"><dt class="kpi-label">Unmatched payments</dt><dd class="kpi-value tabular {% if unmatched_count %}text-amber-700 dark:text-amber-300{% endif %}">{{ unmatched_count }}</dd><dd class="text-xs"><a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'billing:payments' %}?matched=unmatched">Link them to invoices</a></dd></div>
+  </dl>
+
+  <nav class="mt-5 flex gap-1 overflow-x-auto pb-1" aria-label="Status">
+    {% for item in status_tabs %}
+      <a class="tab" href="?{% if base_query %}{{ base_query }}&amp;{% endif %}status={{ item.status }}" {% if item.status == status %}aria-current="page"{% endif %} data-status-tab="{{ item.status|default:'all' }}">{{ item.label }} <span class="ml-1 text-xs tabular-nums opacity-80">{{ item.count }}</span></a>
+    {% endfor %}
+  </nav>
+
+  <form method="get" role="search" class="card mt-3 grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+    <input type="hidden" name="status" value="{{ status }}">
+    <div>
+      <label for="invoice-search" class="field-label">Search</label>
+      <input id="invoice-search" type="search" name="q" value="{{ query }}" placeholder="Number, name or organisation" autocomplete="off"
+             class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm placeholder:text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-400">
+    </div>
+    <label class="flex items-center gap-2 text-sm font-medium sm:pb-2"><input type="checkbox" name="overdue" value="1" {% if overdue %}checked{% endif %} class="h-4 w-4 rounded border-slate-300"> Overdue only</label>
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-secondary">Filter</button>
+      <a href="{% url 'billing:invoices' %}" class="btn btn-ghost">Clear</a>
+    </div>
+  </form>
+
+  <div class="card mt-3 hidden overflow-x-auto md:block">
+    <table class="table-base" data-testid="invoice-table">
+      <caption class="sr-only">Invoices</caption>
+      <thead><tr><th scope="col">Invoice</th><th scope="col">Bill to</th><th scope="col">Status</th><th scope="col">Issued</th><th scope="col">Due</th><th scope="col" class="text-right">Total</th><th scope="col" class="text-right">Balance</th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for item in rows %}
+          <tr data-invoice="{{ item.ref }}">
+            <td class="whitespace-nowrap"><a href="{{ item.get_absolute_url }}" class="font-mono font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ item.display_number }}</a></td>
+            <td class="max-w-72"><span class="block truncate font-medium">{{ item.bill_to_organisation|default:item.bill_to_name }}</span>{% if item.bill_to_organisation %}<span class="muted block truncate text-xs">{{ item.bill_to_name }}</span>{% endif %}</td>
+            <td class="whitespace-nowrap"><span class="{{ item.status|status_badge }}">{{ item.get_status_display }}</span>{% if item.is_overdue %} <span class="{{ 'void'|status_badge }}">Overdue</span>{% endif %}</td>
+            <td class="whitespace-nowrap">{{ item.issue_date|date:"j M Y"|default:"—" }}</td>
+            <td class="whitespace-nowrap {% if item.is_overdue %}font-medium text-rose-700 dark:text-rose-300{% endif %}">{{ item.due_date|date:"j M Y"|default:"—" }}</td>
+            <td class="tabular whitespace-nowrap text-right">{{ item.total_pence|pence }}</td>
+            <td class="tabular whitespace-nowrap text-right font-medium">{% if item.status == "void" or item.status == "draft" %}—{% else %}{{ item.balance_due_pence|pence }}{% endif %}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="muted py-10 text-center">No invoices here yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="mt-3 space-y-2 md:hidden" data-testid="invoice-cards">
+    {% for item in rows %}
+      <li class="card p-4" data-invoice="{{ item.ref }}">
+        <div class="flex items-start justify-between gap-2">
+          <a href="{{ item.get_absolute_url }}" class="min-w-0 font-mono font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ item.display_number }}</a>
+          <span class="flex shrink-0 gap-1 whitespace-nowrap">{% if item.is_overdue %}<span class="{{ 'void'|status_badge }}">Overdue</span>{% endif %}<span class="{{ item.status|status_badge }}">{{ item.get_status_display }}</span></span>
+        </div>
+        <p class="mt-0.5 truncate text-sm font-medium">{{ item.bill_to_organisation|default:item.bill_to_name }}</p>
+        <dl class="mt-2 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
+          <div><dt class="muted text-xs">Due</dt><dd class="{% if item.is_overdue %}font-medium text-rose-700 dark:text-rose-300{% endif %}">{{ item.due_date|date:"j M"|default:"—" }}</dd></div>
+          <div><dt class="muted text-xs">Total</dt><dd class="tabular">{{ item.total_pence|pence }}</dd></div>
+          <div><dt class="muted text-xs">Balance</dt><dd class="tabular font-medium">{% if item.status == "void" or item.status == "draft" %}—{% else %}{{ item.balance_due_pence|pence }}{% endif %}</dd></div>
+        </dl>
+      </li>
+    {% empty %}
+      <li class="card muted p-6 text-center text-sm">No invoices here yet.</li>
+    {% endfor %}
+  </ul>
+  {% if rows|length >= 200 %}<p class="muted mt-2 text-xs">Showing the first 200. Narrow the filters to see more.</p>{% endif %}
+{% endblock %}

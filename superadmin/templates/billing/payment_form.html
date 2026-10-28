@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Record a payment · Billing · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'billing:payments' %}" class="hover:underline">Billing / Payments</a></p>
+  <h1 class="mt-1 text-2xl font-semibold">Record a payment</h1>
+  {% include "billing/_nav.html" with section="payments" %}
+  <p class="muted mt-4 max-w-2xl text-sm">For bank transfers and other payments received outside Stripe. Stripe payments are recorded automatically. Never enter card numbers or full bank account details here.</p>
+  <form method="post" class="card mt-4 max-w-2xl p-5" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" with form=form %}
+    <div class="mt-5 flex justify-end gap-2">
+      <a href="{% url 'billing:payments' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% icon "check" "h-4 w-4" %} Record payment</button>
+    </div>
+  </form>
+{% endblock %}
