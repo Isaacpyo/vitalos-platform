@@ -8,13 +8,14 @@ from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.aidata import selectors as aidata_selectors
 from apps.audit.services import record
 
+from .. import continuity, notifications, selectors, services, staff_selectors
 from .. import files as portal_files
-from .. import notifications, selectors, services, staff_selectors
 from ..access import staff_required
 from ..forms import (
     BriefForm,
@@ -47,6 +48,7 @@ from ..models import (
     File,
     FileVersion,
     InformationRequest,
+    InformationResponse,
     Invitation,
     ManagedService,
     Membership,
@@ -262,11 +264,17 @@ def link_challenge(request, ref):
 def challenge(request, pk):
     ch = get_object_or_404(Challenge.objects.select_related("organisation", "opportunity"), pk=pk)
     members = selectors.live_member_users(ch.organisation)
+    # Opening the workspace is what "read" means for the work queue's "customer answer not yet read" item.
+    InformationResponse.objects.filter(request__challenge=ch, staff_seen_at__isnull=True).update(
+        staff_seen_at=timezone.now()
+    )
     return render(
         request,
         "portaladmin/challenge.html",
         {
             "ch": ch,
+            "status": continuity.challenge_status(ch),
+            "proposal_project": continuity.project_from_proposal(ch),
             "briefs": ch.briefs.prefetch_related("reviews"),
             "projects": ch.projects.all(),
             "updates": ch.updates.all(),
@@ -279,6 +287,45 @@ def challenge(request, pk):
             "services": ch.organisation.services.all(),
         },
     )
+
+
+@staff_required
+@require_POST
+def challenge_stage(request, pk):
+    """The explicit, audited "Update customer-visible stage" action."""
+    ch = get_object_or_404(Challenge.objects.select_related("opportunity"), pk=pk)
+    try:
+        continuity.sync_customer_stage(ch, actor=request.user, request=request)
+    except continuity.ContinuityError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, f"The customer now sees: {ch.get_journey_stage_display()}.")
+    return redirect(ch.opportunity.get_absolute_url())
+
+
+@staff_required
+@require_POST
+def project_from_proposal(request, ref):
+    """ "Create portal project from proposal": explicit, idempotent, unpublished."""
+    opportunity = aidata_selectors.get_by_ref(ref)
+    if opportunity is None:
+        raise Http404
+    ch = staff_selectors.challenge_for_opportunity(opportunity)
+    if ch is None:
+        messages.error(request, "Link the opportunity to the client portal first.")
+        return redirect(f"{opportunity.get_absolute_url()}?tab=proposal")
+    try:
+        project, created = continuity.create_project_from_proposal(ch, actor=request.user, request=request)
+    except continuity.ContinuityError as exc:
+        messages.error(request, str(exc))
+        return redirect(f"{opportunity.get_absolute_url()}?tab=proposal")
+    messages.success(
+        request,
+        "Project prefilled from the approved proposal. Nothing is published; review it, then publish."
+        if created
+        else "This challenge already has a project made from the proposal. Opening it.",
+    )
+    return redirect("portaladmin:project", pk=project.pk)
 
 
 @staff_required

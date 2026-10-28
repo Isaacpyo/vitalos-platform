@@ -41,7 +41,7 @@
               {% for item in group.items %}
                 <li class="aid-row" data-testid="queue-item">
                   <div class="min-w-0 flex-1">
-                    <p class="font-medium text-aid-heading">{{ item.title }}</p>
+                    <p class="font-medium text-aid-heading">{{ item.title }}{% if item.source %} <span class="aid-chip aid-chip-info" data-testid="queue-source">{{ item.source }}</span>{% endif %}</p>
                     <p class="aid-muted text-xs">{{ item.detail }}</p>
                     {% if item.evidence %}<p class="mt-0.5 text-xs">{{ item.evidence }}</p>{% endif %}
                     <p class="aid-muted mt-0.5 flex flex-wrap gap-x-3 text-xs">

@@ -116,3 +116,5 @@ Outside this implementation's scope:
   - `portal.vitalos.co.uk` currently has no DNS records (checked over DoH), so it is free to create.
 - **28 Oct 17:56:** #105 (docs checkpoint) merged.
 - **28 Oct 17:50:** W5 to W8 started, each with the shared brief (lead scratchpad `briefs/shared.md`, summarised in MILESTONES.md).
+
+- **28 Oct 19:30: W9 (integration seams and demonstration).** Full Super Admin gate green on the combined tree before changes (1486 passed). Added: the approved brief and the original enquiry carry into a linked challenge as a draft with provenance tags; "Create portal project from proposal" (idempotent, unpublished, no prices); portal items and stuck AI tasks in the work queue; the opportunity-stage to customer-stage map with an audited "Update customer-visible stage"; a status strip for staff; `experience_seed_demo`; `tests/test_experience_journey.py` (AC-1 to AC-12 plus failure recovery); [DEMO.md](DEMO.md). Migration `portal` 0002 is additive. Screenshots: lead scratchpad `shots/w9-journey/`.

@@ -1,4 +1,4 @@
-{% load aidata_ui %}
+{% load aidata_ui portal_ui %}
 <div class="space-y-5" id="draft">
   <div class="flex flex-wrap items-center justify-between gap-2">
     <h2 class="aid-title">Proposal draft</h2>
@@ -74,6 +74,22 @@
         {% endwith %}
         {% if can_act and not proposal.is_locked %}<div class="flex flex-wrap items-center justify-between gap-2 border-t border-aid-border px-4 py-3"><p class="aid-help !mt-0">Saving sends a reviewed draft back to draft.</p><button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "check" %} Save changes</button></div>{% endif %}
       </form>
+
+      {% if proposal.state == "approved" %}
+        {% portal_panel opportunity as pp %}
+        <section class="aid-card p-4" aria-labelledby="portal-project-heading" data-testid="portal-project">
+          <h3 id="portal-project-heading" class="text-sm font-semibold text-aid-heading">Customer project in the client portal</h3>
+          {% if pp.proposal_project %}
+            <p class="mt-1 text-sm">A project was prefilled from this proposal: <strong>{{ pp.proposal_project.name }}</strong> ({% if pp.proposal_project.published_at %}published{% else %}not published{% endif %}).</p>
+            <a class="aid-btn aid-btn-secondary mt-3" href="{% url 'portaladmin:project' pp.proposal_project.pk %}" data-testid="open-portal-project">Open the portal project</a>
+          {% elif pp.challenge %}
+            <p class="mt-1 text-sm">Prefills a portal project with the scope, deliverables, milestones and responsibilities from this approved proposal. <strong>Nothing is published</strong> and the price is never copied. You review it and publish each part yourself. Pressing it again opens the same project.</p>
+            {% if can_act %}<form method="post" action="{% url 'portaladmin:project_from_proposal' opportunity.ref %}" class="mt-3" data-once>{% csrf_token %}<button type="submit" class="aid-btn aid-btn-primary" data-testid="create-portal-project">Create portal project from proposal</button></form>{% endif %}
+          {% else %}
+            <p class="mt-1 text-sm">Link this opportunity to the client portal first, then the proposal can become a project. <a class="font-semibold underline" href="{% url 'portaladmin:link_challenge' opportunity.ref %}">Link to client portal</a>.</p>
+          {% endif %}
+        </section>
+      {% endif %}
 
       <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         {% include "aidata/components/_review_card.html" with draft=proposal blockers=proposal_blockers can_act=can_act approve_label="Mark ready" noun="proposal" key=key %}
