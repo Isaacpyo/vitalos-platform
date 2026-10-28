@@ -47,15 +47,30 @@ export function adminContrastPairs(): AdminContrastPair[] {
       ["bg", tone.bg],
       ["surface", tone.surface],
     ] as const) {
-      pairs.push({ name: `${mode}/${surfaceName}/text`, fg: hex(tone.text), bg: hex(surface), min: 7 });
+      pairs.push({
+        name: `${mode}/${surfaceName}/text`,
+        fg: hex(tone.text),
+        bg: hex(surface),
+        min: 7,
+      });
       pairs.push({
         name: `${mode}/${surfaceName}/muted`,
         fg: hex(tone.muted),
         bg: hex(surface),
         min: 4.5,
       });
-      pairs.push({ name: `${mode}/${surfaceName}/link`, fg: hex(tone.link), bg: hex(surface), min: 4.5 });
-      pairs.push({ name: `${mode}/${surfaceName}/focus`, fg: hex(tone.focus), bg: hex(surface), min: 3 });
+      pairs.push({
+        name: `${mode}/${surfaceName}/link`,
+        fg: hex(tone.link),
+        bg: hex(surface),
+        min: 4.5,
+      });
+      pairs.push({
+        name: `${mode}/${surfaceName}/focus`,
+        fg: hex(tone.focus),
+        bg: hex(surface),
+        min: 3,
+      });
     }
   }
   for (const [name, pair] of Object.entries(aiDataStatus)) {

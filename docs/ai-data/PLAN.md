@@ -87,6 +87,8 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 ## Checkpoint
 
+_Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery workspace (ADR-055): paste an enquiry, review an evidence-linked brief, discovery pack, proposal draft with human approval, assistant, durable AI tasks, signed website brief-assist endpoint (off by default), shared tokens. Live provider still off; no live model-quality evidence. Next (owner): website client signs `assist`, key and switches, live evaluation, retention schedule. Tasks WS-001 to WS-007 in TASKS.md.
+
 _Last updated: 28 Oct 2026, launch milestone delivered._
 
 - `main` at `ed64d58` (PR #102, squash-merged). All CI green on `main`: CI, Super Admin (PostgreSQL tests, evaluation gate, container smoke), CodeQL, secret scan.

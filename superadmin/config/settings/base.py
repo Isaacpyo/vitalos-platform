@@ -451,6 +451,9 @@ AI_DATA_LLM_BASE_URL = env("AI_DATA_LLM_BASE_URL", default="").strip().rstrip("/
 AI_DATA_LLM_MODEL = env("AI_DATA_LLM_MODEL", default="").strip()
 AI_DATA_LLM_API_KEY = env("AI_DATA_LLM_API_KEY", default="")
 AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)
+# Development only (ADR-055): answer workspace AI actions with a labelled local test double instead of a live
+# model. Ignored unless DEBUG is on, so it can never stand in for a live provider in production.
+AI_DATA_SIMULATED_PROVIDER = env.bool("AI_DATA_SIMULATED_PROVIDER", default=False)
 
 # Billing (apps.billing): invoices, payments and Stripe. Both Stripe values are secrets: set them only in the
 # platform's secret store. With no key everything works except Stripe calls (the UI says "Stripe is not

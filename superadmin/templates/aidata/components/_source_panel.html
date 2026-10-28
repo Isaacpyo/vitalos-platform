@@ -3,7 +3,7 @@
   The source text is shown exactly as supplied, as plain text. Spans a suggestion quotes are marked and
   labelled; "Show source" on a suggestion scrolls to and highlights its span.
 {% endcomment %}
-<section class="aid-card flex min-w-0 flex-col" aria-labelledby="source-heading" data-source>
+<section class="aid-card flex min-w-0 flex-col self-start lg:sticky lg:top-20" aria-labelledby="source-heading" data-source>
   <header class="flex flex-wrap items-center justify-between gap-2 border-b border-aid-border px-4 py-2.5">
     <h3 id="source-heading" class="text-sm font-semibold text-aid-heading">{% aid_icon "document" "mr-1 inline h-4 w-4" %}Source: {{ label|default:"supplied text" }}</h3>
     <span class="aid-chip aid-chip-neutral">{% aid_icon "lock" "h-3.5 w-3.5" %} Unchanged original</span>

@@ -475,7 +475,17 @@ def extract(text: str) -> Extraction:
             )
         ]
         signal = r"\b(problem|struggl|takes? (?:us )?(?:hours|days)|waste|error|mistake|chas|manual|slow|hard|lose|lost|miss|pain|issue|stuck|backlog)\b"
-        picks = _pick(free, signal, 2) or free[:1]
+        picks = _pick(free, signal, 2)
+        if not picks:
+            # The problem is often said in the same sentence as the process ("...by hand, and some get lost").
+            shared = [
+                item
+                for item in sentences
+                if re.search(signal, item[0], flags=re.IGNORECASE)
+                and not EMAIL_RE.search(item[0])
+                and not PHONE_RE.search(item[0])
+            ]
+            picks = shared[:1]
         if picks:
             start, end = picks[0][1], picks[-1][2]
             _set(result, source, "problem_summary", source[start:end], start, end)
