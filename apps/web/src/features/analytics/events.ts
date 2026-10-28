@@ -20,6 +20,17 @@ const route = z
   .regex(/^\/[A-Za-z0-9\-._~/]*$/)
   .max(200);
 
+/** The shared workflow topic slugs of the AI & Data explorer and guided brief (docs/ai-data). */
+const workflowTopic = z.enum([
+  "finance-reconciliation",
+  "document-intake",
+  "customer-requests",
+  "operational-reporting",
+]);
+
+/** Where on the AI & Data pages a demonstration event came from. */
+const demoSurface = z.enum(["hero", "preview", "demonstrator", "expanded"]);
+
 const outcome = z.enum(["success", "validation_error", "rejected", "error"]);
 
 export const analyticsEventSchemas = {
@@ -36,6 +47,22 @@ export const analyticsEventSchemas = {
   insight_read: z.strictObject({ insightSlug: slug }),
   /** A link to a Vitalos product's own site was followed; `destination` is the product slug. */
   outbound_click: z.strictObject({ destination: slug, route }),
+  // --- Vitalos AI & Data marketing experience (W5, ADR-054). Slugs and enums only: no free text.
+  /** First funnel event: a visitor picked a workflow in the hero or the explorer. */
+  workflow_started: z.strictObject({ source: z.enum(["hero", "explorer"]), topic: workflowTopic }),
+  /** A visitor chose a different workflow in the explorer. */
+  explorer_topic_selected: z.strictObject({ topic: workflowTopic }),
+  /** A visitor chose a synthetic sample in a demonstration. */
+  demo_sample_chosen: z.strictObject({ surface: demoSurface, sampleId: slug }),
+  /** A visitor moved a demonstration to another stage (their own click; there are no timers). */
+  demo_stage_viewed: z.strictObject({ surface: demoSurface, sampleId: slug, stage: slug }),
+  /** A visitor expanded the source evidence for one result. `itemId` is a line id such as `l6`. */
+  demo_evidence_expanded: z.strictObject({ surface: demoSurface, sampleId: slug, itemId: slug }),
+  /** A visitor used one of the Explore / Try calls to action. */
+  ai_data_cta_click: z.strictObject({
+    ctaId: z.enum(["explore-workflow", "try-example", "open-expanded-demo", "prepare-brief"]),
+    route,
+  }),
 } as const;
 
 export type AnalyticsEventName = keyof typeof analyticsEventSchemas;

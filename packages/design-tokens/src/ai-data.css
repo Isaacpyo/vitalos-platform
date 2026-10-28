@@ -18,6 +18,10 @@
   --aid-accent-300: #a9bed3;
   --aid-accent-200: #c9d6e3;
   --aid-accent-100: #e3eaf1;
+  --aid-teal-950: #0d2423;
+  --aid-teal-300: #5ec8be;
+  --aid-teal-700: #0f6a66;
+  --aid-teal-100: #ddf2ef;
   --aid-ok-700: #1d6b45;
   --aid-ok-100: #e3f1e8;
   --aid-warn-700: #7f4e00;
@@ -44,6 +48,8 @@
   --aid-focus: var(--aid-accent-300);
   --aid-accent: var(--aid-accent-300);
   --aid-eyebrow: var(--aid-accent-300);
+  --aid-signal: var(--aid-teal-300);
+  --aid-signal-soft: var(--aid-teal-950);
   --aid-chip-bg: var(--aid-ink-800);
   --aid-chip-text: var(--aid-grey-200);
   --tone-bg: var(--aid-bg);
@@ -85,6 +91,8 @@
   --aid-focus: var(--aid-accent-700);
   --aid-accent: var(--aid-accent-700);
   --aid-eyebrow: var(--aid-accent-700);
+  --aid-signal: var(--aid-teal-700);
+  --aid-signal-soft: var(--aid-teal-100);
   --aid-chip-bg: var(--aid-accent-100);
   --aid-chip-text: var(--aid-accent-800);
   --tone-bg: var(--aid-bg);
@@ -126,6 +134,8 @@
   --aid-focus: var(--aid-accent-700);
   --aid-accent: var(--aid-accent-700);
   --aid-eyebrow: var(--aid-accent-700);
+  --aid-signal: var(--aid-teal-700);
+  --aid-signal-soft: var(--aid-teal-100);
   --aid-chip-bg: var(--aid-accent-100);
   --aid-chip-text: var(--aid-accent-800);
   --tone-bg: var(--aid-bg);
@@ -168,6 +178,8 @@
   --color-aid-focus: var(--aid-focus);
   --color-aid-accent: var(--aid-accent);
   --color-aid-eyebrow: var(--aid-eyebrow);
+  --color-aid-signal: var(--aid-signal);
+  --color-aid-signal-soft: var(--aid-signal-soft);
   --color-aid-chip-bg: var(--aid-chip-bg);
   --color-aid-chip-text: var(--aid-chip-text);
   --color-aid-ok: var(--aid-ok-700);

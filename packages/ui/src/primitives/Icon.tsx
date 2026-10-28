@@ -124,6 +124,24 @@ const paths = {
   link: (
     <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66L11.5 6.8M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.5-1.46" />
   ),
+  // Added for the AI & Data work surfaces (Oct 2026), same grid, stroke and caps.
+  copy: <path d="M8 8h12v12H8V8Zm-4 8V4h12" />,
+  expand: <path d="M4 9V4h5m11 5V4h-5M4 15v5h5m11-5v5h-5" />,
+  flag: <path d="M5 21V4m0 0h12l-2 4 2 4H5" />,
+  database: (
+    <>
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3" />
+    </>
+  ),
+  table: <path d="M3 5h18v14H3V5Zm0 5h18M3 14.5h18M9 5v14" />,
+  person: (
+    <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1" />
+    </>
+  ),
+  "arrow-down": <path d="M12 4v15m-6-6 6 6 6-6" />,
 } as const satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof paths;

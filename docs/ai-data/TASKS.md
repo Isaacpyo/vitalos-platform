@@ -58,3 +58,11 @@ Internal delivery tasks for the client portal (W8). They are Vitalos's own platf
 | PORTAL-12 | `portal_seed_demo` (synthetic only, refuses outside DEBUG), screenshots                   | Done                                                                               | `management/commands/portal_seed_demo.py`                                                                                 |
 | PORTAL-13 | Custom domain `portal.vitalos.co.uk` (DNS + Azure binding), go-live check                 | Ready: owner approved the host; deploy.sh binds it on the first deploy after merge | Until then the portal host receives no traffic. Verify: 404 before binding, sign-in page after, `/login/` 404 on the host |
 | PORTAL-14 | Contractual e-signature, live monitoring, email OTP, retention jobs                       | Not started (later phases)                                                         | Listed in ADR-056 section 11                                                                                              |
+
+## Marketing experience (W5, 28 Oct 2026)
+
+Redesign of the public pages (ADR-054), not a customer-dependent task: no evidence is claimed beyond what the pages show.
+
+- Done: home (hero walkthrough, workflow explorer, use cases, reconciliation preview, discover/prove/build/operate, offers by need), demonstrator (three synthetic samples, source beside results, evidence, who does what, Evidence section), solutions and approach refreshed; Base UI foundation in `@vitalos/ui/interactive`; funnel events (`workflow_started` first).
+- Honesty: every demonstration is labelled synthetic and scripted, not live AI; AC-14 (live provider) is still not run; no prices, customers or results added.
+- Later: the guided brief and enquiry events (separate workstream), real customer evidence (VAD-011 onward), a live-model demonstration only after AI_DATA_LLM_API_KEY is set and AC-14 has run.

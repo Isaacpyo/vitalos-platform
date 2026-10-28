@@ -89,13 +89,22 @@ export function ClosingCta({
   id = "closing",
   title = "Tell us about the workflow that costs you most.",
   lead = "Describe the problem in a few sentences. We will reply to arrange a conversation about whether, and how, we can help.",
-}: Readonly<{ id?: string; title?: string; lead?: string }>) {
+  cta,
+  label = division.primaryCta,
+}: Readonly<{
+  id?: string;
+  title?: string;
+  lead?: string;
+  /** Analytics id (`data-aid-cta`), read by AiDataTracker where the page mounts one. */
+  cta?: string;
+  label?: string;
+}>) {
   return (
     <Band tone="dark" labelledBy={id} grid>
       <div className="flex flex-col items-start gap-(--space-6)">
         <SectionHeading id={id} title={title} lead={lead} />
-        <Button href={routes.aiData.contact()} size="lg" arrow>
-          {division.primaryCta}
+        <Button href={routes.aiData.contact()} size="lg" arrow data-aid-cta={cta}>
+          {label}
         </Button>
       </div>
     </Band>
