@@ -47,6 +47,14 @@
 
 - Subagents running in worktrees have no browser and no `.env.local`. The main session does provider setup and secrets first, then delegates code changes.
 
+## Vitalos AI & Data
+
+- Working record: `docs/ai-data/` (start with `PLAN.md` checkpoint, then `TASKS.md`, `DECISIONS.md`, ADR-052). Update the checkpoint and task register at every stage so another agent can continue without repeating work.
+- Pre-approved for Vitalos's own AI & Data foundation: design, implementation, tests, commits, pull requests, merging once required checks are green, and deploying through the existing `main` paths (website on Vercel, Super Admin workflow). Do not pause to ask for these.
+- Not covered by that approval: acting inside a customer's systems or on customer data (needs the customer's written authorisation, a signed scope and data terms, and the onboarding checklist in `docs/ai-data/commercial/`); contacting prospects, sending proposals, signing or publishing prices or other commercial commitments; new paid services or spend, even within the £1,000 speculative ceiling; using another product's or a client's credentials (AI & Data has its own `AI_DATA_LLM_*` settings).
+- Evidence: never mark a customer-dependent VAD task done without real evidence; label synthetic data and simulated model responses; an offline evaluation is not proof that a live provider works. Do not publish case studies, testimonials, ROI figures or certifications that do not exist.
+- Model calls go only through the `apps.aicore` gateway, which enforces the kill switch and the per-run, daily and monthly caps. Record known spend in the Super Admin (AI & Data › Budget).
+
 ## CI (GitHub Actions, public repo)
 
 The repo is public. Standard GitHub-hosted runners are free, but logs, artifacts and workflow files are visible to anyone, and anyone can open a PR. Optimise for speed and security.

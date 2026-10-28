@@ -9,6 +9,7 @@ Vitalos uses a TypeScript-first modular monolith and independently deployable ap
 - `packages`: `design-tokens`, `ui`, `cms`, `config`, `validation`, `security`, `observability`, `testing`, `email-layout` (the shared layout for every Vitalos email, ADR-030).
 - `supabase`: local migrations and pgTAP tests. No remote project is used.
 - `superadmin`: the isolated Django Super Admin (internal, `admin.vitalos.co.uk`, own PostgreSQL; ADR-026). Python toolchain, no source imports to or from the TypeScript apps.
+- Vitalos AI & Data (ADR-052, 28 Oct 2026): the public section `/ai-data` in `apps/web` (own route group and chrome; enquiries through the existing pipeline) and, in the Super Admin, `apps.aidata` (opportunity pipeline, proposed offer prices, budget), `apps.aicore` (model gateway, limits, metering, evaluation; Django-free core) and `apps.recon_demo` (statement reconciliation demonstrator). Working record in `docs/ai-data/`.
 - Quality gates run in CI: format, lint, typecheck, unit tests, boundaries, build, Storybook build, end-to-end and accessibility, JS budgets, client-bundle secret scan, Storybook axe, pgTAP, CodeQL and gitleaks (ADR-021).
 
 ## Future (documented, not built)
@@ -24,7 +25,7 @@ A production Supabase project, an email notifier adapter and outbox scheduler, e
 
 ## Data ownership
 
-Repo (`packages/cms/src/repo`, ADR-028): editorial content. PostgreSQL: enquiries, outbox, rate limits. Super Admin PostgreSQL (separate database): internal company architecture records. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public site. Email is a notification channel, never the record.
+Repo (`packages/cms/src/repo`, ADR-028): editorial content. PostgreSQL: enquiries, outbox, rate limits. Super Admin PostgreSQL (separate database): internal company architecture records, AI & Data opportunities, costs, demonstrator runs and model execution metering. Code: locked copy, routes, gates, tokens. Controlled evidence: outside the public site. Email is a notification channel, never the record.
 
 ## Read next
 
