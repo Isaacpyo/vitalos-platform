@@ -259,9 +259,7 @@ def api_schema(schema: dict) -> dict:
     """The prompt schema without the constraints structured outputs reject (recursively)."""
     if isinstance(schema, dict):
         return {
-            key: api_schema(value)
-            for key, value in schema.items()
-            if key not in _UNSUPPORTED_SCHEMA_KEYWORDS
+            key: api_schema(value) for key, value in schema.items() if key not in _UNSUPPORTED_SCHEMA_KEYWORDS
         }
     if isinstance(schema, list):
         return [api_schema(item) for item in schema]

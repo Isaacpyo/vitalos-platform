@@ -168,9 +168,7 @@ class Command(BaseCommand):
 
         def factory():
             if not recorder:
-                recorder.append(
-                    RecordingProvider(provider, recorded_at=stamp)
-                )
+                recorder.append(RecordingProvider(provider, recorded_at=stamp))
             return recorder[0]
 
         return factory, model
