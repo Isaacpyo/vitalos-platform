@@ -1,5 +1,6 @@
 import { NotificationError } from "../domain/ports";
 import type { EnquiryLogger, NotificationMessage, Notifier } from "../domain/ports";
+import type { EnquiryForNotification } from "../domain/enquiry";
 import type { InlineImage } from "@vitalos/email-layout";
 import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-notification-email";
 
@@ -28,7 +29,8 @@ import { SIMPLE_ADDRESS, cleanLine, renderEnquiryNotification } from "./enquiry-
  *
  * Headers: every notification is automated mail (`Auto-Submitted`, RFC 3834) and names itself with
  * `X-Vitalos-Notification` plus the enquiry's `X-Vitalos-Reference`, so the Super Admin inbox files it
- * as the enquiry it describes instead of as mail from support@ (ADR-046).
+ * as the enquiry it describes instead of as mail from support@ (ADR-046). An AI & Data enquiry adds
+ * `X-Vitalos-Pipeline` and `X-Vitalos-Offer` (see `notificationHeaders`).
  */
 
 export interface EmailNotifierOptions {
@@ -46,13 +48,38 @@ export const DEFAULT_EMAIL_TIMEOUT_MS = 10_000;
 
 export const NOTIFICATION_KIND = "web.enquiry-notification";
 
-export function notificationHeaders(reference: string): Record<string, string> {
-  return {
+/** Source paths of the Vitalos AI & Data section (docs/ai-data/PLAN.md, AID-004). */
+export const AI_DATA_PATH_PREFIX = "/ai-data";
+export const AI_DATA_PIPELINE = "ai-data";
+
+/** An offer key as the enquiry contract stores it: a lowercase slug, nothing else. */
+const OFFER_SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
+
+const isAiDataPath = (path: string): boolean =>
+  path === AI_DATA_PATH_PREFIX || path.startsWith(`${AI_DATA_PATH_PREFIX}/`);
+
+/**
+ * Message headers for an enquiry notification. Every notification names itself and its
+ * reference (ADR-046). An enquiry from the AI & Data section also carries
+ * `X-Vitalos-Pipeline: ai-data` and, when an offer was chosen, `X-Vitalos-Offer: <slug>`, so the
+ * Super Admin ingest can open an opportunity for it (PLAN.md "Shared contracts"). Values are
+ * cleaned to one line; an offer that is not a plain slug is left out rather than sent.
+ */
+export function notificationHeaders(
+  enquiry: Pick<EnquiryForNotification, "reference" | "sourcePath" | "offerSlug">,
+): Record<string, string> {
+  const headers: Record<string, string> = {
     "Auto-Submitted": "auto-generated",
     "X-Auto-Response-Suppress": "All",
     "X-Vitalos-Notification": NOTIFICATION_KIND,
-    "X-Vitalos-Reference": cleanLine(reference),
+    "X-Vitalos-Reference": cleanLine(enquiry.reference),
   };
+  if (isAiDataPath(cleanLine(enquiry.sourcePath))) {
+    headers["X-Vitalos-Pipeline"] = AI_DATA_PIPELINE;
+    const offer = cleanLine(enquiry.offerSlug);
+    if (OFFER_SLUG.test(offer)) headers["X-Vitalos-Offer"] = offer;
+  }
+  return headers;
 }
 
 interface ProviderRequest {
@@ -112,7 +139,7 @@ abstract class EmailNotifier implements Notifier {
       inlineImages: rendered.inlineImages,
       replyTo: SIMPLE_ADDRESS.test(workEmail) ? workEmail : undefined,
       idempotencyKey: message.idempotencyKey,
-      headers: notificationHeaders(message.enquiry.reference),
+      headers: notificationHeaders(message.enquiry),
     });
 
     let response: Response;

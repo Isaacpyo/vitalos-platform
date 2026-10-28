@@ -18,6 +18,12 @@ import { Band, ClosingBand, PageIntro, RowList, renderBands } from "../commercia
 import { bodyBands } from "../commercial/body-bands";
 import { IndustryBand } from "../commercial/dark-bands";
 
+/**
+ * The AI & Data practice links to its division section, /ai-data (AID-002). The main site's
+ * header menus are unchanged (ADR-031 owner direction); this band is the way in from here.
+ */
+export const AI_DATA_PRACTICE_SLUG = "ai-data";
+
 export interface PracticeTemplateProps {
   practice: PracticeView;
   gates: PublicationGates;
@@ -67,6 +73,20 @@ export function PracticeTemplate({ practice, gates }: Readonly<PracticeTemplateP
       />
       {renderBands(
         [
+          (tone) =>
+            practice.slug === AI_DATA_PRACTICE_SLUG ? (
+              <Band
+                tone={tone}
+                spacing="compact"
+                heading="Vitalos AI & Data has its own section"
+                eyebrow="Applied AI & Data Engineering"
+                intro="Concrete solutions for smaller businesses, how we work, and a reconciliation demonstrator on synthetic data."
+              >
+                <Button href={routes.aiData.home()} size="lg" arrow>
+                  Visit Vitalos AI &amp; Data
+                </Button>
+              </Band>
+            ) : null,
           (tone) =>
             practice.problems.length > 0 ? (
               <Band tone={tone} heading={structuralLabels.problems} eyebrow={practice.title}>

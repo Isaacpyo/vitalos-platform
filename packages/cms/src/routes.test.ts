@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   absoluteUrl,
+  aiDataSitemapPaths,
   hrefForDocument,
   hrefForRoutePage,
   isValidSlug,
@@ -83,6 +84,24 @@ describe("helpers", () => {
     expect(isValidSlug("ai-transformation")).toBe(true);
     expect(isValidSlug("Not A Slug")).toBe(false);
     expect(isValidSlug("-bad")).toBe(false);
+  });
+
+  it("builds the AI & Data routes and lists them in the manifest", () => {
+    expect(routes.aiData.home()).toBe("/ai-data");
+    expect(routes.aiData.contact()).toBe("/ai-data/contact");
+    expect(routes.aiData.contact("ai-proof-of-value")).toBe(
+      "/ai-data/contact?offer=ai-proof-of-value",
+    );
+    expect(routes.aiData.thankYou("VIT-0123456789AB")).toBe(
+      "/ai-data/contact/thank-you?ref=VIT-0123456789AB",
+    );
+    const patterns = new Map(routeManifest.map((entry) => [entry.pattern, entry]));
+    for (const path of aiDataSitemapPaths) {
+      expect(patterns.get(path)?.sitemap, path).toBe(true);
+      expect(patterns.get(path)?.gate, path).toBeUndefined();
+    }
+    expect(patterns.get("/ai-data/contact/thank-you")?.sitemap).toBe(false);
+    expect(aiDataSitemapPaths).not.toContain("/ai-data/contact/thank-you");
   });
 
   it("has a unique manifest", () => {
