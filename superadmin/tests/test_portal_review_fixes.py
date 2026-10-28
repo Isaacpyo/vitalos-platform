@@ -291,3 +291,46 @@ def test_l2_ai_what_changed_context_excludes_hidden_events(world):
     services.set_published(world.deliv_a, False, actor=world.staff)
     sources = ai.build_context("what_changed", world.contrib)
     assert "Prototype report" not in " ".join(str(s) for s in sources)
+
+
+# --- L4: legacy Office (OLE) formats are refused in the portal -------------------------------------------------
+
+OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\x00" * 600
+
+
+@pytest.mark.parametrize(
+    ("name", "content_type"),
+    [
+        ("report.doc", "application/msword"),
+        ("sheet.xls", "application/vnd.ms-excel"),
+        ("sheet.xls", "application/octet-stream"),
+        ("notes.txt", "text/plain"),
+    ],
+)
+def test_l4_portal_refuses_ole_documents(world, name, content_type):
+    from apps.portal import files as portal_files
+
+    checked = portal_files.check(name, content_type, OLE_MAGIC)
+    assert checked.refused_reason
+    if name.endswith((".doc", ".xls")):
+        assert ".docx" in checked.refused_reason or "PDF" in checked.refused_reason
+
+
+def test_l4_customer_upload_of_doc_is_refused_with_a_message(world):
+    from apps.portal.models import FileVersion
+    from tests.portal_helpers import upload
+
+    before = FileVersion.objects.count()
+    response = c(world.contrib).post(
+        "/portal/files/upload/",
+        {"challenge": world.ch_a.pk, "file": upload("old.doc", OLE_MAGIC, "application/msword")},
+        follow=True,
+    )
+    assert b"Older Word and Excel" in response.content
+    assert FileVersion.objects.count() == before
+
+
+def test_l4_enquiries_allow_list_is_unchanged():
+    from apps.enquiries.attachments import ALLOWED
+
+    assert "application/msword" in ALLOWED and "application/vnd.ms-excel" in ALLOWED
