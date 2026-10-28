@@ -1,0 +1,20 @@
+{# Managed-service card. Context: s (dict with service, report, fresh). Always shows source and last-updated. #}
+{% load portal_ui %}
+<article class="card" data-testid="service-card" aria-labelledby="svc-{{ s.service.pk }}">
+  <div class="card__head">
+    <h3 id="svc-{{ s.service.pk }}">{{ s.service.name }}</h3>
+    {% if s.report %}{% badge s.report.status s.report.get_status_display %}{% else %}<span class="badge badge--neutral">No report yet</span>{% endif %}
+  </div>
+  {% if s.service.description %}<p class="muted small">{{ s.service.description }}</p>{% endif %}
+  {% if s.report %}
+    {% if s.report.summary %}<p>{{ s.report.summary }}</p>{% endif %}
+    <dl class="kv">
+      <dt>Source</dt><dd>{{ s.fresh.source_label }}</dd>
+      <dt>Last updated</dt><dd>{{ s.report.reported_at|date:"j M Y, H:i" }}</dd>
+    </dl>
+    {% if s.fresh.is_manual %}<p class="help">Vitalos does not have live monitoring connected for this service. This status was entered by a person.</p>{% endif %}
+    {% if s.fresh.stale %}<p class="notice notice--warn mt-1" role="note">{% badge "stale" "Stale" %} This report is old and may no longer be accurate. Ask Vitalos for a fresh status.</p>{% endif %}
+  {% else %}
+    <p class="muted">Vitalos has not reported a status for this service yet. Nothing is being monitored on your behalf in this portal.</p>
+  {% endif %}
+</article>

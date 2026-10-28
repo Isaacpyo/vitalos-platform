@@ -16,7 +16,11 @@ STORAGES = {
     "attachments": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
     "content_media": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
     "careers_cvs": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+    "portal_files": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
 }
+PORTAL_FILES_STORAGE_ENABLED = True
+PORTAL_HOST = ""  # tests that need a portal host override the setting
+PORTAL_ENABLED = True
 ATTACHMENTS_STORAGE_ENABLED = True
 CONTENT_MEDIA_STORAGE_ENABLED = True
 CAREERS_CV_STORAGE_ENABLED = True

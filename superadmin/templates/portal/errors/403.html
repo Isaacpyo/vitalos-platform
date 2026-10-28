@@ -1,0 +1,8 @@
+{% extends "portal/auth/shell.html" %}
+{% block title %}Not allowed · Vitalos client portal{% endblock %}
+{% block body %}
+  <h1>You can't do that</h1>
+  <p class="mt-2">Your role in this organisation does not include this action. You can still read everything shared with you, and you can ask in the discussion.</p>
+  <p class="muted">Roles: viewer (read), contributor (comment and answer), approver (approve deliverable versions), authorised signatory (contractual acceptance).</p>
+  <a class="btn w-full mt-2" href="/">Back to your portal</a>
+{% endblock %}

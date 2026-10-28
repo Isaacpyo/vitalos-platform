@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ org.name }} · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'portaladmin:home' %}" class="hover:underline">Client portal</a></p>
+  <h1 class="mt-1 text-2xl font-semibold">{{ org.name }}{% if org.is_synthetic %} <span class="text-sm font-normal muted">(synthetic)</span>{% endif %}</h1>
+  {% include "portaladmin/_nav.html" with section="orgs" %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="members-h">
+        <h2 id="members-h" class="font-semibold">Members</h2>
+        <p class="muted text-xs">Access follows the membership on every request. Revoking removes access immediately.</p>
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full text-sm" data-testid="members">
+            <thead><tr class="text-left"><th class="py-2 pr-3">Person</th><th class="py-2 pr-3">Role</th><th class="py-2 pr-3">State</th><th class="py-2">Actions</th></tr></thead>
+            <tbody>
+              {% for row in members %}
+                <tr class="border-t border-slate-100 dark:border-slate-800">
+                  <td class="py-2 pr-3">{{ row.member.user.full_name|default:"" }}<br><span class="muted">{{ row.member.user.email }}</span></td>
+                  <td class="py-2 pr-3">{{ row.member.get_role_display }}</td>
+                  <td class="py-2 pr-3">{{ row.state }}</td>
+                  <td class="py-2">
+                    <div class="flex flex-wrap gap-1">
+                      {% if row.member.accepted_at and row.member.is_active %}
+                        <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_start' row.member.pk %}">Preview as customer</a>
+                        {% url 'portaladmin:member_action' row.member.pk 'revoke' as revoke_url %}{% include "portaladmin/_post.html" with url=revoke_url label="Revoke access" %}
+                      {% elif row.member.revoked_at %}
+                        {% url 'portaladmin:member_action' row.member.pk 'restore' as restore_url %}{% include "portaladmin/_post.html" with url=restore_url label="Restore access" %}
+                      {% else %}
+                        {% url 'portaladmin:member_action' row.member.pk 'resend' as resend_url %}{% include "portaladmin/_post.html" with url=resend_url label="Send a new invitation" %}
+                      {% endif %}
+                    </div>
+                    <form method="post" action="{% url 'portaladmin:member_action' row.member.pk 'role' %}" class="mt-2 flex items-center gap-1">{% csrf_token %}
+                      <label class="sr-only" for="role-{{ row.member.pk }}">Role for {{ row.member.user.email }}</label>
+                      <select name="role" id="role-{{ row.member.pk }}" class="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900">
+                        {% for value, label in role_form.fields.role.choices %}<option value="{{ value }}" {% if value == row.member.role %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                      </select>
+                      <button class="btn btn-secondary btn-sm" type="submit">Set role</button>
+                    </form>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" class="muted py-3">No members yet. Invite someone below.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card p-5" aria-labelledby="inv-h">
+        <h2 id="inv-h" class="font-semibold">Invite a member</h2>
+        <p class="muted text-xs">Sends a single-use link that expires. Nobody gets access because they know an email address or an enquiry reference.</p>
+        <form method="post" action="{% url 'portaladmin:member_invite' org.pk %}" class="mt-3" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=invite_form %}
+          <div class="mt-4 flex justify-end"><button class="btn btn-primary" type="submit">Send invitation</button></div>
+        </form>
+        <dl class="muted mt-4 grid gap-1 text-xs">
+          <div><strong>Viewer:</strong> read-only. <strong>Contributor:</strong> comment and answer. <strong>Approver:</strong> approve deliverable versions. <strong>Authorised signatory:</strong> contractual acceptance.</div>
+        </dl>
+      </section>
+
+      <section class="card p-5" aria-labelledby="svc-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="svc-h" class="font-semibold">Managed services</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:service_new' org.pk %}">Add service</a></div>
+        <p class="muted text-xs">No live monitoring is connected. Status is reported by a person and labelled to the customer as such.</p>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for s in services %}
+            <li class="flex flex-wrap items-center justify-between gap-2">
+              <span><strong>{{ s.name }}</strong> <span class="muted">{% if s.published_at %}published{% else %}not published{% endif %}</span></span>
+              <span class="flex gap-1">
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:service_report' s.pk %}">Report status</a>
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:service_edit' s.pk %}">Edit</a>
+                {% if s.published_at %}{% url 'portaladmin:publish' 'service' s.pk 'off' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Hide" next=request.path %}{% else %}{% url 'portaladmin:publish' 'service' s.pk 'on' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Publish" style="btn-primary" next=request.path %}{% endif %}
+              </span>
+            </li>
+          {% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <aside class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="chs-h">
+        <h2 id="chs-h" class="font-semibold">Challenges</h2>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for c in challenges %}<li><a class="underline" href="{% url 'portaladmin:challenge' c.pk %}">{{ c.title }}</a> <span class="muted">{% if c.shared_at %}shared{% else %}not shared{% endif %}</span></li>{% empty %}<li class="muted">None. Open an opportunity in the pipeline and use "Client portal" to link it.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="dl-h">
+        <h2 id="dl-h" class="font-semibold">Recent email delivery</h2>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for d in deliveries %}<li>{{ d.get_status_display }} · {{ d.kind }} · {{ d.recipient.email }} <span class="muted">{{ d.attempts }} attempt{{ d.attempts|pluralize }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+        <p class="mt-2 text-sm"><a class="underline" href="{% url 'portaladmin:deliveries' %}">All deliveries</a></p>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

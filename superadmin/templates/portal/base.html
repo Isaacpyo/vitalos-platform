@@ -1,0 +1,62 @@
+{% load static django_htmx portal_ui %}<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="light dark">
+    <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false, "historyCacheSize": 0, "refreshOnHistoryMiss": true, "selfRequestsOnly": true, "disableInheritance": true}'>
+    <title>{% block title %}Vitalos client portal{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    <link rel="icon" href="{% static 'brand/favicon-32.png' %}" type="image/png" sizes="32x32">
+    <link rel="preload" href="{% static 'fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
+    {% htmx_script %}
+    <script src="{% static 'portal/portal.js' %}" nonce="{{ csp_nonce }}" defer></script>
+  </head>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-inherit="hx-headers">
+    <a href="#main" class="skip-link">Skip to content</a>
+    {% if preview %}
+      <div class="banner banner--preview" role="status" data-testid="preview-banner">
+        Preview as customer: {{ organisation.name }}, as {{ member.name }} ({{ member.get_role_display }}). Read-only, and logged.
+        <a href="{% url 'portaladmin:org' organisation.pk %}">Exit preview</a>
+      </div>
+    {% endif %}
+    {% if organisation.is_synthetic %}
+      <div class="banner banner--synthetic" role="note" data-testid="synthetic-banner">Synthetic demonstration organisation. Everything here is made-up data.</div>
+    {% endif %}
+    <header class="portal-header">
+      <div class="portal-header__inner">
+        <a class="portal-brand" href="{% purl 'home' %}">
+          <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28">
+          <span class="portal-brand__org">{{ organisation.name }}</span>
+        </a>
+        <button type="button" class="nav-toggle" popovertarget="portal-nav" aria-controls="portal-nav" aria-label="Menu">Menu</button>
+        <nav class="portal-nav" id="portal-nav" popover aria-label="Main">
+          <a href="{% purl 'home' %}" {% if nav == 'home' %}aria-current="page"{% endif %}>Dashboard</a>
+          <a href="{% purl 'challenges' %}" {% if nav == 'challenges' %}aria-current="page"{% endif %}>Challenges</a>
+          <a href="{% purl 'questions' %}" {% if nav == 'questions' %}aria-current="page"{% endif %}>Questions</a>
+          <a href="{% purl 'files' %}" {% if nav == 'files' %}aria-current="page"{% endif %}>Files</a>
+          <a href="{% purl 'notifications' %}" {% if nav == 'notifications' %}aria-current="page"{% endif %}>Notifications{% if unread %} <span class="count" aria-label="{{ unread }} unread">{{ unread }}</span>{% endif %}</a>
+          <span class="spacer"></span>
+          <form class="portal-search" action="{% purl 'search' %}" method="get" role="search">
+            <label for="portal-q" class="sr-only">Search your portal</label>
+            <input id="portal-q" type="search" name="q" placeholder="Search" value="{{ q|default:'' }}" autocomplete="off">
+          </form>
+          <a href="{% purl 'account' %}" {% if nav == 'account' %}aria-current="page"{% endif %}>Account</a>
+          {% if not preview %}
+            <form method="post" action="{% purl 'logout' %}">{% csrf_token %}<button type="submit" data-no-busy>Sign out</button></form>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="portal-main" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+    <div class="toasts" role="status" aria-live="polite" aria-atomic="false" id="toasts">
+      {% for message in messages %}
+        <div class="toast toast--{{ message.level_tag }}"><span>{{ message }}</span><button type="button" data-toast-close aria-label="Dismiss">&times;</button></div>
+      {% endfor %}
+    </div>
+  </body>
+</html>

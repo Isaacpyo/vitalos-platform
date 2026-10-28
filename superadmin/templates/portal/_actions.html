@@ -1,0 +1,19 @@
+{# Action-required cards. Context: actions (list of dicts from selectors.actions_required), member. #}
+{% load portal_ui %}
+<ul class="list stack-sm" data-testid="actions">
+  {% for a in actions %}
+    <li>
+      <a class="action{% if a.overdue %} action--overdue{% endif %}" href="{% purl_kw a.url_name a.url_kwargs %}">
+        <span>
+          <span class="action__title">{{ a.title }}</span><br>
+          <span class="muted small">{{ a.context }}{% if a.due %} · Due {{ a.due|date:"j M Y" }}{% if a.overdue %} (overdue){% endif %}{% endif %}</span>
+          {% if a.needs == "approver" and not member.can_approve %}<br><span class="muted small">Needs an approver in your organisation.</span>{% endif %}
+          {% if a.needs == "contributor" and not member.can_comment %}<br><span class="muted small">Needs a contributor.</span>{% endif %}
+        </span>
+        <span class="badge badge--warn nowrap">{% if a.kind == "question" %}Answer{% elif a.kind == "brief" %}Review{% elif a.kind == "approval" %}Decide{% else %}Your task{% endif %}</span>
+      </a>
+    </li>
+  {% empty %}
+    <li class="empty"><h3>Nothing is waiting on you</h3><p>When Vitalos needs an answer, a review or a decision, it appears here and you get a notification.</p></li>
+  {% endfor %}
+</ul>

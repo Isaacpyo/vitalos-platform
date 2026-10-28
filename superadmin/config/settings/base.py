@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.aicore",
     "apps.recon_demo",
     "apps.billing",
+    "apps.portal",
 ]
 
 MIDDLEWARE = [
@@ -63,12 +64,14 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "apps.core.middleware.SecurityHeadersMiddleware",
+    "apps.portal.middleware.PortalRoutingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.core.synthetic.SyntheticVisibilityMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "apps.portal.middleware.CustomerBoundaryMiddleware",
     "apps.accounts.middleware.OTPEnforcementMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -128,6 +131,10 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_NAME = "vsa_session"
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_NAME = "vsa_csrftoken"
+# Host-only cookies: never set a Domain attribute, so the admin host and the client portal host can never
+# share a session or CSRF cookie (ADR-056). A test fails if either is set.
+SESSION_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = None
 
 # django-axes: lock an email+IP combination after repeated failures.
 AXES_FAILURE_LIMIT = env.int("AXES_FAILURE_LIMIT", default=5)
@@ -459,3 +466,26 @@ AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)
 BILLING_STRIPE_SECRET_KEY = env("BILLING_STRIPE_SECRET_KEY", default="")
 BILLING_STRIPE_WEBHOOK_SECRET = env("BILLING_STRIPE_WEBHOOK_SECRET", default="")
 BILLING_PUBLIC_SITE_URL = env("BILLING_PUBLIC_SITE_URL", default="https://vitalos.co.uk").strip().rstrip("/")
+
+# Client portal (apps.portal, ADR-056). PORTAL_HOST: when set, the portal URLs are served only on that host and
+# the Super Admin URLs are not served there; when empty the portal is mounted at /portal/ (local preview only).
+# PORTAL_ENABLED is the master switch for customer access (staff tools and "Preview as customer" always work).
+PORTAL_HOST = env("PORTAL_HOST", default="").strip().lower()
+PORTAL_ENABLED = env.bool("PORTAL_ENABLED", default=True)
+PORTAL_INVITE_TTL_HOURS = env.int("PORTAL_INVITE_TTL_HOURS", default=72)
+# A manually reported managed-service status older than this many hours is labelled stale.
+PORTAL_STATUS_STALE_HOURS = env.int("PORTAL_STATUS_STALE_HOURS", default=72)
+PORTAL_FILES_BUCKET = env("PORTAL_FILES_BUCKET", default="")
+if PORTAL_FILES_BUCKET:
+    PORTAL_FILES_STORAGE = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": _s3_options(PORTAL_FILES_BUCKET, private=True),
+    }
+else:
+    PORTAL_FILES_STORAGE = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": BASE_DIR / "media" / "portal-files"},
+    }
+STORAGES["portal_files"] = PORTAL_FILES_STORAGE
+# Without a bucket, bytes are kept only in development (the production container disk is not durable).
+PORTAL_FILES_STORAGE_ENABLED = bool(PORTAL_FILES_BUCKET) or APP_ENVIRONMENT == "development"

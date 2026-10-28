@@ -1,0 +1,19 @@
+{# Opportunity workspace extensions. Client portal panel (apps.portal, ADR-056). #}
+{% load ui portal_ui %}
+{% portal_panel opportunity as panel %}
+<section class="card p-5" id="client-portal" aria-labelledby="portal-heading" data-testid="portal-panel">
+  <h2 id="portal-heading" class="font-semibold">Client portal</h2>
+  {% if panel.challenge %}
+    <p class="muted text-xs">The customer sees only what you have shared and published. This opportunity's notes, scores and prices are never shown.</p>
+    <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+      <div><dt class="muted text-xs">Organisation</dt><dd>{{ panel.challenge.organisation.name }}</dd></div>
+      <div><dt class="muted text-xs">Journey stage</dt><dd>{{ panel.challenge.get_journey_stage_display }}</dd></div>
+      <div><dt class="muted text-xs">Shared with customer</dt><dd>{% if panel.challenge.shared_at %}{{ panel.challenge.shared_at|date:"j M Y" }}{% else %}Not yet{% endif %}</dd></div>
+      <div><dt class="muted text-xs">Awaiting the customer</dt><dd data-testid="portal-waiting">{{ panel.waiting }}</dd></div>
+    </dl>
+    <a class="btn btn-secondary mt-4 w-full" href="{% url 'portaladmin:challenge' panel.challenge.pk %}">{% icon "users" "h-4 w-4" %} Open portal workspace</a>
+  {% else %}
+    <p class="muted text-xs">Not linked. Linking copies what the customer submitted into the portal so you can review it before sharing. Nothing becomes visible to the customer until you share it.</p>
+    <a class="btn btn-secondary mt-4 w-full" href="{% url 'portaladmin:link_challenge' opportunity.ref %}" data-testid="portal-link">{% icon "link" "h-4 w-4" %} Link to client portal</a>
+  {% endif %}
+</section>

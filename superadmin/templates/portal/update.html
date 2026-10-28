@@ -1,0 +1,8 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ update.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'challenge' pk=challenge.pk %}">{{ challenge.title }}</a></p>
+  <div class="page-head"><div><p class="eyebrow">Update · {{ update.published_at|date:"j M Y" }}</p><h1>{{ update.title }}</h1></div></div>
+  <article class="card"><div class="prose">{{ update.body }}</div></article>
+{% endblock %}

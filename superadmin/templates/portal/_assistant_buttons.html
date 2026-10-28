@@ -1,0 +1,22 @@
+{# Assistant actions. Context: items = list of (activity, label, field_name, field_value). Each is a POST form
+   that works without JavaScript and, with HTMX, loads the answer in place. #}
+{% load portal_ui %}
+<div class="assistant" data-testid="assistant">
+  <h2>Ask about your records</h2>
+  <p class="muted small">Answers use only what you can see in this portal and always link to the records. They cannot change anything. If the AI assistant is unavailable, you get an answer compiled directly from your records instead, and it says so.</p>
+  {% if preview %}
+    <p class="notice">Preview is read-only: the assistant is disabled.</p>
+  {% else %}
+    <div class="row mt-1">
+      {% for activity, label, field, value in items %}
+        <form method="post" action="{% purl 'assistant' activity=activity %}" hx-post="{% purl 'assistant' activity=activity %}" hx-target="#assistant-result" hx-swap="innerHTML" hx-indicator="#assistant-loading">
+          {% csrf_token %}
+          {% if field %}<input type="hidden" name="{{ field }}" value="{{ value }}">{% endif %}
+          <button type="submit" class="btn btn--secondary btn--sm" data-no-busy>{{ label }}</button>
+        </form>
+      {% endfor %}
+    </div>
+    <div id="assistant-loading" class="htmx-indicator" role="status" aria-live="polite"><span class="skeleton"></span><span class="skeleton"></span><span class="sr-only">Working on your answer</span></div>
+    <div id="assistant-result" class="mt-2" aria-live="polite"></div>
+  {% endif %}
+</div>

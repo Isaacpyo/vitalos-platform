@@ -1,0 +1,133 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ deliverable.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'project' pk=project.pk %}">{{ project.name }}</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Deliverable</p>
+      <h1>{{ deliverable.title }}</h1>
+      {% if deliverable.description %}<p class="lede">{{ deliverable.description }}</p>{% endif %}
+    </div>
+  </div>
+
+  {% if not version %}
+    <div class="empty"><h3>No version has been shared yet</h3><p>You will be notified when there is something to review.</p></div>
+  {% else %}
+  <div class="grid grid--main">
+    <div class="stack">
+      <nav aria-label="Versions" class="version-tabs">
+        {% for row in version_rows %}
+          <a href="?v={{ row.version.number }}" {% if row.version.pk == version.pk %}aria-current="true"{% endif %}>Version {{ row.version.number }} {% badge row.state %}</a>
+        {% endfor %}
+      </nav>
+
+      <section class="card" aria-labelledby="ver-h" data-testid="version-preview">
+        <div class="card__head"><h2 id="ver-h">Version {{ version.number }}</h2>{% badge state %}</div>
+        {% if version.summary %}<p><strong>{{ version.summary }}</strong></p>{% endif %}
+        <p class="muted small">Shared {{ version.shared_at|date:"j M Y" }}.{% if not is_latest %} A newer version exists, so this one can no longer be decided on.{% endif %}</p>
+        {% if version.body %}<div class="preview-text mt-1" tabindex="0" role="region" aria-label="Preview of version {{ version.number }}">{{ version.body }}</div>{% else %}<p class="muted mt-1">No preview text was written for this version.</p>{% endif %}
+        {% if file %}
+          {% with fv=version.file_version %}
+            {% if fv.upload_status == "stored" %}<p class="mt-1"><a class="btn btn--secondary btn--sm" href="{% purl 'file_download' pk=fv.pk %}">Download {{ fv.original_name }}</a></p>{% else %}<p class="muted small mt-1">{{ fv.original_name }}: {{ fv.get_upload_status_display }}</p>{% endif %}
+          {% endwith %}
+        {% endif %}
+      </section>
+
+      <section class="approval {% if state == 'approved' %}approval--approved{% elif state == 'changes_requested' %}approval--changes{% endif %}" id="decision" aria-labelledby="dec-h" data-testid="approval-panel">
+        <h2 id="dec-h">Decision on version {{ version.number }}</h2>
+        {% for a in decisions %}
+          <div class="decision{% if a.decision == 'changes_requested' %} decision--changes{% endif %} mt-1" data-testid="decision">
+            <p><strong>{{ a.get_decision_display }}</strong> by {{ a.user_name|default:a.user_email }} ({{ a.get_role_display }}) on {{ a.created_at|date:"j M Y, H:i" }}, for version {{ version.number }}.</p>
+            {% if a.comment %}<p class="prose">{{ a.comment }}</p>{% endif %}
+            {% if a.statement %}<p class="muted small">Statement recorded: {{ a.statement }}</p>{% endif %}
+          </div>
+        {% empty %}
+          <p class="muted">No decision has been recorded on this version yet.</p>
+        {% endfor %}
+
+        {% if version.requires_approval and can_decide %}
+          {% if member.can_approve and not preview %}
+            <div class="row mt-2">
+              <button type="button" class="btn" data-dialog-open="approve-dialog">Approve version {{ version.number }}</button>
+              <button type="button" class="btn btn--secondary" data-dialog-open="changes-dialog">Request changes</button>
+            </div>
+            <noscript>
+              <form method="post" action="{% purl 'version_approve' pk=version.pk %}" class="mt-2">{% csrf_token %}<p>Approve version {{ version.number }}? This records your name, the time and this version.</p><button class="btn" type="submit">Approve version {{ version.number }}</button></form>
+            </noscript>
+          {% elif preview %}
+            <p class="notice mt-2">Preview is read-only: approval controls are disabled.</p>
+          {% else %}
+            <p class="notice mt-2">Approving needs an approver in your organisation. You can comment in the discussion below.</p>
+          {% endif %}
+        {% elif version.requires_approval and state == 'approved' %}
+          <p class="help mt-1">Approval applies to version {{ version.number }} only. If Vitalos shares a new version, it starts unapproved.</p>
+        {% elif not version.requires_approval %}
+          <p class="help mt-1">This version is shared for information. No decision is needed.</p>
+        {% endif %}
+      </section>
+
+      {% if version.is_contractual %}
+        <section class="approval" aria-labelledby="ct-h" data-testid="contract-panel">
+          <h2 id="ct-h">Contractual acceptance</h2>
+          <p class="muted small">This is separate from approving the review. Only an authorised signatory can record it.</p>
+          {% if contract_done %}
+            <p class="mt-1"><span class="badge badge--ok">Accepted</span> Contractual acceptance of version {{ version.number }} is recorded above.</p>
+          {% elif member.can_accept_contract and not preview and is_latest %}
+            <form method="post" action="{% purl 'version_accept' pk=version.pk %}" class="mt-1" novalidate>
+              {% csrf_token %}
+              <blockquote class="notice">{{ contract_statement }}</blockquote>
+              {% include "portal/_fields.html" with form=accept_form %}
+              <button class="btn" type="submit">Record contractual acceptance</button>
+            </form>
+          {% else %}
+            <p class="notice mt-1">Contractual acceptance needs an authorised signatory in your organisation.</p>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      <section class="card" aria-labelledby="disc-h">
+        <h2 id="disc-h">Discussion about this deliverable</h2>
+        {% include "portal/_messages.html" %}
+        <div class="mt-2">{% include "portal/_composer.html" with composer_id="composer" %}</div>
+      </section>
+    </div>
+
+    <aside class="stack" aria-label="History">
+      <section class="card" aria-labelledby="hist-h">
+        <h2 id="hist-h">Version history</h2>
+        <ul class="list">
+          {% for row in version_rows %}
+            <li><a href="?v={{ row.version.number }}">Version {{ row.version.number }}</a> {% badge row.state %}<br><span class="muted small">Shared {{ row.version.shared_at|date:"j M Y" }}</span>
+              {% for a in row.decisions %}<br><span class="small">{{ a.get_decision_display }} by {{ a.user_name|default:a.user_email }}, {{ a.created_at|date:"j M Y" }}</span>{% endfor %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% include "portal/_assistant_buttons.html" with items=assistant_items %}
+    </aside>
+  </div>
+
+  {% if can_decide and member.can_approve and not preview %}
+    <dialog id="approve-dialog" aria-labelledby="approve-title">
+      <form method="post" action="{% purl 'version_approve' pk=version.pk %}" class="dialog__body">
+        {% csrf_token %}
+        <h2 id="approve-title">Approve version {{ version.number }}?</h2>
+        <p class="mt-1">You are approving <strong>{{ deliverable.title }}, version {{ version.number }}</strong> on behalf of {{ organisation.name }}. Vitalos will record your name, the time and this exact version.</p>
+        <p class="muted small">Approving this version does not approve any other version. It is a review approval, not a contractual acceptance.</p>
+        {% include "portal/_fields.html" with form=approve_form %}
+        <div class="dialog__actions"><button type="button" class="btn btn--secondary" data-dialog-close>Cancel</button><button class="btn" type="submit">Yes, approve version {{ version.number }}</button></div>
+      </form>
+    </dialog>
+    <dialog id="changes-dialog" class="drawer" aria-labelledby="changes-title">
+      <form method="post" action="{% purl 'version_changes' pk=version.pk %}" class="dialog__body">
+        {% csrf_token %}
+        <h2 id="changes-title">Request changes to version {{ version.number }}</h2>
+        <p class="muted small mt-1">Tell Vitalos what needs to change. This version stays unapproved and a new version will follow.</p>
+        {% include "portal/_fields.html" with form=changes_form %}
+        <div class="dialog__actions"><button type="button" class="btn btn--secondary" data-dialog-close>Cancel</button><button class="btn" type="submit">Send requested changes</button></div>
+      </form>
+    </dialog>
+  {% endif %}
+  {% endif %}
+{% endblock %}

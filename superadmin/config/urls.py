@@ -22,6 +22,15 @@ urlpatterns = [
     path("ai-data/demonstrator/", include("apps.recon_demo.urls")),
     path("ai-data/", include("apps.aidata.urls")),
     path("billing/", include("apps.billing.urls")),
+    # "Preview as customer": the customer workspace, read-only, bound to one member, for staff only.
+    path(
+        "client-portal/preview/<int:preview_member>/as/",
+        include(("apps.portal.preview_urls", "portal"), namespace="portal_preview"),
+    ),
+    path("client-portal/", include("apps.portal.admin_urls")),
+    # Customer portal, local preview only: the middleware answers 404 here unless PORTAL_HOST is empty and the
+    # portal is enabled. With PORTAL_HOST set the portal is served only on that host (config.portal_urls).
+    path("portal/", include("apps.portal.urls")),
     path("pay/", include("apps.billing.public_urls")),
     path("api/webhooks/stripe/", include("apps.billing.api_urls")),
     path("api/", include("apps.enquiries.api_urls")),
@@ -43,6 +52,6 @@ if settings.APP_ENVIRONMENT == "development" and not settings.CONTENT_MEDIA_BUCK
         ),
     )
 
-handler403 = "apps.core.views.permission_denied"
-handler404 = "apps.core.views.page_not_found"
-handler500 = "apps.core.views.server_error"
+handler403 = "apps.portal.errors.permission_denied"
+handler404 = "apps.portal.errors.page_not_found"
+handler500 = "apps.portal.errors.server_error"
