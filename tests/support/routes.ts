@@ -55,6 +55,12 @@ export const FIXTURE_TEMPLATES: readonly TemplateRoute[] = [
   { name: "products", path: "/products", pattern: "/products" },
   // SOB Autofix uses every band the product template has (facts, sections, screens).
   { name: "product", path: "/products/sob-autofix", pattern: "/products/:slug" },
+  // Vitalos AI & Data (AID-002): code-authored pages, the same under every content source.
+  { name: "ai-data home", path: "/ai-data", pattern: "/ai-data" },
+  { name: "ai-data solutions", path: "/ai-data/solutions", pattern: "/ai-data/solutions" },
+  { name: "ai-data approach", path: "/ai-data/approach", pattern: "/ai-data/approach" },
+  { name: "ai-data demonstrator", path: "/ai-data/demonstrator", pattern: "/ai-data/demonstrator" },
+  { name: "ai-data contact", path: "/ai-data/contact", pattern: "/ai-data/contact" },
 ];
 
 /**
@@ -98,6 +104,12 @@ const DRAFT_TEMPLATES: readonly TemplateRoute[] = [
   { name: "products", path: "/products", pattern: "/products" },
   // SOB Autofix uses every band the product template has (facts, sections, screens).
   { name: "product", path: "/products/sob-autofix", pattern: "/products/:slug" },
+  // Vitalos AI & Data (AID-002): code-authored pages, the same under every content source.
+  { name: "ai-data home", path: "/ai-data", pattern: "/ai-data" },
+  { name: "ai-data solutions", path: "/ai-data/solutions", pattern: "/ai-data/solutions" },
+  { name: "ai-data approach", path: "/ai-data/approach", pattern: "/ai-data/approach" },
+  { name: "ai-data demonstrator", path: "/ai-data/demonstrator", pattern: "/ai-data/demonstrator" },
+  { name: "ai-data contact", path: "/ai-data/contact", pattern: "/ai-data/contact" },
 ];
 
 /** The templates of the content source under test (see tests/support/content-source.ts). */

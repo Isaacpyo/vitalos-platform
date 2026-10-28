@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "generatedAt": null,
+  "gitSha": null,
+  "datasetVersion": "v1",
+  "label": "Offline evaluation on synthetic data",
+  "configs": [],
+  "criteria": []
+}

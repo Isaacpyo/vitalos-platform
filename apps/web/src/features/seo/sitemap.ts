@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { faqGroups } from "../faq/faq-groups";
 import {
   absoluteUrl,
+  aiDataSitemapPaths,
   gateForKind,
   hrefForRoutePage,
   isSitemapEligible,
@@ -38,6 +39,11 @@ export interface SitemapInput {
   routePages: ReadonlySet<RoutePageKey>;
   /** The FAQ page has questions (features/faq). */
   hasFaq?: boolean | undefined;
+  /**
+   * List the Vitalos AI & Data pages (code-authored, ungated; AID-002). `loadSitemap` sets it
+   * while the site has a home page, so an empty content source still yields an empty sitemap.
+   */
+  aiData?: boolean | undefined;
   /** Document and route entries from `ContentSource.getSitemapEntries()`. */
   entries: readonly SitemapEntry[];
 }
@@ -70,6 +76,8 @@ export function buildSitemap(input: SitemapInput): MetadataRoute.Sitemap {
 
   if (input.hasFaq) add(routes.faq());
 
+  if (input.aiData) for (const path of aiDataSitemapPaths) add(path);
+
   for (const entry of input.entries) {
     if (!cleanPath(entry.path) || manifestEntryForPath(entry.path) === undefined) continue;
     const gate = gateForKind(entry.kind) ?? gateForPath(entry.path);
@@ -100,6 +108,7 @@ export async function loadSitemap(
     gates,
     hasHome: home !== null,
     hasFaq: faq.length > 0,
+    aiData: home !== null,
     // A route page marked noindex (for example a section index whose only content is placeholder
     // content, ADR-025) is not listed.
     routePages: new Set(

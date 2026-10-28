@@ -414,6 +414,28 @@ describe("buildSitemap", () => {
     expect(urls(onlyHome)).toEqual(["https://www.example.invalid/"]);
   });
 
+  it("lists the Vitalos AI & Data pages when asked, never the thank-you receipt", () => {
+    const list = urls(
+      buildSitemap({
+        siteUrl,
+        gates: closedGates,
+        hasHome: true,
+        routePages: new Set(),
+        entries: [],
+        aiData: true,
+      }),
+    );
+    expect(list).toEqual([
+      "https://www.example.invalid/",
+      "https://www.example.invalid/ai-data",
+      "https://www.example.invalid/ai-data/solutions",
+      "https://www.example.invalid/ai-data/approach",
+      "https://www.example.invalid/ai-data/demonstrator",
+      "https://www.example.invalid/ai-data/contact",
+    ]);
+    expect(list.some((url) => url.includes("thank-you"))).toBe(false);
+  });
+
   it("drops unclean, unknown and duplicate paths", () => {
     const messy: SitemapEntry[] = [
       { path: "/what-we-do/a?x=1", kind: "practice" },
@@ -452,7 +474,11 @@ describe("loadSitemap", () => {
         ),
     });
     const urls = (await loadSitemap(source, production.siteUrl)).map((entry) => entry.url);
-    expect(urls).toEqual(["https://www.example.invalid/", "https://www.example.invalid/about"]);
+    expect(urls.filter((url) => !url.includes("/ai-data"))).toEqual([
+      "https://www.example.invalid/",
+      "https://www.example.invalid/about",
+    ]);
+    expect(urls).toContain("https://www.example.invalid/ai-data");
   });
 
   it("is empty for the empty content source", async () => {
@@ -469,7 +495,7 @@ describe("loadSitemap", () => {
         Promise.resolve([{ path: "/what-we-do/a", kind: "practice" } as const]),
     });
     const urls = (await loadSitemap(source, production.siteUrl)).map((entry) => entry.url);
-    expect(urls).toEqual([
+    expect(urls.filter((url) => !url.includes("/ai-data"))).toEqual([
       "https://www.example.invalid/",
       "https://www.example.invalid/about",
       "https://www.example.invalid/what-we-do/a",

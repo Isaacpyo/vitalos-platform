@@ -3,7 +3,12 @@ import { NotificationError } from "../domain/ports";
 import type { NotificationMessage } from "../domain/ports";
 import { referenceFromId } from "../domain/enquiry";
 import { piiMarkers, recordingLogger } from "../test-support";
-import { PostmarkNotifier, ResendNotifier, classifyStatus } from "./email-notifier";
+import {
+  PostmarkNotifier,
+  ResendNotifier,
+  classifyStatus,
+  notificationHeaders,
+} from "./email-notifier";
 
 const API_KEY = "key-fixture-do-not-log-0123456789";
 const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
@@ -271,4 +276,79 @@ describe.each(providers)("$name notifier", ({ name, make }) => {
     expect(error).toMatchObject({ code: "email-kind-unsupported", retryable: false });
     expect(fetchFake).not.toHaveBeenCalled();
   });
+});
+
+describe("AI & Data pipeline headers (docs/ai-data/PLAN.md, AID-004)", () => {
+  const base = { reference: referenceFromId(id), offerSlug: undefined };
+
+  it("marks an enquiry from /ai-data with the pipeline and its offer", () => {
+    expect(
+      notificationHeaders({
+        ...base,
+        sourcePath: "/ai-data/contact",
+        offerSlug: "ai-proof-of-value",
+      }),
+    ).toEqual({
+      "Auto-Submitted": "auto-generated",
+      "X-Auto-Response-Suppress": "All",
+      "X-Vitalos-Notification": "web.enquiry-notification",
+      "X-Vitalos-Reference": referenceFromId(id),
+      "X-Vitalos-Pipeline": "ai-data",
+      "X-Vitalos-Offer": "ai-proof-of-value",
+    });
+  });
+
+  it("adds no offer header when none was chosen", () => {
+    const headers = notificationHeaders({ ...base, sourcePath: "/ai-data/contact" });
+    expect(headers["X-Vitalos-Pipeline"]).toBe("ai-data");
+    expect(headers).not.toHaveProperty("X-Vitalos-Offer");
+  });
+
+  it("leaves every other enquiry unchanged, including look-alike paths", () => {
+    for (const sourcePath of ["/contact", "/what-we-do/ai-data", "/ai-database", undefined]) {
+      const headers = notificationHeaders({
+        ...base,
+        sourcePath,
+        offerSlug: "ai-proof-of-value",
+      });
+      expect(headers, String(sourcePath)).not.toHaveProperty("X-Vitalos-Pipeline");
+      expect(headers, String(sourcePath)).not.toHaveProperty("X-Vitalos-Offer");
+    }
+  });
+
+  it("never lets an offer value inject a header line", () => {
+    const headers = notificationHeaders({
+      ...base,
+      sourcePath: "/ai-data/contact",
+      offerSlug: "ai-proof-of-value\r\nBcc: x@example.invalid",
+    });
+    expect(headers).not.toHaveProperty("X-Vitalos-Offer");
+    for (const value of Object.values(headers)) expect(value).not.toMatch(/[\r\n]/);
+  });
+
+  it.each(providers)(
+    "$name sends the pipeline headers with the message",
+    async ({ name, make }) => {
+      const fetchFake = respond(200);
+      await make(fetchFake).send(
+        message({
+          intent: "ai",
+          sourcePath: "/ai-data/contact",
+          offerSlug: "managed-ai-operations",
+        }),
+      );
+      const body = JSON.parse(fetchFake.mock.calls[0]![1]?.body as string) as Record<
+        string,
+        unknown
+      >;
+      const sent =
+        name === "postmark"
+          ? Object.fromEntries(
+              (body.Headers as { Name: string; Value: string }[]).map((h) => [h.Name, h.Value]),
+            )
+          : (body.headers as Record<string, string>);
+      expect(sent["X-Vitalos-Pipeline"]).toBe("ai-data");
+      expect(sent["X-Vitalos-Offer"]).toBe("managed-ai-operations");
+    },
+  );
 });
