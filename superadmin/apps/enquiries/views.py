@@ -18,6 +18,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.accounts.roles import SUPERADMIN, is_superadmin, role_required
+from apps.aidata import selectors as aidata_selectors
 
 from . import attachments, notifications, selectors, services, sla
 from .forms import (
@@ -107,6 +108,7 @@ def _thread_context(request, enquiry, reply_form=None, note_form=None, mode="rep
         "support_mailbox": settings.SUPPORT_MAILBOX,
         "email_transport": settings.EMAIL_TRANSPORT,
         "tag_text": ", ".join(enquiry.tags.values_list("name", flat=True)),
+        "opportunity": aidata_selectors.for_enquiry(enquiry),
         "is_automated": enquiry.status in (Enquiry.Status.SPAM, Enquiry.Status.AUTOMATED)
         or not enquiry.messages.filter(direction=Message.Direction.INBOUND, is_auto=False).exists(),
     }

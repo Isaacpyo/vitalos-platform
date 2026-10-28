@@ -114,6 +114,15 @@ NAV_ITEMS = (
         ("/products",),
         permission="apps.products.access.can_view",
     ),
+    NavItem(
+        "aidata",
+        "AI & Data",
+        "aidata:overview",
+        "sparkles",
+        "Operate",
+        ("/ai-data",),
+        permission="apps.aidata.selectors.can_access",
+    ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem("notifications", "Notifications", "notifications:list", "bell", "Operate", ("/notifications",)),
     NavItem(

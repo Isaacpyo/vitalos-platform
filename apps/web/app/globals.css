@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@vitalos/design-tokens/theme.css";
 @import "@vitalos/design-tokens/tailwind-theme.css";
+/* Vitalos AI & Data section (/ai-data): its own band tones and utilities (bg-aid-*, text-aid-*). */
+@import "@vitalos/design-tokens/ai-data.css";
 
 /* Tailwind scans the shared UI package for utility classes (apps and packages are separate roots). */
 @source "../../../packages/ui/src";

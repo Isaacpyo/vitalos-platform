@@ -1,0 +1,9 @@
+Statement of account - Northgate Office Supplies (fictional)
+Account,NOS-7731
+Date,Reference,Type,Amount,Balance
+2026-07-01,,Opening balance,4000.00,4000.00
+2026-07-02,B-55010,Invoice,4120.00,8120.00
+2026-07-09,B-55011,Invoice,386.25,8506.25
+2026-07-16,BP-0716,Payment,4000.00,4506.25
+2026-07-23,B-55012,Invoice,77.90,4584.15
+,,Closing balance,4584.15,

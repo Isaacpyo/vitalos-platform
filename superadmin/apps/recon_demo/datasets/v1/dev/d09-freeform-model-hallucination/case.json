@@ -1,0 +1,53 @@
+{
+  "id": "d09-freeform-model-hallucination",
+  "description": "Simulated model response with a fabricated invoice (INV-9999) and a wrong amount (604.50 for 640.50). Grounding must reject both.",
+  "tags": [
+    "model-path",
+    "grounding"
+  ],
+  "layout": "freeform",
+  "synthetic": true,
+  "simulated_script": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "source_line": 5,
+            "date": "2026-09-03",
+            "reference": "INV-8001",
+            "type": "invoice",
+            "amount": "1250.00"
+          },
+          {
+            "source_line": 6,
+            "date": "2026-09-10",
+            "reference": "INV-8002",
+            "type": "invoice",
+            "amount": "604.50"
+          },
+          {
+            "source_line": 7,
+            "date": "2026-09-14",
+            "reference": "CN-8003",
+            "type": "credit",
+            "amount": "120.00"
+          },
+          {
+            "source_line": 8,
+            "date": "2026-09-20",
+            "reference": "PAY-8004",
+            "type": "payment",
+            "amount": "800.00"
+          },
+          {
+            "source_line": 5,
+            "date": "2026-09-03",
+            "reference": "INV-9999",
+            "type": "invoice",
+            "amount": "1250.00"
+          }
+        ]
+      }
+    }
+  ]
+}

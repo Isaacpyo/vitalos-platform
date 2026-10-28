@@ -1,0 +1,48 @@
+{
+  "review_kinds": [
+    "exception"
+  ],
+  "exceptions": [
+    {
+      "class": "amount_mismatch",
+      "reference": "B-55011"
+    },
+    {
+      "class": "duplicate",
+      "reference": "B-55012"
+    }
+  ],
+  "lines": [
+    {
+      "source_line": 5,
+      "date": "2026-07-02",
+      "reference": "B-55010",
+      "type": "invoice",
+      "amount": "4120.00"
+    },
+    {
+      "source_line": 6,
+      "date": "2026-07-09",
+      "reference": "B-55011",
+      "type": "invoice",
+      "amount": "386.25"
+    },
+    {
+      "source_line": 7,
+      "date": "2026-07-16",
+      "reference": "BP-0716",
+      "type": "payment",
+      "amount": "4000.00"
+    },
+    {
+      "source_line": 8,
+      "date": "2026-07-23",
+      "reference": "B-55012",
+      "type": "invoice",
+      "amount": "77.90"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "ok"
+}

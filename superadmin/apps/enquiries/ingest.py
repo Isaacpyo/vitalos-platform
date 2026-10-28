@@ -34,7 +34,7 @@ KEPT_HEADERS = (
     "Date", "Message-ID", "In-Reply-To", "References", "Reply-To", "Auto-Submitted", "Precedence",
     "List-Id", "List-Unsubscribe", "X-Autoreply", "X-Autorespond", "Return-Path", "Content-Type",
     "Authentication-Results", automated.NOTIFICATION_HEADER, automated.REFERENCE_HEADER,
-    automated.FORM_HEADER,
+    automated.FORM_HEADER, automated.PIPELINE_HEADER, automated.OFFER_HEADER,
 )  # fmt: skip
 NULL_SENDERS = ("mailer-daemon@", "postmaster@")
 
@@ -183,7 +183,31 @@ def ingest(raw: bytes, *, provider: str, envelope_to: str = "") -> tuple[Message
     InboxSettings.objects.filter(pk=inbox.pk).update(last_inbound_at=timezone.now())
     if event:
         notifications.queue(event, enquiry)
+    if event == "new_enquiry":
+        _pipeline_intake(enquiry, parsed)
     return message, True
+
+
+def _pipeline_intake(enquiry: Enquiry, parsed: ParsedEmail) -> None:
+    """Open an AI & Data opportunity for a form relay marked ``X-Vitalos-Pipeline: ai-data``.
+
+    Only our own form relays count (the header from anyone else is ignored). A failure here never
+    fails the ingest: the enquiry is already filed, and "Create opportunity" on it does the same.
+    """
+    headers = parsed.headers
+    if (headers.get(automated.PIPELINE_HEADER) or "").strip().lower() != "ai-data":
+        return
+    if not automated.is_own_address(parsed.from_email):
+        return
+    if not (headers.get(automated.FORM_HEADER) or headers.get(automated.NOTIFICATION_HEADER)):
+        return
+    try:
+        from apps.aidata.services import create_from_enquiry
+
+        create_from_enquiry(enquiry, offer=(headers.get(automated.OFFER_HEADER) or "").strip().lower())
+    except Exception as exc:  # noqa: BLE001 - the enquiry must stay filed whatever happens here
+        # Reference and error type only: the message or traceback could carry personal data.
+        logger.error("AI & Data intake failed for %s (%s)", enquiry.ref, type(exc).__name__)
 
 
 def _linked(classification: automated.Classification) -> Enquiry | None:

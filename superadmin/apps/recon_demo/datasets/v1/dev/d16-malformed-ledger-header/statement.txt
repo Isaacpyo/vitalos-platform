@@ -1,0 +1,10 @@
+Statement of account - Harbourline Packaging Ltd (fictional)
+Account,HPL-0042
+Date,Reference,Type,Amount,Balance
+2026-09-01,,Opening balance,1200.00,1200.00
+2026-09-03,INV-1001,Invoice,450.00,1650.00
+2026-09-08,INV-1002,Invoice,1275.40,2925.40
+2026-09-12,CN-1003,Credit note,75.40,2850.00
+2026-09-18,PAY-1004,Payment,1200.00,1650.00
+2026-09-24,INV-1005,Invoice,389.99,2039.99
+,,Closing balance,2039.99,

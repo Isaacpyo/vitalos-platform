@@ -129,6 +129,18 @@ ACTIONS = {
     "products.superadmin_opened": "Opened a product superadmin from Product Pipeline",
     "products.access_granted": "Granted Product Pipeline access",
     "products.access_revoked": "Revoked Product Pipeline access",
+    # AI & Data: summaries hold references, never contact details.
+    "aidata.opportunity_created": "Created an AI & Data opportunity",
+    "aidata.opportunity_updated": "Edited an AI & Data opportunity",
+    "aidata.scorecard_updated": "Scored an AI & Data opportunity",
+    "aidata.stage_changed": "Changed an AI & Data opportunity's stage",
+    "aidata.noted": "Added an internal note to an AI & Data opportunity",
+    "aidata.anonymised": "Anonymised an AI & Data opportunity",
+    "aidata.offer_price_changed": "Changed a proposed AI & Data offer price",
+    "aidata.budget_changed": "Changed the AI & Data budget ceilings",
+    "aidata.cost_added": "Added an AI & Data cost",
+    "aidata.cost_changed": "Changed an AI & Data cost",
+    "aidata.cost_deleted": "Deleted an AI & Data cost",
 }
 
 

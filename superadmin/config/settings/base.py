@@ -51,6 +51,9 @@ INSTALLED_APPS = [
     "apps.content_sync",
     "apps.insights",
     "apps.careers",
+    "apps.aidata",
+    "apps.aicore",
+    "apps.recon_demo",
 ]
 
 MIDDLEWARE = [
@@ -434,3 +437,12 @@ LOGGING = {
 }
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
+
+# Vitalos AI & Data model provider (apps.aicore, AID-011/012). OpenAI-compatible chat completions.
+# An empty key leaves the live model path unavailable (the demonstrator runs parser-only). The key is a
+# secret: set it only in the platform's secret store. AI_DATA_DISABLED=true is the environment kill switch
+# and overrides the database setting.
+AI_DATA_LLM_BASE_URL = env("AI_DATA_LLM_BASE_URL", default="").strip().rstrip("/")
+AI_DATA_LLM_MODEL = env("AI_DATA_LLM_MODEL", default="").strip()
+AI_DATA_LLM_API_KEY = env("AI_DATA_LLM_API_KEY", default="")
+AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)

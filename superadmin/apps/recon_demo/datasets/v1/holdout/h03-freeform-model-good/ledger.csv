@@ -1,0 +1,4 @@
+date,reference,type,amount,description
+2026-08-05,KX-410,invoice,2215.00,invoice from supplier
+2026-08-12,KX-411,invoice,96.00,invoice from supplier
+2026-08-21,KP-0821,payment,1500.00,payment from supplier

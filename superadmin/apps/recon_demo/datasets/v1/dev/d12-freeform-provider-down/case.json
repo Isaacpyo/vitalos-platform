@@ -1,0 +1,51 @@
+{
+  "id": "d12-freeform-provider-down",
+  "description": "Simulated persistent HTTP 5xx: three attempts (two retries), then FAILED (unavailable). The simulated provider recovers for the Retry, which must then complete.",
+  "tags": [
+    "model-path",
+    "provider-failure"
+  ],
+  "layout": "freeform",
+  "synthetic": true,
+  "simulated_script": [
+    {
+      "fault": "unavailable"
+    }
+  ],
+  "simulated_retry_script": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "source_line": 5,
+            "date": "2026-09-03",
+            "reference": "INV-8001",
+            "type": "invoice",
+            "amount": "1250.00"
+          },
+          {
+            "source_line": 6,
+            "date": "2026-09-10",
+            "reference": "INV-8002",
+            "type": "invoice",
+            "amount": "640.50"
+          },
+          {
+            "source_line": 7,
+            "date": "2026-09-14",
+            "reference": "CN-8003",
+            "type": "credit",
+            "amount": "120.00"
+          },
+          {
+            "source_line": 8,
+            "date": "2026-09-20",
+            "reference": "PAY-8004",
+            "type": "payment",
+            "amount": "800.00"
+          }
+        ]
+      }
+    }
+  ]
+}

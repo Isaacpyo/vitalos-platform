@@ -66,7 +66,7 @@ const freeTextControls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 // eslint-disable-next-line no-control-regex
 const anyControl = /[\u0000-\u001f\u007f]/;
 
-interface TextRules {
+export interface TextRules {
   min?: number;
   max: number;
   required: string;
@@ -80,9 +80,9 @@ interface TextRules {
  * Trimmed text that PostgreSQL can store, measured the way the database measures it: well-formed
  * Unicode only (a lone surrogate cannot be encoded as UTF-8), no NUL (`text` cannot hold it) and
  * lengths in code points. Anything the database would refuse is a validation error here, never
- * an infrastructure failure.
+ * an infrastructure failure. Shared with the AI & Data form (`./ai-data-enquiry`).
  */
-const storableText = (rules: TextRules) =>
+export const storableText = (rules: TextRules) =>
   z
     .string({ error: rules.required })
     .trim()

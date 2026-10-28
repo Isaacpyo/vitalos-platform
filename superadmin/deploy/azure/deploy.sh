@@ -45,6 +45,9 @@
 # Optional Product Pipeline settings (docs/DEPLOY.md section 10, ADR-044), same rules:
 #   plain variables  ASKBRIDGE_STATUS_URL, ASKBRIDGE_SUPERADMIN_URL
 #   secrets          ASKBRIDGE_STATUS_TOKEN
+# Optional Vitalos AI & Data model settings (ADR-052, docs/ai-data/operations/runbook.md), same rules:
+#   plain variables  AI_DATA_LLM_BASE_URL, AI_DATA_LLM_MODEL, AI_DATA_DISABLED
+#   secrets          AI_DATA_LLM_API_KEY
 set -euo pipefail
 
 DRY_RUN=0
@@ -260,7 +263,8 @@ for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_E
   RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM \
   OUTREACH_MAILBOX OUTREACH_GRAPH_TENANT_ID OUTREACH_GRAPH_CLIENT_ID \
   OUTREACH_SMTP_HOST OUTREACH_SMTP_PORT OUTREACH_SMTP_USER \
-  ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL; do
+  ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL \
+  AI_DATA_LLM_BASE_URL AI_DATA_LLM_MODEL AI_DATA_DISABLED; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
 add_optional_secret() {  # env var name, Container Apps secret name
@@ -289,6 +293,7 @@ add_optional_secret CONTENT_IP_SALT content-ip-salt
 add_optional_secret RELAY_ADMIN_API_SECRET relay-admin-api-secret
 add_optional_secret RELAY_WEBHOOK_SECRET relay-webhook-secret
 add_optional_secret ASKBRIDGE_STATUS_TOKEN askbridge-status-token
+add_optional_secret AI_DATA_LLM_API_KEY ai-data-llm-api-key
 unset _name
 # JOB_ENV is built from ENV_VARS, so PRIMARY_OWNER_EMAIL reaches the release job (create_owner).
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)

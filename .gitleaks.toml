@@ -19,4 +19,6 @@ regexes = [
   '''^6f0f6a6e-1b43-4d7e-9a53-0a6f2f6f4f10$''',
   # Placeholder Askbridge site key in the e2e config (public key format, not a credential).
   '''^pk_0123456789abcdef0123456789abcdef$''',
+  # Dummy AI & Data model key in the demonstrator view test that proves a key is never rendered.
+  '''^sk-secret-NEVER-RENDER-123456$''',
 ]

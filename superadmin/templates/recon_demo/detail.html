@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% load ui humanize %}
+{% block title %}{{ run.ref }} · Demonstrator · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block"><a href="/ai-data/" class="hover:underline">AI &amp; Data</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="muted hidden sm:block"><a href="{% url 'recon_demo:index' %}" class="hover:underline">Demonstrator</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">{{ run.ref }}</li>
+{% endblock %}
+{% block content %}
+  {% include "recon_demo/_header.html" with page_title=run.ref page_lead=sample.title|default:"Pasted statement and ledger" %}
+
+  {# Outcome and actions #}
+  <section class="card mt-6 p-4" aria-labelledby="outcome-heading" data-testid="run-outcome">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h2 id="outcome-heading" class="flex flex-wrap items-center gap-2 text-lg font-semibold">Outcome {% include "recon_demo/_state.html" with state=run.state %}{% if run.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</h2>
+        {% if run.state == "COMPLETED" %}
+          <p class="mt-1 text-sm">Fully reconciled: every line was read and grounded, every line matched the ledger, and the closing balance agrees.</p>
+        {% elif run.state == "UNSUPPORTED" %}
+          <p class="mt-1 text-sm" data-testid="unsupported-reason"><strong>Input rejected before any model call:</strong> {{ results.unsupported_reason }}</p>
+        {% elif run.state == "FAILED" %}
+          <p class="mt-1 text-sm" data-testid="failure"><strong>Model call failed after bounded retries</strong> (category <code class="font-mono">{{ run.error_category }}</code>{% if run.simulated %}, simulated failure{% endif %}). {{ run.error_detail }} Nothing from the model was accepted.</p>
+        {% endif %}
+        {% if run.reasons %}
+          <ul class="mt-2 space-y-1 text-sm" data-testid="reasons">
+            {% for reason in run.reasons %}<li class="flex gap-2"><span class="text-amber-600 dark:text-amber-400" aria-hidden="true">{% icon "alert" "h-4 w-4" %}</span><span>{{ reason.message }}{% if reason.detail %} <span class="muted">{{ reason.detail }}</span>{% endif %}</span></li>{% endfor %}
+          </ul>
+        {% endif %}
+        {% if run.input_truncated %}<p class="muted mt-2 text-xs">The stored copy of the input was shortened to 64 KB.</p>{% endif %}
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {% if run.state == "FAILED" %}
+          <form method="post" action="{% url 'recon_demo:retry' run.ref %}">{% csrf_token %}<button type="submit" class="btn btn-primary btn-sm" data-testid="retry">{% icon "refresh" "h-4 w-4" %} Retry</button></form>
+          <form method="post" action="{% url 'recon_demo:continue' run.ref %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm" data-testid="continue">Continue without model</button></form>
+        {% endif %}
+        <form method="post" action="{% url 'recon_demo:run_again' run.ref %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" {% if not demo_enabled %}disabled{% endif %}>Run again</button></form>
+      </div>
+    </div>
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-slate-100 pt-4 text-sm sm:grid-cols-3 lg:grid-cols-6 dark:border-slate-800">
+      <div><dt class="mono-label muted">Layout</dt><dd class="mt-0.5">{{ results.layout|default:"–" }}</dd></div>
+      <div><dt class="mono-label muted">Model path</dt><dd class="mt-0.5">{{ run.get_model_mode_display }}</dd></div>
+      <div><dt class="mono-label muted">Model calls</dt><dd class="mt-0.5 tabular">{{ run.model_calls }}{% if run.retries %} <span class="muted">({{ run.retries }} retr{{ run.retries|pluralize:"y,ies" }} of the run)</span>{% endif %}</dd></div>
+      <div><dt class="mono-label muted">Tokens in / out</dt><dd class="mt-0.5 tabular">{{ run.input_tokens|intcomma }} / {{ run.output_tokens|intcomma }}</dd></div>
+      <div><dt class="mono-label muted">Estimated cost</dt><dd class="mt-0.5 tabular">£{{ run.cost_gbp|floatformat:4 }}</dd></div>
+      <div><dt class="mono-label muted">Duration</dt><dd class="mt-0.5 tabular">{{ run.duration_ms }} ms</dd></div>
+    </dl>
+  </section>
+
+  <div class="mt-6 grid gap-6 2xl:grid-cols-2">
+    {# Source statement with line numbers #}
+    <section class="card min-w-0" aria-labelledby="source-heading">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <h2 id="source-heading" class="font-semibold">Source statement</h2>
+        <ul class="flex flex-wrap gap-3 text-xs" aria-label="Line highlight key">
+          <li class="flex items-center gap-1"><span class="inline-block h-3 w-1 rounded bg-emerald-500"></span>parser</li>
+          <li class="flex items-center gap-1"><span class="inline-block h-3 w-1 rounded bg-violet-500"></span>model (grounded)</li>
+          <li class="flex items-center gap-1"><span class="inline-block h-3 w-1 rounded bg-amber-500"></span>review</li>
+          <li class="flex items-center gap-1"><span class="inline-block h-3 w-1 rounded bg-rose-500"></span>instruction-like</li>
+          <li class="flex items-center gap-1"><span class="inline-block h-3 w-1 rounded bg-sky-500"></span>balance</li>
+        </ul>
+      </div>
+      <div class="max-h-[32rem] overflow-auto" data-testid="source">
+        {% include "recon_demo/_source.html" %}
+      </div>
+    </section>
+
+    {# Extracted lines and balance #}
+    <div class="min-w-0 space-y-6">
+      <section class="card" aria-labelledby="lines-heading">
+        <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="lines-heading" class="font-semibold">Extracted lines <span class="muted text-sm font-normal">({{ results.lines|length }})</span></h2></div>
+        {% if results.lines %}
+          <div class="overflow-x-auto">
+            <table class="table-base" data-testid="lines-table">
+              <thead><tr><th scope="col">Line</th><th scope="col">Date</th><th scope="col">Reference</th><th scope="col">Type</th><th scope="col" class="text-right">Amount</th><th scope="col">Source</th></tr></thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                {% for line in results.lines %}
+                  <tr>
+                    <td><a href="#L{{ line.source_line }}" class="font-mono text-cobalt-600 hover:underline dark:text-cobalt-300">L{{ line.source_line }}</a></td>
+                    <td class="whitespace-nowrap tabular">{{ line.date }}</td>
+                    <td class="font-mono">{{ line.reference }}</td>
+                    <td>{{ line.type }}</td>
+                    <td class="text-right tabular">{{ line.amount }}</td>
+                    <td>{% if line.origin == "model" %}<span class="text-violet-700 dark:text-violet-300">model, grounded</span>{% if run.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}{% else %}parser{% endif %}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="muted p-4 text-sm">No lines were accepted.</p>
+        {% endif %}
+        {% if results.rejected_model_lines %}
+          <div class="border-t border-slate-200 p-4 dark:border-slate-800" data-testid="rejected-lines">
+            <h3 class="text-sm font-semibold text-rose-700 dark:text-rose-300">Rejected by grounding ({{ results.rejected_model_lines|length }})</h3>
+            <ul class="mt-2 space-y-1 text-sm">
+              {% for item in results.rejected_model_lines %}<li><span class="font-mono">{% if item.source_line %}<a href="#L{{ item.source_line }}" class="hover:underline">L{{ item.source_line }}</a>{% else %}L?{% endif %} {{ item.reference }} {{ item.amount }}</span>: {{ item.reason }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="card p-4" aria-labelledby="balance-heading" data-testid="balance">
+        <h2 id="balance-heading" class="font-semibold">Closing-balance check</h2>
+        {% with b=results.balance %}
+          {% if b %}
+            <p class="mt-1 text-sm">
+              {% if b.verdict == "ok" %}<span class="font-semibold text-emerald-700 dark:text-emerald-300">Agrees.</span>
+              {% elif b.verdict == "mismatch" %}<span class="font-semibold text-rose-700 dark:text-rose-300">Does not agree</span> (difference {{ b.difference }}).
+              {% elif b.verdict == "incomplete" %}<span class="font-semibold text-amber-700 dark:text-amber-300">Not checked:</span> some lines are not yet extracted.
+              {% else %}<span class="muted">No closing balance stated on the statement.</span>{% endif %}
+            </p>
+            <dl class="mt-3 grid grid-cols-3 gap-3 text-sm">
+              <div><dt class="mono-label muted">Opening{% if b.opening_line %} (L{{ b.opening_line }}){% endif %}</dt><dd class="tabular">{{ b.opening|default:"0.00 (not stated)" }}</dd></div>
+              <div><dt class="mono-label muted">Opening + lines</dt><dd class="tabular">{{ b.computed|default:"–" }}</dd></div>
+              <div><dt class="mono-label muted">Stated closing{% if b.closing_line %} (L{{ b.closing_line }}){% endif %}</dt><dd class="tabular">{{ b.stated|default:"–" }}</dd></div>
+            </dl>
+          {% else %}
+            <p class="muted mt-1 text-sm">Not computed for this run.</p>
+          {% endif %}
+        {% endwith %}
+      </section>
+    </div>
+  </div>
+
+  {# Reconciliation #}
+  {% if recon_rows %}
+    <section class="card mt-6" aria-labelledby="recon-heading">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        <h2 id="recon-heading" class="font-semibold">Reconciliation against the ledger</h2>
+        <p class="muted text-xs">Matched by type + normalised reference; amounts in Decimal.</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="table-base" data-testid="recon-table">
+          <thead><tr><th scope="col">Result</th><th scope="col">Reference</th><th scope="col">Type</th><th scope="col" class="text-right">Statement</th><th scope="col" class="text-right">Ledger</th><th scope="col" class="text-right">Difference</th><th scope="col">Where</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for row in recon_rows %}
+              <tr class="{% if row.class != 'matched' %}bg-amber-50/60 dark:bg-amber-950/20{% endif %}">
+                <td class="whitespace-nowrap">{% if row.class == "matched" %}<span class="text-emerald-700 dark:text-emerald-300">{% icon "check" "inline h-4 w-4" %} {{ row.label }}</span>{% else %}<span class="font-medium text-amber-800 dark:text-amber-300">{{ row.label }}</span>{% endif %}</td>
+                <td class="font-mono">{{ row.reference }}</td>
+                <td>{{ row.type }}</td>
+                <td class="text-right tabular">{{ row.statement_amount|default:"–" }}</td>
+                <td class="text-right tabular">{{ row.ledger_amount|default:"–" }}</td>
+                <td class="text-right tabular">{{ row.difference|default:"" }}</td>
+                <td class="whitespace-nowrap">{% if row.source_line %}<a href="#L{{ row.source_line }}" class="font-mono text-cobalt-600 hover:underline dark:text-cobalt-300">L{{ row.source_line }}</a>{% endif %}{% if row.ledger_row %} <span class="muted">ledger row {{ row.ledger_row }}</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  {# Review queue #}
+  <section class="card mt-6" aria-labelledby="review-heading" data-testid="review-queue">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+      <h2 id="review-heading" class="font-semibold">Review queue</h2>
+      <p class="muted text-xs">{% if review_items %}{{ open_items }} open of {{ review_items|length }}{% else %}Nothing to review{% endif %}</p>
+    </div>
+    {% if review_items %}
+      <ol class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for item in review_items %}
+          <li id="review-{{ item.position }}" class="p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-semibold">{{ item.position }}. {{ item.kind_label }}
+                  {% for n in item.source_lines %}<a href="#L{{ n }}" class="ml-1 font-mono text-xs font-normal text-cobalt-600 hover:underline dark:text-cobalt-300">L{{ n }}</a>{% endfor %}
+                </p>
+                <p class="mt-0.5 text-sm">{{ item.detail }}</p>
+                {% if item.status != "open" %}
+                  <p class="muted mt-1 text-xs"><strong class="text-slate-700 dark:text-slate-200">{{ item.get_status_display }}</strong> by {{ item.reviewer.email|default:"?" }} {{ item.decided_at|naturaltime }}{% if item.note %}: “{{ item.note }}”{% endif %}{% if item.correction %} · corrected to {{ item.correction.date }} {{ item.correction.reference }} {{ item.correction.type }} {{ item.correction.amount }}{% endif %}</p>
+                {% endif %}
+              </div>
+              <span class="shrink-0 text-xs font-medium {% if item.status == 'open' %}text-amber-700 dark:text-amber-300{% else %}text-emerald-700 dark:text-emerald-300{% endif %}">{{ item.get_status_display }}</span>
+            </div>
+            {% if run.state == "REVIEW_REQUIRED" %}
+              <details class="mt-2" {% if item.status == "open" and forloop.first %}open{% endif %}>
+                <summary class="cursor-pointer text-xs font-medium text-cobalt-600 dark:text-cobalt-300">{% if item.status == "open" %}Decide{% else %}Change decision{% endif %}</summary>
+                <form method="post" action="{% url 'recon_demo:decide' run.ref item.pk %}" class="mt-2 grid gap-2 sm:grid-cols-6">
+                  {% csrf_token %}
+                  <input type="text" name="note" maxlength="500" placeholder="Note (optional)" aria-label="Note for item {{ item.position }}" class="sm:col-span-6 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <input type="text" name="date" placeholder="Date" aria-label="Corrected date" class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <input type="text" name="reference" placeholder="Reference" aria-label="Corrected reference" class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <select name="type" aria-label="Corrected type" class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800"><option value="">Type</option><option value="invoice">invoice</option><option value="credit">credit</option><option value="payment">payment</option></select>
+                  <input type="text" name="amount" placeholder="Amount" aria-label="Corrected amount" class="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <div class="flex flex-wrap gap-2 sm:col-span-2">
+                    <button type="submit" name="decision" value="accept" class="btn btn-secondary btn-sm">Accept</button>
+                    <button type="submit" name="decision" value="correct" class="btn btn-secondary btn-sm" title="Uses the date, reference, type and amount fields">Correct</button>
+                    <button type="submit" name="decision" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                  </div>
+                </form>
+              </details>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="muted p-4 text-sm">{% if run.state == "COMPLETED" %}No exceptions or uncertainty: nothing needs a reviewer.{% elif run.state == "FAILED" %}Retry the run, or continue without the model to route the unread lines to manual review.{% else %}No review items.{% endif %}</p>
+    {% endif %}
+  </section>
+
+  <div class="mt-6 space-y-6">
+    {# Model executions #}
+    <section class="card min-w-0" aria-labelledby="exec-heading" data-testid="executions">
+      <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="exec-heading" class="font-semibold">Model executions</h2></div>
+      {% if executions %}
+        <div class="overflow-x-auto">
+          <table class="table-base">
+            <thead><tr><th scope="col">Execution</th><th scope="col">Prompt</th><th scope="col">Provider / model</th><th scope="col">Outcome</th><th scope="col" class="text-right">Attempts</th><th scope="col" class="text-right">Tokens</th><th scope="col" class="text-right">Cost</th><th scope="col" class="text-right">Latency</th></tr></thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for e in executions %}
+                <tr>
+                  <td class="font-mono text-xs" title="{{ e.execution_id }}">{{ e.execution_id|stringformat:"s"|slice:":8" }}…</td>
+                  <td class="whitespace-nowrap font-mono text-xs" title="hash {{ e.prompt_hash }}">{{ e.prompt_id }}@{{ e.prompt_version }}<br><span class="muted">{{ e.prompt_hash|slice:":12" }}</span></td>
+                  <td>{{ e.provider }} / {{ e.model }}{% if e.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</td>
+                  <td class="whitespace-nowrap">{{ e.get_outcome_display }}{% if e.error_category %}<br><span class="muted text-xs">{{ e.error_category }}</span>{% endif %}</td>
+                  <td class="text-right tabular">{{ e.attempts }}</td>
+                  <td class="text-right tabular">{{ e.input_tokens }} / {{ e.output_tokens }}</td>
+                  <td class="text-right tabular">£{{ e.cost_gbp|floatformat:4 }}</td>
+                  <td class="text-right tabular">{{ e.latency_ms }} ms</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted p-4 text-sm">No model call was made: {% if run.state == "UNSUPPORTED" %}the input was rejected first.{% elif run.model_mode == "off" %}rules only.{% else %}nothing needed the model.{% endif %} Estimated model cost £0.</p>
+      {% endif %}
+    </section>
+
+    {# Timeline and versions #}
+    <section class="card grid min-w-0 gap-6 p-4 lg:grid-cols-2" aria-labelledby="timeline-heading" data-testid="timeline">
+      <div>
+      <h2 id="timeline-heading" class="font-semibold">State timeline</h2>
+      <ol class="mt-3 space-y-2 text-sm">
+        {% for step in run.timeline %}
+          <li class="flex flex-wrap items-center gap-2">{% include "recon_demo/_state.html" with state=step.state %}<span class="muted text-xs tabular">{{ step.at|slice:"11:19" }}</span>{% if step.note %}<span>{{ step.note }}</span>{% endif %}</li>
+        {% endfor %}
+      </ol>
+      </div>
+      <div>
+      <h3 class="text-sm font-semibold">Run record</h3>
+      <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
+        <dt class="muted">Run id</dt><dd class="break-all font-mono">{{ run.run_id }}</dd>
+        <dt class="muted">Run key</dt><dd class="break-all font-mono" title="sha256 of input and configuration (idempotency)">{{ run.run_key|slice:":16" }}…</dd>
+        {% for name, value in run.config_versions.items %}<dt class="muted">{{ name }}</dt><dd class="break-all font-mono">{{ value|default:"–"|truncatechars:40 }}</dd>{% endfor %}
+        <dt class="muted">Started by</dt><dd>{{ run.created_by.email|default:"–" }}, {{ run.created_at }}</dd>
+        <dt class="muted">Synthetic confirmed</dt><dd>{{ run.synthetic_data_confirmed|yesno:"yes,no" }}</dd>
+      </dl>
+      </div>
+    </section>
+  </div>
+
+  <details class="card mt-6 p-4">
+    <summary class="cursor-pointer font-semibold">Purchase-ledger export</summary>
+    <pre class="mt-3 overflow-x-auto font-mono text-xs leading-5" data-testid="ledger">{{ run.ledger_text }}</pre>
+  </details>
+{% endblock %}

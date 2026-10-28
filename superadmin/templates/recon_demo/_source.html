@@ -1,0 +1,14 @@
+{# Statement lines with numbers and highlight roles. Text is auto-escaped (AC-13). #}
+<table class="w-full border-collapse font-mono text-xs leading-5">
+  <tbody>
+    {% for line in source %}
+      <tr id="L{{ line.number }}" class="{% if line.role == 'rules' %}bg-emerald-50/60 dark:bg-emerald-950/30{% elif line.role == 'model' %}bg-violet-50 dark:bg-violet-950/40{% elif line.role == 'review' %}bg-amber-50 dark:bg-amber-950/40{% elif line.role == 'flagged' %}bg-rose-50 dark:bg-rose-950/40{% elif line.role == 'balance' %}bg-sky-50/70 dark:bg-sky-950/30{% endif %}" {% if line.role_label %}title="{{ line.role_label }}"{% endif %}>
+        <td class="w-1 p-0 {% if line.role == 'rules' %}bg-emerald-500{% elif line.role == 'model' %}bg-violet-500{% elif line.role == 'review' %}bg-amber-500{% elif line.role == 'flagged' %}bg-rose-500{% elif line.role == 'balance' %}bg-sky-500{% endif %}"></td>
+        <td class="muted select-none px-2 text-right align-top tabular">{{ line.number }}</td>
+        <td class="whitespace-pre px-2 align-top">{{ line.text }}</td>
+      </tr>
+    {% empty %}
+      <tr><td class="muted p-4">The statement is empty{% if run.state == "UNSUPPORTED" %} or could not be shown as text{% endif %}.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

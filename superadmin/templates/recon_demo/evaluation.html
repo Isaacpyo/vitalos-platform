@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Evaluation · Demonstrator · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block"><a href="/ai-data/" class="hover:underline">AI &amp; Data</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="muted hidden sm:block"><a href="{% url 'recon_demo:index' %}" class="hover:underline">Demonstrator</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">Evaluation</li>
+{% endblock %}
+{% block content %}
+  {% include "recon_demo/_header.html" with page_title="Evaluation" page_lead="The latest committed offline evaluation of the demonstrator against acceptance criteria AC-1 to AC-14 (written before any evaluation was run)." %}
+
+  {% if report %}
+    <div class="mt-4 flex gap-3 rounded-md border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-200" role="note">
+      {% icon "info" "h-5 w-5 shrink-0" %}
+      <p><strong>{{ report.label }}.</strong> The model-path configuration uses hand-written <strong>simulated</strong> responses: it tests the controls around the model (validation, grounding, retries, limits, review routing), not model quality. It is not evidence that a live provider works; AC-14 needs a live run.</p>
+    </div>
+
+    <dl class="card mt-6 grid grid-cols-2 gap-4 p-4 text-sm md:grid-cols-4">
+      <div><dt class="mono-label muted">Generated</dt><dd class="mt-0.5">{{ report.generated_at }}</dd></div>
+      <div><dt class="mono-label muted">Git commit</dt><dd class="mt-0.5 break-all font-mono text-xs">{{ report.git_sha|default:"unknown" }}</dd></div>
+      <div><dt class="mono-label muted">Dataset</dt><dd class="mt-0.5">{{ report.dataset.name }} {{ report.dataset.version }} · {{ report.dataset.cases }} cases ({{ report.dataset.splits|join:", " }})<br><span class="muted font-mono text-xs">{{ report.dataset.content_hash|slice:":16" }}…</span></dd></div>
+      <div><dt class="mono-label muted">Deterministic hash</dt><dd class="mt-0.5 break-all font-mono text-xs">{{ report.deterministic_hash|slice:":24" }}…</dd></div>
+    </dl>
+
+    <section class="card mt-6" aria-labelledby="criteria-heading">
+      <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="criteria-heading" class="font-semibold">Acceptance criteria</h2></div>
+      <div class="overflow-x-auto">
+        <table class="table-base" data-testid="criteria-table">
+          <thead><tr><th scope="col">ID</th><th scope="col">Criterion</th><th scope="col">Threshold</th>{% for config in report.configs %}<th scope="col">{{ config.id }}{% if config.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</th>{% endfor %}<th scope="col">Result</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for row in report.criteria_rows %}
+              <tr>
+                <td class="whitespace-nowrap font-mono font-medium">{{ row.id }}</td>
+                <td class="min-w-[16rem]">{{ row.title }}<p class="muted mt-0.5 text-xs">{{ row.detail }}</p></td>
+                <td class="whitespace-nowrap">{{ row.threshold }}</td>
+                {% for cell in row.cells %}<td class="whitespace-nowrap">{% if cell %}{% include "recon_demo/_result.html" with result=cell.result %}{% else %}<span class="muted">–</span>{% endif %}</td>{% endfor %}
+                <td class="whitespace-nowrap">{% include "recon_demo/_result.html" with result=row.result %}{% if not row.gating %}<span class="muted block text-xs">separate gate</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card mt-6" aria-labelledby="metrics-heading">
+      <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="metrics-heading" class="font-semibold">Metrics by configuration</h2></div>
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead><tr><th scope="col">Metric</th>{% for config in report.configs %}<th scope="col" class="text-right">{{ config.label }}</th>{% endfor %}</tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for row in report.metric_rows %}<tr><td>{{ row.label }}</td>{% for value in row.values %}<td class="text-right tabular">{{ value }}</td>{% endfor %}</tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card mt-6" aria-labelledby="cases-heading">
+      <details>
+        <summary class="cursor-pointer px-4 py-3 font-semibold" id="cases-heading">Final state per case ({{ report.case_rows|length }})</summary>
+        <div class="overflow-x-auto border-t border-slate-200 dark:border-slate-800">
+          <table class="table-base">
+            <thead><tr><th scope="col">Case</th><th scope="col">Split</th>{% for config in report.configs %}<th scope="col">{{ config.id }}</th>{% endfor %}</tr></thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for row in report.case_rows %}<tr><td class="font-mono text-xs">{{ row.id }}</td><td>{{ row.split }}</td>{% for state in row.states %}<td>{% include "recon_demo/_state.html" with state=state %}</td>{% endfor %}</tr>{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  {% else %}
+    <div class="card mt-6 p-6 text-sm"><p class="font-medium">No evaluation report is committed yet.</p></div>
+  {% endif %}
+
+  <section class="card mt-6 p-4 text-sm" aria-labelledby="run-heading">
+    <h2 id="run-heading" class="font-semibold">How to run it</h2>
+    <p class="muted mt-1">Offline (no key, no network; the CI gate runs the first command):</p>
+    <pre class="mt-2 overflow-x-auto rounded-md bg-slate-100 p-3 font-mono text-xs dark:bg-slate-800">cd superadmin
+python manage.py recon_eval --dataset v1 --config rules-only --config rules+simulated-model --out /tmp/eval
+python manage.py recon_eval --dataset v1 --config rules-only --config rules+simulated-model \
+  --compare rules-only,rules+simulated-model --out ../docs/ai-data/evaluation/v1 --out apps/recon_demo/reports/v1</pre>
+    <p class="muted mt-3">Live (AC-14; needs <code class="font-mono">AI_DATA_LLM_API_KEY</code>, never in CI; the <em>AI &amp; Data live evaluation</em> workflow runs it from <code class="font-mono">main</code> with a hard cap):</p>
+    <pre class="mt-2 overflow-x-auto rounded-md bg-slate-100 p-3 font-mono text-xs dark:bg-slate-800">python manage.py recon_eval --dataset v1 --config rules+live-model --max-calls 40 --out /tmp/live-eval</pre>
+  </section>
+{% endblock %}

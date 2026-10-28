@@ -1,0 +1,10 @@
+KESTREL PRINT CO (FICTIONAL) - statement for account KPC-118
+Customer: Northwind Bookkeeping Demo (fictional)
+
+Balance brought forward at 01 Sep 2026: £800.00
+Invoice INV-8001 dated 03 Sep 2026 for £1,250.00
+Invoice INV-8002 dated 10 Sep 2026 for £640.50
+Credit note CN-8003 dated 14 Sep 2026 for £120.00
+Payment PAY-8004 received 20 Sep 2026: £800.00 - thank you
+Balance due: £1,770.50
+Queries to accounts@kestrel.example

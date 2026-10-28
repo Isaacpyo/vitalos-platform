@@ -1,0 +1,8 @@
+Statement of account - Kestrel Print Co (fictional)
+Account,KPC-118
+Date,Reference,Type,Amount,Balance
+2026-09-01,,Opening balance,0.00,0.00
+2026-09-01,T-901,Invoice,150.00,150.00
+2026-09-08,T-902,Invoice,2280.00,2430.00
+2026-09-15,TP-915,Payment,150.00,2280.00
+,,Closing balance,2280.00,

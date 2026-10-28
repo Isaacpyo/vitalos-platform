@@ -1,0 +1,8 @@
+Statement of account - Fernhill Cleaning Products (fictional)
+Account,FCP-0310
+Date,Reference,Type,Amount,Balance
+2026-09-01,,Opening balance,0.00,0.00
+2026-09-04,INV-5001,Invoice,600.00,600.00
+2026-09-11,INV-5002,Invoice,245.60,845.60
+2026-09-25,PAY-5003,Payment,600.00,245.60
+,,Closing balance,254.60,
