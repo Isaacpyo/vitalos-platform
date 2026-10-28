@@ -46,7 +46,7 @@
           <p class="mt-1" data-testid="provider-missing">{{ provider_reason }}</p>
           <p class="muted mt-2 text-xs">Set <code class="font-mono">AI_DATA_LLM_BASE_URL</code>, <code class="font-mono">AI_DATA_LLM_MODEL</code> and the secret <code class="font-mono">AI_DATA_LLM_API_KEY</code> in the Super Admin's production environment (owner step, AID-012).</p>
         {% endif %}
-        <p class="muted mt-3 text-xs">Price estimate for this model: {{ price.input_per_mtok }} / {{ price.output_per_mtok }} {{ price.currency }} per 1M input / output tokens{% if not price.known %} (unknown model: conservative default){% endif %}. {{ price_table.label }} Last checked: {{ price_table.last_checked }}.</p>
+        <p class="muted mt-3 text-xs">Price estimate {% if provider_model %}for {{ provider_model }}{% else %}(no model configured){% endif %}: {{ price.input_per_mtok }} / {{ price.output_per_mtok }} {{ price.currency }} per 1M input / output tokens{% if not price.known %} (unknown model: conservative default){% endif %}. {{ price_table.label }} Last checked: {{ price_table.last_checked }}.</p>
       </section>
       <section class="card p-4 text-sm" aria-labelledby="usage-heading">
         <h2 id="usage-heading" class="font-semibold">Usage</h2>

@@ -56,7 +56,7 @@
         <ul class="muted mt-2 list-disc space-y-1 pl-5 text-xs">
           <li><strong>Rules only</strong>: unreadable lines become "needs manual extraction" review items.</li>
           <li><strong>Simulated</strong>: the sample's hand-written responses run through the real gateway, grounding and limits. Labelled simulated everywhere; not evidence of model quality.</li>
-          <li><strong>Live</strong>: {% if live_available %}calls the configured provider within the caps.{% else %}unavailable ({{ live_reason }}) The run continues rules-only.{% endif %}</li>
+          <li><strong>Live</strong>: {% if live_available %}calls the configured provider within the caps.{% else %}unavailable. {{ live_reason }} A run that asks for it continues rules-only.{% endif %}</li>
         </ul>
       </fieldset>
 

@@ -85,6 +85,7 @@ class AiSettingsForm(forms.ModelForm):
             "monthly_budget_gbp": "Monthly budget (GBP)",
             "max_calls_per_run": "Model calls per run",
         }
+        help_texts = {"enabled": "Off blocks every demonstrator run and every model call."}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

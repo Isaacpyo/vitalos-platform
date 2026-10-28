@@ -305,7 +305,13 @@ def score(case: EvalCase, output: dict, config: EvalConfig) -> dict:
             1 for line in lines if line["source_line"] in {want["source_line"] for want in expected_lines}
         )
     # Model-path extraction quality (simulated responses here: not evidence of model quality)
-    if "model-path" in case.tags:
+    # Not for rules-only (no model), control cases (calls blocked by design) or scripted simulated failures.
+    if (
+        "model-path" in case.tags
+        and mode != "rules-only"
+        and "control" not in case.tags
+        and not (config.simulated and "provider-failure" in case.tags)
+    ):
         truth = {_line_key(line): line for line in expected_lines}
         model_lines = [line for line in lines if line.get("origin") == "model"]
         counters["model_lines_accepted"] = len(model_lines)

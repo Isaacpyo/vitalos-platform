@@ -59,8 +59,11 @@ def source_lines(run: ReconRun) -> list[dict]:
         for number in item.get("source_lines", []):
             if item["kind"] == "instruction_like_text":
                 roles[number] = "flagged"
-            elif item["kind"] in ("manual_extraction", "ungrounded_line"):
+            elif item["kind"] == "manual_extraction":
                 roles[number] = "review"
+            elif item["kind"] == "ungrounded_line":
+                # A rejected model line may cite a line that another, grounded line was read from.
+                roles.setdefault(number, "review")
     for row in results.get("unparsed", []):
         roles.setdefault(row["source_line"], "review")
     return [

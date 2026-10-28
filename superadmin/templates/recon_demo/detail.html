@@ -200,7 +200,7 @@
     {% endif %}
   </section>
 
-  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+  <div class="mt-6 space-y-6">
     {# Model executions #}
     <section class="card min-w-0" aria-labelledby="exec-heading" data-testid="executions">
       <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="exec-heading" class="font-semibold">Model executions</h2></div>
@@ -230,14 +230,17 @@
     </section>
 
     {# Timeline and versions #}
-    <section class="card min-w-0 p-4" aria-labelledby="timeline-heading" data-testid="timeline">
+    <section class="card grid min-w-0 gap-6 p-4 lg:grid-cols-2" aria-labelledby="timeline-heading" data-testid="timeline">
+      <div>
       <h2 id="timeline-heading" class="font-semibold">State timeline</h2>
       <ol class="mt-3 space-y-2 text-sm">
         {% for step in run.timeline %}
           <li class="flex flex-wrap items-center gap-2">{% include "recon_demo/_state.html" with state=step.state %}<span class="muted text-xs tabular">{{ step.at|slice:"11:19" }}</span>{% if step.note %}<span>{{ step.note }}</span>{% endif %}</li>
         {% endfor %}
       </ol>
-      <h3 class="mt-5 text-sm font-semibold">Run record</h3>
+      </div>
+      <div>
+      <h3 class="text-sm font-semibold">Run record</h3>
       <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
         <dt class="muted">Run id</dt><dd class="break-all font-mono">{{ run.run_id }}</dd>
         <dt class="muted">Run key</dt><dd class="break-all font-mono" title="sha256 of input and configuration (idempotency)">{{ run.run_key|slice:":16" }}…</dd>
@@ -245,6 +248,7 @@
         <dt class="muted">Started by</dt><dd>{{ run.created_by.email|default:"–" }}, {{ run.created_at }}</dd>
         <dt class="muted">Synthetic confirmed</dt><dd>{{ run.synthetic_data_confirmed|yesno:"yes,no" }}</dd>
       </dl>
+      </div>
     </section>
   </div>
 
