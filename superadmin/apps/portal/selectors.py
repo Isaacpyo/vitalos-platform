@@ -182,17 +182,25 @@ def decisions(version):
     return list(Approval.objects.filter(version=version).order_by("created_at", "id"))
 
 
-def version_state(version) -> str:
-    """approved, changes_requested, superseded or pending: from this version's own decisions only."""
-    rows = Approval.objects.filter(version=version, kind=Approval.Kind.REVIEW)
-    if rows.filter(decision=Approval.Decision.APPROVED).exists():
-        return "approved"
-    newer = DeliverableVersion.objects.filter(
+def has_newer_version(version) -> bool:
+    """True when a newer version of the same deliverable is shared and not withdrawn."""
+    return DeliverableVersion.objects.filter(
         deliverable_id=version.deliverable_id,
         number__gt=version.number,
         shared_at__isnull=False,
         withdrawn_at__isnull=True,
     ).exists()
+
+
+def version_state(version) -> str:
+    """approved, changes_requested, superseded or pending: from this version's own decisions only.
+
+    This is the display state. Whether a decision may still be recorded is ``has_newer_version``, which the
+    services check separately so that an approved version that was later superseded accepts nothing more."""
+    rows = Approval.objects.filter(version=version, kind=Approval.Kind.REVIEW)
+    if rows.filter(decision=Approval.Decision.APPROVED).exists():
+        return "approved"
+    newer = has_newer_version(version)
     if rows.filter(decision=Approval.Decision.CHANGES).exists():
         return "superseded" if newer else "changes_requested"
     return "superseded" if newer else "pending"

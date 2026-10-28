@@ -983,7 +983,7 @@ def _version_for_decision(member: Membership, version: DeliverableVersion) -> No
         or deliverable.project.published_at is None
     ):
         raise PortalError("Not available.")
-    if selectors.version_state(version) == "superseded":
+    if selectors.has_newer_version(version):
         raise PortalError(
             "A newer version has been shared. Decisions are recorded against the version you are reviewing, "
             "so please review the latest version."
