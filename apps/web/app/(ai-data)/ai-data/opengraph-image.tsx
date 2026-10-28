@@ -1,6 +1,6 @@
 import { ogContentType, ogSize, renderOgImage } from "../../../src/features/seo/og/og-image";
 
-/** One generated Open Graph image for the AI & Data section; its pages inherit it. */
+/** Open Graph image for the AI & Data home; each section page has its own (seo:check needs og:image per page). */
 export const alt = "Vitalos AI & Data: from AI potential to production reality";
 export const size = ogSize;
 export const contentType = ogContentType;
