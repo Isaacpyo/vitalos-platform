@@ -150,6 +150,7 @@ class ModelGateway:
             max_output_tokens=prompt.max_output_tokens,
             json_output=True,
             timeout_s=limits.per_call_timeout_s,
+            output_schema=prompt.output_schema,
             prompt_ref=prompt.ref,
             input_hash=input_hash(messages),
         )

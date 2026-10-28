@@ -18,7 +18,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.aicore.core.evaluation import evaluate, find_git_sha, load_dataset
-from apps.aicore.core.providers import OpenAICompatibleProvider, RecordingProvider
+from apps.aicore.core.providers import RecordingProvider, build_live_provider
 from apps.recon_demo import evaluation_suite as suite
 from apps.recon_demo.security_checks import run_security_checks
 
@@ -153,27 +153,22 @@ class Command(BaseCommand):
             raise CommandError(
                 f"rules+live-model needs --max-calls between 1 and {MAX_LIVE_CALLS} (a hard cap)."
             )
-        key, base_url, model = (
-            settings.AI_DATA_LLM_API_KEY,
-            settings.AI_DATA_LLM_BASE_URL,
-            settings.AI_DATA_LLM_MODEL,
-        )
-        if not key:
-            raise CommandError("AI_DATA_LLM_API_KEY is not set: the live configuration cannot run.")
-        if not base_url or not model:
-            raise CommandError(
-                "AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL must be set for the live configuration."
+        try:
+            provider = build_live_provider(
+                provider=settings.AI_DATA_LLM_PROVIDER,
+                api_key=settings.AI_DATA_LLM_API_KEY,
+                model=settings.AI_DATA_LLM_MODEL,
+                base_url=settings.AI_DATA_LLM_BASE_URL,
+                effort=settings.AI_DATA_LLM_EFFORT,
             )
+        except ValueError as error:
+            raise CommandError(f"The live configuration cannot run: {error}.") from None
+        model = provider.model
         stamp = datetime.now(UTC).date().isoformat()
 
         def factory():
             if not recorder:
-                recorder.append(
-                    RecordingProvider(
-                        OpenAICompatibleProvider(base_url=base_url, model=model, api_key=key),
-                        recorded_at=stamp,
-                    )
-                )
+                recorder.append(RecordingProvider(provider, recorded_at=stamp))
             return recorder[0]
 
         return factory, model

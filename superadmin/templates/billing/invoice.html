@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load ui billing_ui %}
+{% block title %}{{ invoice.display_number }} · Invoices · Billing · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'billing:invoices' %}" class="hover:underline">Billing / Invoices</a></p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="flex flex-wrap items-center gap-2 text-2xl font-semibold">
+        <span class="font-mono" data-testid="invoice-number">{{ invoice.display_number }}</span>
+        <span class="{{ invoice.status|status_badge }}" data-testid="invoice-status">{{ invoice.get_status_display }}</span>
+        {% if invoice.is_overdue %}<span class="{{ 'void'|status_badge }}">Overdue</span>{% endif %}
+      </h1>
+      <p class="muted mt-1 text-sm">{{ invoice.bill_to_organisation|default:invoice.bill_to_name }}{% if invoice.bill_to_organisation %} · {{ invoice.bill_to_name }}{% endif %}{% if invoice.opportunity %} · <a class="text-cobalt-600 hover:underline dark:text-cobalt-300" href="{{ invoice.opportunity.get_absolute_url }}">{{ invoice.opportunity.ref }}</a>{% endif %}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-secondary btn-sm" href="{% url 'billing:invoice_document' invoice.ref %}" target="_blank" rel="noopener" data-testid="open-document">{% icon "printer" "h-4 w-4" %} Open document</a>
+      {% if invoice.is_draft %}
+        <a class="btn btn-secondary btn-sm" href="{% url 'billing:invoice_edit' invoice.ref %}">{% icon "edit" "h-4 w-4" %} Edit draft</a>
+        <form method="post" action="{% url 'billing:invoice_issue' invoice.ref %}" data-confirm="Issue this invoice? Its number is allocated and its lines are locked. Nothing is emailed.">
+          {% csrf_token %}<button type="submit" class="btn btn-primary btn-sm" data-testid="issue">{% icon "send" "h-4 w-4" %} Issue invoice</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% include "billing/_nav.html" with section="invoices" %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="overview-heading">
+        <h2 id="overview-heading" class="sr-only">Overview</h2>
+        <dl class="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <div><dt class="mono-label muted">Issued</dt><dd class="mt-1">{{ invoice.issue_date|date:"j M Y"|default:"Not yet" }}</dd></div>
+          <div><dt class="mono-label muted">Due</dt><dd class="mt-1 {% if invoice.is_overdue %}font-medium text-rose-700 dark:text-rose-300{% endif %}">{% if invoice.due_date %}{{ invoice.due_date|date:"j M Y" }}{% else %}{{ conf.payment_terms_days }} days after issue{% endif %}</dd></div>
+          <div><dt class="mono-label muted">Total</dt><dd class="mt-1 tabular font-medium">{% if live %}{{ live.total|pence }}{% else %}{{ invoice.total_pence|pence }}{% endif %}</dd></div>
+          <div><dt class="mono-label muted">Balance due</dt><dd class="mt-1 tabular text-lg font-semibold" data-testid="balance">{% if invoice.status == "void" %}—{% elif live %}{{ live.total|pence }}{% else %}{{ invoice.balance_due_pence|pence }}{% endif %}</dd></div>
+        </dl>
+        <div class="mt-5 grid gap-4 border-t border-slate-200 pt-4 text-sm sm:grid-cols-2 dark:border-slate-800">
+          <div>
+            <p class="mono-label muted">Bill to</p>
+            <p class="mt-1 font-medium">{{ invoice.bill_to_name }}</p>
+            {% if invoice.bill_to_organisation %}<p>{{ invoice.bill_to_organisation }}</p>{% endif %}
+            {% if invoice.bill_to_address %}<p class="whitespace-pre-line">{{ invoice.bill_to_address }}</p>{% endif %}
+            {% if invoice.bill_to_email %}<p class="muted">{{ invoice.bill_to_email }}</p>{% endif %}
+          </div>
+          {% if invoice.status == "void" %}
+            <div>
+              <p class="mono-label muted">Void</p>
+              <p class="mt-1">{{ invoice.voided_at|date:"j M Y, H:i" }}</p>
+              <p class="whitespace-pre-line">{{ invoice.void_reason }}</p>
+            </div>
+          {% elif invoice.notes %}
+            <div><p class="mono-label muted">Notes and terms</p><p class="mt-1 whitespace-pre-line">{{ invoice.notes }}</p></div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="card overflow-x-auto" aria-labelledby="lines-heading">
+        <h2 id="lines-heading" class="px-5 pt-4 font-semibold">Lines</h2>
+        <table class="table-base mt-2" data-testid="lines">
+          <thead><tr><th scope="col">Description</th><th scope="col" class="text-right">Qty</th><th scope="col" class="text-right">Unit price</th><th scope="col" class="text-right">Amount</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for line in lines %}
+              <tr><td class="max-w-md">{{ line.description|first_line }}{% with detail=line.description|other_lines %}{% if detail %}<span class="muted mt-0.5 block whitespace-pre-line text-xs">{{ detail }}</span>{% endif %}{% endwith %}</td><td class="tabular text-right">{{ line.quantity|qty }}</td><td class="tabular whitespace-nowrap text-right">{{ line.unit_price_pence|pence }}</td><td class="tabular whitespace-nowrap text-right">{{ line.line_total_pence|pence }}</td></tr>
+            {% empty %}
+              <tr><td colspan="4" class="muted py-6 text-center">No lines yet.</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="text-sm">
+            {% if live %}
+              <tr><td colspan="3" class="muted text-right">Subtotal</td><td class="tabular text-right">{{ live.subtotal|pence }}</td></tr>
+              {% if conf.vat_registered %}<tr><td colspan="3" class="muted text-right">VAT {{ live.vat_rate|floatformat:"-2" }}%</td><td class="tabular text-right">{{ live.vat|pence }}</td></tr>{% endif %}
+              <tr><td colspan="3" class="text-right font-semibold">Total</td><td class="tabular text-right font-semibold">{{ live.total|pence }}</td></tr>
+            {% else %}
+              <tr><td colspan="3" class="muted text-right">Subtotal</td><td class="tabular text-right">{{ invoice.subtotal_pence|pence }}</td></tr>
+              {% if invoice.vat_number %}<tr><td colspan="3" class="muted text-right">VAT {{ invoice.vat_rate|floatformat:"-2" }}%</td><td class="tabular text-right">{{ invoice.vat_pence|pence }}</td></tr>{% endif %}
+              <tr><td colspan="3" class="text-right font-semibold">Total</td><td class="tabular text-right font-semibold">{{ invoice.total_pence|pence }}</td></tr>
+              <tr><td colspan="3" class="muted text-right">Paid</td><td class="tabular text-right">{{ invoice.amount_paid_pence|pence }}</td></tr>
+              <tr><td colspan="3" class="text-right font-semibold">Balance due</td><td class="tabular text-right font-semibold">{{ invoice.balance_due_pence|pence }}</td></tr>
+            {% endif %}
+          </tfoot>
+        </table>
+      </section>
+
+      {% if not invoice.is_draft %}
+        <section class="card p-5" id="payments" aria-labelledby="payments-heading">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="payments-heading" class="font-semibold">Payments</h2>
+            <a href="{% url 'billing:payments' %}" class="text-sm text-cobalt-600 hover:underline dark:text-cobalt-300">All payments</a>
+          </div>
+          <ul class="mt-3 divide-y divide-slate-100 text-sm dark:divide-slate-800" data-testid="invoice-payments">
+            {% for payment in payments %}
+              <li class="flex flex-wrap items-center justify-between gap-2 py-2">
+                <span><span class="font-medium">{{ payment.get_method_display }}</span> <span class="muted">· {{ payment.received_at|date:"j M Y" }}</span>{% if payment.note %} <span class="muted">· {{ payment.note|truncatechars:60 }}</span>{% endif %}</span>
+                <span class="flex items-center gap-2"><span class="{{ payment.status|status_badge }}">{{ payment.get_status_display }}</span><span class="tabular font-medium">{{ payment.amount_pence|pence }}</span>{% if payment.amount_refunded_pence %}<span class="muted tabular">(−{{ payment.amount_refunded_pence|pence }} refunded)</span>{% endif %}</span>
+              </li>
+            {% empty %}
+              <li class="muted py-2">No payments yet.</li>
+            {% endfor %}
+          </ul>
+          {% if invoice.status != "void" %}
+            <details class="mt-4 rounded-md border border-slate-200 dark:border-slate-800" {% if payment_form.errors %}open{% endif %}>
+              <summary class="cursor-pointer px-4 py-2 text-sm font-medium">Record a bank transfer or other payment</summary>
+              <form method="post" action="{% url 'billing:invoice_record_payment' invoice.ref %}" class="grid gap-4 border-t border-slate-200 p-4 sm:grid-cols-2 dark:border-slate-800" novalidate>
+                {% csrf_token %}
+                {% if payment_form.non_field_errors %}<div class="rounded-md bg-rose-50 p-3 text-sm text-rose-700 sm:col-span-2 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in payment_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+                <input type="hidden" name="invoice" value="{{ invoice.pk }}">
+                {% include "aidata/_field.html" with field=payment_form.amount %}
+                {% include "aidata/_field.html" with field=payment_form.received_on %}
+                {% include "aidata/_field.html" with field=payment_form.method %}
+                {% include "aidata/_field.html" with field=payment_form.payer_email %}
+                {% include "aidata/_field.html" with field=payment_form.note span="full" %}
+                <div class="flex justify-end sm:col-span-2"><button type="submit" class="btn btn-primary btn-sm">{% icon "check" "h-4 w-4" %} Record payment</button></div>
+              </form>
+            </details>
+          {% endif %}
+        </section>
+
+        {% if summary_text %}
+          <section class="card p-5" aria-labelledby="summary-heading">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="summary-heading" class="font-semibold">Plain-text summary</h2>
+              <div class="flex gap-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-copy="invoice-summary-text">{% icon "copy" "h-4 w-4" %} Copy</button>
+                <a class="btn btn-ghost btn-sm" href="{% url 'billing:invoice_summary' invoice.ref %}">.txt</a>
+              </div>
+            </div>
+            <p class="muted mt-1 text-xs">Paste into your own email with the PDF attached. Vitalos sends nothing.</p>
+            <pre id="invoice-summary-text" class="mt-3 max-h-80 overflow-auto rounded-md bg-slate-50 p-3 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-slate-800/60">{{ summary_text }}</pre>
+          </section>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <aside class="min-w-0 space-y-6" aria-label="Payment">
+      <section class="card p-5" aria-labelledby="pay-heading">
+        <h2 id="pay-heading" class="font-semibold">How the customer pays</h2>
+        {% if invoice.is_draft %}
+          <p class="muted mt-2 text-sm">Issue the invoice to get its number, payment code and payment link.</p>
+        {% elif invoice.status == "void" %}
+          <p class="muted mt-2 text-sm">This invoice is void and cannot be paid.</p>
+        {% elif invoice.status == "paid" %}
+          <p class="mt-2 text-sm">Paid in full{% if invoice.paid_at %} on {{ invoice.paid_at|date:"j M Y" }}{% endif %}. The payment link is switched off.</p>
+        {% else %}
+          {% if invoice.stripe_payment_link_active and invoice.stripe_payment_link_url %}
+            <p class="mono-label muted mt-3">Stripe payment link</p>
+            <div class="mt-1 flex items-center gap-2">
+              <a id="payment-link-url" href="{{ invoice.stripe_payment_link_url }}" class="min-w-0 truncate font-mono text-sm text-cobalt-600 hover:underline dark:text-cobalt-300" target="_blank" rel="noopener noreferrer" data-testid="payment-link">{{ invoice.stripe_payment_link_url }}</a>
+              <button type="button" class="btn btn-secondary btn-sm shrink-0" data-copy="payment-link-url" aria-label="Copy payment link">{% icon "copy" "h-4 w-4" %} Copy</button>
+            </div>
+            <div class="mx-auto mt-4 w-40 rounded-md bg-white p-3 ring-1 ring-slate-200 [&_svg]:h-auto [&_svg]:w-full dark:ring-slate-700" data-testid="payment-qr">{% qr_svg invoice.stripe_payment_link_url %}</div>
+            <p class="muted mt-2 text-center text-xs">For {{ invoice.stripe_payment_link_amount_pence|pence }} · single use</p>
+          {% else %}
+            <p class="mt-3 text-sm">{% if stripe_configured %}No active payment link.{% else %}<span class="font-medium">Stripe is not configured.</span> Add <code class="font-mono text-xs">BILLING_STRIPE_SECRET_KEY</code> to create payment links.{% endif %}</p>
+            <form method="post" action="{% url 'billing:invoice_payment_link' invoice.ref %}" class="mt-3">
+              {% csrf_token %}<button type="submit" class="btn btn-primary btn-sm w-full" data-testid="create-link" {% if not stripe_configured %}disabled{% endif %}>{% icon "link" "h-4 w-4" %} Create payment link</button>
+            </form>
+          {% endif %}
+          <div class="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <p class="mono-label muted">Or at {{ site_host }}/pay</p>
+            <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
+              <div><dt class="muted text-xs">Invoice</dt><dd class="font-mono">{{ invoice.number }}</dd></div>
+              <div><dt class="muted text-xs">Payment code</dt><dd class="font-mono" data-testid="payment-code">{{ invoice.payment_code_display }}</dd></div>
+            </dl>
+          </div>
+        {% endif %}
+      </section>
+
+      {% if can_void %}
+        <section class="card p-5" aria-labelledby="void-heading">
+          <h2 id="void-heading" class="font-semibold">Void</h2>
+          <p class="muted mt-1 text-xs">A void invoice keeps its number and can no longer be paid. Only for drafts and issued invoices with no payments.</p>
+          <form method="post" action="{% url 'billing:invoice_void' invoice.ref %}" class="mt-3" data-confirm="Void {{ invoice.display_number }}? This cannot be undone." novalidate>
+            {% csrf_token %}
+            {% include "aidata/_field.html" with field=void_form.reason %}
+            <div class="mt-2 flex justify-end"><button type="submit" class="btn btn-danger btn-sm">{% icon "ban" "h-4 w-4" %} Void invoice</button></div>
+          </form>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

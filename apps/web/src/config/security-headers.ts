@@ -21,6 +21,8 @@ export interface SecurityHeaderOptions {
  * - The Askbridge origin (script, connect, img) and Turnstile (script, frame) only when
  *   `ASKBRIDGE_SITE_KEY` is set, even if this site's own Turnstile keys are off (ADR-045).
  * - No other site may frame this one.
+ * - `/pay` only: `form-action` also allows the Super Admin origin (`CONTENT_API_BASE_URL`), where the
+ *   payment form posts, and Stripe Checkout, where it is redirected (AID-018).
  * - `upgrade-insecure-requests` everywhere except plain-http local runs.
  * - The content media host (`CONTENT_MEDIA_HOST`) in `img-src` and the CV upload host
  *   (`CAREERS_UPLOAD_HOST`) in `connect-src`, only when set (ADR-040, brief section 9).
@@ -57,6 +59,19 @@ export function getSecurityHeaders(
   });
 
   const rules: HeaderRules = [{ source: "/:path*", headers }];
+  // Later rules override the same header: the payment page's form leaves the site.
+  const payOrigin = payCheckoutOrigin(env);
+  if (payOrigin) {
+    rules.push({
+      source: "/pay",
+      headers: [
+        {
+          key: "Content-Security-Policy",
+          value: buildCsp({ ...policy, formActionOrigins: [payOrigin, STRIPE_CHECKOUT_ORIGIN] }),
+        },
+      ],
+    });
+  }
   if (env.indexable) {
     rules.push({
       source: "/:path*",
@@ -65,6 +80,19 @@ export function getSecurityHeaders(
     });
   }
   return rules;
+}
+
+/** Stripe Checkout, where the Super Admin redirects the `/pay` form (AID-018). */
+export const STRIPE_CHECKOUT_ORIGIN = "https://checkout.stripe.com";
+
+/** The Super Admin origin the `/pay` form posts to, or undefined when it is not configured. */
+export function payCheckoutOrigin(env: Pick<BuildEnv, "contentApiOrigin">): string | undefined {
+  if (!env.contentApiOrigin) return undefined;
+  try {
+    return new URL(env.contentApiOrigin).origin;
+  } catch {
+    return undefined;
+  }
 }
 
 /** `has`/`missing` values are regular expressions; a host is matched literally. */

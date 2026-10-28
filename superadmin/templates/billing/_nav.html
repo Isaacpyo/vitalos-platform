@@ -1,0 +1,9 @@
+{# Billing sub-navigation. Context: section (invoices, payments, settings). #}
+<div class="mt-4 border-b border-slate-200 dark:border-slate-800">
+  <nav aria-label="Billing sections" class="flex gap-1 overflow-x-auto overflow-y-hidden">
+    {% url 'billing:invoices' as invoices_url %}{% url 'billing:payments' as payments_url %}{% url 'billing:settings' as settings_url %}
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'invoices' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ invoices_url }}" {% if section == 'invoices' %}aria-current="page"{% endif %}>Invoices</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'payments' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ payments_url }}" {% if section == 'payments' %}aria-current="page"{% endif %}>Payments</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'settings' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ settings_url }}" {% if section == 'settings' %}aria-current="page"{% endif %}>Settings</a>
+  </nav>
+</div>

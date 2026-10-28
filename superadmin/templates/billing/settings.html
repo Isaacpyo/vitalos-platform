@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Settings · Billing · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}<li class="muted hidden sm:block">Billing</li><li class="muted hidden sm:block" aria-hidden="true">/</li><li class="truncate font-medium" aria-current="page">Settings</li>{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Billing</p>
+  <h1 class="mt-1 text-2xl font-semibold">Billing settings</h1>
+  {% include "billing/_nav.html" with section="settings" %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <form method="post" class="card min-w-0 p-5" novalidate data-testid="billing-settings">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="mb-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+      <fieldset>
+        <legend class="mono-label muted">Issuer (printed on every invoice)</legend>
+        <div class="mt-2 grid gap-4 sm:grid-cols-2">
+          {% include "aidata/_field.html" with field=form.legal_name %}
+          {% include "aidata/_field.html" with field=form.company_number %}
+          {% include "aidata/_field.html" with field=form.registered_address span="full" %}
+          {% include "aidata/_field.html" with field=form.contact_email %}
+          {% include "aidata/_field.html" with field=form.website %}
+        </div>
+      </fieldset>
+      <fieldset class="mt-6">
+        <legend class="mono-label muted">VAT</legend>
+        <div class="mt-2 grid gap-4 sm:grid-cols-2">
+          {% include "aidata/_field.html" with field=form.vat_registered span="full" %}
+          {% include "aidata/_field.html" with field=form.vat_number %}
+          {% include "aidata/_field.html" with field=form.default_vat_rate %}
+        </div>
+      </fieldset>
+      <fieldset class="mt-6">
+        <legend class="mono-label muted">Numbering and terms</legend>
+        <div class="mt-2 grid gap-4 sm:grid-cols-2">
+          {% include "aidata/_field.html" with field=form.invoice_prefix %}
+          {% include "aidata/_field.html" with field=form.payment_terms_days %}
+        </div>
+      </fieldset>
+      <fieldset class="mt-6">
+        <legend class="mono-label muted">Payment details and footer</legend>
+        <div class="mt-2 grid gap-4">
+          {% include "aidata/_field.html" with field=form.bank_details %}
+          {% include "aidata/_field.html" with field=form.footer_note %}
+        </div>
+      </fieldset>
+      <div class="mt-5 flex justify-end"><button type="submit" class="btn btn-primary">{% icon "check" "h-4 w-4" %} Save settings</button></div>
+    </form>
+
+    <aside class="min-w-0 space-y-4" aria-label="Stripe">
+      <section class="card p-5" aria-labelledby="stripe-heading">
+        <h2 id="stripe-heading" class="font-semibold">Stripe</h2>
+        <dl class="mt-3 space-y-2 text-sm">
+          <div class="flex items-center justify-between gap-2"><dt>Secret key</dt><dd data-testid="stripe-key-status">{% if stripe_configured %}<span class="font-medium text-emerald-700 dark:text-emerald-300">Configured</span>{% else %}<span class="font-medium text-amber-800 dark:text-amber-300">Stripe is not configured</span>{% endif %}</dd></div>
+          <div class="flex items-center justify-between gap-2"><dt>Webhook secret</dt><dd>{% if webhook_configured %}<span class="font-medium text-emerald-700 dark:text-emerald-300">Configured</span>{% else %}<span class="muted">Not set</span>{% endif %}</dd></div>
+          <div class="flex items-center justify-between gap-2"><dt>Payment pages</dt><dd class="font-mono text-xs">{{ site }}/pay</dd></div>
+          <div class="flex items-center justify-between gap-2"><dt>Last sync</dt><dd>{{ last_sync|date:"j M Y, H:i"|default:"Never" }}</dd></div>
+        </dl>
+        <p class="muted mt-3 text-xs">Keys are environment secrets (<code class="font-mono">BILLING_STRIPE_SECRET_KEY</code>, <code class="font-mono">BILLING_STRIPE_WEBHOOK_SECRET</code>), never stored here. Setup steps: <span class="font-mono">superadmin/apps/billing/README.md</span>.</p>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

@@ -343,11 +343,18 @@ jobs:
           CONTENT_IP_SALT: ${{ secrets.CONTENT_IP_SALT }}
           RELAY_ADMIN_API_SECRET: ${{ secrets.RELAY_ADMIN_API_SECRET }}
           RELAY_WEBHOOK_SECRET: ${{ secrets.RELAY_WEBHOOK_SECRET }}
-          # Vitalos AI & Data model path (ADR-052). Unset key: the demonstrator runs parser-only.
+          # Vitalos AI & Data model path (ADR-052, AID-017). Key: AI & Data's own secret when set, else the
+          # organisation's ANTHROPIC_API_KEY. The in-app "model path" switch still starts off.
+          AI_DATA_LLM_PROVIDER: ${{ vars.AI_DATA_LLM_PROVIDER }}
           AI_DATA_LLM_BASE_URL: ${{ vars.AI_DATA_LLM_BASE_URL }}
           AI_DATA_LLM_MODEL: ${{ vars.AI_DATA_LLM_MODEL }}
+          AI_DATA_LLM_EFFORT: ${{ vars.AI_DATA_LLM_EFFORT }}
           AI_DATA_DISABLED: ${{ vars.AI_DATA_DISABLED }}
-          AI_DATA_LLM_API_KEY: ${{ secrets.AI_DATA_LLM_API_KEY }}
+          AI_DATA_LLM_API_KEY: ${{ secrets.AI_DATA_LLM_API_KEY || secrets.ANTHROPIC_API_KEY }}
+          # Billing (superadmin/apps/billing/README.md). Unset key: billing works, Stripe calls are off.
+          BILLING_PUBLIC_SITE_URL: ${{ vars.BILLING_PUBLIC_SITE_URL }}
+          BILLING_STRIPE_SECRET_KEY: ${{ secrets.BILLING_STRIPE_SECRET_KEY }}
+          BILLING_STRIPE_WEBHOOK_SECRET: ${{ secrets.BILLING_STRIPE_WEBHOOK_SECRET }}
         run: |
           # Used only if the app has no such secret yet; existing values are always kept.
           NEW_DJANGO_SECRET_KEY="$(openssl rand -base64 64 | tr -d '\n')"

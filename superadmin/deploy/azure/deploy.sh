@@ -46,8 +46,12 @@
 #   plain variables  ASKBRIDGE_STATUS_URL, ASKBRIDGE_SUPERADMIN_URL
 #   secrets          ASKBRIDGE_STATUS_TOKEN
 # Optional Vitalos AI & Data model settings (ADR-052, docs/ai-data/operations/runbook.md), same rules:
-#   plain variables  AI_DATA_LLM_BASE_URL, AI_DATA_LLM_MODEL, AI_DATA_DISABLED
+#   plain variables  AI_DATA_LLM_PROVIDER, AI_DATA_LLM_BASE_URL, AI_DATA_LLM_MODEL, AI_DATA_LLM_EFFORT,
+#                    AI_DATA_DISABLED
 #   secrets          AI_DATA_LLM_API_KEY
+# Optional Billing settings (superadmin/apps/billing/README.md), same rules:
+#   plain variables  BILLING_PUBLIC_SITE_URL
+#   secrets          BILLING_STRIPE_SECRET_KEY, BILLING_STRIPE_WEBHOOK_SECRET
 set -euo pipefail
 
 DRY_RUN=0
@@ -264,7 +268,8 @@ for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_E
   OUTREACH_MAILBOX OUTREACH_GRAPH_TENANT_ID OUTREACH_GRAPH_CLIENT_ID \
   OUTREACH_SMTP_HOST OUTREACH_SMTP_PORT OUTREACH_SMTP_USER \
   ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL \
-  AI_DATA_LLM_BASE_URL AI_DATA_LLM_MODEL AI_DATA_DISABLED; do
+  AI_DATA_LLM_PROVIDER AI_DATA_LLM_BASE_URL AI_DATA_LLM_MODEL AI_DATA_LLM_EFFORT AI_DATA_DISABLED \
+  BILLING_PUBLIC_SITE_URL; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
 add_optional_secret() {  # env var name, Container Apps secret name
@@ -294,6 +299,8 @@ add_optional_secret RELAY_ADMIN_API_SECRET relay-admin-api-secret
 add_optional_secret RELAY_WEBHOOK_SECRET relay-webhook-secret
 add_optional_secret ASKBRIDGE_STATUS_TOKEN askbridge-status-token
 add_optional_secret AI_DATA_LLM_API_KEY ai-data-llm-api-key
+add_optional_secret BILLING_STRIPE_SECRET_KEY billing-stripe-secret-key
+add_optional_secret BILLING_STRIPE_WEBHOOK_SECRET billing-stripe-webhook-secret
 unset _name
 # JOB_ENV is built from ENV_VARS, so PRIMARY_OWNER_EMAIL reaches the release job (create_owner).
 JOB_ENV=("${ENV_VARS[@]}" "BOOTSTRAP_ADMIN_EMAIL=$ADMIN_EMAIL" BOOTSTRAP_ADMIN_PASSWORD=secretref:bootstrap-admin-password)

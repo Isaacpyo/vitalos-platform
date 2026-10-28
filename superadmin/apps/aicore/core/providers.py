@@ -46,6 +46,9 @@ class ModelRequest:
     max_output_tokens: int = 1024
     json_output: bool = True
     timeout_s: float = 20.0
+    # The prompt's output JSON Schema. Providers with structured outputs constrain the answer to it;
+    # the gateway validates every answer against it either way.
+    output_schema: dict | None = None
     # Correlation for replay and metering. Never contains document text.
     prompt_ref: str = ""
     input_hash: str = ""
@@ -229,6 +232,150 @@ class OpenAICompatibleProvider:
             )
         except (KeyError, IndexError, TypeError, ValueError, AttributeError):
             raise ProviderResponseInvalid("response JSON is not a chat completion") from None
+
+
+# --- Anthropic Messages API (official SDK) ----------------------------------------------------------
+
+#: JSON Schema keywords structured outputs do not accept. They are removed from the schema sent to
+#: the API only; the gateway still validates the answer against the full prompt schema.
+_UNSUPPORTED_SCHEMA_KEYWORDS = frozenset(
+    {
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "multipleOf",
+        "minLength",
+        "maxLength",
+        "pattern",
+        "minItems",
+        "maxItems",
+        "uniqueItems",
+    }
+)
+
+
+def api_schema(schema: dict) -> dict:
+    """The prompt schema without the constraints structured outputs reject (recursively)."""
+    if isinstance(schema, dict):
+        return {
+            key: api_schema(value) for key, value in schema.items() if key not in _UNSUPPORTED_SCHEMA_KEYWORDS
+        }
+    if isinstance(schema, list):
+        return [api_schema(item) for item in schema]
+    return schema
+
+
+class AnthropicProvider:
+    """Claude through the official ``anthropic`` SDK: one Messages API call per request.
+
+    * System messages become the top-level ``system`` prompt; the rest are sent as conversation turns.
+    * ``output_config.format`` constrains the answer to the prompt's JSON Schema (structured outputs).
+    * ``output_config.effort`` sets how much the model thinks (thinking cannot be switched off on
+      current models); extraction runs at ``low`` unless configured otherwise.
+    * ``fallbacks: "default"`` lets the API re-run a request declined by a safety classifier on
+      Anthropic's recommended fallback model; a final refusal is a permanent error here.
+    * The SDK's own retries are off (``max_retries=0``): the gateway owns retries, timeouts and limits.
+    * No sampling parameters are sent: current API versions reject them.
+    """
+
+    name = "anthropic"
+    simulated = False
+    FALLBACK_BETA = "server-side-fallback-2026-07-01"
+
+    def __init__(self, *, model: str, api_key: str, effort: str = "low", client=None):
+        if not api_key and client is None:
+            raise ValueError("An API key is required.")
+        if not model:
+            raise ValueError("A model name is required.")
+        if effort not in {"low", "medium", "high", "xhigh", "max"}:
+            raise ValueError("Effort must be low, medium, high, xhigh or max.")
+        self.model = model
+        self.effort = effort
+        if client is None:
+            import anthropic  # deferred: only the live path needs the SDK
+
+            client = anthropic.Anthropic(api_key=api_key, max_retries=0)
+        self._client = client
+
+    def __repr__(self) -> str:  # never show the key
+        return f"AnthropicProvider(model={self.model!r}, effort={self.effort!r})"
+
+    def _params(self, request: ModelRequest) -> dict:
+        system = "\n\n".join(m["content"] for m in request.messages if m.get("role") == "system")
+        turns = [
+            {"role": m["role"], "content": m["content"]}
+            for m in request.messages
+            if m.get("role") in {"user", "assistant"}
+        ]
+        output_config: dict = {"effort": self.effort}
+        if request.json_output and request.output_schema:
+            output_config["format"] = {"type": "json_schema", "schema": api_schema(request.output_schema)}
+        params = {
+            "model": self.model,
+            "max_tokens": max(request.max_output_tokens, 4096),  # room for thinking at low effort
+            "messages": turns,
+            "output_config": output_config,
+            "betas": [self.FALLBACK_BETA],
+            "fallbacks": "default",
+            "timeout": request.timeout_s,
+        }
+        if system:
+            params["system"] = system
+        return params
+
+    def complete(self, request: ModelRequest) -> ModelResponse:
+        import anthropic
+
+        started = time.monotonic()
+        try:
+            response = self._client.beta.messages.create(**self._params(request))
+        except anthropic.APITimeoutError:
+            raise ProviderTimeout("no response before the timeout") from None
+        except anthropic.APIConnectionError:
+            raise ProviderUnavailable("could not reach the provider") from None
+        except anthropic.RateLimitError:
+            raise ProviderUnavailable("HTTP 429") from None
+        except anthropic.APIStatusError as exc:
+            raise _status_error(exc.status_code) from None
+        latency_ms = int((time.monotonic() - started) * 1000)
+        if response.stop_reason == "refusal":
+            raise ProviderRejected("the model declined the request (refusal)")
+        if response.stop_reason == "max_tokens":
+            raise ProviderResponseInvalid("answer cut off at max_tokens")
+        text = "".join(block.text for block in response.content if block.type == "text")
+        if not text:
+            raise ProviderResponseInvalid("no text in the response")
+        usage = response.usage
+        # With a fallback, top-level usage covers only the attempt that answered; the per-attempt
+        # iterations are the billing record, so meter their sum when they are present.
+        attempts = getattr(usage, "iterations", None) or [usage]
+        input_tokens = sum(int(getattr(a, "input_tokens", 0) or 0) for a in attempts)
+        output_tokens = sum(int(getattr(a, "output_tokens", 0) or 0) for a in attempts)
+        return ModelResponse(
+            text=text,
+            model=str(response.model or self.model),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            finish_reason=str(response.stop_reason or ""),
+            latency_ms=latency_ms,
+        )
+
+
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5-5"  # owner choice, 28 Oct 2026 (AID-017)
+
+
+def build_live_provider(*, provider: str, api_key: str, model: str, base_url: str, effort: str):
+    """The configured live provider. Raises ValueError with a safe message when it is incomplete."""
+    if not api_key:
+        raise ValueError("no model API key is configured (AI_DATA_LLM_API_KEY)")
+    if provider == "anthropic":
+        return AnthropicProvider(model=model or DEFAULT_ANTHROPIC_MODEL, api_key=api_key, effort=effort)
+    if provider == "openai-compatible":
+        if not base_url or not model:
+            raise ValueError("AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL must both be set")
+        return OpenAICompatibleProvider(base_url=base_url, model=model, api_key=api_key)
+    raise ValueError("AI_DATA_LLM_PROVIDER must be anthropic or openai-compatible")
 
 
 def _status_error(status: int) -> ProviderError:

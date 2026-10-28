@@ -1,0 +1,280 @@
+{% load static billing_ui %}<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% if invoice.number %}Invoice {{ invoice.number }}{% else %}Draft invoice{% endif %} · {{ conf.legal_name }}</title>
+  <link rel="icon" href="{% static 'brand/favicon-32.png' %}" type="image/png" sizes="32x32">
+  <style nonce="{{ csp_nonce }}">
+    @font-face { font-family: "Inter"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("{% static 'fonts/inter.woff2' %}") format("woff2"); }
+    @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: swap; src: url("{% static 'fonts/jetbrains-mono.woff2' %}") format("woff2"); }
+    :root {
+      --ink: #0b1320;
+      --text: #1f2a3a;
+      --muted: #667185;
+      --faint: #98a2b3;
+      --rule: #e3e7ee;
+      --rule-strong: #c9d0db;
+      --wash: #f5f7fa;
+      --accent: #4a6382;      /* the one blue-grey accent */
+      --accent-wash: #eef2f7;
+      --paid: #2f6b55;
+      --void: #9b3b3b;
+      --sans: "Inter", "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --mono: "JetBrains Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: #e9ecf1; color: var(--text); font-family: var(--sans);
+      font-size: 9.5pt; line-height: 1.5; font-feature-settings: "tnum" 1, "cv11" 1;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .toolbar {
+      position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      justify-content: space-between; padding: 10px 16px; background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--rule); backdrop-filter: blur(6px); font-size: 13px;
+    }
+    .toolbar p { margin: 0; color: var(--muted); }
+    .toolbar .actions { display: flex; gap: 8px; }
+    .toolbar a, .toolbar button {
+      display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 12px;
+      font: 500 13px/1 var(--sans); text-decoration: none; cursor: pointer; border: 1px solid var(--rule-strong);
+      background: #fff; color: var(--ink);
+    }
+    .toolbar button.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .toolbar a:focus-visible, .toolbar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .sheet {
+      position: relative; width: 210mm; min-height: 297mm; margin: 24px auto 48px; background: #fff;
+      padding: 18mm 18mm 16mm; box-shadow: 0 1px 2px rgba(11,19,32,.06), 0 8px 28px rgba(11,19,32,.08);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand img { display: block; height: 8.5mm; width: auto; }
+    .brand .entity { margin-top: 3mm; color: var(--muted); font-size: 8pt; letter-spacing: .01em; }
+    .title { text-align: right; }
+    .title h1 { margin: 0; font-weight: 300; font-size: 26pt; letter-spacing: -.02em; color: var(--ink); line-height: 1; }
+    .title .number { margin-top: 2.5mm; font-family: var(--mono); font-size: 10pt; color: var(--accent); letter-spacing: .02em; }
+
+    .meta {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 12mm;
+      border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule);
+    }
+    .meta div { padding: 3.2mm 0 3.4mm; }
+    .meta div + div { padding-left: 4mm; border-left: 1px solid var(--rule); }
+    .label { display: block; font-size: 6.8pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .meta .value { display: block; margin-top: 1mm; font-size: 10pt; color: var(--ink); }
+    .meta .due .value { font-weight: 600; }
+    .meta .balance .value { font-weight: 600; color: var(--accent); }
+
+    .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; margin-top: 9mm; }
+    .parties p { margin: 1.6mm 0 0; }
+    .parties .name { font-weight: 600; color: var(--ink); font-size: 10pt; }
+    .parties .small { color: var(--muted); font-size: 8.5pt; }
+
+    table.items { width: 100%; margin-top: 11mm; border-collapse: collapse; }
+    table.items th {
+      padding: 0 0 2.2mm; font-size: 6.8pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); text-align: left; border-bottom: 1px solid var(--ink);
+    }
+    table.items td { padding: 3.2mm 0; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    table.items .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 6mm; }
+    table.items .desc { color: var(--ink); }
+    table.items .desc .detail { display: block; margin-top: .6mm; color: var(--muted); font-size: 8.8pt; white-space: pre-line; }
+    table.items tr { break-inside: avoid; }
+
+    .totals { display: flex; justify-content: space-between; align-items: center; gap: 8mm; margin-top: 2mm; }
+    .stamp-slot { flex: 1; display: flex; justify-content: center; }
+    .totals dl { width: 78mm; margin: 0; }
+    .totals .row { display: flex; justify-content: space-between; padding: 1.7mm 0; font-variant-numeric: tabular-nums; }
+    .totals dt { color: var(--muted); }
+    .totals dd { margin: 0; color: var(--ink); }
+    .totals .total { border-top: 1px solid var(--rule-strong); margin-top: 1mm; padding-top: 2.4mm; }
+    .totals .total dt, .totals .total dd { color: var(--ink); font-weight: 600; }
+    .totals .balance {
+      margin-top: 2.5mm; padding: 3mm 3.5mm; background: var(--accent-wash); border-left: 2px solid var(--accent);
+    }
+    .totals .balance dt { color: var(--ink); font-weight: 600; }
+    .totals .balance dd { font-size: 13pt; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+
+    .pay {
+      display: grid; grid-template-columns: 1fr 30mm; gap: 8mm; margin-top: 11mm; padding-top: 6mm;
+      border-top: 1px solid var(--rule); break-inside: avoid;
+    }
+    .pay h2, .notes h2 { margin: 0; font-size: 6.8pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+    .pay p { margin: 2mm 0 0; }
+    .pay .link { font-family: var(--mono); font-size: 9pt; color: var(--accent); word-break: break-all; text-decoration: none; }
+    .pay .code { font-family: var(--mono); color: var(--ink); font-weight: 500; letter-spacing: .03em; white-space: nowrap; }
+    .pay .bank { margin-top: 3mm; white-space: pre-line; padding: 2.5mm 3mm; background: var(--wash); font-size: 8.8pt; }
+    .pay .terms { color: var(--muted); font-size: 8.5pt; margin-top: 3mm; }
+    .qr { text-align: center; }
+    .qr svg { display: block; width: 30mm; height: 30mm; }
+    .qr svg path { fill: var(--ink); }
+    .qr span { display: block; margin-top: 1.5mm; font-size: 6.8pt; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+    .notes { margin-top: 8mm; break-inside: avoid; }
+    .notes p { margin: 2mm 0 0; white-space: pre-line; }
+
+    footer.foot {
+      margin-top: auto; padding-top: 10mm; color: var(--muted); font-size: 7.5pt; line-height: 1.55;
+    }
+    footer.foot .inner { border-top: 1px solid var(--rule); padding-top: 3.5mm; display: grid; grid-template-columns: 2fr 3fr; gap: 10mm; }
+    footer.foot p { margin: 0; }
+
+    .stamp {
+      transform: rotate(-6deg); border: 1.6pt solid currentColor; border-radius: 2mm; padding: 2mm 5mm 1.6mm;
+      font-size: 20pt; font-weight: 700; letter-spacing: .22em; line-height: 1.1; opacity: .9;
+    }
+    .stamp small { display: block; font-size: 6.5pt; font-weight: 500; letter-spacing: .12em; text-align: center; }
+    .stamp.paid { color: var(--paid); }
+    .stamp.void { color: var(--void); }
+    .watermark {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+      font-size: 110pt; font-weight: 800; letter-spacing: .12em; color: rgba(11,19,32,.045); transform: rotate(-30deg);
+    }
+    .sheet > *:not(.watermark) { position: relative; }
+
+    /* Narrow screens only: printing at A4 width must keep the A4 layout. */
+    @media screen and (max-width: 820px) {
+      .sheet { width: auto; min-height: 0; margin: 12px; padding: 24px 20px; }
+      .parties { grid-template-columns: 1fr; gap: 6mm; }
+      .meta { grid-template-columns: 1fr 1fr; }
+      .meta div:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+      .pay { grid-template-columns: 1fr; }
+      .qr { justify-self: start; }
+      footer.foot .inner { grid-template-columns: 1fr; gap: 2mm; }
+    }
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none !important; }
+      /* One A4 page for a typical invoice; a long one flows on (rows never split). 296mm avoids a blank
+         second page from rounding. */
+      .sheet { margin: 0; box-shadow: none; width: 210mm; min-height: 296mm; padding: 14mm 16mm 11mm; font-size: 9pt; }
+      .meta { margin-top: 8mm; }
+      .parties { margin-top: 6.5mm; }
+      table.items { margin-top: 7.5mm; }
+      table.items td { padding: 2.4mm 0; }
+      .pay { margin-top: 7mm; padding-top: 5mm; }
+      .notes { margin-top: 6mm; }
+      footer.foot { padding-top: 5mm; }
+      .sheet { line-height: 1.42; }
+      .brand img { height: 7.5mm; }
+      .title h1 { font-size: 23pt; }
+      .meta div { padding: 2.6mm 0 2.8mm; }
+      .parties p { margin-top: 1.1mm; }
+      .totals .row { padding: 1.2mm 0; }
+      .totals .balance { margin-top: 2mm; padding: 2.4mm 3.5mm; }
+      .pay { grid-template-columns: 1fr 26mm; }
+      .qr svg { width: 26mm; height: 26mm; }
+      a { color: inherit; }
+    }
+  </style>
+  <script nonce="{{ csp_nonce }}">
+    document.addEventListener("click", function (event) {
+      if (event.target.closest("[data-print]")) window.print();
+    });
+  </script>
+</head>
+<body>
+  <div class="toolbar" role="region" aria-label="Invoice actions">
+    <p>{% if invoice.is_draft %}Draft preview: issue the invoice before sending it.{% else %}Print, or choose “Save as PDF” as the printer, then attach the PDF to your email.{% endif %}</p>
+    <div class="actions">
+      <a href="{{ invoice.get_absolute_url }}">Back to invoice</a>
+      <button type="button" class="primary" data-print data-testid="print">Print / Save as PDF</button>
+    </div>
+  </div>
+
+  <article class="sheet" data-testid="invoice-document" data-status="{{ invoice.status }}">
+    {% if invoice.status == "draft" %}<div class="watermark" aria-hidden="true" data-testid="draft-watermark">DRAFT</div>{% endif %}
+
+    <header class="top">
+      <div class="brand">
+        <img src="{% static 'brand/vitalos-wordmark.png' %}" alt="Vitalos" width="329" height="96">
+      </div>
+      <div class="title">
+        <h1>Invoice</h1>
+        <div class="number">{{ invoice.display_number }}</div>
+      </div>
+    </header>
+
+    <section class="meta" aria-label="Invoice details">
+      <div><span class="label">Issue date</span><span class="value">{{ invoice.issue_date|date:"j F Y"|default:"On issue" }}</span></div>
+      <div class="due"><span class="label">Due date</span><span class="value">{% if invoice.due_date %}{{ invoice.due_date|date:"j F Y" }}{% else %}{{ conf.payment_terms_days }} days after issue{% endif %}</span></div>
+      <div class="balance"><span class="label">Balance due</span><span class="value">{% if invoice.status == "void" %}—{% elif invoice.is_draft %}{{ total|pence }}{% else %}{{ invoice.balance_due_pence|pence }}{% endif %}</span></div>
+    </section>
+
+    <section class="parties">
+      <div>
+        <span class="label">From</span>
+        <p class="name">{{ conf.legal_name }}</p>
+        <p>{% for line in address_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
+        <p class="small">{% if conf.company_number %}Company number {{ conf.company_number }}<br>{% endif %}{% if show_vat and vat_number %}VAT number {{ vat_number }}<br>{% endif %}{% if conf.contact_email %}{{ conf.contact_email }}{% endif %}{% if conf.website %} · {{ conf.website }}{% endif %}</p>
+      </div>
+      <div>
+        <span class="label">Bill to</span>
+        <p class="name">{{ invoice.bill_to_name }}</p>
+        {% if invoice.bill_to_organisation %}<p>{{ invoice.bill_to_organisation }}</p>{% endif %}
+        {% if bill_address_lines %}<p>{% for line in bill_address_lines %}{{ line }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>{% endif %}
+        {% if invoice.bill_to_email %}<p class="small">{{ invoice.bill_to_email }}</p>{% endif %}
+      </div>
+    </section>
+
+    <table class="items" data-testid="document-lines">
+      <thead><tr><th scope="col">Description</th><th scope="col" class="num">Qty</th><th scope="col" class="num">Unit price</th><th scope="col" class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for line in lines %}
+          <tr><td class="desc">{{ line.description|first_line }}{% with detail=line.description|other_lines %}{% if detail %}<span class="detail">{{ detail }}</span>{% endif %}{% endwith %}</td><td class="num">{{ line.quantity|qty }}</td><td class="num">{{ line.unit_price_pence|pence }}</td><td class="num">{{ line.line_total_pence|pence }}</td></tr>
+        {% empty %}
+          <tr><td colspan="4">No lines yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="stamp-slot">
+        {% if invoice.status == "paid" %}<div class="stamp paid" data-testid="paid-stamp">PAID{% if invoice.paid_at %}<small>{{ invoice.paid_at|date:"j M Y" }}</small>{% endif %}</div>{% endif %}
+        {% if invoice.status == "void" %}<div class="stamp void" data-testid="void-stamp">VOID<small>{{ invoice.voided_at|date:"j M Y" }}</small></div>{% endif %}
+      </div>
+      <dl data-testid="document-totals">
+        <div class="row"><dt>Subtotal</dt><dd>{{ subtotal|pence }}</dd></div>
+        {% if show_vat %}<div class="row" data-testid="vat-line"><dt>VAT at {{ vat_rate|floatformat:"-2" }}%</dt><dd>{{ vat|pence }}</dd></div>{% endif %}
+        <div class="row total"><dt>Total</dt><dd>{{ total|pence }}</dd></div>
+        {% if not invoice.is_draft and invoice.status != "void" %}
+          <div class="row"><dt>Amount paid</dt><dd>{{ invoice.amount_paid_pence|pence }}</dd></div>
+          <div class="row balance"><dt>Balance due</dt><dd>{{ invoice.balance_due_pence|pence }}</dd></div>
+        {% endif %}
+      </dl>
+    </div>
+
+    {% if invoice.status != "void" and invoice.status != "paid" %}
+      <section class="pay" aria-label="How to pay">
+        <div>
+          <h2>How to pay</h2>
+          {% if show_link %}
+            <p>Pay securely by card at <a class="link" href="{{ invoice.stripe_payment_link_url }}">{{ invoice.stripe_payment_link_url|short_url }}</a>{% if not invoice.is_draft %} or scan the code.{% endif %}</p>
+          {% endif %}
+          <p>{% if show_link %}Or pay{% else %}Pay by card{% endif %} at <strong>{{ site_host }}/pay</strong> with invoice number <span class="code">{% if invoice.number %}{{ invoice.number }}{% else %}INV-…{% endif %}</span> and payment code <span class="code" data-testid="document-code">{% if invoice.payment_code %}{{ invoice.payment_code_display }}{% else %}XXXX-XXXX{% endif %}</span>.</p>
+          {% if conf.bank_details %}<div class="bank" data-testid="bank-details"><span class="label">Bank transfer · quote {{ invoice.display_number }}</span>{{ conf.bank_details }}</div>{% endif %}
+          <p class="terms">Payment terms: {{ conf.payment_terms_days }} days. {% if invoice.due_date %}Please pay by {{ invoice.due_date|date:"j F Y" }}.{% endif %}</p>
+        </div>
+        {% if show_link %}<div class="qr" data-testid="document-qr">{% qr_svg invoice.stripe_payment_link_url %}<span>Scan to pay</span></div>{% endif %}
+      </section>
+    {% endif %}
+
+    {% if invoice.notes %}
+      <section class="notes"><h2>Notes</h2><p>{{ invoice.notes }}</p></section>
+    {% endif %}
+
+    <footer class="foot">
+      <div class="inner">
+        <p>{{ conf.footer_note }}</p>
+        <p>{{ conf.legal_name }}. Registered in England and Wales{% if conf.company_number %}, company number {{ conf.company_number }}{% endif %}.{% if address_lines %} Registered office: {{ address_lines|join:", " }}.{% endif %}</p>
+      </div>
+    </footer>
+  </article>
+</body>
+</html>

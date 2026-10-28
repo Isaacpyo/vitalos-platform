@@ -27,6 +27,17 @@ describe("buildCsp", () => {
     expect(csp).not.toContain("upgrade-insecure-requests");
   });
 
+  it("adds form-action origins only when given, and rejects anything that is not an origin", () => {
+    const csp = buildCsp({
+      ...base,
+      formActionOrigins: ["https://admin.example.invalid", "https://checkout.stripe.com"],
+    });
+    expect(directive(csp, "form-action")).toBe(
+      "'self' https://admin.example.invalid https://checkout.stripe.com",
+    );
+    expect(() => buildCsp({ ...base, formActionOrigins: ["https://a.invalid/path"] })).toThrow();
+  });
+
   it("adds Relay realtime origins to connect-src and rejects anything that is not an origin", () => {
     const csp = buildCsp({ ...base, connect: ["wss://project.supabase.co"] });
     expect(directive(csp, "connect-src")).toBe("'self' wss://project.supabase.co");

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.aidata",
     "apps.aicore",
     "apps.recon_demo",
+    "apps.billing",
 ]
 
 MIDDLEWARE = [
@@ -438,11 +439,23 @@ LOGGING = {
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
 
-# Vitalos AI & Data model provider (apps.aicore, AID-011/012). OpenAI-compatible chat completions.
+# Vitalos AI & Data model provider (apps.aicore, AID-011/012/017). AI_DATA_LLM_PROVIDER is "anthropic"
+# (default: Claude through the official SDK, model defaults to claude-sonnet-5-5) or "openai-compatible"
+# (chat completions; needs AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL).
 # An empty key leaves the live model path unavailable (the demonstrator runs parser-only). The key is a
 # secret: set it only in the platform's secret store. AI_DATA_DISABLED=true is the environment kill switch
 # and overrides the database setting.
+AI_DATA_LLM_PROVIDER = env("AI_DATA_LLM_PROVIDER", default="anthropic").strip().lower()
+AI_DATA_LLM_EFFORT = env("AI_DATA_LLM_EFFORT", default="low").strip().lower()
 AI_DATA_LLM_BASE_URL = env("AI_DATA_LLM_BASE_URL", default="").strip().rstrip("/")
 AI_DATA_LLM_MODEL = env("AI_DATA_LLM_MODEL", default="").strip()
 AI_DATA_LLM_API_KEY = env("AI_DATA_LLM_API_KEY", default="")
 AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)
+
+# Billing (apps.billing): invoices, payments and Stripe. Both Stripe values are secrets: set them only in the
+# platform's secret store. With no key everything works except Stripe calls (the UI says "Stripe is not
+# configured"); with no webhook secret /api/webhooks/stripe/ answers 503. Use a Vitalos restricted key only,
+# never another product's. BILLING_PUBLIC_SITE_URL is where the payment pages live (vitalos.co.uk/pay).
+BILLING_STRIPE_SECRET_KEY = env("BILLING_STRIPE_SECRET_KEY", default="")
+BILLING_STRIPE_WEBHOOK_SECRET = env("BILLING_STRIPE_WEBHOOK_SECRET", default="")
+BILLING_PUBLIC_SITE_URL = env("BILLING_PUBLIC_SITE_URL", default="https://vitalos.co.uk").strip().rstrip("/")

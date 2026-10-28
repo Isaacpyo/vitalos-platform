@@ -13,6 +13,9 @@
     "gpt-4o-mini": { "input_per_mtok": "0.15", "output_per_mtok": "0.60", "currency": "USD" },
     "gpt-4.1-mini": { "input_per_mtok": "0.40", "output_per_mtok": "1.60", "currency": "USD" },
     "deepseek-chat": { "input_per_mtok": "0.27", "output_per_mtok": "1.10", "currency": "USD" },
-    "gemini-2.0-flash": { "input_per_mtok": "0.10", "output_per_mtok": "0.40", "currency": "USD" }
+    "gemini-2.0-flash": { "input_per_mtok": "0.10", "output_per_mtok": "0.40", "currency": "USD" },
+    "claude-opus-5-5": { "input_per_mtok": "4.00", "output_per_mtok": "20.00", "currency": "USD", "note": "Anthropic list price (claude-api reference, cached 2026-10-06); output includes thinking tokens." },
+    "claude-sonnet-5-5": { "input_per_mtok": "2.00", "output_per_mtok": "10.00", "currency": "USD", "note": "Anthropic list price (claude-api reference, cached 2026-10-06)." },
+    "claude-haiku-5-5": { "input_per_mtok": "0.10", "output_per_mtok": "0.50", "currency": "USD", "note": "Anthropic list price up to 100K-token prompts (claude-api reference, cached 2026-10-06)." }
   }
 }
