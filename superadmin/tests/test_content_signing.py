@@ -197,3 +197,15 @@ def test_preview_token_signed_with_an_unknown_key_is_refused(settings):
     settings.CONTENT_PREVIEW_SECRET = ""
     with pytest.raises(signing.NotConfigured):
         signing.verify_preview_token(token, "post", item)
+
+
+def test_assist_scope_uses_the_read_keys_and_cannot_cross_scopes():
+    """ADR-055: website brief assist is signed under its own scope with the existing read keys."""
+    assert signing.keys_for("assist") == signing.keys_for("read")
+    path = "/api/ai-data/brief-assist/"
+    headers = signing.sign_headers("assist", "POST", path, b"{}")
+    assert _verify("assist", path=path, body=b"{}", method="POST", headers=headers).key_id == "read-1"
+    with pytest.raises(signing.InvalidSignature):
+        _verify("read", path=path, body=b"{}", method="POST", headers=headers)
+    with pytest.raises(signing.InvalidSignature):
+        _verify("tick", path=path, body=b"{}", method="POST", headers=headers)
