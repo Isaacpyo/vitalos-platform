@@ -93,7 +93,7 @@ def _apply(run: ReconRun, result: workflow.WorkflowResult) -> None:
     run.config_versions = result.config_versions
     run.results = result.to_dict()
     run.reasons = result.reasons
-    run.simulated = result.simulated
+    run.simulated = run.simulated or result.simulated  # earlier simulated attempts stay labelled
     run.model_calls += result.model_calls
     run.input_tokens += result.input_tokens
     run.output_tokens += result.output_tokens

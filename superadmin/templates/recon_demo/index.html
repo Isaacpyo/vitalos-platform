@@ -29,8 +29,8 @@
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
             {% for run in runs %}
               <tr>
-                <td class="font-mono font-medium"><a href="{{ run.get_absolute_url }}" class="text-cobalt-600 hover:underline dark:text-cobalt-300">{{ run.ref }}</a></td>
-                <td>{% include "recon_demo/_state.html" with state=run.state %}</td>
+                <td class="whitespace-nowrap font-mono font-medium"><a href="{{ run.get_absolute_url }}" class="text-cobalt-600 hover:underline dark:text-cobalt-300">{{ run.ref }}</a></td>
+                <td class="whitespace-nowrap">{% include "recon_demo/_state.html" with state=run.state %}</td>
                 <td>{% if run.sample_key %}Sample: {{ run.sample_key }}{% else %}Pasted text{% endif %}</td>
                 <td>{{ run.get_model_mode_display }}{% if run.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</td>
                 <td class="text-right tabular">{{ run.results.lines|length }}</td>
