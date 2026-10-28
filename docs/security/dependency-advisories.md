@@ -22,3 +22,13 @@ Update 25 Oct 2026: three high advisories published after the last green `main` 
 | GHSA-xjj6-f33q-929c | undici >=7.18.0 <7.30.1, >=8.0.0 <8.12.2 | vitest > jsdom > undici (test time)                                                       | high     | Overrides `undici@>=7.18.0 <7.30.1` to 7.30.1 and `undici@>=8.0.0 <8.12.2` to 8.12.2  | 2027-01-25        |
 
 Publish dates (npm): zod 4.6.6 2026-10-11; undici 7.30.1 and 8.12.2 2026-10-15 (younger than two weeks; the only patched releases). After this change: 0 high unignored.
+
+Update 28 Oct 2026: GitHub reported six advisories on `main` (moderate and low in npm, plus dev-only pip advisories). None was high in `pnpm audit`, but they are fixed while the tree is open.
+
+| Advisory                                   | Package                 | Path                                                      | Severity     | Resolution                                                                                      | Owner review date |
+| ------------------------------------------ | ----------------------- | --------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------- | ----------------- |
+| Incomplete fix of GHSA-6g55-p6wh-862q      | postcss <=8.5.22        | apps/web > @tailwindcss/postcss > postcss (build time)    | moderate     | Override `postcss@<8.5.18` raised to `postcss@<8.5.23` → 8.5.23                                 | 2027-01-28        |
+| Four fast-uri advisories (scheme and host) | fast-uri >=3.0.0 <3.1.9 | lighthouse > ajv-formats > ajv > fast-uri (dev only)      | moderate/low | Override `fast-uri@>=3.0.0 <3.1.9` → 3.1.9                                                      | 2027-01-28        |
+| Six filelock CVEs (CVE-2026-112906 et al.) | filelock 4.1.0 (pip)    | superadmin `requirements-dev.txt` (test and tooling only) | see CVEs     | Pinned to 4.2.1, the first fixed release; `pip-audit --strict -r requirements-dev.txt` is clean | 2027-01-28        |
+
+Publish dates: postcss 8.5.23 2026-07-24; fast-uri 3.1.9 2026-10-19 and filelock 4.2.1 2026-10-17 (younger than two weeks; the first patched releases). After this change `pnpm audit` reports no known vulnerabilities at any level.
