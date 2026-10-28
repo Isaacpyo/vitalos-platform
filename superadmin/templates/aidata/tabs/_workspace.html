@@ -1,0 +1,92 @@
+{% load aidata_ui %}
+<div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+  <div class="min-w-0 space-y-5">
+    <section id="brief" aria-labelledby="brief-heading">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 id="brief-heading" class="aid-title">Brief</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          {% if brief %}{% state_chip brief.state %}<span class="aid-chip aid-chip-neutral">{{ brief.get_mode_display }}{% if brief.simulated %}: simulated{% endif %}</span>{% endif %}
+          {% if brief and brief.state == "approved" %}<span class="aid-muted text-xs">Approved by {{ brief.decided_by.email }}, {{ brief.decided_at|date:"j M Y" }}</span>{% endif %}
+        </div>
+      </div>
+
+      {% if brief and brief.is_active or brief and brief.state == "failed" %}
+        {% include "aidata/components/_task_status.html" with draft=brief execution=execution|get_item:brief.pk polling=brief.is_active availability=availability %}
+      {% elif brief and brief.state == "draft" or brief and brief.state == "reviewed" %}
+        <div class="aid-banner aid-banner-warn" role="status" data-testid="brief-pending">{% aid_icon "flag" "mt-0.5 h-4 w-4 shrink-0" %}<p>A brief is prepared and waiting for your review. <a class="font-semibold underline" href="{% url 'aidata:brief_preview' brief.pk %}">Check the proposed changes</a>.</p></div>
+      {% endif %}
+
+      {% if brief and brief.source_text and segments %}
+        <div class="aid-split mt-3" data-split>
+          {% include "aidata/components/_source_panel.html" with segments=segments label=brief.source_label %}
+          <div class="aid-split-handle" role="separator" aria-orientation="vertical" aria-label="Resize source and brief panels" aria-valuemin="25" aria-valuemax="75" aria-valuenow="46" tabindex="0"></div>
+          <div class="aid-card min-w-0 divide-y divide-aid-border px-4" data-testid="brief-fields">
+            {% for row in inline_fields %}
+              {% include "aidata/components/_inline_field.html" with opportunity=opportunity name=row.name label=row.label field_kind=row.kind sectors=sectors saved=False error="" raw="" %}
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="aid-card mt-1 divide-y divide-aid-border px-4" data-testid="brief-fields">
+          {% for row in inline_fields %}
+            {% include "aidata/components/_inline_field.html" with opportunity=opportunity name=row.name label=row.label field_kind=row.kind sectors=sectors saved=False error="" raw="" %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      <p class="aid-help">Each field saves on its own. Blank means not known: nothing is guessed. Offer and scorecard are on the Qualify and details tab.</p>
+    </section>
+
+    {% if can_act %}
+      <section aria-labelledby="refresh-heading" class="aid-card p-4" data-testid="prepare-brief">
+        <h2 id="refresh-heading" class="aid-title !text-base">{% if brief %}Update the brief from new text{% else %}Prepare a brief{% endif %}</h2>
+        {% if opportunity.enquiry and not brief %}
+          <p class="aid-muted mt-1 text-sm">This opportunity came from enquiry {{ opportunity.enquiry.ref }}. Read the original message (kept unchanged) into a brief you can check.</p>
+          <form method="post" action="{% url 'aidata:brief_from_enquiry' opportunity.ref %}" class="mt-3 flex flex-wrap gap-2" data-once>{% csrf_token %}
+            <input type="hidden" name="key" value="{{ key }}">
+            {% if availability.available %}<button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "spark" %} Prepare with AI</button>{% endif %}
+            <button type="submit" name="mode" value="rules" class="aid-btn {% if availability.available %}aid-btn-secondary{% else %}aid-btn-primary{% endif %}">{% aid_icon "list" %} Read it without AI</button>
+          </form>
+        {% endif %}
+        <details class="mt-3" {% if not opportunity.enquiry and not brief %}open{% endif %}>
+          <summary class="cursor-pointer text-sm font-medium text-aid-link">Paste a call note or another message</summary>
+          <div class="mt-3">
+            {% url 'aidata:brief_from_text' opportunity.ref as paste_url %}
+            {% include "aidata/components/_composer.html" with action=paste_url key=key availability=availability id="note-text" heading="Paste text to propose changes from" hint="You see each change next to what is there now, and choose which to apply." rows=6 min=10 submit_label="Propose changes with AI" %}
+          </div>
+        </details>
+      </section>
+    {% endif %}
+  </div>
+
+  <aside class="min-w-0 space-y-4" aria-label="Deliverables and next actions">
+    <section class="aid-card p-4" aria-labelledby="deliv-heading" data-testid="deliverables">
+      <h2 id="deliv-heading" class="text-sm font-semibold text-aid-heading">Deliverables</h2>
+      <ul class="mt-2 space-y-3 text-sm">
+        <li>
+          <div class="flex flex-wrap items-center justify-between gap-2"><span class="font-medium">Discovery pack</span>{% if pack %}{% state_chip pack.state %}{% else %}<span class="aid-chip aid-chip-neutral">Not started</span>{% endif %}</div>
+          <a class="text-xs text-aid-link hover:underline" href="?tab=discovery">{% if pack %}Open v{{ pack.version }}{% else %}Start discovery{% endif %}</a>
+        </li>
+        <li>
+          <div class="flex flex-wrap items-center justify-between gap-2"><span class="font-medium">Proposal draft</span>{% if proposal %}{% state_chip proposal.state %}{% else %}<span class="aid-chip aid-chip-neutral">Not started</span>{% endif %}</div>
+          {% if proposal %}<a class="text-xs text-aid-link hover:underline" href="?tab=proposal">Open v{{ proposal.version }}</a>
+          {% elif proposal_blocked %}<p class="aid-muted text-xs">Blocked: needs approved discovery.</p>
+          {% else %}<a class="text-xs text-aid-link hover:underline" href="?tab=proposal">Draft the proposal</a>{% endif %}
+        </li>
+      </ul>
+      <p class="aid-help">Nothing is ever sent, emailed or published automatically.</p>
+    </section>
+
+    <section class="aid-card p-4" aria-labelledby="orig-heading">
+      <h2 id="orig-heading" class="text-sm font-semibold text-aid-heading">Original enquiry</h2>
+      {% if original_enquiry %}
+        <p class="mt-1 text-sm">{{ original_enquiry.ref }}: {{ original_enquiry.subject|default:"(no subject)" }}</p>
+        <p class="aid-muted text-xs">Kept exactly as received. Everything derived from it on this page links back to it.</p>
+        <a class="aid-btn aid-btn-secondary mt-2" href="{{ original_enquiry.get_absolute_url }}">{% aid_icon "inbox" %} Open the enquiry</a>
+      {% else %}
+        <p class="aid-muted mt-1 text-sm">This opportunity was not created from an enquiry in the inbox.{% if brief %} Its source text is shown next to the brief.{% endif %}</p>
+      {% endif %}
+    </section>
+
+    {% include "aidata/_opportunity_extensions.html" %}
+  </aside>
+</div>

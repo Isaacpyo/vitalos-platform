@@ -1,0 +1,56 @@
+{% load aidata_ui %}{% comment %}
+  Task execution status for one draft. Context: draft, execution (gateway metadata or None), polling, availability.
+  The state comes from the database row, so a reload shows the same thing. While queued or running the panel
+  polls /drafts/<id>/status/ every 2 s and the page reloads once the task ends. No timers pretend to work.
+{% endcomment %}
+<section id="task-{{ draft.pk }}" class="aid-surface p-4" aria-live="polite" data-testid="task-status" data-state="{{ draft.state }}"
+  {% if polling %}hx-get="{% url 'aidata:draft_status' draft.pk %}" hx-trigger="every 2s" hx-swap="outerHTML" hx-headers='{"X-Task-Was-Active": "true"}'{% endif %}>
+  <div class="flex flex-wrap items-center gap-2">
+    {% state_chip draft.state %}
+    <h3 class="text-sm font-semibold">{{ draft.get_kind_display }} v{{ draft.version }}</h3>
+    <span class="aid-muted text-xs">Attempt {{ draft.attempts }} of {{ draft.max_attempts }}</span>
+  </div>
+
+  {% if draft.state == "queued" or draft.state == "running" %}
+    <div class="mt-3 space-y-2" role="status">
+      <div class="aid-skeleton h-3 w-2/3" aria-hidden="true"></div>
+      <div class="aid-skeleton h-3 w-1/2" aria-hidden="true"></div>
+      <p class="text-sm">
+        {% if draft.state == "queued" %}Waiting to run. It is saved, so you can leave this page; the content tick will pick it up.
+        {% else %}Running now{% if draft.started_at %} since {{ draft.started_at|date:"H:i:s" }}{% endif %}. The lease renews while it works; if the process dies it is put back in the queue.{% endif %}
+      </p>
+    </div>
+    <form method="post" action="{% url 'aidata:draft_cancel' draft.pk %}" class="mt-3">{% csrf_token %}
+      <button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon "stop" %} Cancel</button>
+    </form>
+  {% elif draft.state == "failed" %}
+    <div class="aid-banner aid-banner-error mt-3" role="alert" data-testid="task-failed">
+      {% aid_icon "error" "mt-0.5 h-4 w-4 shrink-0" %}
+      <div>
+        <p><strong>It did not finish.</strong> {{ draft.error_category|default:"error" }}: {{ draft.error_detail|default:"no further detail" }}</p>
+        <p class="mt-1 text-xs">The original text is untouched and nothing was created. You can try again, prepare it without AI, or write it by hand.</p>
+      </div>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      {% if draft.attempts < draft.max_attempts %}
+        <form method="post" action="{% url 'aidata:draft_retry' draft.pk %}" data-once>{% csrf_token %}<button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "refresh" %} Retry</button></form>
+      {% endif %}
+      {% if draft.kind != "proposal" %}
+        <form method="post" action="{% url 'aidata:draft_retry' draft.pk %}" data-once>{% csrf_token %}<input type="hidden" name="without_ai" value="1"><button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon "list" %} Prepare without AI</button></form>
+      {% endif %}
+      <form method="post" action="{% url 'aidata:draft_cancel' draft.pk %}">{% csrf_token %}<button type="submit" class="aid-btn aid-btn-quiet">Dismiss</button></form>
+    </div>
+  {% elif draft.state == "cancelled" %}
+    <p class="mt-3 text-sm">Cancelled. Nothing was changed.</p>
+  {% else %}
+    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
+      <div><dt class="aid-muted">Prepared by</dt><dd class="font-medium">{{ draft.get_mode_display }}</dd></div>
+      {% if draft.finished_at %}<div><dt class="aid-muted">Finished</dt><dd>{{ draft.finished_at|date:"j M, H:i" }}</dd></div>{% endif %}
+      {% if execution %}
+        <div><dt class="aid-muted">Model call</dt><dd>{{ execution.outcome }}{% if execution.simulated %} (simulated){% endif %}</dd></div>
+        <div><dt class="aid-muted">Tokens, cost, time</dt><dd>{{ execution.tokens }}, £{{ execution.cost|floatformat:4 }}, {{ execution.latency_ms }} ms</dd></div>
+      {% endif %}
+    </dl>
+    {% if draft.fallback_reason %}<p class="aid-muted mt-2 text-xs">AI was not used: {{ draft.fallback_reason }}</p>{% endif %}
+  {% endif %}
+</section>

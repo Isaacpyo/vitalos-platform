@@ -93,6 +93,7 @@ class NewOpportunityForm(OpportunityForm):
             "contact_name",
             "contact_role",
             "contact_email",
+            "contact_phone",
             "next_action",
             "next_action_due",
             "problem_summary",

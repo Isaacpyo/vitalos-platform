@@ -77,7 +77,14 @@ class ReviewDecisionForm(forms.Form):
 class AiSettingsForm(forms.ModelForm):
     class Meta:
         model = AiSettings
-        fields = ["enabled", "model_path_enabled", "brief_assist_enabled", "daily_run_cap", "monthly_budget_gbp", "max_calls_per_run"]
+        fields = [
+            "enabled",
+            "model_path_enabled",
+            "brief_assist_enabled",
+            "daily_run_cap",
+            "monthly_budget_gbp",
+            "max_calls_per_run",
+        ]
         labels = {
             "enabled": "AI & Data enabled (kill switch)",
             "model_path_enabled": "Live model path",

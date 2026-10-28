@@ -78,7 +78,12 @@ def parse_request(raw: bytes) -> dict:
         ident, question, answer = item.get("id"), item.get("question"), item.get("answer")
         if not (isinstance(ident, str) and ANSWER_ID_RE.fullmatch(ident)):
             raise Invalid("answers")
-        if not (isinstance(question, str) and len(question) <= 300 and isinstance(answer, str) and len(answer) <= 1500):
+        if not (
+            isinstance(question, str)
+            and len(question) <= 300
+            and isinstance(answer, str)
+            and len(answer) <= 1500
+        ):
             raise Invalid("answers")
         clean.append({"id": ident, "question": question.strip(), "answer": answer.strip()})
     if not isinstance(visitor, str) or not VISITOR_RE.fullmatch(visitor):
@@ -121,7 +126,10 @@ def _event(stage: str, outcome: str, **fields) -> None:
 
 def _rate_limited(visitor_hash: str, now) -> bool:
     counted = BriefAssistEvent.objects.exclude(outcome__in=("rate_limited", "invalid"))
-    if counted.filter(visitor_hash=visitor_hash, created_at__gt=now - VISITOR_WINDOW).count() >= VISITOR_LIMIT:
+    if (
+        counted.filter(visitor_hash=visitor_hash, created_at__gt=now - VISITOR_WINDOW).count()
+        >= VISITOR_LIMIT
+    ):
         return True
     return counted.filter(created_at__gt=now - GLOBAL_WINDOW).count() >= GLOBAL_LIMIT
 

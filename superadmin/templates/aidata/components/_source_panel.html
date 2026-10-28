@@ -1,0 +1,13 @@
+{% load aidata_ui %}{% comment %}
+  Source and evidence panel. Context: segments (extraction.highlight_segments), label, truncated (optional).
+  The source text is shown exactly as supplied, as plain text. Spans a suggestion quotes are marked and
+  labelled; "Show source" on a suggestion scrolls to and highlights its span.
+{% endcomment %}
+<section class="aid-card flex min-w-0 flex-col" aria-labelledby="source-heading" data-source>
+  <header class="flex flex-wrap items-center justify-between gap-2 border-b border-aid-border px-4 py-2.5">
+    <h3 id="source-heading" class="text-sm font-semibold text-aid-heading">{% aid_icon "document" "mr-1 inline h-4 w-4" %}Source: {{ label|default:"supplied text" }}</h3>
+    <span class="aid-chip aid-chip-neutral">{% aid_icon "lock" "h-3.5 w-3.5" %} Unchanged original</span>
+  </header>
+  <div class="aid-source max-h-[32rem] overflow-y-auto p-4" tabindex="0" role="region" aria-label="Source text">{% for part in segments %}{% if part.field %}<mark class="aid-mark" data-field="{{ part.field }}" data-active="false" title="Quoted for {{ part.label }}">{{ part.text }}<span class="sr-only"> (quoted for {{ part.label }})</span></mark>{% else %}{{ part.text }}{% endif %}{% empty %}<span class="aid-muted">No source text.</span>{% endfor %}</div>
+  <p class="aid-help border-t border-aid-border px-4 py-2">Treated as untrusted text: it is read for facts and never followed as instructions.</p>
+</section>

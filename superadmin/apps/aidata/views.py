@@ -16,7 +16,8 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from apps.accounts.roles import SERVICE_LEAD, SUPERADMIN, role_required
 from apps.enquiries import selectors as enquiry_selectors
 
-from . import scoring, selectors, services
+from . import ai, scoring, selectors, services, workqueue
+from . import workspace_views as ws
 from .forms import (
     BudgetSettingsForm,
     CostEntryForm,
@@ -27,7 +28,7 @@ from .forms import (
     ScorecardForm,
     StageForm,
 )
-from .models import BudgetSettings, CostEntry, OfferPrice, Sector
+from .models import BudgetSettings, CostEntry, OfferPrice, Opportunity, Sector
 
 #: Linked by path only; the demonstrator is another app (apps.recon_demo).
 DEMONSTRATOR_PATH = "/ai-data/demonstrator/"
@@ -53,19 +54,32 @@ def _error_text(exc: ValidationError) -> str:
 @require_GET
 def overview(request):
     summary = selectors.budget_summary()
+    groups = workqueue.work_queue()
     return render(
         request,
         "aidata/overview.html",
         {
+            "groups": groups,
+            "queue_empty": not any(group.total for group in groups),
             "stage_counts": selectors.stage_counts(),
+            "total_opportunities": sum(item["count"] for item in selectors.stage_counts()),
             "overdue": selectors.overdue(),
             "overdue_count": selectors.overdue_count(),
             "budget": summary,
             "prices": selectors.offer_prices(),
             "demonstrator_path": DEMONSTRATOR_PATH,
             "today": timezone.localdate(),
+            "availability": ai.availability(),
+            "usage": aicore_usage(),
+            "can_act": selectors.can_edit_pipeline(request.user),
         },
     )
+
+
+def aicore_usage() -> dict:
+    from apps.aicore import services as aicore
+
+    return aicore.usage_summary()
 
 
 # --- Pipeline -------------------------------------------------------------------------------------
@@ -104,6 +118,7 @@ def pipeline(request):
 @access_required
 @require_http_methods(["GET", "POST"])
 def opportunity_new(request):
+    """The composer (paste an enquiry) with manual entry kept below it. The manual form is unchanged."""
     form = NewOpportunityForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         try:
@@ -113,10 +128,11 @@ def opportunity_new(request):
         else:
             messages.success(request, f"Created {opportunity.ref}.")
             return redirect(opportunity.get_absolute_url())
-    return render(request, "aidata/opportunity_form.html", {"form": form})
+    context = ws.composer_context(request, form=form, manual_open=request.method == "POST")
+    return render(request, "aidata/opportunity_form.html", context)
 
 
-def _detail_context(request, opportunity, **forms) -> dict:
+def _detail_context(request, opportunity, tab="workspace", **forms) -> dict:
     allowed = services.allowed_stages(opportunity, request.user)
     initial_scores = opportunity.criterion_scores()
     return {
@@ -138,6 +154,7 @@ def _detail_context(request, opportunity, **forms) -> dict:
         "notes": opportunity.notes.select_related("author")[:100],
         "today": timezone.localdate(),
         "is_closed": opportunity.is_closed,
+        **ws.workspace_context(request, opportunity, tab),
     }
 
 
@@ -145,7 +162,10 @@ def _detail_context(request, opportunity, **forms) -> dict:
 @require_GET
 def opportunity(request, ref):
     item = _get(ref)
-    return render(request, "aidata/opportunity.html", _detail_context(request, item))
+    tab = request.GET.get("tab", "workspace")
+    if tab not in {key for key, _label, _icon in ws.TABS}:
+        tab = "workspace"
+    return render(request, "aidata/opportunity.html", _detail_context(request, item, tab))
 
 
 @access_required
@@ -162,7 +182,9 @@ def opportunity_edit(request, ref):
         else:
             messages.success(request, "Details saved." if changed else "Nothing changed.")
             return redirect(item.get_absolute_url())
-    response = render(request, "aidata/opportunity.html", _detail_context(request, item, form=form))
+    response = render(
+        request, "aidata/opportunity.html", _detail_context(request, item, "details", form=form)
+    )
     response.status_code = 400
     return response
 
@@ -187,7 +209,9 @@ def opportunity_score(request, ref):
         else:
             messages.success(request, f"Scorecard saved: {item.scorecard.label}.")
             return redirect(item.get_absolute_url() + "#scorecard")
-    response = render(request, "aidata/opportunity.html", _detail_context(request, item, score_form=form))
+    response = render(
+        request, "aidata/opportunity.html", _detail_context(request, item, "details", score_form=form)
+    )
     response.status_code = 400
     return response
 
@@ -229,7 +253,9 @@ def opportunity_stage(request, ref):
         else:
             messages.success(request, f"Moved to {item.get_stage_display()}.")
             return redirect(item.get_absolute_url())
-    response = render(request, "aidata/opportunity.html", _detail_context(request, item, stage_form=form))
+    response = render(
+        request, "aidata/opportunity.html", _detail_context(request, item, "details", stage_form=form)
+    )
     response.status_code = 400
     return response
 
@@ -247,7 +273,9 @@ def opportunity_note(request, ref):
         else:
             messages.success(request, "Note added.")
             return redirect(item.get_absolute_url() + "#notes")
-    response = render(request, "aidata/opportunity.html", _detail_context(request, item, note_form=form))
+    response = render(
+        request, "aidata/opportunity.html", _detail_context(request, item, "details", note_form=form)
+    )
     response.status_code = 400
     return response
 
@@ -371,3 +399,106 @@ def cost_delete(request, pk):
     services.delete_cost_entry(entry, request.user, request=request)
     messages.success(request, "Cost deleted.")
     return redirect(reverse("aidata:budget"))
+
+
+# --- Later lifecycle stages: navigation and empty states only (no data is invented) -------------------------
+
+LIFECYCLE = {
+    "delivery": {
+        "title": "Delivery",
+        "summary": "Contracted work in progress: what is being built, what is blocked, and what the customer has to do.",
+        "needs": [
+            (
+                "Project, milestones and deliverables",
+                "The client portal (apps.portal): projects, milestones, deliverables, approvals and updates.",
+                "Planned: the main session connects the portal to opportunities.",
+            ),
+            (
+                "Tasks and test cases",
+                "A task list per milestone, with test cases tied to the acceptance criteria of the approved discovery pack.",
+                "Not built. Acceptance criteria already exist on approved discovery.",
+            ),
+            (
+                "Progress summaries and blockers",
+                "Written project updates and blocked items. AI may draft a summary; a person approves it.",
+                "Not built.",
+            ),
+        ],
+        "next": "Win an opportunity (record the signed scope reference) and connect it to a portal project.",
+    },
+    "operations": {
+        "title": "Managed operations",
+        "summary": "Live systems Vitalos runs for customers: incidents, exceptions and the monthly report.",
+        "needs": [
+            (
+                "Incident summaries",
+                "Incident records (docs/ai-data/commercial/18-incident-record.md) tied to a customer system.",
+                "Not built. Needs a live managed system to record against.",
+            ),
+            (
+                "Exceptions",
+                "Items a system could not handle and a person must decide, like the demonstrator's review items, from a production system.",
+                "Not built. The demonstrator's review queue is the pattern.",
+            ),
+            (
+                "Monthly report data",
+                "Usage, cost and incident counts per customer (template 14).",
+                "Not built. Needs metering per customer system.",
+            ),
+        ],
+        "next": "Production systems and the managed-operations contract come first; this stays empty until then.",
+    },
+    "incubation": {
+        "title": "Product incubation",
+        "summary": "Turning proven, repeatable customer solutions into products.",
+        "needs": [
+            (
+                "Evidence of recurring needs",
+                "Several customer-funded engagements with the same workflow, with the measured result of each.",
+                "Shown below from real opportunities, once there are repeats.",
+            ),
+            (
+                "Reusable components",
+                "A register of components reused across engagements, with reuse level and ownership of the IP.",
+                "Not built (template 16 and VAD-018 describe it).",
+            ),
+            (
+                "Product candidate review",
+                "A go, validate or reject decision backed by the evidence above.",
+                "Needs repeated customer evidence (VAD-019).",
+            ),
+        ],
+        "next": "No product decision is made without repeated customer evidence.",
+    },
+}
+
+
+@access_required
+@require_GET
+def lifecycle(request, stage):
+    info = LIFECYCLE.get(stage)
+    if info is None:
+        raise Http404
+    recurring = []
+    if stage == "incubation":
+        from django.db.models import Count
+
+        rows = (
+            Opportunity.objects.exclude(sector="")
+            .values("sector")
+            .annotate(n=Count("id"))
+            .filter(n__gte=2)
+            .order_by("-n")
+        )
+        labels = dict(Sector.choices)
+        recurring = [{"label": labels.get(row["sector"], row["sector"]), "count": row["n"]} for row in rows]
+    return render(
+        request,
+        "aidata/lifecycle.html",
+        {
+            "info": info,
+            "section": stage,
+            "recurring": recurring,
+            "won": Opportunity.objects.filter(stage="won").count(),
+        },
+    )

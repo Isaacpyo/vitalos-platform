@@ -319,6 +319,20 @@ def clean_brief_values(raw: dict) -> dict:
     return values
 
 
+def _fill(opportunity: Opportunity, data: dict, accept: set[str] | None) -> dict:
+    """Values to write onto an existing opportunity: the accepted fields, or by default only blank ones."""
+    out = {}
+    for name, value in data.items():
+        if name == "next_action_due":
+            continue
+        chosen = name in accept if accept is not None else not getattr(opportunity, name, "")
+        if chosen:
+            out[name] = value
+    if "next_action" in out and "next_action_due" in data:
+        out["next_action_due"] = data["next_action_due"]
+    return out
+
+
 def apply_brief(
     draft: Draft,
     values: dict,
@@ -328,6 +342,7 @@ def apply_brief(
     title: str = "",
     offer: str = "",
     next_action: str = "",
+    accept: set[str] | None = None,
     request=None,
 ) -> Opportunity:
     """The human decision on a brief: create the opportunity, or update/link an existing one.
@@ -360,11 +375,7 @@ def apply_brief(
             opportunity = selectors.get_by_ref(target.split(":", 1)[1])
             if opportunity is None:
                 raise ValidationError("That opportunity no longer exists.")
-            fill = {
-                k: v
-                for k, v in data.items()
-                if not getattr(opportunity, k, "") or k in ("next_action", "next_action_due")
-            }
+            fill = _fill(opportunity, data, accept)
             services.update_details(opportunity, fill, actor, request=request)
             created = False
         elif target.startswith("enquiry:"):
@@ -372,11 +383,7 @@ def apply_brief(
             if enquiry is None:
                 raise ValidationError("That enquiry no longer exists.")
             opportunity = services.create_from_enquiry(enquiry, offer=offer, actor=actor, request=request)
-            fill = {
-                k: v
-                for k, v in data.items()
-                if not getattr(opportunity, k, "") or k in ("next_action", "next_action_due")
-            }
+            fill = _fill(opportunity, data, accept)
             services.update_details(opportunity, fill, actor, request=request)
             created = True
         else:
