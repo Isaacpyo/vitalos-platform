@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { routes } from "@vitalos/cms";
 import { getEnv, getFeatures } from "@vitalos/config";
 import { aiDataOffers } from "@vitalos/validation/ai-data-enquiry";
 import { IconTile } from "@vitalos/ui";
 import { AiDataEnquiryForm } from "../../../../src/components/ai-data/AiDataEnquiryForm";
 import { AiDataPage } from "../../../../src/components/ai-data/chrome";
 import { Band, SectionHeading } from "../../../../src/components/ai-data/primitives";
+import { GuidedBrief } from "../../../../src/components/ai-data/brief/GuidedBrief";
+import { JsOnly, NoJsOnly } from "../../../../src/components/ai-data/brief/JsOnly";
+import { isBriefAssistConfigured } from "../../../../src/features/ai-data/brief/server";
+import { isTopicSlug } from "../../../../src/features/ai-data/brief/types";
 import { ContactAlternative } from "../../../../src/components/contact/ContactAlternative";
 import { parseContactSearchParams } from "../../../../src/components/contact/contact-params";
 import type { ContactSearchParams } from "../../../../src/components/contact/contact-params";
@@ -19,7 +24,7 @@ export const metadata: Metadata = aiDataMetadata("contact");
 
 const title = "Discuss your business challenge";
 const lead =
-  "Tell us about the workflow you want to improve and the result you are after. A few sentences are enough to start.";
+  "Tell us about the workflow you want to improve. We will ask a few questions and help you shape a short brief you can edit before you share it. Prefer a plain form? That is one click away.";
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
@@ -47,6 +52,31 @@ export default async function AiDataContactPage({
   const offer =
     rawOffer && (aiDataOffers as readonly string[]).includes(rawOffer) ? rawOffer : undefined;
   const turnstileSiteKey = features.turnstile ? env.turnstile.siteKey : undefined;
+  const rawTopic = first(query.topic)?.trim();
+  const topic = isTopicSlug(rawTopic) ? rawTopic : null;
+  const simple = first(query.mode) === "simple";
+  const carried = new URLSearchParams();
+  if (topic) carried.set("topic", topic);
+  if (offer) carried.set("offer", offer);
+  for (const [key, value] of Object.entries(utm ?? {})) carried.set(`utm_${key}`, String(value));
+  const withMode = (mode: string | null) => {
+    const params = new URLSearchParams(carried);
+    if (mode) params.set("mode", mode);
+    const text = params.toString();
+    return `${routes.aiData.contact()}${text ? `?${text}` : ""}`;
+  };
+  const guidedHref = withMode(null);
+  const simpleHref = withMode("simple");
+  const simpleForm = form.available ? (
+    <AiDataEnquiryForm
+      action={submitAiDataEnquiryAction}
+      privacyNoticeVersion={form.privacyNoticeVersion}
+      idempotencyKey={crypto.randomUUID()}
+      prefill={{ offer, utm }}
+      turnstileSiteKey={turnstileSiteKey}
+      contactEmail={settings.contactEmail}
+    />
+  ) : null;
 
   return (
     <AiDataPage current="contact">
@@ -67,14 +97,47 @@ export default async function AiDataContactPage({
             className="min-w-0 rounded-lg border border-aid-border p-(--space-4) sm:p-(--space-7)"
           >
             {form.available ? (
-              <AiDataEnquiryForm
-                action={submitAiDataEnquiryAction}
-                privacyNoticeVersion={form.privacyNoticeVersion}
-                idempotencyKey={crypto.randomUUID()}
-                prefill={{ offer, utm }}
-                turnstileSiteKey={turnstileSiteKey}
-                contactEmail={settings.contactEmail}
-              />
+              <div className="flex flex-col gap-(--space-6)">
+                <nav aria-label="Ways to get in touch">
+                  <ul className="m-0 flex list-none flex-wrap gap-(--space-2) p-0">
+                    {[
+                      { label: "Guided brief", href: guidedHref, current: !simple },
+                      { label: "Simple form", href: simpleHref, current: simple },
+                    ].map((item) => (
+                      <li key={item.label}>
+                        <a
+                          href={item.href}
+                          aria-current={item.current ? "page" : undefined}
+                          className="inline-flex min-h-11 items-center rounded-full border border-aid-control-border px-(--space-5) font-semibold text-aid-heading no-underline transition-colors duration-(--duration-feedback) hover:bg-aid-chip-bg aria-[current=page]:border-aid-action aria-[current=page]:bg-aid-action aria-[current=page]:text-aid-action-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aid-focus"
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+                {simple ? (
+                  simpleForm
+                ) : (
+                  <>
+                    <JsOnly>
+                      <GuidedBrief
+                        aiAvailable={isBriefAssistConfigured()}
+                        initialTopic={topic}
+                        idempotencyKey={crypto.randomUUID()}
+                        action={submitAiDataEnquiryAction}
+                        privacyNoticeVersion={form.privacyNoticeVersion}
+                        offer={offer}
+                        utm={utm}
+                        turnstileSiteKey={turnstileSiteKey}
+                        contactEmail={settings.contactEmail}
+                        simpleFormHref={simpleHref}
+                      />
+                    </JsOnly>
+                    <NoJsOnly>{simpleForm}</NoJsOnly>
+                  </>
+                )}
+              </div>
             ) : (
               <ContactAlternative contactEmail={settings.contactEmail} />
             )}

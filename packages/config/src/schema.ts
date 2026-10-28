@@ -150,6 +150,8 @@ const rawSchema = z.object({
   CONTENT_API_BASE_URL: originUrl.optional(),
   CONTENT_READ_KEY_ID: z.string().regex(keyIdPattern, "must match [a-z0-9-]{1,32}").optional(),
   CONTENT_READ_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
+  // Guided-brief assist endpoint origin (server-only). Unset: falls back to CONTENT_API_BASE_URL.
+  BRIEF_ASSIST_BASE_URL: originUrl.optional(),
   CAREERS_SUBMIT_KEY_ID: z.string().regex(keyIdPattern, "must match [a-z0-9-]{1,32}").optional(),
   CAREERS_SUBMIT_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
   CONTENT_REVALIDATE_SECRET: keyList.optional(),
@@ -323,6 +325,8 @@ export interface ContentEnv {
   uploadOrigin: string | undefined;
   /** Bearer the Cloudflare Worker presents to the tick route (ADR-042), besides CRON_SECRET. */
   tickSecret: string | undefined;
+  /** Origin for the guided-brief assist call (`BRIEF_ASSIST_BASE_URL`, else the content API origin). */
+  briefAssistBaseUrl: string | undefined;
 }
 
 export const DEFAULT_CONTENT_CACHE_TTL_SECONDS = 600;
@@ -444,6 +448,7 @@ function resolve(raw: Raw): { env: Env; siteUrlMissing: boolean } {
         mediaOrigin: raw.CONTENT_MEDIA_HOST,
         uploadOrigin: raw.CAREERS_UPLOAD_HOST,
         tickSecret: raw.CONTENT_TICK_SECRET,
+        briefAssistBaseUrl: raw.BRIEF_ASSIST_BASE_URL ?? raw.CONTENT_API_BASE_URL,
       },
       search: {
         indexNowKey: raw.INDEXNOW_KEY,

@@ -18,7 +18,7 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
  * rotate with no downtime. Pure Node `crypto`, no framework imports.
  */
 
-export const signingScopes = ["read", "tick", "submit", "revalidate", "render", "preview"] as const;
+export const signingScopes = ["read", "tick", "submit", "revalidate", "render", "preview", "assist"] as const;
 export type SigningScope = (typeof signingScopes)[number];
 
 export interface SigningKey {
