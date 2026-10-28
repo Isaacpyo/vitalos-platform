@@ -69,6 +69,8 @@ LOG_WS="${AZ_LOG_WORKSPACE:-log-vitalos-superadmin}"
 APP="${AZ_APP:-superadmin}"
 RELEASE_JOB="${APP}-release"
 DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
+# Client portal host (ADR-056). The app serves only the portal URLs on it; the custom-domain binding is separate.
+PORTAL_HOST_NAME="${PORTAL_HOST:-portal.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
 # Client portal host (ADR-056, approved by the owner 28 Oct 2026); PORTAL_DOMAIN="" skips it.
 PORTAL_DOMAIN="${PORTAL_DOMAIN-portal.vitalos.co.uk}"
@@ -247,8 +249,9 @@ ENV_VARS=(
   DJANGO_SETTINGS_MODULE=config.settings.prod
   DJANGO_SECRET_KEY=secretref:django-secret-key
   DATABASE_URL=secretref:database-url
-  "ALLOWED_HOSTS=$DOMAIN"
-  "CSRF_TRUSTED_ORIGINS=https://$DOMAIN"
+  "ALLOWED_HOSTS=$DOMAIN,$PORTAL_HOST_NAME"
+  "CSRF_TRUSTED_ORIGINS=https://$DOMAIN,https://$PORTAL_HOST_NAME"
+  "PORTAL_HOST=$PORTAL_HOST_NAME"
   SECURE_SSL_REDIRECT=True
   TRUSTED_PROXY_COUNT=1
   APP_ENVIRONMENT=production
@@ -274,7 +277,7 @@ for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_E
   OUTREACH_SMTP_HOST OUTREACH_SMTP_PORT OUTREACH_SMTP_USER \
   ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL \
   AI_DATA_LLM_PROVIDER AI_DATA_LLM_BASE_URL AI_DATA_LLM_MODEL AI_DATA_LLM_EFFORT AI_DATA_DISABLED \
-  BILLING_PUBLIC_SITE_URL; do
+  BILLING_PUBLIC_SITE_URL PORTAL_ENABLED PORTAL_FILES_BUCKET; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
 add_optional_secret() {  # env var name, Container Apps secret name

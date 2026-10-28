@@ -28,3 +28,6 @@ LOGGING["handlers"]["console"]["formatter"] = env("LOG_FORMAT", default="text")
 # Serve static files straight from app/static directories while developing.
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
+
+# Local demonstrations may replay labelled, simulated assistant answers (apps/portal/fixtures/ai_replay).
+PORTAL_AI_REPLAY = env.bool("PORTAL_AI_REPLAY", default=True)

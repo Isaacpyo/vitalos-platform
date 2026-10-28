@@ -18,6 +18,8 @@ from .base import (
     CONTENT_MEDIA_STORAGE,
     EMAIL_TRANSPORT,
     OBJECT_STORAGE_BUCKET,
+    PORTAL_FILES_BUCKET,
+    PORTAL_FILES_STORAGE,
     RELAY_ADMIN_API_SECRET,
     RELAY_API_BASE_URL,
     RELAY_CLIENT,
@@ -44,6 +46,22 @@ DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=0)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool("DB_DISABLE_SERVER_SIDE_CURSORS", default=True)
+# Client portal (ADR-056, owner decision): served on its own host, nothing else is served there. The portal
+# answers 404 on that host until the custom domain resolves to this app. PORTAL_ENABLED defaults to on only
+# when a portal host is set; it is env-overridable, and /portal/ path mounting is local preview only.
+PORTAL_HOST = env("PORTAL_HOST", default="portal.vitalos.co.uk").strip().lower()
+PORTAL_ENABLED = env.bool("PORTAL_ENABLED", default=bool(PORTAL_HOST))
+# Simulated assistant answers are for local demonstrations only.
+PORTAL_AI_REPLAY = False
+if PORTAL_ENABLED and not PORTAL_HOST:
+    raise ImproperlyConfigured(
+        "PORTAL_ENABLED needs PORTAL_HOST in production: /portal/ path mounting is for local preview only."
+    )
+if PORTAL_HOST:
+    if PORTAL_HOST not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS = [*ALLOWED_HOSTS, PORTAL_HOST]
+    if f"https://{PORTAL_HOST}" not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, f"https://{PORTAL_HOST}"]
 APP_ENVIRONMENT = env("APP_ENVIRONMENT", default="production")
 APP_BASE_URL = env("APP_BASE_URL", default="https://admin.vitalos.co.uk").rstrip("/")
 if EMAIL_TRANSPORT == "resend" and not RESEND_API_KEY:
@@ -99,12 +117,14 @@ STORAGES = {
     "attachments": ATTACHMENTS_STORAGE,
     "content_media": CONTENT_MEDIA_STORAGE,
     "careers_cvs": CAREERS_CV_STORAGE,
+    "portal_files": PORTAL_FILES_STORAGE,
 }
 # Production keeps attachment bytes only in object storage; the container disk is not durable.
 ATTACHMENTS_STORAGE_ENABLED = bool(OBJECT_STORAGE_BUCKET)
 # Same rule for post images and CVs: no bucket, no uploads (ADR-041: no CV upload tickets).
 CONTENT_MEDIA_STORAGE_ENABLED = bool(CONTENT_MEDIA_BUCKET)
 CAREERS_CV_STORAGE_ENABLED = bool(CAREERS_CV_BUCKET)
+PORTAL_FILES_STORAGE_ENABLED = bool(PORTAL_FILES_BUCKET)
 
 # Insights and Careers keys, targets and the applicant IP salt (empty values leave the features off).
 _content_problems = content_validation.problems(

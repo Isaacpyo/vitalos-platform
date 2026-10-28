@@ -1,0 +1,16 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Email preferences · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'notifications' %}">Notifications</a></p>
+  <div class="page-head"><div><h1>Email preferences</h1><p class="lede">Choose which events Vitalos emails you about. In-app notifications always appear here. We only email members of your organisation.</p></div></div>
+  {% if preview %}
+    <p class="notice">Preview is read-only.</p>
+  {% else %}
+    <form class="card" method="post" novalidate>
+      {% csrf_token %}
+      {% include "portal/_fields.html" %}
+      <button class="btn" type="submit">Save preferences</button>
+    </form>
+  {% endif %}
+{% endblock %}

@@ -108,3 +108,15 @@ _Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery worksp
   - Set `TURNSTILE_SECRET_KEY` as a `production` secret, with the same value as on Vercel, so that `/pay/checkout/` verifies the human check. Without it, only the honeypot and rate limits apply.
   - Review Billing › Settings.
 - **Still not verified in production:** a real enquiry end to end, a live Stripe payment, and the live model path.
+
+## Client portal (ADR-056)
+
+Workstream W8, 28 Oct 2026. A customer portal inside the Super Admin (`apps.portal`) that follows the journey Submitted challenge, Discovery, Assessment, Proposal, Active project, Handover, Managed operations, keeping the original opportunity and its discussion attached.
+
+- **Where:** `https://portal.vitalos.co.uk` (owner decision; only portal URLs are served on that host). `/portal/` path mounting is local preview only. Staff tools are at `/client-portal/` and a "Client portal" panel sits in the opportunity workspace.
+- **Access:** staff invite members (single-use, expiring, hashed token through `apps.mailer`); roles viewer, contributor, approver, authorised signatory; axes lockout; optional TOTP. An enquiry never creates access.
+- **Visibility:** explicit publication per record, scoped selectors, internal fields never rendered, searched, emailed, exported or sent to the AI. Deliverable approvals are version-specific; change requests are request-only with a review trail.
+- **AI:** six read-only activities through `apps.aicore` with a deterministic, labelled fallback (today's production state: no model).
+- **Not built (later phases):** live monitoring integrations (status is manual, labelled, goes stale), contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation administration.
+- **Owner steps before customers use it:** DNS record and Azure custom-domain binding for `portal.vitalos.co.uk`; a private bucket and `PORTAL_FILES_BUCKET` for file uploads; optional `PORTAL_HOST` / `PORTAL_ENABLED` variables (see `superadmin/apps/portal/README.md`).
+- **Checkpoint:** implemented and tested in the worktree branch (see the task register, PORTAL-01 to PORTAL-12). Not deployed; nothing is exposed until the custom domain resolves to the app. The owner approved `portal.vitalos.co.uk` on 28 Oct 2026; `superadmin/deploy/azure/deploy.sh` creates the DNS records and the managed certificate on the first deploy after merge.

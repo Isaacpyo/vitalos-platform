@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ p.name }} · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'portaladmin:challenge' ch.pk %}" class="hover:underline">Client portal / {{ ch.organisation.name }} / {{ ch.title }}</a></p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold">{{ p.name }}</h1>
+      <p class="muted mt-1 text-sm">{{ p.get_status_display }}{% if p.target_date %} · target {{ p.target_date|date:"j M Y" }}{% endif %} · {% if p.published_at %}visible to the customer{% else %}<strong>not published</strong>{% endif %}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:project_edit' p.pk %}">Edit</a>
+      {% if p.published_at %}{% url 'portaladmin:publish' 'project' p.pk 'off' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Hide from customer" next=request.path %}{% else %}{% url 'portaladmin:publish' 'project' p.pk 'on' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Publish to customer" style="btn-primary" next=request.path %}{% endif %}
+    </div>
+  </div>
+  {% include "portaladmin/_nav.html" with section="orgs" %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="ms-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="ms-h" class="font-semibold">Milestones</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:milestone_new' p.pk %}">Add milestone</a></div>
+        <p class="muted text-xs">A status label and a target date. No percentage complete.</p>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for m in milestones %}
+            <li class="flex flex-wrap items-center justify-between gap-2">
+              <span><strong>{{ m.title }}</strong> <span class="muted">{{ m.get_status_display }}{% if m.target_date %} · {{ m.target_date|date:"j M Y" }}{% endif %} · {% if m.published_at %}published{% else %}not published{% endif %}</span></span>
+              <span class="flex gap-1">
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:milestone_edit' m.pk %}">Edit</a>
+                {% if m.published_at %}{% url 'portaladmin:publish' 'milestone' m.pk 'off' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Hide" next=request.path %}{% else %}{% url 'portaladmin:publish' 'milestone' m.pk 'on' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Publish" style="btn-primary" next=request.path %}{% endif %}
+              </span>
+            </li>
+          {% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="it-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="it-h" class="font-semibold">Responsibilities, dependencies and blockers</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:item_new' p.pk %}">Add</a></div>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for i in items %}
+            <li class="flex flex-wrap items-center justify-between gap-2">
+              <span><span class="mono-label muted">{{ i.get_kind_display }} · {{ i.get_party_display }}</span> {{ i.text }}{% if i.is_done %} <span class="muted">(done)</span>{% endif %} <span class="muted">· {% if i.published_at %}published{% else %}not published{% endif %}</span></span>
+              <span class="flex gap-1">
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:item_edit' i.pk %}">Edit</a>
+                {% if i.published_at %}{% url 'portaladmin:publish' 'item' i.pk 'off' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Hide" next=request.path %}{% else %}{% url 'portaladmin:publish' 'item' i.pk 'on' as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Publish" style="btn-primary" next=request.path %}{% endif %}
+              </span>
+            </li>
+          {% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+    </div>
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="dv-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="dv-h" class="font-semibold">Deliverables</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:deliverable_new' p.pk %}">Add deliverable</a></div>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for row in deliverables %}<li><a class="underline" href="{% url 'portaladmin:deliverable' row.d.pk %}">{{ row.d.title }}</a> <span class="muted">{{ row.versions|length }} version{{ row.versions|length|pluralize }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="cr-h">
+        <h2 id="cr-h" class="font-semibold">Customer change requests</h2>
+        <p class="muted text-xs">The portal can only request. Accepting records the decision; edit scope, price or dates through the normal process.</p>
+        <ul class="mt-3 space-y-2 text-sm" data-testid="changes">
+          {% for c in changes %}<li><a class="underline" href="{% url 'portaladmin:change_review' c.pk %}">{{ c.title }}</a> <span class="muted">{{ c.get_status_display }} · {{ c.created_at|date:"j M Y" }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="sc-h">
+        <h2 id="sc-h" class="font-semibold">Agreed scope (as shown)</h2>
+        <p class="mt-2 whitespace-pre-wrap break-words text-sm">{{ p.agreed_scope|default:"Not written yet." }}</p>
+        {% if p.internal_notes %}<p class="mt-3 rounded-md bg-slate-50 p-2 text-xs dark:bg-slate-800"><strong>Internal (never shown):</strong> {{ p.internal_notes }}</p>{% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

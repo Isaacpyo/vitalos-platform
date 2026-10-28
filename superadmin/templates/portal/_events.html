@@ -1,0 +1,12 @@
+{# Activity feed. Context: events. Every entry was written from published fields only. #}
+{% load portal_ui %}
+<ol class="list" data-testid="activity">
+  {% for e in events %}
+    <li>
+      {% if e.url_name %}<a href="{% purl_kw e.url_name e.url_kwargs %}">{{ e.summary }}</a>{% else %}{{ e.summary }}{% endif %}
+      <br><span class="muted small">{{ e.occurred_at|date:"j M Y, H:i" }}{% if e.actor_is_customer %} · by your team{% else %} · Vitalos{% endif %}</span>
+    </li>
+  {% empty %}
+    <li class="muted">No activity yet.</li>
+  {% endfor %}
+</ol>

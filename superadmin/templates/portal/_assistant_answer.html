@@ -1,0 +1,36 @@
+{# One assistant answer. Context: answer (apps.portal.ai.Answer), activity_label. #}
+{% load portal_ui %}
+<section class="answer{% if answer.mode != 'compiled' %} answer--ai{% endif %}" aria-labelledby="answer-title" data-testid="assistant-answer" data-mode="{{ answer.mode }}">
+  <p class="eyebrow">{{ activity_label }}</p>
+  <h3 id="answer-title" class="sr-only">{{ activity_label }}</h3>
+  <p><span class="badge {% if answer.mode == 'compiled' %}badge--neutral{% else %}badge--warn{% endif %}" data-testid="answer-label">{{ answer.label }}</span></p>
+  {% if answer.note %}<p class="notice notice--warn small" role="note">{{ answer.note }}</p>{% endif %}
+  {% if answer.summary %}<p><strong>{{ answer.summary }}</strong></p>{% endif %}
+  {% if answer.points %}
+    <ul class="stack-sm">
+      {% for p in answer.points %}
+        <li>{{ p.text }}
+          <span class="citations small">{% for sid in p.sources %}{% for s in answer.sources %}{% if s.id == sid %}[<a href="{% purl_kw s.url_name s.url_kwargs %}">{{ s.id }}</a>]{% endif %}{% endfor %}{% endfor %}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% if answer.gaps %}
+    <h4 class="mt-2">Missing or possibly out of date</h4>
+    <ul class="small">{% for g in answer.gaps %}<li>{{ g }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if answer.draft %}
+    <h4 class="mt-2">A draft you can edit</h4>
+    <p class="muted small">Review and change this before sending anything. Nothing is sent for you.</p>
+    <pre class="preview-text" id="assistant-draft">{{ answer.draft }}</pre>
+    <p class="mt-1"><button type="button" class="btn btn--secondary btn--sm" data-fill="#composer" data-from="assistant-draft">Use this draft in the message box</button></p>
+  {% endif %}
+  {% with cited=answer.cited %}
+    {% if cited %}
+      <details class="sources mt-2">
+        <summary>Records used ({{ cited|length }})</summary>
+        <ul>{% for s in cited %}<li>[{{ s.id }}] <a href="{% purl_kw s.url_name s.url_kwargs %}">{{ s.label }}</a>{% if s.updated %} · updated {{ s.updated|date:"j M Y" }}{% endif %}</li>{% endfor %}</ul>
+      </details>
+    {% endif %}
+  {% endwith %}
+</section>

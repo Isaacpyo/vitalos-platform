@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Client portal</p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold">Client portal</h1>
+      <p class="muted mt-1 max-w-2xl text-sm">What customers can see, what is waiting on them, and what they have done. Nothing here is visible to a customer until you publish it.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{% url 'portaladmin:org_new' %}">{% icon "plus" "h-4 w-4" %} New organisation</a>
+  </div>
+  {% include "portaladmin/_nav.html" with section="home" %}
+
+  {% if failed %}
+    <p class="mt-4 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200" role="status">{{ failed }} portal email{{ failed|pluralize }} failed to send. <a class="underline" href="{% url 'portaladmin:deliveries' %}?status=failed">Review delivery</a>. The underlying actions were not affected.</p>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <section class="card p-5" aria-labelledby="decisions-h" data-testid="outstanding">
+      <h2 id="decisions-h" class="font-semibold">Outstanding customer decisions</h2>
+      <p class="muted text-xs">Waiting on a customer. Approvals are tracked per version.</p>
+      <h3 class="mono-label muted mt-4">Deliverable versions awaiting approval</h3>
+      <ul class="mt-2 space-y-2 text-sm">
+        {% for v in decisions.versions %}<li><a class="underline" href="{% url 'portaladmin:deliverable' v.deliverable_id %}">{{ v.deliverable.title }} v{{ v.number }}</a> <span class="muted">{{ v.deliverable.project.challenge.organisation.name }} · shared {{ v.shared_at|date:"j M Y" }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+      </ul>
+      <h3 class="mono-label muted mt-4">Briefs awaiting review</h3>
+      <ul class="mt-2 space-y-2 text-sm">
+        {% for b in decisions.briefs %}<li><a class="underline" href="{% url 'portaladmin:challenge' b.challenge_id %}">{{ b.challenge.title }} brief v{{ b.number }}</a> <span class="muted">{{ b.challenge.organisation.name }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+      </ul>
+      <h3 class="mono-label muted mt-4">Questions awaiting an answer</h3>
+      <ul class="mt-2 space-y-2 text-sm">
+        {% for q in decisions.questions %}<li><a class="underline" href="{% url 'portaladmin:challenge' q.challenge_id %}">{{ q.question }}</a> <span class="muted">{{ q.challenge.organisation.name }}{% if q.due_date %} · due {{ q.due_date|date:"j M Y" }}{% endif %}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+      </ul>
+      <h3 class="mono-label muted mt-4">Change requests to review</h3>
+      <ul class="mt-2 space-y-2 text-sm">
+        {% for c in decisions.changes %}<li><a class="underline" href="{% url 'portaladmin:change_review' c.pk %}">{{ c.title }}</a> <span class="muted">{{ c.project.challenge.organisation.name }} · {{ c.get_status_display }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+      </ul>
+    </section>
+
+    <div class="space-y-6">
+      <section class="card p-5" aria-labelledby="act-h">
+        <h2 id="act-h" class="font-semibold">Recent customer activity</h2>
+        <ul class="mt-3 space-y-2 text-sm" data-testid="customer-activity">
+          {% for e in activity %}<li>{{ e.summary }} <span class="muted">· {{ e.challenge.organisation.name }} · {{ e.occurred_at|date:"j M, H:i" }}</span></li>{% empty %}<li class="muted">No customer activity yet.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="org-h">
+        <h2 id="org-h" class="font-semibold">Organisations</h2>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for o in orgs %}<li><a class="underline" href="{% url 'portaladmin:org' o.pk %}">{{ o.name }}</a>{% if o.is_synthetic %} <span class="muted">(synthetic)</span>{% endif %}</li>{% empty %}<li class="muted">No organisations yet. Create one, invite a member, then link an opportunity from the pipeline.</li>{% endfor %}
+        </ul>
+      </section>
+      <section class="card p-5" aria-labelledby="ch-h">
+        <h2 id="ch-h" class="font-semibold">Recent challenges</h2>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for c in challenges %}<li><a class="underline" href="{% url 'portaladmin:challenge' c.pk %}">{{ c.title }}</a> <span class="muted">{{ c.organisation.name }} · {{ c.get_journey_stage_display }}{% if not c.shared_at %} · not shared{% endif %}</span></li>{% empty %}<li class="muted">None yet.</li>{% endfor %}
+        </ul>
+      </section>
+    </div>
+  </div>
+{% endblock %}

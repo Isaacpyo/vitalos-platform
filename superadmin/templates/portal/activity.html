@@ -1,0 +1,6 @@
+{% extends "portal/base.html" %}
+{% block title %}Activity · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Activity</h1><p class="lede">What has happened on your challenges and projects, newest first.</p></div></div>
+  <div class="card">{% include "portal/_events.html" %}</div>
+{% endblock %}

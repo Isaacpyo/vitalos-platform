@@ -9,7 +9,9 @@ EXEMPT_PREFIXES = ("/login/", "/logout/", "/account/2fa/", "/static/", "/healthz
 
 
 class OTPEnforcementMiddleware:
-    """Send authenticated users who still owe a second factor to verification or enrolment."""
+    """Send authenticated users who still owe a second factor to verification or enrolment.
+
+    Portal surfaces are skipped: the client portal runs its own optional second factor (ADR-056)."""
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -19,6 +21,7 @@ class OTPEnforcementMiddleware:
         if (
             user.is_authenticated
             and not request.path.startswith(EXEMPT_PREFIXES)
+            and not getattr(request, "portal_surface", False)
             and not user.is_verified()
             and otp_required(user)
         ):

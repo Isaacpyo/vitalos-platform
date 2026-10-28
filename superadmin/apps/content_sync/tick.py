@@ -93,6 +93,12 @@ def run(now=None) -> dict:
         tick_sync(now)  # Stripe payments reconciliation, at most every 10 minutes and only with a key
     except Exception:  # noqa: BLE001 - billing must never stop the tick
         logger.exception("Billing sync failed")
+    try:
+        from apps.portal.notifications import send_pending
+
+        send_pending(limit=25)  # client portal emails that are due for a bounded retry (ADR-056)
+    except Exception:  # noqa: BLE001 - portal mail must never stop the tick
+        logger.exception("Portal email retry failed")
     state = TickState.load()
     daily = {}
     if _daily_due(state, now):

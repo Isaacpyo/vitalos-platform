@@ -1,0 +1,32 @@
+{
+  "_readme": "SIMULATED demonstration fixture, hand-written for the synthetic Northwind Synthetic Ltd seed data (portal_seed_demo). It is not output from a live model. Points cite records by their visible label.",
+  "label": "simulated",
+  "summary": "Several things are waiting on you, and one is overdue.",
+  "points": [
+    {
+      "text": "Provide a sample ledger export (this is overdue).",
+      "cite": [
+        "Dependency: Provide a sample ledger export"
+      ]
+    },
+    {
+      "text": "Answer which ledger system you export from.",
+      "cite": [
+        "Question: Which ledger system do you export from?"
+      ]
+    },
+    {
+      "text": "Review proposed brief version 2.",
+      "cite": [
+        "Brief: Review proposed brief v2"
+      ]
+    },
+    {
+      "text": "Decide on version 2 of the Prototype findings report.",
+      "cite": [
+        "Approval: Review Prototype findings report (version 2)"
+      ]
+    }
+  ],
+  "gaps": []
+}

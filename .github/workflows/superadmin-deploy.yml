@@ -353,6 +353,9 @@ jobs:
           AI_DATA_LLM_API_KEY: ${{ secrets.AI_DATA_LLM_API_KEY || secrets.ANTHROPIC_API_KEY }}
           # Billing (superadmin/apps/billing/README.md). Unset key: billing works, Stripe calls are off.
           BILLING_PUBLIC_SITE_URL: ${{ vars.BILLING_PUBLIC_SITE_URL }}
+          PORTAL_HOST: ${{ vars.PORTAL_HOST }}
+          PORTAL_ENABLED: ${{ vars.PORTAL_ENABLED }}
+          PORTAL_FILES_BUCKET: ${{ vars.PORTAL_FILES_BUCKET }}
           BILLING_STRIPE_SECRET_KEY: ${{ secrets.BILLING_STRIPE_SECRET_KEY }}
           BILLING_STRIPE_WEBHOOK_SECRET: ${{ secrets.BILLING_STRIPE_WEBHOOK_SECRET }}
         run: |

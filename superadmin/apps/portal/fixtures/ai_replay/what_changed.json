@@ -1,0 +1,26 @@
+{
+  "_readme": "SIMULATED demonstration fixture, hand-written for the synthetic Northwind Synthetic Ltd seed data (portal_seed_demo). It is not output from a live model. Points cite records by their visible label.",
+  "label": "simulated",
+  "summary": "Vitalos has been active on your project since your last visit.",
+  "points": [
+    {
+      "text": "An update was published: Week 2, sample data checked.",
+      "cite": [
+        "Activity: Update: Week 2: sample data checked"
+      ]
+    },
+    {
+      "text": "Version 2 of the Prototype findings report was shared for review.",
+      "cite": [
+        "Activity: Prototype findings report: version 2 is ready to review"
+      ]
+    },
+    {
+      "text": "A new brief (version 2) is ready for you to review.",
+      "cite": [
+        "Activity: A new brief (version 2) is ready for you to review"
+      ]
+    }
+  ],
+  "gaps": []
+}

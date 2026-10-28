@@ -1,0 +1,33 @@
+{% load static %}<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="light dark">
+    <title>{% block title %}Vitalos client portal{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
+    <script src="{% static 'portal/portal.js' %}" nonce="{{ csp_nonce }}" defer></script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <div class="auth">
+      <div class="auth__card">
+        <div class="auth__brand">
+          <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28">
+          <span class="eyebrow eyebrow--inline">Client portal</span>
+        </div>
+        <main id="main" class="auth__body" tabindex="-1">
+          {% if messages %}
+            <div class="stack-sm mb-2" role="status" aria-live="polite">
+              {% for message in messages %}<p class="notice{% if message.level_tag == 'error' %} notice--warn{% endif %}">{{ message }}</p>{% endfor %}
+            </div>
+          {% endif %}
+          {% block body %}{% endblock %}
+        </main>
+        <p class="muted small center mt-2">{% block foot %}Vitalos Technologies. Repeated wrong passwords lock sign-in for a while.{% endblock %}</p>
+      </div>
+    </div>
+  </body>
+</html>

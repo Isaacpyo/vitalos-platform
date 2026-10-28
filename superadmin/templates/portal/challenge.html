@@ -1,0 +1,103 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ challenge.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'challenges' %}">Challenges</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Submitted {{ challenge.submitted_at|date:"j M Y" }}</p>
+      <h1>{{ challenge.title }}</h1>
+      {% if challenge.status_note %}<p class="lede">{{ challenge.status_note }}</p>{% endif %}
+    </div>
+  </div>
+
+  <ol class="journey mb-2" aria-label="Where this challenge is">
+    {% for step in journey %}<li data-state="{{ step.state }}">{{ step.label }}{% if step.state == "current" %} <span class="sr-only">(current stage)</span>{% endif %}</li>{% endfor %}
+  </ol>
+
+  <div class="grid grid--main">
+    <div class="stack">
+      <section class="card" aria-labelledby="sub-h">
+        <h2 id="sub-h">What you told us</h2>
+        <p class="muted small">Your original submission, kept as you wrote it.</p>
+        <div class="prose mt-1" data-testid="submitted-problem">{{ challenge.submitted_problem|default:"No problem description was recorded." }}</div>
+        {% if challenge.submitted_outcome %}<h3 class="mt-2">The outcome you want</h3><div class="prose mt-1">{{ challenge.submitted_outcome }}</div>{% endif %}
+      </section>
+
+      {% if pending %}
+        <section class="card card--attention" aria-labelledby="pend-h" data-testid="pending-brief">
+          <div class="card__head"><h2 id="pend-h">Brief version {{ pending.number }}: please review</h2><span class="badge badge--warn">Proposed</span></div>
+          {% if pending.change_note %}<p class="notice small">What changed: {{ pending.change_note }}</p>{% endif %}
+          {% include "portal/_brief.html" with brief=pending %}
+          {% if member.can_comment and not preview %}
+            <form method="post" action="{% purl 'brief_review' pk=challenge.pk brief_pk=pending.pk %}" class="mt-2" novalidate>
+              {% csrf_token %}
+              <div class="field"><label for="brief-comment">Comment (needed if you want changes)</label><textarea class="p-input p-textarea" id="brief-comment" name="comment" rows="3" maxlength="2000"></textarea></div>
+              <div class="row">
+                {% if member.can_approve %}<button class="btn" type="submit" name="decision" value="accept">Accept this brief</button>{% endif %}
+                <button class="btn btn--secondary" type="submit" name="decision" value="changes">Comment and request changes</button>
+              </div>
+              {% if not member.can_approve %}<p class="help">Accepting a brief needs an approver in your organisation. You can comment and request changes.</p>{% endif %}
+              <p class="help">Accepting a brief records a shared understanding. It is not a contract and does not change price or dates.</p>
+            </form>
+          {% elif preview %}<p class="notice mt-2">Preview is read-only.</p>
+          {% else %}<p class="notice mt-2">Your role is read-only.</p>{% endif %}
+        </section>
+      {% endif %}
+
+      <section class="card" aria-labelledby="brief-h">
+        <div class="card__head"><h2 id="brief-h">Agreed brief</h2>{% if agreed %}<span class="badge badge--ok">Version {{ agreed.number }} agreed</span>{% endif %}</div>
+        {% if agreed %}
+          {% include "portal/_brief.html" with brief=agreed %}
+          <p class="muted small">Agreed by {{ agreed.agreed_by|person:False }} on {{ agreed.agreed_at|date:"j M Y" }}.</p>
+        {% else %}
+          <p class="muted">There is no agreed brief yet. Vitalos will propose one for you to review.</p>
+        {% endif %}
+        {% if briefs|length > 1 or not agreed %}
+          <details class="mt-2">
+            <summary>Version history ({{ briefs|length }})</summary>
+            <ul class="list mt-1">
+              {% for b in briefs %}
+                <li><strong>Version {{ b.number }}</strong> {% badge b.status b.get_status_display %} <span class="muted small">{{ b.proposed_at|date:"j M Y" }}</span>
+                  {% if b.summary %}<br><span class="small">{{ b.summary }}</span>{% endif %}
+                  {% for r in b.reviews.all %}<br><span class="muted small">{{ r.get_decision_display }} by {{ r.user|person:False }}, {{ r.created_at|date:"j M Y" }}{% if r.comment %}: {{ r.comment }}{% endif %}</span>{% endfor %}
+                </li>
+              {% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+        <p class="help mt-1">Tags show where each statement came from: your words, an agreed fact, or an AI suggestion that a person at Vitalos has reviewed.</p>
+      </section>
+
+      <section class="card" id="discussion" aria-labelledby="disc-h">
+        <h2 id="disc-h">Discussion</h2>
+        <p class="muted small">Add clarifications here. Vitalos is notified.</p>
+        {% include "portal/_messages.html" %}
+        <div class="mt-2">{% include "portal/_composer.html" with composer_id="composer" %}</div>
+      </section>
+    </div>
+
+    <aside class="stack" aria-label="Related">
+      {% if questions %}
+        <section class="card" aria-labelledby="q-h">
+          <h2 id="q-h">Questions</h2>
+          <ul class="list">{% for q in questions %}<li><a href="{% purl 'question' pk=q.pk %}">{{ q.question }}</a> {% badge q.status q.get_status_display %}</li>{% endfor %}</ul>
+        </section>
+      {% endif %}
+      <section class="card" aria-labelledby="p-h">
+        <h2 id="p-h">Projects</h2>
+        <ul class="list">{% for p in projects %}<li><a href="{% purl 'project' pk=p.pk %}">{{ p.name }}</a> {% badge p.status p.get_status_display %}</li>{% empty %}<li class="muted">No project has been started yet. Next steps will appear here.</li>{% endfor %}</ul>
+      </section>
+      <section class="card" aria-labelledby="u-h">
+        <h2 id="u-h">Updates</h2>
+        <ul class="list">{% for u in updates %}<li><a href="{% purl 'update' pk=u.pk %}">{{ u.title }}</a><br><span class="muted small">{{ u.published_at|date:"j M Y" }}</span></li>{% empty %}<li class="muted">No updates yet.</li>{% endfor %}</ul>
+      </section>
+      <section class="card" aria-labelledby="f-h">
+        <h2 id="f-h">Files</h2>
+        <ul class="list">{% for f in files %}<li><a href="{% purl 'file' pk=f.pk %}">{{ f.title }}</a></li>{% empty %}<li class="muted">No files yet.</li>{% endfor %}</ul>
+        <p class="mt-1"><a href="{% purl 'files' %}">Upload or manage files</a></p>
+      </section>
+      {% include "portal/_assistant_buttons.html" with items=assistant_items %}
+    </aside>
+  </div>
+{% endblock %}

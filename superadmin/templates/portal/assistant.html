@@ -1,0 +1,6 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ activity_label }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>{{ activity_label }}</h1></div><a class="btn btn--secondary" href="{% url 'portal:home' %}">Back to dashboard</a></div>
+  <div class="card">{% include "portal/_assistant_answer.html" %}</div>
+{% endblock %}

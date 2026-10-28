@@ -1,0 +1,38 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Question · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'questions' %}">Questions</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">{{ q.challenge.title }}</p>
+      <h1>{{ q.question }}</h1>
+      <p class="lede">{% badge q.status q.get_status_display %}{% if q.due_date %} Due {{ q.due_date|date:"j M Y" }}{% if q.due_date < today and q.status == "open" %} (overdue){% endif %}.{% endif %}</p>
+    </div>
+  </div>
+  <div class="stack">
+    {% if q.detail %}<section class="card"><h2>Detail</h2><p class="prose mt-1">{{ q.detail }}</p></section>{% endif %}
+    <section class="card" aria-labelledby="ans-h">
+      <h2 id="ans-h">Answers</h2>
+      <ul class="messages">
+        {% for r in responses %}
+          <li class="message"><span class="avatar" aria-hidden="true">{{ r.user|person:False|initials }}</span><div><div class="message__meta"><strong>{{ r.user|person:False }}</strong> · {{ r.created_at|date:"j M Y, H:i" }}</div><div class="message__body">{{ r.body }}</div></div></li>
+        {% empty %}
+          <li class="muted">No answer yet.</li>
+        {% endfor %}
+      </ul>
+      {% if q.status != "closed" %}
+        {% if member.can_comment and not preview %}
+          <form method="post" class="mt-2" novalidate>
+            {% csrf_token %}
+            <div class="field"><label for="id_body">{% if q.status == "open" %}Your answer{% else %}Add to your answer{% endif %}</label>{{ form.body }}{% for e in form.body.errors %}<p class="error" role="alert">{{ e }}</p>{% endfor %}</div>
+            <button class="btn" type="submit">Send answer</button>
+          </form>
+        {% elif preview %}<p class="notice mt-2">Preview is read-only.</p>
+        {% else %}<p class="notice mt-2">Your role is read-only. Ask a contributor to answer.</p>{% endif %}
+      {% else %}
+        <p class="notice mt-2">This question is closed.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

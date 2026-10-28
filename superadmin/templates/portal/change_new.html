@@ -1,0 +1,13 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Request a change · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'project' pk=project.pk %}">{{ project.name }}</a></p>
+  <div class="page-head"><div><h1>Request a change</h1><p class="lede">Anything that affects scope, cost or dates goes through a change request. You can ask here; nothing changes until Vitalos has reviewed it, replied, and any agreed change has been made through the normal process.</p></div></div>
+  <form class="card" method="post" novalidate>
+    {% csrf_token %}
+    {% include "portal/_fields.html" %}
+    <button class="btn" type="submit">Send change request</button>
+    <a class="btn btn--ghost" href="{% purl 'project' pk=project.pk %}">Cancel</a>
+  </form>
+{% endblock %}
