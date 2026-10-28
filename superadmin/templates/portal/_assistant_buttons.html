@@ -1,5 +1,4 @@
-{# Assistant actions. Context: items = list of (activity, label, field_name, field_value). Each is a POST form
-   that works without JavaScript and, with HTMX, loads the answer in place. #}
+{% comment %}Assistant actions. Context: items = list of (activity, label, field_name, field_value). Each is a POST form that works without JavaScript and, with HTMX, loads the answer in place.{% endcomment %}
 {% load portal_ui %}
 <div class="assistant" data-testid="assistant">
   <h2>Ask about your records</h2>
@@ -14,16 +13,21 @@
           {% if field %}<input type="hidden" name="{{ field }}" value="{{ value }}">{% endif %}
           <button type="submit" class="btn btn--secondary btn--sm" data-no-busy>{{ label }}</button>
         </form>
-        {% if replay_available %}
+      {% endfor %}
+    </div>
+    {% if replay_available %}
+      <p class="muted small mt-2">Local demonstration only: replay a hand-written, simulated answer instead (not a live model).</p>
+      <div class="row mt-1">
+        {% for activity, label, field, value in items %}
           <form method="post" action="{% purl 'assistant' activity=activity %}" hx-post="{% purl 'assistant' activity=activity %}" hx-target="#assistant-result" hx-swap="innerHTML" hx-indicator="#assistant-loading">
             {% csrf_token %}
             {% if field %}<input type="hidden" name="{{ field }}" value="{{ value }}">{% endif %}
             <input type="hidden" name="replay" value="1">
-            <button type="submit" class="btn btn--ghost btn--sm" data-no-busy title="Replays a hand-written demonstration answer. Not a live model.">{{ label }} (simulated demo)</button>
+            <button type="submit" class="btn btn--ghost btn--sm" data-no-busy>{{ label }} (simulated)</button>
           </form>
-        {% endif %}
-      {% endfor %}
-    </div>
+        {% endfor %}
+      </div>
+    {% endif %}
     <div id="assistant-loading" class="htmx-indicator" role="status" aria-live="polite"><span class="skeleton"></span><span class="skeleton"></span><span class="sr-only">Working on your answer</span></div>
     <div id="assistant-result" class="mt-2" aria-live="polite"></div>
   {% endif %}

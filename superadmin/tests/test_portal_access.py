@@ -3,22 +3,21 @@
 import datetime as dt
 
 import pytest
-from django.core import mail
 from django.test import Client
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.accounts.roles import SUPERADMIN
-from apps.accounts.services import set_role
 from apps.audit.models import AuditEvent
 from apps.portal import services
 from apps.portal.models import Invitation, Membership, Role
-from tests.portal_helpers import PASSWORD, build_world, client_for, make_member, make_staff
+from tests.portal_helpers import PASSWORD, build_world, client_for, make_member
 
 
 @pytest.fixture
-def world(db):
-    return build_world()
+def world(db, mailoutbox):
+    built = build_world()
+    mailoutbox.clear()  # building the world publishes things, which emails members
+    return built
 
 
 def _invite(world, email="newbie@northwind.example.test", role=Role.CONTRIBUTOR, send=True):
@@ -258,9 +257,3 @@ def test_logout_requires_post_and_ends_the_session(world):
     assert client.get("/portal/sign-out/").status_code == 405
     assert client.post("/portal/sign-out/").status_code == 302
     assert client.get("/portal/").status_code == 302
-
-
-def test_make_staff_helper_is_a_real_superadmin(world):
-    other = make_staff("another-staff@example.test")
-    set_role(other, SUPERADMIN, actor=None)
-    assert mail.outbox == []

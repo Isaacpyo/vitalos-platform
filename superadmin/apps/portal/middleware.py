@@ -69,6 +69,12 @@ class CustomerBoundaryMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+    @staticmethod
+    def _is_member(user) -> bool:
+        from . import selectors
+
+        return selectors.get_membership(user) is not None
+
     def __call__(self, request):
         user = getattr(request, "user", None)
         if user is not None and user.is_authenticated and not user_roles(user):
@@ -77,7 +83,12 @@ class CustomerBoundaryMiddleware:
                 return self.get_response(request)
             if path.startswith(OPEN_PREFIXES):
                 return self.get_response(request)
-            if path in ("/", "/login/") and request.method in ("GET", "HEAD") and settings.PORTAL_ENABLED:
+            if (
+                path in ("/", "/login/")
+                and request.method in ("GET", "HEAD")
+                and settings.PORTAL_ENABLED
+                and self._is_member(user)
+            ):
                 return HttpResponseRedirect(portal_home_url())
             raise PermissionDenied
         return self.get_response(request)

@@ -1099,6 +1099,9 @@ table.table {
 .answer--ai {
   border-left-color: var(--aid-warn-700);
 }
+.answer .badge {
+  white-space: normal;
+}
 .citations a {
   font-size: 0.8125rem;
 }
