@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load ui aidata_ui %}
+{% block title %}Budget · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">AI &amp; Data</p>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Budget</h1>
+    {% if can_edit %}
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'aidata:budget_settings' %}" class="btn btn-secondary btn-sm">{% icon "settings" "h-4 w-4" %} Ceilings</a>
+        <a href="{% url 'aidata:cost_new' %}" class="btn btn-primary btn-sm">{% icon "plus" "h-4 w-4" %} Add a cost</a>
+      </div>
+    {% endif %}
+  </div>
+  {% include "aidata/_nav.html" with section="budget" %}
+
+  <div class="mt-4 flex gap-3 rounded-md border border-slate-300 bg-slate-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800/60" role="note" data-testid="cap-note">
+    {% icon "info" "h-5 w-5 shrink-0" %}
+    <p><strong>A cloud budget alert is not a spending cap.</strong> This page tracks spend against the speculative ceiling (AID-013); it does not stop anything being charged. Any new paid service needs the owner's approval, even within the ceiling. Recurring commitments count for 12 months.</p>
+  </div>
+  {% if ceilings_mismatch %}
+    <p class="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" role="alert">The category ceilings add up to {{ category_total|gbp }}, not the overall ceiling of {{ overall.ceiling|gbp }}.</p>
+  {% endif %}
+  {% if overall.status != "ok" %}
+    <p class="mt-3 rounded-md border p-3 text-sm font-medium {% if overall.status == 'over' %}border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200{% else %}border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200{% endif %}" role="alert" data-testid="overall-warning">
+      {% if overall.status == 'over' %}Over the overall ceiling by {{ overall.over_by|gbp }}.{% else %}{{ overall.percent }}% of the overall ceiling is used or planned.{% endif %}
+    </p>
+  {% endif %}
+
+  <section class="card mt-4 p-5" aria-labelledby="overall-heading">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <h2 id="overall-heading" class="font-semibold">Overall</h2>
+      <p><span class="tabular text-2xl font-semibold" data-testid="overall-used">{{ overall.used|gbp }}</span> <span class="muted text-sm">of {{ overall.ceiling|gbp }} · {{ overall.remaining|gbp }} remaining</span></p>
+    </div>
+    <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ overall.percent }}" aria-label="Overall budget used">
+      <div class="h-full {{ overall.percent|bar_width }} {% if overall.status == 'over' %}bg-rose-600{% elif overall.status == 'warn' %}bg-amber-500{% else %}bg-mineral{% endif %}"></div>
+    </div>
+  </section>
+
+  <div class="card mt-4 overflow-x-auto">
+    <table class="table-base" data-testid="budget-table">
+      <caption class="sr-only">Spend by category</caption>
+      <thead><tr><th scope="col">Category</th><th scope="col" class="text-right">Ceiling</th><th scope="col" class="text-right">Actual</th><th scope="col" class="text-right">Planned</th><th scope="col" class="text-right">Committed</th><th scope="col" class="text-right">Remaining</th><th scope="col">Status</th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for line in lines %}
+          <tr data-category="{{ line.key }}">
+            <th scope="row" class="align-top !text-[13px] !font-medium !normal-case !tracking-normal text-slate-900 dark:text-slate-100">{{ line.label }}</th>
+            <td class="tabular text-right">{{ line.ceiling|gbp }}</td>
+            <td class="tabular text-right">{{ line.actual|gbp }}</td>
+            <td class="tabular text-right">{{ line.planned|gbp }}</td>
+            <td class="tabular text-right">{{ line.committed|gbp }}</td>
+            <td class="tabular text-right {% if line.remaining < 0 %}font-medium text-rose-700 dark:text-rose-300{% endif %}">{{ line.remaining|gbp }}</td>
+            <td><span class="{{ line.status|budget_badge }}">{% if line.status == 'over' %}Over ceiling{% elif line.status == 'warn' %}{{ line.percent }}% used{% else %}OK{% endif %}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="border-t-2 border-slate-200 font-semibold dark:border-slate-700">
+        <tr>
+          <th scope="row" class="align-top !text-[13px] !normal-case !tracking-normal text-slate-900 dark:text-slate-100">Overall</th>
+          <td class="tabular px-3 py-2 text-right">{{ overall.ceiling|gbp }}</td>
+          <td class="tabular px-3 py-2 text-right">{{ overall.actual|gbp }}</td>
+          <td class="tabular px-3 py-2 text-right">{{ overall.planned|gbp }}</td>
+          <td class="tabular px-3 py-2 text-right">{{ overall.committed|gbp }}</td>
+          <td class="tabular px-3 py-2 text-right">{{ overall.remaining|gbp }}</td>
+          <td class="px-3 py-2"><span class="{{ overall.status|budget_badge }}">{% if overall.status == 'over' %}Over ceiling{% elif overall.status == 'warn' %}{{ overall.percent }}% used{% else %}OK{% endif %}</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <section class="mt-6" aria-labelledby="entries-heading">
+    <h2 id="entries-heading" class="font-semibold">Costs</h2>
+    <div class="card mt-2 overflow-x-auto">
+      <table class="table-base" data-testid="cost-table">
+        <caption class="sr-only">Cost entries</caption>
+        <thead><tr><th scope="col">Date</th><th scope="col">Category</th><th scope="col">Supplier and description</th><th scope="col">Kind</th><th scope="col" class="text-right">Amount</th><th scope="col">Owner</th><th scope="col">Evidence</th>{% if can_edit %}<th scope="col"><span class="sr-only">Actions</span></th>{% endif %}</tr></thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for entry in entries %}
+            <tr>
+              <td class="whitespace-nowrap">{{ entry.date|date:"j M Y" }}</td>
+              <td>{{ entry.get_category_display }}</td>
+              <td><span class="font-medium">{{ entry.supplier }}</span><span class="muted block text-xs">{{ entry.description }}</span></td>
+              <td class="whitespace-nowrap">{{ entry.get_kind_display }}{% if entry.recurrence != "none" %} <span class="muted text-xs">({{ entry.get_recurrence_display|lower }})</span>{% endif %}</td>
+              <td class="tabular whitespace-nowrap text-right">{{ entry.amount|gbp }}</td>
+              <td class="whitespace-nowrap">{{ entry.owner.email|default:"—" }}</td>
+              <td>{% if entry.evidence_link %}<a href="{{ entry.evidence_link }}" class="text-cobalt-600 hover:underline dark:text-cobalt-300" rel="noopener noreferrer" target="_blank">Link</a>{% else %}—{% endif %}</td>
+              {% if can_edit %}
+                <td class="whitespace-nowrap text-right">
+                  <a href="{% url 'aidata:cost_edit' entry.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+                  <form method="post" action="{% url 'aidata:cost_delete' entry.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm" aria-label="Delete the {{ entry.supplier }} cost of {{ entry.amount|gbp }}">Delete</button></form>
+                </td>
+              {% endif %}
+            </tr>
+          {% empty %}
+            <tr><td colspan="{% if can_edit %}8{% else %}7{% endif %}" class="muted py-10 text-center">No costs recorded. Known spend is £0.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if not can_edit %}<p class="muted mt-2 text-xs">View only. A super admin records costs and changes ceilings.</p>{% endif %}
+  </section>
+{% endblock %}

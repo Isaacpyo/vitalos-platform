@@ -1,0 +1,11 @@
+{# One form field with label, help and errors. Context: field, optional span ("full" spans both columns). #}
+<div class="{% if span == 'full' %}sm:col-span-2{% endif %}">
+  {% if field.widget_type == "checkbox" %}
+    <label class="flex items-center gap-2 text-sm font-medium">{{ field }} <span>{{ field.label }}</span></label>
+  {% else %}
+    <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}{% if field.field.required %} <span class="text-rose-600" aria-hidden="true">*</span>{% endif %}</label>
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<p class="field-help" id="{{ field.auto_id }}_help">{{ field.help_text }}</p>{% endif %}
+  {% for error in field.errors %}<p class="field-error" role="alert">{{ error }}</p>{% endfor %}
+</div>

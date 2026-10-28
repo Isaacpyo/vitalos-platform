@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ title }} · Budget · AI & Data · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'aidata:budget' %}" class="hover:underline">AI &amp; Data / Budget</a></p>
+  <h1 class="mt-1 text-2xl font-semibold">{{ title }}</h1>
+  {% include "aidata/_nav.html" with section="budget" %}
+  <p class="muted mt-4 max-w-2xl text-sm">Recording a cost here does not approve it. New paid services need the owner's approval. Never paste card numbers or secrets.</p>
+  <form method="post" class="card mt-4 max-w-2xl p-5" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_fields.html" with form=form %}
+    <div class="mt-5 flex justify-end gap-2">
+      <a href="{% url 'aidata:budget' %}" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary">{% icon "check" "h-4 w-4" %} Save</button>
+    </div>
+  </form>
+{% endblock %}

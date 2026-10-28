@@ -32,6 +32,9 @@ AUTOMATED = "automated"
 NOTIFICATION_HEADER = "X-Vitalos-Notification"
 REFERENCE_HEADER = "X-Vitalos-Reference"
 FORM_HEADER = "X-Vitalos-Form"
+#: AI & Data form relays (docs/ai-data/PLAN.md): the ingest opens an opportunity from them.
+PIPELINE_HEADER = "X-Vitalos-Pipeline"
+OFFER_HEADER = "X-Vitalos-Offer"
 WEB_NOTIFICATION = "web.enquiry-notification"
 OWN_DOMAIN = "vitalos.co.uk"
 NOREPLY_LOCAL_PARTS = ("mailer-daemon", "postmaster", "noreply", "no-reply", "donotreply", "do-not-reply")

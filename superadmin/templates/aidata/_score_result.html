@@ -1,0 +1,7 @@
+{% load aidata_ui %}
+{# Score and band, computed on the server. Context: result (scoring.Result), preview (bool). #}
+<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1" data-testid="score-result">
+  <p><span class="tabular text-3xl font-semibold" data-score>{% if result.score is not None %}{{ result.score }}{% else %}—{% endif %}</span><span class="muted text-sm"> / 100</span></p>
+  <span class="{{ result.band|band_badge }}" data-band="{{ result.band }}">{{ result.label }}</span>
+  {% if preview %}<span class="muted text-xs">Preview, not saved yet</span>{% endif %}
+</div>

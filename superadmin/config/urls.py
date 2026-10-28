@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/content/v1/", include("apps.content_sync.api_urls")),
     path("api/careers/v1/", include("apps.careers.api_urls")),
     path("careers/", include("apps.careers.urls")),
+    path("ai-data/", include("apps.aidata.urls")),
     path("api/", include("apps.enquiries.api_urls")),
     path("api/", include("apps.relay.api_urls")),
     path("settings/", include("apps.enquiries.settings_urls")),
