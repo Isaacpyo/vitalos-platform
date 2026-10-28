@@ -87,10 +87,22 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, launch milestone delivered._
+_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered._
 
-- `main` at `ed64d58` (PR #102, squash-merged). All CI green on `main`: CI, Super Admin (PostgreSQL tests, evaluation gate, container smoke), CodeQL, secret scan.
-- Website: production deployment `vitalos-platform-cefs1uag8` (Vercel, READY). `/ai-data`, `/solutions`, `/approach`, `/demonstrator`, `/contact` answer 200, are in the sitemap, carry the security headers and no `noindex`; thank-you is `noindex`. **Merging to `main` did not create a Vercel deployment** (no Git-triggered deployments in the last day; see runbook §1), so production was deployed from a clean checkout of `main` with `vercel deploy --prod`.
-- Super Admin: `Super Admin deploy` run for `ed64d58` succeeded; `/healthz/` 200; every `/ai-data/` page redirects anonymous users to sign-in.
-- Not verified in production: a real enquiry end to end (Turnstile human check needs a person) and the support@ → Super Admin email route (no access to Cloudflare Email Routing settings).
-- Next actions (owner): see "External prerequisites" in `commercial/20-first-sale-readiness.md` and the completion report; first, one test enquiry from a `@vitalos.co.uk` address at `/ai-data/contact`, then confirm it appears as an opportunity (stage New) and close it as Lost with reason "test".
+- `main` at `162f58e` (vitalos-technologies/vitalos-platform#104, squash-merged after every check passed on its head).
+- **Website** (Vercel deployed from the merge; the Git integration is reconnected):
+  - `vitalos.co.uk/pay` and `/pay/thank-you` answer 200 and are `noindex`.
+  - The `/pay` form posts to `https://admin.vitalos.co.uk/pay/checkout/`. Only `/pay` has the wider CSP, `form-action 'self' https://admin.vitalos.co.uk https://checkout.stripe.com`; `/contact` keeps `'self'`.
+  - The "See the demonstrator" button is gone from the AI & Data thank-you page.
+- **Super Admin** (`Super Admin deploy` for `162f58e` succeeded):
+  - `/healthz/` returns 200.
+  - `/billing/` redirects to sign-in.
+  - `GET /pay/checkout/` and `GET /api/webhooks/stripe/` return 405.
+  - A POST with an unknown invoice returns 303 to `vitalos.co.uk/pay?...&error=not-found`.
+- **AC-14 (live provider) is blocked.** The `AI & Data live evaluation` run 40735552845 stopped before any model call, so nothing was spent: neither `AI_DATA_LLM_API_KEY` nor the organisation's `ANTHROPIC_API_KEY` reaches this repository's `production` environment. Owner step: either give `vitalos-platform` access to the organisation secret `ANTHROPIC_API_KEY`, or add `AI_DATA_LLM_API_KEY` as a `production` environment secret. Then re-run the workflow with `confirm=LIVE`.
+- **Billing owner steps** (ADR-053; `superadmin/apps/billing/README.md`):
+  - Create a restricted key in Vitalos's own Stripe account and store it as `BILLING_STRIPE_SECRET_KEY`.
+  - Add a webhook to `https://admin.vitalos.co.uk/api/webhooks/stripe/` for `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`, and store its signing secret as `BILLING_STRIPE_WEBHOOK_SECRET`.
+  - Set `TURNSTILE_SECRET_KEY` as a `production` secret, with the same value as on Vercel, so that `/pay/checkout/` verifies the human check. Without it, only the honeypot and rate limits apply.
+  - Review Billing › Settings.
+- **Still not verified in production:** a real enquiry end to end, a live Stripe payment, and the live model path.
