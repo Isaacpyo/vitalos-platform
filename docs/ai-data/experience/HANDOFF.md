@@ -81,7 +81,11 @@ Folder: `/tmp/claude-0/-home-user/c4f095cc-360d-5d23-a143-c311cf5ef6e4/scratchpa
 - **Super Admin, PostgreSQL 16:**
   - Final tree (`f3c26c6`): ruff, format, the email guard, `makemigrations --check`, **pytest 1565 passed**, `recon_eval` (AC-1 to AC-13 pass, AC-14 not run), `aidata_eval` (22/22), bandit, and the migration guard (additive only). All PASS.
 - **Secrets:** gitleaks 8.28.0 over history is clean (one false positive allowlisted by exact value). `pip-audit --strict` is clean on both requirements files.
-- **CI on #106:** green for every job a draft runs (quality, unit, Super Admin lint/tests/deploy checks, pip-audit and bandit, gitleaks).
+- **CI on #106 (head `2fa8db6`, full ready-for-review run):** every job is green.
+  - **Website:** quality (`pnpm audit`, format, the email guard, lint and typecheck, boundaries); unit tests and build; e2e plus axe WCAG 2.2 AA, the JS budgets and the client bundle secret scan; e2e-draft plus axe on the draft templates; e2e-sparse; e2e-askbridge; storybook-a11y; SEO with Lighthouse budgets; visual (no CI baselines existed, so this run recorded them for adoption).
+  - **Database:** pgTAP.
+  - **Super Admin:** lint, tests and deploy checks; email gallery; pip-audit and bandit; container build and browser smoke test.
+  - **Code scanning:** CodeQL; gitleaks.
 - **Independent review:** permission boundaries were reviewed on `471a52f`. There were no critical or high findings. All three medium and six low findings, and the question-id mismatch, are fixed with 50 new tests (W10, see PROGRESS.md). Cookie-name hardening (`__Host-`) and reset-endpoint timing are recorded as follow-ups in ADR-056.
 
 ## Known issues and configuration blockers

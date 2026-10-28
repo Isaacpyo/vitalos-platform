@@ -4,8 +4,8 @@ Newest entries first. Each entry gives the time (UTC), what changed, and the evi
 
 ## Current state
 
-- **M0 to M7 done; M8 in progress.** Every lane (W5 to W10) is merged into `claude/amazing-cray-miqs1x`, the independent review findings are fixed, and every local gate is green. #106 is ready for review; the full CI browser suites run on it.
-- **Next:** watch #106 CI, then the owner's review and merge decision (see HANDOFF.md, "Merge and deploy").
+- **M0 to M8 done.** Every lane (W5 to W10) is merged into `claude/amazing-cray-miqs1x`, the independent review findings are fixed, every local gate is green, and the full CI is green on #106.
+- **Next:** the owner's review and merge decision (see HANDOFF.md, "Merge and deploy"). After that, the model key and the live evaluation.
 
 ## Facts established (28 Oct 2026, before implementation)
 
@@ -67,6 +67,8 @@ Outside this implementation's scope:
 | 28 Oct 2026 | At most three implementation agents at a time; W6 paused until W5 finishes                                                                                                                                     | Owner instruction                                                                                                                        |
 
 ## Log
+
+- **28 Oct 20:35: #106 ready for review; the full CI is green on `2fa8db6`** (all jobs, including e2e and axe, e2e-draft, SEO and Lighthouse, storybook-a11y, visual, pgTAP and the Super Admin container smoke test). M8 is done apart from the merge, which is held for the owner's review (see HANDOFF.md).
 
 - **28 Oct 20:20: review fixes merged (W10, `f3c26c6`); final gates green.**
   - **M1:** a newer shared version blocks every decision on an older one.
