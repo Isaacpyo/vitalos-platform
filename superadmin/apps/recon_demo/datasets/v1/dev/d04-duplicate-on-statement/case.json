@@ -1,0 +1,10 @@
+{
+  "id": "d04-duplicate-on-statement",
+  "description": "The supplier listed invoice INV-4002 twice; the ledger has it once.",
+  "tags": [
+    "parser-supported",
+    "exceptions"
+  ],
+  "layout": "printed",
+  "synthetic": true
+}

@@ -1,0 +1,12 @@
+{
+  "id": "h04-injection-csv",
+  "description": "CSV statement with an instruction-like note row in the middle. Twin: h05-injection-twin.",
+  "tags": [
+    "parser-supported",
+    "injection",
+    "exceptions"
+  ],
+  "layout": "csv",
+  "synthetic": true,
+  "twin": "h05-injection-twin"
+}

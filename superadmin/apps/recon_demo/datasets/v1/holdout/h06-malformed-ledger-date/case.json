@@ -1,0 +1,9 @@
+{
+  "id": "h06-malformed-ledger-date",
+  "description": "Ledger export with an impossible date (31/02/2026).",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

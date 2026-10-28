@@ -1,0 +1,4 @@
+date,reference,type,amount,description
+2026-10-02,INV-4001,invoice,310.00,invoice from supplier
+2026-10-07,INV-4002,invoice,1125.00,invoice from supplier
+2026-10-16,PAY-4003,payment,900.00,payment from supplier

@@ -1,0 +1,25 @@
+{
+  "id": "d10-freeform-schema-invalid",
+  "description": "Simulated model returns output that fails the JSON Schema twice: the run must fail as invalid_output, never accept the data.",
+  "tags": [
+    "model-path",
+    "provider-failure"
+  ],
+  "layout": "freeform",
+  "synthetic": true,
+  "simulated_script": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "source_line": "five",
+            "reference": "INV-8001"
+          }
+        ]
+      }
+    },
+    {
+      "respond": "Here are the lines: INV-8001 1250.00"
+    }
+  ]
+}

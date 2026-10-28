@@ -1,0 +1,10 @@
+{
+  "id": "d03-missing-mismatch-unmatched",
+  "description": "One invoice missing from the ledger, one amount transposed (1,440.00 vs 1,404.00), one ledger invoice not on the statement.",
+  "tags": [
+    "parser-supported",
+    "exceptions"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

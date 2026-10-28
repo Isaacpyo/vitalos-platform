@@ -1,0 +1,6 @@
+date,reference,type,amount,description
+2026-09-03,INV-1001,invoice,450.00,invoice from supplier
+2026-09-08,INV-1002,invoice,1275.40,invoice from supplier
+2026-09-12,CN-1003,credit,75.40,credit from supplier
+2026-09-18,PAY-1004,payment,1200.00,payment from supplier
+2026-09-24,INV-1005,invoice,389.99,invoice from supplier

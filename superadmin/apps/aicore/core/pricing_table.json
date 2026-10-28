@@ -1,0 +1,18 @@
+{
+  "label": "Estimate. Prices are list prices per 1M tokens as last known when this file was written; check the provider's price page before relying on them. FX is a planning assumption.",
+  "last_checked": "2026-10-28 (not verified against live price pages: no provider account in this milestone)",
+  "fx_to_gbp": { "USD": "0.80", "GBP": "1" },
+  "default": {
+    "note": "Unknown model: a deliberately high price so budget checks stay conservative.",
+    "input_per_mtok": "5.00",
+    "output_per_mtok": "15.00",
+    "currency": "USD"
+  },
+  "models": {
+    "simulated": { "input_per_mtok": "0", "output_per_mtok": "0", "currency": "GBP", "note": "Simulated test double: no provider, no cost." },
+    "gpt-4o-mini": { "input_per_mtok": "0.15", "output_per_mtok": "0.60", "currency": "USD" },
+    "gpt-4.1-mini": { "input_per_mtok": "0.40", "output_per_mtok": "1.60", "currency": "USD" },
+    "deepseek-chat": { "input_per_mtok": "0.27", "output_per_mtok": "1.10", "currency": "USD" },
+    "gemini-2.0-flash": { "input_per_mtok": "0.10", "output_per_mtok": "0.40", "currency": "USD" }
+  }
+}

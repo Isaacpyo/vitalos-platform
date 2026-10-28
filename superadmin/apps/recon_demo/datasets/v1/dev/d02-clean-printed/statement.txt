@@ -1,0 +1,14 @@
+NORTHGATE OFFICE SUPPLIES (FICTIONAL)
+Unit 4, Example Trading Estate, Exampletown EX1 1AA   accounts@northgate.example
+STATEMENT OF ACCOUNT                         Account: NOS-7731
+
+Date        Ref          Details                             Debit     Credit     Balance
+01/09/2026  B/F          Balance brought forward                                   640.00
+02/09/2026  INV-2001     Invoice                          2,340.00               2,980.00
+09/09/2026  INV-2002     Invoice                            118.75               3,098.75
+15/09/2026  PAY-2003     Payment received - BACS                     1,500.00    1,598.75
+22/09/2026  INV-2004     Invoice                          1,062.10               2,660.85
+29/09/2026  CN-2005      Credit note - damaged item                     18.75    2,642.10
+
+                                                       Closing balance           2,642.10
+Payment terms: 30 days from invoice date. Please quote the invoice reference with remittances.

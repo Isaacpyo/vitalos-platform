@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}New run · Demonstrator · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block"><a href="/ai-data/" class="hover:underline">AI &amp; Data</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="muted hidden sm:block"><a href="{% url 'recon_demo:index' %}" class="hover:underline">Demonstrator</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">New run</li>
+{% endblock %}
+{% block content %}
+  {% include "recon_demo/_header.html" with page_title="New reconciliation run" page_lead="Pick a built-in synthetic sample or paste a supplier statement and a purchase-ledger export. The run starts straight away." %}
+
+  <div class="mt-4 flex gap-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200" role="note" data-testid="client-data-warning">
+    {% icon "alert" "h-5 w-5 shrink-0" %}
+    <p><strong>Do not paste client or prospect data.</strong> This demonstrator is for synthetic data, or data a client has explicitly authorised in writing for this purpose. Pasted text is stored with the run.</p>
+  </div>
+
+  <form method="post" action="{% url 'recon_demo:new' %}" class="mt-6 grid gap-6 lg:grid-cols-3" novalidate data-testid="new-run-form">
+    {% csrf_token %}
+    {{ form.run_again }}
+    <div class="space-y-6 lg:col-span-2">
+      {% if form.non_field_errors %}<div class="field-error">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+      <fieldset class="card p-4">
+        <legend class="px-1 font-semibold">1. Input</legend>
+        <div class="mt-2 flex flex-wrap gap-4 text-sm">
+          {% for radio in form.source %}<label class="inline-flex items-center gap-2">{{ radio.tag }} {{ radio.choice_label }}</label>{% endfor %}
+        </div>
+        <div class="mt-4">
+          <label for="{{ form.sample_key.id_for_label }}" class="field-label">Sample</label>
+          {{ form.sample_key }}
+          {% if form.sample_key.errors %}<p class="field-error">{{ form.sample_key.errors|join:" " }}</p>{% endif %}
+        </div>
+        <details class="mt-4" {% if form.statement.value or form.ledger.value %}open{% endif %}>
+          <summary class="cursor-pointer text-sm font-medium">Paste text instead</summary>
+          <div class="mt-3 space-y-4">
+            <div>
+              <label for="{{ form.statement.id_for_label }}" class="field-label">Supplier statement (CSV export or printed text)</label>
+              {{ form.statement }}
+              <p class="field-help">Up to 64 KB of UTF-8 text. Larger, empty or binary input is rejected as Unsupported before any model call.</p>
+            </div>
+            <div>
+              <label for="{{ form.ledger.id_for_label }}" class="field-label">Purchase-ledger export (CSV)</label>
+              {{ form.ledger }}
+              <p class="field-help">Columns: date, reference, type (invoice, credit, payment), amount. Other columns are ignored.</p>
+            </div>
+          </div>
+        </details>
+      </fieldset>
+
+      <fieldset class="card p-4">
+        <legend class="px-1 font-semibold">2. Model path</legend>
+        <label for="{{ form.mode.id_for_label }}" class="field-label mt-2">For lines the parser cannot read</label>
+        {{ form.mode }}
+        {% if form.mode.errors %}<p class="field-error">{{ form.mode.errors|join:" " }}</p>{% endif %}
+        <ul class="muted mt-2 list-disc space-y-1 pl-5 text-xs">
+          <li><strong>Rules only</strong>: unreadable lines become "needs manual extraction" review items.</li>
+          <li><strong>Simulated</strong>: the sample's hand-written responses run through the real gateway, grounding and limits. Labelled simulated everywhere; not evidence of model quality.</li>
+          <li><strong>Live</strong>: {% if live_available %}calls the configured provider within the caps.{% else %}unavailable ({{ live_reason }}) The run continues rules-only.{% endif %}</li>
+        </ul>
+      </fieldset>
+
+      <div class="card p-4">
+        <label class="flex items-start gap-3 text-sm">
+          {{ form.synthetic_confirmed }}
+          <span><strong>{{ form.synthetic_confirmed.label }}</strong><br><span class="muted">Required for every run.</span></span>
+        </label>
+        {% if form.synthetic_confirmed.errors %}<p class="field-error">{{ form.synthetic_confirmed.errors|join:" " }}</p>{% endif %}
+        <div class="mt-4 flex items-center gap-3">
+          <button type="submit" class="btn btn-primary" {% if not demo_enabled %}disabled{% endif %}>{% icon "arrow-right" "h-4 w-4" %} Start run</button>
+          <a href="{% url 'recon_demo:index' %}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </div>
+    </div>
+
+    <aside class="space-y-3" aria-labelledby="samples-heading">
+      <h2 id="samples-heading" class="font-semibold">Built-in samples</h2>
+      <p class="muted text-xs">Fictional suppliers and ledgers from evaluation dataset v1.</p>
+      <ul class="space-y-2">
+        {% for sample in samples %}
+          <li class="card p-3">
+            <a href="?sample={{ sample.key }}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ sample.title }}</a>
+            {% if sample.has_script %} {% include "recon_demo/_simulated.html" %}{% endif %}
+            <p class="muted mt-0.5 text-xs">{{ sample.summary }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </form>
+{% endblock %}

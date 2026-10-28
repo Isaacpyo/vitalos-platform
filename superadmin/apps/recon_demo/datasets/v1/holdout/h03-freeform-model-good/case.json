@@ -1,0 +1,38 @@
+{
+  "id": "h03-freeform-model-good",
+  "description": "Different free-text supplier; simulated model response extracts every line correctly.",
+  "tags": [
+    "model-path"
+  ],
+  "layout": "freeform",
+  "synthetic": true,
+  "simulated_script": [
+    {
+      "respond": {
+        "lines": [
+          {
+            "source_line": 5,
+            "date": "2026-08-05",
+            "reference": "KX-410",
+            "type": "invoice",
+            "amount": "2215.00"
+          },
+          {
+            "source_line": 6,
+            "date": "2026-08-12",
+            "reference": "KX-411",
+            "type": "invoice",
+            "amount": "96.00"
+          },
+          {
+            "source_line": 7,
+            "date": "2026-08-21",
+            "reference": "KP-0821",
+            "type": "payment",
+            "amount": "1500.00"
+          }
+        ]
+      }
+    }
+  ]
+}

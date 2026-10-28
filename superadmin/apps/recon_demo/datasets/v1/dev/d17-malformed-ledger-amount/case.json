@@ -1,0 +1,9 @@
+{
+  "id": "d17-malformed-ledger-amount",
+  "description": "Ledger export with an unparseable amount.",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

@@ -1,0 +1,6 @@
+date,reference,type,amount,description
+2026-10-01,INV-3101,invoice,820.00,invoice from supplier
+2026-10-06,INV-3102,invoice,1404.00,invoice from supplier
+2026-10-14,PAY-3104,payment,2000.00,payment from supplier
+2026-10-20,INV-3105,invoice,512.30,invoice from supplier
+2026-10-27,INV-3199,invoice,230.00,invoice from supplier

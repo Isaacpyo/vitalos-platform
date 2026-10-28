@@ -1,0 +1,10 @@
+{
+  "id": "d02-clean-printed",
+  "description": "Printed (fixed-width) statement, every line matches, closing balance agrees.",
+  "tags": [
+    "parser-supported",
+    "clean"
+  ],
+  "layout": "printed",
+  "synthetic": true
+}

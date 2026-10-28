@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}AI settings · Demonstrator · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block"><a href="/ai-data/" class="hover:underline">AI &amp; Data</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="muted hidden sm:block"><a href="{% url 'recon_demo:index' %}" class="hover:underline">Demonstrator</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">AI settings</li>
+{% endblock %}
+{% block content %}
+  {% include "recon_demo/_header.html" with page_title="AI settings" page_lead="Kill switch and spending caps for AI & Data model calls. Every model call goes through the AI core gateway, which checks these before calling the provider. Changes are audited." %}
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-3">
+    <form method="post" class="card space-y-5 p-4 lg:col-span-2" novalidate data-testid="settings-form">
+      {% csrf_token %}
+      <div>
+        <label class="flex items-start gap-3 text-sm">{{ form.enabled }}<span><strong>{{ form.enabled.label }}</strong><br><span class="muted">{{ form.enabled.help_text }}</span></span></label>
+        {% if env_disabled %}<p class="field-error">AI_DATA_DISABLED is set in the environment: the demonstrator stays off whatever this says.</p>{% endif %}
+      </div>
+      <div>
+        <label class="flex items-start gap-3 text-sm">{{ form.model_path_enabled }}<span><strong>{{ form.model_path_enabled.label }}</strong><br><span class="muted">{{ form.model_path_enabled.help_text }}</span></span></label>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        {% for field in form %}{% if field.name != "enabled" and field.name != "model_path_enabled" %}
+          <div>
+            <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}<p class="field-error">{{ field.errors|join:" " }}</p>{% endif %}
+          </div>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+        <button type="submit" class="btn btn-primary">Save settings</button>
+        <p class="muted text-xs">Last changed {{ ai.updated_at|default:"never" }}{% if ai.updated_by %} by {{ ai.updated_by.email }}{% endif %}</p>
+      </div>
+    </form>
+
+    <aside class="space-y-4">
+      <section class="card p-4 text-sm" aria-labelledby="provider-heading">
+        <h2 id="provider-heading" class="font-semibold">Provider</h2>
+        {% if provider_configured %}
+          <p class="mt-1">OpenAI-compatible endpoint <span class="font-mono text-xs">{{ provider_host }}</span>, model <span class="font-mono text-xs">{{ provider_model }}</span>. The API key is set (never shown).</p>
+        {% else %}
+          <p class="mt-1" data-testid="provider-missing">{{ provider_reason }}</p>
+          <p class="muted mt-2 text-xs">Set <code class="font-mono">AI_DATA_LLM_BASE_URL</code>, <code class="font-mono">AI_DATA_LLM_MODEL</code> and the secret <code class="font-mono">AI_DATA_LLM_API_KEY</code> in the Super Admin's production environment (owner step, AID-012).</p>
+        {% endif %}
+        <p class="muted mt-3 text-xs">Price estimate for this model: {{ price.input_per_mtok }} / {{ price.output_per_mtok }} {{ price.currency }} per 1M input / output tokens{% if not price.known %} (unknown model: conservative default){% endif %}. {{ price_table.label }} Last checked: {{ price_table.last_checked }}.</p>
+      </section>
+      <section class="card p-4 text-sm" aria-labelledby="usage-heading">
+        <h2 id="usage-heading" class="font-semibold">Usage</h2>
+        <dl class="mt-2 grid grid-cols-2 gap-2">
+          <dt class="muted">Spend this month</dt><dd class="tabular">£{{ usage.spent_month_gbp|floatformat:4 }} of £{{ usage.budget_gbp }}</dd>
+          <dt class="muted">Live runs today</dt><dd class="tabular">{{ usage.runs_today }} of {{ usage.daily_cap }}</dd>
+          <dt class="muted">Executions this month</dt><dd class="tabular">{{ usage.executions_month }}</dd>
+        </dl>
+      </section>
+    </aside>
+  </div>
+
+  <section class="card mt-6" aria-labelledby="recent-heading">
+    <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800"><h2 id="recent-heading" class="font-semibold">Recent model executions</h2></div>
+    {% if executions %}
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead><tr><th scope="col">When</th><th scope="col">Run</th><th scope="col">Prompt</th><th scope="col">Model</th><th scope="col">Outcome</th><th scope="col" class="text-right">Attempts</th><th scope="col" class="text-right">Cost</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for e in executions %}<tr><td class="whitespace-nowrap">{{ e.created_at|date:"j M H:i" }}</td><td class="font-mono">{{ e.run_ref }}</td><td class="font-mono text-xs">{{ e.prompt_id }}@{{ e.prompt_version }}</td><td>{{ e.model }}{% if e.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</td><td>{{ e.get_outcome_display }}</td><td class="text-right tabular">{{ e.attempts }}</td><td class="text-right tabular">£{{ e.cost_gbp|floatformat:4 }}</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted p-4 text-sm">No model executions yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

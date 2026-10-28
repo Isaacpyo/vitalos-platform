@@ -1,0 +1,9 @@
+BRAMBLEWOOD CATERING SUPPLIES (FICTIONAL) - statement for account BCS-2209
+Customer: Northwind Bookkeeping Demo (fictional)
+
+Balance brought forward at 01 Aug 2026: £1,500.00
+Invoice KX-410 dated 05 Aug 2026 for £2,215.00
+Invoice KX-411 dated 12 Aug 2026 for £96.00
+Payment KP-0821 received 21 Aug 2026: £1,500.00 - thank you
+Balance due: £2,311.00
+Queries to accounts@bramblewood.example

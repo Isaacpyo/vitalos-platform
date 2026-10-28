@@ -1,0 +1,10 @@
+{
+  "id": "h02-mismatch-ledger-duplicate",
+  "description": "Amount mismatch (386.25 vs 368.25) and an invoice posted twice in the ledger.",
+  "tags": [
+    "parser-supported",
+    "exceptions"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

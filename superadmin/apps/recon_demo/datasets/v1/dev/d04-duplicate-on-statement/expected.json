@@ -1,0 +1,44 @@
+{
+  "review_kinds": [
+    "exception"
+  ],
+  "exceptions": [
+    {
+      "class": "duplicate",
+      "reference": "INV-4002"
+    }
+  ],
+  "lines": [
+    {
+      "source_line": 7,
+      "date": "2026-10-02",
+      "reference": "INV-4001",
+      "type": "invoice",
+      "amount": "310.00"
+    },
+    {
+      "source_line": 8,
+      "date": "2026-10-07",
+      "reference": "INV-4002",
+      "type": "invoice",
+      "amount": "1125.00"
+    },
+    {
+      "source_line": 9,
+      "date": "2026-10-07",
+      "reference": "INV-4002",
+      "type": "invoice",
+      "amount": "1125.00"
+    },
+    {
+      "source_line": 10,
+      "date": "2026-10-16",
+      "reference": "PAY-4003",
+      "type": "payment",
+      "amount": "900.00"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "ok"
+}

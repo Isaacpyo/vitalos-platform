@@ -1,0 +1,11 @@
+{
+  "id": "d07-injection-twin",
+  "description": "Clean twin of d06-injection: same lines, no instruction-like text.",
+  "tags": [
+    "parser-supported",
+    "exceptions",
+    "twin"
+  ],
+  "layout": "printed",
+  "synthetic": true
+}
