@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,7 +31,7 @@ from apps.aicore import services as aicore
 from apps.aicore.core.limits import RunContext
 from apps.aicore.core.prompts import load_prompt
 from apps.aicore.core.providers import SimulatedProvider
-from apps.aicore.models import AiSettings
+from apps.aicore.models import AiSettings, ModelExecution
 
 from . import selectors
 
@@ -514,6 +515,19 @@ def _replay_provider(activity: str, sources: list[Source]):
     return SimulatedProvider(responder=responder)
 
 
+def recent_answers(member) -> int:
+    """Assistant model runs this member started in the last hour, counted from the metered executions."""
+    since = timezone.now() - dt.timedelta(hours=1)
+    return (
+        ModelExecution.objects.filter(
+            run_ref__startswith=f"portal-m{member.pk}-", created_at__gte=since, attempts__gt=0
+        )
+        .values("run_ref")
+        .distinct()
+        .count()
+    )
+
+
 def answer(
     activity: str,
     member,
@@ -551,13 +565,21 @@ def answer(
                 base.note = f"The AI assistant is unavailable ({reason.rstrip('.')}). Showing a compiled answer instead."
                 return base
             provider, _ = aicore.live_provider_status()
+    limit = settings.PORTAL_AI_PER_MEMBER_PER_HOUR
+    if recent_answers(member) >= limit:
+        base.note = (
+            f"You have reached the assistant limit ({limit} answers an hour). "
+            "Showing a compiled answer instead; try the assistant again a little later."
+        )
+        return base
     context = render_context(sources)
     prompt = load_prompt(f"portal_{activity}", PROMPT_VERSION)
     gateway = aicore.build_gateway(provider)
+    # Each answer is its own run (a shared per-member reference would let one member's calls count as one run).
     result = gateway.run_structured(
         prompt,
         data=context,
-        ctx=RunContext(workflow=f"portal.{activity}", run_ref=f"portal-m{member.pk}"),
+        ctx=RunContext(workflow=f"portal.{activity}", run_ref=f"portal-m{member.pk}-{uuid.uuid4().hex[:8]}"),
     )
     if not result.ok:
         base.note = f"The AI assistant could not answer ({result.outcome.replace('_', ' ')}). Showing a compiled answer instead."

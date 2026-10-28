@@ -362,3 +362,140 @@ def test_l6_staff_back_redirect_keeps_local_paths(world):
         f"/client-portal/publish/milestone/{world.ms2.pk}/on/", {"next": f"/client-portal/projects/{world.project_a.pk}/"}
     )
     assert response["Location"] == f"/client-portal/projects/{world.project_a.pk}/"
+
+
+# --- M2: public and customer AI workflows cannot use the whole daily pool --------------------------------------
+
+
+def _live_runs(workflow, count, prefix):
+    """Metered live (not simulated) runs today, each its own run."""
+    import uuid
+
+    from apps.aicore.models import ModelExecution
+
+    for index in range(count):
+        ModelExecution.objects.create(
+            execution_id=uuid.uuid4(),
+            workflow=workflow,
+            run_ref=f"{prefix}-{index}",
+            prompt_id="p",
+            prompt_version=1,
+            prompt_hash="h",
+            provider="anthropic",
+            model="m",
+            outcome="success",
+            attempts=1,
+            simulated=False,
+        )
+
+
+def _guard_decision(workflow):
+    from apps.aicore import services as aicore
+    from apps.aicore.core.limits import RunContext
+
+    guard = aicore.build_gateway(object()).guard
+    return guard.check_call(
+        RunContext(workflow=workflow, run_ref="new-run"), input_chars=10, worst_case_gbp=0
+    )
+
+
+@pytest.fixture
+def pool(db):
+    from apps.aicore.models import AiSettings
+
+    AiSettings.objects.update_or_create(pk=1, defaults={"enabled": True, "daily_run_cap": 10})
+
+
+def test_m2_brief_assist_is_capped_at_its_share_of_the_daily_pool(pool):
+    _live_runs("aidata.brief_questions", 3, "ba")  # 30% of 10
+    refused = _guard_decision("aidata.brief_draft")
+    assert not refused.allowed and refused.limit == "workflow_daily_cap"
+    assert _guard_decision("aidata.extract_statement").allowed  # staff workflows keep headroom
+    assert _guard_decision("portal.unanswered").allowed
+
+
+def test_m2_portal_assistant_is_capped_at_its_share_of_the_daily_pool(pool):
+    _live_runs("portal.what_changed", 3, "portal-m1")
+    refused = _guard_decision("portal.unanswered")
+    assert not refused.allowed and refused.limit == "workflow_daily_cap"
+    assert _guard_decision("aidata.brief_questions").allowed
+
+
+def test_m2_public_and_customer_together_never_take_the_whole_pool(pool):
+    _live_runs("aidata.brief_questions", 3, "ba")
+    _live_runs("portal.unanswered", 3, "portal-m1")
+    staff = _guard_decision("aidata.extract_statement")
+    assert staff.allowed  # 6 of 10 used by public and customer at most; the other 4 stay for staff
+
+
+def test_m2_shares_are_settings_with_sane_defaults(settings, pool):
+    from django.conf import settings as django_settings
+
+    assert django_settings.AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT == 30
+    assert django_settings.AI_DATA_PORTAL_DAILY_SHARE_PERCENT == 30
+    assert django_settings.PORTAL_AI_PER_MEMBER_PER_HOUR == 10
+    settings.AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT = 10  # 1 of 10
+    _live_runs("aidata.brief_questions", 1, "ba")
+    assert not _guard_decision("aidata.brief_questions").allowed
+
+
+def test_m2_unused_share_is_not_reserved_for_a_closed_workflow(pool, settings):
+    settings.AI_DATA_BRIEF_ASSIST_DAILY_SHARE_PERCENT = 0
+    assert not _guard_decision("aidata.brief_questions").allowed
+
+
+def test_m2_portal_assistant_is_throttled_per_member_with_an_honest_answer(world):
+    import uuid
+
+    from apps.aicore.core.providers import SimulatedProvider
+    from apps.aicore.models import ModelExecution
+    from apps.portal import ai
+
+    for index in range(10):
+        ModelExecution.objects.create(
+            execution_id=uuid.uuid4(),
+            workflow="portal.unanswered",
+            run_ref=f"portal-m{world.approver.pk}-{index}",
+            prompt_id="p",
+            prompt_version=1,
+            prompt_hash="h",
+            provider="x",
+            model="m",
+            outcome="success",
+            attempts=1,
+            simulated=True,
+        )
+    provider = SimulatedProvider(
+        [{"respond": {"summary": "s", "points": [{"text": "t", "sources": ["S1"]}], "gaps": []}}]
+    )
+    result = ai.answer("unanswered", world.approver, provider=provider)
+    assert result.mode == "compiled" and provider.calls == []
+    assert "limit" in result.note.lower() and "10" in result.note
+    # Another member is unaffected, and the view answers 200, not an error page.
+    other = ai.answer(
+        "unanswered",
+        world.contrib,
+        provider=SimulatedProvider(
+            [{"respond": {"summary": "s", "points": [{"text": "t", "sources": ["S1"]}], "gaps": []}}]
+        ),
+    )
+    assert other.mode == "ai"
+    response = c(world.approver).post("/portal/assistant/unanswered/")
+    assert response.status_code == 200
+
+
+def test_m2_every_assistant_answer_is_its_own_run(world):
+    from apps.aicore.core.providers import SimulatedProvider
+    from apps.aicore.models import ModelExecution
+    from apps.portal import ai
+
+    def provider():
+        return SimulatedProvider(
+            [{"respond": {"summary": "s", "points": [{"text": "t", "sources": ["S1"]}], "gaps": []}}]
+        )
+
+    ai.answer("unanswered", world.approver, provider=provider())
+    ai.answer("unanswered", world.approver, provider=provider())
+    refs = set(ModelExecution.objects.values_list("run_ref", flat=True))
+    assert len(refs) == 2 and all(r.startswith(f"portal-m{world.approver.pk}-") for r in refs)
+    assert all(len(r) <= 40 for r in refs)
