@@ -129,6 +129,22 @@ export const routes = {
   product: (slug: string) => `/products/${seg(slug)}`,
   /** The podcast page: where the footer's Spotify and Apple links lead (owner direction, 16 Oct 2026). */
   podcast: () => "/podcast",
+  /**
+   * Vitalos AI & Data, the division section with its own header (docs/ai-data/PLAN.md, AID-002).
+   * Code-authored pages, ungated, in the sitemap except the thank-you receipt.
+   */
+  aiData: {
+    home: () => "/ai-data",
+    solutions: () => "/ai-data/solutions",
+    approach: () => "/ai-data/approach",
+    demonstrator: () => "/ai-data/demonstrator",
+    /** `offer` pre-selects one of the AI & Data offer keys in the form. */
+    contact: (offer?: string) =>
+      offer ? `/ai-data/contact?offer=${seg(offer)}` : "/ai-data/contact",
+    /** Where an accepted AI & Data enquiry lands. Never indexed. */
+    thankYou: (reference?: string) =>
+      reference ? `/ai-data/contact/thank-you?ref=${seg(reference)}` : "/ai-data/contact/thank-you",
+  },
   sitemap: () => "/sitemap.xml",
   robots: () => "/robots.txt",
 } as const;
@@ -239,4 +255,20 @@ export const routeManifest: readonly RouteManifestEntry[] = [
   { pattern: "/products/[slug]", sitemap: true },
   // Not indexed while the show links are placeholders (owner direction, 16 Oct 2026).
   { pattern: "/podcast", sitemap: false },
+  // Vitalos AI & Data (AID-002): code-authored pages, listed by `aiDataSitemapPaths`.
+  { pattern: "/ai-data", sitemap: true },
+  { pattern: "/ai-data/solutions", sitemap: true },
+  { pattern: "/ai-data/approach", sitemap: true },
+  { pattern: "/ai-data/demonstrator", sitemap: true },
+  { pattern: "/ai-data/contact", sitemap: true },
+  { pattern: "/ai-data/contact/thank-you", sitemap: false },
+];
+
+/** The AI & Data pages the sitemap lists (the thank-you receipt is never indexed). */
+export const aiDataSitemapPaths: readonly string[] = [
+  routes.aiData.home(),
+  routes.aiData.solutions(),
+  routes.aiData.approach(),
+  routes.aiData.demonstrator(),
+  routes.aiData.contact(),
 ];

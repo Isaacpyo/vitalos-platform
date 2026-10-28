@@ -31,3 +31,11 @@ export {
 export { component } from "./component";
 export { responsive, type SectionSpacing } from "./responsive";
 export { contrastRatio, relativeLuminance } from "./contrast";
+export {
+  aiDataContrastPairs,
+  aiDataPrimitives,
+  aiDataStatus,
+  aiDataTones,
+  type AiDataContrastPair,
+  type AiDataTone,
+} from "./ai-data";
