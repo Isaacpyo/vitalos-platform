@@ -4,8 +4,8 @@ Newest entries first. Each entry gives the time (UTC), what changed, and the evi
 
 ## Current state
 
-- **M0 done.** W5 (marketing), W7 (admin) and W8 (portal) are running in isolated worktrees. W6 (guided brief) is paused at a committed checkpoint, under the three-agent cap, and resumes after W5.
-- **Next for the lead:** add the portal custom domain to the deploy script, then integrate each lane as it reports.
+- **M0 to M7 done; M8 in progress.** Every lane (W5 to W10) is merged into `claude/amazing-cray-miqs1x`, the independent review findings are fixed, and every local gate is green. #106 is ready for review; the full CI browser suites run on it.
+- **Next:** watch #106 CI, then the owner's review and merge decision (see HANDOFF.md, "Merge and deploy").
 
 ## Facts established (28 Oct 2026, before implementation)
 
@@ -67,6 +67,20 @@ Outside this implementation's scope:
 | 28 Oct 2026 | At most three implementation agents at a time; W6 paused until W5 finishes                                                                                                                                     | Owner instruction                                                                                                                        |
 
 ## Log
+
+- **28 Oct 20:20: review fixes merged (W10, `f3c26c6`); final gates green.**
+  - **M1:** a newer shared version blocks every decision on an older one.
+  - **M2:** per-workflow daily shares of the AI run cap (brief assist and portal assistant at 30% each, so staff keep headroom). There is also a per-member assistant limit of 10 an hour with an honest compiled answer. A bug was found and fixed along the way: every portal assistant call shared one run ref.
+  - **M3:** customers append only to their own files; sharing exposes only the pinned file version (`FileVersion.customer_visible`, migration `portal` 0003).
+  - **L1:** non-numeric ids give 404.
+  - **L2:** events for unpublished targets are hidden (migration `portal` 0004).
+  - **L3:** decisions and brief reviews lock and re-check.
+  - **L4:** `.doc` and `.xls` are refused in the portal.
+  - **L5:** brief assist writes a pending row before the model call.
+  - **L6:** `next` is validated.
+  - **Question ids** are renumbered.
+  - 50 new tests. The reviewer's suspicions about cookie tossing and reset timing are recorded as follow-ups in ADR-056.
+  - **Lead gate on the final tree:** ruff, format, the email guard, `makemigrations --check`, **pytest 1565 passed**, `recon_eval`, `aidata_eval`, bandit, the migration guard and Prettier, all PASS. gitleaks over history is clean.
 
 - **28 Oct 21:15: integration complete (W5, W6, W7, W8, W9); independent review done; fixes in progress.**
   - **Merges:** W6 (guided brief) `471a52f`, W9 (seams, AC-1 to AC-12 journey test, `experience_seed_demo`, DEMO.md) `c906942`.

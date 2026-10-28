@@ -1,6 +1,6 @@
 # Handoff: AI & Data connected experience
 
-_Lead handoff, overnight run of 28 October 2026. Change set: vitalos-technologies/vitalos-platform#106 (branch `claude/amazing-cray-miqs1x`). Detail and evidence: [SCOPE.md](SCOPE.md) (acceptance criteria), [MILESTONES.md](MILESTONES.md) (lanes), [PROGRESS.md](PROGRESS.md) (log, decisions, blockers), [DEMO.md](DEMO.md) (click-through)._
+_Lead handoff, overnight run of 28 October 2026 (final tree `f3c26c6` plus docs). Change set: vitalos-technologies/vitalos-platform#106 (branch `claude/amazing-cray-miqs1x`). Detail and evidence: [SCOPE.md](SCOPE.md) (acceptance criteria), [MILESTONES.md](MILESTONES.md) (lanes), [PROGRESS.md](PROGRESS.md) (log, decisions, blockers), [DEMO.md](DEMO.md) (click-through)._
 
 ## What works now
 
@@ -79,12 +79,10 @@ Folder: `/tmp/claude-0/-home-user/c4f095cc-360d-5d23-a143-c311cf5ef6e4/scratchpa
   - Commands: `pnpm format:check`, `check:raw-colours`, `check:turbo-env`, `content:types:check`, `lint`, `typecheck`, `test`, `check:boundaries`, `check:security` (`pnpm audit`: no known vulnerabilities), `check:email`, and `pnpm --filter web build`. All PASS.
   - The lanes also reported e2e (447 passed on W5; 256 on W6's subset), e2e-draft, axe and a11y, storybook-a11y, `seo:check`, and perf budgets. CI runs the full browser suites once the PR leaves draft.
 - **Super Admin, PostgreSQL 16:**
-  - ruff, format, the email guard, `makemigrations --check`, **pytest 1514 passed**, `recon_eval` (AC-1 to AC-13 pass, AC-14 not run), `aidata_eval` (22/22), bandit, and the migration guard (additive only). All PASS.
-  - After the provenance fix: the portal and experience tests pass (175).
-  - _Review fixes: see below._
+  - Final tree (`f3c26c6`): ruff, format, the email guard, `makemigrations --check`, **pytest 1565 passed**, `recon_eval` (AC-1 to AC-13 pass, AC-14 not run), `aidata_eval` (22/22), bandit, and the migration guard (additive only). All PASS.
 - **Secrets:** gitleaks 8.28.0 over history is clean (one false positive allowlisted by exact value). `pip-audit --strict` is clean on both requirements files.
 - **CI on #106:** green for every job a draft runs (quality, unit, Super Admin lint/tests/deploy checks, pip-audit and bandit, gitleaks).
-- **Independent review:** permission boundaries were reviewed on `471a52f`. There were no critical or high findings. The medium and low findings are fixed (see PROGRESS.md and the W10 entry).
+- **Independent review:** permission boundaries were reviewed on `471a52f`. There were no critical or high findings. All three medium and six low findings, and the question-id mismatch, are fixed with 50 new tests (W10, see PROGRESS.md). Cookie-name hardening (`__Host-`) and reset-endpoint timing are recorded as follow-ups in ADR-056.
 
 ## Known issues and configuration blockers
 
@@ -105,7 +103,7 @@ Folder: `/tmp/claude-0/-home-user/c4f095cc-360d-5d23-a143-c311cf5ef6e4/scratchpa
 
 ## Migrations and rollback
 
-- **New migrations (all additive: CreateModel, AddField and constraints only):** `aicore` 0002, `aidata` 0003, `portal` 0001 and 0002 (plus any added by the review fixes, see PROGRESS.md).
+- **New migrations (all additive):** `aicore` 0002, `aidata` 0003, `portal` 0001 to 0004. They are CreateModel, AddField and constraints only, plus one RunPython backfill in `portal` 0003 that marks versions of already customer-visible files as visible. That is a no-op in production, which has no portal data yet.
 - **Order:** they are applied by the release job before the new code serves traffic.
 - **Rollback:** revert the merge. The tables can stay; nothing reads them after a revert. On the website, revert or roll back the Vercel deployment.
 
