@@ -81,14 +81,16 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 - [x] ADR-052, architecture docs, operations runbook, AGENTS.md/CLAUDE.md autonomy section
 - [x] Integrated branch: format, lint, typecheck, unit tests, boundaries, build, Super Admin ruff/pytest/migrations check, evaluation gate
 - [x] Screenshots of site and Super Admin pages (desktop and mobile)
-- [ ] PR opened, CI green, squash-merged
-- [ ] Production verified: vitalos.co.uk/ai-data pages and enquiry path; Super Admin deploy healthy
-- [ ] Completion report with external prerequisites
+- [x] PR opened, CI green, squash-merged (vitalos-technologies/vitalos-platform#102 → `ed64d58`)
+- [x] Production verified: vitalos.co.uk/ai-data pages (200, sitemap, headers) and Super Admin deploy healthy; a live enquiry through the human check is an owner step (below)
+- [x] Completion report with external prerequisites
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, W1–W4 integrated on `claude/amazing-cray-miqs1x`._
+_Last updated: 28 Oct 2026, launch milestone delivered._
 
-- Local gates on the integrated branch: web format, lint, typecheck, unit tests (976), build, boundaries; Super Admin ruff, migrations check, pytest on PostgreSQL (1,123), bandit, email guard, `check --deploy`, evaluation gate (AC-1–AC-13 pass; AC-14 not run).
-- Known pre-existing issue outside scope: `check:raw-colours` flags two `rgb()` shadows in `packages/relay-widget/src/panel.css` (also on `main`; not run in CI).
-- Next action: open the PR, get CI green, squash-merge, verify production (`/ai-data` pages; Super Admin deploy health), then complete the report.
+- `main` at `ed64d58` (PR #102, squash-merged). All CI green on `main`: CI, Super Admin (PostgreSQL tests, evaluation gate, container smoke), CodeQL, secret scan.
+- Website: production deployment `vitalos-platform-cefs1uag8` (Vercel, READY). `/ai-data`, `/solutions`, `/approach`, `/demonstrator`, `/contact` answer 200, are in the sitemap, carry the security headers and no `noindex`; thank-you is `noindex`. **Merging to `main` did not create a Vercel deployment** (no Git-triggered deployments in the last day; see runbook §1), so production was deployed from a clean checkout of `main` with `vercel deploy --prod`.
+- Super Admin: `Super Admin deploy` run for `ed64d58` succeeded; `/healthz/` 200; every `/ai-data/` page redirects anonymous users to sign-in.
+- Not verified in production: a real enquiry end to end (Turnstile human check needs a person) and the support@ → Super Admin email route (no access to Cloudflare Email Routing settings).
+- Next actions (owner): see "External prerequisites" in `commercial/20-first-sale-readiness.md` and the completion report; first, one test enquiry from a `@vitalos.co.uk` address at `/ai-data/contact`, then confirm it appears as an opportunity (stage New) and close it as Lost with reason "test".
