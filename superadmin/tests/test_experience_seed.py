@@ -79,3 +79,13 @@ def test_the_seed_carries_one_opportunity_into_a_challenge_and_a_project(db, set
     call_command("experience_seed_demo", reset=True, stdout=io.StringIO())
     assert Opportunity.objects.filter(title="Example Ledger Ltd [Synthetic]").count() == 1
     assert Challenge.objects.filter(organisation__name="Example Ledger Ltd (synthetic)").count() == 1
+
+
+def test_without_project_leaves_the_click_to_the_walkthrough(db, settings):
+    settings.DEBUG = True
+    settings.APP_ENVIRONMENT = "development"
+    call_command("experience_seed_demo", without_project=True, stdout=io.StringIO())
+    challenge = Challenge.objects.get(organisation__name="Example Ledger Ltd (synthetic)")
+    assert not Project.objects.filter(challenge=challenge).exists()
+    project, created = continuity.create_project_from_proposal(challenge, actor=challenge.created_by)
+    assert created and project.published_at is None

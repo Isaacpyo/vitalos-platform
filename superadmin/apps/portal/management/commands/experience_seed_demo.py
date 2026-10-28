@@ -50,8 +50,13 @@ class Command(BaseCommand):
             action="store_true",
             help="Rebuild the synthetic portal data (organisations and challenges only).",
         )
+        parser.add_argument(
+            "--without-project",
+            action="store_true",
+            help="Stop before the project: the walkthrough then creates it with 'Create portal project from proposal'.",
+        )
 
-    def handle(self, *args, reset=False, **options):
+    def handle(self, *args, reset=False, without_project=False, **options):
         if (
             not settings.DEBUG
             or settings.APP_ENVIRONMENT == "production"
@@ -74,7 +79,7 @@ class Command(BaseCommand):
                 "portal_seed_demo", staff_email=STAFF_EMAIL, password=password, reset=reset, stdout=quiet
             )
             staff = User.objects.get(email=STAFF_EMAIL)
-            self._flow(staff, password)
+            opportunity = self._flow(staff, password, without_project)
         self.stdout.write(
             self.style.SUCCESS(
                 "Synthetic experience data created. No email was sent and no model was called."
@@ -89,7 +94,7 @@ class Command(BaseCommand):
             "  Another organisation (for the isolation check): approver@contoso.example.test, same password."
         )
         self.stdout.write(
-            "  The flow: opportunity OPP for 'Example Ledger Ltd [Synthetic]' -> portal challenge and project; "
+            f"  The flow: opportunity {opportunity.ref} for 'Example Ledger Ltd [Synthetic]' -> portal challenge and project; "
             "the opportunity is at Proposal while the customer sees Submitted."
         )
 
@@ -117,7 +122,7 @@ class Command(BaseCommand):
         member.save()
         return member
 
-    def _flow(self, staff, password):
+    def _flow(self, staff, password, without_project=False):
         opportunity = Opportunity.objects.filter(title=OPPORTUNITY_TITLE).first()
         if opportunity is None:
             raise CommandError("The AI & Data seed did not create the Example Ledger opportunity.")
@@ -138,7 +143,7 @@ class Command(BaseCommand):
         services.share_challenge(challenge, actor=staff)
         brief = challenge.briefs.get(number=1)
         services.propose_brief(brief, actor=staff)
-        if proposal is not None:
+        if proposal is not None and not without_project:
             project, _ = continuity.create_project_from_proposal(challenge, actor=staff)
             services.set_published(project, True, actor=staff)
             today = timezone.localdate()
@@ -165,3 +170,4 @@ class Command(BaseCommand):
         opportunity.next_action = "Walk the customer through the first results"
         opportunity.next_action_due = timezone.localdate()
         opportunity.save()
+        return opportunity
