@@ -165,7 +165,8 @@ class Command(BaseCommand):
             summary="Adds the weekly statement check",
             change_note="We heard that statements are checked weekly, so the pilot now includes that step.",
             segments=[
-                {"id": "s1", "text": ch.submitted_problem, "provenance": "customer_statement"},
+                # No source enquiry in the seed, so the problem is Vitalos's wording (an agreed fact).
+                {"id": "s1", "text": f"The problem: {opp.problem_summary}", "provenance": "agreed_fact"},
                 {"id": "s2", "text": "Statements arrive weekly as PDF and CSV.", "provenance": "agreed_fact"},
                 {
                     "id": "s3",

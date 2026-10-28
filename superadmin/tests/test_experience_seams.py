@@ -101,8 +101,23 @@ def test_linking_carries_the_original_enquiry_and_the_approved_brief_as_a_draft(
     assert brief.status == BriefStatus.DRAFT and brief.proposed_at is None  # never auto-published
     statements = [s for s in brief.segments if s["provenance"] == "customer_statement"]
     original = opportunity.enquiry.messages.filter(direction="inbound").first().text_body
-    assert "".join(s["text"] for s in statements) == original  # the customer's words, unchanged
     assert "[vitalos-brief v1" in original and "You said:" in original
+    # Only what the visitor wrote, unchanged: their description and answers. Not the marker, not the
+    # checklist's suggestions, not the website's contact rows, sector or budget.
+    said = "".join(s["text"] for s in statements)
+    assert said == continuity.original_statement(opportunity)
+    assert "You said: We match supplier statements" in said and "A: Xero and a shared spreadsheet" in said
+    for absent in (
+        "[vitalos-brief",
+        "Read the statements",
+        "suggested from our checklist",
+        "Work email",
+        "Source page",
+        "Indicative budget",
+        "Sector:",
+        "Re-keys each line",
+    ):
+        assert absent.lower() not in said.lower()
     assert all(
         s["provenance"] in {"customer_statement", "ai_suggestion", "agreed_fact"} for s in brief.segments
     )
@@ -147,19 +162,52 @@ def test_without_an_approved_brief_linking_behaves_as_before(db):
     assert challenge.briefs.get(number=1).summary == "Starting point: what you told us"
 
 
-def test_a_pasted_text_opportunity_carries_the_pasted_original(db):
+def test_a_pasted_text_opportunity_never_presents_the_paste_as_the_customers_words(db):
+    """Staff may paste their own call notes, so a paste is never shown to the customer as "your words"."""
     w = two_orgs()
     staff = w.staff
-    text = "We re-key invoices by hand.\nIt takes a day each week.\nContact: pat@example.test"
+    text = (
+        "Call notes: they re-key invoices by hand. INTERNAL: budget looks tight.\nContact: pat@example.test"
+    )
     draft, _ = workspace.prepare_brief(
         source_text=text, source_label="Pasted", key="p1", actor=staff, mode=DraftMode.RULES
     )
     opportunity = workspace.apply_brief(draft, draft.payload["fields"], staff, title="Pat's firm")
     challenge = services.link_challenge(opportunity=opportunity, organisation=w.org_a, actor=staff)
-    statements = [
-        s["text"] for s in challenge.briefs.get(number=1).segments if s["provenance"] == "customer_statement"
-    ]
-    assert "".join(statements) == text
+    segments = challenge.briefs.get(number=1).segments
+    # Only the approved fields travel, as Vitalos's own wording ("agreed fact"); the paste itself never does.
+    assert segments and {s["provenance"] for s in segments} <= {"agreed_fact", "ai_suggestion"}
+    statements = [s for s in segments if s["provenance"] == "customer_statement"]
+    assert not statements and "budget looks tight" not in json.dumps(segments)
+    assert challenge.submitted_problem == "" and challenge.submitted_outcome == ""
+
+
+def test_customer_words_by_format():
+    classic = (
+        "Vitalos AI & Data enquiry\nSector: Retail\nBusiness problem or workflow:\nWe re-key orders.\n"
+        "Current tools and process:\nShopify and a spreadsheet\nDesired outcome:\nNot given\n"
+        "Indicative budget: £1,000–£5,000 (enquirer's estimate)"
+    )
+    assert continuity.customer_words(classic) == {
+        "problem": "We re-key orders.",
+        "tools": "Shopify and a spreadsheet",
+        "outcome": "",
+    }
+    plain = "Hello, we would like help with our invoices."
+    assert continuity.customer_words(plain)["problem"] == plain
+    guided = (
+        "Vitalos AI & Data enquiry\nBusiness problem or workflow:\n[vitalos-brief v1 questions=ai brief=ai]\n"
+        "You said: Orders are re-keyed.\nFollow-up answers (you said):\nQ: How many?\nA: About 200 a week\n"
+        "Possible automation (suggested by AI):\n- Read the orders\nUnknowns (edited by you):\n- Peak volumes\n"
+        "Suggested next step (suggested from our checklist): A short call\n"
+        "Current tools and process:\nAI-drafted card text\nDesired outcome:\nAI-drafted outcome"
+    )
+    words = continuity.customer_words(guided)
+    assert words["problem"] == (
+        "You said: Orders are re-keyed.\nFollow-up answers (you said):\nQ: How many?\nA: About 200 a week\n"
+        "Unknowns (edited by you):\n- Peak volumes"
+    )
+    assert words["tools"] == "" and words["outcome"] == ""
 
 
 def test_a_long_original_is_split_without_changing_a_character(db):

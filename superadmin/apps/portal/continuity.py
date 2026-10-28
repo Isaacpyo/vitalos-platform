@@ -16,6 +16,7 @@ workspace's models only inside functions.
 from __future__ import annotations
 
 import datetime as dt
+import re
 from dataclasses import dataclass, field
 
 from django.db import transaction
@@ -102,16 +103,119 @@ def _ai_values(draft) -> dict[str, str]:
     return {i.get("name"): i.get("value", "") for i in items if isinstance(i, dict)}
 
 
-def original_statement(opportunity, brief) -> str:
-    """The customer's own submission, exactly as received: the first inbound message of the source enquiry,
-    or (for an opportunity made from pasted text) the pasted source the brief was prepared from."""
+#: The website's guided-brief marker line (docs/ai-data/engineering/guided-brief.md); the visitor never wrote it.
+BRIEF_MARKER = re.compile(r"^\[vitalos-brief v\d+[^\]]*\]$")
+#: Guided-brief blocks written by the AI or the checklist; only "edited by you" blocks are the visitor's words.
+_SUGGESTION_BLOCK = re.compile(
+    r"^(possible automation|unknowns|suggested next step) \((suggested by ai|suggested from our checklist|edited by you)\):",
+    re.IGNORECASE,
+)
+_GUIDED_HEADERS = ("you said:", "follow-up answers (you said):")
+
+
+def strip_marker(text: str) -> str:
+    """``text`` without the guided-brief marker line."""
+    return "\n".join(
+        line for line in (text or "").splitlines() if not BRIEF_MARKER.match(line.strip())
+    ).strip()
+
+
+def customer_words(text: str) -> dict[str, str]:
+    """The parts of an inbound enquiry the customer wrote, by section (``problem``, ``tools``, ``outcome``).
+
+    * A plain email (no website composition): the whole text, as the problem.
+    * The classic AI & Data form: the three typed sections.
+    * A guided brief: only what the visitor wrote in the problem section ("You said:", their answers, and
+      blocks marked "edited by you"). Suggestion blocks, the marker, and the tools and outcome card sections
+      (whose provenance the notification does not carry, format v1) are left out.
+
+    Contact rows, the source page, sector and budget are never part of it.
+    """
+    from apps.aidata import intake
+
+    lines = intake._composed_lines(text)
+    if lines is None:
+        return {"problem": (text or "").strip(), "tools": "", "outcome": ""}
+    guided = any(BRIEF_MARKER.match(line.strip()) for line in lines)
+    kept: dict[str, list[str]] = {name: [] for name in intake.SECTIONS.values()}
+    current, skipping = None, False
+    for line in lines:
+        stripped = line.strip()
+        lowered = stripped.lower()
+        if lowered in intake.SECTIONS:
+            current, skipping = intake.SECTIONS[lowered], False
+            continue
+        if lowered.startswith(("sector:", "indicative budget:")):
+            current = None
+            continue
+        if current is None or BRIEF_MARKER.match(stripped):
+            continue
+        if guided:
+            if current != "problem":
+                continue
+            block = _SUGGESTION_BLOCK.match(stripped)
+            if block:
+                skipping = block.group(2).lower() != "edited by you"
+            elif lowered.startswith(_GUIDED_HEADERS):
+                skipping = False
+            if skipping:
+                continue
+        kept[current].append(line.rstrip())
+    words = {name: "\n".join(value).strip() for name, value in kept.items()}
+    return {name: ("" if value.lower() in intake.NOT_GIVEN else value) for name, value in words.items()}
+
+
+def original_statement(opportunity, brief=None) -> str:
+    """The customer's own words, from the source enquiry only (see ``customer_words``). A pasted source is never
+    used: staff may paste their own call notes, which cannot be presented to the customer as their words."""
     from apps.aidata import workspace
 
-    if opportunity.enquiry_id:
-        text = workspace.original_enquiry_text(opportunity.enquiry)
-        if text.strip():
-            return text
-    return brief.source_text or ""
+    if not opportunity.enquiry_id:
+        return ""
+    words = customer_words(workspace.original_enquiry_text(opportunity.enquiry))
+    labels = (("problem", ""), ("tools", "Current tools and process:\n"), ("outcome", "Desired outcome:\n"))
+    return "\n\n".join(f"{label}{words[name]}" for name, label in labels if words[name])
+
+
+def submitted_words(opportunity) -> dict[str, str]:
+    """For "What you told us": the customer's own problem and outcome from the source enquiry, else blank (an
+    opportunity made from pasted text has no customer-authored source). Never the marker or a staff paste."""
+    from apps.aidata import workspace
+
+    if not opportunity.enquiry_id:
+        return {"problem": "", "tools": "", "outcome": ""}
+    words = customer_words(workspace.original_enquiry_text(opportunity.enquiry))
+    return {name: value[:4000] for name, value in words.items()}
+
+
+def first_segments(opportunity) -> list[dict]:
+    """The first brief version without an approved workspace brief.
+
+    With a source enquiry: the customer's own words, as ``customer_statement``. Without one (an opportunity
+    staff typed or pasted): the opportunity's problem and outcome as Vitalos wrote them, tagged ``agreed_fact``
+    so they are never shown to the customer as "your words". Either way the version stays a draft for staff
+    to review before it is proposed.
+    """
+    statement = original_statement(opportunity)
+    if statement:
+        return [
+            {"id": f"s{index}", "text": piece, "provenance": "customer_statement"}
+            for index, piece in enumerate((p for p in _chunks(statement) if p.strip()), start=1)
+        ]
+    segments = []
+    for label, value in (
+        ("The problem", strip_marker(opportunity.problem_summary or "")),
+        ("What good looks like", (opportunity.desired_outcome or "").strip()),
+    ):
+        if value:
+            segments.append(
+                {
+                    "id": f"s{len(segments) + 1}",
+                    "text": f"{label}: {value}"[:SEGMENT_LIMIT],
+                    "provenance": "agreed_fact",
+                }
+            )
+    return segments
 
 
 def carried_brief_segments(opportunity) -> list[dict] | None:

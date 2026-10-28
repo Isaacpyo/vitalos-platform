@@ -338,41 +338,29 @@ def link_challenge(
     opportunity is not modified. The challenge stays private until ``share_challenge``."""
     if hasattr(opportunity, "portal_challenge"):
         raise PortalError("This opportunity is already linked to a portal challenge.")
+    words = continuity.submitted_words(opportunity)
     with transaction.atomic():
         challenge = Challenge.objects.create(
             organisation=organisation,
             opportunity=opportunity,
             title=(title or opportunity.title)[:200],
-            submitted_problem=opportunity.problem_summary or "",
-            submitted_outcome=opportunity.desired_outcome or "",
+            submitted_problem=words["problem"],
+            submitted_outcome=words["outcome"],
             submitted_at=opportunity.created_at,
             created_by=actor,
         )
-        # An APPROVED workspace brief (and only that) is carried over, as a DRAFT version: the original
-        # words as customer statements, the approved fields tagged agreed fact or AI suggestion. Without
-        # one the first version holds the two parsed customer fields, as before.
+        # An APPROVED workspace brief (and only that) is carried over, as a DRAFT version: the customer's own
+        # words as customer statements, the approved fields tagged agreed fact or AI suggestion. Without one,
+        # the first version holds the customer's own words, or (no source enquiry) what Vitalos wrote.
         carried = continuity.carried_brief_segments(opportunity)
-        segments = []
-        if carried is None:
-            if challenge.submitted_problem:
-                segments.append(
-                    {"id": "s1", "text": challenge.submitted_problem, "provenance": "customer_statement"}
-                )
-            if challenge.submitted_outcome:
-                segments.append(
-                    {
-                        "id": f"s{len(segments) + 1}",
-                        "text": challenge.submitted_outcome,
-                        "provenance": "customer_statement",
-                    }
-                )
+        segments = continuity.first_segments(opportunity) if carried is None else carried
         BriefVersion.objects.create(
             challenge=challenge,
             number=1,
             summary="Starting point: what you told us"
             if carried is None
             else "What you told us, and the brief we prepared",
-            segments=segments if carried is None else carried,
+            segments=segments,
             created_by=actor,
         )
     record(

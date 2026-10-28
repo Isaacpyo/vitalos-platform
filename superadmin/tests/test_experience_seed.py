@@ -38,7 +38,9 @@ def test_the_seed_carries_one_opportunity_into_a_challenge_and_a_project(db, set
     assert challenge.organisation.is_synthetic and challenge.is_shared
     brief = challenge.briefs.get(number=1)
     assert brief.status == "proposed"
-    assert {s["provenance"] for s in brief.segments} >= {"customer_statement", "agreed_fact"}
+    # The seed's opportunity comes from pasted text, so its brief carries the approved fields as agreed facts
+    # and never presents the paste as the customer's words.
+    assert {s["provenance"] for s in brief.segments} == {"agreed_fact"}
     project = Project.objects.get(challenge=challenge)
     assert (
         project.published_at
