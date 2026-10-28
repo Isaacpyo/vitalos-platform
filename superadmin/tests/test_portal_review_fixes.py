@@ -196,3 +196,50 @@ def test_m3_staff_making_a_file_visible_shares_its_current_versions(world):
     services.set_file_visibility(version.file, "customer", actor=world.staff)
     version.refresh_from_db()
     assert version.customer_visible is True
+
+
+# --- L1: non-numeric ids are a 404, never a 500 ---------------------------------------------------------------
+
+
+@pytest.mark.parametrize("bad", ["abc", "1e3", "-", "9" * 40, "1 OR 1=1"])
+def test_l1_non_numeric_ids_in_posts_are_404(world, bad):
+    client = c(world.contrib)
+    client.raise_request_exception = False
+    for field in ("milestone", "deliverable"):
+        r = client.post(f"/portal/challenges/{world.ch_a.pk}/discuss/", {"body": "hi", field: bad})
+        assert r.status_code == 404, (field, r.status_code)
+    for activity, field in (
+        ("summarise_project", "project"),
+        ("explain_deliverable", "deliverable"),
+        ("clarify_challenge", "challenge"),
+        ("unanswered", "challenge"),
+    ):
+        r = client.post(f"/portal/assistant/{activity}/", {field: bad})
+        assert r.status_code == 404, (activity, r.status_code)
+    r = client.post("/portal/files/upload/", {"challenge": bad})
+    assert r.status_code in (302, 404)
+
+
+def test_l1_selectors_reject_non_numeric_pk(world):
+    from django.http import Http404
+
+    for getter in (
+        selectors.get_challenge,
+        selectors.get_project,
+        selectors.get_milestone,
+        selectors.get_deliverable,
+        selectors.get_file,
+        selectors.get_file_version,
+        selectors.get_version,
+        selectors.get_brief,
+        selectors.get_thread,
+        selectors.get_update,
+    ):
+        with pytest.raises(Http404):
+            getter(world.contrib, "abc")
+
+
+def test_l1_unicode_digit_version_query_is_not_a_500(world):
+    client = c(world.contrib)
+    client.raise_request_exception = False
+    assert client.get(f"/portal/deliverables/{world.deliv_a.pk}/?v=\u00b2").status_code == 200

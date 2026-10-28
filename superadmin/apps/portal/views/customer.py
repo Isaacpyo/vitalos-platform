@@ -365,7 +365,7 @@ def deliverable(request, ctx, pk):
     all_versions = list(selectors.versions(m, d))
     chosen = None
     wanted = request.GET.get("v", "")
-    if wanted.isdigit():
+    if wanted.isascii() and wanted.isdigit():
         chosen = next((v for v in all_versions if v.number == int(wanted)), None)
     version = chosen or (all_versions[0] if all_versions else None)
     state = selectors.version_state(version) if version else ""

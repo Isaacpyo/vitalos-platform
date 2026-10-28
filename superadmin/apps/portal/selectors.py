@@ -42,6 +42,18 @@ from .models import (
     Update,
 )
 
+def _pk(value) -> int:
+    """A primary key from untrusted input (a POST field or query string). Anything that is not a plain
+    positive integer that fits the database column is a 404, exactly like a record that does not exist."""
+    try:
+        number = int(str(value).strip())
+    except (TypeError, ValueError):
+        raise Http404 from None
+    if not 0 < number < 2**63:
+        raise Http404
+    return number
+
+
 # --- Membership ---------------------------------------------------------------------------------------------------
 
 
@@ -81,7 +93,7 @@ def challenges(member):
 
 
 def get_challenge(member, pk):
-    return get_object_or_404(challenges(member), pk=pk)
+    return get_object_or_404(challenges(member), pk=_pk(pk))
 
 
 def briefs(member, challenge):
@@ -95,7 +107,7 @@ def briefs(member, challenge):
 def get_brief(member, pk):
     brief = get_object_or_404(
         BriefVersion.objects.select_related("challenge").exclude(status=BriefStatus.DRAFT),
-        pk=pk,
+        pk=_pk(pk),
         proposed_at__isnull=False,
     )
     if brief.challenge.organisation_id != member.organisation_id or brief.challenge.shared_at is None:
@@ -121,7 +133,7 @@ def projects(member):
 
 
 def get_project(member, pk):
-    return get_object_or_404(projects(member), pk=pk)
+    return get_object_or_404(projects(member), pk=_pk(pk))
 
 
 def milestones(member, project=None):
@@ -132,7 +144,7 @@ def milestones(member, project=None):
 
 
 def get_milestone(member, pk):
-    return get_object_or_404(milestones(member).select_related("project__challenge"), pk=pk)
+    return get_object_or_404(milestones(member).select_related("project__challenge"), pk=_pk(pk))
 
 
 def items(member, project):
@@ -151,7 +163,7 @@ def deliverables(member, project=None):
 
 
 def get_deliverable(member, pk):
-    return get_object_or_404(deliverables(member), pk=pk)
+    return get_object_or_404(deliverables(member), pk=_pk(pk))
 
 
 def versions(member, deliverable):
@@ -165,7 +177,7 @@ def versions(member, deliverable):
 def get_version(member, pk):
     version = get_object_or_404(
         DeliverableVersion.objects.select_related("deliverable__project__challenge", "file_version__file"),
-        pk=pk,
+        pk=_pk(pk),
         shared_at__isnull=False,
         withdrawn_at__isnull=True,
     )
@@ -223,7 +235,7 @@ def information_requests(member, challenge=None):
 
 
 def get_information_request(member, pk):
-    return get_object_or_404(information_requests(member), pk=pk)
+    return get_object_or_404(information_requests(member), pk=_pk(pk))
 
 
 def change_requests(member, project=None):
@@ -234,7 +246,7 @@ def change_requests(member, project=None):
 
 
 def get_change_request(member, pk):
-    return get_object_or_404(change_requests(member), pk=pk)
+    return get_object_or_404(change_requests(member), pk=_pk(pk))
 
 
 def updates(member, challenge=None, project=None):
@@ -249,7 +261,7 @@ def updates(member, challenge=None, project=None):
 
 
 def get_update(member, pk):
-    return get_object_or_404(updates(member), pk=pk)
+    return get_object_or_404(updates(member), pk=_pk(pk))
 
 
 # --- Discussion -------------------------------------------------------------------------------------------------------
@@ -265,7 +277,7 @@ def threads(member, challenge=None):
 
 
 def get_thread(member, pk):
-    return get_object_or_404(threads(member), pk=pk)
+    return get_object_or_404(threads(member), pk=_pk(pk))
 
 
 def messages(member, thread):
@@ -296,7 +308,7 @@ def files(member, challenge=None, project=None):
 
 
 def get_file(member, pk):
-    return get_object_or_404(files(member), pk=pk)
+    return get_object_or_404(files(member), pk=_pk(pk))
 
 
 def file_versions(member, file):
@@ -307,7 +319,7 @@ def file_versions(member, file):
 
 def get_file_version(member, pk):
     version = get_object_or_404(
-        FileVersion.objects.select_related("file__challenge"), pk=pk, customer_visible=True
+        FileVersion.objects.select_related("file__challenge"), pk=_pk(pk), customer_visible=True
     )
     get_file(member, version.file_id)
     return version
@@ -321,7 +333,7 @@ def services(member):
 
 
 def get_service(member, pk):
-    return get_object_or_404(services(member), pk=pk)
+    return get_object_or_404(services(member), pk=_pk(pk))
 
 
 def latest_report(service):
