@@ -68,6 +68,23 @@ Outside this implementation's scope:
 
 ## Log
 
+- **28 Oct 21:15: integration complete (W5, W6, W7, W8, W9); independent review done; fixes in progress.**
+  - **Merges:** W6 (guided brief) `471a52f`, W9 (seams, AC-1 to AC-12 journey test, `experience_seed_demo`, DEMO.md) `c906942`.
+  - **Lead gates on the full tree:**
+    - Web, all PASS: `format:check`, `check:raw-colours`, `check:turbo-env`, `content:types:check`, lint, typecheck, `pnpm test`, `check:boundaries`, `check:security`, `check:email`, and the `web` build.
+    - Super Admin, all PASS: ruff, format, the email guard, `makemigrations --check`, **pytest 1514 passed**, `recon_eval`, `aidata_eval`, bandit, and the migration guard.
+    - CI on #106 is green for every job that runs on a draft.
+  - **gitleaks false positive fixed** (`a62b69c`): a sessionStorage key name was allowlisted by exact value. Reproduced locally (1 finding without the entry, 0 with it).
+  - **Provenance fix (lead, `aea77e4`).** Found reviewing W9's screenshots, and flagged independently by the review. The portal showed the whole notification email (marker, contact rows) or a staff paste as "Your words", and "What you told us" read "No problem description was recorded". Now:
+    - Only customer-authored text is a customer statement.
+    - A paste never is.
+    - Opportunities without an enquiry carry Vitalos's wording as agreed facts.
+    - The portal and experience tests pass (175).
+  - **Independent review (M7) of `471a52f`:** no critical or high findings. Isolation, the customer/staff boundary, invitations, file downloads, the signed brief-assist endpoint, XSS and AI safety held up.
+    - Medium: M1, contractual acceptance of a superseded version; M2, public and customer callers can exhaust the shared daily AI run cap; M3, customer versions appended to staff files, and earlier internal versions of a shared file downloadable.
+    - Low: L1, 500 on non-numeric ids; L2, events after unpublish; L3, approval and brief races; L4, legacy `.doc`/`.xls`; L5, brief-assist burst counting; L6, staff open redirect; plus a question-id mismatch.
+    - W10 is fixing them test-first.
+
 - **28 Oct 20:30: operational quality.**
   - **Lead web gate on W5 + W7 + W8** (`801cb75`), all PASS: `check:turbo-env`, `content:types:check`, lint, typecheck, `pnpm test`, `check:boundaries`, `check:security`, `check:email`, and the `web` production build. `format:check` failed only on ADR-056 (W8 had not run Prettier); fixed and re-checked.
   - **Dependency advisories** (`a3e1f82`, `30bbb33`):
