@@ -68,6 +68,19 @@ Outside this implementation's scope:
 
 ## Log
 
+- **28 Oct 19:40: W8 (client portal) merged** (`39524ce`).
+  - **Conflicts resolved:**
+    - `opportunity.html`: kept W7's tabbed layout; the portal panel comes in through `_opportunity_extensions.html` in the workspace tab.
+    - The ADR index, PLAN and TASKS: kept both lanes' sections.
+  - **Deploy:** `PORTAL_DOMAIN` now follows W8's `PORTAL_HOST` (`28e3d45`).
+  - **Lead gate on main plus W7** (`07ddb65`), all PASS:
+    - ruff and format, the email guard, `makemigrations --check`;
+    - pytest 1340 passed on PostgreSQL 16;
+    - `recon_eval`, `aidata_eval` (22/22), bandit;
+    - the migration guard.
+  - **Lead review of W8 screenshots:** the dashboard leads with "What we need from you"; blockers name who is responsible; managed systems are labelled manually reported or stale; approvals are version-specific (v1 approved, v2 awaiting a decision).
+  - **W9 started** on `28e3d45`: admin ↔ portal seams (brief continuity, proposal → project, portal items in the work queue, stage visibility), the AC-1 to AC-12 journey test, `experience_seed_demo` and DEMO.md. Running: W5, W6, W9.
+
 - **28 Oct 19:00: W7 (admin workspace) reported and was merged** into `claude/amazing-cray-miqs1x` (merge `cd98ceb`, 87 files).
   - **Lead review:** the brief-assist endpoint checks the signature before reading any field or switch, fails closed with no keys, rate-limits per visitor and globally, and stores hashes only. Every workspace view is gated to SuperAdmin or ServiceLead. The `mark_safe` call only wraps static icon markup. The migrations (`aidata` 0003, `aicore` 0002) are additive.
   - **Decision kept:** Viewers stay refused on all AI & Data pages (ADR-026: opportunities hold personal data). A redacted read-only view would be an owner decision.
