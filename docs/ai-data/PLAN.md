@@ -74,20 +74,21 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 - [x] Blueprint read; workspace, repos, hosting, enquiry pipeline, Super Admin and credentials inspected
 - [x] Plan, decision log, task register, demonstrator acceptance criteria committed before evaluation
-- [ ] W1 public site pages built, responsive, accessible; AI & Data form submits through the existing pipeline
-- [ ] W2 pipeline (stages, owner, next action, notes, dates, scorecard), offers, budget in the Super Admin; intake from enquiries
-- [ ] W3 AI core (provider interface, validation, versioning, timeouts/retries, ids/audit, metering, limits, kill switch) and demonstrator; offline evaluation report
-- [ ] W4 commercial templates and checklists
-- [ ] ADR-052, architecture docs, operations runbook, AGENTS.md/CLAUDE.md autonomy section
-- [ ] Integrated branch: format, lint, typecheck, unit tests, boundaries, build, Super Admin ruff/pytest/migrations check, evaluation gate
-- [ ] Screenshots of site and Super Admin pages (desktop and mobile)
+- [x] W1 public site pages built, responsive, accessible; AI & Data form submits through the existing pipeline
+- [x] W2 pipeline (stages, owner, next action, notes, dates, scorecard), offers, budget in the Super Admin; intake from enquiries
+- [x] W3 AI core (provider interface, validation, versioning, timeouts/retries, ids/audit, metering, limits, kill switch) and demonstrator; offline evaluation report
+- [x] W4 commercial templates and checklists
+- [x] ADR-052, architecture docs, operations runbook, AGENTS.md/CLAUDE.md autonomy section
+- [x] Integrated branch: format, lint, typecheck, unit tests, boundaries, build, Super Admin ruff/pytest/migrations check, evaluation gate
+- [x] Screenshots of site and Super Admin pages (desktop and mobile)
 - [ ] PR opened, CI green, squash-merged
 - [ ] Production verified: vitalos.co.uk/ai-data pages and enquiry path; Super Admin deploy healthy
 - [ ] Completion report with external prerequisites
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, planning complete; workstreams W1–W4 starting._
+_Last updated: 28 Oct 2026, W1–W4 integrated on `claude/amazing-cray-miqs1x`._
 
-- Branch: `claude/amazing-cray-miqs1x` (from `main` at f59d56a).
-- Next action: integrate W1–W4 as they finish; run all gates; open the PR.
+- Local gates on the integrated branch: web format, lint, typecheck, unit tests (976), build, boundaries; Super Admin ruff, migrations check, pytest on PostgreSQL (1,123), bandit, email guard, `check --deploy`, evaluation gate (AC-1–AC-13 pass; AC-14 not run).
+- Known pre-existing issue outside scope: `check:raw-colours` flags two `rgb()` shadows in `packages/relay-widget/src/panel.css` (also on `main`; not run in CI).
+- Next action: open the PR, get CI green, squash-merge, verify production (`/ai-data` pages; Super Admin deploy health), then complete the report.
