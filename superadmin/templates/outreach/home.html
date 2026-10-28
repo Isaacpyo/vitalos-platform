@@ -13,7 +13,7 @@
   {% if not mailbox_ready %}
     <div class="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-100" role="note" data-testid="outreach-no-mailbox">
       <strong>No outreach mailbox yet.</strong>
-      {% if sends_for_real %}Start stays off until one is set up (OUTREACH_SMTP_*, Super Admin docs, email setup step 13). Resend's acceptable use policy forbids cold email, and one Resend account carries every other Vitalos email.{% else %}This server only writes emails to the log (EMAIL_TRANSPORT=log): nothing leaves.{% endif %}
+      {% if sends_for_real %}Start stays off until the Microsoft 365 mailbox is connected (Super Admin docs, email setup step 13). Resend's acceptable use policy forbids cold email, and one Resend account carries every other Vitalos email.{% else %}This server only writes emails to the log (EMAIL_TRANSPORT=log): nothing leaves.{% endif %}
     </div>
   {% endif %}
   {% if current.last_error %}

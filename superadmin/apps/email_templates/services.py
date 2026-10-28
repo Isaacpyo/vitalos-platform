@@ -20,7 +20,7 @@ from django.utils.text import slugify
 
 from apps.accounts.roles import is_superadmin
 from apps.audit.services import record
-from apps.mailer.backends import outreach_connection
+from apps.mailer.backends import outreach_connection, outreach_mailbox
 from apps.mailer.layout import clean_line
 from apps.mailer.messages import build_message
 
@@ -494,7 +494,7 @@ def eml_message(template: EmailTemplate, package: UsePackage, *, user):
 OUTREACH_NEEDS_MAILBOX = (
     "Outreach email is not sent through the platform's email provider: Resend's acceptable use policy "
     "forbids cold outreach, and a suspension would stop every Vitalos email. Set up the outreach mailbox "
-    "(OUTREACH_SMTP_*), or download the .eml and send it from your own mailbox."
+    "(Microsoft 365: OUTREACH_GRAPH_*), or download the .eml and send it from your own mailbox."
 )
 
 
@@ -508,7 +508,7 @@ def send_unavailable(template: EmailTemplate) -> str:
 def send_from(template: EmailTemplate, user) -> str:
     """The address Send uses: the outreach mailbox for outreach, otherwise the signed-in admin."""
     if template.kind == Kind.OUTREACH and outreach_connection() is not None:
-        return settings.OUTREACH_SMTP_USER
+        return outreach_mailbox()
     return user.email
 
 
@@ -520,7 +520,7 @@ def send_use(
     The rules for copying apply (archived, outreach recipient, unsubscribed), plus: a recipient is always
     needed, the sender's address must be on the Vitalos sending domain, sends are limited per hour and a
     repeat of the same send within two minutes is refused. Outreach goes only through the outreach
-    mailbox (OUTREACH_SMTP_*), From that mailbox, never through Resend. A person sends it, so it carries
+    mailbox (Microsoft 365 over Graph, or SMTP), From that mailbox, never through Resend. A person sends it, so it carries
     no Auto-Submitted header (ADR-046 is for automated mail); replies go to the sender. The audit event
     never holds the recipient's address. Returns True if it left the platform.
     """

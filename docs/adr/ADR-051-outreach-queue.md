@@ -34,3 +34,7 @@ Every Vitalos email goes through one Resend account: support@ replies, sign-in l
 - Deliverability depends on that mailbox's domain reputation, authentication (SPF, DKIM, DMARC), low volume and low complaints. The software cannot guarantee the Primary tab.
 - Contact rows hold business email addresses and first names. They are kept so that no address is emailed twice, and they are not deleted automatically. The owner is to set a retention period, which would then become a documented retention job.
 - `outreach_connection` builds Django's SMTP backend directly, which Django 6.1 deprecates along with `EMAIL_BACKEND`. It moves to a `MAILERS` alias in the same migration.
+
+## Status note (28 Oct 2026)
+
+The outreach mailbox is Microsoft 365 Business Basic on vitalos.co.uk (owner decision). It sends through Microsoft Graph, signing in as an app (client credentials) that is allowed to send only as that one mailbox, so no mailbox password is stored. SMTP stays available for other providers. Microsoft is retiring password SMTP: off by default for existing tenants from late December 2026, removed in 2027. MX stays on Cloudflare, so Microsoft 365 only sends for the domain. Setup is in `superadmin/docs/email-setup.md` step 13, and the decision is in `superadmin/docs/DECISIONS.md` 127.
