@@ -489,3 +489,6 @@ else:
 STORAGES["portal_files"] = PORTAL_FILES_STORAGE
 # Without a bucket, bytes are kept only in development (the production container disk is not durable).
 PORTAL_FILES_STORAGE_ENABLED = bool(PORTAL_FILES_BUCKET) or APP_ENVIRONMENT == "development"
+# Demonstration only: replay hand-written, labelled AI answers through the gateway's simulated provider so the
+# citation UI can be shown without a live model. Never on in production (prod.py forces it off).
+PORTAL_AI_REPLAY = env.bool("PORTAL_AI_REPLAY", default=False)

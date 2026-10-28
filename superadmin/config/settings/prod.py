@@ -51,6 +51,8 @@ DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = env.bool("DB_DISABLE_SERVE
 # when a portal host is set; it is env-overridable, and /portal/ path mounting is local preview only.
 PORTAL_HOST = env("PORTAL_HOST", default="portal.vitalos.co.uk").strip().lower()
 PORTAL_ENABLED = env.bool("PORTAL_ENABLED", default=bool(PORTAL_HOST))
+# Simulated assistant answers are for local demonstrations only.
+PORTAL_AI_REPLAY = False
 if PORTAL_ENABLED and not PORTAL_HOST:
     raise ImproperlyConfigured(
         "PORTAL_ENABLED needs PORTAL_HOST in production: /portal/ path mounting is for local preview only."

@@ -210,7 +210,8 @@ def build_context(activity: str, member, *, challenge=None, project=None, delive
         _question_sources(c, member, project.challenge)
     elif activity == "what_changed":
         since = member.previous_visit_at
-        qs = selectors.events(member, since=since)[:25] if since else selectors.events(member)[:10]
+        own = selectors.events(member).exclude(actor_user=member.user)
+        qs = own.filter(occurred_at__gt=since)[:25] if since else own[:10]
         for e in qs:
             c.add(
                 f"event:{e.pk}",
@@ -493,12 +494,12 @@ def _replay_provider(activity: str, sources: list[Source]):
     fixture = _fixture(activity)
     if fixture is None:
         return None
-    by_key = {s.key: s.id for s in sources}
+    by_label = {s.label: s.id for s in sources}  # fixtures cite records by their visible label
 
     def responder(_request):
         points = []
         for p in fixture.get("points", []):
-            ids = [by_key[k] for k in p.get("cite", []) if k in by_key]
+            ids = [by_label[k] for k in p.get("cite", []) if k in by_label]
             if ids:
                 points.append({"text": p["text"], "sources": ids})
         return {

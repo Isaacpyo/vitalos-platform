@@ -66,6 +66,7 @@ def show(request, ctx, template, context=None, status=200):
         "organisation": ctx.organisation,
         "preview": ctx.preview,
         "unread": unread,
+        "replay_available": ai.replay_available(),
         "nav": NAV.get(getattr(request.resolver_match, "url_name", ""), ""),
     }
     return render(request, template, {**base, **(context or {})}, status=status)

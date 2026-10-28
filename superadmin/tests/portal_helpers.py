@@ -82,7 +82,13 @@ def make_member(org, email, role, name="", synthetic_password=PASSWORD):
 
 
 def client_for(user) -> Client:
+    """A signed-in client. Staff get a verified second factor (SuperAdmin requires one); customers do not."""
+    from apps.accounts.roles import has_any_role
+    from tests.conftest import login
+
     client = Client()
+    if has_any_role(user):
+        return login(client, user)
     client.force_login(user)
     return client
 

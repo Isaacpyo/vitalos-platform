@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -27,6 +29,18 @@ from .models import EmailDelivery, Membership, Notification, NotificationPrefere
 logger = logging.getLogger(__name__)
 
 RETRY_BACKOFF_MINUTES = 5
+
+# The demo seed command (and nothing else) turns email off for its synthetic people.
+_email_suppressed: ContextVar[bool] = ContextVar("portal_email_suppressed", default=False)
+
+
+@contextmanager
+def email_suppressed():
+    token = _email_suppressed.set(True)
+    try:
+        yield
+    finally:
+        _email_suppressed.reset(token)
 
 
 def preferences(user) -> NotificationPreference:
@@ -72,7 +86,7 @@ def notify(
         except IntegrityError:
             continue  # already notified for this event
         created += 1
-        if send_email and preferences(member.user).wants_email(kind):
+        if send_email and not _email_suppressed.get() and preferences(member.user).wants_email(kind):
             delivery = EmailDelivery.objects.create(
                 notification=note,
                 organisation=organisation,
@@ -120,7 +134,7 @@ def deliver(delivery_id: int, *, manual: bool = False) -> EmailDelivery | None:
     try:
         with transaction.atomic():
             d = (
-                EmailDelivery.objects.select_for_update()
+                EmailDelivery.objects.select_for_update(of=("self",))
                 .select_related("notification", "organisation", "recipient")
                 .get(pk=delivery_id)
             )
