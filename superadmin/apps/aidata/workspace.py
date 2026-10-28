@@ -625,7 +625,7 @@ def price_block(offer: str) -> dict:
     }
 
 
-def build_proposal(opportunity: Opportunity, basis: Draft) -> dict:
+def build_proposal(opportunity: Opportunity, basis: Draft, price: dict | None = None) -> dict:
     """Assemble the proposal from the approved discovery pack and the offer definition. No model."""
     definition = catalog.definition(opportunity.offer)
     pack = basis.payload
@@ -660,7 +660,7 @@ def build_proposal(opportunity: Opportunity, basis: Draft) -> dict:
         "acceptance_criteria": [item["text"] for item in pack.get("acceptance_criteria", [])],
         "payment": definition["payment"] if definition else "",
         "exit_criteria": definition["exit_criteria"] if definition else "",
-        "price": price_block(opportunity.offer),
+        "price": price if price is not None else price_block(opportunity.offer),
         "notes": list(catalog.PROPOSAL_NOTES),
         "discovery_version": basis.version,
     }

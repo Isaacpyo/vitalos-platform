@@ -391,7 +391,8 @@ def extract(text: str) -> Extraction:
             )
     if "contact_name" not in result.fields:
         sig = re.search(
-            r"(?:my name is|i am|i'm|this is)\s+([A-Z][a-z]+(?:\s[A-Z][a-z'\-]+){0,2})(?=[\s,.]|$)", source
+            r"(?i:my name is|i am|i['’]m|this is)\s+([A-Z][a-z]+(?:\s[A-Z][a-z'\-]+){0,2})(?=[\s,.]|$)",
+            source,
         )
         if sig is None:
             sig = re.search(
@@ -440,7 +441,7 @@ def extract(text: str) -> Extraction:
     if "desired_outcome" not in result.fields:
         picks = _pick(
             sentences,
-            r"\b(we want|we'd like|we would like|i want|i'd like|goal|aim|hope|looking to|need to be able)\b",
+            r"\b(we want|we'd like|we would like|i want|i'd like|goal|aim|hope to|hoping to|looking to|need to be able)\b",
         )
         if picks:
             _set(result, source, "desired_outcome", picks[0][0], picks[0][1], picks[0][2])

@@ -127,23 +127,29 @@ _AID_ICONS = {
 }
 
 
-@register.simple_tag
-def aid_icon(name, classes="h-4 w-4", title=""):
+def _markup(name: str):
     shape = _AID_ICONS.get(name, _AID_ICONS["info"])
     inner = shape if shape.lstrip().startswith("<") else f'<path d="{shape}"/>'
     # Static, trusted SVG markup defined above; never built from user input.
-    markup = mark_safe(inner)  # noqa: S308  # nosec B308 B703
-    a11y = (
-        format_html('role="img" aria-label="{}"', title)
-        if title
-        else mark_safe('aria-hidden="true" focusable="false"')
-    )  # noqa: S308  # nosec B308 B703
+    return mark_safe(inner)  # noqa: S308  # nosec B308 B703
+
+
+@register.simple_tag
+def aid_icon(name, classes="h-4 w-4", title=""):
+    attrs = (
+        'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter"'
+    )
+    if title:
+        return format_html(
+            '<svg class="{}" viewBox="0 0 24 24" ' + attrs + ' role="img" aria-label="{}">{}</svg>',
+            classes,
+            title,
+            _markup(name),
+        )
     return format_html(
-        '<svg class="{}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" '
-        'stroke-linecap="square" stroke-linejoin="miter" {}>{}</svg>',
+        '<svg class="{}" viewBox="0 0 24 24" ' + attrs + ' aria-hidden="true" focusable="false">{}</svg>',
         classes,
-        a11y,
-        markup,
+        _markup(name),
     )
 
 

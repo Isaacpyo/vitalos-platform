@@ -42,7 +42,7 @@ _ACCEPT = re.compile(
     re.I,
 )
 _ACTOR = re.compile(
-    r"^(?P<actor>[A-Z][\w ]{1,30}?)\s+(?:then\s+)?(?:(?:re)?(?:enters?|sends?|checks?|reviews?|copies|opens?|exports?|uploads?|emails?|approves?|updates?|chases?|types?|downloads?|files?|logs?|reconciles?|matches|prints?|calls?|keys?)\b)"
+    r"^(?P<actor>[A-Z][\w ]{1,30}?)\s+(?:then\s+)?(?:(?:re-?)?(?:enters?|sends?|checks?|reviews?|copies|opens?|exports?|uploads?|emails?|approves?|updates?|chases?|types?|downloads?|files?|logs?|reconciles?|matches|compares|marks|prints?|calls?|keys?)\b)"
 )
 _SYSTEM = re.compile(
     r"\b(?:in|into|on|from|via|using|to)\s+((?:[A-Z][\w.&-]+)(?:\s[A-Z][\w.&-]+)?|excel|outlook|gmail|spreadsheet|the (?:shared )?(?:mailbox|inbox|portal|erp|crm))",
