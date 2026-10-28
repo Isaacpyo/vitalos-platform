@@ -1,8 +1,8 @@
 {
   "schema": "vitalos.evaluation.report/1",
-  "generated_at": "2026-10-28T11:49:23+00:00",
-  "git_sha": "caf589ce65de19b886e8e3e6e071cf2fab871712",
-  "deterministic_hash": "e815cd581aacd2b4c61bf46cce9d89cce8dc2e8701caa126eed618421ace82c1",
+  "generated_at": "2026-10-28T11:57:18+00:00",
+  "git_sha": "203afb8662d199a5fc6b640d40bc26eaf6b57126",
+  "deterministic_hash": "a214cbfeabd94704c88822bc138481c5ea9413450a0ec438013bca63e10c0df1",
   "dataset": {
     "name": "recon_demo",
     "version": "v1",
@@ -48,7 +48,7 @@
         "exceptionPrecision": 1.0,
         "stateAccuracy": 1.0,
         "unsafeAccepts": 0,
-        "modelFieldAccuracy": 0.0,
+        "modelFieldAccuracy": null,
         "modelCalls": 0,
         "costPerCaseGbp": 0.0
       },
@@ -73,9 +73,6 @@
         "malformed_ok": 6,
         "malformed_total": 6,
         "model_calls": 0,
-        "model_expected_lines": 35,
-        "model_lines_accepted": 0,
-        "model_lines_correct": 0,
         "rec_ok": 26,
         "rec_total": 26,
         "state_correct": 27,
@@ -83,7 +80,7 @@
         "unhandled_errors": 0,
         "unsafe_accepts": 0
       },
-      "outputs_hash": "50df096d08b1a58181502ccbf0b5851ecbcdb65786fb63f371ce1ce26dcafcfb",
+      "outputs_hash": "699095f14fb42c5cf1d4794341f7f162311007dc234c72e8ecb64ea82875b9e8",
       "cases": [
         {
           "id": "d01-clean-csv",
@@ -376,9 +373,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -407,9 +401,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -438,9 +429,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -469,9 +457,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -500,9 +485,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -653,9 +635,6 @@
             "unhandled_errors": 0,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 0,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -684,9 +663,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -717,9 +693,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -750,9 +723,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -859,9 +829,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 3,
             "unsafe_accepts": 0,
             "rec_total": 1,
             "rec_ok": 1,
@@ -1009,7 +976,7 @@
         "exceptionPrecision": 1.0,
         "stateAccuracy": 1.0,
         "unsafeAccepts": 0,
-        "modelFieldAccuracy": 0.4,
+        "modelFieldAccuracy": 0.9091,
         "modelCalls": 11,
         "costPerCaseGbp": 0.0
       },
@@ -1034,9 +1001,9 @@
         "malformed_ok": 6,
         "malformed_total": 6,
         "model_calls": 11,
-        "model_expected_lines": 35,
-        "model_lines_accepted": 14,
-        "model_lines_correct": 14,
+        "model_expected_lines": 11,
+        "model_lines_accepted": 10,
+        "model_lines_correct": 10,
         "pf_ok": 3,
         "pf_total": 3,
         "rec_ok": 26,
@@ -1046,7 +1013,7 @@
         "unhandled_errors": 0,
         "unsafe_accepts": 0
       },
-      "outputs_hash": "5ad4ec37dc5dfe31e116180f01d5389c64a3b09faf69d5183b69c2a71d6180fd",
+      "outputs_hash": "90f0f5dcd38e19e260beba5e56e0219715a7bf7a5e17caa95766b9be7afea576",
       "cases": [
         {
           "id": "d01-clean-csv",
@@ -1401,9 +1368,6 @@
             "unhandled_errors": 0,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "pf_total": 1,
             "pf_ok": 1,
@@ -1432,9 +1396,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 4,
-            "model_lines_correct": 4,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "exc_tp": 0,
             "exc_fp": 0,
@@ -1467,9 +1428,6 @@
             "unhandled_errors": 0,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "pf_total": 1,
             "pf_ok": 1,
@@ -1622,9 +1580,6 @@
             "unhandled_errors": 0,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 0,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -1653,9 +1608,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -1686,9 +1638,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -1719,9 +1668,6 @@
             "ac1_ok": 1,
             "state_total": 1,
             "state_correct": 1,
-            "model_lines_accepted": 0,
-            "model_lines_correct": 0,
-            "model_expected_lines": 4,
             "unsafe_accepts": 0,
             "ctrl_total": 1,
             "ctrl_ok": 1,
@@ -2150,7 +2096,7 @@
       "threshold": "Identical",
       "gating": true,
       "result": "pass",
-      "detail": "Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git caf589ce65de; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883",
+      "detail": "Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git 203afb8662d1; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883",
       "configs": {}
     },
     {
@@ -2179,44 +2125,44 @@
   ],
   "timings": {
     "rules-only": {
-      "p95_ms": 1.29,
+      "p95_ms": 2.2,
       "metrics": {
-        "p95_duration_ms": 1.29,
-        "parser_only_p95_ms": 1.29
+        "p95_duration_ms": 2.2,
+        "parser_only_p95_ms": 2.2
       },
       "cases": {
-        "d01-clean-csv": 1.66,
-        "d02-clean-printed": 1.29,
-        "d03-missing-mismatch-unmatched": 0.45,
-        "d04-duplicate-on-statement": 0.52,
-        "d05-balance-mismatch": 0.3,
-        "d06-injection": 0.56,
-        "d07-injection-twin": 0.51,
-        "d08-freeform-model-good": 0.35,
-        "d09-freeform-model-hallucination": 0.35,
-        "d10-freeform-schema-invalid": 0.37,
-        "d11-freeform-timeout-then-success": 0.31,
-        "d12-freeform-provider-down": 0.31,
-        "d13-malformed-empty": 0.06,
-        "d14-malformed-binary": 0.09,
+        "d01-clean-csv": 2.33,
+        "d02-clean-printed": 1.57,
+        "d03-missing-mismatch-unmatched": 0.73,
+        "d04-duplicate-on-statement": 0.7,
+        "d05-balance-mismatch": 0.55,
+        "d06-injection": 0.6,
+        "d07-injection-twin": 0.69,
+        "d08-freeform-model-good": 0.39,
+        "d09-freeform-model-hallucination": 0.37,
+        "d10-freeform-schema-invalid": 2.2,
+        "d11-freeform-timeout-then-success": 0.42,
+        "d12-freeform-provider-down": 0.38,
+        "d13-malformed-empty": 0.07,
+        "d14-malformed-binary": 0.06,
         "d15-malformed-oversize": 0.09,
-        "d16-malformed-ledger-header": 0.08,
-        "d17-malformed-ledger-amount": 0.13,
+        "d16-malformed-ledger-header": 0.09,
+        "d17-malformed-ledger-amount": 0.14,
         "d18-control-kill-switch": 0.05,
-        "d19-control-call-cap": 0.31,
-        "d20-control-daily-cap": 0.33,
-        "d21-control-monthly-budget": 0.28,
-        "h01-printed-credits-payments": 0.61,
-        "h02-mismatch-ledger-duplicate": 0.32,
-        "h03-freeform-model-good": 0.31,
-        "h04-injection-csv": 0.37,
+        "d19-control-call-cap": 1.61,
+        "d20-control-daily-cap": 0.62,
+        "d21-control-monthly-budget": 0.33,
+        "h01-printed-credits-payments": 0.67,
+        "h02-mismatch-ledger-duplicate": 0.36,
+        "h03-freeform-model-good": 0.32,
+        "h04-injection-csv": 0.29,
         "h05-injection-twin": 0.27,
-        "h06-malformed-ledger-date": 1.16
+        "h06-malformed-ledger-date": 2.18
       },
       "volatile": {
         "d01-clean-csv": {
           "execution_ids": [],
-          "workflow_ms": 1
+          "workflow_ms": 2
         },
         "d02-clean-printed": {
           "execution_ids": [],
@@ -2252,7 +2198,7 @@
         },
         "d10-freeform-schema-invalid": {
           "execution_ids": [],
-          "workflow_ms": 0
+          "workflow_ms": 2
         },
         "d11-freeform-timeout-then-success": {
           "execution_ids": [],
@@ -2321,39 +2267,39 @@
       }
     },
     "rules+simulated-model": {
-      "p95_ms": 3.89,
+      "p95_ms": 1.82,
       "metrics": {
-        "p95_duration_ms": 3.89,
-        "parser_only_p95_ms": 5.71
+        "p95_duration_ms": 1.82,
+        "parser_only_p95_ms": 0.75
       },
       "cases": {
         "d01-clean-csv": 0.56,
-        "d02-clean-printed": 0.61,
-        "d03-missing-mismatch-unmatched": 0.38,
-        "d04-duplicate-on-statement": 0.45,
-        "d05-balance-mismatch": 0.26,
-        "d06-injection": 0.48,
-        "d07-injection-twin": 0.47,
-        "d08-freeform-model-good": 2.14,
-        "d09-freeform-model-hallucination": 2.14,
-        "d10-freeform-schema-invalid": 1.1,
-        "d11-freeform-timeout-then-success": 1.47,
-        "d12-freeform-provider-down": 3.89,
-        "d13-malformed-empty": 0.22,
-        "d14-malformed-binary": 0.14,
-        "d15-malformed-oversize": 0.13,
+        "d02-clean-printed": 0.66,
+        "d03-missing-mismatch-unmatched": 0.41,
+        "d04-duplicate-on-statement": 0.61,
+        "d05-balance-mismatch": 0.58,
+        "d06-injection": 0.62,
+        "d07-injection-twin": 0.68,
+        "d08-freeform-model-good": 1.82,
+        "d09-freeform-model-hallucination": 1.41,
+        "d10-freeform-schema-invalid": 0.92,
+        "d11-freeform-timeout-then-success": 1.62,
+        "d12-freeform-provider-down": 2.16,
+        "d13-malformed-empty": 0.19,
+        "d14-malformed-binary": 0.12,
+        "d15-malformed-oversize": 0.15,
         "d16-malformed-ledger-header": 0.14,
-        "d17-malformed-ledger-amount": 0.22,
-        "d18-control-kill-switch": 0.08,
-        "d19-control-call-cap": 3.37,
-        "d20-control-daily-cap": 1.48,
-        "d21-control-monthly-budget": 1.83,
-        "h01-printed-credits-payments": 1.61,
-        "h02-mismatch-ledger-duplicate": 0.5,
-        "h03-freeform-model-good": 1.64,
-        "h04-injection-csv": 2.49,
-        "h05-injection-twin": 5.71,
-        "h06-malformed-ledger-date": 0.39
+        "d17-malformed-ledger-amount": 0.23,
+        "d18-control-kill-switch": 0.07,
+        "d19-control-call-cap": 0.9,
+        "d20-control-daily-cap": 0.71,
+        "d21-control-monthly-budget": 0.75,
+        "h01-printed-credits-payments": 0.72,
+        "h02-mismatch-ledger-duplicate": 0.45,
+        "h03-freeform-model-good": 1.19,
+        "h04-injection-csv": 0.48,
+        "h05-injection-twin": 0.36,
+        "h06-malformed-ledger-date": 0.32
       },
       "volatile": {
         "d01-clean-csv": {
@@ -2386,31 +2332,31 @@
         },
         "d08-freeform-model-good": {
           "execution_ids": [
-            "f8e19a89-124c-447d-9c3e-8d09328ecdde"
+            "05db2839-9c9f-49fb-a47a-d5c0033688fc"
           ],
-          "workflow_ms": 2
+          "workflow_ms": 1
         },
         "d09-freeform-model-hallucination": {
           "execution_ids": [
-            "c1d5b22c-3cd6-41bb-a3f5-4aca24d3f297"
+            "f684024d-c77b-4728-b371-2fab5861884e"
           ],
           "workflow_ms": 1
         },
         "d10-freeform-schema-invalid": {
           "execution_ids": [
-            "99b4287a-1472-49d1-8b04-7d5432ff80c5"
+            "fb466776-6164-4cab-aeaf-c9fb2e77c4e4"
           ],
           "workflow_ms": 0
         },
         "d11-freeform-timeout-then-success": {
           "execution_ids": [
-            "77437005-3e8d-48cf-9c3c-2f5f42d1f1e5"
+            "14ab6f98-ba4c-4834-b1fc-1d61e4417e3c"
           ],
           "workflow_ms": 1
         },
         "d12-freeform-provider-down": {
           "execution_ids": [
-            "1610d6bd-5d28-4c43-afcf-a909c6ca509e"
+            "7c5a3702-4408-4eeb-8992-b43c4f6465c4"
           ],
           "workflow_ms": 0
         },
@@ -2436,25 +2382,25 @@
         },
         "d19-control-call-cap": {
           "execution_ids": [
-            "befcf494-3fa6-4357-b036-e4116bbc95e8"
+            "9f2690a3-8c48-4ed7-b7f9-8bbb5fb56651"
           ],
-          "workflow_ms": 3
+          "workflow_ms": 0
         },
         "d20-control-daily-cap": {
           "execution_ids": [
-            "651e9a51-2413-4b11-8a92-49c449b1ffc2"
+            "5a2fc392-f576-41d9-acf9-c1cf391e2f37"
           ],
           "workflow_ms": 0
         },
         "d21-control-monthly-budget": {
           "execution_ids": [
-            "c68207ea-8d7a-4379-aa8e-b103e427f038"
+            "665ea8ef-aafa-4698-9a2e-e188231ac2ce"
           ],
-          "workflow_ms": 1
+          "workflow_ms": 0
         },
         "h01-printed-credits-payments": {
           "execution_ids": [],
-          "workflow_ms": 1
+          "workflow_ms": 0
         },
         "h02-mismatch-ledger-duplicate": {
           "execution_ids": [],
@@ -2462,13 +2408,13 @@
         },
         "h03-freeform-model-good": {
           "execution_ids": [
-            "4dcdf2f7-0fb0-4658-8132-6b0ee8dbc4d9"
+            "06299add-e7bc-4842-8503-bc34169e1843"
           ],
           "workflow_ms": 1
         },
         "h04-injection-csv": {
           "execution_ids": [],
-          "workflow_ms": 2
+          "workflow_ms": 0
         },
         "h05-injection-twin": {
           "execution_ids": [],

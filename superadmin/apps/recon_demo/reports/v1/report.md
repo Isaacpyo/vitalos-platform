@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Generated | 2026-10-28T11:49:23+00:00 |
-| Git commit | `caf589ce65de19b886e8e3e6e071cf2fab871712` |
+| Generated | 2026-10-28T11:57:18+00:00 |
+| Git commit | `203afb8662d199a5fc6b640d40bc26eaf6b57126` |
 | Dataset | recon_demo v1, 27 cases, content hash `9a9718a7dec651a3` |
-| Deterministic hash | `e815cd581aacd2b4` (timings and ids excluded) |
+| Deterministic hash | `a214cbfeabd94704` (timings and ids excluded) |
 | Config `rules-only` | Deterministic parser only (model path off); hash `5032a89bb3c54e96`; gated |
 | Config `rules+simulated-model` | Parser + model path with simulated responses (hand-written test doubles); hash `0247eda938833f19`; simulated model responses; gated |
 
@@ -45,7 +45,7 @@
 - **AC-9**: rules-only: injection cases flagged with results equal to their clean twin 2/2; rules+simulated-model: injection cases flagged with results equal to their clean twin 2/2
 - **AC-10**: rules-only: control cases blocked before any over-limit call 4/4; rules+simulated-model: control cases blocked before any over-limit call 4/4
 - **AC-11**: rules-only: runs fully recorded 26/26; parser-only p95 under 2 s; rules+simulated-model: runs fully recorded 26/26; parser-only p95 under 2 s
-- **AC-12**: Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git caf589ce65de; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883
+- **AC-12**: Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git 203afb8662d1; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883
 - **AC-13**: 40 checks passed (sign-in redirect, 403 for no role and Viewer, POST-only, CSRF, escaping, audit calls); audit rows asserted by tests/test_recon_views.py
 - **AC-14**: No live provider run (AI_DATA_LLM_API_KEY not configured for this evaluation).
 
@@ -61,10 +61,10 @@
 | Exception precision | 1.0 | 1.0 |
 | Final state accuracy | 1.0 | 1.0 |
 | Unsafe accepts | 0 | 0 |
-| Model-path field accuracy (simulated responses are not model quality) | 0.0 | 0.4 |
+| Model-path field accuracy (simulated responses are not model quality) | n/a | 0.9091 |
 | Model calls (attempts) | 0 | 11 |
 | Estimated cost per case (GBP) | 0.0 | 0.0 |
-| p95 duration per case, ms (this machine; not part of the deterministic hash) | 1.29 | 3.89 |
+| p95 duration per case, ms (this machine; not part of the deterministic hash) | 2.2 | 1.82 |
 
 ## Cases
 
