@@ -37,7 +37,7 @@ export function Chip({
         "inline-flex min-h-11 items-center gap-(--space-2) rounded-full border px-(--space-4) py-(--space-2) text-small",
         "transition-[background-color,border-color,transform] duration-(--duration-feedback) ease-(--ease-standard)",
         "border-aid-control-border bg-aid-control-bg text-aid-text hover:border-aid-accent hover:bg-aid-chip-bg",
-        "active:translate-y-px aria-pressed:border-aid-action aria-pressed:bg-aid-action aria-pressed:text-aid-action-text",
+        "active:translate-y-px aria-pressed:border-aid-signal aria-pressed:bg-aid-signal-soft aria-pressed:text-aid-heading",
         "disabled:cursor-not-allowed disabled:opacity-60",
         focusRing,
       )}
@@ -83,20 +83,7 @@ export function ProvenanceTag({
   );
 }
 
-/** Placeholder shown only while a real request is in flight. */
-export function Skeleton({ lines = 3 }: Readonly<{ lines?: number }>) {
-  return (
-    <div aria-hidden="true" className="flex flex-col gap-(--space-3)" data-testid="brief-skeleton">
-      {Array.from({ length: lines }, (_, index) => (
-        <div
-          key={index}
-          className="h-5 rounded-sm bg-aid-border motion-safe:animate-pulse"
-          style={{ width: `${92 - index * 14}%` }}
-        />
-      ))}
-    </div>
-  );
-}
+export { Skeleton } from "@vitalos/ui/interactive";
 
 /** Notice block: info (neutral), warning (AI could not be used) or error. Text plus icon. */
 export function Notice({

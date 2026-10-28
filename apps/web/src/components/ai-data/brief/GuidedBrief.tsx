@@ -111,6 +111,8 @@ export function GuidedBrief(props: GuidedBriefProps) {
   const started = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stepChanged = useRef(false);
+  /** What an async step just did; announced together with the step change that follows it. */
+  const resultNote = useRef("");
 
   // Restore a draft from this tab's session (never from anywhere else).
   useEffect(() => {
@@ -148,8 +150,10 @@ export function GuidedBrief(props: GuidedBriefProps) {
       return;
     }
     headingRef.current?.focus();
+    const note = resultNote.current;
+    resultNote.current = "";
     setAnnouncement(
-      `Step ${steps.indexOf(draft.step) + 1} of ${steps.length}: ${stepLabels[draft.step]}`,
+      `Step ${steps.indexOf(draft.step) + 1} of ${steps.length}: ${stepLabels[draft.step]}.${note ? ` ${note}` : ""}`,
     );
   }, [draft.step]);
 
@@ -200,7 +204,7 @@ export function GuidedBrief(props: GuidedBriefProps) {
     setBusy(null);
     if (result.source === "ai") {
       dispatch({ type: "questions-ready", questions: result.data, source: "ai", notice: null });
-      setAnnouncement("Questions suggested by AI are ready.");
+      resultNote.current = "Questions suggested by AI are ready.";
     } else {
       dispatch({
         type: "questions-ready",
@@ -208,7 +212,7 @@ export function GuidedBrief(props: GuidedBriefProps) {
         source: "checklist",
         notice: unavailableNotice(result.reason),
       });
-      setAnnouncement("The AI assistant was not available. Checklist questions are ready.");
+      resultNote.current = "The AI assistant was not available. Checklist questions are ready.";
     }
   }
 
@@ -249,7 +253,7 @@ export function GuidedBrief(props: GuidedBriefProps) {
         source: "ai",
         notice: null,
       });
-      setAnnouncement("Your brief is ready to review. It was drafted by AI.");
+      resultNote.current = "Your brief is ready to review. It was drafted by AI.";
     } else {
       dispatch({
         type: "brief-ready",
@@ -257,9 +261,8 @@ export function GuidedBrief(props: GuidedBriefProps) {
         source: "checklist",
         notice: unavailableNotice(result.reason),
       });
-      setAnnouncement(
-        "The AI assistant was not available. Your brief was prepared from our checklist.",
-      );
+      resultNote.current =
+        "The AI assistant was not available. Your brief was prepared from our checklist.";
     }
   }
 
@@ -303,7 +306,7 @@ export function GuidedBrief(props: GuidedBriefProps) {
               className={cx(
                 "flex min-h-8 items-center gap-(--space-2) rounded-full border px-(--space-3) text-small",
                 step === draft.step
-                  ? "border-aid-action bg-aid-action text-aid-action-text"
+                  ? "border-aid-signal bg-aid-signal-soft font-semibold text-aid-heading"
                   : index < stepNumber - 1
                     ? "border-aid-line text-aid-heading"
                     : "border-aid-border text-aid-muted",

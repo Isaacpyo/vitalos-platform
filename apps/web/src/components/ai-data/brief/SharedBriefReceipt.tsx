@@ -8,7 +8,8 @@ import {
   parseShared,
 } from "../../../features/ai-data/brief/state";
 import type { SharedBrief } from "../../../features/ai-data/brief/state";
-import { Notice, ProvenanceTag, secondaryButton, textButton } from "./parts";
+import { CopyButton } from "@vitalos/ui/interactive";
+import { Notice, ProvenanceTag, textButton } from "./parts";
 
 const listeners = new Set<() => void>();
 const subscribe = (listener: () => void) => {
@@ -34,7 +35,6 @@ const TRACKED_KEY = "vitalos.aid.brief.tracked.v1";
 export function SharedBriefReceipt({ reference }: Readonly<{ reference: string }>) {
   const raw = useSyncExternalStore(subscribe, readShared, () => null);
   const shared = useMemo(() => parseShared(raw), [raw]);
-  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const [cleared, setCleared] = useState(false);
 
   useEffect(() => {
@@ -53,15 +53,6 @@ export function SharedBriefReceipt({ reference }: Readonly<{ reference: string }
   }, [reference]);
 
   if (!shared) return cleared ? <Notice tone="info" title="Removed from this browser" /> : null;
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(shared?.fullText ?? "");
-      setCopied("done");
-    } catch {
-      setCopied("failed");
-    }
-  }
 
   function clearCopy() {
     try {
@@ -90,22 +81,14 @@ export function SharedBriefReceipt({ reference }: Readonly<{ reference: string }
         </ProvenanceTag>
         <span className="text-small text-aid-muted">{shared.cardsKept} cards shared</span>
       </div>
-      <pre className="m-0 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-md border border-aid-border bg-aid-surface p-(--space-4) font-sans text-small text-aid-text">
+      <pre className="m-0 whitespace-pre-wrap break-words rounded-md border border-aid-border bg-aid-surface p-(--space-4) font-sans text-small text-aid-text">
         {shared.fullText}
       </pre>
       <div className="flex flex-wrap items-center gap-(--space-3)">
-        <button type="button" className={secondaryButton} onClick={() => void copy()}>
-          Copy the brief
-        </button>
+        <CopyButton value={shared.fullText} label="Copy the brief" copiedLabel="Brief copied" />
         <button type="button" className={textButton} onClick={clearCopy}>
           Remove this copy from my browser
         </button>
-        <p aria-live="polite" className="m-0 text-small text-aid-muted">
-          {copied === "done" ? "Copied to the clipboard." : null}
-          {copied === "failed"
-            ? "Could not copy. Select the text above and copy it instead."
-            : null}
-        </p>
       </div>
     </section>
   );

@@ -3,16 +3,15 @@
  * server actions and the tests all use the same shapes.
  */
 
-export const topicSlugs = [
-  "finance-reconciliation",
-  "document-intake",
-  "customer-requests",
-  "operational-reporting",
-] as const;
-export type TopicSlug = (typeof topicSlugs)[number];
+// The four slugs are shared with the explorer (workflows.ts, ADR-054) and `?topic=`.
+import { isWorkflowTopic, workflowTopicSlugs } from "../workflows";
+import type { WorkflowTopic } from "../workflows";
+
+export const topicSlugs = workflowTopicSlugs;
+export type TopicSlug = WorkflowTopic;
 
 export const isTopicSlug = (value: unknown): value is TopicSlug =>
-  typeof value === "string" && (topicSlugs as readonly string[]).includes(value);
+  typeof value === "string" && isWorkflowTopic(value);
 
 /** Limits. The brief-assist contract allows more; these keep a shared brief inside the enquiry. */
 export const BRIEF_LIMITS = {

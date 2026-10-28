@@ -228,4 +228,3 @@ export function parseShared(raw: string | null): SharedBrief | null {
   }
   return null;
 }
-

@@ -96,7 +96,7 @@ export function BriefCardView({ card, onEdit, onRevert, onRemove, onRestore }: B
     <article
       aria-labelledby={headingId}
       data-card={card.key}
-      className="flex flex-col gap-(--space-4) rounded-lg border border-aid-border bg-aid-surface p-(--space-5) md:p-(--space-6)"
+      className="flex flex-col gap-(--space-4) rounded-xl border border-aid-border bg-aid-surface p-(--space-5) transition-[border-color,box-shadow] duration-(--duration-feedback) ease-(--ease-standard) hover:border-aid-line hover:shadow-floating md:p-(--space-6)"
     >
       <header className="flex flex-wrap items-center justify-between gap-(--space-3)">
         <h3 id={headingId} className="m-0 text-h4 text-aid-heading">

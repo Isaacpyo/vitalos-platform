@@ -7,7 +7,7 @@ import { AiDataEnquiryForm } from "../../../../src/components/ai-data/AiDataEnqu
 import { AiDataPage } from "../../../../src/components/ai-data/chrome";
 import { Band, SectionHeading } from "../../../../src/components/ai-data/primitives";
 import { GuidedBrief } from "../../../../src/components/ai-data/brief/GuidedBrief";
-import { JsOnly, NoJsOnly } from "../../../../src/components/ai-data/brief/JsOnly";
+import { JsOnly, NoJsOnly } from "../../../../src/components/ai-data/brief/NoJsOnly";
 import { isBriefAssistConfigured } from "../../../../src/features/ai-data/brief/server";
 import { isTopicSlug } from "../../../../src/features/ai-data/brief/types";
 import { ContactAlternative } from "../../../../src/components/contact/ContactAlternative";
@@ -134,6 +134,7 @@ export default async function AiDataContactPage({
                         simpleFormHref={simpleHref}
                       />
                     </JsOnly>
+
                     <NoJsOnly>{simpleForm}</NoJsOnly>
                   </>
                 )}

@@ -41,19 +41,19 @@ A customer is an `accounts.User` with no staff role plus an active, accepted `Me
 
 Every customer-facing model has an explicit publication state; every internal-only field is named `internal_*` (or lives on an internal thread/file) so tests can plant markers in each and assert they never appear.
 
-| Record                                      | Customer sees it when                                                         |
-| ------------------------------------------- | ----------------------------------------------------------------------------- |
-| Challenge                                   | `shared_at` is set by staff (the text is a snapshot taken when linked)        |
-| Brief version                               | proposed, agreed, superseded or changes-requested; never a draft              |
-| Project, milestone, project item            | `published_at` set                                                            |
-| Deliverable                                 | published, and only its **shared**, not withdrawn versions                    |
-| Update                                      | status published (a draft is invisible; a published update is frozen)         |
-| Question (information request)              | sent (`published_at`)                                                         |
-| Discussion thread                           | not internal; internal threads exist for staff only                           |
-| File                                        | `visibility = customer`; internal files are never listed or downloadable      |
-| Managed service and status report           | published                                                                     |
-| Change request                              | always, to the organisation that raised it                                    |
-| Activity event, notification                | written by services from published fields only                                |
+| Record                            | Customer sees it when                                                    |
+| --------------------------------- | ------------------------------------------------------------------------ |
+| Challenge                         | `shared_at` is set by staff (the text is a snapshot taken when linked)   |
+| Brief version                     | proposed, agreed, superseded or changes-requested; never a draft         |
+| Project, milestone, project item  | `published_at` set                                                       |
+| Deliverable                       | published, and only its **shared**, not withdrawn versions               |
+| Update                            | status published (a draft is invisible; a published update is frozen)    |
+| Question (information request)    | sent (`published_at`)                                                    |
+| Discussion thread                 | not internal; internal threads exist for staff only                      |
+| File                              | `visibility = customer`; internal files are never listed or downloadable |
+| Managed service and status report | published                                                                |
+| Change request                    | always, to the organisation that raised it                               |
+| Activity event, notification      | written by services from published fields only                           |
 
 All reads go through `apps/portal/selectors.py`, which scopes by organisation **and** publication; a record in another organisation or not yet published behaves exactly like one that does not exist (`Http404`). Views, search, exports, downloads, notifications and AI context builders use only those selectors. Hiding a control in a template is never the mechanism. One test module (`tests/test_portal_isolation.py`) iterates every surface for a second synthetic organisation and asserts 404 with no leakage.
 

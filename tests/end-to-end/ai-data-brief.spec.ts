@@ -100,7 +100,9 @@ test("checklist path: no AI, nothing sent, honest labels, edit and remove, share
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "A few questions" })).toBeFocused();
-  await expect(page.getByText("Questions from our checklist: no AI used")).toBeVisible();
+  await expect(
+    page.getByText("Questions from our checklist: no AI used", { exact: true }),
+  ).toBeVisible();
   await expect(page.getByTestId("brief-announcer")).toHaveText(/Step 2 of 4/);
   const outcome = page.getByRole("group", { name: /What would a good result look like/ });
   await outcome.getByRole("button", { name: "Fewer errors" }).click();
@@ -113,7 +115,9 @@ test("checklist path: no AI, nothing sent, honest labels, edit and remove, share
 
   await page.getByRole("button", { name: "Prepare my brief" }).click();
   await expect(page.getByRole("heading", { name: "Review your brief" })).toBeFocused();
-  await expect(page.getByText("Prepared from our checklist: no AI used")).toBeVisible();
+  await expect(
+    page.getByText("Prepared from our checklist: no AI used", { exact: true }),
+  ).toBeVisible();
   expect(await calls(page)).toEqual({ questions: 0, brief: 0, rejected: 0 });
 
   await expect(
@@ -170,7 +174,7 @@ test("AI path: the opt-in sends text, and everything the AI wrote is labelled a 
   await page.getByRole("checkbox", { name: /Use AI to suggest questions/ }).check();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByText("Questions suggested by AI")).toBeVisible();
+  await expect(page.getByText("Questions suggested by AI", { exact: true })).toBeVisible();
   await expect(page.getByText("Which supplier statements are the hardest to match?")).toBeVisible();
   expect(await calls(page)).toMatchObject({ questions: 1, brief: 0, rejected: 0 });
   await page
@@ -198,10 +202,12 @@ for (const [marker, label] of [
     await describe(page, `${DESCRIPTION} ${marker}`);
     await page.getByRole("checkbox", { name: /Use AI to suggest questions/ }).check();
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.getByText("AI was not used")).toBeVisible();
+    await expect(page.getByText("AI was not used", { exact: true })).toBeVisible();
     await expect(page.getByText(/We used our checklist instead/)).toBeVisible();
-    await expect(page.getByText("Questions from our checklist: no AI used")).toBeVisible();
-    await expect(page.getByText("Questions suggested by AI")).toHaveCount(0);
+    await expect(
+      page.getByText("Questions from our checklist: no AI used", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Questions suggested by AI", { exact: true })).toHaveCount(0);
     await expect(page.getByTestId("brief-announcer")).toHaveText(/AI assistant was not available/);
   });
 }
