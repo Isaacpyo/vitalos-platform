@@ -52,6 +52,12 @@ export const relaySemantic: Record<string, { light: Foundation; dark: Foundation
 /** The only transparency the brand allows: the tablet drawer scrim (midnight at 40%). */
 export const relayScrim = "rgba(11, 19, 32, 0.4)";
 
+/** Elevation for the floating panel and its cards (midnight-tinted shadows, unchanged values moved here from panel.css). */
+export const relayShadows = {
+  panel: "0 24px 48px -12px rgb(11 19 32 / 0.28)",
+  card: "0 12px 24px -8px rgb(11 19 32 / 0.2)",
+} as const;
+
 const kebab = (key: string) =>
   key
     .replace(/([a-z])([A-Z])/g, "$1-$2")
@@ -72,6 +78,8 @@ export function renderRelayCss(): string {
     ".relay-root {",
     foundation,
     `  --relay-scrim: ${relayScrim};`,
+    `  --relay-shadow-panel: ${relayShadows.panel};`,
+    `  --relay-shadow-card: ${relayShadows.card};`,
     roles("light"),
     "}",
     "",
