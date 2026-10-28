@@ -4,11 +4,22 @@ Owner: Operations Owner (founder at launch). Scope: the public section `vitalos.
 
 ## 1. Where things run
 
-| Piece                                  | Host                                         | Deploys                                                                               |
-| -------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Public pages and the AI & Data form    | Vercel project `vitalos-platform` (`dub1`)   | Automatically on merge to `main`; pull requests get preview deployments               |
-| Enquiry records and outbox             | Website Supabase project (ADR-019)           | No schema change in this milestone                                                    |
-| Pipeline, offers, budget, demonstrator | Super Admin, Azure Container Apps (UK South) | `Super Admin deploy` workflow after CI on `main` (guarded, backed up, health-checked) |
+| Piece                                  | Host                                         | Deploys                                                                                                                                 |
+| -------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Public pages and the AI & Data form    | Vercel project `vitalos-platform` (`dub1`)   | Intended: on merge to `main`. On 28 Oct 2026 the Git integration created no deployment, so production was deployed with the CLI (below) |
+| Enquiry records and outbox             | Website Supabase project (ADR-019)           | No schema change in this milestone                                                                                                      |
+| Pipeline, offers, budget, demonstrator | Super Admin, Azure Container Apps (UK South) | `Super Admin deploy` workflow after CI on `main` (guarded, backed up, health-checked)                                                   |
+
+### Deploying the website when the Git integration does not
+
+Check first: `vercel ls vitalos-platform` (or the Vercel dashboard) should show a production deployment for the merge commit within a few minutes. If none appears:
+
+1. `git worktree add --detach /tmp/deploy <merge sha>` (a clean checkout of `main`, no `node_modules`).
+2. In it: `vercel link --yes --project vitalos-platform`, then `vercel deploy --prod --yes`. Vercel builds remotely with the project's own environment variables (Root Directory `apps/web`).
+3. `vercel link` writes a `.env.local` with development variables into that checkout: delete it immediately, then remove the worktree.
+4. Run the smoke checks in §4.
+
+Owner follow-up: reconnect the Vercel GitHub integration (Vercel › Project › Settings › Git) so merges deploy again; `docs/operations/deployment.md` notes Git-triggered deployments were blocked by team access.
 
 ## 2. Configuration
 
