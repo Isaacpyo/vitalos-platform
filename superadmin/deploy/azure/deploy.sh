@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Deploy the Vitalos Super Admin to Azure Container Apps (consumption plan, UK South) at zero monthly
 # cost: scale-to-zero inside the Container Apps free grant, free-tier PostgreSQL (Supabase by default, or
-# Neon), the image on ghcr.io, Cloudflare free DNS and an Azure managed (free) TLS certificate for admin.vitalos.co.uk.
+# Neon), the image on ghcr.io, Cloudflare free DNS and Azure managed (free) TLS certificates for admin.vitalos.co.uk
+# and the client portal host portal.vitalos.co.uk.
 #
 #   superadmin/deploy/azure/deploy.sh --dry-run   # print the plan and expected cost; calls nothing
 #   superadmin/deploy/azure/deploy.sh             # deploy (normally run by the "Super Admin deploy" workflow)
@@ -69,6 +70,8 @@ APP="${AZ_APP:-superadmin}"
 RELEASE_JOB="${APP}-release"
 DOMAIN="${CUSTOM_DOMAIN:-admin.vitalos.co.uk}"
 ZONE="${DNS_ZONE:-vitalos.co.uk}"
+# Client portal host (ADR-056, approved by the owner 28 Oct 2026); PORTAL_DOMAIN="" skips it.
+PORTAL_DOMAIN="${PORTAL_DOMAIN-portal.vitalos.co.uk}"
 ADMIN_EMAIL="${BOOTSTRAP_ADMIN_EMAIL:?BOOTSTRAP_ADMIN_EMAIL is required (the bootstrap admin sign-in email)}"
 CPU="0.25"
 MEMORY="0.5Gi"
@@ -116,6 +119,8 @@ Will create or update:
        TXT   asuid.${DOMAIN%%."$ZONE"} -> <custom domain verification ID>
        (no CLOUDFLARE_API_TOKEN: the two records are printed and the run stops here, resumable)
   5. Custom domain $DOMAIN + Azure managed certificate (free), CNAME validation
+  6. Client portal host ${PORTAL_DOMAIN:-<skipped>}: the same records and a managed certificate on the same app;
+     a portal DNS or certificate problem is reported as a warning and never fails the admin deploy
 
 Not created (zero-cost design): no container registry (public ghcr.io package), no managed PostgreSQL
 (Supabase or Neon free), no Key Vault (Container Apps secrets), no storage account (backups run in GitHub Actions).
@@ -340,76 +345,103 @@ FQDN="$(az containerapp show -n "$APP" -g "$RG" --query properties.configuration
 VERIFICATION_ID="$(az containerapp show -n "$APP" -g "$RG" --query properties.customDomainVerificationId -o tsv)"
 output fqdn "$FQDN"
 
-bound() {
-  [ "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].bindingType" -o tsv 2>/dev/null)" = "SniEnabled" ]
+bound() {  # domain
+  [ "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$1'].bindingType" -o tsv 2>/dev/null)" = "SniEnabled" ]
 }
 
-if bound; then
-  log "$DOMAIN is already bound with a managed certificate; DNS left as it is"
-else
-  log "DNS: $DOMAIN -> $FQDN"
+if [ -n "${CLOUDFLARE_API_TOKEN:-}" ]; then mask "$CLOUDFLARE_API_TOKEN"; fi
+cloudflare() {  # method, path, [json body]
+  curl -fsS -X "$1" "https://api.cloudflare.com/client/v4$2" \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" ${3:+--data "$3"}
+}
+upsert_record() {  # zone id, type, name, content. Never silently replaces a record pointing elsewhere.
+  local zone_id="$1" type="$2" name="$3" content="$4" existing existing_id existing_content body
+  existing="$(cloudflare GET "/zones/$zone_id/dns_records?type=$type&name=$name" |
+    python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] + " " + r[0]["content"].strip(chr(34)) if r else "")')"
+  existing_id="${existing%% *}"
+  existing_content="${existing#* }"
+  body="$(python3 -c 'import json,sys; print(json.dumps({"type": sys.argv[1], "name": sys.argv[2], "content": sys.argv[3], "ttl": 300, "proxied": False}))' "$type" "$name" "$content")"
+  if [ -z "$existing" ]; then
+    cloudflare POST "/zones/$zone_id/dns_records" "$body" > /dev/null
+  elif [ "$existing_content" != "$content" ]; then
+    [ "${DNS_OVERWRITE:-}" = "1" ] ||
+      die "$type $name already points to '$existing_content'. Check what uses it, then re-run with DNS_OVERWRITE=1."
+    cloudflare PUT "/zones/$zone_id/dns_records/$existing_id" "$body" > /dev/null
+  fi
+}
+resolves() {  # name, type, expected value (DNS-over-HTTPS, no dig needed)
+  curl -fsS -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=$1&type=$2" |
+    python3 -c 'import json,sys; want=sys.argv[1].rstrip(".").lower(); answers=[a["data"].strip("\"").rstrip(".").lower() for a in json.load(sys.stdin).get("Answer", [])]; sys.exit(0 if want in answers else 1)' "$3"
+}
+
+# Point a custom domain at the app (Cloudflare, DNS only) and bind a free Azure managed certificate.
+# Returns 1 after printing the two records to create when there is no Cloudflare token; dies when the
+# records do not propagate within 30 minutes.
+ensure_domain() {  # domain
+  local domain="$1" zone_id attempt
+  if bound "$domain"; then
+    log "$domain is already bound with a managed certificate; DNS left as it is"
+    return 0
+  fi
+  log "DNS: $domain -> $FQDN"
   if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
     cat <<EOF
 
 CLOUDFLARE_API_TOKEN is not set. Create these records in the $ZONE zone (DNS only / grey cloud, TTL 300),
 then run the workflow again; it resumes from here:
-  CNAME  ${DOMAIN%%."$ZONE"}         $FQDN
-  TXT    asuid.${DOMAIN%%."$ZONE"}   $VERIFICATION_ID
+  CNAME  ${domain%%."$ZONE"}         $FQDN
+  TXT    asuid.${domain%%."$ZONE"}   $VERIFICATION_ID
 EOF
-    output bound false
-    exit 0
+    return 1
   fi
-  mask "$CLOUDFLARE_API_TOKEN"
-  cloudflare() {  # method, path, [json body]
-    curl -fsS -X "$1" "https://api.cloudflare.com/client/v4$2" \
-      -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" ${3:+--data "$3"}
-  }
-  upsert_record() {  # zone id, type, name, content. Never silently replaces a record pointing elsewhere.
-    local zone_id="$1" type="$2" name="$3" content="$4" existing existing_id existing_content body
-    existing="$(cloudflare GET "/zones/$zone_id/dns_records?type=$type&name=$name" |
-      python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] + " " + r[0]["content"].strip(chr(34)) if r else "")')"
-    existing_id="${existing%% *}"
-    existing_content="${existing#* }"
-    body="$(python3 -c 'import json,sys; print(json.dumps({"type": sys.argv[1], "name": sys.argv[2], "content": sys.argv[3], "ttl": 300, "proxied": False}))' "$type" "$name" "$content")"
-    if [ -z "$existing" ]; then
-      cloudflare POST "/zones/$zone_id/dns_records" "$body" > /dev/null
-    elif [ "$existing_content" != "$content" ]; then
-      [ "${DNS_OVERWRITE:-}" = "1" ] ||
-        die "$type $name already points to '$existing_content'. Check what uses it, then re-run with DNS_OVERWRITE=1."
-      cloudflare PUT "/zones/$zone_id/dns_records/$existing_id" "$body" > /dev/null
-    fi
-  }
-  ZONE_ID="$(cloudflare GET "/zones?name=$ZONE" | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] if r else "")')"
-  [ -n "$ZONE_ID" ] || die "zone $ZONE not found for this Cloudflare token"
-  upsert_record "$ZONE_ID" CNAME "$DOMAIN" "$FQDN"
-  upsert_record "$ZONE_ID" TXT "asuid.$DOMAIN" "$VERIFICATION_ID"
-  log "Cloudflare records written (DNS only, grey cloud)"
-
-  resolves() {  # name, type, expected value (DNS-over-HTTPS, no dig needed)
-    curl -fsS -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=$1&type=$2" |
-      python3 -c 'import json,sys; want=sys.argv[1].rstrip(".").lower(); answers=[a["data"].strip("\"").rstrip(".").lower() for a in json.load(sys.stdin).get("Answer", [])]; sys.exit(0 if want in answers else 1)' "$3"
-  }
+  zone_id="$(cloudflare GET "/zones?name=$ZONE" | python3 -c 'import json,sys; r=json.load(sys.stdin)["result"]; print(r[0]["id"] if r else "")')"
+  [ -n "$zone_id" ] || die "zone $ZONE not found for this Cloudflare token"
+  upsert_record "$zone_id" CNAME "$domain" "$FQDN"
+  upsert_record "$zone_id" TXT "asuid.$domain" "$VERIFICATION_ID"
+  log "Cloudflare records written for $domain (DNS only, grey cloud)"
   for attempt in $(seq 1 60); do
-    if resolves "$DOMAIN" CNAME "$FQDN" && resolves "asuid.$DOMAIN" TXT "$VERIFICATION_ID"; then break; fi
-    [ "$attempt" = 60 ] && die "DNS for $DOMAIN has not propagated after 30 minutes; re-run later"
+    if resolves "$domain" CNAME "$FQDN" && resolves "asuid.$domain" TXT "$VERIFICATION_ID"; then break; fi
+    [ "$attempt" = 60 ] && die "DNS for $domain has not propagated after 30 minutes; re-run later"
     sleep 30
   done
-
-  log "Custom domain and managed certificate (free)"
-  if [ -z "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$DOMAIN'].name" -o tsv)" ]; then
-    quiet az containerapp hostname add -n "$APP" -g "$RG" --hostname "$DOMAIN"
+  log "Custom domain $domain and managed certificate (free)"
+  if [ -z "$(az containerapp hostname list -n "$APP" -g "$RG" --query "[?name=='$domain'].name" -o tsv)" ]; then
+    quiet az containerapp hostname add -n "$APP" -g "$RG" --hostname "$domain"
   fi
-  quiet az containerapp hostname bind -n "$APP" -g "$RG" --hostname "$DOMAIN" --environment "$CAE" --validation-method CNAME
+  quiet az containerapp hostname bind -n "$APP" -g "$RG" --hostname "$domain" --environment "$CAE" --validation-method CNAME
+}
+
+if ! ensure_domain "$DOMAIN"; then
+  output bound false
+  exit 0
 fi
 output bound true
 
 log "Waiting for https://$DOMAIN (the first request also wakes the app and the database)"
+healthy=0
 for attempt in $(seq 1 60); do
   if curl -fsS --max-time 30 "https://$DOMAIN/healthz/" > /dev/null 2>&1; then
     curl -fsS -o /dev/null -w "login page: HTTP %{http_code}\n" "https://$DOMAIN/login/"
     log "Live: https://$DOMAIN ($IMAGE)"
-    exit 0
+    healthy=1
+    break
   fi
   sleep 20
 done
-die "https://$DOMAIN did not become healthy within 20 minutes (attempt $attempt)"
+[ "$healthy" = 1 ] || die "https://$DOMAIN did not become healthy within 20 minutes (attempt $attempt)"
+
+# The client portal host (ADR-056) is served by the same app. Its DNS and certificate are set up the
+# same way, but a portal problem never fails an otherwise healthy admin deploy: it is reported instead.
+if [ -n "$PORTAL_DOMAIN" ]; then
+  if ( ensure_domain "$PORTAL_DOMAIN" ); then
+    output portal_bound true
+    if curl -fsS --max-time 30 "https://$PORTAL_DOMAIN/healthz/" > /dev/null 2>&1; then
+      log "Portal host live: https://$PORTAL_DOMAIN"
+    else
+      printf '::warning::https://%s/healthz/ is not answering yet (certificate issuance can take a few minutes)\n' "$PORTAL_DOMAIN"
+    fi
+  else
+    output portal_bound false
+    printf '::warning::%s is not bound yet; see the log above and re-run the deploy\n' "$PORTAL_DOMAIN"
+  fi
+fi
