@@ -140,10 +140,7 @@ def _rate_limited(visitor_hash: str, now) -> bool:
     """Over a limit, counting the caller's own pending row (written first) and every in-flight call, so a
     burst of simultaneous requests is counted before any of them reaches the model."""
     counted = BriefAssistEvent.objects.exclude(outcome__in=("rate_limited", "invalid"))
-    if (
-        counted.filter(visitor_hash=visitor_hash, created_at__gt=now - VISITOR_WINDOW).count()
-        > VISITOR_LIMIT
-    ):
+    if counted.filter(visitor_hash=visitor_hash, created_at__gt=now - VISITOR_WINDOW).count() > VISITOR_LIMIT:
         return True
     return counted.filter(created_at__gt=now - GLOBAL_WINDOW).count() > GLOBAL_LIMIT
 

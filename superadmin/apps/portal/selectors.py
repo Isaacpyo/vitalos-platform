@@ -42,6 +42,7 @@ from .models import (
     Update,
 )
 
+
 def _pk(value) -> int:
     """A primary key from untrusted input (a POST field or query string). Anything that is not a plain
     positive integer that fits the database column is a 404, exactly like a record that does not exist."""
@@ -378,7 +379,8 @@ def events(member, challenge=None, project=None, since=None):
         Q(project__isnull=True) | Q(project__in=projects(member))
     )
     qs = qs.exclude(
-        Q(version__isnull=False) & (Q(version__shared_at__isnull=True) | Q(version__withdrawn_at__isnull=False))
+        Q(version__isnull=False)
+        & (Q(version__shared_at__isnull=True) | Q(version__withdrawn_at__isnull=False))
     ).exclude(Q(milestone__isnull=False) & Q(milestone__published_at__isnull=True))
     gated = {
         "deliverable": deliverables(member),

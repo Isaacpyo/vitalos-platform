@@ -123,9 +123,7 @@ def live_provider_status() -> tuple[ModelProvider | None, str]:
 
 def build_gateway(provider: ModelProvider, ai: AiSettings | None = None, **kwargs) -> ModelGateway:
     ai = ai or AiSettings.load()
-    guard = LimitGuard(
-        limits(ai), DbUsage(), enabled=lambda: is_enabled(), workflow_shares=workflow_shares()
-    )
+    guard = LimitGuard(limits(ai), DbUsage(), enabled=lambda: is_enabled(), workflow_shares=workflow_shares())
     return ModelGateway(provider, guard, recorders=[record_execution], **kwargs)
 
 
