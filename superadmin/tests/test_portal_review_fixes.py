@@ -334,3 +334,31 @@ def test_l4_enquiries_allow_list_is_unchanged():
     from apps.enquiries.attachments import ALLOWED
 
     assert "application/msword" in ALLOWED and "application/vnd.ms-excel" in ALLOWED
+
+
+# --- L6: staff redirect target is validated --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "target",
+    ["https://evil.example/phish", "//evil.example/x", "http://evil.example", "javascript:alert(1)", "\\\\evil.example"],
+)
+def test_l6_staff_back_redirect_rejects_foreign_targets(world, target):
+    from tests.portal_helpers import client_for as make_client
+
+    staff = make_client(world.staff)
+    response = staff.post(
+        f"/client-portal/publish/milestone/{world.ms2.pk}/off/", {"next": target}, HTTP_HOST="testserver"
+    )
+    assert response.status_code == 302
+    assert response["Location"] == "/client-portal/"
+
+
+def test_l6_staff_back_redirect_keeps_local_paths(world):
+    from tests.portal_helpers import client_for as make_client
+
+    staff = make_client(world.staff)
+    response = staff.post(
+        f"/client-portal/publish/milestone/{world.ms2.pk}/on/", {"next": f"/client-portal/projects/{world.project_a.pk}/"}
+    )
+    assert response["Location"] == f"/client-portal/projects/{world.project_a.pk}/"
