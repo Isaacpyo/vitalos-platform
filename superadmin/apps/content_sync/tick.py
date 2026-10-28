@@ -82,6 +82,12 @@ def run(now=None) -> dict:
     except Exception:  # noqa: BLE001 - mail must never stop the tick
         logger.exception("Outreach send failed")
     try:
+        from apps.aidata import tasks as aidata_tasks
+
+        aidata_tasks.tick(now)  # recover stale AI drafts (expired lease) and run queued ones
+    except Exception:  # noqa: BLE001 - AI & Data must never stop the tick
+        logger.exception("AI & Data task tick failed")
+    try:
         from apps.billing.services import tick_sync
 
         tick_sync(now)  # Stripe payments reconciliation, at most every 10 minutes and only with a key

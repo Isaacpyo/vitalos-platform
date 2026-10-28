@@ -363,13 +363,17 @@ class Draft(models.Model):
     it. An approved draft is never edited: a revision is a new version and supersedes it on approval.
     """
 
-    opportunity = models.ForeignKey(Opportunity, null=True, blank=True, on_delete=models.CASCADE, related_name="drafts")
+    opportunity = models.ForeignKey(
+        Opportunity, null=True, blank=True, on_delete=models.CASCADE, related_name="drafts"
+    )
     # Every derived record links back to the original enquiry, which is never altered.
     enquiry = models.ForeignKey(
         "enquiries.Enquiry", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     kind = models.CharField(max_length=12, choices=DraftKind.choices)
-    state = models.CharField(max_length=12, choices=DraftState.choices, default=DraftState.QUEUED, db_index=True)
+    state = models.CharField(
+        max_length=12, choices=DraftState.choices, default=DraftState.QUEUED, db_index=True
+    )
     version = models.PositiveIntegerField(default=1)
     mode = models.CharField(max_length=8, choices=DraftMode.choices, default=DraftMode.RULES)
     requested_mode = models.CharField(max_length=8, choices=DraftMode.choices, default=DraftMode.RULES)
@@ -381,7 +385,9 @@ class Draft(models.Model):
     ai_payload = models.JSONField(default=dict, blank=True)
     evidence = models.JSONField(default=list, blank=True)
     warnings = models.JSONField(default=list, blank=True)
-    basis = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="derived")
+    basis = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="derived"
+    )
     execution_id = models.UUIDField(null=True, blank=True)
     prompt_ref = models.CharField(max_length=80, blank=True)
     simulated = models.BooleanField(default=False)
@@ -394,12 +400,18 @@ class Draft(models.Model):
     error_category = models.CharField(max_length=40, blank=True)
     error_detail = models.CharField(max_length=300, blank=True)
     fallback_reason = models.CharField(max_length=300, blank=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     reviewed_at = models.DateTimeField(null=True, blank=True)
-    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
     decided_at = models.DateTimeField(null=True, blank=True)
     decision_note = models.CharField(max_length=500, blank=True)
 
@@ -440,3 +452,6 @@ class BriefAssistEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"Brief assist {self.stage} {self.outcome}"

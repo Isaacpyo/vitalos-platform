@@ -1,9 +1,9 @@
 """Opportunistic content tick (ADR-042): when the admin serves the content API, or a signed-in page in
-Insights, Careers, Content or Billing, it runs the tick in the background at most once a minute."""
+Insights, Careers, Content, Billing or AI & Data, it runs the tick in the background at most once a minute."""
 
 from . import tick
 
-ADMIN_PREFIXES = ("/insights/", "/careers/", "/content/", "/billing/")
+ADMIN_PREFIXES = ("/insights/", "/careers/", "/content/", "/billing/", "/ai-data/")
 API_PREFIX = "/api/content/v1/"
 
 

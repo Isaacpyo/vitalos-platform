@@ -29,6 +29,7 @@ class OpportunityForm(StyledFormMixin, forms.ModelForm):
             "contact_name",
             "contact_email",
             "contact_role",
+            "contact_phone",
             "website_reference",
             "next_action",
             "next_action_due",
