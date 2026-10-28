@@ -507,6 +507,18 @@ def propose_brief(brief: BriefVersion, *, actor, request=None) -> None:
     )
 
 
+def _lock_brief(brief: BriefVersion) -> BriefVersion:
+    """Lock the brief row and re-check, on the fresh row, that it is still the proposed version under review."""
+    fresh = BriefVersion.objects.select_for_update().select_related("challenge").get(pk=brief.pk)
+    if fresh.status != BriefStatus.PROPOSED:
+        raise PortalError("This brief is not waiting for review.")
+    if BriefVersion.objects.filter(
+        challenge_id=fresh.challenge_id, number__gt=fresh.number, proposed_at__isnull=False
+    ).exists():
+        raise PortalError("A newer brief has been proposed. Please review the latest version.")
+    return fresh
+
+
 def review_brief(
     member: Membership, brief: BriefVersion, *, accept: bool, comment: str, request=None
 ) -> BriefReview:
@@ -522,6 +534,7 @@ def review_brief(
     if not accept and not member.can_comment:
         raise PortalError("Your role is read-only.")
     with transaction.atomic():
+        brief = _lock_brief(brief)
         review = BriefReview.objects.create(
             brief=brief,
             user=member.user,
@@ -692,6 +705,7 @@ def share_version(version: DeliverableVersion, *, actor, request=None) -> None:
             "Publish the project (and share its challenge) before sharing a deliverable version."
         )
     with transaction.atomic():
+        Deliverable.objects.select_for_update().get(pk=deliverable.pk)
         if deliverable.published_at is None:
             deliverable.published_at = _now()
             deliverable.save(update_fields=["published_at"])
@@ -990,6 +1004,16 @@ def _version_for_decision(member: Membership, version: DeliverableVersion) -> No
         )
 
 
+def _lock_version(member: Membership, version: DeliverableVersion) -> DeliverableVersion:
+    """Inside a transaction: lock the deliverable (which also serialises ``share_version`` and
+    ``withdraw_version``), reload the version and re-run the checks on the fresh rows, so a decision never
+    lands on a version that a concurrent request has just superseded or withdrawn."""
+    Deliverable.objects.select_for_update().get(pk=version.deliverable_id)
+    fresh = DeliverableVersion.objects.select_related("deliverable__project__challenge").get(pk=version.pk)
+    _version_for_decision(member, fresh)
+    return fresh
+
+
 def approve_version(member: Membership, version: DeliverableVersion, *, comment="", request=None) -> Approval:
     if not member.can_approve:
         raise PortalError("Your role cannot approve. Ask an approver in your organisation.")
@@ -999,6 +1023,7 @@ def approve_version(member: Membership, version: DeliverableVersion, *, comment=
     comment = _clean_text(comment, field="Comment", required=False, limit=2000)
     try:
         with transaction.atomic():
+            version = _lock_version(member, version)
             approval = Approval.objects.create(
                 version=version,
                 kind=Approval.Kind.REVIEW,
@@ -1029,17 +1054,23 @@ def request_version_changes(
             "This version is already approved. Ask Vitalos for a new version if something must change."
         )
     comment = _clean_text(comment, field="What needs to change", limit=2000)
-    approval = Approval.objects.create(
-        version=version,
-        kind=Approval.Kind.REVIEW,
-        decision=Approval.Decision.CHANGES,
-        user=member.user,
-        user_email=member.user.email,
-        user_name=member.user.full_name,
-        role=member.role,
-        comment=comment,
-        ip=client_ip(request) or None if request is not None else None,
-    )
+    with transaction.atomic():
+        version = _lock_version(member, version)
+        if selectors.version_state(version) == "approved":
+            raise PortalError(
+                "This version is already approved. Ask Vitalos for a new version if something must change."
+            )
+        approval = Approval.objects.create(
+            version=version,
+            kind=Approval.Kind.REVIEW,
+            decision=Approval.Decision.CHANGES,
+            user=member.user,
+            user_email=member.user.email,
+            user_name=member.user.full_name,
+            role=member.role,
+            comment=comment,
+            ip=client_ip(request) or None if request is not None else None,
+        )
     _decision_side_effects(member, version, approval, "asked for changes to")
     return approval
 
@@ -1060,6 +1091,7 @@ def accept_contract(
     )
     try:
         with transaction.atomic():
+            version = _lock_version(member, version)
             approval = Approval.objects.create(
                 version=version,
                 kind=Approval.Kind.CONTRACTUAL,
