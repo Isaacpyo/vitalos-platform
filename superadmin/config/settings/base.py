@@ -438,10 +438,14 @@ LOGGING = {
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
 
-# Vitalos AI & Data model provider (apps.aicore, AID-011/012). OpenAI-compatible chat completions.
+# Vitalos AI & Data model provider (apps.aicore, AID-011/012/017). AI_DATA_LLM_PROVIDER is "anthropic"
+# (default: Claude through the official SDK, model defaults to claude-opus-5-5) or "openai-compatible"
+# (chat completions; needs AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL).
 # An empty key leaves the live model path unavailable (the demonstrator runs parser-only). The key is a
 # secret: set it only in the platform's secret store. AI_DATA_DISABLED=true is the environment kill switch
 # and overrides the database setting.
+AI_DATA_LLM_PROVIDER = env("AI_DATA_LLM_PROVIDER", default="anthropic").strip().lower()
+AI_DATA_LLM_EFFORT = env("AI_DATA_LLM_EFFORT", default="low").strip().lower()
 AI_DATA_LLM_BASE_URL = env("AI_DATA_LLM_BASE_URL", default="").strip().rstrip("/")
 AI_DATA_LLM_MODEL = env("AI_DATA_LLM_MODEL", default="").strip()
 AI_DATA_LLM_API_KEY = env("AI_DATA_LLM_API_KEY", default="")

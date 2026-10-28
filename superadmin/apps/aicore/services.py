@@ -18,7 +18,7 @@ from apps.audit.services import record
 
 from .core.gateway import GatewayResult, ModelGateway
 from .core.limits import ExecutionLimits, LimitGuard
-from .core.providers import ModelProvider, OpenAICompatibleProvider
+from .core.providers import ModelProvider, build_live_provider
 from .models import AiSettings, ModelExecution
 
 
@@ -95,20 +95,16 @@ def record_execution(result: GatewayResult) -> ModelExecution:
 
 def live_provider_status() -> tuple[ModelProvider | None, str]:
     """The configured live provider, or (None, why it is unavailable). Never reveals the key."""
-    key = getattr(settings, "AI_DATA_LLM_API_KEY", "")
-    base_url = getattr(settings, "AI_DATA_LLM_BASE_URL", "")
-    model = getattr(settings, "AI_DATA_LLM_MODEL", "")
-    if not key:
-        return (
-            None,
-            "No model API key is configured (AI_DATA_LLM_API_KEY), so the live model path is unavailable.",
-        )
-    if not base_url or not model:
-        return None, "AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL must both be set for the live model path."
     try:
-        return OpenAICompatibleProvider(base_url=base_url, model=model, api_key=key), ""
+        return build_live_provider(
+            provider=getattr(settings, "AI_DATA_LLM_PROVIDER", "anthropic"),
+            api_key=getattr(settings, "AI_DATA_LLM_API_KEY", ""),
+            model=getattr(settings, "AI_DATA_LLM_MODEL", ""),
+            base_url=getattr(settings, "AI_DATA_LLM_BASE_URL", ""),
+            effort=getattr(settings, "AI_DATA_LLM_EFFORT", "low"),
+        ), ""
     except ValueError as error:
-        return None, f"The live model configuration is invalid: {error}"
+        return None, f"The live model path is unavailable: {error}."
 
 
 def build_gateway(provider: ModelProvider, ai: AiSettings | None = None, **kwargs) -> ModelGateway:

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { routes } from "@vitalos/cms";
-import { Button } from "@vitalos/ui";
 import { TrackOnMount } from "../../../../../src/components/analytics/track-on-mount";
 import { AiDataPage } from "../../../../../src/components/ai-data/chrome";
 import { ArrowLink, Band, Eyebrow } from "../../../../../src/components/ai-data/primitives";
@@ -49,10 +48,7 @@ export default async function AiDataThankYouPage({
             </p>
           ) : null}
           {page?.successMessage ? <p className="m-0 text-aid-text">{page.successMessage}</p> : null}
-          <div className="flex flex-col gap-(--space-4) pt-(--space-2) sm:flex-row sm:items-center">
-            <Button href={routes.aiData.demonstrator()} variant="secondary" size="lg">
-              See the demonstrator
-            </Button>
+          <div className="pt-(--space-2)">
             <ArrowLink href={routes.aiData.home()}>Back to Vitalos AI &amp; Data</ArrowLink>
           </div>
         </div>

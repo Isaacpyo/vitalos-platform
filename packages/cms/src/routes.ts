@@ -145,6 +145,14 @@ export const routes = {
     thankYou: (reference?: string) =>
       reference ? `/ai-data/contact/thank-you?ref=${seg(reference)}` : "/ai-data/contact/thank-you",
   },
+  /**
+   * Pay an invoice (AID-018): the form posts the invoice number and payment code to the Super Admin,
+   * which opens Stripe Checkout. Never indexed. `invoice` and `code` prefill the form.
+   */
+  pay: (invoice?: string) => (invoice ? `/pay?invoice=${seg(invoice)}` : "/pay"),
+  /** Where Stripe returns a payer after a completed checkout. Never indexed. */
+  payThankYou: (invoice?: string) =>
+    invoice ? `/pay/thank-you?invoice=${seg(invoice)}` : "/pay/thank-you",
   sitemap: () => "/sitemap.xml",
   robots: () => "/robots.txt",
 } as const;
@@ -262,6 +270,9 @@ export const routeManifest: readonly RouteManifestEntry[] = [
   { pattern: "/ai-data/demonstrator", sitemap: true },
   { pattern: "/ai-data/contact", sitemap: true },
   { pattern: "/ai-data/contact/thank-you", sitemap: false },
+  // Paying an invoice (AID-018): a utility page and its receipt, never indexed.
+  { pattern: "/pay", sitemap: false },
+  { pattern: "/pay/thank-you", sitemap: false },
 ];
 
 /** The AI & Data pages the sitemap lists (the thank-you receipt is never indexed). */

@@ -27,6 +27,25 @@ const headersFor = (env: Partial<BuildEnv>, isDev = false) => {
 };
 
 describe("getSecurityHeaders", () => {
+  it("lets only the /pay form post to the Super Admin and on to Stripe Checkout", () => {
+    expect(headersFor({}).get("Content-Security-Policy")).toContain("form-action 'self';");
+    const off = getSecurityHeaders(baseEnv, { isDev: false });
+    expect(off.find((rule) => rule.source === "/pay")).toBeUndefined();
+    const on = getSecurityHeaders(
+      { ...baseEnv, contentApiOrigin: "https://admin.example.invalid" },
+      { isDev: false },
+    );
+    expect(on[0]!.headers.find((h) => h.key === "Content-Security-Policy")?.value).toContain(
+      "form-action 'self';",
+    );
+    const pay = on.find((rule) => rule.source === "/pay");
+    expect(pay?.headers).toHaveLength(1);
+    expect(pay?.headers[0]).toMatchObject({ key: "Content-Security-Policy" });
+    expect(pay?.headers[0]?.value).toContain(
+      "form-action 'self' https://admin.example.invalid https://checkout.stripe.com;",
+    );
+  });
+
   it("adds the Relay realtime origin to connect-src only when configured", () => {
     const off = headersFor({}).get("Content-Security-Policy") ?? "";
     expect(off).toContain("connect-src 'self';");

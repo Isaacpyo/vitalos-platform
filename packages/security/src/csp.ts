@@ -31,6 +31,12 @@ export interface BuildCspInput {
    */
   connect?: readonly string[];
   /**
+   * Extra `form-action` origins (bare https origins). Only the `/pay` route sets them: its form posts
+   * to the Super Admin, which answers with a redirect to Stripe Checkout, and browsers check that
+   * redirect against `form-action` too.
+   */
+  formActionOrigins?: readonly string[];
+  /**
    * Origin of the Askbridge widget (ADR-045): allowed in `script-src`, `connect-src` and `img-src`.
    * Also allows Turnstile (script and frame), which the widget may load. Bare https origin only.
    */
@@ -102,7 +108,7 @@ export function buildCsp(input: BuildCspInput): string {
     ["frame-src", turnstile ? [TURNSTILE_ORIGIN] : ["'none'"]],
     ["object-src", ["'none'"]],
     ["base-uri", ["'self'"]],
-    ["form-action", ["'self'"]],
+    ["form-action", ["'self'", ...unique((input.formActionOrigins ?? []).map(assertCspOrigin))]],
     ["frame-ancestors", frameAncestors.length > 0 ? frameAncestors : ["'none'"]],
   ];
 

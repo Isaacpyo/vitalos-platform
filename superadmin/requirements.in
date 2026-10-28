@@ -19,3 +19,4 @@ nh3
 django-storages[s3]
 openpyxl
 defusedxml
+anthropic>=2.3,<3
