@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 
 from apps.accounts.roles import SERVICE_LEAD, SUPERADMIN
 from apps.aidata import services
-from apps.aidata.models import OfferPrice, Opportunity, Stage, StageChange
+from apps.aidata.models import Draft, DraftKind, DraftState, OfferPrice, Opportunity, Stage, StageChange
 from apps.audit.models import AuditEvent
 
 
@@ -27,8 +27,20 @@ def make(actor, **extra):
     return services.create_opportunity({**data, **extra}, actor)
 
 
+def approve_discovery(opportunity, actor):
+    """A proposal needs approved discovery (ADR-055): give the opportunity one, as a person would."""
+    Draft.objects.get_or_create(
+        opportunity=opportunity,
+        kind=DraftKind.DISCOVERY,
+        version=1,
+        defaults={"state": DraftState.APPROVED, "decided_by": actor, "payload": {"workflow_steps": []}},
+    )
+
+
 def move(opportunity, *stages, actor, **kwargs):
     for stage in stages:
+        if stage == Stage.PROPOSAL:
+            approve_discovery(opportunity, actor)
         services.change_stage(opportunity, stage, actor, **kwargs)
     return opportunity
 

@@ -1,0 +1,35 @@
+{% load aidata_ui %}{% comment %}
+  Prompt composer. Context: action, key, availability, heading, hint, field (textarea name), submit_label,
+  suggestions (optional list of (label, text)), source_label (optional), rows, min.
+  Pasted text or a plain-text file (up to 100 KB). It is untrusted: framed as data, never followed as instructions.
+{% endcomment %}
+<form method="post" action="{{ action }}" class="aid-card p-4" data-once data-testid="composer">
+  {% csrf_token %}
+  <input type="hidden" name="key" value="{{ key }}">
+  <label for="{{ id|default:'composer-text' }}" class="aid-title block">{{ heading }}</label>
+  {% if hint %}<p class="aid-muted mt-1 text-sm">{{ hint }}</p>{% endif %}
+  <textarea id="{{ id|default:'composer-text' }}" name="{{ field|default:'text' }}" rows="{{ rows|default:8 }}" maxlength="20000" required minlength="{{ min|default:10 }}"
+            class="aid-input mt-3" data-count-for="{{ id|default:'composer-text' }}-count" placeholder="{{ placeholder }}"></textarea>
+  <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
+    <p id="{{ id|default:'composer-text' }}-count" class="aid-help !mt-0" aria-live="off"></p>
+    <div class="flex items-center gap-2">
+      <label for="{{ id|default:'composer-text' }}-file" class="aid-btn aid-btn-secondary cursor-pointer">{% aid_icon "paperclip" %} Attach a text file</label>
+      <input id="{{ id|default:'composer-text' }}-file" type="file" accept=".txt,.md,.csv,.eml,.log,.json,text/plain" class="sr-only"
+             data-attach-target="{{ id|default:'composer-text' }}" data-attach-status="{{ id|default:'composer-text' }}-attach">
+    </div>
+  </div>
+  <p id="{{ id|default:'composer-text' }}-attach" class="aid-help" role="status">Plain-text files only (.txt, .md, .csv, .eml), up to 100 KB. Nothing is uploaded until you submit.</p>
+  {% if suggestions %}
+    <p class="aid-eyebrow mt-3">Suggested starting points</p>
+    <ul class="mt-1 flex flex-wrap gap-2">{% for label, text in suggestions %}<li><button type="button" class="aid-btn aid-btn-secondary" data-fill-target="{{ id|default:'composer-text' }}" data-fill-text="{{ text }}">{{ label }}</button></li>{% endfor %}</ul>
+  {% endif %}
+  <div class="mt-4 flex flex-wrap items-center gap-2">
+    {% if availability.available %}
+      <button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "spark" %} {{ submit_label|default:"Prepare with AI" }}</button>
+      <button type="submit" name="mode" value="rules" class="aid-btn aid-btn-secondary">{% aid_icon "list" %} Read it without AI</button>
+    {% else %}
+      <button type="submit" name="mode" value="rules" class="aid-btn aid-btn-primary">{% aid_icon "list" %} Read it without AI</button>
+    {% endif %}
+    <span class="aid-help !mt-0">{% if availability.available %}{{ availability.label }}.{% else %}AI is unavailable: {{ availability.reason }}{% endif %}</span>
+  </div>
+</form>

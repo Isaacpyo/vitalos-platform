@@ -109,7 +109,7 @@ def test_pipeline_filters(client_for, admin, opportunity):
 
 
 def test_detail_shows_scorecard_customer_and_internal_labels(client_for, admin, opportunity):
-    body = client_for(admin).get(opportunity.get_absolute_url()).content.decode()
+    body = client_for(admin).get(opportunity.get_absolute_url() + "?tab=details").content.decode()
     for text in ("Qualification scorecard", "Not scored", "May be shared with the customer", "Internal only",
                  "Estimated value (GBP, estimate)", '<option value="reviewing">Reviewing</option>'):  # fmt: skip
         assert text in body
@@ -310,7 +310,7 @@ def test_unknown_reference_is_404(client_for, admin):
 
 def test_dates_render_in_iso_format_for_the_native_date_picker(client_for, admin, opportunity):
     services.update_details(opportunity, {"next_action_due": date(2026, 11, 3)}, admin)
-    body = client_for(admin).get(opportunity.get_absolute_url()).content.decode()
+    body = client_for(admin).get(opportunity.get_absolute_url() + "?tab=details").content.decode()
     assert 'type="date" name="next_action_due" value="2026-11-03"' in body
 
 

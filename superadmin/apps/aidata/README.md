@@ -1,6 +1,6 @@
 # AI & Data (`apps.aidata`)
 
-The internal side of Vitalos AI & Data (docs/ai-data/, AID-003, AID-004, AID-006, AID-013, AID-015): the opportunity pipeline, the proposed offer prices and the speculative budget. URL prefix `/ai-data/`, namespace `aidata`. Live records (opportunities, contacts, costs) live only in the Super Admin database, never in the public repository.
+The internal side of Vitalos AI & Data (docs/ai-data/, AID-003, AID-004, AID-006, AID-013, AID-015): the opportunity pipeline, the proposed offer prices and the speculative budget, plus (ADR-055) the AI-assisted delivery workspace: enquiry, brief, discovery, proposal. URL prefix `/ai-data/`, namespace `aidata`. Live records (opportunities, contacts, costs) live only in the Super Admin database, never in the public repository.
 
 Business rules: `services.py` (every write: authorised, validated, audited), `selectors.py` (reads, access rules, budget totals), `scoring.py` (pure scorecard maths), `intake.py` (pure parsing of the website notification). Views only call these.
 
@@ -10,13 +10,30 @@ Business rules: `services.py` (every write: authorised, validated, audited), `se
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
 | `/ai-data/`                                           | Overview: cards to Pipeline, Offers, Budget and Demonstrator (`/ai-data/demonstrator/`, apps.recon_demo); counts by stage, overdue next actions, budget used vs ceiling | SuperAdmin, ServiceLead                         |
 | `/ai-data/pipeline/`                                  | Opportunities table (stacked cards on mobile), stage tabs, filters: owner, sector, overdue, search                | SuperAdmin, ServiceLead                         |
-| `/ai-data/pipeline/new/`                              | Create an opportunity by hand (referral, outbound, partner)                                                         | SuperAdmin, ServiceLead                         |
 | `/ai-data/pipeline/OPP-0001/`                         | Details form, stage change and history, scorecard with a live server-side preview, internal notes, source enquiry | SuperAdmin, ServiceLead (reopen: SuperAdmin)    |
 | `/ai-data/from-enquiry/VIT-0001/` (POST)              | "Create opportunity" on an enquiry; opens the existing one if there is one                                         | SuperAdmin, ServiceLead                         |
 | `/ai-data/offers/`, `/ai-data/offers/<key>/edit/`     | Proposed offer prices, with the banner "Proposed commercial assumptions — not validated market rates, not published" | View: both roles. Edit: SuperAdmin              |
 | `/ai-data/budget/`, `…/ceilings/`, `…/costs/…`        | Budget by category: actual, planned, committed, remaining; warns at 80 % and over the ceiling                      | View: both roles. Edit: SuperAdmin              |
 
 Anonymous users are sent to sign-in; Viewers and users without a role get 403. Every change is a POST with a CSRF token and writes an audit event (`aidata.*` in `apps/audit/services.py`). Audit summaries carry references, field names and amounts, never contact details or note text. The models do not use django-simple-history: stage history is its own table (`StageChange`), and history rows would keep personal data past retention.
+
+## AI-assisted workspace (ADR-055)
+
+Modules: `extraction.py` (pure rules: contact details, guided-brief sections, quoted evidence spans), `discovery.py` (pack shape, rules reader, quote checking), `catalog.py` (offer definitions and question templates from `docs/ai-data/commercial/`), `ai.py` (availability and the only door to a model, through `apps.aicore`), `tasks.py` (durable execution: queued/running/failed/cancelled, leases, recovery, bounded retry, idempotency), `workspace.py` (runners, review, approval, versions, duplicates, proposal), `assist.py` (opportunity assistant), `workqueue.py` (overview queue and timeline), `exports.py` (proposal Markdown), `brief_assist.py` (signed website endpoint), `evaluation.py` (offline reliability cases), `simulated.py` (labelled test double for development).
+
+| URL | What |
+| --- | --- |
+| `/ai-data/` | Work queue: needs your decision, prepared for review, blocked, next actions; compact pipeline, budget and AI usage |
+| `/ai-data/pipeline/new/` | Composer ("Paste the enquiry or describe the conversation") with manual entry kept below |
+| `/ai-data/pipeline/new/preview/<id>/` | Brief preview: source beside fields, evidence, missing fields, duplicates (open existing or link), approve |
+| `/ai-data/pipeline/OPP-0001/?tab=workspace\|discovery\|proposal\|details\|activity` | The opportunity workspace; `details` holds the original details, stage and scorecard |
+| `/ai-data/drafts/<id>/{status,retry,cancel,save,review,approve,reject,revise}/`, `export.md`, `export.print` | Task status and draft lifecycle |
+| `/ai-data/lifecycle/{delivery,operations,incubation}/` | Later lifecycle stages: empty states and the data each needs |
+| `POST /api/ai-data/brief-assist/` | Website brief assist, signed (`assist` scope), feature switch default off |
+
+Rules: AI output is a suggestion, labelled; values without a real quote are dropped; approved drafts are history; a proposal needs approved discovery (also enforced when moving to Proposal); prices come only from Offers or a labelled estimate; nothing is sent. Viewers get 403 as before. Development screenshots: `DJANGO_DEBUG=1 AI_DATA_SIMULATED_PROVIDER=1 python manage.py aidata_seed_demo --with-users` (refuses outside DEBUG; synthetic records labelled `[Synthetic]`). Reliability cases: `python manage.py aidata_eval` (reliability only, not model quality; report in `docs/ai-data/evaluation/workspace-v1/`).
+
+Tests: `test_aidata_workspace.py` (journey, permissions, failures, retries, durability, history), `test_aidata_brief_assist.py`, `test_aidata_eval.py`, `test_content_signing.py` (assist scope).
 
 ## Pipeline rules
 

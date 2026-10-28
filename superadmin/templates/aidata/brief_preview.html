@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load ui aidata_ui static %}
+{% block title %}Review the brief · AI & Data · Vitalos Super Admin{% endblock %}
+{% block scripts %}<script src="{% static 'js/aidata.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
+{% block main_width %}max-w-[90rem]{% endblock %}
+{% block content %}
+<div class="aid-ws" data-aid-admin>
+  <p class="aid-eyebrow"><a href="{% if opportunity %}{{ opportunity.get_absolute_url }}{% else %}{% url 'aidata:opportunity_new' %}{% endif %}" class="hover:underline">{% if opportunity %}{{ opportunity.ref }}{% else %}New opportunity{% endif %}</a> / Brief</p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-aid-heading">{% if opportunity %}Proposed changes to {{ opportunity.ref }}{% else %}Review the brief{% endif %}</h1>
+      <p class="aid-muted mt-1 max-w-3xl text-sm">Check each field against the source, correct what is wrong and leave blank what is not known. Nothing is saved until you approve.</p>
+    </div>
+    <div class="flex items-center gap-2">{% state_chip draft.state %}<span class="aid-chip aid-chip-neutral">{{ draft.get_mode_display }}{% if draft.simulated %}: simulated{% endif %}</span></div>
+  </div>
+
+  <div class="mt-4 space-y-3">
+    {% include "aidata/components/_task_status.html" with draft=draft execution=execution polling=polling availability=availability %}
+  </div>
+
+  {% if draft.state == "draft" or draft.state == "reviewed" or draft.state == "approved" or draft.state == "rejected" or draft.state == "failed" %}
+    <div class="aid-split mt-4" data-split>
+      {% include "aidata/components/_source_panel.html" with segments=segments label=draft.source_label %}
+      <div class="aid-split-handle" role="separator" aria-orientation="vertical" aria-label="Resize source and review panels" aria-valuemin="25" aria-valuemax="75" aria-valuenow="46" tabindex="0"></div>
+
+      <div class="min-w-0">
+        {% if draft.state == "draft" or draft.state == "reviewed" %}
+          <form method="post" action="{% url 'aidata:brief_apply' draft.pk %}" class="aid-card" data-once data-testid="brief-form">
+            {% csrf_token %}
+            <header class="border-b border-aid-border px-4 py-3">
+              <h2 class="aid-title !text-base">{% if opportunity %}Proposed changes{% else %}Proposed brief{% endif %}</h2>
+              <p class="aid-help !mt-0">{% if draft.mode == "ai" %}Suggested by AI{% if draft.simulated %} (simulated test double){% endif %}; every value below is editable.{% elif draft.mode == "rules" %}Read by rules, no AI used.{% else %}Written by hand.{% endif %}</p>
+            </header>
+
+            {% if draft.fallback_reason %}<div class="aid-banner aid-banner-info m-4 mb-0" role="status">{% aid_icon "info" "mt-0.5 h-4 w-4 shrink-0" %}<p>AI was not used: {{ draft.fallback_reason }} This brief was read by rules.</p></div>{% endif %}
+            {% for warning in draft.warnings %}<div class="aid-banner aid-banner-warn m-4 mb-0" role="status" data-testid="warning">{% aid_icon "warning" "mt-0.5 h-4 w-4 shrink-0" %}<p>{{ warning }}</p></div>{% endfor %}
+
+            {% if missing or unclear %}
+              <div class="m-4 mb-0 aid-surface p-3" data-testid="uncertainty">
+                {% if missing %}<p class="text-sm"><strong>Not found in the source:</strong> {% for item in missing %}<span class="aid-chip aid-chip-warn mr-1">{% aid_icon "flag" "h-3 w-3" %}{{ item }}</span>{% endfor %}</p>{% endif %}
+                {% if unclear %}<p class="mt-2 text-sm"><strong>Flagged unclear by the model:</strong> {% for item in unclear %}<span class="aid-chip aid-chip-warn mr-1">{% aid_icon "question" "h-3 w-3" %}{{ item }}</span>{% endfor %}</p>{% endif %}
+                <p class="aid-help">Blank means the text does not say. Nothing is guessed or given a confidence score.</p>
+              </div>
+            {% endif %}
+
+            {% if duplicates %}
+              <fieldset class="m-4 mb-0 rounded-md border border-aid-warn/40 bg-aid-warn-bg p-3" data-testid="duplicates">
+                <legend class="px-1 text-sm font-semibold text-aid-warn">{% aid_icon "warning" "mr-1 inline h-4 w-4" %}This may already be here</legend>
+                <ul class="space-y-2 text-sm text-aid-text">
+                  {% for dup in duplicates %}
+                    <li class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span class="min-w-0 flex-1"><span class="font-mono text-xs">{{ dup.ref }}</span> {{ dup.label }}<br><span class="aid-muted text-xs">{{ dup.reasons|join:"; " }}</span></span>
+                      <a href="{{ dup.url }}" class="aid-btn aid-btn-secondary">Open existing</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <p class="mt-3 text-sm font-medium text-aid-text">What would you like to do?</p>
+                <div class="mt-1 space-y-1.5 text-sm text-aid-text">
+                  <label class="flex items-center gap-2"><input type="radio" name="target" value="new" checked> Create a new opportunity anyway</label>
+                  {% for dup in duplicates %}
+                    {% if dup.opportunity %}<label class="flex items-center gap-2"><input type="radio" name="target" value="update:{{ dup.opportunity.ref }}"> Link: add these details to {{ dup.opportunity.ref }} (blank fields only)</label>
+                    {% elif dup.enquiry %}<label class="flex items-center gap-2"><input type="radio" name="target" value="enquiry:{{ dup.enquiry.ref }}"> Link: create the opportunity from enquiry {{ dup.enquiry.ref }}</label>{% endif %}
+                  {% endfor %}
+                </div>
+              </fieldset>
+            {% else %}
+              {% if not opportunity %}<input type="hidden" name="target" value="new">{% else %}<input type="hidden" name="target" value="update:{{ opportunity.ref }}">{% endif %}
+            {% endif %}
+
+            <div class="space-y-1 p-4">
+              {% if not opportunity %}
+                <div class="pb-2"><label for="pv-title" class="aid-label">Opportunity title</label><input id="pv-title" name="title" class="aid-input" maxlength="200" value="{{ values.organisation|default:values.contact_name }}" placeholder="Defaults to the organisation or contact"></div>
+              {% endif %}
+              {% for row in rows %}
+                <div class="grid gap-2 border-t border-aid-border py-3 first:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto]" data-field-row="{{ row.name }}">
+                  <div class="min-w-0">
+                    <label for="pv-{{ row.name }}" class="aid-label">{{ row.label }}
+                      {% if row.missing %}<span class="aid-chip aid-chip-warn ml-1">{% aid_icon "flag" "h-3 w-3" %}Blank</span>{% elif row.by == "ai" %}<span class="aid-chip aid-chip-info ml-1">{% aid_icon "spark" "h-3 w-3" %}AI</span>{% elif row.by == "rules" %}<span class="aid-chip aid-chip-neutral ml-1">Rules</span>{% endif %}
+                    </label>
+                    {% if row.kind == "area" %}<textarea id="pv-{{ row.name }}" name="{{ row.name }}" rows="3" class="aid-input">{{ row.proposed }}</textarea>
+                    {% elif row.name == "sector" %}<select id="pv-sector" name="sector" class="aid-input"><option value="">Not known</option>{% for key, text in sectors %}<option value="{{ key }}"{% if key == row.proposed %} selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+                    {% elif row.name == "budget_band" %}<select id="pv-budget_band" name="budget_band" class="aid-input"><option value="">Not known</option>{% for key, text in bands %}<option value="{{ key }}"{% if key == row.proposed %} selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+                    {% else %}<input id="pv-{{ row.name }}" name="{{ row.name }}" class="aid-input" value="{{ row.proposed }}">{% endif %}
+                    {% if opportunity and row.current %}
+                      <p class="mt-1 text-xs" data-testid="before-after"><span class="aid-muted">Now:</span> {{ row.current|truncatechars:160 }} {% if row.changes %}<span class="aid-chip aid-chip-warn">{% aid_icon "pencil" "h-3 w-3" %}Would change</span>{% else %}<span class="aid-chip aid-chip-neutral">Same</span>{% endif %}</p>
+                    {% endif %}
+                  </div>
+                  <div class="flex flex-wrap items-start gap-2 sm:flex-col sm:items-end">
+                    {% if row.has_evidence %}<button type="button" class="aid-btn aid-btn-secondary" data-show-evidence="{{ row.name }}" data-evidence-scope="[data-source]">{% aid_icon "eye" %} Show source</button>{% endif %}
+                    {% if opportunity and row.proposed %}<label class="flex min-h-10 items-center gap-2 text-xs"><input type="checkbox" name="accept" value="{{ row.name }}"{% if row.accept %} checked{% endif %}> Apply</label>{% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+
+              <div class="grid gap-3 border-t border-aid-border pt-3 sm:grid-cols-2">
+                <div>
+                  <label for="pv-offer" class="aid-label">Suggested offer
+                    {% if offer.reasons %}<button type="button" class="aid-chip aid-chip-info ml-1" popovertarget="why-offer" aria-label="Why this offer">{% aid_icon "question" "h-3 w-3" %}Why</button>{% endif %}
+                  </label>
+                  <select id="pv-offer" name="offer" class="aid-input"><option value="">No offer yet</option>{% for key, text in offers %}<option value="{{ key }}"{% if key == offer.value %} selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+                  {% if opportunity %}<label class="mt-1 flex items-center gap-2 text-xs"><input type="checkbox" name="accept" value="offer"{% if not opportunity.offer %} checked{% endif %}> Apply</label>{% endif %}
+                  <div id="why-offer" popover class="aid-popover"><p class="font-semibold">Why {{ offer.value|offer_name|default:"this offer" }}</p><ul class="mt-1 list-disc pl-4">{% for reason in offer.reasons %}<li>{{ reason }}</li>{% endfor %}</ul></div>
+                </div>
+                <div>
+                  <label for="pv-next" class="aid-label">Suggested next action
+                    {% if next_action.reasons %}<button type="button" class="aid-chip aid-chip-info ml-1" popovertarget="why-next" aria-label="Why this next action">{% aid_icon "question" "h-3 w-3" %}Why</button>{% endif %}
+                  </label>
+                  <input id="pv-next" name="next_action" class="aid-input" maxlength="300" value="{{ next_action.value }}">
+                  {% if opportunity %}<label class="mt-1 flex items-center gap-2 text-xs"><input type="checkbox" name="accept" value="next_action"> Apply</label>{% endif %}
+                  <div id="why-next" popover class="aid-popover"><p class="font-semibold">Why this next action</p><ul class="mt-1 list-disc pl-4">{% for reason in next_action.reasons %}<li>{{ reason }}</li>{% endfor %}</ul></div>
+                </div>
+              </div>
+            </div>
+
+            <footer class="flex flex-wrap items-center justify-between gap-2 border-t border-aid-border px-4 py-3">
+              <button type="button" class="aid-btn aid-btn-danger" data-dialog-open="discard-dialog">{% aid_icon "close" %} Discard</button>
+              <button type="submit" class="aid-btn aid-btn-primary" data-testid="approve-brief">{% aid_icon "check" %} {% if opportunity %}Approve and apply the checked changes{% else %}Approve brief and create opportunity{% endif %}</button>
+            </footer>
+          </form>
+          <dialog id="discard-dialog" class="aid-dialog" aria-labelledby="discard-title">
+            <form method="post" action="{% url 'aidata:brief_discard' draft.pk %}" class="p-5" data-once>{% csrf_token %}
+              <h2 id="discard-title" class="aid-title">Discard this preview?</h2>
+              <p class="aid-muted mt-1 text-sm">Nothing has been created. The pasted text is removed after 30 days if you do not come back to it.</p>
+              <div class="mt-4 flex justify-end gap-2"><button type="button" class="aid-btn aid-btn-secondary" data-dialog-close>Keep it</button><button type="submit" class="aid-btn aid-btn-danger">Discard</button></div>
+            </form>
+          </dialog>
+        {% elif draft.state == "approved" %}
+          <div class="aid-card p-4" data-testid="brief-approved">
+            <p class="font-semibold text-aid-heading">{% aid_icon "success" "mr-1 inline h-4 w-4 text-aid-ok" %}Approved by {{ draft.decided_by.email }} on {{ draft.decided_at|date:"j M Y, H:i" }}</p>
+            {% if draft.opportunity %}<a class="aid-btn aid-btn-primary mt-3" href="{{ draft.opportunity.get_absolute_url }}">Open {{ draft.opportunity.ref }} {% aid_icon "arrow-right" %}</a>{% endif %}
+          </div>
+        {% elif draft.state == "rejected" %}
+          <div class="aid-card p-4"><p class="font-semibold">Discarded.</p><p class="aid-muted text-sm">Nothing was created.</p>
+            <a class="aid-btn aid-btn-secondary mt-3" href="{% url 'aidata:opportunity_new' %}">Start again</a></div>
+        {% elif draft.state == "failed" %}
+          <div class="aid-card p-4"><p class="font-semibold">Nothing was created.</p><p class="aid-muted text-sm">The source text on the left is kept exactly as you pasted it. Use the buttons above to try again or to read it without AI, or enter the opportunity manually.</p>
+            <a class="aid-btn aid-btn-secondary mt-3" href="{% url 'aidata:opportunity_new' %}#manual">Enter it manually</a></div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

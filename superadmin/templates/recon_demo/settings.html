@@ -21,8 +21,11 @@
       <div>
         <label class="flex items-start gap-3 text-sm">{{ form.model_path_enabled }}<span><strong>{{ form.model_path_enabled.label }}</strong><br><span class="muted">{{ form.model_path_enabled.help_text }}</span></span></label>
       </div>
+      <div>
+        <label class="flex items-start gap-3 text-sm">{{ form.brief_assist_enabled }}<span><strong>{{ form.brief_assist_enabled.label }}</strong><br><span class="muted">{{ form.brief_assist_enabled.help_text }}</span></span></label>
+      </div>
       <div class="grid gap-4 sm:grid-cols-3">
-        {% for field in form %}{% if field.name != "enabled" and field.name != "model_path_enabled" %}
+        {% for field in form %}{% if field.name != "enabled" and field.name != "model_path_enabled" and field.name != "brief_assist_enabled" %}
           <div>
             <label for="{{ field.id_for_label }}" class="field-label">{{ field.label }}</label>
             {{ field }}

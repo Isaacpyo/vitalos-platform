@@ -72,6 +72,12 @@ jobs:
         run: python manage.py recon_eval --dataset v1 --config rules-only --config rules+simulated-model --out /tmp/eval
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
+      # AI & Data workspace prompts (ADR-055): offline reliability cases with hand-written model responses.
+      # Reliability only: it says nothing about live model quality.
+      - name: AI & Data workspace reliability cases (offline)
+        run: python manage.py aidata_eval --out /tmp/aidata-eval
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
       - name: manage.py check --deploy
         env:
           DJANGO_SETTINGS_MODULE: config.settings.prod

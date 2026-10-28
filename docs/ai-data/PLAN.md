@@ -87,7 +87,9 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered._
+_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered. For the connected experience (marketing, admin workspace, client portal), see `experience/PROGRESS.md`._
+
+_Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery workspace (ADR-055): paste an enquiry, review an evidence-linked brief, discovery pack, proposal draft with human approval, assistant, durable AI tasks, signed website brief-assist endpoint (off by default), shared tokens. Live provider still off; no live model-quality evidence. Next (owner): website client signs `assist`, key and switches, live evaluation, retention schedule. Tasks WS-001 to WS-007 in TASKS.md.
 
 - `main` at `162f58e` (vitalos-technologies/vitalos-platform#104, squash-merged after every check passed on its head).
 - **Website** (Vercel deployed from the merge; the Git integration is reconnected):

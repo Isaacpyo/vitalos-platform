@@ -1,0 +1,9 @@
+{% load aidata_ui %}{% comment %}
+  Empty state with a clear next action. Context: icon, title, body, action_url, action_label (optional).
+{% endcomment %}
+<div class="aid-surface flex flex-col items-start gap-2 p-5" data-testid="empty-state">
+  <span class="aid-muted">{% aid_icon icon|default:"inbox" "h-6 w-6" %}</span>
+  <p class="font-semibold text-aid-heading">{{ title }}</p>
+  <p class="aid-muted max-w-prose text-sm">{{ body }}</p>
+  {% if action_url %}<a href="{{ action_url }}" class="aid-btn aid-btn-primary mt-1">{{ action_label }} {% aid_icon "arrow-right" %}</a>{% endif %}
+</div>
