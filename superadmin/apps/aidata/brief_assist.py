@@ -37,7 +37,9 @@ MAX_BODY = 24_000
 STAGES = ("questions", "brief")
 VISITOR_RE = re.compile(r"[0-9a-f]{16,64}", re.ASCII)
 TOPIC_RE = re.compile(r"[a-z0-9-]{1,40}", re.ASCII)
-ANSWER_ID_RE = re.compile(r"q[1-9][0-9]?", re.ASCII)
+# The website accepts any short id for an answer (it only echoes it back as a label); the ids it sends
+# are used as text in the data block, never as keys, so the same pattern is accepted here.
+ANSWER_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,20}", re.ASCII)
 URL_RE = re.compile(r"https?://|www\.", re.IGNORECASE)
 
 #: Per visitor (an HMAC of their IP made by the website) and for everyone together.
@@ -120,30 +122,44 @@ def _unavailable():
     return _json({"error": "unavailable"}, 503)
 
 
-def _event(stage: str, outcome: str, **fields) -> None:
-    BriefAssistEvent.objects.create(stage=stage[:12], outcome=outcome[:20], **fields)
+def _event(stage: str, outcome: str, **fields) -> BriefAssistEvent:
+    return BriefAssistEvent.objects.create(stage=stage[:12], outcome=outcome[:20], **fields)
+
+
+def _finish(event: BriefAssistEvent, outcome: str, **fields) -> None:
+    """Move the pending row to its outcome. A row that is never finished (the worker died mid-call) stays
+    ``pending`` and keeps counting against the limits until its window ends, so a crash cannot be used to
+    get free calls."""
+    event.outcome = outcome[:20]
+    for name, value in fields.items():
+        setattr(event, name, value)
+    event.save()
 
 
 def _rate_limited(visitor_hash: str, now) -> bool:
+    """Over a limit, counting the caller's own pending row (written first) and every in-flight call, so a
+    burst of simultaneous requests is counted before any of them reaches the model."""
     counted = BriefAssistEvent.objects.exclude(outcome__in=("rate_limited", "invalid"))
     if (
         counted.filter(visitor_hash=visitor_hash, created_at__gt=now - VISITOR_WINDOW).count()
-        >= VISITOR_LIMIT
+        > VISITOR_LIMIT
     ):
         return True
-    return counted.filter(created_at__gt=now - GLOBAL_WINDOW).count() >= GLOBAL_LIMIT
+    return counted.filter(created_at__gt=now - GLOBAL_WINDOW).count() > GLOBAL_LIMIT
 
 
 def clean_questions(output: dict) -> list[dict]:
+    """Valid questions, de-duplicated by their text and renumbered q1..q4 in order, whatever ids the model
+    chose, so the website's answers always come back with ids the brief stage accepts."""
     questions, seen = [], set()
     for item in output["questions"]:
-        ident = item["id"]
-        if ident in seen or not item["question"].strip() or URL_RE.search(item["question"]):
+        text = item["question"].strip()
+        if text.lower() in seen or not text or URL_RE.search(text):
             continue
-        seen.add(ident)
+        seen.add(text.lower())
         questions.append(
             {
-                "id": ident,
+                "id": f"q{len(questions) + 1}",
                 "question": item["question"].strip()[:300],
                 "why": item["why"].strip()[:300],
                 "suggestions": [
@@ -194,8 +210,10 @@ def endpoint(request):
     input_hash = _digest(compose(body))
     now = timezone.now()
     common = {"topic": body["topic"], "visitor_hash": visitor_hash, "input_hash": input_hash}
+    # Record the call BEFORE the model is asked, then count: concurrent bursts see each other's pending rows.
+    pending = _event(body["stage"], "pending", **common)
     if _rate_limited(visitor_hash, now):
-        _event(body["stage"], "rate_limited", **common)
+        _finish(pending, "rate_limited")
         return _json({"error": "rate-limited"}, 429)
     prompt = "brief_questions" if body["stage"] == "questions" else "brief_draft"
     try:
@@ -208,26 +226,25 @@ def endpoint(request):
             variables={"topic": body["topic"] or "not given"},
         )
     except ai.AiUnavailable:
-        _event(body["stage"], "unavailable", **common)
+        _finish(pending, "unavailable")
         return _unavailable()
     except ai.AiFailed as exc:
-        _event(
-            body["stage"],
-            exc.result.outcome[:20],
+        _finish(
+            pending,
+            exc.result.outcome,
             execution_id=exc.result.execution_id,
             latency_ms=int((time.monotonic() - started) * 1000),
-            **common,
         )
         return _unavailable()
     latency = int((time.monotonic() - started) * 1000)
     if body["stage"] == "questions":
         questions = clean_questions(run.output)
         if len(questions) < 2:
-            _event("questions", "invalid_output", execution_id=run.execution_id, latency_ms=latency, **common)
+            _finish(pending, "invalid_output", execution_id=run.execution_id, latency_ms=latency)
             return _unavailable()
-        _event("questions", "success", execution_id=run.execution_id, latency_ms=latency, **common)
+        _finish(pending, "success", execution_id=run.execution_id, latency_ms=latency)
         return _json({"mode": "ai", "questions": questions})
-    _event("brief", "success", execution_id=run.execution_id, latency_ms=latency, **common)
+    _finish(pending, "success", execution_id=run.execution_id, latency_ms=latency)
     return _json({"mode": "ai", "brief": clean_brief(run.output)})
 
 

@@ -209,7 +209,7 @@ def test_budget_reached_is_503():
         body(description="too short"),
         body(description="x" * 4001),
         body(answers=[{"id": "q1", "question": "q", "answer": "a"}] * 7),
-        body(answers=[{"id": "bad", "question": "q", "answer": "a"}]),
+        body(answers=[{"id": "bad id!", "question": "q", "answer": "a"}]),
         body(answers=[{"id": "q1", "question": "q" * 301, "answer": "a"}]),
         body(answers=[{"id": "q1", "question": "q", "answer": "a" * 1501}]),
         body(visitor_ref="not-hex"),
@@ -282,7 +282,7 @@ def test_output_with_links_is_cleaned():
     }
     provider({"respond": bad})
     data = post().json()
-    assert [q["id"] for q in data["questions"]] == ["q2", "q3"]
+    assert [q["id"] for q in data["questions"]] == ["q1", "q2"]
     assert data["questions"][0]["suggestions"] == ["Excel"]
 
 
@@ -303,3 +303,121 @@ def test_too_few_clean_questions_is_503():
 def test_read_keys_constant_is_what_assist_uses(settings):
     assert signing.keys_for("assist") == signing.keys_for("read")
     assert settings.CONTENT_READ_CLIENT_KEYS == READ_KEYS
+
+
+# --- Review findings L5 and question ids (W10) ---------------------------------------------------------------
+
+
+def _fake_run(output):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(output=output, execution_id=None)
+
+
+def test_l5_a_pending_row_exists_before_the_model_call_and_is_updated_after(monkeypatch):
+    seen = {}
+
+    def fake(prompt_id, version, **kwargs):
+        seen["rows"] = list(BriefAssistEvent.objects.values_list("outcome", flat=True))
+        raise ai.AiUnavailable("test")
+
+    provider({"respond": QUESTIONS})  # an available (simulated) provider; run_prompt itself is faked below
+    monkeypatch.setattr(ai, "run_prompt", fake)
+    assert post().status_code == 503
+    assert seen["rows"] == ["pending"]
+    assert list(BriefAssistEvent.objects.values_list("outcome", flat=True)) == ["unavailable"]
+
+
+def test_l5_a_concurrent_burst_is_counted_by_the_rate_limiter(monkeypatch):
+    from apps.aidata import brief_assist
+
+    statuses = []
+
+    def fake(prompt_id, version, **kwargs):
+        if not statuses:  # the outer call fires a burst while its own call is still in flight
+            statuses.append("outer")
+            for _ in range(brief_assist.VISITOR_LIMIT):
+                statuses.append(post().status_code)
+        return _fake_run(QUESTIONS)
+
+    provider({"respond": QUESTIONS})
+    monkeypatch.setattr(ai, "run_prompt", fake)
+    assert post().status_code == 200
+    burst = statuses[1:]
+    assert burst.count(200) == brief_assist.VISITOR_LIMIT - 1 and burst.count(429) == 1
+
+
+def test_l5_an_abandoned_pending_row_still_counts_until_the_window_ends(monkeypatch):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.aidata import brief_assist
+
+    visitor_hash = brief_assist._digest(VISITOR)
+    for _ in range(brief_assist.VISITOR_LIMIT):
+        BriefAssistEvent.objects.create(stage="questions", outcome="pending", visitor_hash=visitor_hash)
+    provider({"respond": QUESTIONS})
+    assert post().status_code == 429
+    BriefAssistEvent.objects.filter(outcome="pending").update(
+        created_at=timezone.now() - brief_assist.VISITOR_WINDOW - timedelta(seconds=5)
+    )
+    provider({"respond": QUESTIONS})
+    assert post().status_code == 200  # expired with the window
+
+
+def test_l5_a_crash_during_the_call_leaves_a_counted_pending_row(monkeypatch):
+    def boom(*args, **kwargs):
+        raise RuntimeError("provider exploded")
+
+    provider({"respond": QUESTIONS})
+    monkeypatch.setattr(ai, "run_prompt", boom)
+    client = Client(raise_request_exception=False)
+    response = signed_post(client, PATH, body(), scope="assist")
+    assert response.status_code == 500
+    assert list(BriefAssistEvent.objects.values_list("outcome", flat=True)) == ["pending"]
+
+
+def test_question_ids_are_renumbered_q1_to_q4_in_order():
+    # The model keeps its own numbering (here out of order, with a repeat); the website gets q1..q4.
+    messy = {
+        "questions": [
+            {"id": "q5", "question": "Who does this today?", "why": "w", "suggestions": []},
+            {"id": "q2", "question": "Which tools are involved?", "why": "w", "suggestions": []},
+            {"id": "q2", "question": "How often does it happen?", "why": "w", "suggestions": []},
+            {"id": "q6", "question": "Which tools are involved?", "why": "w", "suggestions": []},
+        ]
+    }
+    provider({"respond": messy})
+    questions = post().json()["questions"]
+    assert [q["id"] for q in questions] == ["q1", "q2", "q3"]
+    assert [q["question"] for q in questions] == [
+        "Who does this today?",
+        "Which tools are involved?",
+        "How often does it happen?",
+    ]
+
+
+def test_clean_questions_renumbers_whatever_ids_it_is_given():
+    from apps.aidata import brief_assist
+
+    output = {
+        "questions": [
+            {"id": "first", "question": "One?", "why": "w", "suggestions": []},
+            {"id": "Q-3_x", "question": "Two?", "why": "w", "suggestions": []},
+        ]
+    }
+    assert [q["id"] for q in brief_assist.clean_questions(output)] == ["q1", "q2"]
+
+
+def test_parse_request_accepts_the_websites_answer_id_pattern():
+    from apps.aidata import brief_assist
+
+    answers = [{"id": "Custom_id-1", "question": "Q?", "answer": "A"}]
+    parsed = brief_assist.parse_request(body(stage="brief", answers=answers))
+    assert parsed["answers"][0]["id"] == "Custom_id-1"
+    for bad in ("", "x" * 21, "a b", "q1;drop", "é"):
+        with pytest.raises(brief_assist.Invalid):
+            brief_assist.parse_request(
+                body(stage="brief", answers=[{"id": bad, "question": "Q?", "answer": "A"}])
+            )
