@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -39,7 +38,7 @@ def home(request):
         "in_window": services.in_window(now),
         "problems": services.start_problems(current),
         "mailbox_ready": services.mailbox_ready(),
-        "mailbox": settings.OUTREACH_SMTP_USER,
+        "mailbox": services.outreach_mailbox(),
         "sends_for_real": services.sends_for_real(),
         "templates": services.templates(),
         "daily_cap_max": services.DAILY_CAP_MAX,

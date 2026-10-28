@@ -28,10 +28,12 @@
 #   plain variables  PRIMARY_OWNER_EMAIL (also reaches the release job), EMAIL_TRANSPORT, INBOUND_PROVIDER,
 #                    NOTIFY_OWNER_EMAIL, OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_BUCKET,
 #                    OBJECT_STORAGE_REGION, RETENTION_ENFORCE, RELAY_API_BASE_URL, RELAY_REALTIME_ENABLED,
-#                    RELAY_EMAIL_FROM
+#                    RELAY_EMAIL_FROM, OUTREACH_MAILBOX, OUTREACH_GRAPH_TENANT_ID, OUTREACH_GRAPH_CLIENT_ID,
+#                    OUTREACH_SMTP_HOST, OUTREACH_SMTP_PORT, OUTREACH_SMTP_USER
 #   secrets          RESEND_API_KEY, RESEND_WEBHOOK_SECRET, INBOUND_WEBHOOK_SECRET, TURNSTILE_SECRET_KEY,
 #                    OBJECT_STORAGE_ACCESS_KEY_ID, OBJECT_STORAGE_SECRET_ACCESS_KEY, SLACK_WEBHOOK_URL,
-#                    RELAY_ADMIN_API_SECRET, RELAY_WEBHOOK_SECRET
+#                    RELAY_ADMIN_API_SECRET, RELAY_WEBHOOK_SECRET, OUTREACH_GRAPH_CLIENT_SECRET,
+#                    OUTREACH_SMTP_PASSWORD
 #                    (Container Apps secrets, referenced with secretref:; an empty value never overwrites
 #                    a secret that is already stored). APP_BASE_URL is always https://<domain>.
 # Optional Insights and Careers settings (docs/DEPLOY.md, "Content (Insights and Careers)"), same rules:
@@ -256,6 +258,8 @@ for _name in PRIMARY_OWNER_EMAIL EMAIL_TRANSPORT INBOUND_PROVIDER NOTIFY_OWNER_E
   CAREERS_EMAIL_FROM CAREERS_CANDIDATE_EMAILS_ENABLED CONTENT_RELAY_SYNC_ENABLED CONTENT_READ_RATE_LIMIT \
   CONTENT_OPPORTUNISTIC_TICK \
   RELAY_API_BASE_URL RELAY_REALTIME_ENABLED RELAY_EMAIL_FROM \
+  OUTREACH_MAILBOX OUTREACH_GRAPH_TENANT_ID OUTREACH_GRAPH_CLIENT_ID \
+  OUTREACH_SMTP_HOST OUTREACH_SMTP_PORT OUTREACH_SMTP_USER \
   ASKBRIDGE_STATUS_URL ASKBRIDGE_SUPERADMIN_URL; do
   if [ -n "${!_name:-}" ]; then ENV_VARS+=("$_name=${!_name}"); fi
 done
@@ -274,6 +278,8 @@ add_optional_secret TURNSTILE_SECRET_KEY turnstile-secret-key
 add_optional_secret OBJECT_STORAGE_ACCESS_KEY_ID object-storage-access-key-id
 add_optional_secret OBJECT_STORAGE_SECRET_ACCESS_KEY object-storage-secret-access-key
 add_optional_secret SLACK_WEBHOOK_URL slack-webhook-url
+add_optional_secret OUTREACH_GRAPH_CLIENT_SECRET outreach-graph-client-secret
+add_optional_secret OUTREACH_SMTP_PASSWORD outreach-smtp-password
 add_optional_secret CONTENT_READ_CLIENT_KEYS content-read-client-keys
 add_optional_secret CAREERS_SUBMIT_CLIENT_KEYS careers-submit-client-keys
 add_optional_secret CONTENT_REVALIDATE_SECRET content-revalidate-secret

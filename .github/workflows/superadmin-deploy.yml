@@ -307,6 +307,13 @@ jobs:
           RELAY_API_BASE_URL: ${{ vars.RELAY_API_BASE_URL }}
           RELAY_REALTIME_ENABLED: ${{ vars.RELAY_REALTIME_ENABLED }}
           RELAY_EMAIL_FROM: ${{ vars.RELAY_EMAIL_FROM }}
+          # Outreach mailbox (ADR-051; email-setup.md step 13): Microsoft 365 over Graph, or SMTP.
+          OUTREACH_MAILBOX: ${{ vars.OUTREACH_MAILBOX }}
+          OUTREACH_GRAPH_TENANT_ID: ${{ vars.OUTREACH_GRAPH_TENANT_ID }}
+          OUTREACH_GRAPH_CLIENT_ID: ${{ vars.OUTREACH_GRAPH_CLIENT_ID }}
+          OUTREACH_SMTP_HOST: ${{ vars.OUTREACH_SMTP_HOST }}
+          OUTREACH_SMTP_PORT: ${{ vars.OUTREACH_SMTP_PORT }}
+          OUTREACH_SMTP_USER: ${{ vars.OUTREACH_SMTP_USER }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_WEBHOOK_SECRET: ${{ secrets.RESEND_WEBHOOK_SECRET }}
           INBOUND_WEBHOOK_SECRET: ${{ secrets.INBOUND_WEBHOOK_SECRET }}
@@ -314,6 +321,8 @@ jobs:
           OBJECT_STORAGE_ACCESS_KEY_ID: ${{ secrets.OBJECT_STORAGE_ACCESS_KEY_ID }}
           OBJECT_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.OBJECT_STORAGE_SECRET_ACCESS_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          OUTREACH_GRAPH_CLIENT_SECRET: ${{ secrets.OUTREACH_GRAPH_CLIENT_SECRET }}
+          OUTREACH_SMTP_PASSWORD: ${{ secrets.OUTREACH_SMTP_PASSWORD }}
           # Insights and Careers (ADR-039 to ADR-042; superadmin/docs/DEPLOY.md section 9). Same rule:
           # an unset value is skipped, never written over a stored one.
           CONTENT_WEB_TARGETS: ${{ vars.CONTENT_WEB_TARGETS }}

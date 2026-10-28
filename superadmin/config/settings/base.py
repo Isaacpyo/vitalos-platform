@@ -163,8 +163,14 @@ NOTIFY_FROM_HEADER = f"Vitalos Admin <{NOTIFY_FROM}>"
 DEFAULT_FROM_EMAIL = NOTIFY_FROM_HEADER
 SERVER_EMAIL = NOTIFY_FROM_HEADER
 # Outreach (cold) email never goes through Resend: its acceptable use policy forbids cold outreach,
-# and a suspension would stop every other Vitalos email. It goes through a real mailbox over SMTP
-# instead; with no mailbox set, outreach sends are refused while EMAIL_TRANSPORT=resend (DECISIONS 120).
+# and a suspension would stop every other Vitalos email. It goes through a real mailbox instead:
+# Microsoft 365 over Microsoft Graph (OUTREACH_GRAPH_*, preferred) or any mailbox over SMTP
+# (OUTREACH_SMTP_*). With neither set, outreach sends are refused while EMAIL_TRANSPORT=resend
+# (DECISIONS 120, 127). OUTREACH_MAILBOX is the From and Reply-To address.
+OUTREACH_MAILBOX = env("OUTREACH_MAILBOX", default="").strip().lower()
+OUTREACH_GRAPH_TENANT_ID = env("OUTREACH_GRAPH_TENANT_ID", default="").strip()
+OUTREACH_GRAPH_CLIENT_ID = env("OUTREACH_GRAPH_CLIENT_ID", default="").strip()
+OUTREACH_GRAPH_CLIENT_SECRET = env("OUTREACH_GRAPH_CLIENT_SECRET", default="")
 OUTREACH_SMTP_HOST = env("OUTREACH_SMTP_HOST", default="")
 OUTREACH_SMTP_PORT = env.int("OUTREACH_SMTP_PORT", default=465)
 OUTREACH_SMTP_USER = env("OUTREACH_SMTP_USER", default="").strip()

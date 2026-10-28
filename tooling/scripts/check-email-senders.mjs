@@ -28,12 +28,14 @@ const PATTERNS = {
     /api\.resend\.com/,
     /\bresend\.Emails\.send\b/,
     /\bsmtplib\b/,
+    /graph\.microsoft\.com[^"'\s]*\/sendMail/,
   ],
   ts: [
     /\bresend\.emails\.send\b/,
     /\bnew\s+Resend\s*\(/,
     /api\.resend\.com/,
     /api\.postmarkapp\.com/,
+    /graph\.microsoft\.com[^"'\s]*\/sendMail/,
     /from\s+["']nodemailer["']|require\(\s*["']nodemailer["']\s*\)/,
   ],
 };

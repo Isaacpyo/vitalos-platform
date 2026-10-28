@@ -2,7 +2,7 @@
 
 The queue sends one email at a time from the content tick (ADR-042): only while a person has pressed
 Start, on weekdays from 09:00 to 17:00 London time, up to the daily cap, with a random 3 to 8 minute gap
-between emails. It sends only through the outreach mailbox (OUTREACH_SMTP_*), never Resend, whose
+between emails. It sends only through the outreach mailbox (Microsoft 365 over Graph, or SMTP), never Resend, whose
 acceptable use policy forbids cold outreach (DECISIONS 120).
 """
 
@@ -27,7 +27,7 @@ from apps.audit.services import record
 from apps.email_templates import services as template_services
 from apps.email_templates.models import EmailSuppression, EmailTemplate, Kind
 from apps.email_templates.rendering import unsubscribe_url
-from apps.mailer.backends import outreach_connection
+from apps.mailer.backends import outreach_connection, outreach_mailbox
 from apps.mailer.layout import clean_line
 from apps.mailer.messages import build_message
 
@@ -162,7 +162,7 @@ def start_problems(current: OutreachSettings) -> list[str]:
         problems.append("The chosen template is archived or not an outreach template.")
     if not mailbox_ready() and settings.EMAIL_TRANSPORT == "resend":
         problems.append(
-            "No outreach mailbox is set up (OUTREACH_SMTP_*). Outreach never goes through Resend, whose "
+            "No outreach mailbox is set up (Microsoft 365: OUTREACH_GRAPH_*). Outreach never goes through Resend, whose "
             "acceptable use policy forbids cold email."
         )
     return problems
@@ -299,7 +299,7 @@ def _send(contact: Contact, current: OutreachSettings, now: datetime) -> int:
     package = template_services.render_for(template, values, contact.email)
     user = current.started_by
     name = clean_line((user.get_full_name() if user else "") or "Vitalos Technologies")
-    mailbox = settings.OUTREACH_SMTP_USER or (user.email if user else settings.NOTIFY_FROM)
+    mailbox = outreach_mailbox() or (user.email if user else settings.NOTIFY_FROM)
     message = build_message(
         package.rendered.email,
         subject=package.subject,

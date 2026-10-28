@@ -232,18 +232,54 @@ export async function POST(request: Request) {
 
 Before shipping it the owner must approve the privacy notice wording and retention (v2026-10 is approved; 24 months), and set the two variables in Vercel for Preview and Production.
 
-## 13. Outreach mailbox (needs approval: it costs money)
+## 13. Outreach mailbox: Microsoft 365 on vitalos.co.uk (needs approval: it costs money)
 
-Outreach templates (kind Outreach, such as `outreach-small-business-free-plan`) are cold email. Resend's acceptable use policy forbids it ("You are prohibited from sending unsolicited messages of any kind, including cold outreach, purchased lists, or scraped contact data", resend.com/legal/acceptable-use, read 27 Oct 2026). Because every other Vitalos email goes through the same Resend account, **Send** on an outreach template is refused while `EMAIL_TRANSPORT=resend` until an outreach mailbox is set up. Copy and Download .eml still work, so you can send from your own mail client.
+Outreach templates (kind Outreach, such as `outreach-small-business-free-plan`) are cold email. Resend's acceptable use policy forbids it ("You are prohibited from sending unsolicited messages of any kind, including cold outreach, purchased lists, or scraped contact data", resend.com/legal/acceptable-use, read 27 Oct 2026), and every other Vitalos email goes through the same Resend account. So outreach goes only through its own mailbox. Until one is connected, **Send** on an outreach template and **Start** in Mail › Outreach stay off while `EMAIL_TRANSPORT=resend`. Copy and Download .eml still work.
 
-To turn it on:
+**Owner decision (28 Oct 2026):** Microsoft 365 Business Basic, one user, on `vitalos.co.uk` (no separate domain), sending through Microsoft Graph (DECISIONS 127).
 
-1. Get a mailbox that allows SMTP sending as you, for example Google Workspace or Microsoft 365 on `vitalos.co.uk`, or, better for reputation, on a separate outreach domain. This costs money, so it needs the owner's approval. Add that provider's SPF and DKIM records (a DNS change, so this also needs approval).
-2. Create an app password for the mailbox.
-3. Set `OUTREACH_SMTP_HOST`, `OUTREACH_SMTP_PORT` (465 for implicit TLS, 587 for STARTTLS) and `OUTREACH_SMTP_USER` as Container Apps variables. Store `OUTREACH_SMTP_PASSWORD` as a secret. The user is also the From address and the Reply-To.
-4. Send one outreach email to your own address from **Use template** and check the headers: SPF, DKIM and DMARC should all show `pass`.
+Microsoft 365 only **sends** for vitalos.co.uk. The MX records stay on Cloudflare, because Cloudflare Email Routing delivers support@ to the Enquiries inbox (step 1) and the other addresses to their inboxes. The admin signs in to Microsoft as an app, so no mailbox password is stored. Microsoft is retiring password SMTP: from late December 2026 it is off by default for existing tenants, and it is removed in 2027.
 
-Keep outreach volume low and steady (start at about 15 a day). A complaint rate above 0.3% at Gmail gets the mailbox's mail filtered.
+Steps 2, 3 and 5 are DNS changes and need approval. Steps 6 and 7 need a Microsoft admin sign-in.
+
+1. **Sign up** (owner): Business Basic, one user, contact email temitope.agbola@vitalos.co.uk. The `<name>.onmicrosoft.com` address chosen at sign-up is permanent.
+2. **Add the domain:** Microsoft 365 admin centre › Settings › Domains › Add domain › `vitalos.co.uk`.
+   - Choose to add the DNS records yourself.
+   - Add the verification TXT (`MS=ms…`) in Cloudflare. Use DNS only, never proxied.
+   - When Microsoft lists the mail records, add only the SPF change. Do **not** add its MX record. Microsoft then reports that the domain has setup issues; that is expected.
+   - Keep exactly one SPF record. The apex record becomes `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com include:spf.protection.outlook.com ~all`.
+3. **DKIM:** in the Microsoft Defender portal, go to Email & collaboration › Policies › Threat policies › Email authentication settings › DKIM › `vitalos.co.uk`.
+   - Copy the two CNAME records (`selector1._domainkey` and `selector2._domainkey`) into Cloudflare, DNS only.
+   - Then switch DKIM signing on. Resend keeps its own `resend._domainkey` record.
+4. **Internal relay:** in the Exchange admin centre, go to Mail flow › Accepted domains › `vitalos.co.uk` and set it to Internal relay. Without this, Microsoft 365 treats every @vitalos.co.uk address as its own, so mail from Outlook to support@ or admin@ bounces instead of going to Cloudflare.
+5. **The mailbox:**
+   - Give the user the primary address `temitope.agbola@vitalos.co.uk`.
+   - Replies to it still arrive through Cloudflare Email Routing. To read them in Outlook, route that address (Cloudflare › Email › Email Routing › Routes) to the mailbox's `@<name>.onmicrosoft.com` address, after verifying that destination.
+6. **The app the admin signs in as:** in the Entra admin centre, go to App registrations › New registration, name it "Vitalos admin outreach", this directory only, with no redirect URI.
+   - Copy the Application (client) ID and the Directory (tenant) ID.
+   - Under Certificates & secrets, add a client secret valid for 24 months and note its expiry.
+   - Grant **no** API permissions in Entra. Entra grants cover every mailbox, and they add to the scoped grant in the next step.
+7. **Scope it to the one mailbox** (Exchange Online PowerShell, `Connect-ExchangeOnline` as the admin). The object ID is the app's Object ID under Enterprise applications. Allow up to two hours for the grant to apply.
+
+   ```powershell
+   New-ServicePrincipal -AppId <client id> -ObjectId <enterprise app object id> -DisplayName "Vitalos admin outreach"
+   New-ManagementScope -Name "Outreach mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'temitope.agbola@vitalos.co.uk'"
+   New-ManagementRoleAssignment -App <client id> -Role "Application Mail.Send" -CustomResourceScope "Outreach mailbox"
+   Test-ServicePrincipalAuthorization -Identity <client id> -Resource temitope.agbola@vitalos.co.uk
+   ```
+
+8. **Settings:** in the GitHub `production` environment, set three variables and one secret. The next deploy writes them to the Container App, the secret as a Container Apps secret.
+   - Variables: `OUTREACH_MAILBOX=temitope.agbola@vitalos.co.uk`, `OUTREACH_GRAPH_TENANT_ID` and `OUTREACH_GRAPH_CLIENT_ID`.
+   - Secret: `OUTREACH_GRAPH_CLIENT_SECRET`.
+9. **Test:**
+   - From Mail › Email templates › Use on the outreach template, send one email to an address outside Vitalos that you can read.
+   - Its headers must show `spf=pass`, `dkim=pass` (d=vitalos.co.uk) and `dmarc=pass`. It also appears in the mailbox's Sent Items.
+   - Mail › Outreach then shows the mailbox, and Start becomes available.
+10. **Before the client secret expires:** create a new one, update the GitHub secret and redeploy.
+
+Another provider can be used over SMTP instead (`OUTREACH_SMTP_HOST`, `OUTREACH_SMTP_PORT`, `OUTREACH_SMTP_USER`, secret `OUTREACH_SMTP_PASSWORD`, with `OUTREACH_MAILBOX` as the From address). Do not use SMTP with Microsoft 365.
+
+Keep outreach volume low and steady: start at about 15 a day and raise it slowly. Microsoft 365 is not for bulk mail. A complaint rate above 0.3% at Gmail gets the mailbox's mail filtered.
 
 ## Rollback
 
