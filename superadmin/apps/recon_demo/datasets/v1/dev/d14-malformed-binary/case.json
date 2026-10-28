@@ -1,0 +1,9 @@
+{
+  "id": "d14-malformed-binary",
+  "description": "A PNG image uploaded as the statement.",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "none",
+  "synthetic": true
+}

@@ -1,0 +1,32 @@
+{
+  "review_kinds": [
+    "balance_mismatch"
+  ],
+  "exceptions": [],
+  "lines": [
+    {
+      "source_line": 5,
+      "date": "2026-09-04",
+      "reference": "INV-5001",
+      "type": "invoice",
+      "amount": "600.00"
+    },
+    {
+      "source_line": 6,
+      "date": "2026-09-11",
+      "reference": "INV-5002",
+      "type": "invoice",
+      "amount": "245.60"
+    },
+    {
+      "source_line": 7,
+      "date": "2026-09-25",
+      "reference": "PAY-5003",
+      "type": "payment",
+      "amount": "600.00"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "mismatch"
+}

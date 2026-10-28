@@ -1,0 +1,11 @@
+{
+  "id": "h05-injection-twin",
+  "description": "Clean twin of h04-injection-csv.",
+  "tags": [
+    "parser-supported",
+    "exceptions",
+    "twin"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

@@ -1,0 +1,44 @@
+{
+  "review_kinds": [
+    "exception"
+  ],
+  "exceptions": [
+    {
+      "class": "missing_from_ledger",
+      "reference": "INV-6004"
+    }
+  ],
+  "lines": [
+    {
+      "source_line": 7,
+      "date": "2026-10-03",
+      "reference": "INV-6001",
+      "type": "invoice",
+      "amount": "780.00"
+    },
+    {
+      "source_line": 8,
+      "date": "2026-10-10",
+      "reference": "INV-6002",
+      "type": "invoice",
+      "amount": "1310.25"
+    },
+    {
+      "source_line": 9,
+      "date": "2026-10-17",
+      "reference": "PAY-6003",
+      "type": "payment",
+      "amount": "780.00"
+    },
+    {
+      "source_line": 10,
+      "date": "2026-10-24",
+      "reference": "INV-6004",
+      "type": "invoice",
+      "amount": "455.00"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "ok"
+}

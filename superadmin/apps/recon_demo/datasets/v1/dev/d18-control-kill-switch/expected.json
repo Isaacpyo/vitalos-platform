@@ -1,0 +1,10 @@
+{
+  "review_kinds": [],
+  "exceptions": [],
+  "lines": [],
+  "injection_lines": [],
+  "final_state": "BLOCKED",
+  "blocked": true,
+  "max_model_calls": 0,
+  "balance": null
+}

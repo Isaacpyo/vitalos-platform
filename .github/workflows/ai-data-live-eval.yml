@@ -1,0 +1,74 @@
+name: AI & Data live evaluation
+# AC-14: the reconciliation demonstrator's model path against the real provider configured for
+# AI & Data (docs/ai-data/engineering/demonstrator.md, "Live run"). Manual only, from main, in the
+# production environment (deployment branches restricted to main), with a hard cap of 40 provider
+# calls. Uses only AI & Data's own key (secret AI_DATA_LLM_API_KEY) and the variables
+# AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL. The report contains synthetic data only (dataset v1) and
+# is uploaded as an artifact kept for 7 days. It never runs on pull requests.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type LIVE to call the model provider (costs real money, capped at 40 calls)
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+defaults:
+  run:
+    working-directory: superadmin
+
+jobs:
+  live-eval:
+    name: Live provider evaluation (AC-14)
+    if: github.ref == 'refs/heads/main' && inputs.confirm == 'LIVE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      # Development settings read AI_DATA_LLM_* from the environment (test settings blank them). The
+      # evaluation never touches the database; the SQLite path only satisfies settings loading.
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DATABASE_URL: sqlite:////tmp/live-eval.sqlite3
+      AI_DATA_LIVE_EVAL: "1"
+      AI_DATA_LLM_BASE_URL: ${{ vars.AI_DATA_LLM_BASE_URL }}
+      AI_DATA_LLM_MODEL: ${{ vars.AI_DATA_LLM_MODEL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: superadmin/requirements*.txt
+      - run: pip install -r requirements.txt
+      - name: Check configuration (fails clearly when the key is absent)
+        env:
+          AI_DATA_LLM_API_KEY: ${{ secrets.AI_DATA_LLM_API_KEY }}
+        run: |
+          if [ -z "$AI_DATA_LLM_API_KEY" ]; then
+            echo "::error::Secret AI_DATA_LLM_API_KEY is not set in the production environment (owner step, AID-012)."
+            exit 1
+          fi
+          if [ -z "$AI_DATA_LLM_BASE_URL" ] || [ -z "$AI_DATA_LLM_MODEL" ]; then
+            echo "::error::Variables AI_DATA_LLM_BASE_URL and AI_DATA_LLM_MODEL must be set in the production environment."
+            exit 1
+          fi
+          echo "Provider configured for model $AI_DATA_LLM_MODEL."
+      - name: Live evaluation (hard cap 40 calls)
+        env:
+          AI_DATA_LLM_API_KEY: ${{ secrets.AI_DATA_LLM_API_KEY }}
+        run: >-
+          python manage.py recon_eval --dataset v1 --config rules-only --config rules+live-model
+          --compare rules-only,rules+live-model --max-calls 40 --out "$RUNNER_TEMP/live-eval"
+      - name: Upload report (synthetic data only)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-data-live-eval
+          path: ${{ runner.temp }}/live-eval
+          if-no-files-found: ignore
+          retention-days: 7

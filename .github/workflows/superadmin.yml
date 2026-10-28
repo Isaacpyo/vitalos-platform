@@ -66,6 +66,12 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.test
       - name: pytest (PostgreSQL)
         run: pytest
+      # AI & Data demonstrator release gate (AC-1 to AC-13, docs/ai-data/engineering/demonstrator-acceptance.md).
+      # Offline: no database, no network, no key; the model path uses labelled simulated responses.
+      - name: AI & Data evaluation gate (offline)
+        run: python manage.py recon_eval --dataset v1 --config rules-only --config rules+simulated-model --out /tmp/eval
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
       - name: manage.py check --deploy
         env:
           DJANGO_SETTINGS_MODULE: config.settings.prod

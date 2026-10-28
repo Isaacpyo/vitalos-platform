@@ -1,0 +1,15 @@
+FERNHILL CLEANING PRODUCTS (FICTIONAL)
+Unit 4, Example Trading Estate, Exampletown EX1 1AA   accounts@fernhill.example
+STATEMENT OF ACCOUNT                         Account: FCP-0310
+
+Date        Ref          Details                             Debit     Credit     Balance
+01/08/2026  B/F          Balance brought forward                                 2,100.00
+04/08/2026  SI-77120     Invoice - deep clean supplies    1,890.00               3,990.00
+06/08/2026  SC-77121     Credit note - returned drum                    45.00    3,945.00
+13/08/2026  SI-77135     Invoice                            264.36               4,209.36
+19/08/2026  RC-0819      Payment received - BACS                     2,100.00    2,109.36
+27/08/2026  SI-77160     Invoice                            731.14               2,840.50
+29/08/2026  SC-77161     Credit note - pricing                          12.50    2,828.00
+
+                                                       Closing balance           2,828.00
+Payment terms: 30 days from invoice date. Please quote the invoice reference with remittances.

@@ -1,0 +1,44 @@
+{
+  "review_kinds": [],
+  "exceptions": [],
+  "lines": [
+    {
+      "source_line": 5,
+      "date": "2026-09-03",
+      "reference": "INV-1001",
+      "type": "invoice",
+      "amount": "450.00"
+    },
+    {
+      "source_line": 6,
+      "date": "2026-09-08",
+      "reference": "INV-1002",
+      "type": "invoice",
+      "amount": "1275.40"
+    },
+    {
+      "source_line": 7,
+      "date": "2026-09-12",
+      "reference": "CN-1003",
+      "type": "credit",
+      "amount": "75.40"
+    },
+    {
+      "source_line": 8,
+      "date": "2026-09-18",
+      "reference": "PAY-1004",
+      "type": "payment",
+      "amount": "1200.00"
+    },
+    {
+      "source_line": 9,
+      "date": "2026-09-24",
+      "reference": "INV-1005",
+      "type": "invoice",
+      "amount": "389.99"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "COMPLETED",
+  "balance": "ok"
+}

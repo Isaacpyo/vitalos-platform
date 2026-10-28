@@ -1,0 +1,10 @@
+{
+  "id": "d01-clean-csv",
+  "description": "CSV statement export, every line matches the ledger, closing balance agrees.",
+  "tags": [
+    "parser-supported",
+    "clean"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

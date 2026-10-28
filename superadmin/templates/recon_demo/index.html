@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load ui humanize %}
+{% block title %}Demonstrator · AI & Data · Vitalos Super Admin{% endblock %}
+{% block breadcrumbs %}
+  <li class="muted hidden sm:block"><a href="/ai-data/" class="hover:underline">AI &amp; Data</a></li>
+  <li class="muted hidden sm:block" aria-hidden="true">/</li>
+  <li class="truncate font-medium" aria-current="page">Demonstrator</li>
+{% endblock %}
+{% block content %}
+  {% include "recon_demo/_header.html" %}
+
+  <section class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5" aria-label="Run summary">
+    <div class="card p-4"><p class="mono-label muted">Runs</p><p class="mt-1 text-2xl font-semibold tabular">{{ runs|length }}</p></div>
+    <div class="card p-4"><p class="mono-label muted">Completed</p><p class="mt-1 text-2xl font-semibold tabular">{{ counts.COMPLETED }}</p></div>
+    <div class="card p-4"><p class="mono-label muted">Review required</p><p class="mt-1 text-2xl font-semibold tabular">{{ counts.REVIEW_REQUIRED }}</p></div>
+    <div class="card p-4"><p class="mono-label muted">Failed / unsupported</p><p class="mt-1 text-2xl font-semibold tabular">{{ counts.FAILED }} / {{ counts.UNSUPPORTED }}</p></div>
+    <div class="card col-span-2 p-4 md:col-span-1"><p class="mono-label muted">Model spend this month</p><p class="mt-1 text-2xl font-semibold tabular">£{{ usage.spent_month_gbp|floatformat:4 }}</p><p class="muted text-xs">of £{{ usage.budget_gbp }} budget · {{ usage.runs_today }} live run{{ usage.runs_today|pluralize }} today</p></div>
+  </section>
+
+  <section class="card mt-6" aria-labelledby="runs-heading">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+      <h2 id="runs-heading" class="font-semibold">Runs</h2>
+      <a href="{% url 'recon_demo:new' %}" class="btn btn-primary btn-sm">{% icon "plus" "h-4 w-4" %} New run</a>
+    </div>
+    {% if runs %}
+      <div class="overflow-x-auto">
+        <table class="table-base" data-testid="runs-table">
+          <thead><tr><th scope="col">Run</th><th scope="col">State</th><th scope="col">Input</th><th scope="col">Model path</th><th scope="col" class="text-right">Lines</th><th scope="col" class="text-right">Review items</th><th scope="col" class="text-right">Cost</th><th scope="col">Started</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            {% for run in runs %}
+              <tr>
+                <td class="whitespace-nowrap font-mono font-medium"><a href="{{ run.get_absolute_url }}" class="text-cobalt-600 hover:underline dark:text-cobalt-300">{{ run.ref }}</a></td>
+                <td class="whitespace-nowrap">{% include "recon_demo/_state.html" with state=run.state %}</td>
+                <td>{% if run.sample_key %}Sample: {{ run.sample_key }}{% else %}Pasted text{% endif %}</td>
+                <td>{{ run.get_model_mode_display }}{% if run.simulated %} {% include "recon_demo/_simulated.html" %}{% endif %}</td>
+                <td class="text-right tabular">{{ run.results.lines|length }}</td>
+                <td class="text-right tabular">{{ run.results.review_items|length }}</td>
+                <td class="text-right tabular">£{{ run.cost_gbp|floatformat:4 }}</td>
+                <td class="whitespace-nowrap"><span title="{{ run.created_at }}">{{ run.created_at|naturaltime }}</span><span class="muted"> · {{ run.created_by.email|default:"system" }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-8 text-center">
+        <p class="font-medium">No runs yet.</p>
+        <p class="muted mt-1 text-sm">Start with a built-in synthetic sample: a clean statement, a missing invoice, a prompt injection or a simulated provider failure.</p>
+        <a href="{% url 'recon_demo:new' %}" class="btn btn-primary mt-4">{% icon "plus" "h-4 w-4" %} New run</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="mt-6 grid gap-4 md:grid-cols-3" aria-label="How it works">
+    <div class="card p-4"><h3 class="font-semibold">Deterministic first</h3><p class="muted mt-1 text-sm">A rules parser reads CSV exports and printed statements. The model is used only for lines it cannot read, and only when the model path is on.</p></div>
+    <div class="card p-4"><h3 class="font-semibold">Grounded or rejected</h3><p class="muted mt-1 text-sm">Every model line must cite a source line that shows its reference, amount and date. Anything else is rejected and goes to a reviewer.</p></div>
+    <div class="card p-4"><h3 class="font-semibold">Controlled</h3><p class="muted mt-1 text-sm">Kill switch, per-run call cap, daily run cap and monthly budget are checked before every model call. Each call is metered and audited.</p></div>
+  </section>
+{% endblock %}

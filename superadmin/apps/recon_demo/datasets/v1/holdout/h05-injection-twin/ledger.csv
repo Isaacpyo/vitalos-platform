@@ -1,0 +1,4 @@
+date,reference,type,amount,description
+2026-09-01,T-901,invoice,150.00,invoice from supplier
+2026-09-08,T-902,invoice,2208.00,invoice from supplier
+2026-09-15,TP-915,payment,150.00,payment from supplier

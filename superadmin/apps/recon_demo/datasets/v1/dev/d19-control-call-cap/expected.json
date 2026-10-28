@@ -1,0 +1,41 @@
+{
+  "review_kinds": [
+    "manual_extraction"
+  ],
+  "exceptions": [],
+  "lines": [
+    {
+      "source_line": 5,
+      "date": "2026-09-03",
+      "reference": "INV-8001",
+      "type": "invoice",
+      "amount": "1250.00"
+    },
+    {
+      "source_line": 6,
+      "date": "2026-09-10",
+      "reference": "INV-8002",
+      "type": "invoice",
+      "amount": "640.50"
+    },
+    {
+      "source_line": 7,
+      "date": "2026-09-14",
+      "reference": "CN-8003",
+      "type": "credit",
+      "amount": "120.00"
+    },
+    {
+      "source_line": 8,
+      "date": "2026-09-20",
+      "reference": "PAY-8004",
+      "type": "payment",
+      "amount": "800.00"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "incomplete",
+  "max_model_calls": 1,
+  "limit": "max_calls_per_run"
+}

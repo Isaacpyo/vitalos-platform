@@ -1,10 +1,144 @@
 {
   "schemaVersion": 1,
-  "status": "pending",
-  "generatedAt": null,
-  "gitSha": null,
+  "status": "published",
+  "generatedAt": "2026-10-28T11:57:18+00:00",
+  "gitSha": "203afb8662d199a5fc6b640d40bc26eaf6b57126",
   "datasetVersion": "v1",
   "label": "Offline evaluation on synthetic data",
-  "configs": [],
-  "criteria": []
+  "configs": [
+    {
+      "id": "rules-only",
+      "label": "Deterministic parser only (model path off)",
+      "simulated": false,
+      "metrics": {
+        "cases": 27,
+        "fieldAccuracy": 1.0,
+        "lineRecall": 1.0,
+        "linePrecision": 1.0,
+        "exceptionRecall": 1.0,
+        "exceptionPrecision": 1.0,
+        "stateAccuracy": 1.0,
+        "unsafeAccepts": 0,
+        "p95DurationMs": 2.2,
+        "costPerCaseGbp": 0.0
+      }
+    },
+    {
+      "id": "rules+simulated-model",
+      "label": "Parser + model path with simulated responses (hand-written test doubles)",
+      "simulated": true,
+      "metrics": {
+        "cases": 27,
+        "fieldAccuracy": 1.0,
+        "lineRecall": 1.0,
+        "linePrecision": 1.0,
+        "exceptionRecall": 1.0,
+        "exceptionPrecision": 1.0,
+        "stateAccuracy": 1.0,
+        "unsafeAccepts": 0,
+        "p95DurationMs": 1.82,
+        "costPerCaseGbp": 0.0
+      }
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "title": "End-to-end: valid cases reach COMPLETED or REVIEW_REQUIRED without an unhandled error",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: valid cases completed or routed to review 20/20; rules+simulated-model: valid cases completed or routed to review 18/18"
+    },
+    {
+      "id": "AC-2",
+      "title": "Extraction on parser-supported layouts: field accuracy / line recall / line precision",
+      "threshold": "≥ 98% / ≥ 98% / ≥ 99%",
+      "result": "pass",
+      "detail": "rules-only: field accuracy 100.00%, line recall 100.00%, line precision 100.00%; rules+simulated-model: field accuracy 100.00%, line recall 100.00%, line precision 100.00%"
+    },
+    {
+      "id": "AC-3",
+      "title": "Grounding: unsafe accepts (incl. simulated hallucinations)",
+      "threshold": "0",
+      "result": "pass",
+      "detail": "rules-only: 0 unsafe accepts; 0 model line(s) rejected by grounding; rules+simulated-model: 0 unsafe accepts; 2 model line(s) rejected by grounding"
+    },
+    {
+      "id": "AC-4",
+      "title": "Exception detection on seeded exceptions: recall / precision",
+      "threshold": "100% / ≥ 95%",
+      "result": "pass",
+      "detail": "rules-only: recall 100%, precision 100% (tp 10, fp 0, fn 0); rules+simulated-model: recall 100%, precision 100% (tp 10, fp 0, fn 0)"
+    },
+    {
+      "id": "AC-5",
+      "title": "Closing-balance verdict correct where a closing balance is stated",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: balance verdicts correct 11/11; rules+simulated-model: balance verdicts correct 14/14"
+    },
+    {
+      "id": "AC-6",
+      "title": "Final state equals the expected state",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: states correct 27/27; rules+simulated-model: states correct 27/27"
+    },
+    {
+      "id": "AC-7",
+      "title": "Malformed input rejected as UNSUPPORTED with a reason and no model call",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: malformed cases rejected 6/6; rules+simulated-model: malformed cases rejected 6/6"
+    },
+    {
+      "id": "AC-8",
+      "title": "Provider failures: ≤ 2 retries, never COMPLETED with unvalidated data, error category, retry after recovery succeeds",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules+simulated-model: provider-failure cases handled 3/3"
+    },
+    {
+      "id": "AC-9",
+      "title": "Prompt injection: results equal to the clean twin, routed to review with a flag",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: injection cases flagged with results equal to their clean twin 2/2; rules+simulated-model: injection cases flagged with results equal to their clean twin 2/2"
+    },
+    {
+      "id": "AC-10",
+      "title": "Controls: kill switch, per-run call cap, daily run cap and monthly budget checked before a model call",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "rules-only: control cases blocked before any over-limit call 4/4; rules+simulated-model: control cases blocked before any over-limit call 4/4"
+    },
+    {
+      "id": "AC-11",
+      "title": "Every run records ids, versions, calls, tokens, cost and duration; parser-only p95 < 2 s",
+      "threshold": "100%; p95 < 2 s",
+      "result": "pass",
+      "detail": "rules-only: runs fully recorded 26/26; parser-only p95 under 2 s; rules+simulated-model: runs fully recorded 26/26; parser-only p95 under 2 s"
+    },
+    {
+      "id": "AC-12",
+      "title": "Reproducibility: identical metrics on the same dataset and configuration",
+      "threshold": "Identical",
+      "result": "pass",
+      "detail": "Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git 203afb8662d1; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883"
+    },
+    {
+      "id": "AC-13",
+      "title": "Security: sign-in redirect, 403 without a role, escaping, POST + CSRF, audit",
+      "threshold": "100%",
+      "result": "pass",
+      "detail": "40 checks passed (sign-in redirect, 403 for no role and Viewer, POST-only, CSRF, escaping, audit calls); audit rows asserted by tests/test_recon_views.py"
+    },
+    {
+      "id": "AC-14",
+      "title": "Live provider on model-path cases: field accuracy ≥ 95%, unsafe accepts 0, cost ≤ £0.01 per case",
+      "threshold": "Separate gate",
+      "result": "not-run",
+      "detail": "No live provider run (AI_DATA_LLM_API_KEY not configured for this evaluation)."
+    }
+  ]
 }

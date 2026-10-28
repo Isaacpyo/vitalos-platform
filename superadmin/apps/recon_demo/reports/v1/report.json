@@ -1,0 +1,2430 @@
+{
+  "schema": "vitalos.evaluation.report/1",
+  "generated_at": "2026-10-28T11:57:18+00:00",
+  "git_sha": "203afb8662d199a5fc6b640d40bc26eaf6b57126",
+  "deterministic_hash": "a214cbfeabd94704c88822bc138481c5ea9413450a0ec438013bca63e10c0df1",
+  "dataset": {
+    "name": "recon_demo",
+    "version": "v1",
+    "content_hash": "9a9718a7dec651a33f8058b2a6ccf1b270ebecd5f729bb1759961c4e38931b0e",
+    "cases": 27,
+    "splits": [
+      "dev",
+      "holdout"
+    ]
+  },
+  "label": "Offline evaluation on synthetic data",
+  "configs": [
+    {
+      "id": "rules-only",
+      "label": "Deterministic parser only (model path off)",
+      "simulated": false,
+      "gated": true,
+      "config_hash": "5032a89bb3c54e966c360a69482d2fcd8ecb62c8f4db629130094cc424040387",
+      "description": {
+        "workflow": "recon_demo.statement_reconciliation",
+        "parser": "statement_rules@1",
+        "reconcile": "reconcile@1",
+        "injection": "injection_rules@1",
+        "model_mode": "off",
+        "prompt": null,
+        "prompt_hash": null,
+        "limits": {
+          "max_input_chars": 20000,
+          "max_calls_per_run": 6,
+          "per_call_timeout_s": 20.0,
+          "max_retries": 2,
+          "overall_deadline_s": 40.0,
+          "daily_run_cap": 50,
+          "monthly_budget_gbp": "10.00"
+        }
+      },
+      "metrics": {
+        "cases": 27,
+        "fieldAccuracy": 1.0,
+        "lineRecall": 1.0,
+        "linePrecision": 1.0,
+        "exceptionRecall": 1.0,
+        "exceptionPrecision": 1.0,
+        "stateAccuracy": 1.0,
+        "unsafeAccepts": 0,
+        "modelFieldAccuracy": null,
+        "modelCalls": 0,
+        "costPerCaseGbp": 0.0
+      },
+      "counters": {
+        "ac1_ok": 20,
+        "ac1_total": 20,
+        "balance_correct": 11,
+        "balance_total": 11,
+        "cases": 27,
+        "cost_microgbp": 0,
+        "ctrl_ok": 4,
+        "ctrl_total": 4,
+        "exc_fn": 0,
+        "exc_fp": 0,
+        "exc_tp": 10,
+        "ext_expected_lines": 46,
+        "ext_fields_correct": 184,
+        "ext_fields_total": 184,
+        "ext_matched_lines": 46,
+        "ext_predicted_lines": 46,
+        "ext_predicted_true": 46,
+        "malformed_ok": 6,
+        "malformed_total": 6,
+        "model_calls": 0,
+        "rec_ok": 26,
+        "rec_total": 26,
+        "state_correct": 27,
+        "state_total": 27,
+        "unhandled_errors": 0,
+        "unsafe_accepts": 0
+      },
+      "outputs_hash": "699095f14fb42c5cf1d4794341f7f162311007dc234c72e8ecb64ea82875b9e8",
+      "cases": [
+        {
+          "id": "d01-clean-csv",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "007458efa3dae67066700fd7cf600b35a8b3615e4edce313806ca4bf6762b079",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d02-clean-printed",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "845330261c8ae0d86596691839684cd21ad6c750039f13ddab3f787fa088e600",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d03-missing-mismatch-unmatched",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8e50f277dc645fe82b2eae524a1ba9dfed7b7b6c55ecd9cfc35dfd608353c6c9",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 3,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d04-duplicate-on-statement",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "37940bb0919ce7f49c9e38327206731acdec2862aa70e9d4c966e501a637b15e",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d05-balance-mismatch",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "balance_mismatch"
+            ],
+            "balance": "mismatch",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "5e4e36d46650ebe9d66b70caa520a4d0add6753399297d646835ad285bb45093",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d06-injection",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception",
+              "instruction_like_text"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "586ffd7573298e38cddd8ef3b826bfd6e33a17885044b0a6c86fcf5ce9f4951f",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d07-injection-twin",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "929382e09975c5dc2d4d11f8af20edc668d4300a2a09d0b5acef421b862e4f65",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d08-freeform-model-good",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d09-freeform-model-hallucination",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d10-freeform-schema-invalid",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d11-freeform-timeout-then-success",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d12-freeform-provider-down",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d13-malformed-empty",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "6d71f1e8af17d4cac0855bf028e3da4c5306527dbe74f9d58c32abf53c5ef486",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d14-malformed-binary",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "04241c3758f1b2d598616a0b785e991cf12b7b133935044612c88647423a2f31",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d15-malformed-oversize",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "18df798a79a4be2d911f0c7334aaa52b9a9121ab168887cad7041d8527927010",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d16-malformed-ledger-header",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "ee27c6523f369e3a57feda5225354c0b74888b117625a76bfeb3ecec5062fcdb",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d17-malformed-ledger-amount",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "6d5bf2c7eb65a49a5a8f156942ac033f7171200f9c249da85441c5fede09aad0",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d18-control-kill-switch",
+          "split": "dev",
+          "output": {
+            "state": "BLOCKED",
+            "model_calls": 0
+          },
+          "output_hash": "895abc7617494cae391c9a3ccf2df20c69bb4e2d5053af66bc5b32ac67648b42",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d19-control-call-cap",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d20-control-daily-cap",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d21-control-monthly-budget",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8a0dd369fcbb99f004a049d858d9a8b6fc53d030ee5ae3bc2f3895ebe31d6187",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h01-printed-credits-payments",
+          "split": "holdout",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "6f4c8f29a8e57690899e6b406f76939018307dabbc642eeefde1945d500d5e0c",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 6,
+            "ext_predicted_lines": 6,
+            "ext_matched_lines": 6,
+            "ext_fields_correct": 24,
+            "ext_fields_total": 24,
+            "ext_predicted_true": 6,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h02-mismatch-ledger-duplicate",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "35646bc4dd5f936ecf354b42b97d7025a4226625b56503f684f7513c0c89c49e",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 2,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h03-freeform-model-good",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "cef855100f29dc42f9846700ffc81ccd5d35665cd73608a43b24258a401b93cf",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h04-injection-csv",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception",
+              "instruction_like_text"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "65f38f8123a90a0bf72f4b7b40b2cbbc8f6cb1074ed29333ea85b905903b45ec",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h05-injection-twin",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "a78816e633439bbdb0d146e82d10334258505581948d4256e1eb35a34b2c1e8c",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h06-malformed-ledger-date",
+          "split": "holdout",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "44bd8a21c1db5b5f04e6c0a7e4d0a0b57ec13cf32dcf7a92018a2fd1092dc0d7",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "rules+simulated-model",
+      "label": "Parser + model path with simulated responses (hand-written test doubles)",
+      "simulated": true,
+      "gated": true,
+      "config_hash": "0247eda938833f1997e997ab7747a69d71f458b7eaa9d0b4afa60a4c24a97556",
+      "description": {
+        "workflow": "recon_demo.statement_reconciliation",
+        "parser": "statement_rules@1",
+        "reconcile": "reconcile@1",
+        "injection": "injection_rules@1",
+        "model_mode": "simulated",
+        "prompt": "statement_extraction@2",
+        "prompt_hash": "386decf0c336f4e4c784ac5e2624690256cb2ec8e8957c9179fd097675523608",
+        "limits": {
+          "max_input_chars": 20000,
+          "max_calls_per_run": 6,
+          "per_call_timeout_s": 20.0,
+          "max_retries": 2,
+          "overall_deadline_s": 40.0,
+          "daily_run_cap": 50,
+          "monthly_budget_gbp": "10.00"
+        }
+      },
+      "metrics": {
+        "cases": 27,
+        "fieldAccuracy": 1.0,
+        "lineRecall": 1.0,
+        "linePrecision": 1.0,
+        "exceptionRecall": 1.0,
+        "exceptionPrecision": 1.0,
+        "stateAccuracy": 1.0,
+        "unsafeAccepts": 0,
+        "modelFieldAccuracy": 0.9091,
+        "modelCalls": 11,
+        "costPerCaseGbp": 0.0
+      },
+      "counters": {
+        "ac1_ok": 18,
+        "ac1_total": 18,
+        "balance_correct": 14,
+        "balance_total": 14,
+        "cases": 27,
+        "cost_microgbp": 0,
+        "ctrl_ok": 4,
+        "ctrl_total": 4,
+        "exc_fn": 0,
+        "exc_fp": 0,
+        "exc_tp": 10,
+        "ext_expected_lines": 46,
+        "ext_fields_correct": 184,
+        "ext_fields_total": 184,
+        "ext_matched_lines": 46,
+        "ext_predicted_lines": 46,
+        "ext_predicted_true": 46,
+        "malformed_ok": 6,
+        "malformed_total": 6,
+        "model_calls": 11,
+        "model_expected_lines": 11,
+        "model_lines_accepted": 10,
+        "model_lines_correct": 10,
+        "pf_ok": 3,
+        "pf_total": 3,
+        "rec_ok": 26,
+        "rec_total": 26,
+        "state_correct": 27,
+        "state_total": 27,
+        "unhandled_errors": 0,
+        "unsafe_accepts": 0
+      },
+      "outputs_hash": "90f0f5dcd38e19e260beba5e56e0219715a7bf7a5e17caa95766b9be7afea576",
+      "cases": [
+        {
+          "id": "d01-clean-csv",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "263562f9224012a62748c10d652858d75d668d788b285250b9804cd217638784",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d02-clean-printed",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "dda8b704f5f55a93296050d21b12bad174c1bc64c9958971166fa44f7cba0605",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d03-missing-mismatch-unmatched",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "7e3c6e804e70bdf9f5cef1677b5a2a43fe8e33d677a8211c5c5e63b9c730c5e1",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 5,
+            "ext_predicted_lines": 5,
+            "ext_matched_lines": 5,
+            "ext_fields_correct": 20,
+            "ext_fields_total": 20,
+            "ext_predicted_true": 5,
+            "unsafe_accepts": 0,
+            "exc_tp": 3,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d04-duplicate-on-statement",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "ba74f3dc07364740856a1624157f261f29a31ca84778b79d70a5f0bec8a05c34",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d05-balance-mismatch",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "balance_mismatch"
+            ],
+            "balance": "mismatch",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "ced3a5765e968c4c172b57aa45adf8100359fdf0031cdb3109063c1abaf5b11b",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d06-injection",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception",
+              "instruction_like_text"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "84396d3c3e81c7d61d47299c4061d9f81f4ea2a7080f016386f8a1edd7138d5b",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d07-injection-twin",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "97a0b5a399c47ce23ed413d3bf47e4122a27ebf50df38b3961d4cd3da88140c2",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d08-freeform-model-good",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 1,
+            "max_attempts": 1,
+            "error_category": ""
+          },
+          "output_hash": "860145d89e7ff9ae14b8c2be7dd014f8fb7dba8617c192df9f5a435caf1992f6",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "model_lines_accepted": 4,
+            "model_lines_correct": 4,
+            "model_expected_lines": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 1,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d09-freeform-model-hallucination",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction",
+              "ungrounded_line"
+            ],
+            "balance": "incomplete",
+            "model_calls": 1,
+            "max_attempts": 1,
+            "error_category": ""
+          },
+          "output_hash": "00a54070f2e2c13fa49c64841d16fb3368ce1fd13d2675215d5e7c624226aef5",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "model_lines_accepted": 3,
+            "model_lines_correct": 3,
+            "model_expected_lines": 4,
+            "unsafe_accepts": 0,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 1,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d10-freeform-schema-invalid",
+          "split": "dev",
+          "output": {
+            "state": "FAILED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 2,
+            "max_attempts": 2,
+            "error_category": "schema_invalid"
+          },
+          "output_hash": "cd5b86ce370ff964468a19489d8da3e5ccb02ac3f19ed8fe987e4c01daba3720",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "pf_total": 1,
+            "pf_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 2,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d11-freeform-timeout-then-success",
+          "split": "dev",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 2,
+            "max_attempts": 2,
+            "error_category": ""
+          },
+          "output_hash": "ece18891ed2c246c6c46698d8c7797eb0050aea6873032fab1742a3521fb1001",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "pf_total": 1,
+            "pf_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 2,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d12-freeform-provider-down",
+          "split": "dev",
+          "output": {
+            "state": "FAILED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 3,
+            "max_attempts": 3,
+            "error_category": "unavailable",
+            "retry_state": "COMPLETED"
+          },
+          "output_hash": "083b24666147dc2c21e5812815fa407b47115f29db0717713d407ce2fbfe5434",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "pf_total": 1,
+            "pf_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 3,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d13-malformed-empty",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "6c608ec4f058332d1d94519a81f916b5edfc823fb2d8a110fdf070adb836713b",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d14-malformed-binary",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "838f2a3e7b830b260c4fd4369bf57bc6adcee09a423401e5aa6000b1167ab1f6",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d15-malformed-oversize",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "ed4fce59197450679db200eb4c49a26338808cca97f143a8bc5009e21ddd9857",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d16-malformed-ledger-header",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "f10615bb9e143358e291b4236ed38ca1935e84722ef11e6202349b0063c7084d",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d17-malformed-ledger-amount",
+          "split": "dev",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "cdc190546099f420d2244a945da5f1d60c89db9836357255c7b05ec658672b00",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d18-control-kill-switch",
+          "split": "dev",
+          "output": {
+            "state": "BLOCKED",
+            "model_calls": 0
+          },
+          "output_hash": "895abc7617494cae391c9a3ccf2df20c69bb4e2d5053af66bc5b32ac67648b42",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d19-control-call-cap",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 1,
+            "max_attempts": 1,
+            "error_category": ""
+          },
+          "output_hash": "0f18295fe06356c5ed6f1e6a5eba69de10c538c7eb84076237587b6c7a34cc86",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 1,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d20-control-daily-cap",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "5b1eb9d606f6cbacbd069480bcfc47ff9f694db5f4263110c1026aacca2eac50",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "d21-control-monthly-budget",
+          "split": "dev",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "manual_extraction"
+            ],
+            "balance": "incomplete",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "0f059ebe4e281a78cd999dd2fe0a0cbae4051af9bddaa0eab835c28174c1d12e",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "ctrl_total": 1,
+            "ctrl_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h01-printed-credits-payments",
+          "split": "holdout",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "8b686f6753b2506ca39118f69540ad75bae5ca005fde0d95abc0944b301c1bfe",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 6,
+            "ext_predicted_lines": 6,
+            "ext_matched_lines": 6,
+            "ext_fields_correct": 24,
+            "ext_fields_total": 24,
+            "ext_predicted_true": 6,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h02-mismatch-ledger-duplicate",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "d8671244749e7cd1c6c5816c71fdbad1fc771a84df2c7476e8d08e84255b79e4",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 4,
+            "ext_predicted_lines": 4,
+            "ext_matched_lines": 4,
+            "ext_fields_correct": 16,
+            "ext_fields_total": 16,
+            "ext_predicted_true": 4,
+            "unsafe_accepts": 0,
+            "exc_tp": 2,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h03-freeform-model-good",
+          "split": "holdout",
+          "output": {
+            "state": "COMPLETED",
+            "review_kinds": [],
+            "balance": "ok",
+            "model_calls": 1,
+            "max_attempts": 1,
+            "error_category": ""
+          },
+          "output_hash": "653d41901c9507e723048a0ed5cb8515a8e0eb81b4ae1e311d5389585648977a",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "model_lines_accepted": 3,
+            "model_lines_correct": 3,
+            "model_expected_lines": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 0,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 1,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h04-injection-csv",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception",
+              "instruction_like_text"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "71c96d1b8c9031bfe716a637e06bb24eaba13aa187c237e065f776d82f2af507",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h05-injection-twin",
+          "split": "holdout",
+          "output": {
+            "state": "REVIEW_REQUIRED",
+            "review_kinds": [
+              "exception"
+            ],
+            "balance": "ok",
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "efdedfbd963bf13352ff328c44069a29499103e52e9c73d796abc3ce60af1e5d",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "ac1_total": 1,
+            "ac1_ok": 1,
+            "state_total": 1,
+            "state_correct": 1,
+            "ext_expected_lines": 3,
+            "ext_predicted_lines": 3,
+            "ext_matched_lines": 3,
+            "ext_fields_correct": 12,
+            "ext_fields_total": 12,
+            "ext_predicted_true": 3,
+            "unsafe_accepts": 0,
+            "exc_tp": 1,
+            "exc_fp": 0,
+            "exc_fn": 0,
+            "balance_total": 1,
+            "balance_correct": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        },
+        {
+          "id": "h06-malformed-ledger-date",
+          "split": "holdout",
+          "output": {
+            "state": "UNSUPPORTED",
+            "review_kinds": [],
+            "balance": null,
+            "model_calls": 0,
+            "max_attempts": 0,
+            "error_category": ""
+          },
+          "output_hash": "bd03ebab23d65ff98fb935f8362b01e98ee99ef4d5b929cb9cf63f59ce2f5e34",
+          "counters": {
+            "cases": 1,
+            "unhandled_errors": 0,
+            "state_total": 1,
+            "state_correct": 1,
+            "unsafe_accepts": 0,
+            "malformed_total": 1,
+            "malformed_ok": 1,
+            "rec_total": 1,
+            "rec_ok": 1,
+            "model_calls": 0,
+            "cost_microgbp": 0
+          }
+        }
+      ]
+    }
+  ],
+  "criteria": [
+    {
+      "id": "AC-1",
+      "title": "End-to-end: valid cases reach COMPLETED or REVIEW_REQUIRED without an unhandled error",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: valid cases completed or routed to review 20/20; rules+simulated-model: valid cases completed or routed to review 18/18",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "valid cases completed or routed to review 18/18"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "valid cases completed or routed to review 20/20"
+        }
+      }
+    },
+    {
+      "id": "AC-2",
+      "title": "Extraction on parser-supported layouts: field accuracy / line recall / line precision",
+      "threshold": "≥ 98% / ≥ 98% / ≥ 99%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: field accuracy 100.00%, line recall 100.00%, line precision 100.00%; rules+simulated-model: field accuracy 100.00%, line recall 100.00%, line precision 100.00%",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "field accuracy 100.00%, line recall 100.00%, line precision 100.00%"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "field accuracy 100.00%, line recall 100.00%, line precision 100.00%"
+        }
+      }
+    },
+    {
+      "id": "AC-3",
+      "title": "Grounding: unsafe accepts (incl. simulated hallucinations)",
+      "threshold": "0",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: 0 unsafe accepts; 0 model line(s) rejected by grounding; rules+simulated-model: 0 unsafe accepts; 2 model line(s) rejected by grounding",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "0 unsafe accepts; 2 model line(s) rejected by grounding"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "0 unsafe accepts; 0 model line(s) rejected by grounding"
+        }
+      }
+    },
+    {
+      "id": "AC-4",
+      "title": "Exception detection on seeded exceptions: recall / precision",
+      "threshold": "100% / ≥ 95%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: recall 100%, precision 100% (tp 10, fp 0, fn 0); rules+simulated-model: recall 100%, precision 100% (tp 10, fp 0, fn 0)",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "recall 100%, precision 100% (tp 10, fp 0, fn 0)"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "recall 100%, precision 100% (tp 10, fp 0, fn 0)"
+        }
+      }
+    },
+    {
+      "id": "AC-5",
+      "title": "Closing-balance verdict correct where a closing balance is stated",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: balance verdicts correct 11/11; rules+simulated-model: balance verdicts correct 14/14",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "balance verdicts correct 14/14"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "balance verdicts correct 11/11"
+        }
+      }
+    },
+    {
+      "id": "AC-6",
+      "title": "Final state equals the expected state",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: states correct 27/27; rules+simulated-model: states correct 27/27",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "states correct 27/27"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "states correct 27/27"
+        }
+      }
+    },
+    {
+      "id": "AC-7",
+      "title": "Malformed input rejected as UNSUPPORTED with a reason and no model call",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: malformed cases rejected 6/6; rules+simulated-model: malformed cases rejected 6/6",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "malformed cases rejected 6/6"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "malformed cases rejected 6/6"
+        }
+      }
+    },
+    {
+      "id": "AC-8",
+      "title": "Provider failures: ≤ 2 retries, never COMPLETED with unvalidated data, error category, retry after recovery succeeds",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules+simulated-model: provider-failure cases handled 3/3",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "provider-failure cases handled 3/3"
+        }
+      }
+    },
+    {
+      "id": "AC-9",
+      "title": "Prompt injection: results equal to the clean twin, routed to review with a flag",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: injection cases flagged with results equal to their clean twin 2/2; rules+simulated-model: injection cases flagged with results equal to their clean twin 2/2",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "injection cases flagged with results equal to their clean twin 2/2"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "injection cases flagged with results equal to their clean twin 2/2"
+        }
+      }
+    },
+    {
+      "id": "AC-10",
+      "title": "Controls: kill switch, per-run call cap, daily run cap and monthly budget checked before a model call",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: control cases blocked before any over-limit call 4/4; rules+simulated-model: control cases blocked before any over-limit call 4/4",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "control cases blocked before any over-limit call 4/4"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "control cases blocked before any over-limit call 4/4"
+        }
+      }
+    },
+    {
+      "id": "AC-11",
+      "title": "Every run records ids, versions, calls, tokens, cost and duration; parser-only p95 < 2 s",
+      "threshold": "100%; p95 < 2 s",
+      "gating": true,
+      "result": "pass",
+      "detail": "rules-only: runs fully recorded 26/26; parser-only p95 under 2 s; rules+simulated-model: runs fully recorded 26/26; parser-only p95 under 2 s",
+      "configs": {
+        "rules+simulated-model": {
+          "result": "pass",
+          "detail": "runs fully recorded 26/26; parser-only p95 under 2 s"
+        },
+        "rules-only": {
+          "result": "pass",
+          "detail": "runs fully recorded 26/26; parser-only p95 under 2 s"
+        }
+      }
+    },
+    {
+      "id": "AC-12",
+      "title": "Reproducibility: identical metrics on the same dataset and configuration",
+      "threshold": "Identical",
+      "gating": true,
+      "result": "pass",
+      "detail": "Two runs gave identical outputs and metrics; dataset v1 (9a9718a7dec6), git 203afb8662d1; config rules-only 5032a89bb3c5, rules+simulated-model 0247eda93883",
+      "configs": {}
+    },
+    {
+      "id": "AC-13",
+      "title": "Security: sign-in redirect, 403 without a role, escaping, POST + CSRF, audit",
+      "threshold": "100%",
+      "gating": true,
+      "result": "pass",
+      "detail": "40 checks passed (sign-in redirect, 403 for no role and Viewer, POST-only, CSRF, escaping, audit calls); audit rows asserted by tests/test_recon_views.py",
+      "configs": {}
+    },
+    {
+      "id": "AC-14",
+      "title": "Live provider on model-path cases: field accuracy ≥ 95%, unsafe accepts 0, cost ≤ £0.01 per case",
+      "threshold": "Separate gate",
+      "gating": false,
+      "result": "not-run",
+      "detail": "No live provider run (AI_DATA_LLM_API_KEY not configured for this evaluation).",
+      "configs": {}
+    }
+  ],
+  "notes": [
+    "Dataset v1 is synthetic (fictional suppliers, .example domains). Expected outputs were written from how each case was constructed, not from the system's output.",
+    "rules+simulated-model uses the hand-written responses in each case.json (simulated: true). It exercises the real gateway, schema validation, grounding, retries and limits.",
+    "AC-14 (live provider) not run: it needs AI_DATA_LLM_API_KEY and is never inferred offline."
+  ],
+  "timings": {
+    "rules-only": {
+      "p95_ms": 2.2,
+      "metrics": {
+        "p95_duration_ms": 2.2,
+        "parser_only_p95_ms": 2.2
+      },
+      "cases": {
+        "d01-clean-csv": 2.33,
+        "d02-clean-printed": 1.57,
+        "d03-missing-mismatch-unmatched": 0.73,
+        "d04-duplicate-on-statement": 0.7,
+        "d05-balance-mismatch": 0.55,
+        "d06-injection": 0.6,
+        "d07-injection-twin": 0.69,
+        "d08-freeform-model-good": 0.39,
+        "d09-freeform-model-hallucination": 0.37,
+        "d10-freeform-schema-invalid": 2.2,
+        "d11-freeform-timeout-then-success": 0.42,
+        "d12-freeform-provider-down": 0.38,
+        "d13-malformed-empty": 0.07,
+        "d14-malformed-binary": 0.06,
+        "d15-malformed-oversize": 0.09,
+        "d16-malformed-ledger-header": 0.09,
+        "d17-malformed-ledger-amount": 0.14,
+        "d18-control-kill-switch": 0.05,
+        "d19-control-call-cap": 1.61,
+        "d20-control-daily-cap": 0.62,
+        "d21-control-monthly-budget": 0.33,
+        "h01-printed-credits-payments": 0.67,
+        "h02-mismatch-ledger-duplicate": 0.36,
+        "h03-freeform-model-good": 0.32,
+        "h04-injection-csv": 0.29,
+        "h05-injection-twin": 0.27,
+        "h06-malformed-ledger-date": 2.18
+      },
+      "volatile": {
+        "d01-clean-csv": {
+          "execution_ids": [],
+          "workflow_ms": 2
+        },
+        "d02-clean-printed": {
+          "execution_ids": [],
+          "workflow_ms": 1
+        },
+        "d03-missing-mismatch-unmatched": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d04-duplicate-on-statement": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d05-balance-mismatch": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d06-injection": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d07-injection-twin": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d08-freeform-model-good": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d09-freeform-model-hallucination": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d10-freeform-schema-invalid": {
+          "execution_ids": [],
+          "workflow_ms": 2
+        },
+        "d11-freeform-timeout-then-success": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d12-freeform-provider-down": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d13-malformed-empty": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d14-malformed-binary": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d15-malformed-oversize": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d16-malformed-ledger-header": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d17-malformed-ledger-amount": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d19-control-call-cap": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d20-control-daily-cap": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d21-control-monthly-budget": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h01-printed-credits-payments": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h02-mismatch-ledger-duplicate": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h03-freeform-model-good": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h04-injection-csv": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h05-injection-twin": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h06-malformed-ledger-date": {
+          "execution_ids": [],
+          "workflow_ms": 1
+        }
+      }
+    },
+    "rules+simulated-model": {
+      "p95_ms": 1.82,
+      "metrics": {
+        "p95_duration_ms": 1.82,
+        "parser_only_p95_ms": 0.75
+      },
+      "cases": {
+        "d01-clean-csv": 0.56,
+        "d02-clean-printed": 0.66,
+        "d03-missing-mismatch-unmatched": 0.41,
+        "d04-duplicate-on-statement": 0.61,
+        "d05-balance-mismatch": 0.58,
+        "d06-injection": 0.62,
+        "d07-injection-twin": 0.68,
+        "d08-freeform-model-good": 1.82,
+        "d09-freeform-model-hallucination": 1.41,
+        "d10-freeform-schema-invalid": 0.92,
+        "d11-freeform-timeout-then-success": 1.62,
+        "d12-freeform-provider-down": 2.16,
+        "d13-malformed-empty": 0.19,
+        "d14-malformed-binary": 0.12,
+        "d15-malformed-oversize": 0.15,
+        "d16-malformed-ledger-header": 0.14,
+        "d17-malformed-ledger-amount": 0.23,
+        "d18-control-kill-switch": 0.07,
+        "d19-control-call-cap": 0.9,
+        "d20-control-daily-cap": 0.71,
+        "d21-control-monthly-budget": 0.75,
+        "h01-printed-credits-payments": 0.72,
+        "h02-mismatch-ledger-duplicate": 0.45,
+        "h03-freeform-model-good": 1.19,
+        "h04-injection-csv": 0.48,
+        "h05-injection-twin": 0.36,
+        "h06-malformed-ledger-date": 0.32
+      },
+      "volatile": {
+        "d01-clean-csv": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d02-clean-printed": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d03-missing-mismatch-unmatched": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d04-duplicate-on-statement": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d05-balance-mismatch": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d06-injection": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d07-injection-twin": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d08-freeform-model-good": {
+          "execution_ids": [
+            "05db2839-9c9f-49fb-a47a-d5c0033688fc"
+          ],
+          "workflow_ms": 1
+        },
+        "d09-freeform-model-hallucination": {
+          "execution_ids": [
+            "f684024d-c77b-4728-b371-2fab5861884e"
+          ],
+          "workflow_ms": 1
+        },
+        "d10-freeform-schema-invalid": {
+          "execution_ids": [
+            "fb466776-6164-4cab-aeaf-c9fb2e77c4e4"
+          ],
+          "workflow_ms": 0
+        },
+        "d11-freeform-timeout-then-success": {
+          "execution_ids": [
+            "14ab6f98-ba4c-4834-b1fc-1d61e4417e3c"
+          ],
+          "workflow_ms": 1
+        },
+        "d12-freeform-provider-down": {
+          "execution_ids": [
+            "7c5a3702-4408-4eeb-8992-b43c4f6465c4"
+          ],
+          "workflow_ms": 0
+        },
+        "d13-malformed-empty": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d14-malformed-binary": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d15-malformed-oversize": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d16-malformed-ledger-header": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d17-malformed-ledger-amount": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "d19-control-call-cap": {
+          "execution_ids": [
+            "9f2690a3-8c48-4ed7-b7f9-8bbb5fb56651"
+          ],
+          "workflow_ms": 0
+        },
+        "d20-control-daily-cap": {
+          "execution_ids": [
+            "5a2fc392-f576-41d9-acf9-c1cf391e2f37"
+          ],
+          "workflow_ms": 0
+        },
+        "d21-control-monthly-budget": {
+          "execution_ids": [
+            "665ea8ef-aafa-4698-9a2e-e188231ac2ce"
+          ],
+          "workflow_ms": 0
+        },
+        "h01-printed-credits-payments": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h02-mismatch-ledger-duplicate": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h03-freeform-model-good": {
+          "execution_ids": [
+            "06299add-e7bc-4842-8503-bc34169e1843"
+          ],
+          "workflow_ms": 1
+        },
+        "h04-injection-csv": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h05-injection-twin": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        },
+        "h06-malformed-ledger-date": {
+          "execution_ids": [],
+          "workflow_ms": 0
+        }
+      }
+    }
+  }
+}

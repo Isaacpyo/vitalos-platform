@@ -1,0 +1,10 @@
+{
+  "id": "h01-printed-credits-payments",
+  "description": "Printed statement with several credit notes and a payment; clean.",
+  "tags": [
+    "parser-supported",
+    "clean"
+  ],
+  "layout": "printed",
+  "synthetic": true
+}

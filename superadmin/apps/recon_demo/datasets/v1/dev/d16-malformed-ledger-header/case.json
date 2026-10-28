@@ -1,0 +1,9 @@
+{
+  "id": "d16-malformed-ledger-header",
+  "description": "Ledger export with the wrong columns (no date or type).",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

@@ -1,0 +1,10 @@
+{
+  "id": "d05-balance-mismatch",
+  "description": "Every line matches but the stated closing balance (254.60) differs from the lines (245.60).",
+  "tags": [
+    "parser-supported",
+    "balance"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

@@ -1,0 +1,37 @@
+{
+  "review_kinds": [
+    "exception"
+  ],
+  "exceptions": [
+    {
+      "class": "amount_mismatch",
+      "reference": "T-902"
+    }
+  ],
+  "lines": [
+    {
+      "source_line": 5,
+      "date": "2026-09-01",
+      "reference": "T-901",
+      "type": "invoice",
+      "amount": "150.00"
+    },
+    {
+      "source_line": 6,
+      "date": "2026-09-08",
+      "reference": "T-902",
+      "type": "invoice",
+      "amount": "2280.00"
+    },
+    {
+      "source_line": 7,
+      "date": "2026-09-15",
+      "reference": "TP-915",
+      "type": "payment",
+      "amount": "150.00"
+    }
+  ],
+  "injection_lines": [],
+  "final_state": "REVIEW_REQUIRED",
+  "balance": "ok"
+}

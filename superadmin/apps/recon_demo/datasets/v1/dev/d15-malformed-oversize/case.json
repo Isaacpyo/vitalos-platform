@@ -1,0 +1,9 @@
+{
+  "id": "d15-malformed-oversize",
+  "description": "A statement over the 64 KB limit.",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "csv",
+  "synthetic": true
+}

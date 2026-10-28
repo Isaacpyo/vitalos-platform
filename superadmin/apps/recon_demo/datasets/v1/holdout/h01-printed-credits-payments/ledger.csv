@@ -1,0 +1,7 @@
+date,reference,type,amount,description
+2026-08-04,SI-77120,invoice,1890.00,invoice from supplier
+2026-08-06,SC-77121,credit,45.00,credit from supplier
+2026-08-13,SI-77135,invoice,264.36,invoice from supplier
+2026-08-19,RC-0819,payment,2100.00,payment from supplier
+2026-08-27,SI-77160,invoice,731.14,invoice from supplier
+2026-08-29,SC-77161,credit,12.50,credit from supplier

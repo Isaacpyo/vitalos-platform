@@ -80,9 +80,15 @@ const published = {
 } as const;
 
 describe("demonstrator report contract", () => {
-  it("the committed report is valid and pending until a real run writes it", () => {
-    expect(demonstratorReport.status).toBe("pending");
-    expect(demonstratorReport.configs).toEqual([]);
+  it("the committed report is valid, and published only with real configurations and criteria", () => {
+    // `recon_eval --web-report` writes it from a real evaluation run (docs/ai-data/evaluation/).
+    expect(parseDemonstratorReport(demonstratorReport)).toEqual(demonstratorReport);
+    if (demonstratorReport.status === "published") {
+      expect(demonstratorReport.configs.length).toBeGreaterThan(0);
+      expect(demonstratorReport.criteria.find((c) => c.id === "AC-14")?.result).toBe("not-run");
+    } else {
+      expect(demonstratorReport.configs).toEqual([]);
+    }
   });
 
   it("accepts a published report and rejects invented or malformed figures", () => {
@@ -106,7 +112,17 @@ describe("demonstrator report contract", () => {
 
 describe("EvaluationResults", () => {
   it("pending: says plainly that results come after the next run, and shows no figures", () => {
-    const html = renderToStaticMarkup(<EvaluationResults report={demonstratorReport} />);
+    const pending = parseDemonstratorReport({
+      schemaVersion: 1,
+      status: "pending",
+      generatedAt: null,
+      gitSha: null,
+      datasetVersion: "v1",
+      label: "Offline evaluation on synthetic data",
+      configs: [],
+      criteria: [],
+    });
+    const html = renderToStaticMarkup(<EvaluationResults report={pending} />);
     expect(html).toContain("Evaluation results are published after the next evaluation run.");
     expect(html).not.toContain("<table");
     expect(html).not.toMatch(/\d+(\.\d+)?%/);

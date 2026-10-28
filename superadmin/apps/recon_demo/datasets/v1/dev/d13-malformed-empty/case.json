@@ -1,0 +1,9 @@
+{
+  "id": "d13-malformed-empty",
+  "description": "Empty statement.",
+  "tags": [
+    "malformed"
+  ],
+  "layout": "none",
+  "synthetic": true
+}
