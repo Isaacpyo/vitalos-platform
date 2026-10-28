@@ -68,6 +68,18 @@ Outside this implementation's scope:
 
 ## Log
 
+- **28 Oct 20:05: W5 (marketing and design) merged** (`33c5fc6`).
+  - **Conflicts:** docs only. The ADR index is now the union of rows (48).
+  - **Seam caught by W7's drift test:** W5 added a teal `signal` token role, so the Super Admin token CSS was regenerated (`e28d3a1`). Marketing and admin now share it.
+  - **Lead review of the screenshots:**
+    - The hero is a click-through and labelled "Synthetic data" and "Scripted example, not live AI".
+    - Checks expand to the cited source line.
+    - The demonstrator shows the source beside the results, marks exceptions in text and colour, and keeps evaluation tables in a secondary Evidence section.
+  - **Copy check:** "a fixed fee agreed in writing" is pre-existing approved copy (`copy.ts`), not a new commitment.
+  - **Bundle:** `/ai-data` went from 195,982 to 205,166 B gzip. The budget was raised to 222,000, with the justification in ADR-054. The demonstrator rose to 200,106 B (budget 206,000). Solutions and approach dropped to 191,076 B (`sideEffects: false`).
+  - **Noted:** on 390 px phones the existing "Ask Vitalos" launcher overlaps the end of the hero bullet list, as it does site-wide. This is pre-existing and left as is.
+  - **W6** was told to merge `e28d3a1` and use `@vitalos/ui/interactive`.
+
 - **28 Oct 19:40: W8 (client portal) merged** (`39524ce`).
   - **Conflicts resolved:**
     - `opportunity.html`: kept W7's tabbed layout; the portal panel comes in through `_opportunity_extensions.html` in the workspace tab.
