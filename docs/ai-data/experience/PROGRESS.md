@@ -68,6 +68,16 @@ Outside this implementation's scope:
 
 ## Log
 
+- **28 Oct 20:30: operational quality.**
+  - **Lead web gate on W5 + W7 + W8** (`801cb75`), all PASS: `check:turbo-env`, `content:types:check`, lint, typecheck, `pnpm test`, `check:boundaries`, `check:security`, `check:email`, and the `web` production build. `format:check` failed only on ADR-056 (W8 had not run Prettier); fixed and re-checked.
+  - **Dependency advisories** (`a3e1f82`, `30bbb33`):
+    - `postcss` override raised to 8.5.23.
+    - `fast-uri` override added at 3.1.9.
+    - `filelock` 4.2.1 (dev requirements).
+    - `pnpm audit`: no known vulnerabilities at any level. `pip-audit --strict` is clean for both requirements files.
+    - Recorded in `docs/security/dependency-advisories.md`.
+  - **Pre-existing defect fixed** (`1da310e`): two raw `rgb()` shadows in the Relay widget became `--relay-shadow-*` tokens, so `pnpm check:raw-colours` (and the documented local `pnpm check`) passes again. Values are unchanged.
+
 - **28 Oct 20:05: W5 (marketing and design) merged** (`33c5fc6`).
   - **Conflicts:** docs only. The ADR index is now the union of rows (48).
   - **Seam caught by W7's drift test:** W5 added a teal `signal` token role, so the Super Admin token CSS was regenerated (`e28d3a1`). Marketing and admin now share it.
