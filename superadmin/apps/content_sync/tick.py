@@ -1,6 +1,7 @@
 """The content tick (ADR-042): promote due scheduled posts, close expired roles, deliver pending sync
-events and held-back application alerts, send one paced outreach email when one is due, and once a day
-run retention and purge orphaned uploads.
+events and held-back application alerts, send one paced outreach email when one is due, reconcile Stripe
+payments (billing, at most every 10 minutes, only with a key), and once a day run retention and purge
+orphaned uploads.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed
 ``POST /api/content/v1/tick`` and opportunistically, at most once a minute, in a background thread.
@@ -80,6 +81,12 @@ def run(now=None) -> dict:
         outreach = send_due(now)  # one paced outreach email, when one is due (DECISIONS 124)
     except Exception:  # noqa: BLE001 - mail must never stop the tick
         logger.exception("Outreach send failed")
+    try:
+        from apps.billing.services import tick_sync
+
+        tick_sync(now)  # Stripe payments reconciliation, at most every 10 minutes and only with a key
+    except Exception:  # noqa: BLE001 - billing must never stop the tick
+        logger.exception("Billing sync failed")
     state = TickState.load()
     daily = {}
     if _daily_due(state, now):

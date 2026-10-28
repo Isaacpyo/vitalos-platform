@@ -11,6 +11,7 @@ from apps.accounts.models import User
 from apps.accounts.roles import SERVICE_LEAD, SUPERADMIN, VIEWER
 from apps.accounts.services import set_role
 from apps.architecture.models import ServiceLine, TeamMember
+from tests.billing_helpers import fake_stripe  # noqa: F401 - billing's local fake Stripe server fixture
 
 
 def random_password() -> str:

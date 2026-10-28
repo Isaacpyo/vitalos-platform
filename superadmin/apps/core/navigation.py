@@ -1,6 +1,6 @@
 """Primary navigation: one definition shared by the sidebar, breadcrumbs and the command palette.
 
-An item either links to a page or, with ``children``, is a dropdown (Mail). Each child has its own
+An item either links to a page or, with ``children``, is a dropdown (Mail, Billing). Each child has its own
 permission; a dropdown is shown when at least one child is visible. Hiding an item is only a
 convenience: every view enforces its own role on the server.
 """
@@ -122,6 +122,34 @@ NAV_ITEMS = (
         "Operate",
         ("/ai-data",),
         permission="apps.aidata.selectors.can_access",
+    ),
+    NavItem(
+        "billing",
+        "Billing",
+        "",
+        "wallet",
+        "Operate",
+        (),
+        children=(
+            NavItem(
+                "invoices",
+                "Invoices",
+                "billing:invoices",
+                "receipt",
+                "Operate",
+                ("/billing/invoices", "/billing/settings"),
+                permission="apps.billing.selectors.can_access",
+            ),
+            NavItem(
+                "payments",
+                "Payments",
+                "billing:payments",
+                "credit-card",
+                "Operate",
+                ("/billing/payments",),
+                permission="apps.billing.selectors.can_access",
+            ),
+        ),
     ),
     NavItem("activity", "Activity", "architecture:activity", "activity", "Operate", ("/activity", "/audit")),
     NavItem("notifications", "Notifications", "notifications:list", "bell", "Operate", ("/notifications",)),

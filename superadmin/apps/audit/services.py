@@ -141,6 +141,20 @@ ACTIONS = {
     "aidata.cost_added": "Added an AI & Data cost",
     "aidata.cost_changed": "Changed an AI & Data cost",
     "aidata.cost_deleted": "Deleted an AI & Data cost",
+    # Billing: summaries hold invoice numbers, never customer names or amounts.
+    "billing.settings_changed": "Changed the billing settings",
+    "billing.invoice_created": "Created a draft invoice",
+    "billing.invoice_updated": "Edited a draft invoice",
+    "billing.invoice_issued": "Issued an invoice",
+    "billing.invoice_voided": "Voided an invoice",
+    "billing.payment_link_created": "Created a Stripe payment link",
+    "billing.payment_link_deactivated": "Deactivated a Stripe payment link",
+    "billing.payment_recorded": "Recorded a payment",
+    "billing.payment_linked": "Linked a payment to an invoice",
+    "billing.payment_unlinked": "Unlinked a payment from an invoice",
+    "billing.payment_refunded": "Recorded a Stripe refund",
+    "billing.stripe_synced": "Synced payments from Stripe",
+    "billing.checkout_started": "Opened a card payment from vitalos.co.uk/pay",
 }
 
 

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.aidata",
     "apps.aicore",
     "apps.recon_demo",
+    "apps.billing",
 ]
 
 MIDDLEWARE = [
@@ -446,3 +447,11 @@ AI_DATA_LLM_BASE_URL = env("AI_DATA_LLM_BASE_URL", default="").strip().rstrip("/
 AI_DATA_LLM_MODEL = env("AI_DATA_LLM_MODEL", default="").strip()
 AI_DATA_LLM_API_KEY = env("AI_DATA_LLM_API_KEY", default="")
 AI_DATA_DISABLED = env.bool("AI_DATA_DISABLED", default=False)
+
+# Billing (apps.billing): invoices, payments and Stripe. Both Stripe values are secrets: set them only in the
+# platform's secret store. With no key everything works except Stripe calls (the UI says "Stripe is not
+# configured"); with no webhook secret /api/webhooks/stripe/ answers 503. Use a Vitalos restricted key only,
+# never another product's. BILLING_PUBLIC_SITE_URL is where the payment pages live (vitalos.co.uk/pay).
+BILLING_STRIPE_SECRET_KEY = env("BILLING_STRIPE_SECRET_KEY", default="")
+BILLING_STRIPE_WEBHOOK_SECRET = env("BILLING_STRIPE_WEBHOOK_SECRET", default="")
+BILLING_PUBLIC_SITE_URL = env("BILLING_PUBLIC_SITE_URL", default="https://vitalos.co.uk").strip().rstrip("/")

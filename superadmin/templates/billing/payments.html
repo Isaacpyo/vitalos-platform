@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load ui billing_ui %}
+{% block title %}Payments · Billing · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Billing</p>
+  <div class="mt-1 flex flex-wrap items-end justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Payments</h1>
+    <div class="flex flex-wrap gap-2">
+      <form method="post" action="{% url 'billing:payments_sync' %}">
+        {% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm" data-testid="sync" {% if not stripe_configured %}disabled title="Stripe is not configured"{% endif %}>{% icon "refresh" "h-4 w-4" %} Sync from Stripe</button>
+      </form>
+      <a href="{% url 'billing:payment_new' %}" class="btn btn-primary btn-sm">{% icon "plus" "h-4 w-4" %} Record payment</a>
+    </div>
+  </div>
+  {% include "billing/_nav.html" with section="payments" %}
+
+  {% if not stripe_configured %}
+    <p class="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200" data-testid="stripe-not-configured">Stripe is not configured. Card payments, payment links and sync are off until <code class="font-mono text-xs">BILLING_STRIPE_SECRET_KEY</code> is set. Bank transfers can still be recorded.</p>
+  {% else %}
+    <p class="muted mt-4 text-xs">Stripe payments arrive by webhook and are checked again every 10 minutes.{% if last_sync %} Last sync {{ last_sync|date:"j M Y, H:i" }}.{% endif %}</p>
+  {% endif %}
+
+  <nav class="mt-4 flex flex-wrap gap-1" aria-label="Filter payments">
+    <a class="tab" href="?method={{ method }}" {% if not matched %}aria-current="page"{% endif %}>All</a>
+    <a class="tab" href="?matched=matched&amp;method={{ method }}" {% if matched == "matched" %}aria-current="page"{% endif %}>Matched</a>
+    <a class="tab" href="?matched=unmatched&amp;method={{ method }}" {% if matched == "unmatched" %}aria-current="page"{% endif %} data-testid="unmatched-tab">Unmatched <span class="ml-1 text-xs tabular-nums opacity-80">{{ unmatched_count }}</span></a>
+    <form method="get" class="ml-auto flex items-center gap-2">
+      <input type="hidden" name="matched" value="{{ matched }}">
+      <label for="payment-method" class="sr-only">Method</label>
+      <select id="payment-method" name="method" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800">
+        <option value="">Any method</option>
+        {% for value, label in methods %}<option value="{{ value }}" {% if value == method %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+  </nav>
+
+  <ul class="mt-3 space-y-2" data-testid="payments-list">
+    {% for payment in rows %}
+      <li class="card p-4" data-payment="{{ payment.pk }}">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="flex flex-wrap items-center gap-2">
+              <span class="tabular text-base font-semibold">{{ payment.amount_pence|pence }}</span>
+              <span class="{{ payment.status|status_badge }}">{{ payment.get_status_display }}</span>
+              {% if payment.amount_refunded_pence and payment.status != "refunded" %}<span class="muted text-xs">{{ payment.amount_refunded_pence|pence }} refunded</span>{% endif %}
+              {% if payment.currency != "GBP" %}<span class="{{ 'partially_paid'|status_badge }}">{{ payment.currency }}</span>{% endif %}
+            </p>
+            <p class="muted mt-0.5 text-sm">{{ payment.get_method_display }} · {{ payment.received_at|date:"j M Y, H:i" }}{% if payment.payer_email %} · {{ payment.payer_email }}{% endif %}{% if payment.created_by %} · recorded by {{ payment.created_by.email }}{% endif %}</p>
+            {% if payment.note %}<p class="mt-1 text-sm whitespace-pre-line">{{ payment.note }}</p>{% endif %}
+            {% if payment.stripe_checkout_session_id %}<p class="muted mt-1 truncate font-mono text-[11px]">{{ payment.stripe_checkout_session_id }}</p>{% endif %}
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            {% if payment.invoice %}
+              <a class="btn btn-secondary btn-sm font-mono" href="{{ payment.invoice.get_absolute_url }}">{{ payment.invoice.display_number }}</a>
+              <form method="post" action="{% url 'billing:payment_unlink' payment.pk %}" data-confirm="Unlink this payment from {{ payment.invoice.display_number }}? The invoice balance goes back up.">
+                {% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Unlink</button>
+              </form>
+            {% else %}
+              <span class="{{ 'partially_paid'|status_badge }}" data-testid="unmatched">Unmatched{% if payment.reference %} · ref {{ payment.reference }}{% endif %}</span>
+              <form method="post" action="{% url 'billing:payment_link' payment.pk %}" class="flex items-center gap-2">
+                {% csrf_token %}
+                <label for="link-{{ payment.pk }}" class="sr-only">Invoice to link to</label>
+                <select id="link-{{ payment.pk }}" name="invoice" class="max-w-56 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800" required>
+                  {% for value, label in link_form.fields.invoice.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Link</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </li>
+    {% empty %}
+      <li class="card muted p-8 text-center text-sm">No payments here yet.</li>
+    {% endfor %}
+  </ul>
+  {% if rows|length >= 200 %}<p class="muted mt-2 text-xs">Showing the latest 200.</p>{% endif %}
+{% endblock %}

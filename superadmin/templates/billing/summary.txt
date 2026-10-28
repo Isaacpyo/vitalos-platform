@@ -1,0 +1,18 @@
+{% load billing_ui %}{% autoescape off %}Invoice {{ invoice.number }} from {{ conf.legal_name }}
+
+Issued: {{ invoice.issue_date|date:"j F Y" }}
+Due: {{ invoice.due_date|date:"j F Y" }}
+Total: {{ invoice.total_pence|pence }}{% if invoice.amount_paid_pence %}
+Paid: {{ invoice.amount_paid_pence|pence }}{% endif %}
+Balance due: {{ invoice.balance_due_pence|pence }}
+{% if invoice.is_open %}
+How to pay
+{% if invoice.stripe_payment_link_active and invoice.stripe_payment_link_url %}- Pay by card: {{ invoice.stripe_payment_link_url }}
+{% endif %}- Or pay at {{ site_host }}/pay with invoice number {{ invoice.number }} and payment code {{ invoice.payment_code_display }}{% if conf.bank_details %}
+- Or by bank transfer, quoting {{ invoice.number }}:
+{{ conf.bank_details }}{% endif %}
+{% endif %}
+The invoice is attached as a PDF.{% if conf.contact_email %} Questions: {{ conf.contact_email }}{% endif %}
+
+{{ conf.legal_name }}{% if conf.company_number %} · Company number {{ conf.company_number }}{% endif %}
+{% endautoescape %}
