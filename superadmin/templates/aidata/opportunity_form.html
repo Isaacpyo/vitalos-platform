@@ -1,33 +1,63 @@
 {% extends "base.html" %}
-{% load ui %}
+{% load ui aidata_ui static %}
 {% block title %}New opportunity · AI & Data · Vitalos Super Admin{% endblock %}
+{% block scripts %}<script src="{% static 'js/aidata.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
 {% block content %}
-  <p class="mono-label muted"><a href="{% url 'aidata:pipeline' %}" class="hover:underline">AI &amp; Data / Pipeline</a></p>
-  <h1 class="mt-1 text-2xl font-semibold">New opportunity</h1>
-  <p class="muted mt-1 max-w-3xl text-sm">For referrals, outbound and partner leads. Website enquiries become opportunities on their own, or with "Create opportunity" on the enquiry.</p>
+<div class="aid-ws" data-aid-admin>
+  <p class="aid-eyebrow"><a href="{% url 'aidata:pipeline' %}" class="hover:underline">AI &amp; Data / Pipeline</a></p>
+  <h1 class="mt-1 text-2xl font-semibold text-aid-heading">New opportunity</h1>
+  <p class="aid-muted mt-1 max-w-3xl text-sm">Start from the words: paste the enquiry or describe the conversation. You get a structured brief to check, with the source beside it, before anything is saved. Website enquiries also become opportunities on their own, or with "Create opportunity" on the enquiry.</p>
   {% include "aidata/_nav.html" with section="pipeline" %}
-  <form method="post" class="card mt-6 max-w-4xl p-5" novalidate>
-    {% csrf_token %}
-    {% if form.non_field_errors %}<div class="mb-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
-    <div class="grid gap-4 sm:grid-cols-2">
-      {% include "aidata/_field.html" with field=form.title span="full" %}
-      {% include "aidata/_field.html" with field=form.organisation %}
-      {% include "aidata/_field.html" with field=form.sector %}
-      {% include "aidata/_field.html" with field=form.source %}
-      {% include "aidata/_field.html" with field=form.offer %}
-      {% include "aidata/_field.html" with field=form.owner %}
-      {% include "aidata/_field.html" with field=form.estimated_value %}
-      {% include "aidata/_field.html" with field=form.contact_name %}
-      {% include "aidata/_field.html" with field=form.contact_role %}
-      {% include "aidata/_field.html" with field=form.contact_email span="full" %}
-      {% include "aidata/_field.html" with field=form.next_action %}
-      {% include "aidata/_field.html" with field=form.next_action_due %}
-      {% include "aidata/_field.html" with field=form.problem_summary span="full" %}
+
+  <div class="mt-6 grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+    <div class="space-y-4">
+      {% url 'aidata:brief_paste' as paste_url %}
+      {% include "aidata/components/_composer.html" with action=paste_url key=key availability=availability heading="Paste the enquiry or describe the conversation" hint="An email, a form submission, call notes or a few lines of your own. Include names, contact details and what they want if you have them." placeholder="For example: Sam at Example Ledger Ltd emailed asking whether we can read supplier statements into their ledger, which takes two days a month..." rows=9 min=10 %}
+      <div>{% include "aidata/components/_ai_status.html" with availability=availability %}</div>
     </div>
-    <p class="muted mt-4 text-xs">Dates, scores, the customer-visible summary and internal notes are on the opportunity page once it exists.</p>
-    <div class="mt-5 flex justify-end gap-2">
-      <a href="{% url 'aidata:pipeline' %}" class="btn btn-ghost">Cancel</a>
-      <button type="submit" class="btn btn-primary">{% icon "plus" "h-4 w-4" %} Create opportunity</button>
-    </div>
-  </form>
+    <aside class="space-y-3" aria-label="How this works">
+      <section class="aid-surface p-4">
+        <h2 class="text-sm font-semibold text-aid-heading">What happens next</h2>
+        <ol class="mt-2 list-decimal space-y-1.5 pl-4 text-sm">
+          <li>The text is read: contact details and organisation by rules, the rest by AI when it is on.</li>
+          <li>You see each field with the quoted source beside it. Unknown fields stay blank.</li>
+          <li>We warn you about possible duplicates, then you create the opportunity or link it.</li>
+        </ol>
+      </section>
+      <section class="aid-surface p-4">
+        <h2 class="text-sm font-semibold text-aid-heading">Safe by design</h2>
+        <ul class="mt-2 list-disc space-y-1 pl-4 text-sm"><li>Pasted text is untrusted; it can never give the AI instructions.</li><li>AI output is a suggestion, labelled, and never saved without your approval.</li><li>Nothing is emailed or sent to anyone.</li></ul>
+      </section>
+    </aside>
+  </div>
+
+  <details id="manual" class="aid-card mt-6 max-w-6xl" {% if manual_open %}open{% endif %}>
+    <summary class="cursor-pointer px-4 py-3 text-sm font-semibold text-aid-heading">{% aid_icon "pencil" "mr-1 inline h-4 w-4" %} Enter the details manually (referrals, outbound and partner leads)</summary>
+    <form method="post" class="border-t border-aid-border p-5" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="mb-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+      <div class="grid gap-4 sm:grid-cols-2">
+        {% include "aidata/_field.html" with field=form.title span="full" %}
+        {% include "aidata/_field.html" with field=form.organisation %}
+        {% include "aidata/_field.html" with field=form.sector %}
+        {% include "aidata/_field.html" with field=form.source %}
+        {% include "aidata/_field.html" with field=form.offer %}
+        {% include "aidata/_field.html" with field=form.owner %}
+        {% include "aidata/_field.html" with field=form.estimated_value %}
+        {% include "aidata/_field.html" with field=form.contact_name %}
+        {% include "aidata/_field.html" with field=form.contact_role %}
+        {% include "aidata/_field.html" with field=form.contact_email span="full" %}
+        {% include "aidata/_field.html" with field=form.contact_phone %}
+        {% include "aidata/_field.html" with field=form.next_action %}
+        {% include "aidata/_field.html" with field=form.next_action_due %}
+        {% include "aidata/_field.html" with field=form.problem_summary span="full" %}
+      </div>
+      <p class="muted mt-4 text-xs">Dates, scores, the customer-visible summary and internal notes are on the opportunity page once it exists.</p>
+      <div class="mt-5 flex justify-end gap-2">
+        <a href="{% url 'aidata:pipeline' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" class="btn btn-primary">{% icon "plus" "h-4 w-4" %} Create opportunity</button>
+      </div>
+    </form>
+  </details>
+</div>
 {% endblock %}

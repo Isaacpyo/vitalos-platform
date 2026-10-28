@@ -19,6 +19,8 @@
   --relay-stroke-light: #7a879b;
   --relay-stroke-dark: #5f6e86;
   --relay-scrim: rgba(11, 19, 32, 0.4);
+  --relay-shadow-panel: 0 24px 48px -12px rgb(11 19 32 / 0.28);
+  --relay-shadow-card: 0 12px 24px -8px rgb(11 19 32 / 0.2);
   --relay-surface-100: var(--relay-off-white);
   --relay-surface-200: var(--relay-white);
   --relay-surface-inverse: var(--relay-midnight);

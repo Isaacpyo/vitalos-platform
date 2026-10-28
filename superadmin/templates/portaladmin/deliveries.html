@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Email delivery · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted">Client portal</p>
+  <h1 class="mt-1 text-2xl font-semibold">Email delivery</h1>
+  <p class="muted mt-1 max-w-2xl text-sm">Every portal email has a durable record. A failed email never blocks or loses the underlying action. Automatic retries stop after {{ max_attempts }} attempts; a manual retry sends at most once, because a sent record is never sent again. Records hold no message text.</p>
+  {% include "portaladmin/_nav.html" with section="deliveries" %}
+  <p class="mt-4 text-sm">Show:
+    <a class="underline" href="?">all</a> · <a class="underline" href="?status=queued">queued</a> · <a class="underline" href="?status=sent">sent</a> · <a class="underline" href="?status=failed">failed</a></p>
+  <div class="card mt-3 overflow-x-auto p-0">
+    <table class="w-full text-sm" data-testid="deliveries">
+      <thead><tr class="text-left"><th class="p-3">When</th><th class="p-3">Organisation</th><th class="p-3">To</th><th class="p-3">Kind</th><th class="p-3">Status</th><th class="p-3">Attempts</th><th class="p-3">Last error</th><th class="p-3"></th></tr></thead>
+      <tbody>
+        {% for d in deliveries %}
+          <tr class="border-t border-slate-100 dark:border-slate-800">
+            <td class="p-3">{{ d.created_at|date:"j M, H:i" }}</td><td class="p-3">{{ d.organisation.name }}</td><td class="p-3">{{ d.to_email }}</td><td class="p-3">{{ d.kind }}</td>
+            <td class="p-3">{{ d.get_status_display }}{% if d.sent_at %} {{ d.sent_at|date:"H:i" }}{% endif %}</td><td class="p-3">{{ d.attempts }}</td><td class="p-3">{{ d.last_error|default:"" }}</td>
+            <td class="p-3">{% if d.status != "sent" %}{% url 'portaladmin:delivery_retry' d.pk as retry_url %}{% include "portaladmin/_post.html" with url=retry_url label="Retry now" %}{% endif %}</td>
+          </tr>
+        {% empty %}<tr><td colspan="8" class="p-3 muted">No emails yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

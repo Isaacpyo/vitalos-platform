@@ -32,6 +32,10 @@ export const aiDataPrimitives = {
   accent300: "#A9BED3",
   accent200: "#C9D6E3",
   accent100: "#E3EAF1",
+  teal950: "#0D2423",
+  teal300: "#5EC8BE",
+  teal700: "#0F6A66",
+  teal100: "#DDF2EF",
   ok700: "#1D6B45",
   ok100: "#E3F1E8",
   warn700: "#7F4E00",
@@ -69,6 +73,13 @@ export interface AiDataRoles {
   /** The blue-grey accent, text and UI use. */
   readonly accent: AiDataPrimitive;
   readonly eyebrow: AiDataPrimitive;
+  /**
+   * Teal signal: the active step, the selected item and the "this is the result" marker in work
+   * surfaces. Text and UI use on `bg` and `surface` (4.5:1).
+   */
+  readonly signal: AiDataPrimitive;
+  /** Tint behind a selected or highlighted row; `text` and `signal` stay legible on it. */
+  readonly signalSoft: AiDataPrimitive;
   /** Small label chip ("Synthetic data") and the text on it. */
   readonly chipBg: AiDataPrimitive;
   readonly chipText: AiDataPrimitive;
@@ -93,6 +104,8 @@ export const aiDataTones = {
     focus: "accent300",
     accent: "accent300",
     eyebrow: "accent300",
+    signal: "teal300",
+    signalSoft: "teal950",
     chipBg: "ink800",
     chipText: "grey200",
   },
@@ -114,6 +127,8 @@ export const aiDataTones = {
     focus: "accent700",
     accent: "accent700",
     eyebrow: "accent700",
+    signal: "teal700",
+    signalSoft: "teal100",
     chipBg: "accent100",
     chipText: "accent800",
   },
@@ -135,6 +150,8 @@ export const aiDataTones = {
     focus: "accent700",
     accent: "accent700",
     eyebrow: "accent700",
+    signal: "teal700",
+    signalSoft: "teal100",
     chipBg: "accent100",
     chipText: "accent800",
   },
@@ -202,6 +219,7 @@ export function aiDataContrastPairs(): AiDataContrastPair[] {
       add("linkHover", t.linkHover, 4.5);
       add("accent", t.accent, 4.5);
       add("eyebrow", t.eyebrow, 4.5);
+      add("signal", t.signal, 4.5);
       add("line", t.line, 3);
       add("controlBorder", t.controlBorder, 3);
       add("focus", t.focus, 3);
@@ -214,6 +232,9 @@ export function aiDataContrastPairs(): AiDataContrastPair[] {
     add("actionLabel", t.actionText, t.action, 4.5);
     add("actionHoverLabel", t.actionText, t.actionHover, 4.5);
     add("chip", t.chipText, t.chipBg, 4.5);
+    add("textOnSignalSoft", t.text, t.signalSoft, 7);
+    add("headingOnSignalSoft", t.heading, t.signalSoft, 7);
+    add("signalOnSignalSoft", t.signal, t.signalSoft, 4.5);
   }
   for (const [name, { fg, bg }] of Object.entries(aiDataStatus)) {
     pairs.push({ name: `status/${name}`, fg: hex(fg), bg: hex(bg), min: 4.5 });

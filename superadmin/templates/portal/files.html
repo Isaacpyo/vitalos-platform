@@ -1,0 +1,47 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Files · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Files</h1><p class="lede">Documents shared between you and Vitalos, organised by challenge. Every version is kept.</p></div></div>
+  {% if not storage_enabled %}
+    <p class="notice notice--warn mb-2" role="note">File storage is not set up yet. You can still record a file, but its contents will not be kept until storage is configured.</p>
+  {% endif %}
+  <div class="stack">
+    {% for g in groups %}
+      <section class="card" aria-labelledby="g-{{ g.challenge.pk }}">
+        <h2 id="g-{{ g.challenge.pk }}">{{ g.challenge.title }}</h2>
+        <div class="table-wrap mt-1">
+          <table class="table" data-testid="files-table">
+            <thead><tr><th scope="col">File</th><th scope="col">Latest version</th><th scope="col">Status</th><th scope="col">Added</th></tr></thead>
+            <tbody>
+              {% for f in g.files %}
+                {% with v=f.shown_versions.0 %}
+                  <tr>
+                    <th scope="row"><a href="{% purl 'file' pk=f.pk %}">{{ f.title }}</a>{% if f.project %}<br><span class="muted small">{{ f.project.name }}</span>{% endif %}</th>
+                    <td>{{ v.original_name }}<br><span class="muted small">v{{ v.number }} · {{ v.size|filesizeformat }}</span></td>
+                    <td>{% badge v.upload_status v.get_upload_status_display %}</td>
+                    <td>{{ f.created_at|date:"j M Y" }}</td>
+                  </tr>
+                {% endwith %}
+              {% empty %}
+                <tr><td colspan="4" class="muted">No files yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if member.can_comment and not preview %}
+          <form method="post" action="{% purl 'file_upload' %}" enctype="multipart/form-data" class="mt-2" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="challenge" value="{{ g.challenge.pk }}">
+            <div class="field"><label for="file-{{ g.challenge.pk }}">Upload a file</label><input class="p-file" type="file" id="file-{{ g.challenge.pk }}" name="file" required data-names="names-{{ g.challenge.pk }}"><span id="names-{{ g.challenge.pk }}" class="small muted"></span>
+              <p class="help">PDF, images, Word, Excel, PowerPoint, text or CSV, up to {{ max_mb }} MB. Files are checked by content before they are kept.</p></div>
+            <div class="field"><label for="title-{{ g.challenge.pk }}">Title (optional)</label><input class="p-input" id="title-{{ g.challenge.pk }}" name="title" maxlength="200"></div>
+            <button class="btn" type="submit">Upload</button>
+          </form>
+        {% endif %}
+      </section>
+    {% empty %}
+      <div class="empty"><h3>No files yet</h3><p>Files appear here once a challenge has been shared with you.</p></div>
+    {% endfor %}
+  </div>
+{% endblock %}

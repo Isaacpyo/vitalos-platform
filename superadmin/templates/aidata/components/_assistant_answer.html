@@ -1,0 +1,30 @@
+{% load aidata_ui %}{% comment %}
+  An assistant answer. Context: answer (assist.Answer or None), error, opportunity.
+  Every line shows the records it relies on. Mode is always labelled: rules (no AI), AI, or keyword search.
+{% endcomment %}
+<div id="assistant-answer" aria-live="polite" data-testid="assistant-answer">
+  {% if error %}
+    <p class="aid-error" role="alert">{{ error }}</p>
+  {% elif answer %}
+    <div class="aid-surface p-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <h4 class="text-sm font-semibold text-aid-heading">{{ answer.title }}</h4>
+        <span class="aid-chip {% if answer.mode == 'ai' %}aid-chip-info{% else %}aid-chip-neutral{% endif %}">{% if answer.mode == "ai" %}Suggested by AI{% elif answer.mode == "search" %}Keyword search, no AI{% else %}Worked out by rules, no AI{% endif %}</span>
+      </div>
+      {% if answer.lines %}
+        <ul class="mt-2 space-y-2 text-sm">
+          {% for line in answer.lines %}
+            <li>{{ line.text }}{% for cite in line.cites %} <a href="#cite-{{ cite }}" class="aid-chip aid-chip-neutral">{{ cite }}</a>{% endfor %}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if answer.note %}<p class="aid-help">{{ answer.note }}</p>{% endif %}
+      {% if answer.cited %}
+        <details class="mt-2 text-xs">
+          <summary class="cursor-pointer font-medium">Records used ({{ answer.cited|length }})</summary>
+          <ol class="mt-1 space-y-1">{% for rec in answer.cited %}<li id="cite-{{ rec.id }}"><span class="font-mono">{{ rec.id }}</span> {{ rec.label }}: {{ rec.text }}</li>{% endfor %}</ol>
+        </details>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

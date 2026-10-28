@@ -1,0 +1,2 @@
+{# A small POST button. Context: url, label, style (btn-secondary default), confirm (optional text), next (optional). #}
+<form method="post" action="{{ url }}" class="inline">{% csrf_token %}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}<button type="submit" class="btn btn-sm {{ style|default:'btn-secondary' }}"{% if confirm %} data-confirm="{{ confirm }}"{% endif %}>{{ label }}</button></form>

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load ui portal_ui %}
+{% block title %}{{ ch.title }} · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'portaladmin:org' ch.organisation_id %}" class="hover:underline">Client portal / {{ ch.organisation.name }}</a></p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold break-words">{{ ch.title }}</h1>
+      <p class="muted mt-1 text-sm">{{ ch.get_journey_stage_display }} · {% if ch.shared_at %}shared with the customer {{ ch.shared_at|date:"j M Y" }}{% else %}<strong>not shared: invisible to the customer</strong>{% endif %} · Opportunity <a class="underline" href="{{ ch.opportunity.get_absolute_url }}">{{ ch.opportunity.ref }}</a></p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:challenge_edit' ch.pk %}">Edit</a>
+      {% if not ch.shared_at %}{% url 'portaladmin:challenge_share' ch.pk as share_url %}{% include "portaladmin/_post.html" with url=share_url label="Share with the customer" style="btn-primary" %}{% endif %}
+    </div>
+  </div>
+  {% include "portaladmin/_nav.html" with section="orgs" %}
+
+  <section class="card mt-4 p-4" aria-label="Status for staff">
+    {% include "portaladmin/_status.html" %}
+    {% if status.difference %}
+      <div class="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" role="status" data-testid="stage-difference">
+        <strong>Opportunity is at {{ status.difference.opportunity_stage }}; customer sees {{ status.difference.customer_stage }}.</strong>
+        <form method="post" action="{% url 'portaladmin:challenge_stage' ch.pk %}" class="mt-2">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Update customer-visible stage to "{{ status.difference.suggested_label }}"</button></form>
+      </div>
+    {% endif %}
+    {% if proposal_project %}<p class="muted mt-3 text-xs">Project prefilled from the approved proposal: <a class="underline" href="{% url 'portaladmin:project' proposal_project.pk %}">{{ proposal_project.name }}</a>.</p>{% endif %}
+  </section>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="orig-h">
+        <h2 id="orig-h" class="font-semibold">As shown to the customer</h2>
+        <p class="muted text-xs">A snapshot of what they submitted. The opportunity keeps the original and its history.</p>
+        <p class="mt-3 whitespace-pre-wrap break-words text-sm">{{ ch.submitted_problem|default:"(no problem text)" }}</p>
+        {% if ch.submitted_outcome %}<p class="mt-2 whitespace-pre-wrap break-words text-sm"><strong>Outcome:</strong> {{ ch.submitted_outcome }}</p>{% endif %}
+        {% if ch.internal_notes %}<p class="mt-3 rounded-md bg-slate-50 p-2 text-xs dark:bg-slate-800"><strong>Internal note (never shown):</strong> {{ ch.internal_notes }}</p>{% endif %}
+      </section>
+
+      <section class="card p-5" aria-labelledby="brief-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="brief-h" class="font-semibold">Brief versions</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:brief_new' ch.pk %}">New version</a></div>
+        <ul class="mt-3 space-y-3 text-sm">
+          {% for b in briefs %}
+            <li class="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+              <div class="flex flex-wrap items-center justify-between gap-2"><strong>Version {{ b.number }}</strong><span class="muted">{{ b.get_status_display }}</span></div>
+              {% if b.summary %}<p class="muted">{{ b.summary }}</p>{% endif %}
+              <ul class="mt-2 space-y-1">{% for seg in b.segments %}<li><span class="mono-label muted">{{ seg.provenance|provenance_label }}</span> {{ seg.text|truncatechars:160 }}</li>{% endfor %}</ul>
+              {% for r in b.reviews.all %}<p class="mt-1 text-xs">{{ r.get_decision_display }} by {{ r.user.email }}, {{ r.created_at|date:"j M Y, H:i" }}{% if r.comment %}: {{ r.comment }}{% endif %}</p>{% endfor %}
+              <div class="mt-2 flex flex-wrap gap-1">
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_item' 'brief' b.pk %}">Preview as customer</a>
+                {% if b.status == "draft" %}
+                  <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:brief_edit' ch.pk b.pk %}">Edit</a>
+                  {% url 'portaladmin:brief_propose' b.pk as propose_url %}{% include "portaladmin/_post.html" with url=propose_url label="Propose to customer" style="btn-primary" %}
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="card p-5" aria-labelledby="upd-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="upd-h" class="font-semibold">Updates</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:update_new' ch.pk %}">Prepare update</a></div>
+        <ul class="mt-3 space-y-2 text-sm" data-testid="updates">
+          {% for u in updates %}
+            <li class="flex flex-wrap items-center justify-between gap-2">
+              <span><strong>{{ u.title }}</strong> <span class="muted">{{ u.get_status_display }}{% if u.published_at %} {{ u.published_at|date:"j M Y" }}{% endif %}</span></span>
+              <span class="flex gap-1">
+                <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_item' 'update' u.pk %}">Preview</a>
+                {% if u.status == "draft" %}<a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:update_edit' u.pk %}">Edit</a>{% url 'portaladmin:update_publish' u.pk as pub_url %}{% include "portaladmin/_post.html" with url=pub_url label="Publish" style="btn-primary" %}{% endif %}
+              </span>
+            </li>
+          {% empty %}<li class="muted">No updates.</li>{% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <div class="min-w-0 space-y-6">
+      <section class="card p-5" aria-labelledby="proj-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="proj-h" class="font-semibold">Projects</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:project_new' ch.pk %}">New project</a></div>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for p in projects %}<li><a class="underline" href="{% url 'portaladmin:project' p.pk %}">{{ p.name }}</a> <span class="muted">{{ p.get_status_display }} · {% if p.published_at %}published{% else %}not published{% endif %}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+
+      <section class="card p-5" aria-labelledby="q-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="q-h" class="font-semibold">Questions for the customer</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:question_new' ch.pk %}">Ask a question</a></div>
+        <ul class="mt-3 space-y-3 text-sm" data-testid="questions">
+          {% for q in questions %}
+            <li>
+              <strong>{{ q.question }}</strong> <span class="muted">{{ q.get_status_display }}{% if q.due_date %} · due {{ q.due_date|date:"j M Y" }}{% endif %}{% if not q.published_at %} · not sent{% endif %}</span>
+              {% for r in q.responses.all %}<p class="mt-1 rounded-md bg-slate-50 p-2 dark:bg-slate-800"><span class="muted">{{ r.user.email }}, {{ r.created_at|date:"j M Y, H:i" }}:</span> {{ r.body }}</p>{% endfor %}
+              {% if q.status != "closed" %}{% url 'portaladmin:question_close' q.pk as close_url %}{% include "portaladmin/_post.html" with url=close_url label="Close" %}{% endif %}
+            </li>
+          {% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+
+      <section class="card p-5" aria-labelledby="disc-h">
+        <h2 id="disc-h" class="font-semibold">Discussion</h2>
+        <ul class="mt-3 space-y-2 text-sm" data-testid="threads">
+          {% for t in threads %}
+            <li><span class="mono-label muted">{{ t.title }}{% if t.is_internal %} · INTERNAL, never shown{% endif %}</span>
+              <ul class="mt-1 space-y-1">{% for m in t.messages.all %}<li><strong>{{ m.author.email }}</strong> <span class="muted">{{ m.created_at|date:"j M, H:i" }}</span> {{ m.body }}</li>{% endfor %}</ul></li>
+          {% empty %}<li class="muted">No messages.</li>{% endfor %}
+        </ul>
+        <form method="post" action="{% url 'portaladmin:staff_message' ch.pk %}" class="mt-3" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_fields.html" with form=message_form %}
+          <div class="mt-3 flex justify-end"><button class="btn btn-secondary btn-sm" type="submit">Post</button></div>
+        </form>
+      </section>
+
+      <section class="card p-5" aria-labelledby="f-h">
+        <div class="flex items-center justify-between gap-2"><h2 id="f-h" class="font-semibold">Files</h2><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:file_new' ch.pk %}">Upload</a></div>
+        <ul class="mt-3 space-y-2 text-sm">
+          {% for f in files %}
+            <li class="flex flex-wrap items-center justify-between gap-2">
+              <span>{{ f.title }} <span class="muted">{{ f.get_visibility_display }}{% for v in f.versions.all|slice:":1" %} · {{ v.original_name }} · {{ v.get_upload_status_display }}{% endfor %}</span></span>
+              <span class="flex gap-1">
+                {% for v in f.versions.all|slice:":1" %}{% if v.upload_status == "stored" %}<a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:file_download' v.pk %}">Download</a>{% endif %}{% endfor %}
+                <form method="post" action="{% url 'portaladmin:file_visibility' f.pk %}" class="inline">{% csrf_token %}<input type="hidden" name="visibility" value="{% if f.visibility == 'customer' %}internal{% else %}customer{% endif %}"><button class="btn btn-secondary btn-sm" type="submit">{% if f.visibility == "customer" %}Make internal{% else %}Share with customer{% endif %}</button></form>
+              </span>
+            </li>
+          {% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </section>
+
+      <section class="card p-5" aria-labelledby="ev-h">
+        <h2 id="ev-h" class="font-semibold">What the customer's activity feed shows</h2>
+        <ul class="mt-3 space-y-1 text-sm">{% for e in events %}<li>{{ e.summary }} <span class="muted">{{ e.occurred_at|date:"j M, H:i" }}</span></li>{% empty %}<li class="muted">Nothing yet.</li>{% endfor %}</ul>
+      </section>
+    </div>
+  </div>
+{% endblock %}

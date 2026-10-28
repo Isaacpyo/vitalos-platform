@@ -1,0 +1,153 @@
+# Progress, decisions, evidence and blockers
+
+Newest entries first. Each entry gives the time (UTC), what changed, and the evidence or the next step.
+
+## Current state
+
+- **M0 to M8 done.** Every lane (W5 to W10) is merged into `claude/amazing-cray-miqs1x`, the independent review findings are fixed, every local gate is green, and the full CI is green on #106.
+- **Next:** the owner's review and merge decision (see HANDOFF.md, "Merge and deploy"). After that, the model key and the live evaluation.
+
+## Facts established (28 Oct 2026, before implementation)
+
+Verified working; no rebuild needed:
+
+- **Enquiry durability (ADR-019):**
+  - `submit_enquiry` writes the enquiry and its outbox row in one transaction.
+  - The idempotency key is unique; a replay returns the original reference.
+  - The AI & Data form already sends `idempotencyKey`, and has a test.
+- **Notification delivery:**
+  - The outbox has a lease (`FOR UPDATE SKIP LOCKED`), counts attempts, and dead-letters to `failed`.
+  - Retryable and permanent errors are told apart.
+  - Delivery happens best-effort straight after submit (`after()`), with a daily Vercel cron (`/api/internal/outbox/dispatch`, 06:00) as the fallback.
+- **AI:**
+  - `apps.aicore` gateway: providers are Anthropic (official SDK), OpenAI-compatible, Simulated, Replay and Recording.
+  - It has a kill switch, per-run, daily and monthly caps, schema validation and metering (`ModelExecution`).
+  - The demonstrator's offline evaluation AC-1 to AC-13 passes.
+- **Super Admin roles:** SuperAdmin, ServiceLead and Viewer. A user without a role has no access.
+- **Payments:** `/pay` and the Super Admin billing are live (#104).
+
+Existing functionality that needs improvement (in scope):
+
+- The `/ai-data` hero is oversized and text-only.
+- The demonstrator is explanatory rather than usable.
+- The contact page is a plain form.
+- The admin AI & Data overview is navigation cards rather than a work queue.
+- The opportunity page has no brief, discovery or proposal workspace.
+
+Missing functionality (in scope):
+
+- A guided brief.
+- AI-prepared briefs with sources.
+- Discovery packs and proposal drafts.
+- Durable AI task states in the admin.
+- The whole client portal: no customer auth, organisations, projects, deliverables or approvals exist.
+
+Blocked by configuration (not in code):
+
+- **Live AI.** The live provider is off and there is no `AI_DATA_LLM_API_KEY` (the organisation's `ANTHROPIC_API_KEY` is not shared with this repo), so live AI results and the demonstrator's AC-14 cannot be produced. Every AI surface ships with an honest unavailable state and a non-AI path.
+- **Stripe.** No Vitalos Stripe key or webhook secret is configured.
+- **Turnstile on the Super Admin.** `TURNSTILE_SECRET_KEY` is not set for the Super Admin, so `/pay/checkout/` relies on the honeypot and rate limits only.
+- **Outbox fallback cadence.** On the Vercel Hobby plan, cron fallback dispatch is daily; a notification retry may take up to a day if `after()` fails. This is an existing limitation, recorded in ADR-019.
+
+Outside this implementation's scope:
+
+- Live monitoring integrations.
+- Contractual e-signature.
+- Product-incubation scoring.
+- Autonomous outreach.
+
+## Decisions
+
+| Date        | Decision                                                                                                                                                                                                       | Why                                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 28 Oct 2026 | Base UI 1.9.0 (MIT) under `@vitalos/ui`, as owned shadcn-style components; no Radix; no lucide (the in-house monoline icon set is extended); no React Flow or Recharts unless real interactive data needs them | One coherent foundation; the existing design system and ADR-023/024 stay valid; small dependencies                                       |
+| 28 Oct 2026 | The Super Admin and the portal stay Django, HTMX and template components, with native `<dialog>`, the Popover API and live regions                                                                             | They are not React; no framework rewrite (owner brief)                                                                                   |
+| 28 Oct 2026 | The client portal lives inside the Super Admin deployment, host-routed to `portal.vitalos.co.uk` (owner approved the host), with host-only cookies                                                             | It shares records with the admin, so nothing is entered twice; auth, mailer, audit and the AI gateway are reused; no new service or cost |
+| 28 Oct 2026 | Website AI assistance goes through the Super Admin `aicore` gateway via an HMAC-signed endpoint; the website falls back to rules                                                                               | AGENTS.md: model calls go only through `apps.aicore`; credentials stay on the server                                                     |
+| 28 Oct 2026 | At most three implementation agents at a time; W6 paused until W5 finishes                                                                                                                                     | Owner instruction                                                                                                                        |
+
+## Log
+
+- **28 Oct 20:35: #106 ready for review; the full CI is green on `2fa8db6`** (all jobs, including e2e and axe, e2e-draft, SEO and Lighthouse, storybook-a11y, visual, pgTAP and the Super Admin container smoke test). M8 is done apart from the merge, which is held for the owner's review (see HANDOFF.md).
+
+- **28 Oct 20:20: review fixes merged (W10, `f3c26c6`); final gates green.**
+  - **M1:** a newer shared version blocks every decision on an older one.
+  - **M2:** per-workflow daily shares of the AI run cap (brief assist and portal assistant at 30% each, so staff keep headroom). There is also a per-member assistant limit of 10 an hour with an honest compiled answer. A bug was found and fixed along the way: every portal assistant call shared one run ref.
+  - **M3:** customers append only to their own files; sharing exposes only the pinned file version (`FileVersion.customer_visible`, migration `portal` 0003).
+  - **L1:** non-numeric ids give 404.
+  - **L2:** events for unpublished targets are hidden (migration `portal` 0004).
+  - **L3:** decisions and brief reviews lock and re-check.
+  - **L4:** `.doc` and `.xls` are refused in the portal.
+  - **L5:** brief assist writes a pending row before the model call.
+  - **L6:** `next` is validated.
+  - **Question ids** are renumbered.
+  - 50 new tests. The reviewer's suspicions about cookie tossing and reset timing are recorded as follow-ups in ADR-056.
+  - **Lead gate on the final tree:** ruff, format, the email guard, `makemigrations --check`, **pytest 1565 passed**, `recon_eval`, `aidata_eval`, bandit, the migration guard and Prettier, all PASS. gitleaks over history is clean.
+
+- **28 Oct 21:15: integration complete (W5, W6, W7, W8, W9); independent review done; fixes in progress.**
+  - **Merges:** W6 (guided brief) `471a52f`, W9 (seams, AC-1 to AC-12 journey test, `experience_seed_demo`, DEMO.md) `c906942`.
+  - **Lead gates on the full tree:**
+    - Web, all PASS: `format:check`, `check:raw-colours`, `check:turbo-env`, `content:types:check`, lint, typecheck, `pnpm test`, `check:boundaries`, `check:security`, `check:email`, and the `web` build.
+    - Super Admin, all PASS: ruff, format, the email guard, `makemigrations --check`, **pytest 1514 passed**, `recon_eval`, `aidata_eval`, bandit, and the migration guard.
+    - CI on #106 is green for every job that runs on a draft.
+  - **gitleaks false positive fixed** (`a62b69c`): a sessionStorage key name was allowlisted by exact value. Reproduced locally (1 finding without the entry, 0 with it).
+  - **Provenance fix (lead, `aea77e4`).** Found reviewing W9's screenshots, and flagged independently by the review. The portal showed the whole notification email (marker, contact rows) or a staff paste as "Your words", and "What you told us" read "No problem description was recorded". Now:
+    - Only customer-authored text is a customer statement.
+    - A paste never is.
+    - Opportunities without an enquiry carry Vitalos's wording as agreed facts.
+    - The portal and experience tests pass (175).
+  - **Independent review (M7) of `471a52f`:** no critical or high findings. Isolation, the customer/staff boundary, invitations, file downloads, the signed brief-assist endpoint, XSS and AI safety held up.
+    - Medium: M1, contractual acceptance of a superseded version; M2, public and customer callers can exhaust the shared daily AI run cap; M3, customer versions appended to staff files, and earlier internal versions of a shared file downloadable.
+    - Low: L1, 500 on non-numeric ids; L2, events after unpublish; L3, approval and brief races; L4, legacy `.doc`/`.xls`; L5, brief-assist burst counting; L6, staff open redirect; plus a question-id mismatch.
+    - W10 is fixing them test-first.
+
+- **28 Oct 20:30: operational quality.**
+  - **Lead web gate on W5 + W7 + W8** (`801cb75`), all PASS: `check:turbo-env`, `content:types:check`, lint, typecheck, `pnpm test`, `check:boundaries`, `check:security`, `check:email`, and the `web` production build. `format:check` failed only on ADR-056 (W8 had not run Prettier); fixed and re-checked.
+  - **Dependency advisories** (`a3e1f82`, `30bbb33`):
+    - `postcss` override raised to 8.5.23.
+    - `fast-uri` override added at 3.1.9.
+    - `filelock` 4.2.1 (dev requirements).
+    - `pnpm audit`: no known vulnerabilities at any level. `pip-audit --strict` is clean for both requirements files.
+    - Recorded in `docs/security/dependency-advisories.md`.
+  - **Pre-existing defect fixed** (`1da310e`): two raw `rgb()` shadows in the Relay widget became `--relay-shadow-*` tokens, so `pnpm check:raw-colours` (and the documented local `pnpm check`) passes again. Values are unchanged.
+
+- **28 Oct 20:05: W5 (marketing and design) merged** (`33c5fc6`).
+  - **Conflicts:** docs only. The ADR index is now the union of rows (48).
+  - **Seam caught by W7's drift test:** W5 added a teal `signal` token role, so the Super Admin token CSS was regenerated (`e28d3a1`). Marketing and admin now share it.
+  - **Lead review of the screenshots:**
+    - The hero is a click-through and labelled "Synthetic data" and "Scripted example, not live AI".
+    - Checks expand to the cited source line.
+    - The demonstrator shows the source beside the results, marks exceptions in text and colour, and keeps evaluation tables in a secondary Evidence section.
+  - **Copy check:** "a fixed fee agreed in writing" is pre-existing approved copy (`copy.ts`), not a new commitment.
+  - **Bundle:** `/ai-data` went from 195,982 to 205,166 B gzip. The budget was raised to 222,000, with the justification in ADR-054. The demonstrator rose to 200,106 B (budget 206,000). Solutions and approach dropped to 191,076 B (`sideEffects: false`).
+  - **Noted:** on 390 px phones the existing "Ask Vitalos" launcher overlaps the end of the hero bullet list, as it does site-wide. This is pre-existing and left as is.
+  - **W6** was told to merge `e28d3a1` and use `@vitalos/ui/interactive`.
+
+- **28 Oct 19:40: W8 (client portal) merged** (`39524ce`).
+  - **Conflicts resolved:**
+    - `opportunity.html`: kept W7's tabbed layout; the portal panel comes in through `_opportunity_extensions.html` in the workspace tab.
+    - The ADR index, PLAN and TASKS: kept both lanes' sections.
+  - **Deploy:** `PORTAL_DOMAIN` now follows W8's `PORTAL_HOST` (`28e3d45`).
+  - **Lead gate on main plus W7** (`07ddb65`), all PASS:
+    - ruff and format, the email guard, `makemigrations --check`;
+    - pytest 1340 passed on PostgreSQL 16;
+    - `recon_eval`, `aidata_eval` (22/22), bandit;
+    - the migration guard.
+  - **Lead review of W8 screenshots:** the dashboard leads with "What we need from you"; blockers name who is responsible; managed systems are labelled manually reported or stale; approvals are version-specific (v1 approved, v2 awaiting a decision).
+  - **W9 started** on `28e3d45`: admin ↔ portal seams (brief continuity, proposal → project, portal items in the work queue, stage visibility), the AC-1 to AC-12 journey test, `experience_seed_demo` and DEMO.md. Running: W5, W6, W9.
+
+- **28 Oct 19:00: W7 (admin workspace) reported and was merged** into `claude/amazing-cray-miqs1x` (merge `cd98ceb`, 87 files).
+  - **Lead review:** the brief-assist endpoint checks the signature before reading any field or switch, fails closed with no keys, rate-limits per visitor and globally, and stores hashes only. Every workspace view is gated to SuperAdmin or ServiceLead. The `mark_safe` call only wraps static icon markup. The migrations (`aidata` 0003, `aicore` 0002) are additive.
+  - **Decision kept:** Viewers stay refused on all AI & Data pages (ADR-026: opportunities hold personal data). A redacted read-only view would be an owner decision.
+  - **Pre-existing defect found** (not in CI): `pnpm check:raw-colours` fails on `main` because of two raw `rgb()` shadows in `packages/relay-widget/src/panel.css`. It is outside this scope and logged for a follow-up.
+  - **W6 resumed** (the cap allows three: W5, W6, W8) with the amended signing contract: the existing v1 scheme with the new scope `assist`.
+
+- **28 Oct 18:10:**
+  - The owner approved `portal.vitalos.co.uk` and the overnight execution brief.
+  - W6 paused at a checkpoint.
+  - The additional requirements (durable tasks, visibility surfaces, notification retries, evaluation cases, funnel) were sent to W5, W7 and W8.
+  - `portal.vitalos.co.uk` currently has no DNS records (checked over DoH), so it is free to create.
+- **28 Oct 17:56:** #105 (docs checkpoint) merged.
+- **28 Oct 17:50:** W5 to W8 started, each with the shared brief (lead scratchpad `briefs/shared.md`, summarised in MILESTONES.md).
+
+- **28 Oct 19:30: W9 (integration seams and demonstration).** Full Super Admin gate green on the combined tree before changes (1486 passed). Added: the approved brief and the original enquiry carry into a linked challenge as a draft with provenance tags; "Create portal project from proposal" (idempotent, unpublished, no prices); portal items and stuck AI tasks in the work queue; the opportunity-stage to customer-stage map with an audited "Update customer-visible stage"; a status strip for staff; `experience_seed_demo`; `tests/test_experience_journey.py` (AC-1 to AC-12 plus failure recovery); [DEMO.md](DEMO.md). Migration `portal` 0002 is additive. Screenshots: lead scratchpad `shots/w9-journey/`.

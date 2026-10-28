@@ -1,0 +1,107 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Dashboard · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">{{ organisation.name }}</p>
+      <h1>Your dashboard</h1>
+      <p class="lede">Hello {{ member.user.full_name|default:member.user.email }}. This is where your challenges with Vitalos stand today.{% if since %} Your last visit was {{ since|date:"j M Y, H:i" }}.{% endif %}</p>
+    </div>
+  </div>
+
+  {% if not challenges %}
+    <div class="empty" data-testid="empty-dashboard">
+      <h3>Nothing has been shared with you yet</h3>
+      <p>When Vitalos shares a challenge or project with {{ organisation.name }}, it appears here. If you were expecting something, ask your Vitalos contact.</p>
+    </div>
+  {% else %}
+    <div class="grid grid--main">
+      <div class="stack">
+        <section class="card{% if actions %} card--attention{% endif %}" aria-labelledby="needs-h">
+          <div class="card__head"><h2 id="needs-h">What we need from you</h2>{% if actions %}<span class="badge badge--warn">{{ actions|length }}</span>{% endif %}</div>
+          {% include "portal/_actions.html" %}
+        </section>
+
+        {% if blockers %}
+          <section class="card" aria-labelledby="blk-h">
+            <h2 id="blk-h">Blockers</h2>
+            <ul class="list" data-testid="blockers">
+              {% for b in blockers %}<li>{{ b.text }} <span class="muted small">· responsible: {{ b.party }} · <a href="{% purl 'project' pk=b.project.pk %}">{{ b.project.name }}</a></span></li>{% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+
+        <section class="card" aria-labelledby="ch-h">
+          <div class="card__head"><h2 id="ch-h">Your challenges</h2><a href="{% purl 'challenges' %}">All challenges</a></div>
+          <ul class="list">
+            {% for c in challenges %}
+              <li>
+                <a href="{% purl 'challenge' pk=c.pk %}"><strong>{{ c.title }}</strong></a>
+                <span class="badge badge--info">{{ c.get_journey_stage_display }}</span>
+                {% if c.status_note %}<br><span class="muted small">{{ c.status_note }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+
+        {% if projects %}
+          <section class="card" aria-labelledby="pr-h">
+            <h2 id="pr-h">Active projects</h2>
+            <ul class="list">
+              {% for p in projects %}
+                <li><a href="{% purl 'project' pk=p.pk %}"><strong>{{ p.name }}</strong></a> {% badge p.status p.get_status_display %}
+                  {% if p.target_date %}<br><span class="muted small">Target date {{ p.target_date|date:"j M Y" }}. Dates are targets and can change; Vitalos will tell you if they do.</span>{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+
+        {% if services %}
+          <section aria-labelledby="sv-h" class="stack-sm">
+            <h2 id="sv-h">Managed systems</h2>
+            {% for s in services %}{% include "portal/_service_card.html" %}{% endfor %}
+          </section>
+        {% endif %}
+
+        {% include "portal/_assistant_buttons.html" with items=assistant_items %}
+      </div>
+
+      <aside class="stack" aria-label="Latest">
+        <section class="card" aria-labelledby="lu-h">
+          <h2 id="lu-h">Latest update</h2>
+          {% if latest_update %}
+            <p class="mt-1"><a href="{% purl 'update' pk=latest_update.pk %}"><strong>{{ latest_update.title }}</strong></a><br><span class="muted small">{{ latest_update.published_at|date:"j M Y" }}</span></p>
+            <p class="prose small">{{ latest_update.body|truncatechars:240 }}</p>
+          {% else %}
+            <p class="muted">No update has been published yet.</p>
+          {% endif %}
+        </section>
+        <section class="card" aria-labelledby="nm-h">
+          <h2 id="nm-h">Next milestone</h2>
+          {% if next_milestone %}
+            <p class="mt-1"><a href="{% purl 'milestone' pk=next_milestone.pk %}"><strong>{{ next_milestone.title }}</strong></a> {% badge next_milestone.status next_milestone.get_status_display %}</p>
+            <p class="small muted">{{ next_milestone.project.name }}{% if next_milestone.target_date %} · target {{ next_milestone.target_date|date:"j M Y" }}{% else %} · no date set{% endif %}</p>
+          {% else %}
+            <p class="muted">No milestones have been published yet.</p>
+          {% endif %}
+        </section>
+        <section class="card" aria-labelledby="rd-h">
+          <h2 id="rd-h">Recent deliverables</h2>
+          <ul class="list">
+            {% for v in recent_versions %}
+              <li><a href="{% purl 'deliverable' pk=v.deliverable_id %}">{{ v.deliverable.title }}</a> <span class="muted small">version {{ v.number }} · shared {{ v.shared_at|date:"j M Y" }}</span></li>
+            {% empty %}
+              <li class="muted">Nothing shared yet.</li>
+            {% endfor %}
+          </ul>
+        </section>
+        <section class="card" aria-labelledby="ac-h">
+          <div class="card__head"><h2 id="ac-h">Recent activity</h2><a href="{% purl 'activity' %}">All</a></div>
+          {% include "portal/_events.html" %}
+        </section>
+      </aside>
+    </div>
+  {% endif %}
+{% endblock %}

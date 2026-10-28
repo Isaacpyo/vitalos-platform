@@ -1,0 +1,23 @@
+{# Message composer. Context: challenge, message_form, optional milestone / deliverable, composer_id. #}
+{% load portal_ui %}
+{% if member.can_comment and not preview %}
+  <form method="post" action="{% purl 'challenge_discuss' pk=challenge.pk %}" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if milestone %}<input type="hidden" name="milestone" value="{{ milestone.pk }}">{% endif %}
+    {% if deliverable %}<input type="hidden" name="deliverable" value="{{ deliverable.pk }}">{% endif %}
+    <div class="field">
+      <label for="{{ composer_id|default:'composer' }}">Your message</label>
+      <textarea name="body" id="{{ composer_id|default:'composer' }}" class="p-input p-textarea" rows="4" maxlength="4000" required></textarea>
+    </div>
+    <div class="field">
+      <label for="{{ composer_id|default:'composer' }}-file">Attach a file (optional)</label>
+      <input type="file" name="attachment" id="{{ composer_id|default:'composer' }}-file" class="p-file">
+      <p class="help">PDF, images, Word, Excel, PowerPoint, text or CSV, up to 10 MB. Files are checked before they are kept.</p>
+    </div>
+    <button class="btn" type="submit">Send message</button>
+  </form>
+{% elif preview %}
+  <p class="notice">Preview is read-only: the composer is disabled.</p>
+{% else %}
+  <p class="notice">Your role is read-only. You can read everything shared with you; ask a contributor or approver to reply.</p>
+{% endif %}

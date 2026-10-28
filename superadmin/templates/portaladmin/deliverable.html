@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load ui portal_ui %}
+{% block title %}{{ d.title }} · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{% url 'portaladmin:project' p.pk %}" class="hover:underline">Client portal / {{ ch.organisation.name }} / {{ p.name }}</a></p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div><h1 class="text-2xl font-semibold">{{ d.title }}</h1><p class="muted mt-1 text-sm">{% if d.published_at %}Visible to the customer once a version is shared{% else %}Not yet visible{% endif %}. Approvals attach to a specific version.</p></div>
+    <div class="flex gap-2"><a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:deliverable_edit' d.pk %}">Edit</a><a class="btn btn-primary btn-sm" href="{% url 'portaladmin:version_new' d.pk %}">New version</a></div>
+  </div>
+  {% include "portaladmin/_nav.html" with section="orgs" %}
+
+  <div class="mt-6 space-y-4" data-testid="versions">
+    {% for row in rows %}
+      <section class="card p-5" aria-labelledby="v{{ row.v.number }}-h">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="v{{ row.v.number }}-h" class="font-semibold">Version {{ row.v.number }}</h2>
+          <span class="text-sm" data-testid="state-{{ row.v.number }}">{% if row.v.withdrawn_at %}Withdrawn{% elif not row.v.shared_at %}Not shared{% else %}Shared {{ row.v.shared_at|date:"j M Y" }} · {{ row.state|human }}{% endif %}</span>
+        </div>
+        {% if row.v.summary %}<p class="mt-1 text-sm">{{ row.v.summary }}</p>{% endif %}
+        {% if row.v.is_contractual %}<p class="muted text-xs">Contractual document.</p>{% endif %}
+        {% if row.v.internal_notes %}<p class="mt-2 rounded-md bg-slate-50 p-2 text-xs dark:bg-slate-800"><strong>Internal (never shown):</strong> {{ row.v.internal_notes }}</p>{% endif %}
+        <h3 class="mono-label muted mt-3">Decisions on this version</h3>
+        <ul class="mt-1 space-y-1 text-sm" data-testid="decisions-{{ row.v.number }}">
+          {% for a in row.approvals %}<li><strong>{{ a.get_decision_display }}</strong> by {{ a.user_email }} ({{ a.get_role_display }}) on {{ a.created_at|date:"j M Y, H:i" }}{% if a.comment %}: {{ a.comment }}{% endif %}</li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_item' 'version' row.v.pk %}">Preview as customer</a>
+          {% if not row.v.shared_at or row.v.withdrawn_at %}{% url 'portaladmin:version_action' row.v.pk 'share' as share_url %}{% include "portaladmin/_post.html" with url=share_url label="Share with customer" style="btn-primary" %}{% elif row.v.shared_at %}{% url 'portaladmin:version_action' row.v.pk 'withdraw' as wd_url %}{% include "portaladmin/_post.html" with url=wd_url label="Withdraw" %}{% endif %}
+        </div>
+      </section>
+    {% empty %}
+      <p class="muted">No versions yet. Create the first one; it starts unshared and unapproved.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -55,6 +55,10 @@ export const ASKBRIDGE_TEST_SITE_KEY = "pk_0123456789abcdef0123456789abcdef";
 export const ASKBRIDGE_TEST_ORIGIN = "https://askbridge.e2e.invalid";
 const askbridgeOn = process.env.E2E_ASKBRIDGE === "1";
 
+/** Fake Super Admin for the guided brief's AI path (test-only, nothing leaves the machine). */
+const briefAssistPort = Number(process.env.E2E_BRIEF_ASSIST_PORT ?? 3299);
+const briefAssistOrigin = `http://127.0.0.1:${briefAssistPort}`;
+
 const web = "corepack pnpm --filter @vitalos/web exec next";
 const command = [
   process.env.E2E_SKIP_BUILD === "1" ? undefined : `${web} build`,
@@ -98,41 +102,55 @@ export default defineConfig({
   reporter: process.env.CI
     ? [["github"], ["html", { open: "never" }]]
     : [["list"], ["html", { open: "never" }]],
-  webServer: {
-    command,
-    url: `${baseURL}/api/health`,
-    reuseExistingServer: process.env.E2E_REUSE_SERVER === "1",
-    timeout: 300_000,
-    stdout: "pipe",
-    env: {
-      NEXT_PUBLIC_SITE_URL: baseURL,
-      VITALOS_DEPLOY_ENV: "local",
-      VITALOS_CONTENT_SOURCE: process.env.E2E_CONTENT_SOURCE ?? "fixtures",
-      VITALOS_FIXTURE_SET: fixtureSet,
-      VITALOS_ENQUIRY_BACKEND: process.env.E2E_ENQUIRY_BACKEND ?? "memory",
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: TURNSTILE_TEST_SITE_KEY,
-      TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET_KEY,
-      // Test-only values for secrets the pipeline requires; they protect nothing.
-      ENQUIRY_IP_HASH_SALT: "e2e-only-ip-hash-salt-not-a-secret",
-      OUTBOX_DISPATCH_SECRET: "e2e-only-outbox-dispatch-secret-not-a-secret",
-      EMAIL_PROVIDER: "none",
-      // Askbridge replaces Relay on the public site when its key is set (ADR-045). Off by default,
-      // so the main run covers Relay; E2E_ASKBRIDGE=1 builds the Askbridge variant (own CI job).
-      ASKBRIDGE_SITE_KEY: askbridgeOn ? ASKBRIDGE_TEST_SITE_KEY : "",
-      ASKBRIDGE_ORIGIN: askbridgeOn ? ASKBRIDGE_TEST_ORIGIN : "",
-      // Vitalos Relay on, fully offline: in-memory store, deterministic mock model, no realtime,
-      // no Super Admin webhook (events are recorded in memory). Test-only secrets.
-      RELAY_ENABLED: process.env.E2E_RELAY ?? "true",
-      RELAY_STORE: "memory",
-      RELAY_LLM_PROVIDER: "mock",
-      // Every browser in the run shares one IP; production keeps the multiplier at 1.
-      RELAY_RATE_LIMIT_MULTIPLIER: "100",
-      RELAY_TOKEN_PEPPER: "e2e-only-relay-token-pepper-not-a-secret",
-      RELAY_IP_SALT: "e2e-only-relay-ip-salt",
-      RELAY_ADMIN_API_SECRET: RELAY_TEST_ADMIN_SECRET,
-      CRON_SECRET: "e2e-only-cron-secret-not-a-secret-000",
+  webServer: [
+    {
+      command,
+      url: `${baseURL}/api/health`,
+      reuseExistingServer: process.env.E2E_REUSE_SERVER === "1",
+      timeout: 300_000,
+      stdout: "pipe",
+      env: {
+        NEXT_PUBLIC_SITE_URL: baseURL,
+        VITALOS_DEPLOY_ENV: "local",
+        VITALOS_CONTENT_SOURCE: process.env.E2E_CONTENT_SOURCE ?? "fixtures",
+        VITALOS_FIXTURE_SET: fixtureSet,
+        VITALOS_ENQUIRY_BACKEND: process.env.E2E_ENQUIRY_BACKEND ?? "memory",
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: TURNSTILE_TEST_SITE_KEY,
+        TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET_KEY,
+        // Test-only values for secrets the pipeline requires; they protect nothing.
+        ENQUIRY_IP_HASH_SALT: "e2e-only-ip-hash-salt-not-a-secret",
+        OUTBOX_DISPATCH_SECRET: "e2e-only-outbox-dispatch-secret-not-a-secret",
+        EMAIL_PROVIDER: "none",
+        // Askbridge replaces Relay on the public site when its key is set (ADR-045). Off by default,
+        // so the main run covers Relay; E2E_ASKBRIDGE=1 builds the Askbridge variant (own CI job).
+        ASKBRIDGE_SITE_KEY: askbridgeOn ? ASKBRIDGE_TEST_SITE_KEY : "",
+        ASKBRIDGE_ORIGIN: askbridgeOn ? ASKBRIDGE_TEST_ORIGIN : "",
+        // Vitalos Relay on, fully offline: in-memory store, deterministic mock model, no realtime,
+        // no Super Admin webhook (events are recorded in memory). Test-only secrets.
+        RELAY_ENABLED: process.env.E2E_RELAY ?? "true",
+        RELAY_STORE: "memory",
+        RELAY_LLM_PROVIDER: "mock",
+        // Every browser in the run shares one IP; production keeps the multiplier at 1.
+        RELAY_RATE_LIMIT_MULTIPLIER: "100",
+        RELAY_TOKEN_PEPPER: "e2e-only-relay-token-pepper-not-a-secret",
+        RELAY_IP_SALT: "e2e-only-relay-ip-salt",
+        RELAY_ADMIN_API_SECRET: RELAY_TEST_ADMIN_SECRET,
+        CRON_SECRET: "e2e-only-cron-secret-not-a-secret-000",
+        // Guided brief (W6): the AI assist points at a local fake Super Admin (below). The content
+        // API base URL stays unset, so Insights and Careers behave exactly as before.
+        BRIEF_ASSIST_BASE_URL: briefAssistOrigin,
+        CONTENT_READ_KEY_ID: "e2e-read",
+        CONTENT_READ_SECRET: "e2e-only-content-read-secret-not-a-secret-0000",
+      },
     },
-  },
+    {
+      // Stands in for the Super Admin's brief-assist endpoint (tests/support/fake-brief-assist.mjs).
+      command: `node tests/support/fake-brief-assist.mjs ${briefAssistPort}`,
+      url: `${briefAssistOrigin}/health`,
+      reuseExistingServer: process.env.E2E_REUSE_SERVER === "1",
+      timeout: 30_000,
+    },
+  ],
   use: { baseURL, trace: "retain-on-failure" },
   projects: sparseRun
     ? [sparseProject]

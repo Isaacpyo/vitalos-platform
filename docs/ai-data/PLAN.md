@@ -87,7 +87,9 @@ Update the boxes as work lands. A box is ticked only with evidence in TASKS.md.
 
 ## Checkpoint
 
-_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered._
+_Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered. For the connected experience (marketing, admin workspace, client portal), see `experience/PROGRESS.md`._
+
+_Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery workspace (ADR-055): paste an enquiry, review an evidence-linked brief, discovery pack, proposal draft with human approval, assistant, durable AI tasks, signed website brief-assist endpoint (off by default), shared tokens. Live provider still off; no live model-quality evidence. Next (owner): website client signs `assist`, key and switches, live evaluation, retention schedule. Tasks WS-001 to WS-007 in TASKS.md.
 
 - `main` at `162f58e` (vitalos-technologies/vitalos-platform#104, squash-merged after every check passed on its head).
 - **Website** (Vercel deployed from the merge; the Git integration is reconnected):
@@ -106,3 +108,18 @@ _Last updated: 28 Oct 2026, billing, `/pay` and the Claude provider delivered._
   - Set `TURNSTILE_SECRET_KEY` as a `production` secret, with the same value as on Vercel, so that `/pay/checkout/` verifies the human check. Without it, only the honeypot and rate limits apply.
   - Review Billing › Settings.
 - **Still not verified in production:** a real enquiry end to end, a live Stripe payment, and the live model path.
+
+## Client portal (ADR-056)
+
+Workstream W8, 28 Oct 2026. A customer portal inside the Super Admin (`apps.portal`) that follows the journey Submitted challenge, Discovery, Assessment, Proposal, Active project, Handover, Managed operations, keeping the original opportunity and its discussion attached.
+
+- **Where:** `https://portal.vitalos.co.uk` (owner decision; only portal URLs are served on that host). `/portal/` path mounting is local preview only. Staff tools are at `/client-portal/` and a "Client portal" panel sits in the opportunity workspace.
+- **Access:** staff invite members (single-use, expiring, hashed token through `apps.mailer`); roles viewer, contributor, approver, authorised signatory; axes lockout; optional TOTP. An enquiry never creates access.
+- **Visibility:** explicit publication per record, scoped selectors, internal fields never rendered, searched, emailed, exported or sent to the AI. Deliverable approvals are version-specific; change requests are request-only with a review trail.
+- **AI:** six read-only activities through `apps.aicore` with a deterministic, labelled fallback (today's production state: no model).
+- **Not built (later phases):** live monitoring integrations (status is manual, labelled, goes stale), contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation administration.
+- **Owner steps before customers use it:** DNS record and Azure custom-domain binding for `portal.vitalos.co.uk`; a private bucket and `PORTAL_FILES_BUCKET` for file uploads; optional `PORTAL_HOST` / `PORTAL_ENABLED` variables (see `superadmin/apps/portal/README.md`).
+- **Checkpoint:** implemented and tested in the worktree branch (see the task register, PORTAL-01 to PORTAL-12). Not deployed; nothing is exposed until the custom domain resolves to the app. The owner approved `portal.vitalos.co.uk` on 28 Oct 2026; `superadmin/deploy/azure/deploy.sh` creates the DNS records and the managed certificate on the first deploy after merge.
+
+- **W6 note (28 Oct 2026):** `/ai-data/contact` is a guided brief (describe, questions, editable cards with provenance, share) over the unchanged enquiry pipeline; AI assist is opt-in, server-side and falls back to a labelled checklist. Production AI stays off until the Super Admin "Website brief assist" switch and a provider key exist. See `engineering/guided-brief.md` and the W6 section of ADR-054.
+- **W5 note (28 Oct 2026):** the public pages were redesigned as AI work surfaces (ADR-054): scripted, labelled hero walkthrough, workflow explorer with the four shared topic slugs, reconciliation preview and a usable demonstrator with three synthetic samples. Base UI 1.9.0 is wrapped in `@vitalos/ui/interactive` and loaded on demand. Home JavaScript +9.2 KB gzip (budget raised to 222,000 B with reasons in `tests/performance/budgets.json`). Not changed: `/ai-data/contact`, the brief, the Super Admin.

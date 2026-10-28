@@ -1,0 +1,154 @@
+{% load ui aidata_ui %}
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+    <div class="min-w-0 space-y-6">
+      {# Details #}
+      <form method="post" action="{% url 'aidata:opportunity_edit' opportunity.ref %}" class="card p-5" aria-labelledby="details-heading" novalidate>
+        {% csrf_token %}
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="details-heading" class="font-semibold">Details</h2>
+          <button type="submit" class="btn btn-primary btn-sm">{% icon "check" "h-4 w-4" %} Save details</button>
+        </div>
+        {% if form.non_field_errors %}<div class="mt-3 rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+
+        <fieldset class="mt-4">
+          <legend class="mono-label muted">Opportunity</legend>
+          <div class="mt-2 grid gap-4 sm:grid-cols-2">
+            {% include "aidata/_field.html" with field=form.title span="full" %}
+            {% include "aidata/_field.html" with field=form.organisation %}
+            {% include "aidata/_field.html" with field=form.sector %}
+            {% include "aidata/_field.html" with field=form.source %}
+            {% include "aidata/_field.html" with field=form.offer %}
+            {% include "aidata/_field.html" with field=form.owner %}
+            {% include "aidata/_field.html" with field=form.website_reference %}
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-6">
+          <legend class="mono-label muted">Next action and dates</legend>
+          <div class="mt-2 grid gap-4 sm:grid-cols-2">
+            {% include "aidata/_field.html" with field=form.next_action span="full" %}
+            {% include "aidata/_field.html" with field=form.next_action_due %}
+            {% include "aidata/_field.html" with field=form.decision_due %}
+            {% include "aidata/_field.html" with field=form.discovery_date %}
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-6">
+          <legend class="mono-label muted">Contact (personal data)</legend>
+          <div class="mt-2 grid gap-4 sm:grid-cols-2">
+            {% include "aidata/_field.html" with field=form.contact_name %}
+            {% include "aidata/_field.html" with field=form.contact_role %}
+            {% include "aidata/_field.html" with field=form.contact_email span="full" %}
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-6">
+          <legend class="mono-label muted">Problem and commercial picture</legend>
+          <div class="mt-2 grid gap-4 sm:grid-cols-2">
+            {% include "aidata/_field.html" with field=form.problem_summary span="full" %}
+            {% include "aidata/_field.html" with field=form.current_tools %}
+            {% include "aidata/_field.html" with field=form.desired_outcome %}
+            {% include "aidata/_field.html" with field=form.timeframe %}
+            {% include "aidata/_field.html" with field=form.budget_band %}
+            {% include "aidata/_field.html" with field=form.estimated_value %}
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-6 rounded-md border border-amber-300 bg-amber-50/60 p-4 dark:border-amber-800 dark:bg-amber-950/40">
+          <legend class="px-1 text-sm font-semibold text-amber-900 dark:text-amber-200">{% icon "globe" "inline h-4 w-4" %} May be shared with the customer</legend>
+          {% include "aidata/_field.html" with field=form.customer_summary %}
+        </fieldset>
+
+        <fieldset class="mt-4 rounded-md border border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+          <legend class="px-1 text-sm font-semibold">{% icon "shield" "inline h-4 w-4" %} Internal only</legend>
+          {% include "aidata/_field.html" with field=form.internal_notes %}
+        </fieldset>
+
+        <div class="mt-4 flex justify-end"><button type="submit" class="btn btn-primary">{% icon "check" "h-4 w-4" %} Save details</button></div>
+      </form>
+
+      {# Internal notes #}
+      <section class="card p-5" id="notes" aria-labelledby="notes-heading">
+        <h2 id="notes-heading" class="font-semibold">Internal notes</h2>
+        <p class="muted text-xs">Never shared with the customer.</p>
+        <form method="post" action="{% url 'aidata:opportunity_note' opportunity.ref %}" class="mt-3">
+          {% csrf_token %}
+          {% include "aidata/_field.html" with field=note_form.body %}
+          <div class="mt-2 flex justify-end"><button type="submit" class="btn btn-secondary btn-sm">{% icon "note" "h-4 w-4" %} Add note</button></div>
+        </form>
+        <ul class="mt-4 space-y-3 text-sm" data-testid="notes">
+          {% for note in notes %}
+            <li class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/60">
+              <p class="whitespace-pre-wrap break-words">{{ note.body }}</p>
+              <p class="mono-label muted mt-1">{{ note.author.email|default:"Unknown" }} · {{ note.created_at|date:"j M Y, H:i" }}</p>
+            </li>
+          {% empty %}
+            <li class="muted">No notes yet.</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <aside class="min-w-0 space-y-6" aria-label="Stage and scorecard">
+      {# Stage #}
+      <section class="card p-5" aria-labelledby="stage-heading">
+        <h2 id="stage-heading" class="font-semibold">Stage</h2>
+        <dl class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+          <div><dt class="muted text-xs">Current</dt><dd><span class="{{ opportunity.stage|stage_badge }}">{{ opportunity.get_stage_display }}</span></dd></div>
+          <div><dt class="muted text-xs">Since</dt><dd>{{ opportunity.stage_changed_at|date:"j M Y" }}</dd></div>
+          <div><dt class="muted text-xs">Created</dt><dd>{{ opportunity.created_at|date:"j M Y" }}</dd></div>
+          <div><dt class="muted text-xs">Closed</dt><dd>{{ opportunity.closed_at|date:"j M Y"|default:"—" }}</dd></div>
+          {% if opportunity.outcome_reason %}<div class="col-span-2"><dt class="muted text-xs">Outcome reason</dt><dd class="whitespace-pre-wrap break-words">{{ opportunity.outcome_reason }}</dd></div>{% endif %}
+          {% if opportunity.signed_scope_reference %}<div class="col-span-2"><dt class="muted text-xs">Signed scope reference</dt><dd class="font-mono break-all">{{ opportunity.signed_scope_reference }}</dd></div>{% endif %}
+        </dl>
+        {% if allowed_stages %}
+          <form method="post" action="{% url 'aidata:opportunity_stage' opportunity.ref %}" class="mt-4 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800" data-testid="stage-form">
+            {% csrf_token %}
+            {% if stage_form.non_field_errors %}<div class="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in stage_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+            {% include "aidata/_field.html" with field=stage_form.stage %}
+            {% include "aidata/_field.html" with field=stage_form.reason %}
+            {% include "aidata/_field.html" with field=stage_form.signed_scope_reference %}
+            <button type="submit" class="btn btn-secondary w-full">{% icon "arrow-right" "h-4 w-4" %} Change stage</button>
+          </form>
+        {% elif is_closed %}
+          <p class="muted mt-4 border-t border-slate-100 pt-4 text-sm dark:border-slate-800">Won and lost are final. A super admin can reopen it to Reviewing.</p>
+        {% endif %}
+        <h3 class="mono-label muted mt-5">History</h3>
+        <ol class="mt-2 space-y-2 text-sm" data-testid="stage-history">
+          {% for change in stage_changes %}
+            <li>
+              <span class="font-medium">{% if change.from_stage %}{{ change.get_from_stage_display }} → {% endif %}{{ change.get_to_stage_display }}</span>
+              {% if change.reason %}<span class="block break-words">{{ change.reason }}</span>{% endif %}
+              <span class="mono-label muted block">{{ change.actor.email|default:"System" }} · {{ change.created_at|date:"j M Y, H:i" }}</span>
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+
+      {# Scorecard #}
+      <section class="card p-5" id="scorecard" aria-labelledby="score-heading">
+        <h2 id="score-heading" class="font-semibold">Qualification scorecard</h2>
+        <p class="muted mt-1 text-xs">Score each from 0 (none) to 5 (strong). 80+ proposal candidate, 65–79 more discovery or narrower scope, under 65 decline or defer.</p>
+        <div id="score-result" class="mt-3" aria-live="polite">{% include "aidata/_score_result.html" with result=result preview=False %}</div>
+        <form method="post" action="{% url 'aidata:opportunity_score' opportunity.ref %}" class="mt-4 space-y-3"
+              hx-get="{% url 'aidata:score_preview' opportunity.ref %}" hx-trigger="change" hx-target="#score-result" hx-swap="innerHTML" hx-params="not csrfmiddlewaretoken" data-testid="score-form">
+          {% csrf_token %}
+          {% if score_form.non_field_errors %}<div class="rounded-md bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{% for error in score_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+          {% for field in score_form %}
+            {% if field.name != "risk_override" and field.name != "risk_reason" %}
+              <div class="grid grid-cols-[minmax(0,1fr)_6.5rem] items-center gap-2">
+                <label for="{{ field.id_for_label }}" class="text-sm">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="field-error col-span-2">{{ error }}</p>{% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+          <div class="border-t border-slate-100 pt-3 dark:border-slate-800">
+            {% include "aidata/_field.html" with field=score_form.risk_override %}
+            <div class="mt-2">{% include "aidata/_field.html" with field=score_form.risk_reason %}</div>
+          </div>
+          <button type="submit" class="btn btn-secondary w-full">{% icon "check" "h-4 w-4" %} Save scorecard</button>
+        </form>
+      </section>
+    </aside>
+  </div>

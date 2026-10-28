@@ -1,0 +1,24 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ milestone.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'project' pk=project.pk %}">{{ project.name }}</a></p>
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Milestone</p>
+      <h1>{{ milestone.title }}</h1>
+      <p class="lede">{% badge milestone.status milestone.get_status_display %}{% if milestone.target_date %} Target {{ milestone.target_date|date:"j M Y" }}.{% endif %} {{ milestone.description }}</p>
+    </div>
+  </div>
+  <div class="stack">
+    {% if deliverables %}
+      <section class="card"><h2>Deliverables for this milestone</h2>
+        <ul class="list">{% for d in deliverables %}<li><a href="{% purl 'deliverable' pk=d.pk %}">{{ d.title }}</a></li>{% endfor %}</ul></section>
+    {% endif %}
+    <section class="card" aria-labelledby="disc-h">
+      <h2 id="disc-h">Discussion about this milestone</h2>
+      {% include "portal/_messages.html" %}
+      <div class="mt-2">{% include "portal/_composer.html" with composer_id="composer" %}</div>
+    </section>
+  </div>
+{% endblock %}

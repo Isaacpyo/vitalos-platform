@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 import { routes } from "@vitalos/cms";
-import { Button } from "@vitalos/ui";
+import { Button, Icon } from "@vitalos/ui";
 import { AiDataPage } from "../../../../src/components/ai-data/chrome";
 import {
   EvaluationResults,
   ReconciliationTable,
   StatementExcerpt,
 } from "../../../../src/components/ai-data/demonstrator";
-import {
-  Band,
-  LabelChip,
-  Panel,
-  SectionHeading,
-} from "../../../../src/components/ai-data/primitives";
+import { Band, LabelChip, SectionHeading } from "../../../../src/components/ai-data/primitives";
+import { ReconWorkbench } from "../../../../src/components/ai-data/ReconWorkbench";
+import { MethodChip } from "../../../../src/components/ai-data/work-surface";
 import { JsonLd } from "../../../../src/components/json-ld";
+import { demoSamples } from "../../../../src/features/ai-data/demonstrator-samples";
 import { demonstratorReport } from "../../../../src/features/ai-data/demonstrator-report";
 import { aiDataGraph, aiDataMetadata } from "../../../../src/features/ai-data/seo";
 
@@ -49,6 +47,8 @@ const steps = [
 const split = [
   {
     heading: "Deterministic code",
+    method: "code",
+    icon: "code",
     items: [
       "Input checks and file limits",
       "Parsing of known statement layouts",
@@ -59,14 +59,19 @@ const split = [
   },
   {
     heading: "Model, when enabled",
+    method: "ai-assisted",
+    icon: "chip",
     items: [
       "Reading statement lines in layouts the parser does not know",
       "Its output is validated against a schema and the source text before use",
       "Never trusted for sums, matches or approvals",
+      "Not used at all in the scripted samples on this page",
     ],
   },
   {
     heading: "A person",
+    method: "person",
+    icon: "person",
     items: [
       "Reviews every exception and every uncertain line",
       "Accepts, corrects or rejects each item",
@@ -108,7 +113,7 @@ export default function AiDataDemonstratorPage() {
             </li>
             <li>
               <LabelChip icon="document" size="lg">
-                Illustrative example
+                Scripted example
               </LabelChip>
             </li>
             <li>
@@ -132,25 +137,15 @@ export default function AiDataDemonstratorPage() {
         </div>
       </Band>
 
-      <Band tone="light" labelledBy="aid-steps">
+      <Band tone="light" labelledBy="aid-workbench">
         <div className="flex flex-col gap-(--space-7)">
-          <SectionHeading id="aid-steps" eyebrow="What it does" title="Five steps, in order." />
-          <ol className="m-0 flex list-none flex-col gap-0 border-t border-aid-border p-0">
-            {steps.map((step, index) => (
-              <li
-                key={step.title}
-                className="grid grid-cols-[2.5rem_1fr] gap-x-(--space-3) gap-y-(--space-1) border-b border-aid-border py-(--space-5) md:grid-cols-[3rem_14rem_1fr] md:gap-x-(--space-6)"
-              >
-                <span className="pt-1 font-mono text-small text-aid-muted">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="m-0 text-body-l font-semibold text-aid-heading">{step.title}</h3>
-                <p className="col-start-2 m-0 max-w-(--container-prose) text-aid-text md:col-start-3">
-                  {step.text}
-                </p>
-              </li>
-            ))}
-          </ol>
+          <SectionHeading
+            id="aid-workbench"
+            eyebrow="Try it"
+            title="Choose a sample and follow every result back to its source."
+            lead="The statement is on the left and the results on the right. Choose a result to expand its evidence and highlight the line it cites. The sample inputs are synthetic; the results are prepared from them, not computed live."
+          />
+          <ReconWorkbench samples={demoSamples} surface="demonstrator" tone="light" />
         </div>
       </Band>
 
@@ -163,35 +158,45 @@ export default function AiDataDemonstratorPage() {
           />
           <ul className="m-0 grid list-none gap-(--space-5) p-0 md:grid-cols-3">
             {split.map((column) => (
-              <Panel as="li" key={column.heading}>
+              <li
+                key={column.heading}
+                className="flex min-w-0 flex-col gap-(--space-4) rounded-xl border border-aid-border bg-aid-surface p-(--space-5) transition-[border-color,box-shadow] duration-(--duration-feedback) hover:border-aid-line hover:shadow-floating"
+              >
+                <div className="flex items-center justify-between gap-(--space-3)">
+                  <span className="inline-flex size-10 items-center justify-center rounded-md border border-aid-signal bg-aid-signal-soft text-aid-signal">
+                    <Icon name={column.icon} size={20} />
+                  </span>
+                  <MethodChip method={column.method} />
+                </div>
                 <h3 className="m-0 text-h3 text-aid-heading">{column.heading}</h3>
                 <ul className="m-0 flex list-disc flex-col gap-(--space-2) pl-(--space-5)">
                   {column.items.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </Panel>
+              </li>
             ))}
           </ul>
         </div>
       </Band>
 
-      <Band tone="light" labelledBy="aid-example">
+      <Band tone="light" labelledBy="aid-steps">
         <div className="flex flex-col gap-(--space-7)">
-          <div className="flex flex-col gap-(--space-4)">
-            <div className="flex flex-wrap gap-(--space-2)">
-              <LabelChip icon="info">Synthetic data</LabelChip>
-              <LabelChip icon="document">Illustrative example</LabelChip>
-            </div>
-            <SectionHeading
-              id="aid-example"
-              eyebrow="Example"
-              title="A statement excerpt and its reconciliation."
-              lead="A short, made-up statement from a fictional supplier, and the result the demonstrator produces against a fictional purchase ledger. Every result cites the statement line (L5, L6 and so on) it came from."
-            />
-          </div>
-          <StatementExcerpt />
-          <ReconciliationTable />
+          <SectionHeading id="aid-steps" eyebrow="What it does" title="Five steps, in order." />
+          <ol className="m-0 grid list-none gap-(--space-4) p-0 sm:grid-cols-2 lg:grid-cols-5">
+            {steps.map((step, index) => (
+              <li
+                key={step.title}
+                className="flex flex-col gap-(--space-2) border-t-2 border-aid-signal pt-(--space-3)"
+              >
+                <span className="font-mono text-small text-aid-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="m-0 text-body-l font-semibold text-aid-heading">{step.title}</h3>
+                <p className="m-0 text-small text-aid-text">{step.text}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </Band>
 
@@ -217,15 +222,33 @@ export default function AiDataDemonstratorPage() {
         </div>
       </Band>
 
-      <Band tone="light" labelledBy="aid-evaluation">
+      <Band tone="light" labelledBy="aid-evidence">
         <div className="flex flex-col gap-(--space-7)">
           <SectionHeading
-            id="aid-evaluation"
-            eyebrow="Evaluation"
+            id="aid-evidence"
+            eyebrow="Evidence"
             title={demonstratorReport.label}
-            lead="Acceptance criteria were written down before any evaluation was run, and thresholds only change through a dated revision. Offline results with simulated model responses test the controls around the model, not the quality of any live model."
+            lead="Acceptance criteria were written down before any evaluation was run, and thresholds only change through a dated revision. Offline results with simulated model responses test the controls around the model, not the quality of any live model. The live-provider criterion has not run."
           />
           <EvaluationResults report={demonstratorReport} />
+          <details className="group rounded-xl border border-aid-border bg-aid-surface">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-(--space-4) px-(--space-5) py-(--space-3) font-semibold text-aid-heading [&::-webkit-details-marker]:hidden">
+              <span>The first sample as plain tables</span>
+              <Icon
+                name="chevron-down"
+                size={20}
+                className="shrink-0 transition-transform duration-(--duration-disclosure) group-open:rotate-180"
+              />
+            </summary>
+            <div className="flex flex-col gap-(--space-6) px-(--space-5) pb-(--space-5)">
+              <p className="m-0 text-aid-muted">
+                The same synthetic statement and its reconciliation as ordinary tables, for readers
+                who prefer them and for tools that cannot use the interactive view.
+              </p>
+              <StatementExcerpt />
+              <ReconciliationTable />
+            </div>
+          </details>
         </div>
       </Band>
 

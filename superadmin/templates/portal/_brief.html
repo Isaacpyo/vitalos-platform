@@ -1,0 +1,10 @@
+{# One brief version with provenance-tagged segments. Context: brief. #}
+{% load portal_ui %}
+<ul class="segments" data-testid="brief-segments">
+  {% for seg in brief.segments %}
+    <li class="segment segment--{{ seg.provenance|provenance_class }}">
+      <span class="chip">{{ seg.provenance|provenance_label }}</span>
+      <div class="prose">{{ seg.text }}</div>
+    </li>
+  {% endfor %}
+</ul>

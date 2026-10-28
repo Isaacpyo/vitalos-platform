@@ -1,0 +1,25 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Notifications · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <div><h1>Notifications</h1><p class="lede">Published updates, questions, deliverables and approval requests for you.</p></div>
+    <div class="row">
+      <a class="btn btn--secondary btn--sm" href="{% purl 'notification_preferences' %}">Email preferences</a>
+      {% if notifications and not preview %}<form method="post" action="{% purl 'notifications_read_all' %}" class="inline-form">{% csrf_token %}<button class="btn btn--secondary btn--sm" type="submit">Mark all read</button></form>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <ul class="list" data-testid="notifications">
+      {% for n in notifications %}
+        <li>
+          <a href="{% purl 'notification_open' pk=n.pk %}"><strong>{{ n.title }}</strong></a>{% if not n.read_at %} <span class="badge badge--info">New</span>{% endif %}
+          {% if n.body %}<br><span class="small">{{ n.body }}</span>{% endif %}
+          <br><span class="muted small">{{ n.get_kind_display }} · {{ n.created_at|date:"j M Y, H:i" }}</span>
+        </li>
+      {% empty %}
+        <li class="empty"><h3>No notifications</h3><p>You will see published updates, questions and review requests here.</p></li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

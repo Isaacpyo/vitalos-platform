@@ -20,10 +20,47 @@ describe("analytics taxonomy", () => {
         "outbound_click",
         "primary_cta_click",
         "trust_enquiry_submit",
+        // Vitalos AI & Data marketing experience (W5, ADR-054).
+        "workflow_started",
+        "explorer_topic_selected",
+        "demo_sample_chosen",
+        "demo_stage_viewed",
+        "demo_evidence_expanded",
+        "ai_data_cta_click",
+        // Guided brief on /ai-data/contact (W6): counts, enums and booleans only.
+        "brief_ai_opt_in",
+        "brief_completed",
+        "brief_questions_answered",
+        "brief_shared",
+        "brief_started",
+        "simple_form_submitted",
       ].sort(),
     );
     expect(isAnalyticsEventName("page_view")).toBe(false);
     expect(isAnalyticsEventName("toString")).toBe(false);
+  });
+});
+
+describe("AI & Data events", () => {
+  const track = vi.fn();
+  const onInvalid = vi.fn();
+  const sink = createValidatingSink({ track }, onInvalid);
+
+  it("accepts slugs and enums and rejects free text", () => {
+    sink.track("workflow_started", { source: "hero", topic: "document-intake" });
+    sink.track("demo_stage_viewed", { surface: "hero", sampleId: "statement", stage: "check" });
+    expect(track).toHaveBeenCalledTimes(2);
+    sink.track("workflow_started", {
+      source: "hero",
+      topic: "my own words about payroll",
+    } as never);
+    sink.track("demo_evidence_expanded", {
+      surface: "hero",
+      sampleId: "statement",
+      itemId: "Line 6 of the statement",
+    } as never);
+    expect(track).toHaveBeenCalledTimes(2);
+    expect(onInvalid).toHaveBeenCalledTimes(2);
   });
 });
 

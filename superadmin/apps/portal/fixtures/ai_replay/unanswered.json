@@ -1,0 +1,14 @@
+{
+  "_readme": "SIMULATED demonstration fixture, hand-written for the synthetic Northwind Synthetic Ltd seed data (portal_seed_demo). It is not output from a live model. Points cite records by their visible label.",
+  "label": "simulated",
+  "summary": "One question is still waiting for your answer.",
+  "points": [
+    {
+      "text": "Which ledger system do you export from? It was due yesterday.",
+      "cite": [
+        "Question: Which ledger system do you export from?"
+      ]
+    }
+  ],
+  "gaps": []
+}

@@ -1,0 +1,16 @@
+{% load static %}<!doctype html>
+{# Operator preview BEFORE publishing: the customer's styling and content, without customer navigation. #}
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Preview: not published · Vitalos client portal</title>
+    <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
+  </head>
+  <body>
+    <div class="banner banner--preview" role="status" data-testid="draft-banner">Preview: not published. {% block preview_note %}The customer cannot see this yet.{% endblock %} <a href="{{ back }}">Back to the admin</a></div>
+    <header class="portal-header"><div class="portal-header__inner"><span class="portal-brand"><img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28"><span class="portal-brand__org">{{ challenge.organisation.name }}</span></span></div></header>
+    <main class="portal-main" id="main">{% block preview_body %}{% endblock %}</main>
+  </body>
+</html>

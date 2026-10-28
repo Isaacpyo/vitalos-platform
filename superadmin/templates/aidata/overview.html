@@ -1,84 +1,108 @@
 {% extends "base.html" %}
-{% load ui aidata_ui %}
+{% load ui aidata_ui static %}
 {% block title %}AI & Data · Vitalos Super Admin{% endblock %}
+{% block scripts %}<script src="{% static 'js/aidata.js' %}" nonce="{{ csp_nonce }}" defer></script>{% endblock %}
 {% block content %}
-  <p class="mono-label muted">Vitalos AI &amp; Data</p>
-  <h1 class="mt-1 text-2xl font-semibold">AI &amp; Data</h1>
-  <p class="muted mt-1 max-w-3xl text-sm">Internal pipeline, proposed offer prices and the speculative budget. Live records stay here, never in the public repository.</p>
+<div class="aid-ws" data-aid-admin>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <p class="aid-eyebrow">Vitalos AI &amp; Data</p>
+      <h1 class="mt-1 text-2xl font-semibold text-aid-heading">Delivery workspace</h1>
+      <p class="aid-muted mt-1 max-w-3xl text-sm">Enquiry, qualification, discovery, proposal, delivery, managed operations, product incubation. AI prepares; a person decides. Live records stay here, never in the public repository.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'aidata:opportunity_new' %}" class="aid-btn aid-btn-primary" data-testid="new-from-enquiry">{% aid_icon "spark" %} Paste an enquiry</a>
+      <a href="{% url 'aidata:opportunity_new' %}#manual" class="aid-btn aid-btn-secondary">{% aid_icon "plus" %} New opportunity</a>
+    </div>
+  </div>
   {% include "aidata/_nav.html" with section="overview" %}
 
-  <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <a href="{% url 'aidata:pipeline' %}" class="card group block p-5 hover:border-cobalt-600/50" data-testid="card-pipeline">
-      <p class="flex items-center gap-2 font-semibold">{% icon "trend" "h-5 w-5 text-cobalt-600 dark:text-cobalt-300" %} Pipeline</p>
-      <p class="muted mt-1 text-sm">Opportunities from enquiries, referrals and outbound, with stages, owners and a scorecard.</p>
-      <p class="mt-3 text-sm font-medium text-cobalt-600 group-hover:underline dark:text-cobalt-300">Open pipeline</p>
-    </a>
-    <a href="{% url 'aidata:offers' %}" class="card group block p-5 hover:border-cobalt-600/50" data-testid="card-offers">
-      <p class="flex items-center gap-2 font-semibold">{% icon "package" "h-5 w-5 text-cobalt-600 dark:text-cobalt-300" %} Offers</p>
-      <p class="muted mt-1 text-sm">Four offers with proposed prices. Commercial assumptions, not published.</p>
-      <p class="mt-3 text-sm font-medium text-cobalt-600 group-hover:underline dark:text-cobalt-300">Open offers</p>
-    </a>
-    <a href="{% url 'aidata:budget' %}" class="card group block p-5 hover:border-cobalt-600/50" data-testid="card-budget">
-      <p class="flex items-center gap-2 font-semibold">{% icon "briefcase" "h-5 w-5 text-cobalt-600 dark:text-cobalt-300" %} Budget</p>
-      <p class="muted mt-1 text-sm">Spend against the {{ budget.overall.ceiling|gbp }} speculative ceiling, by category.</p>
-      <p class="mt-3 text-sm font-medium text-cobalt-600 group-hover:underline dark:text-cobalt-300">Open budget</p>
-    </a>
-    <a href="{{ demonstrator_path }}" class="card group block p-5 hover:border-cobalt-600/50" data-testid="card-demonstrator">
-      <p class="flex items-center gap-2 font-semibold">{% icon "flask" "h-5 w-5 text-cobalt-600 dark:text-cobalt-300" %} Demonstrator</p>
-      <p class="muted mt-1 text-sm">Supplier statement reconciliation with exception review, on synthetic data.</p>
-      <p class="mt-3 text-sm font-medium text-cobalt-600 group-hover:underline dark:text-cobalt-300">Open demonstrator</p>
-    </a>
-  </div>
+  <div class="mt-4">{% include "aidata/components/_ai_status.html" with availability=availability compact=True %}</div>
 
-  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-    <section class="card p-5" aria-labelledby="stages-heading">
-      <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="stages-heading" class="font-semibold">Pipeline by stage</h2>
-        <a href="{% url 'aidata:opportunity_new' %}" class="btn btn-secondary btn-sm">{% icon "plus" "h-4 w-4" %} New opportunity</a>
-      </div>
-      <ul class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="stage-counts">
+  <h2 class="sr-only">Work queue</h2>
+  {% if queue_empty and not total_opportunities %}
+    <div class="mt-6" data-testid="queue-empty">
+      {% url 'aidata:opportunity_new' as new_url %}
+      {% include "aidata/components/_empty_state.html" with icon="inbox" title="Nothing in the workspace yet" body="Paste an enquiry or describe a conversation. AI (or plain rules when AI is off) prepares a brief with the evidence beside it; you check it, correct it and decide. Nothing is created until you do." action_url=new_url action_label="Paste an enquiry" %}
+    </div>
+  {% else %}
+    <div class="mt-6 grid gap-4 lg:grid-cols-2" data-testid="work-queue">
+      {% for group in groups %}
+        <section class="aid-card" aria-labelledby="queue-{{ group.key }}" data-group="{{ group.key }}">
+          <header class="flex items-center justify-between gap-2 border-b border-aid-border px-4 py-3">
+            <div>
+              <h3 id="queue-{{ group.key }}" class="text-sm font-semibold text-aid-heading">{{ group.title }}</h3>
+              <p class="aid-muted text-xs">{{ group.question }}</p>
+            </div>
+            <span class="aid-chip {% if group.key == 'blocked' and group.total %}aid-chip-error{% elif group.total %}aid-chip-info{% else %}aid-chip-neutral{% endif %}">{{ group.total }}</span>
+          </header>
+          {% if group.items %}
+            <ul>
+              {% for item in group.items %}
+                <li class="aid-row" data-testid="queue-item">
+                  <div class="min-w-0 flex-1">
+                    <p class="font-medium text-aid-heading">{{ item.title }}{% if item.source %} <span class="aid-chip aid-chip-info" data-testid="queue-source">{{ item.source }}</span>{% endif %}</p>
+                    <p class="aid-muted text-xs">{{ item.detail }}</p>
+                    {% if item.evidence %}<p class="mt-0.5 text-xs">{{ item.evidence }}</p>{% endif %}
+                    <p class="aid-muted mt-0.5 flex flex-wrap gap-x-3 text-xs">
+                      {% if item.owner %}<span>{% aid_icon "users" "mr-1 inline h-3.5 w-3.5" %}{{ item.owner }}</span>{% endif %}
+                      {% if item.due %}<span class="{% if item.overdue %}font-semibold text-aid-error{% endif %}">{% aid_icon "clock" "mr-1 inline h-3.5 w-3.5" %}{% if item.overdue %}Overdue, {% endif %}due {{ item.due|date:"j M" }}</span>{% endif %}
+                    </p>
+                  </div>
+                  <a href="{{ item.url }}" class="aid-btn aid-btn-secondary shrink-0">{{ item.action }} {% aid_icon "arrow-right" %}</a>
+                </li>
+              {% endfor %}
+            </ul>
+            {% if group.total > group.items|length %}<p class="aid-muted border-t border-aid-border px-4 py-2 text-xs">Showing {{ group.items|length }} of {{ group.total }}.</p>{% endif %}
+          {% else %}
+            <p class="aid-muted px-4 py-4 text-sm">{{ group.empty }}</p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+    <section class="aid-card p-4" aria-labelledby="stages-heading">
+      <h2 id="stages-heading" class="text-sm font-semibold text-aid-heading">Pipeline by stage</h2>
+      <ul class="mt-3 grid grid-cols-4 gap-1.5" data-testid="stage-counts">
         {% for item in stage_counts %}
-          <li>
-            <a href="{% url 'aidata:pipeline' %}?stage={{ item.stage }}" class="block rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
-              <span class="muted block text-xs">{{ item.label }}</span>
-              <span class="tabular block text-xl font-semibold">{{ item.count }}</span>
-            </a>
-          </li>
+          <li><a href="{% url 'aidata:pipeline' %}?stage={{ item.stage }}" class="block rounded-md border border-aid-border px-2 py-1.5 hover:bg-aid-surface"><span class="aid-muted block truncate text-[11px]">{{ item.label }}</span><span class="tabular block text-lg font-semibold">{{ item.count }}</span></a></li>
         {% endfor %}
       </ul>
-
-      <h3 class="mt-6 flex items-center gap-2 text-sm font-semibold">{% icon "clock" "h-4 w-4" %} Overdue next actions <span class="{% if overdue_count %}{{ 'over'|budget_badge }}{% else %}{{ 'ok'|budget_badge }}{% endif %}">{{ overdue_count }}</span></h3>
+      <h3 class="mt-4 flex items-center gap-2 text-xs font-semibold">{% aid_icon "clock" "h-4 w-4" %} Overdue next actions <span class="aid-chip {% if overdue_count %}aid-chip-error{% else %}aid-chip-ok{% endif %}">{{ overdue_count }}</span></h3>
       {% if overdue %}
-        <ul class="mt-2 divide-y divide-slate-100 text-sm dark:divide-slate-800" data-testid="overdue-list">
+        <ul class="mt-2 space-y-1 text-sm" data-testid="overdue-list">
           {% for item in overdue %}
-            <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2">
-              <a href="{{ item.get_absolute_url }}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300"><span class="font-mono text-xs">{{ item.ref }}</span> {{ item.title }}</a>
-              <span class="muted">{{ item.next_action|default:"No next action" }}</span>
-              <span class="ml-auto whitespace-nowrap text-xs font-medium text-rose-700 dark:text-rose-300">Due {{ item.next_action_due|date:"j M Y" }}</span>
-            </li>
+            <li class="flex flex-wrap items-baseline gap-x-2"><a href="{{ item.get_absolute_url }}" class="font-medium text-aid-link hover:underline"><span class="font-mono text-xs">{{ item.ref }}</span> {{ item.title }}</a><span class="ml-auto whitespace-nowrap text-xs font-medium text-aid-error">Due {{ item.next_action_due|date:"j M Y" }}</span></li>
           {% endfor %}
         </ul>
-        {% if overdue_count > overdue|length %}<a class="mt-2 inline-block text-sm text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'aidata:pipeline' %}?overdue=1">All {{ overdue_count }} overdue</a>{% endif %}
+        {% if overdue_count > overdue|length %}<a class="mt-2 inline-block text-sm text-aid-link hover:underline" href="{% url 'aidata:pipeline' %}?overdue=1">All {{ overdue_count }} overdue</a>{% endif %}
       {% else %}
-        <p class="muted mt-2 text-sm">Nothing overdue.</p>
+        <p class="aid-muted mt-2 text-sm">Nothing overdue.</p>
       {% endif %}
     </section>
 
-    <section class="card p-5" aria-labelledby="budget-heading">
-      <h2 id="budget-heading" class="font-semibold">Budget used</h2>
+    <section class="aid-card p-4" aria-labelledby="budget-heading">
+      <h2 id="budget-heading" class="text-sm font-semibold text-aid-heading">Budget used</h2>
       {% with line=budget.overall %}
-        <p class="mt-3"><span class="tabular text-2xl font-semibold">{{ line.used|gbp }}</span> <span class="muted text-sm">of {{ line.ceiling|gbp }}</span></p>
-        <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ line.percent }}" aria-label="Budget used">
-          <div class="h-full {{ line.percent|bar_width }} {% if line.status == 'over' %}bg-rose-600{% elif line.status == 'warn' %}bg-amber-500{% else %}bg-mineral{% endif %}"></div>
+        <p class="mt-2"><span class="tabular text-xl font-semibold">{{ line.used|gbp }}</span> <span class="aid-muted text-sm">of {{ line.ceiling|gbp }}</span></p>
+        <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-aid-surface" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ line.percent }}" aria-label="Budget used">
+          <div class="h-full {{ line.percent|bar_width }} {% if line.status == 'over' %}bg-aid-error{% elif line.status == 'warn' %}bg-aid-warn{% else %}bg-aid-ok{% endif %}"></div>
         </div>
-        <dl class="mt-3 grid grid-cols-3 gap-2 text-sm">
-          <div><dt class="muted text-xs">Actual</dt><dd class="tabular">{{ line.actual|gbp }}</dd></div>
-          <div><dt class="muted text-xs">Planned</dt><dd class="tabular">{{ line.planned|gbp }}</dd></div>
-          <div><dt class="muted text-xs">Committed</dt><dd class="tabular">{{ line.committed|gbp }}</dd></div>
-        </dl>
-        <p class="mt-3 text-sm"><span class="{{ line.status|budget_badge }}">{% if line.status == 'over' %}Over the ceiling{% elif line.status == 'warn' %}80% or more used{% else %}Within the ceiling{% endif %}</span> <span class="muted">{{ line.remaining|gbp }} remaining</span></p>
+        <p class="mt-2 text-sm"><span class="aid-chip {% if line.status == 'over' %}aid-chip-error{% elif line.status == 'warn' %}aid-chip-warn{% else %}aid-chip-ok{% endif %}">{% if line.status == 'over' %}Over the ceiling{% elif line.status == 'warn' %}80% or more used{% else %}Within the ceiling{% endif %}</span> <span class="aid-muted">{{ line.remaining|gbp }} remaining</span></p>
       {% endwith %}
-      <p class="muted mt-3 text-xs">A cloud budget alert is not a spending cap. Any new paid service needs the owner's approval.</p>
+      <p class="aid-muted mt-2 text-xs">A cloud budget alert is not a spending cap. Any new paid service needs the owner's approval. <a class="text-aid-link hover:underline" href="{% url 'aidata:budget' %}">Open budget</a></p>
+    </section>
+
+    <section class="aid-card p-4" aria-labelledby="ai-heading">
+      <h2 id="ai-heading" class="text-sm font-semibold text-aid-heading">AI this month</h2>
+      <dl class="mt-2 grid grid-cols-2 gap-2 text-sm">
+        <div><dt class="aid-muted text-xs">Estimated spend</dt><dd class="tabular font-semibold">£{{ usage.spent_month_gbp|floatformat:2 }} <span class="aid-muted font-normal">of £{{ usage.budget_gbp|floatformat:2 }}</span></dd></div>
+        <div><dt class="aid-muted text-xs">Model runs today</dt><dd class="tabular font-semibold">{{ usage.runs_today }} <span class="aid-muted font-normal">of {{ usage.daily_cap }}</span></dd></div>
+      </dl>
+      <p class="aid-muted mt-2 text-xs">Every model call goes through the gateway: kill switch, per-run, daily and monthly caps. <a class="text-aid-link hover:underline" href="{{ demonstrator_path }}">Demonstrator</a> · <a class="text-aid-link hover:underline" href="{% url 'aidata:offers' %}">Offers</a></p>
     </section>
   </div>
+</div>
 {% endblock %}

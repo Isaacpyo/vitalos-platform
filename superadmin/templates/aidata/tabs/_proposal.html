@@ -1,0 +1,113 @@
+{% load aidata_ui portal_ui %}
+<div class="space-y-5" id="draft">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 class="aid-title">Proposal draft</h2>
+    {% if proposal %}<div class="flex flex-wrap items-center gap-2">{% state_chip proposal.state %}<span class="aid-chip aid-chip-neutral">Version {{ proposal.version }} · assembled by rules, no AI</span></div>{% endif %}
+  </div>
+
+  <div class="aid-banner aid-banner-info" role="note">{% aid_icon "shield" "mt-0.5 h-4 w-4 shrink-0" %}<p><strong>Nothing is sent from here.</strong> A proposal is drafted only from an approved discovery pack and the offer definition. Approving marks it ready; you export it and send it yourself.</p></div>
+
+  {% if not proposal or proposal.state == "rejected" %}
+    {% if proposal_blocked %}
+      <div class="aid-banner aid-banner-warn" role="status" data-testid="proposal-blocked">{% aid_icon "flag" "mt-0.5 h-4 w-4 shrink-0" %}<p><strong>Blocked.</strong> {{ proposal_blocked.0 }} <a class="font-semibold underline" href="?tab=discovery">Open discovery</a>.</p></div>
+    {% elif not opportunity.offer %}
+      <div class="aid-banner aid-banner-warn" role="status">{% aid_icon "flag" "mt-0.5 h-4 w-4 shrink-0" %}<p><strong>Choose an offer first.</strong> The proposal follows the offer definition. <a class="font-semibold underline" href="?tab=details">Set the offer</a>.</p></div>
+    {% else %}
+      <div class="aid-card p-4">
+        <p class="text-sm">Discovery v{{ approved_discovery.version }} is approved for {{ opportunity.get_offer_display }}. Draft the scope, deliverables, exclusions, dependencies, milestones and acceptance criteria from it.</p>
+        {% if can_act %}<form method="post" action="{% url 'aidata:proposal_start' opportunity.ref %}" class="mt-3" data-once>{% csrf_token %}<input type="hidden" name="key" value="{{ key }}"><button type="submit" class="aid-btn aid-btn-primary" data-testid="draft-proposal">{% aid_icon "document" %} Draft the proposal</button></form>{% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    {% if proposal.is_active or proposal.state == "failed" %}
+      {% include "aidata/components/_task_status.html" with draft=proposal execution=execution|get_item:proposal.pk polling=proposal.is_active availability=availability %}
+    {% endif %}
+    {% if proposal.state == "draft" or proposal.state == "reviewed" or proposal.state == "approved" %}
+      {% if proposal_stale %}<div class="aid-banner aid-banner-warn" role="status" data-testid="proposal-stale">{% aid_icon "warning" "mt-0.5 h-4 w-4 shrink-0" %}<p>A newer discovery pack was approved after this draft. Reject this draft and draft again from the current one.</p></div>{% endif %}
+      {% if proposal.state == "approved" %}<div class="aid-banner aid-banner-ok" role="status"><p>{% aid_icon "success" "mr-1 inline h-4 w-4" %}Marked ready. This version is history; use Revise to change it. Send it yourself from the export below.</p></div>{% endif %}
+
+      <form method="post" action="{% url 'aidata:draft_save' proposal.pk %}" class="aid-card" data-once data-testid="proposal-form">
+        {% csrf_token %}
+        {% with p=proposal.payload ro=proposal.is_locked %}
+        <div class="grid gap-4 p-4 lg:grid-cols-2">
+          <div class="lg:col-span-2"><label for="pp-title" class="aid-label">Title</label><input id="pp-title" name="title" class="aid-input" maxlength="200" value="{{ p.title }}" {% if ro %}readonly{% endif %}></div>
+          <div class="lg:col-span-2"><label for="pp-summary" class="aid-label">Summary</label><textarea id="pp-summary" name="summary" rows="3" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.summary }}</textarea></div>
+          <div><label for="pp-scope" class="aid-label">Scope (one per line)</label><textarea id="pp-scope" name="scope" rows="6" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.scope|lines }}</textarea><p class="aid-help">From the approved requirements and workflow.</p></div>
+          <div><label for="pp-del" class="aid-label">Deliverables (one per line)</label><textarea id="pp-del" name="deliverables" rows="6" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.deliverables|lines }}</textarea><p class="aid-help">From the {{ p.offer_name|default:"offer" }} definition.</p></div>
+          <div><label for="pp-excl" class="aid-label">Exclusions (one per line)</label><textarea id="pp-excl" name="exclusions" rows="5" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.exclusions|lines }}</textarea></div>
+          <div><label for="pp-dep" class="aid-label">Dependencies (one per line)</label><textarea id="pp-dep" name="dependencies" rows="5" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.dependencies|lines }}</textarea><p class="aid-help">What we need from the customer, assumptions and open points.</p></div>
+          <div class="lg:col-span-2"><label for="pp-acc" class="aid-label">Acceptance criteria (one per line)</label><textarea id="pp-acc" name="acceptance_criteria" rows="4" class="aid-input" {% if ro %}readonly{% endif %}>{{ p.acceptance_criteria|lines }}</textarea></div>
+
+          <fieldset class="lg:col-span-2">
+            <legend class="aid-label !text-sm">Milestones</legend>
+            <div id="milestones" class="mt-1 space-y-2">
+              {% for m in p.milestones %}
+                <div data-row class="aid-surface grid gap-2 p-2.5 sm:grid-cols-[1fr_2fr_10rem_auto]">
+                  <input name="ms_name" class="aid-input" aria-label="Milestone name" value="{{ m.name }}" {% if ro %}readonly{% endif %}>
+                  <input name="ms_description" class="aid-input" aria-label="What it delivers" value="{{ m.description }}" {% if ro %}readonly{% endif %}>
+                  <input name="ms_target" class="aid-input" aria-label="Target date or timing" placeholder="Target (text)" value="{{ m.target }}" {% if ro %}readonly{% endif %}>
+                  {% if not ro %}<button type="button" class="aid-btn aid-btn-quiet" data-row-remove aria-label="Remove milestone">{% aid_icon "close" %}</button>{% endif %}
+                </div>
+              {% empty %}
+                <div data-row class="aid-surface grid gap-2 p-2.5 sm:grid-cols-[1fr_2fr_10rem_auto]"><input name="ms_name" class="aid-input" aria-label="Milestone name"><input name="ms_description" class="aid-input" aria-label="What it delivers"><input name="ms_target" class="aid-input" aria-label="Target" placeholder="Target (text)"><button type="button" class="aid-btn aid-btn-quiet" data-row-remove aria-label="Remove milestone">{% aid_icon "close" %}</button></div>
+              {% endfor %}
+            </div>
+            {% if not ro %}<button type="button" class="aid-btn aid-btn-quiet mt-1" data-add-row="milestones">{% aid_icon "plus" %} Add a milestone</button>{% endif %}
+            <p class="aid-help">Targets are free text. No dates are invented.</p>
+          </fieldset>
+
+          <fieldset class="lg:col-span-2 rounded-md border border-aid-border p-3" data-testid="price">
+            <legend class="px-1 text-sm font-semibold text-aid-heading">Price</legend>
+            <div class="space-y-2 text-sm">
+              <label class="flex items-start gap-2"><input type="radio" name="price_kind" value="offer_price" class="mt-1"{% if p.price.kind == "offer_price" %} checked{% endif %}{% if ro %} disabled{% endif %}> <span><strong>The offer price</strong> from AI &amp; Data &rsaquo; Offers: {% if offer_price.label %}<span class="tabular">{{ offer_price.label }}</span> <span class="aid-chip {% if offer_price.status == 'validated' %}aid-chip-ok{% else %}aid-chip-warn{% endif %}">{% if offer_price.status == 'validated' %}Validated{% else %}Proposed, not validated{% endif %}</span>{% else %}none is set for this offer{% endif %}</span></label>
+              <label class="flex items-start gap-2"><input type="radio" name="price_kind" value="estimate" class="mt-1"{% if p.price.kind == "estimate" %} checked{% endif %}{% if ro %} disabled{% endif %}> <span><strong>An estimate</strong> you type. It is always labelled "Estimate", never as a quote.</span></label>
+              <div class="grid gap-2 pl-6 sm:grid-cols-[10rem_1fr]">
+                <div><label for="pp-amount" class="aid-label">Estimate (GBP)</label><input id="pp-amount" name="price_amount" inputmode="decimal" class="aid-input" value="{% if p.price.kind == 'estimate' %}{{ p.price.amount }}{% endif %}" {% if ro %}readonly{% endif %}></div>
+                <div><label for="pp-pnote" class="aid-label">Basis of the estimate</label><input id="pp-pnote" name="price_note" class="aid-input" maxlength="300" value="{% if p.price.kind == 'estimate' %}{{ p.price.note }}{% endif %}" {% if ro %}readonly{% endif %}></div>
+              </div>
+              <label class="flex items-start gap-2"><input type="radio" name="price_kind" value="none" class="mt-1"{% if p.price.kind == "none" %} checked{% endif %}{% if ro %} disabled{% endif %}> <span>No price yet (the proposal cannot be approved until one is chosen)</span></label>
+              <p class="aid-help">Now: <strong>{{ p.price.label }}</strong>. {{ p.price.note }} Prices exclude VAT.</p>
+            </div>
+          </fieldset>
+          <div class="lg:col-span-2"><label for="pp-pay" class="aid-label">Payment terms (proposed default, negotiable)</label><input id="pp-pay" name="payment" class="aid-input" maxlength="400" value="{{ p.payment }}" {% if ro %}readonly{% endif %}></div>
+        </div>
+        {% endwith %}
+        {% if can_act and not proposal.is_locked %}<div class="flex flex-wrap items-center justify-between gap-2 border-t border-aid-border px-4 py-3"><p class="aid-help !mt-0">Saving sends a reviewed draft back to draft.</p><button type="submit" class="aid-btn aid-btn-primary">{% aid_icon "check" %} Save changes</button></div>{% endif %}
+      </form>
+
+      {% if proposal.state == "approved" %}
+        {% portal_panel opportunity as pp %}
+        <section class="aid-card p-4" aria-labelledby="portal-project-heading" data-testid="portal-project">
+          <h3 id="portal-project-heading" class="text-sm font-semibold text-aid-heading">Customer project in the client portal</h3>
+          {% if pp.proposal_project %}
+            <p class="mt-1 text-sm">A project was prefilled from this proposal: <strong>{{ pp.proposal_project.name }}</strong> ({% if pp.proposal_project.published_at %}published{% else %}not published{% endif %}).</p>
+            <a class="aid-btn aid-btn-secondary mt-3" href="{% url 'portaladmin:project' pp.proposal_project.pk %}" data-testid="open-portal-project">Open the portal project</a>
+          {% elif pp.challenge %}
+            <p class="mt-1 text-sm">Prefills a portal project with the scope, deliverables, milestones and responsibilities from this approved proposal. <strong>Nothing is published</strong> and the price is never copied. You review it and publish each part yourself. Pressing it again opens the same project.</p>
+            {% if can_act %}<form method="post" action="{% url 'portaladmin:project_from_proposal' opportunity.ref %}" class="mt-3" data-once>{% csrf_token %}<button type="submit" class="aid-btn aid-btn-primary" data-testid="create-portal-project">Create portal project from proposal</button></form>{% endif %}
+          {% else %}
+            <p class="mt-1 text-sm">Link this opportunity to the client portal first, then the proposal can become a project. <a class="font-semibold underline" href="{% url 'portaladmin:link_challenge' opportunity.ref %}">Link to client portal</a>.</p>
+          {% endif %}
+        </section>
+      {% endif %}
+
+      <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        {% include "aidata/components/_review_card.html" with draft=proposal blockers=proposal_blockers can_act=can_act approve_label="Mark ready" noun="proposal" key=key %}
+        <section class="aid-surface p-4" aria-labelledby="export-heading" data-testid="export">
+          <h3 id="export-heading" class="text-sm font-semibold text-aid-heading">Export for sending yourself</h3>
+          <p class="aid-help">{% if proposal.state == "approved" %}Approved. {% else %}Not approved: the export is marked as a draft. {% endif %}Each export is recorded in the audit trail.</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <a class="aid-btn aid-btn-secondary" href="{% url 'aidata:proposal_export' proposal.pk 'md' %}">{% aid_icon "download" %} Markdown</a>
+            <a class="aid-btn aid-btn-secondary" href="{% url 'aidata:proposal_export' proposal.pk 'print' %}" target="_blank" rel="noopener">{% aid_icon "print" %} Print view</a>
+          </div>
+        </section>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {% if groups.proposal.history %}
+    <details><summary class="cursor-pointer text-sm font-medium text-aid-link">Earlier versions ({{ groups.proposal.history|length }})</summary>
+      <ul class="mt-2 space-y-1 text-sm">{% for d in groups.proposal.history %}<li class="flex flex-wrap items-center gap-2"><span>v{{ d.version }}</span>{% state_chip d.state %}<span class="aid-muted text-xs">{{ d.created_at|date:"j M Y" }}{% if d.decided_by %} · {{ d.decided_by.email }}{% endif %}</span></li>{% endfor %}</ul>
+    </details>
+  {% endif %}
+</div>

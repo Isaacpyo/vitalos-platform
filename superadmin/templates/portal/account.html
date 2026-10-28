@@ -1,0 +1,25 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}Account · Vitalos client portal{% endblock %}
+{% block content %}
+  <div class="page-head"><div><h1>Your account</h1></div></div>
+  <div class="grid grid--2">
+    <section class="card">
+      <h2>You</h2>
+      <dl class="kv mt-1">
+        <dt>Name</dt><dd>{{ member.user.full_name|default:"Not set" }}</dd>
+        <dt>Email</dt><dd>{{ member.user.email }}</dd>
+        <dt>Organisation</dt><dd>{{ organisation.name }}</dd>
+        <dt>Your role</dt><dd>{{ member.get_role_display }}</dd>
+      </dl>
+      <p class="help mt-1">{% if member.role == "viewer" %}Read-only.{% elif member.role == "contributor" %}You can comment, answer questions, upload files and request changes.{% elif member.role == "approver" %}You can also approve, or request changes to, a specific deliverable version.{% else %}You can also record contractual acceptance as an authorised signatory.{% endif %}</p>
+    </section>
+    <section class="card">
+      <h2>Sign-in security</h2>
+      <p class="mt-1">Two-step sign-in: <strong>{% if mfa %}on{% else %}off{% endif %}</strong>.</p>
+      {% if not mfa and not preview %}<p><a class="btn btn--secondary" href="{% purl 'otp_setup' %}">Turn on two-step sign-in</a></p>{% endif %}
+      <p class="help">To change your password, use "Forgot your password?" on the sign-in page.</p>
+      <p><a href="{% purl 'notification_preferences' %}">Email preferences</a></p>
+    </section>
+  </div>
+{% endblock %}

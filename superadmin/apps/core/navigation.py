@@ -124,6 +124,15 @@ NAV_ITEMS = (
         permission="apps.aidata.selectors.can_access",
     ),
     NavItem(
+        "portal",
+        "Client portal",
+        "portaladmin:home",
+        "users",
+        "Operate",
+        ("/client-portal",),
+        permission="apps.portal.access.staff_can_manage",
+    ),
+    NavItem(
         "billing",
         "Billing",
         "",

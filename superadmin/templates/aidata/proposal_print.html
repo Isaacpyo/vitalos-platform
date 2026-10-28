@@ -1,0 +1,35 @@
+<!doctype html>
+{% load aidata_ui static %}
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ p.title }} · {{ opportunity.ref }} proposal v{{ draft.version }}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/aidata.js' %}" nonce="{{ csp_nonce }}" defer></script>
+</head>
+<body class="bg-white text-slate-900">
+  <main class="mx-auto max-w-3xl px-6 py-8 text-[15px] leading-relaxed">
+    <div class="mb-6 flex items-center justify-between gap-3 print:hidden">
+      <p class="text-sm text-slate-600">Print view. Use your browser's print or save as PDF. Nothing has been sent.</p>
+      <button type="button" class="btn btn-primary" data-print>Print</button>
+    </div>
+    {% if not ready %}<p class="mb-4 rounded border-2 border-amber-600 px-3 py-2 text-sm font-semibold text-amber-800">DRAFT: not approved. Do not send.</p>{% endif %}
+    <p class="font-mono text-xs uppercase tracking-wider text-slate-500">{{ opportunity.ref }} · proposal version {{ draft.version }} · based on approved discovery v{{ p.discovery_version }}</p>
+    <h1 class="mt-1 text-3xl font-semibold">{{ p.title }}</h1>
+    {% if p.summary %}<h2 class="mt-6 text-lg font-semibold">Summary</h2><p class="whitespace-pre-line">{{ p.summary }}</p>{% endif %}
+    {% for heading, items in sections %}
+      <h2 class="mt-6 text-lg font-semibold">{{ heading }}</h2>
+      {% if items %}<ul class="list-disc pl-5">{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="text-slate-500">None stated.</p>{% endif %}
+    {% endfor %}
+    <h2 class="mt-6 text-lg font-semibold">Milestones</h2>
+    {% if p.milestones %}<ol class="list-decimal pl-5">{% for m in p.milestones %}<li><strong>{{ m.name }}</strong>{% if m.target %} (target: {{ m.target }}){% endif %}: {{ m.description }}</li>{% endfor %}</ol>{% else %}<p class="text-slate-500">None stated.</p>{% endif %}
+    <h2 class="mt-6 text-lg font-semibold">Price</h2>
+    <p>{% if p.price.kind == "none" %}Price to be confirmed.{% else %}{{ p.price.label }} (excl. VAT). {{ p.price.note }}{% endif %}</p>
+    {% if p.payment %}<p class="mt-1"><strong>Payment:</strong> {{ p.payment }}</p>{% endif %}
+    <h2 class="mt-6 text-lg font-semibold">Notes</h2>
+    <ul class="list-disc pl-5 text-sm">{% for n in p.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+  </main>
+</body>
+</html>

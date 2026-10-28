@@ -52,6 +52,21 @@ describe("Vitalos AI & Data tokens", () => {
     },
   );
 
+  it("verifies the teal signal on every surface it sits on, and text on its tint", () => {
+    const pairs = aiDataContrastPairs();
+    for (const tone of Object.keys(aiDataTones)) {
+      for (const role of [
+        "bg/signal",
+        "surface/signal",
+        "textOnSignalSoft",
+        "headingOnSignalSoft",
+        "signalOnSignalSoft",
+      ]) {
+        expect(pairs.some((p) => p.name === `${tone}/${role}`)).toBe(true);
+      }
+    }
+  });
+
   it("holds body text to AAA (7:1) on every band", () => {
     for (const pair of aiDataContrastPairs().filter((p) => p.name.endsWith("/text"))) {
       expect(contrastRatio(pair.fg, pair.bg), pair.name).toBeGreaterThanOrEqual(7);

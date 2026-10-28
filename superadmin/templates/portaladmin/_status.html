@@ -1,0 +1,14 @@
+{# Staff-only: the five things to know about an active challenge. Context: status (continuity.challenge_status). #}
+<dl class="grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-5" data-testid="challenge-status">
+  <div><dt class="mono-label muted">Status</dt><dd class="font-medium">{{ status.status }}</dd><dd class="muted text-xs">{{ status.journey }}{% if not status.shared %} · not shared{% endif %}</dd></div>
+  <div><dt class="mono-label muted">Responsible</dt><dd class="font-medium" data-testid="status-responsible">{{ status.responsible }}</dd></div>
+  <div><dt class="mono-label muted">What happens next</dt><dd class="font-medium" data-testid="status-next">{{ status.next }}</dd>{% if status.next_due %}<dd class="text-xs {% if status.next_overdue %}font-semibold text-red-700 dark:text-red-400{% else %}muted{% endif %}">{% if status.next_overdue %}Overdue, {% endif %}due {{ status.next_due|date:"j M Y" }}</dd>{% endif %}</div>
+  <div>
+    <dt class="mono-label muted">Blocked</dt>
+    <dd data-testid="status-blocked">{% for line in status.blocked %}<span class="block font-medium">{{ line }}</span>{% empty %}<span class="muted">Nothing is blocked.</span>{% endfor %}</dd>
+  </div>
+  <div>
+    <dt class="mono-label muted">The customer needs to</dt>
+    <dd data-testid="status-customer">{% for line in status.customer_todo %}<span class="block">{{ line }}</span>{% empty %}<span class="muted">Nothing is waiting on them.</span>{% endfor %}</dd>
+  </div>
+</dl>

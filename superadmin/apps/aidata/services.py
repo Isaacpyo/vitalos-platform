@@ -60,6 +60,7 @@ DETAIL_FIELDS = (
     "contact_name",
     "contact_email",
     "contact_role",
+    "contact_phone",
     "source",
     "website_reference",
     "offer",
@@ -299,6 +300,11 @@ def change_stage(
         raise ValidationError({"reason": f"Give a reason for moving to {Stage(to_stage).label}."})
     if to_stage == Stage.WON and not (signed_scope_reference or opportunity.signed_scope_reference):
         raise ValidationError({"signed_scope_reference": "Enter the signed scope reference to mark it won."})
+    from . import workspace
+
+    blockers = workspace.stage_blockers(opportunity, to_stage)
+    if blockers:
+        raise ValidationError({"stage": blockers})
     now = timezone.now()
     with transaction.atomic():
         opportunity.stage = to_stage
@@ -330,6 +336,21 @@ def change_stage(
             stage=to_stage,
             reopened=reopening,
         )
+        if to_stage == Stage.QUALIFIED:
+            # The funnel event the admin measures (website: started, brief completed, submitted).
+            band = opportunity.scorecard.band
+            record(
+                "aidata.opportunity_qualified",
+                request=request,
+                actor=actor,
+                entity=opportunity,
+                entity_id=opportunity.ref,
+                summary=f"{opportunity.ref} qualified",
+                source=opportunity.source,
+                band=band,
+                has_brief=opportunity.drafts.filter(kind="brief", state="approved").exists(),
+                days_since_created=(now - opportunity.created_at).days,
+            )
     return change
 
 
@@ -469,12 +490,22 @@ def anonymise_opportunity(opportunity: Opportunity) -> None:
     opportunity.contact_name = REMOVED
     opportunity.contact_email = ""
     opportunity.contact_role = ""
+    opportunity.contact_phone = ""
     opportunity.internal_notes = REMOVED if opportunity.internal_notes else ""
     opportunity.anonymised_at = timezone.now()
     opportunity.save(
-        update_fields=["contact_name", "contact_email", "contact_role", "internal_notes", "anonymised_at"]
+        update_fields=[
+            "contact_name",
+            "contact_email",
+            "contact_role",
+            "contact_phone",
+            "internal_notes",
+            "anonymised_at",
+        ]
     )
     opportunity.notes.update(body=REMOVED)
+    # Source text and what was derived from it can hold personal details: remove them, keep the record.
+    opportunity.drafts.update(source_text="", payload={}, ai_payload={}, evidence=[])
     record(
         "aidata.anonymised",
         entity=opportunity,

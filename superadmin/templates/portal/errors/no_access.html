@@ -1,0 +1,8 @@
+{% extends "portal/auth/shell.html" %}
+{% block title %}No portal access · Vitalos client portal{% endblock %}
+{% block body %}
+  <h1>Your portal access is not active</h1>
+  <p class="mt-2">This account is not a current member of any organisation. Access can be removed at any time by Vitalos or by the organisation's administrator.</p>
+  <p class="muted">If you expected access, ask your Vitalos contact for a new invitation.</p>
+  <form method="post" action="{% url 'portal:logout' %}" class="mt-2">{% csrf_token %}<button class="btn btn--secondary w-full" type="submit">Sign out</button></form>
+{% endblock %}

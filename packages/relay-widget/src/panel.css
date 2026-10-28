@@ -34,7 +34,7 @@
   color: var(--relay-ink);
   border: 1px solid var(--relay-line);
   border-radius: var(--relay-radius-panel);
-  box-shadow: 0 24px 48px -12px rgb(11 19 32 / 0.28);
+  box-shadow: var(--relay-shadow-panel);
   font-family: var(--relay-font-text);
   font-size: 15px;
   line-height: 24px;
@@ -274,7 +274,7 @@
   background: var(--relay-surface-200);
   border: 1px solid var(--relay-line);
   border-radius: var(--relay-radius-card);
-  box-shadow: 0 12px 24px -8px rgb(11 19 32 / 0.2);
+  box-shadow: var(--relay-shadow-card);
   color: var(--relay-ink);
 }
 .relay-menu > button,

@@ -1,0 +1,18 @@
+{% extends "portal/base.html" %}
+{% load portal_ui %}
+{% block title %}{{ change.title }} · Vitalos client portal{% endblock %}
+{% block content %}
+  <p class="crumbs"><a href="{% purl 'project' pk=project.pk %}">{{ project.name }}</a></p>
+  <div class="page-head"><div><p class="eyebrow">Change request</p><h1>{{ change.title }}</h1><p class="lede">{% badge change.status change.get_status_display %} Affects: {{ change.affects|default:"not stated" }}.</p></div></div>
+  <div class="stack">
+    <section class="card"><h2>What you asked for</h2><p class="prose mt-1">{{ change.description }}</p></section>
+    {% if change.customer_response %}<section class="card"><h2>Vitalos' response</h2><p class="prose mt-1">{{ change.customer_response }}</p></section>{% endif %}
+    <section class="card" aria-labelledby="trail-h">
+      <h2 id="trail-h">Review trail</h2>
+      <ol class="list mt-1" data-testid="trail">
+        {% for t in trail %}<li><strong>{{ t.get_to_status_display }}</strong>{% if t.note %}: {{ t.note }}{% endif %}<br><span class="muted small">{{ t.created_at|date:"j M Y, H:i" }}{% if t.actor_email and t.from_status %} · by Vitalos{% else %} · by your team{% endif %}</span></li>{% endfor %}
+      </ol>
+      <p class="help">Accepting a change request records the decision. Scope, price and dates change only when Vitalos confirms the agreed change.</p>
+    </section>
+  </div>
+{% endblock %}

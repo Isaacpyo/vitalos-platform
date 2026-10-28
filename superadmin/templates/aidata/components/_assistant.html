@@ -1,0 +1,38 @@
+{% load aidata_ui %}{% comment %}
+  Contextual assistant, scoped to one opportunity (a native <dialog> drawer). Context: opportunity, availability.
+  Fixed actions first. A free-text question is answered only from this opportunity's records, with citations.
+{% endcomment %}
+<dialog id="assistant-drawer" class="aid-dialog aid-drawer" aria-labelledby="assistant-title" data-testid="assistant">
+  <div class="flex h-full flex-col">
+    <header class="flex items-center justify-between border-b border-aid-border px-4 py-3">
+      <div>
+        <h2 id="assistant-title" class="aid-title !text-base">Assistant for {{ opportunity.ref }}</h2>
+        <p class="aid-help !mt-0">Uses only this opportunity's records.</p>
+      </div>
+      <button type="button" class="aid-btn aid-btn-quiet" data-dialog-close aria-label="Close assistant">{% aid_icon "close" %}</button>
+    </header>
+    <div class="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+      {% include "aidata/components/_ai_status.html" with availability=availability compact=True %}
+      <div>
+        <p class="aid-eyebrow">Quick actions</p>
+        <div class="mt-2 flex flex-wrap gap-2">
+          {% for action, label, icon_name in assistant_actions %}
+            <form method="post" action="{% url 'aidata:assistant' opportunity.ref %}" hx-post="{% url 'aidata:assistant' opportunity.ref %}" hx-target="#assistant-answer" hx-swap="outerHTML" hx-indicator="#assistant-busy">
+              {% csrf_token %}<input type="hidden" name="action" value="{{ action }}">
+              <button type="submit" class="aid-btn aid-btn-secondary">{% aid_icon icon_name %} {{ label }}</button>
+            </form>
+          {% endfor %}
+        </div>
+      </div>
+      <form method="post" action="{% url 'aidata:assistant' opportunity.ref %}" hx-post="{% url 'aidata:assistant' opportunity.ref %}" hx-target="#assistant-answer" hx-swap="outerHTML" hx-indicator="#assistant-busy">
+        {% csrf_token %}<input type="hidden" name="action" value="ask">
+        <label for="assistant-question" class="aid-label">Ask about this opportunity</label>
+        <textarea id="assistant-question" name="question" rows="3" maxlength="400" class="aid-input" placeholder="For example: what tools do they use today?"></textarea>
+        <p class="aid-help">{% if availability.available %}Answered by AI from the records only, with citations.{% else %}AI is unavailable: this searches the records by keyword.{% endif %} Your question is not stored.</p>
+        <button type="submit" class="aid-btn aid-btn-primary mt-2">{% aid_icon "search" %} Ask</button>
+      </form>
+      <div id="assistant-busy" class="htmx-indicator" role="status"><div class="aid-skeleton h-3 w-2/3"></div><span class="sr-only">Working…</span></div>
+      <div id="assistant-answer"></div>
+    </div>
+  </div>
+</dialog>

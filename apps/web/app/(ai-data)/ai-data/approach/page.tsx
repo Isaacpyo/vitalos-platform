@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { routes } from "@vitalos/cms";
 import { AiDataPage } from "../../../../src/components/ai-data/chrome";
 import { DeliveryLoop } from "../../../../src/components/ai-data/DeliveryLoop";
+import { DeliveryStages } from "../../../../src/components/ai-data/DeliveryStages";
 import {
   ArrowLink,
   Band,
@@ -36,6 +37,18 @@ export default function AiDataApproachPage() {
           title={title}
           lead={lead}
         />
+      </Band>
+
+      <Band tone="muted" labelledBy="aid-stages-title">
+        <div className="flex flex-col gap-(--space-7)">
+          <SectionHeading
+            id="aid-stages-title"
+            eyebrow="Customer-funded engineering"
+            title="Four stages. You fund one at a time."
+            lead="Each stage is scoped on its own, with a fixed fee agreed in writing, and ends with evidence you can use to decide whether to go on. The ten steps below are what happens inside them."
+          />
+          <DeliveryStages />
+        </div>
       </Band>
 
       <Band tone="light" labelledBy="aid-lifecycle">

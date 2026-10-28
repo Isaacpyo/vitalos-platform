@@ -21,7 +21,8 @@ auditConfig:
 
 overrides:
   js-yaml@<3.15.2: 3.15.2
-  postcss@<8.5.18: 8.5.18
+  # postcss@<8.5.23: incomplete fix of GHSA-6g55-p6wh-862q (28 Oct 2026 audit); @tailwindcss/postcss > postcss.
+  postcss@<8.5.23: 8.5.23
   smol-toml@<1.7.1: 1.7.1
   # motion is pinned exact (ADR-024); its own caret ranges would pull releases younger than two weeks.
   motion@13.4.4>framer-motion: 13.4.4
@@ -40,4 +41,6 @@ overrides:
   chromium-bidi>zod: 4.6.6
   # Stop-gap: vitest 3 asks for tinypool ^1; the real fix is vitest 4 (follow-up).
   vitest@3>tinypool: 2.1.2
+  # fast-uri <3.1.9 (four advisories, 28 Oct 2026 audit): lighthouse > ajv-formats > ajv > fast-uri (dev only).
+  fast-uri@>=3.0.0 <3.1.9: 3.1.9
   next>sharp: 0.35.5
