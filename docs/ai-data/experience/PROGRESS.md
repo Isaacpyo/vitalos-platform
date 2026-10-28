@@ -68,6 +68,12 @@ Outside this implementation's scope:
 
 ## Log
 
+- **28 Oct 19:00: W7 (admin workspace) reported and was merged** into `claude/amazing-cray-miqs1x` (merge `cd98ceb`, 87 files).
+  - **Lead review:** the brief-assist endpoint checks the signature before reading any field or switch, fails closed with no keys, rate-limits per visitor and globally, and stores hashes only. Every workspace view is gated to SuperAdmin or ServiceLead. The `mark_safe` call only wraps static icon markup. The migrations (`aidata` 0003, `aicore` 0002) are additive.
+  - **Decision kept:** Viewers stay refused on all AI & Data pages (ADR-026: opportunities hold personal data). A redacted read-only view would be an owner decision.
+  - **Pre-existing defect found** (not in CI): `pnpm check:raw-colours` fails on `main` because of two raw `rgb()` shadows in `packages/relay-widget/src/panel.css`. It is outside this scope and logged for a follow-up.
+  - **W6 resumed** (the cap allows three: W5, W6, W8) with the amended signing contract: the existing v1 scheme with the new scope `assist`.
+
 - **28 Oct 18:10:**
   - The owner approved `portal.vitalos.co.uk` and the overnight execution brief.
   - W6 paused at a checkpoint.
