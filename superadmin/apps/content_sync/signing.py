@@ -30,7 +30,7 @@ from django.conf import settings
 VERSION = "v1"
 TOLERANCE_SECONDS = 300
 PREVIEW_TTL_SECONDS = 15 * 60
-SCOPES = ("read", "tick", "submit", "revalidate", "render", "preview")
+SCOPES = ("read", "tick", "assist", "submit", "revalidate", "render", "preview")
 KEY_ID_RE = re.compile(r"[a-z0-9-]{1,32}", re.ASCII)
 TIMESTAMP_RE = re.compile(r"[0-9]{1,12}", re.ASCII)
 SIGNATURE_RE = re.compile(r"v1=([0-9a-f]{64})", re.ASCII)
@@ -45,6 +45,7 @@ EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 SCOPE_SETTINGS = {
     "read": "CONTENT_READ_CLIENT_KEYS",
     "tick": "CONTENT_READ_CLIENT_KEYS",
+    "assist": "CONTENT_READ_CLIENT_KEYS",  # website brief assist (ADR-055); same keys, no new secret
     "submit": "CAREERS_SUBMIT_CLIENT_KEYS",
     "revalidate": "CONTENT_REVALIDATE_SECRET",
     "render": "CONTENT_RENDER_SECRET",

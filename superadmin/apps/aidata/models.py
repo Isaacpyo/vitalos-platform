@@ -87,6 +87,7 @@ class Opportunity(models.Model):
     contact_name = models.CharField(max_length=200, blank=True)
     contact_email = models.EmailField(blank=True)
     contact_role = models.CharField(max_length=120, blank=True)
+    contact_phone = models.CharField(max_length=40, blank=True)
     source = models.CharField(
         max_length=20, choices=OpportunitySource.choices, default=OpportunitySource.OTHER
     )
@@ -321,3 +322,121 @@ class CostEntry(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.supplier} £{self.amount}"
+
+
+# --- AI-assisted workspace records (ADR-055) ----------------------------------------------------------
+
+
+class DraftKind(models.TextChoices):
+    BRIEF = "brief", "Brief"
+    QUESTIONS = "questions", "Discovery questions"
+    DISCOVERY = "discovery", "Discovery pack"
+    PROPOSAL = "proposal", "Proposal draft"
+
+
+class DraftState(models.TextChoices):
+    """Execution states (queued, running, failed, cancelled) and review states share one field."""
+
+    QUEUED = "queued", "Queued"
+    RUNNING = "running", "Running"
+    DRAFT = "draft", "Draft"
+    REVIEWED = "reviewed", "Reviewed"
+    APPROVED = "approved", "Approved"
+    REJECTED = "rejected", "Rejected"
+    SUPERSEDED = "superseded", "Superseded"
+    FAILED = "failed", "Failed"
+    CANCELLED = "cancelled", "Cancelled"
+
+
+class DraftMode(models.TextChoices):
+    AI = "ai", "Prepared with AI"
+    RULES = "rules", "Prepared by rules (no AI)"
+    MANUAL = "manual", "Written by hand"
+
+
+class Draft(models.Model):
+    """One generated or hand-written artefact: a brief, discovery questions, a discovery pack or a proposal.
+
+    It is also the durable task record: ``state`` queued/running/failed/cancelled, the lease and the
+    attempt counter come from here, so a reload never loses a task and a dead worker cannot leave one
+    running for ever (aidata/tasks.py). The source text is kept unchanged next to what was derived from
+    it. An approved draft is never edited: a revision is a new version and supersedes it on approval.
+    """
+
+    opportunity = models.ForeignKey(Opportunity, null=True, blank=True, on_delete=models.CASCADE, related_name="drafts")
+    # Every derived record links back to the original enquiry, which is never altered.
+    enquiry = models.ForeignKey(
+        "enquiries.Enquiry", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    kind = models.CharField(max_length=12, choices=DraftKind.choices)
+    state = models.CharField(max_length=12, choices=DraftState.choices, default=DraftState.QUEUED, db_index=True)
+    version = models.PositiveIntegerField(default=1)
+    mode = models.CharField(max_length=8, choices=DraftMode.choices, default=DraftMode.RULES)
+    requested_mode = models.CharField(max_length=8, choices=DraftMode.choices, default=DraftMode.RULES)
+    idempotency_key = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    source_label = models.CharField(max_length=120, blank=True)
+    source_text = models.TextField(blank=True)
+    source_hash = models.CharField(max_length=64, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    ai_payload = models.JSONField(default=dict, blank=True)
+    evidence = models.JSONField(default=list, blank=True)
+    warnings = models.JSONField(default=list, blank=True)
+    basis = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="derived")
+    execution_id = models.UUIDField(null=True, blank=True)
+    prompt_ref = models.CharField(max_length=80, blank=True)
+    simulated = models.BooleanField(default=False)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField(default=3)
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    heartbeat_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    error_category = models.CharField(max_length=40, blank=True)
+    error_detail = models.CharField(max_length=300, blank=True)
+    fallback_reason = models.CharField(max_length=300, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decision_note = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["opportunity", "kind", "version"],
+                condition=models.Q(opportunity__isnull=False),
+                name="aidata_draft_unique_version",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} v{self.version} ({self.state})"
+
+    @property
+    def is_active(self) -> bool:
+        return self.state in (DraftState.QUEUED, DraftState.RUNNING)
+
+    @property
+    def is_locked(self) -> bool:
+        """Approved, superseded and rejected drafts are history: they are never edited."""
+        return self.state in (DraftState.APPROVED, DraftState.SUPERSEDED, DraftState.REJECTED)
+
+
+class BriefAssistEvent(models.Model):
+    """One website brief-assist call: metadata and hashes only, never the visitor's words."""
+
+    stage = models.CharField(max_length=12)
+    outcome = models.CharField(max_length=20)
+    topic = models.CharField(max_length=40, blank=True)
+    visitor_hash = models.CharField(max_length=64, blank=True)
+    input_hash = models.CharField(max_length=64, blank=True)
+    execution_id = models.UUIDField(null=True, blank=True)
+    latency_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]

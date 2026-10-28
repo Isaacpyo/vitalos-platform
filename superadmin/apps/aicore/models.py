@@ -60,6 +60,12 @@ class AiSettings(models.Model):
         help_text="Send statement lines the parser cannot read to the live model provider. "
         "Needs AI_DATA_LLM_API_KEY in the environment.",
     )
+    brief_assist_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Website brief assist",
+        help_text="Let the website's guided brief ask the Super Admin for suggested questions and a draft "
+        "brief (signed requests only). Off by default. Also needs the kill switch on and a model key.",
+    )
     daily_run_cap = models.PositiveIntegerField(
         default=20, validators=[MaxValueValidator(1000)], help_text="Live model runs per day (Europe/London)."
     )

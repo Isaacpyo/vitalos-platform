@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Shared AI & Data tokens, generated from packages/design-tokens (ADR-055). */
+@import "./ai-data-tokens.css";
 
 /* Scan templates and Python (form widgets, badge helpers) for class names. */
 @source "../templates";

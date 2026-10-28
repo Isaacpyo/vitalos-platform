@@ -77,10 +77,11 @@ class ReviewDecisionForm(forms.Form):
 class AiSettingsForm(forms.ModelForm):
     class Meta:
         model = AiSettings
-        fields = ["enabled", "model_path_enabled", "daily_run_cap", "monthly_budget_gbp", "max_calls_per_run"]
+        fields = ["enabled", "model_path_enabled", "brief_assist_enabled", "daily_run_cap", "monthly_budget_gbp", "max_calls_per_run"]
         labels = {
             "enabled": "AI & Data enabled (kill switch)",
             "model_path_enabled": "Live model path",
+            "brief_assist_enabled": "Website brief assist",
             "daily_run_cap": "Daily model-run cap",
             "monthly_budget_gbp": "Monthly budget (GBP)",
             "max_calls_per_run": "Model calls per run",
@@ -91,5 +92,5 @@ class AiSettingsForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for name in ("daily_run_cap", "monthly_budget_gbp", "max_calls_per_run"):
             self.fields[name].widget.attrs["class"] = INPUT
-        for name in ("enabled", "model_path_enabled"):
+        for name in ("enabled", "model_path_enabled", "brief_assist_enabled"):
             self.fields[name].widget.attrs["class"] = CHECK
