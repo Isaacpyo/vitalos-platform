@@ -220,7 +220,7 @@ jobs:
           echo "::add-mask::$SESSION"
           INBOUND_SECRET="$(grep '^INBOUND_WEBHOOK_SECRET=' "$RUNNER_TEMP/app.env" | cut -d= -f2-)"
           echo "::add-mask::$INBOUND_SECRET"
-          python e2e/a11y.py --base http://localhost:8000 --axe "$RUNNER_TEMP/package/axe.min.js"             --session "$SESSION" --inbound-secret "$INBOUND_SECRET"
+          python e2e/a11y.py --base http://localhost:8000 --axe "$RUNNER_TEMP/package/axe.min.js"             --session "$SESSION" --inbound-secret="$INBOUND_SECRET"
       - name: Container logs
         if: always()
         run: docker logs web 2>&1 | tail -200 || true
