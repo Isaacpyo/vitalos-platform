@@ -362,7 +362,7 @@ class AnthropicProvider:
         )
 
 
-DEFAULT_ANTHROPIC_MODEL = "claude-opus-5-5"
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5-5"  # owner choice, 28 Oct 2026 (AID-017)
 
 
 def build_live_provider(*, provider: str, api_key: str, model: str, base_url: str, effort: str):

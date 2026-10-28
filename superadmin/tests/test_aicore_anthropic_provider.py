@@ -91,7 +91,7 @@ def test_request_maps_system_schema_effort_and_fallbacks():
     provider = AnthropicProvider(model=DEFAULT_ANTHROPIC_MODEL, api_key="", client=client)
     provider.complete(REQUEST)
     params = client.calls[0]
-    assert params["model"] == "claude-opus-5-5"
+    assert params["model"] == "claude-sonnet-5-5"
     assert params["system"].startswith("You extract lines")
     assert params["messages"] == [{"role": "user", "content": "L1: 2026-10-01 INV-1 100.00"}]
     assert params["output_config"]["effort"] == "low"
@@ -119,7 +119,7 @@ def test_api_schema_strips_unsupported_constraints_but_keeps_structure():
 
 def test_response_text_and_usage():
     client = FakeClient(result=_message(text='{"lines": [{"source_line": 1, "amount": "100.00"}]}'))
-    response = AnthropicProvider(model="claude-opus-5-5", api_key="", client=client).complete(REQUEST)
+    response = AnthropicProvider(model="claude-sonnet-5-5", api_key="", client=client).complete(REQUEST)
     assert response.text.startswith('{"lines"')
     assert (response.input_tokens, response.output_tokens) == (120, 40)
     assert response.simulated is False
@@ -136,7 +136,7 @@ def test_usage_sums_fallback_iterations():
         ],
     )
     client = FakeClient(result=_message(usage=usage))
-    response = AnthropicProvider(model="claude-opus-5-5", api_key="", client=client).complete(REQUEST)
+    response = AnthropicProvider(model="claude-sonnet-5-5", api_key="", client=client).complete(REQUEST)
     assert (response.input_tokens, response.output_tokens) == (200, 35)
 
 
@@ -171,7 +171,7 @@ def test_error_mapping(error, expected):
 
 
 def test_key_never_in_repr():
-    provider = AnthropicProvider(model="claude-opus-5-5", api_key="sk-ant-NEVER-SHOWN-1234567890")
+    provider = AnthropicProvider(model="claude-sonnet-5-5", api_key="sk-ant-NEVER-SHOWN-1234567890")
     assert "NEVER-SHOWN" not in repr(provider)
 
 
