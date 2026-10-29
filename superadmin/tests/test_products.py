@@ -403,7 +403,8 @@ def test_pipeline_lists_every_product(client_for, superadmin, askbridge, seeded)
     for key in ("askbridge", *OTHER_PRODUCTS, "autofix"):
         assert f'data-product="{key}"' in body and f"products/{key}-app-icon" in body
         assert f"/products/{key}/" in body
-    assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body and "Autofix" in body
+    assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body and "Pitline" in body
+    assert "Autofix" not in body
 
 
 def test_products_without_a_status_endpoint_make_no_request(client_for, superadmin, askbridge, seeded):
@@ -463,21 +464,21 @@ def test_product_access_command_knows_the_new_products(viewer, seeded):
     )
 
 
-# --- Autofix --------------------------------------------------------------------------------------------
+# --- Pitline (formerly Autofix; the key, codename and settings keep autofix) --------------------------------
 
 AUTOFIX_TOKEN = "autofix-status-token-DO-NOT-RENDER-9876543210"
-AUTOFIX_STATUS_URL = "https://autofix.example.test/superadmin/api/platform/v1/status"
-AUTOFIX_SUPERADMIN_URL = "https://autofix.example.test/superadmin/"
+AUTOFIX_STATUS_URL = "https://pitline.example.test/superadmin/api/platform/v1/status"
+AUTOFIX_SUPERADMIN_URL = "https://pitline.example.test/superadmin/"
 
 
 def autofix_payload(**overrides):
-    """What Autofix serves (``apps/autofix/status.py`` in the autofix repo, DECISIONS A403)."""
+    """What Pitline serves (``apps/autofix/status.py`` in the pitline repo, DECISIONS A403)."""
     body = {
         "product": "autofix",
         "environment": "production",
         "status": "operational",
         "checkedAt": timezone.now().isoformat().replace("+00:00", "Z"),
-        # Autofix adds onboarding and cancelled; the contract ignores unknown keys.
+        # Pitline adds onboarding and cancelled; the contract ignores unknown keys.
         "tenants": {"total": 12, "active": 7, "trial": 3, "suspended": 1, "onboarding": 3, "cancelled": 1},
         "subscriptions": {"active": 6, "trialing": 3, "pastDue": 1},
         "alerts": [],
@@ -489,7 +490,7 @@ def autofix_payload(**overrides):
 
 @pytest.fixture
 def autofix(askbridge, settings, monkeypatch):
-    """Autofix configured; its answers come from ``autofix.answer``, Askbridge's from the Askbridge stub."""
+    """Pitline configured; its answers come from ``autofix.answer``, Askbridge's from the Askbridge stub."""
     settings.AUTOFIX_STATUS_URL = AUTOFIX_STATUS_URL
     settings.AUTOFIX_STATUS_TOKEN = AUTOFIX_TOKEN
     settings.AUTOFIX_SUPERADMIN_URL = AUTOFIX_SUPERADMIN_URL
@@ -523,7 +524,7 @@ def test_autofix_payload_parses_with_its_extra_tenant_keys():
 def test_autofix_degraded_with_an_alert_on_its_own_superadmin():
     answer = autofix_payload(
         status="degraded",
-        alerts=[alert(title="2 Autofix jobs failed", url=AUTOFIX_SUPERADMIN_URL + "jobs/")],
+        alerts=[alert(title="2 Pitline jobs failed", url=AUTOFIX_SUPERADMIN_URL + "jobs/")],
     )
     snapshot = status.parse_status(answer, get_product("autofix"))
     assert (
@@ -534,11 +535,28 @@ def test_autofix_degraded_with_an_alert_on_its_own_superadmin():
         status.parse_status(autofix_payload(alerts=[alert()]), get_product("autofix"))
 
 
-def test_autofix_defaults_point_at_its_live_superadmin():
+def test_autofix_defaults_point_at_pitline():
     from config.settings import base
 
-    assert base.AUTOFIX_STATUS_URL == "https://autofix.vitalos.co.uk/superadmin/api/platform/v1/status"
-    assert base.AUTOFIX_SUPERADMIN_URL == "https://autofix.vitalos.co.uk/superadmin/"
+    assert base.AUTOFIX_STATUS_URL == "https://pitline.co.uk/superadmin/api/platform/v1/status"
+    assert base.AUTOFIX_SUPERADMIN_URL == "https://pitline.co.uk/superadmin/"
+
+
+@pytest.mark.django_db
+def test_migration_0004_renames_the_existing_autofix_permission():
+    from importlib import import_module
+
+    from django.apps import apps
+
+    migration = import_module("apps.products.migrations.0004_product_pipeline_pitline_name")
+    permission = Permission.objects.get(
+        content_type__app_label="products", codename="open_autofix_superadmin"
+    )
+    permission.name = migration.OLD_NAME
+    permission.save()
+    migration.rename(migration.NEW_NAME)(apps, None)
+    permission.refresh_from_db()
+    assert permission.name == "Can see Pitline details and open the Pitline Superadmin"
 
 
 def test_autofix_not_configured_makes_no_request(client_for, superadmin, askbridge, seeded):
@@ -561,7 +579,7 @@ def test_autofix_open_redirects_to_its_superadmin_with_audit(client_for, autofix
     response = client_for(autofix_operator).post("/products/autofix/open/")
     assert response.status_code == 302 and response["Location"] == AUTOFIX_SUPERADMIN_URL
     event = AuditEvent.objects.get(action="products.superadmin_opened")
-    assert event.entity_id == "autofix" and event.summary == "Opened the Autofix Superadmin"
+    assert event.entity_id == "autofix" and event.summary == "Opened the Pitline Superadmin"
     assert AUTOFIX_TOKEN not in json.dumps(event.metadata)
 
 

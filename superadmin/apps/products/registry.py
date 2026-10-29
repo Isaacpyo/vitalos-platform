@@ -125,7 +125,7 @@ PRODUCTS: tuple[Product, ...] = (
     ),
     Product(
         key="autofix",
-        name="Autofix",
+        name="Pitline",
         endorsement="by Vitalos",
         summary="Online booking and garage management for independent garages.",
         mark="products/autofix-mark.svg",

@@ -21,7 +21,7 @@ class ProductAccess(models.Model):
                 "Can see Vitalos Workforce details and open the Vitalos Workforce Superadmin",
             ),
             ("open_tipsignal_superadmin", "Can see TipSignal details and open the TipSignal Superadmin"),
-            ("open_autofix_superadmin", "Can see Autofix details and open the Autofix Superadmin"),
+            ("open_autofix_superadmin", "Can see Pitline details and open the Pitline Superadmin"),
         ]
 
     def __str__(self):

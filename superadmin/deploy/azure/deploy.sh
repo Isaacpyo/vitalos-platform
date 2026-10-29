@@ -46,6 +46,7 @@
 # Optional Product Pipeline settings (docs/DEPLOY.md section 10, ADR-044), same rules:
 #   plain variables  ASKBRIDGE_STATUS_URL, ASKBRIDGE_SUPERADMIN_URL, AUTOFIX_STATUS_URL, AUTOFIX_SUPERADMIN_URL
 #   secrets          ASKBRIDGE_STATUS_TOKEN, AUTOFIX_STATUS_TOKEN
+#   (AUTOFIX_* configure Pitline, formerly Autofix; the names and the secret autofix-status-token are kept)
 # Optional Vitalos AI & Data model settings (ADR-052, docs/ai-data/operations/runbook.md), same rules:
 #   plain variables  AI_DATA_LLM_PROVIDER, AI_DATA_LLM_BASE_URL, AI_DATA_LLM_MODEL, AI_DATA_LLM_EFFORT,
 #                    AI_DATA_DISABLED

@@ -23,7 +23,7 @@ LABEL_MAX_WORDS = 2
 BANNED_WORDS = ("revolutionary", "cutting-edge", "unleash", "supercharge", "magic")
 #: Names that are not sentence-case mistakes when capitalised mid-subject.
 PROPER_NOUNS = {
-    "Vitalos", "Askbridge", "Relay", "Answerd", "Autofix", "Workforce", "Super", "Admin", "AI", "UK", "GDPR",
+    "Vitalos", "Askbridge", "Relay", "Answerd", "Pitline", "Workforce", "Super", "Admin", "AI", "UK", "GDPR",
     "VAT", "Q1", "Q2", "Q3", "Q4", "I", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
     "Sunday", "January", "February", "March", "April", "May", "June", "July", "August", "September",
     "October", "November", "December", "Microsoft", "Google", "Zoom", "Teams",
