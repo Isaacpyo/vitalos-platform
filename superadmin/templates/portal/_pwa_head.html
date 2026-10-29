@@ -1,0 +1,9 @@
+{# Installable app head tags (ADR-056, Phase 1). Only on the customer surface: `pwa` is None in staff preview. #}
+    <link rel="manifest" href="{{ pwa.manifest }}">
+    <meta name="theme-color" content="{{ pwa.theme_color }}" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="{{ pwa.theme_color_dark }}" media="(prefers-color-scheme: dark)">
+    <link rel="apple-touch-icon" href="{{ pwa.apple_touch_icon }}" sizes="180x180">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ pwa.title }}">
+    <meta name="application-name" content="{{ pwa.title }}">

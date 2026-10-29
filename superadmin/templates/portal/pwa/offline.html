@@ -1,0 +1,36 @@
+{% load static %}<!doctype html>
+{% comment %}
+  Shown by the service worker when a portal page cannot be reached. Rendered without a request context (no
+  session, member or organisation), cached on the device, and identical for everyone: never add personal data.
+{% endcomment %}
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="{{ theme_color }}" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="{{ theme_color_dark }}" media="(prefers-color-scheme: dark)">
+    <title>You're offline · Vitalos client portal</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    <link rel="icon" href="{% static 'brand/favicon-32.png' %}" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
+  </head>
+  <body>
+    <div class="auth">
+      <div class="auth__card">
+        <div class="auth__brand">
+          <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28">
+          <span class="eyebrow eyebrow--inline">Client portal</span>
+        </div>
+        <main id="main" class="auth__body" data-testid="offline-page">
+          <h1>You're offline</h1>
+          <p class="mt-2">Your portal needs a connection; nothing is stored on this device.</p>
+          <p class="muted">Check your Wi-Fi or mobile data, then try again.</p>
+          <a class="btn w-full mt-2" href="">Try again</a>
+          <p class="center small mt-2"><a href="{{ home_url }}">Go to your portal home</a></p>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
