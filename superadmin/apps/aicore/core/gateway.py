@@ -203,7 +203,9 @@ class ModelGateway:
                     )
                 )
                 logger.warning(
-                    "model call failed",
+                    "model call failed: %s (%s)",
+                    error.category,
+                    safe_detail(error.detail, 160),
                     extra={
                         "execution_id": result.execution_id,
                         "attempt": result.attempts,
