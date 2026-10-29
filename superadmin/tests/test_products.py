@@ -400,10 +400,10 @@ def no_other_superadmins(settings):
 
 def test_pipeline_lists_every_product(client_for, superadmin, askbridge, seeded):
     body = page(client_for, superadmin)
-    for key in ("askbridge", *OTHER_PRODUCTS):
+    for key in ("askbridge", *OTHER_PRODUCTS, "autofix"):
         assert f'data-product="{key}"' in body and f"products/{key}-app-icon" in body
         assert f"/products/{key}/" in body
-    assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body
+    assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body and "Autofix" in body
 
 
 def test_products_without_a_status_endpoint_make_no_request(client_for, superadmin, askbridge, seeded):
@@ -461,6 +461,132 @@ def test_product_access_command_knows_the_new_products(viewer, seeded):
     assert viewer.has_perm("products.open_tipsignal_superadmin") and viewer.has_perm(
         "products.open_workforce_superadmin"
     )
+
+
+# --- Autofix --------------------------------------------------------------------------------------------
+
+AUTOFIX_TOKEN = "autofix-status-token-DO-NOT-RENDER-9876543210"
+AUTOFIX_STATUS_URL = "https://autofix.example.test/superadmin/api/platform/v1/status"
+AUTOFIX_SUPERADMIN_URL = "https://autofix.example.test/superadmin/"
+
+
+def autofix_payload(**overrides):
+    """What Autofix serves (``apps/autofix/status.py`` in the autofix repo, DECISIONS A403)."""
+    body = {
+        "product": "autofix",
+        "environment": "production",
+        "status": "operational",
+        "checkedAt": timezone.now().isoformat().replace("+00:00", "Z"),
+        # Autofix adds onboarding and cancelled; the contract ignores unknown keys.
+        "tenants": {"total": 12, "active": 7, "trial": 3, "suspended": 1, "onboarding": 3, "cancelled": 1},
+        "subscriptions": {"active": 6, "trialing": 3, "pastDue": 1},
+        "alerts": [],
+        "superadminUrl": AUTOFIX_SUPERADMIN_URL,
+    }
+    body.update(overrides)
+    return body
+
+
+@pytest.fixture
+def autofix(askbridge, settings, monkeypatch):
+    """Autofix configured; its answers come from ``autofix.answer``, Askbridge's from the Askbridge stub."""
+    settings.AUTOFIX_STATUS_URL = AUTOFIX_STATUS_URL
+    settings.AUTOFIX_STATUS_TOKEN = AUTOFIX_TOKEN
+    settings.AUTOFIX_SUPERADMIN_URL = AUTOFIX_SUPERADMIN_URL
+    stub = Stub()
+    stub.answer = autofix_payload()
+
+    def route(url, token, timeout=client.TIMEOUT_SECONDS):
+        return (stub if url == AUTOFIX_STATUS_URL else askbridge)(url, token, timeout)
+
+    monkeypatch.setattr(client, "fetch_status_json", route)
+    return stub
+
+
+@pytest.fixture
+def autofix_operator(make_user):
+    from apps.accounts.roles import VIEWER
+
+    user = make_user(VIEWER, email="autofix-operator@example.test")
+    grant(user, "view_product_pipeline", "open_autofix_superadmin")
+    return user
+
+
+def test_autofix_payload_parses_with_its_extra_tenant_keys():
+    snapshot = status.parse_status(autofix_payload(), get_product("autofix"))
+    assert snapshot.product == "autofix" and snapshot.status == "operational"
+    assert snapshot.tenants == {"total": 12, "active": 7, "trial": 3, "suspended": 1}
+    assert snapshot.subscriptions == {"active": 6, "trialing": 3, "pastDue": 1}
+    assert snapshot.superadmin_url == AUTOFIX_SUPERADMIN_URL
+
+
+def test_autofix_degraded_with_an_alert_on_its_own_superadmin():
+    answer = autofix_payload(
+        status="degraded",
+        alerts=[alert(title="2 Autofix jobs failed", url=AUTOFIX_SUPERADMIN_URL + "jobs/")],
+    )
+    snapshot = status.parse_status(answer, get_product("autofix"))
+    assert (
+        snapshot.status == "degraded" and snapshot.critical_alerts[0].url == AUTOFIX_SUPERADMIN_URL + "jobs/"
+    )
+    # A link to another product's host is refused.
+    with pytest.raises(status.InvalidStatus):
+        status.parse_status(autofix_payload(alerts=[alert()]), get_product("autofix"))
+
+
+def test_autofix_defaults_point_at_its_live_superadmin():
+    from config.settings import base
+
+    assert base.AUTOFIX_STATUS_URL == "https://autofix.vitalos.co.uk/superadmin/api/platform/v1/status"
+    assert base.AUTOFIX_SUPERADMIN_URL == "https://autofix.vitalos.co.uk/superadmin/"
+
+
+def test_autofix_not_configured_makes_no_request(client_for, superadmin, askbridge, seeded):
+    detail = page(client_for, superadmin, "/products/autofix/")
+    assert "Status not configured" in detail and 'data-testid="product-counts"' not in detail
+    assert all(call["url"] == STATUS_URL for call in askbridge.calls)
+
+
+def test_autofix_card_shows_live_status(client_for, autofix_operator, autofix, seeded):
+    detail = page(client_for, autofix_operator, "/products/autofix/")
+    assert 'data-state="ok:operational"' in detail
+    assert re.search(r'data-testid="tenants-total">12<', detail)
+    assert "7 active · 3 on trial · 1 suspended" in detail
+    assert re.search(r'data-testid="subscriptions-active">6<', detail) and "3 trialing · 1 past due" in detail
+    assert 'action="/products/autofix/open/"' in detail
+    assert autofix.calls == [{"url": AUTOFIX_STATUS_URL, "token": AUTOFIX_TOKEN, "timeout": 3.0}]
+
+
+def test_autofix_open_redirects_to_its_superadmin_with_audit(client_for, autofix_operator, autofix, seeded):
+    response = client_for(autofix_operator).post("/products/autofix/open/")
+    assert response.status_code == 302 and response["Location"] == AUTOFIX_SUPERADMIN_URL
+    event = AuditEvent.objects.get(action="products.superadmin_opened")
+    assert event.entity_id == "autofix" and event.summary == "Opened the Autofix Superadmin"
+    assert AUTOFIX_TOKEN not in json.dumps(event.metadata)
+
+
+def test_autofix_open_needs_its_own_permission(client_for, askbridge_operator, autofix, seeded):
+    assert client_for(askbridge_operator).post("/products/autofix/open/").status_code == 403
+    detail = page(client_for, askbridge_operator, "/products/autofix/")
+    assert 'data-testid="no-open-permission"' in detail and 'data-testid="product-counts"' not in detail
+    grant(askbridge_operator, "open_autofix_superadmin")
+    operator = type(askbridge_operator).objects.get(pk=askbridge_operator.pk)
+    assert client_for(operator).post("/products/autofix/open/").status_code == 302
+    out = io.StringIO()
+    call_command("product_access", "--email", operator.email, stdout=out)
+    assert "open_autofix_superadmin" in out.getvalue()
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [autofix_payload(), client.StatusFetchError("http_503"), ["bad"]],
+    ids=["ok", "unavailable", "bad"],
+)
+def test_autofix_token_is_never_rendered(client_for, superadmin, autofix, seeded, answer):
+    autofix.answer = answer
+    for path in ("/products/", "/products/autofix/", "/"):
+        body = page(client_for, superadmin, path)
+        assert AUTOFIX_TOKEN not in body and "Bearer" not in body and AUTOFIX_STATUS_URL not in body
 
 
 # --- product_access command ---------------------------------------------------------------------------
