@@ -339,6 +339,7 @@ def test_page_loads_and_upload_queues(client_for, owner, library, settings):
     page = client.get("/mail/outreach/").content.decode()
     assert "Load leads from Notion" in page and 'data-testid="outreach-no-mailbox"' in page
     assert "disabled" in page.split('data-testid="outreach-start"')[1].split(">")[0]
+    assert 'data-confirm-label="Start sending"' in page and 'id="confirm-dialog"' in page
     response = client.post(
         "/mail/outreach/upload/", {"file": _csv(), "corporate_only": "on", "only_new": "on"}, follow=True
     )

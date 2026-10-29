@@ -29,6 +29,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 from playwright.sync_api import Page, expect, sync_playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 SLUGS = ["consulting", "engineering", "ai-data", "experience", "managed-services", "labs"]
 TABS = {
@@ -289,12 +290,22 @@ class Smoke:
         expect(self.page.get_by_test_id("send-email")).to_be_enabled()  # not clicked: the smoke sends no mail
         self.shot("17-use-template")
 
+    def confirm_if_asked(self) -> None:
+        """Answer yes in the admin's confirmation dialog (partials/confirm_dialog.html) when it opens."""
+        dialog = self.page.get_by_test_id("confirm-dialog")
+        try:
+            dialog.wait_for(state="visible", timeout=3000)
+        except PlaywrightTimeoutError:
+            return
+        dialog.get_by_test_id("confirm-ok").click()
+        expect(dialog).to_be_hidden()
+
     def cleanup(self, names: dict[str, str], project: str, kpi: str, password: str) -> None:
         def archive_in(tab: str, locator_css: str, label: str) -> None:
             self.page.goto(self.url(f"/s/consulting/?tab={tab}"))
             item = self.page.locator(locator_css, has_text=label).first
-            self.page.once("dialog", lambda dialog: dialog.accept())
             item.get_by_role("button", name=f"Archive {label}").first.click()
+            self.confirm_if_asked()
             self.wait_htmx()
 
         archive_in("projects", "tr[id^=project-]", project)

@@ -327,3 +327,13 @@ Design: [ADR-029](../../docs/adr/ADR-029-superadmin-enquiries-mail-console.md) (
 ## Product Pipeline: Autofix (29 Oct 2026)
 
 128. **Autofix in the registry.** Owner: add Autofix (online booking and garage management for independent garages) to the Product Pipeline. Open permission `open_autofix_superadmin` (migration `0003`), settings `AUTOFIX_STATUS_URL`, `AUTOFIX_STATUS_TOKEN` (secret `autofix-status-token`) and `AUTOFIX_SUPERADMIN_URL`. Autofix serves the ADR-044 contract from its own superadmin (`https://autofix.vitalos.co.uk/superadmin/api/platform/v1/status`; mapping in DECISIONS A403 of the autofix repo). Its extra tenant keys `onboarding` and `cancelled` are ignored by `parse_status`, as the contract allows. The token is the one Autofix already holds; it is copied, not regenerated. The mark and app icon are drawn from Autofix's brand icon (`src/app/icon.svg`: a wrench on navy `#071127`), with a blue `#1974E2` bolt hole.
+
+## Confirmation dialog (29 Oct 2026)
+
+129. **One styled confirmation dialog replaces the browser's confirm.** The owner asked for a proper pop-up instead of the browser's "admin.vitalos.co.uk says" box. `templates/partials/confirm_dialog.html` is included once in `base.html`, and `static/js/app.js` ("Confirmations") opens it as a modal `<dialog>` with the sign-out dialog's backdrop.
+    - **Where it is used:** a `data-confirm` form or submit button, any `hx-confirm` request, and Use template › Send.
+    - **Text:** the confirm text is split into a title (up to the first "?") and a body. `data-confirm-title`, `data-confirm-label` and `data-confirm-danger` override the title, the button label and the button style (danger is red).
+    - **Send:** the dialog lists To, From and Subject, and warns when the template is a draft.
+    - **Answering:** Cancel, Escape and a click outside the box all mean no, and focus returns to the button. A yes re-submits the same form once, marked as confirmed. All text is set with `textContent`, never as HTML.
+    - **Fallback:** `window.confirm` remains only where `<dialog>` is unavailable.
+    - **Bug fix:** a `data-confirm` on a submit button (portal admin) was previously ignored. It now asks.

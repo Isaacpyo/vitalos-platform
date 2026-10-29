@@ -30,7 +30,7 @@
 
 <div class="card mb-3 flex flex-wrap items-center gap-2 p-3" role="group" aria-label="Use this email">
   {% with blocked=package.needs_recipient %}
-    <button type="button" class="btn btn-primary" data-testid="send-email" data-use-send data-use-from="{{ send_from }}"
+    <button type="button" class="btn btn-primary" data-testid="send-email" data-use-send data-use-from="{{ send_from }}" data-use-subject="{{ package.subject }}"{% if template.status == "draft" %} data-use-draft{% endif %}
             hx-post="{% url 'email_templates:use_send' template.pk %}" hx-include="#use-form" hx-target="#use-panel" hx-swap="innerHTML"
             hx-disabled-elt="this" {% if blocked or error or not recipient or send_unavailable %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Send email</button>
     <button type="button" class="btn btn-secondary" data-use-copy="copy_subject" data-use-url="{% url 'email_templates:use_payload' template.pk %}" {% if blocked or error %}disabled{% endif %}>Copy subject</button>

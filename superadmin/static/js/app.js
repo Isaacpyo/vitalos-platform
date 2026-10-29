@@ -493,28 +493,136 @@
     field.dispatchEvent(new Event("input", { bubbles: true }));
   });
 
-  // Plain form posts that need a confirm (no inline handlers: the CSP allows only nonced scripts).
+  // Confirmations: one styled <dialog> (partials/confirm_dialog.html) instead of window.confirm, for
+  // data-confirm forms (or their submit button), hx-confirm requests and Use template's Send. Resolves
+  // true only on the confirm button; Cancel, Escape and a click outside the box all resolve false.
+  var confirmState = null;
+
+  function splitQuestion(text) {
+    var at = text.indexOf("?");
+    if (at === -1 || at === text.length - 1) return { title: text, body: "" };
+    return { title: text.slice(0, at + 1), body: text.slice(at + 1).trim() };
+  }
+
+  function confirmDialog(options) {
+    var dialog = document.getElementById("confirm-dialog");
+    if (!dialog || typeof dialog.showModal !== "function") {
+      return Promise.resolve(window.confirm([options.title, options.body].filter(Boolean).join("\n\n")));
+    }
+    if (dialog.open) return Promise.resolve(false); // one question at a time; the modal blocks the page
+    dialog.querySelector("[data-confirm-title]").textContent = options.title || "Are you sure?";
+    var body = dialog.querySelector("[data-confirm-body]");
+    body.textContent = options.body || "";
+    body.hidden = !options.body;
+    var details = dialog.querySelector("[data-confirm-details]");
+    details.textContent = "";
+    (options.details || []).forEach(function (row) {
+      if (!row[1]) return;
+      var term = document.createElement("dt");
+      term.className = "muted";
+      term.textContent = row[0];
+      var value = document.createElement("dd");
+      value.className = "break-words font-medium";
+      value.textContent = row[1];
+      details.appendChild(term);
+      details.appendChild(value);
+    });
+    details.hidden = details.childElementCount === 0;
+    var note = dialog.querySelector("[data-confirm-note]");
+    note.textContent = options.note || "";
+    note.hidden = !options.note;
+    var ok = dialog.querySelector("[data-confirm-ok]");
+    ok.textContent = options.confirmLabel || "Confirm";
+    ok.className = "btn " + (options.danger ? "btn-danger" : "btn-primary");
+    return new Promise(function (resolve) {
+      confirmState = { resolve: resolve, opener: document.activeElement };
+      dialog.returnValue = "";
+      dialog.showModal();
+      dialog.querySelector("[data-confirm-cancel]").focus();
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    var dialog = document.getElementById("confirm-dialog");
+    if (!dialog || !dialog.open) return;
+    if (event.target.closest("[data-confirm-ok]")) dialog.close("ok");
+    else if (event.target.closest("[data-confirm-cancel]") || event.target === dialog) dialog.close("cancel");
+  });
+  document.addEventListener(
+    "close",
+    function (event) {
+      if (event.target.id !== "confirm-dialog" || !confirmState) return;
+      var state = confirmState;
+      confirmState = null;
+      if (state.opener && state.opener.isConnected && state.opener.focus) state.opener.focus();
+      state.resolve(event.target.returnValue === "ok");
+    },
+    true,
+  );
+
+  function confirmOptions(source, text) {
+    var parts = splitQuestion(text);
+    return {
+      title: source.getAttribute("data-confirm-title") || parts.title,
+      body: source.getAttribute("data-confirm-title") ? text : parts.body,
+      confirmLabel: source.getAttribute("data-confirm-label") || "Confirm",
+      danger: source.hasAttribute("data-confirm-danger"),
+    };
+  }
+
+  // Plain form posts that need a confirm, on the form or its submit button (no inline handlers: the
+  // CSP allows only nonced scripts). After a yes, the same submit runs again, marked as confirmed.
   document.addEventListener("submit", function (event) {
     var form = event.target;
-    var message = form.getAttribute && form.getAttribute("data-confirm");
-    if (message && !window.confirm(message)) event.preventDefault();
-  });
-
-  // Use template: confirm a send with the recipient as typed now (the panel may not have caught up yet).
-  document.addEventListener("htmx:confirm", function (event) {
-    var button = event.target;
-    if (!button.matches || !button.matches("[data-use-send]")) return;
-    event.preventDefault();
-    var field = document.getElementById("use-recipient");
-    var recipient = field ? field.value.trim() : "";
-    if (!recipient) {
-      useStatus("Add the recipient's email address to send.", true);
+    if (!form.getAttribute) return;
+    var submitter = event.submitter;
+    var source = submitter && submitter.hasAttribute("data-confirm") ? submitter : form;
+    var message = source.getAttribute("data-confirm");
+    if (!message) return;
+    if (form.hasAttribute("data-confirmed")) {
+      form.removeAttribute("data-confirmed");
       return;
     }
-    var from = button.getAttribute("data-use-from");
-    if (window.confirm("Send this email to " + recipient + " now, from " + from + "?")) {
-      event.detail.issueRequest(true);
+    event.preventDefault();
+    confirmDialog(confirmOptions(source, message)).then(function (yes) {
+      if (!yes) return;
+      form.setAttribute("data-confirmed", "");
+      if (form.requestSubmit) form.requestSubmit(submitter && submitter.form === form ? submitter : undefined);
+      else form.submit();
+    });
+  });
+
+  // HTMX requests: Use template's Send shows who it goes to; any hx-confirm uses the same dialog.
+  document.addEventListener("htmx:confirm", function (event) {
+    var element = event.target;
+    if (element.matches && element.matches("[data-use-send]")) {
+      event.preventDefault();
+      var field = document.getElementById("use-recipient");
+      var recipient = field ? field.value.trim() : "";
+      if (!recipient) {
+        useStatus("Add the recipient's email address to send.", true);
+        return;
+      }
+      confirmDialog({
+        title: "Send this email now?",
+        details: [
+          ["To", recipient],
+          ["From", element.getAttribute("data-use-from")],
+          ["Subject", element.getAttribute("data-use-subject")],
+        ],
+        note: element.hasAttribute("data-use-draft") ? "This template is a draft: its wording is not yet approved." : "",
+        confirmLabel: "Send email",
+      }).then(function (yes) {
+        if (yes) event.detail.issueRequest(true);
+      });
+      return;
     }
+    var question = event.detail && event.detail.question;
+    if (!question) return;
+    event.preventDefault();
+    confirmDialog(confirmOptions(element, question)).then(function (yes) {
+      if (yes) event.detail.issueRequest(true);
+    });
   });
 
   // Use template: copy buttons. The server renders the email for this recipient (and audits it);
