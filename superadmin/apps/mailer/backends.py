@@ -18,6 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from email import policy
 from email.message import MIMEPart
 
 from django.conf import settings
@@ -110,6 +111,10 @@ class GraphEmailBackend(BaseEmailBackend):
     Applications), limited to the one mailbox. The access token is cached until shortly before it expires. Each message
     goes as base64 MIME, so List-Unsubscribe, the Message-ID and the inline images arrive as built; Exchange
     keeps a copy in the mailbox's Sent Items.
+
+    The MIME is serialised with CRLF line endings (``policy.SMTP``, as Django's SMTP backend does). Django's
+    default is bare LF, and Graph misreads a quoted-printable soft line break ending in LF: it dropped a
+    character at every wrap ("tou=h" for "touch") in the first live send on 29 Oct 2026.
     """
 
     def __init__(self, *, tenant_id, client_id, client_secret, mailbox, timeout=20):
@@ -166,7 +171,7 @@ class GraphEmailBackend(BaseEmailBackend):
         sent = 0
         url = GRAPH_SEND_URL.format(mailbox=urllib.parse.quote(self.mailbox, safe="@"))
         for message in email_messages:
-            mime = base64.b64encode(message.message().as_bytes())
+            mime = base64.b64encode(message.message(policy=policy.SMTP).as_bytes())
             headers = {"Authorization": f"Bearer {self._token()}", "Content-Type": "text/plain"}
             status, body = self._post(url, mime, headers)
             if status == 401:  # the cached token was revoked or expired early: sign in again once
