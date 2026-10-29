@@ -117,6 +117,13 @@ def test_rejected_is_not_retried():
     assert result.outcome == "rejected" and result.attempts == 1 and clock.sleeps == []
 
 
+def test_failed_call_logs_its_category_and_redacted_detail(caplog):
+    gw, _p, _c, _ = gateway([{"fault": "rejected"}])
+    with caplog.at_level("WARNING", logger="aicore.gateway"):
+        run(gw)
+    assert "model call failed: rejected (simulated rejected)" in caplog.text
+
+
 def test_schema_invalid_output_retried_once_then_invalid_output():
     bad = {"respond": {"lines": [{"source_line": "three"}]}}
     gw, provider, _c, _ = gateway([bad, {"respond": "not json"}, GOOD])

@@ -101,7 +101,10 @@ _Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery worksp
   - `/billing/` redirects to sign-in.
   - `GET /pay/checkout/` and `GET /api/webhooks/stripe/` return 405.
   - A POST with an unknown invoice returns 303 to `vitalos.co.uk/pay?...&error=not-found`.
-- **AC-14 (live provider) is blocked.** The `AI & Data live evaluation` run 40735552845 stopped before any model call, so nothing was spent: neither `AI_DATA_LLM_API_KEY` nor the organisation's `ANTHROPIC_API_KEY` reaches this repository's `production` environment. Owner step: either give `vitalos-platform` access to the organisation secret `ANTHROPIC_API_KEY`, or add `AI_DATA_LLM_API_KEY` as a `production` environment secret. Then re-run the workflow with `confirm=LIVE`.
+- **AC-14 (live provider) passed with the owner's Vitalos key; the CI secret still has to be replaced.**
+  - **29 Oct 2026, 23:14 UTC:** the lead ran the same live evaluation through the `apps.aicore` gateway, with the key the owner provided for AI & Data (`claude-sonnet-5-5`, effort `low`, cap 40 calls). Results: 7/7 model-path calls answered (HTTP 200), model-path field accuracy 100%, unsafe accepts 0, estimated £0.0028 per model-path case (threshold £0.01), about £0.02 in total. The rules-only gate passed. The data is synthetic (dataset v1).
+  - **CI run 40968966484** used the `AI_DATA_LLM_API_KEY` then stored in the `production` environment. All 7 calls were refused with HTTP 400, so that stored key is not usable. Owner step: replace the secret with the working key, then re-run the workflow with `confirm=LIVE` so the evidence comes from CI too.
+  - **Provider change:** the provider now keeps the API's error type and message, so a refused call names its cause.
 - **Billing owner steps** (ADR-053; `superadmin/apps/billing/README.md`):
   - Create a restricted key in Vitalos's own Stripe account and store it as `BILLING_STRIPE_SECRET_KEY`.
   - Add a webhook to `https://admin.vitalos.co.uk/api/webhooks/stripe/` for `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`, and store its signing secret as `BILLING_STRIPE_WEBHOOK_SECRET`.
