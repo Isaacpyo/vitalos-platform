@@ -1,9 +1,12 @@
 """Customer portal URLs. Mounted at the root of PORTAL_HOST (config.portal_urls), at /portal/ for local preview,
-and under /client-portal/preview/<member>/ for staff "Preview as customer" (namespace portal_preview)."""
+and under /client-portal/preview/<member>/ for staff "Preview as customer" (namespace portal_preview).
+
+Staff preview mounts ``workspace_patterns`` only: the sign-in routes and the installable-app routes (manifest,
+service worker, offline page) exist on the customer surface alone."""
 
 from django.urls import path
 
-from .views import auth, customer
+from .views import auth, customer, pwa
 
 app_name = "portal"
 
@@ -51,4 +54,11 @@ workspace_patterns = [
     path("notifications/<int:pk>/open/", customer.notification_open, name="notification_open"),
 ]
 
-urlpatterns = auth_patterns + workspace_patterns
+# Installable app (ADR-056, Phase 1). Public; the worker sits at the portal root so its scope covers the portal.
+pwa_patterns = [
+    path("manifest.webmanifest", pwa.manifest, name="manifest"),
+    path("sw.js", pwa.service_worker, name="service_worker"),
+    path("offline/", pwa.offline, name="offline"),
+]
+
+urlpatterns = auth_patterns + pwa_patterns + workspace_patterns

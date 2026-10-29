@@ -111,4 +111,63 @@
       if (out) out.textContent = input.files.length ? input.files[0].name : "";
     }
   });
+
+  // Installable app (ADR-056, Phase 1). The server sets data-sw on <html> only on the customer surface (the portal
+  // host or the local /portal/ mount), never in staff preview. The worker caches public static files and the
+  // offline page only; see sw.js for the privacy rule.
+  var root = document.documentElement;
+  var swUrl = root.getAttribute("data-sw");
+  var swScope = root.getAttribute("data-sw-scope");
+  if (!swUrl || !swScope) return;
+
+  if ("serviceWorker" in navigator && window.isSecureContext) {
+    var register = function () {
+      navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(function () {
+        // The portal works without the worker; there is nothing to tell the customer.
+      });
+    };
+    if (document.readyState === "complete") register();
+    else window.addEventListener("load", register);
+  }
+
+  // "Install the app" on the Account page. The server shows the manual steps; this swaps in what fits the device.
+  // No automatic banner anywhere: the browser's own install prompt is held until the customer asks for it here.
+  var install = document.querySelector("[data-install]");
+  var deferredPrompt = null;
+  function standalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+  function showInstall(state) {
+    if (!install) return;
+    install.querySelectorAll("[data-install-state]").forEach(function (el) {
+      el.hidden = el.getAttribute("data-install-state") !== state;
+    });
+  }
+  var ios =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (standalone()) showInstall("installed");
+  else if (ios) showInstall("ios");
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    deferredPrompt = event;
+    if (!standalone()) showInstall("prompt");
+  });
+  window.addEventListener("appinstalled", function () {
+    deferredPrompt = null;
+    showInstall("installed");
+  });
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-install-button]");
+    if (!button || !deferredPrompt) return;
+    var prompt = deferredPrompt;
+    deferredPrompt = null;
+    prompt.prompt();
+    prompt.userChoice
+      .then(function (choice) {
+        showInstall(choice && choice.outcome === "accepted" ? "installed" : "manual");
+      })
+      .catch(function () {
+        showInstall("manual");
+      });
+  });
 })();

@@ -272,18 +272,6 @@ a:hover {
   min-width: 1.35rem;
   text-align: center;
 }
-.nav-toggle {
-  display: none;
-  margin-left: auto;
-  color: var(--aid-white);
-  background: none;
-  border: 1px solid var(--aid-grey-600);
-  border-radius: var(--portal-radius);
-  min-height: 44px;
-  padding: 0 0.9rem;
-  font: inherit;
-  cursor: pointer;
-}
 .portal-search {
   display: flex;
 }
@@ -302,38 +290,6 @@ a:hover {
   color: var(--aid-grey-300);
 }
 
-@media (max-width: 52rem) {
-  .nav-toggle {
-    display: inline-flex;
-    align-items: center;
-  }
-  .portal-nav:not(:popover-open) {
-    display: none;
-  }
-  .portal-nav:popover-open {
-    position: fixed;
-    inset: 3.5rem 0 auto 0;
-    margin: 0;
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    background: var(--aid-header-bg);
-    padding: 0.5rem 1rem 1rem;
-    border: 0;
-    border-bottom: 1px solid var(--aid-grey-600);
-    max-height: calc(100vh - 3.5rem);
-    overflow: auto;
-  }
-  .portal-search input {
-    width: 100%;
-  }
-  .portal-search {
-    padding: 0.25rem 0;
-  }
-  .portal-brand__org {
-    display: none;
-  }
-}
 @media (min-width: 52.01rem) {
   .portal-nav[popover] {
     position: static;
@@ -461,7 +417,7 @@ a:hover {
 }
 .kv {
   display: grid;
-  grid-template-columns: max-content 1fr;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 0.35rem 1rem;
   margin: 0;
   font-size: 0.9375rem;
@@ -471,6 +427,9 @@ a:hover {
 }
 .kv dd {
   margin: 0;
+  min-width: 0;
+  /* Long addresses wrap instead of pushing a narrow screen sideways. */
+  overflow-wrap: anywhere;
 }
 
 /* Badges */
@@ -1155,6 +1114,186 @@ code,
   font-size: 0.875em;
 }
 
+/*
+ * Mobile app shell (ADR-056, Phase 1: installable app). At the mobile breakpoint, and always in the installed app
+ * (display-mode: standalone), the primary destinations move to a fixed bottom tab bar and "More" opens the header
+ * menu as a sheet above it. Desktop in a browser tab (wider than 52rem) is unchanged: the tab bar stays hidden.
+ * Safe-area insets keep content clear of notches and the home indicator (viewport-fit=cover on portal pages).
+ */
+:root {
+  --portal-tabbar-h: 3.5rem;
+}
+.tabbar {
+  display: none;
+}
+.auth {
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px))
+    max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+}
+@media (max-width: 52rem), (display-mode: standalone) {
+  /* Keyboard focus and in-page links scroll clear of the tab bar (WCAG 2.2, focus not obscured). */
+  html {
+    scroll-padding-bottom: calc(var(--portal-tabbar-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+  .portal-header {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .portal-header__inner {
+    min-height: 3rem;
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+  .portal-brand__org {
+    display: none;
+  }
+  .portal-main {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    padding-bottom: calc(var(--portal-tabbar-h) + env(safe-area-inset-bottom, 0px) + 2.5rem);
+  }
+  .toasts {
+    bottom: calc(var(--portal-tabbar-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+
+  /* "More": the header menu as a sheet above the tab bar, holding what the tabs do not (Files, Search, Account,
+     Sign out). The [popover] selectors outrank the desktop rule so an installed app on a wide screen gets it too. */
+  .portal-nav[popover]:not(:popover-open) {
+    display: none;
+  }
+  .portal-nav[popover]:popover-open {
+    position: fixed;
+    inset: auto 0 calc(var(--portal-tabbar-h) + env(safe-area-inset-bottom, 0px)) 0;
+    width: min(100%, 32rem);
+    max-height: calc(100dvh - var(--portal-tabbar-h) - env(safe-area-inset-bottom, 0px) - 1rem);
+    margin: 0 auto;
+    padding: 0.75rem max(1rem, env(safe-area-inset-right, 0px)) 0.75rem max(1rem, env(safe-area-inset-left, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    overflow: auto;
+    background: var(--aid-header-bg);
+    color: var(--aid-header-text);
+    border: 0;
+    border-top: 1px solid var(--aid-grey-600);
+    border-radius: var(--portal-radius-lg) var(--portal-radius-lg) 0 0;
+    box-shadow: var(--portal-shadow-lg);
+  }
+  .portal-nav [data-tab],
+  .portal-nav .spacer {
+    display: none;
+  }
+  .portal-search {
+    padding: 0.25rem 0;
+  }
+  .portal-search input {
+    width: 100%;
+  }
+
+  .tabbar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    background: var(--aid-surface);
+    border-top: 1px solid var(--aid-border);
+  }
+  .tabbar__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-width: 0;
+    min-height: var(--portal-tabbar-h);
+    padding: 0.4rem 0.125rem 0.35rem;
+    border: 0;
+    background: none;
+    color: var(--aid-muted);
+    font: inherit;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tabbar__item:hover {
+    color: var(--aid-heading);
+  }
+  .tabbar__item:focus-visible {
+    outline-offset: -4px;
+  }
+  .tabbar__item[aria-current="page"],
+  .tabbar__item.is-active {
+    color: var(--aid-action);
+  }
+  /* "More" while its sheet is open (a rule of its own: a browser without :has() drops only this one). */
+  body:has(.portal-nav:popover-open) .tabbar__item[popovertarget] {
+    color: var(--aid-action);
+  }
+  /* The active tab is marked by shape as well as colour. */
+  .tabbar__item[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: calc(50% - 1rem);
+    width: 2rem;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: currentColor;
+  }
+  .tabbar__icon {
+    position: relative;
+    display: inline-flex;
+  }
+  .tabbar__icon svg {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .tabbar__label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tabbar__badge {
+    position: absolute;
+    top: -0.3rem;
+    left: calc(100% - 0.55rem);
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    background: var(--aid-action);
+    color: var(--aid-action-text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.1rem;
+    text-align: center;
+    box-shadow: 0 0 0 2px var(--aid-surface);
+  }
+}
+/* The narrowest phones (320px): five tabs of 64px, so the labels use the full width and a 10px size (the size of
+   native tab bar labels), which fits "Notifications". */
+@media (max-width: 22.5rem) {
+  .tabbar__item {
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0.625rem;
+  }
+}
+@media (max-width: 40rem) {
+  dialog.drawer {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1167,6 +1306,7 @@ code,
 }
 @media print {
   .portal-header,
+  .tabbar,
   .toasts,
   .btn {
     display: none;

@@ -15,6 +15,7 @@ systems. Architecture, visibility model, auth, AI boundaries and retention: [ADR
 | `notifications.py`                         | In-app notifications, preferences, email with durable `EmailDelivery`, bounded retries.                    |
 | `files.py`                                 | Allow-list, content sniffing, size cap, private storage.                                                   |
 | `ai.py`                                    | Six assistant activities: scoped context, deterministic answers, gateway path, validation, replay.         |
+| `pwa.py`, `views/pwa.py`                   | Installable app: manifest values, the service worker's precache list and cache version, the three public routes. |
 | `views/`                                   | `auth.py` (sign-in, invitation, reset, TOTP), `customer.py` (workspace), `staff.py` (Super Admin tools).   |
 | `urls.py`, `preview_urls.py`, `admin_urls.py` | Customer routes; the same routes for staff preview; staff routes at `/client-portal/`.                  |
 | `management/commands/portal_seed_demo.py`  | Synthetic data for local screenshots. Refuses to run unless DEBUG is on outside production.                |
@@ -43,6 +44,38 @@ DJANGO_SETTINGS_MODULE=config.settings.dev python manage.py portal_seed_demo --s
 The seed creates Northwind Synthetic Ltd and Contoso Synthetic plc (flagged synthetic; a banner shows), sends no email, and
 refuses to run in production or without `DEBUG`. `--reset` rebuilds only the synthetic data.
 
+## Installable app (Phase 1)
+
+The portal installs as an app from the browser (no app store). The decision and the privacy rule are in [ADR-056, Phase 1](../../../docs/adr/ADR-056-client-portal.md#phase-1-installable-app-29-oct-2026).
+
+| Route                  | Portal host             | Local preview                  | What                                                                      |
+| ---------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------- |
+| `manifest.webmanifest` | `/manifest.webmanifest` | `/portal/manifest.webmanifest` | Web app manifest (`application/manifest+json`).                           |
+| `sw.js`                | `/sw.js`                | `/portal/sw.js`                | Service worker, `no-cache`, rendered from `templates/portal/pwa/sw.js`.   |
+| `offline/`             | `/offline/`             | `/portal/offline/`             | Public offline page (`noindex`, no organisation or member data).          |
+
+None of the three exists on the admin host or in staff preview. The worker caches public static files and the offline page only: never a page, a partial, a download or an export. Signing out therefore needs no cache purge.
+
+- **Mobile shell:** `templates/portal/_tabbar.html` (bottom tab bar) and the "Mobile app shell" block in `static/portal/portal.css`. It shows at 52rem or narrower and always in the installed app.
+- **Head tags:** `templates/portal/_pwa_head.html`, added by `base.html` and `auth/shell.html` through the `portal_pwa` tag. The tag returns nothing in staff preview, without a request, or when a view passes `pwa_skip`.
+- **Install card:** on the Account page. `portal.js` swaps the manual steps for an Install button, the iOS instruction or "Installed on this device".
+
+### Regenerate the icons
+
+The icons live in `static/portal/icons/` and are made from `apps/web/public/brand/vitalos-symbol-512.png` (the mark is not redrawn). To regenerate them, run this from the repository root and commit the PNGs:
+
+```sh
+pnpm install --frozen-lockfile                 # Playwright's Chromium comes with @playwright/test
+node tooling/scripts/generate-portal-icons.mjs
+```
+
+### Test offline
+
+1. Run the portal locally (above) and sign in at `http://localhost:8000/portal/sign-in/`. Service workers need a secure context. `localhost` and `127.0.0.1` count as one; a LAN address over plain http does not.
+2. In DevTools, open Application. Under Service workers, `/portal/sw.js` should be active with scope `/portal/`. The Manifest pane should show the icons and no installability errors. Cache storage should hold only `/static/...` files and `/portal/offline/`.
+3. In the Network panel, choose Offline, then open any portal page, including one you visited before. You should get the offline page, never a cached copy of the workspace.
+4. Automated checks are in `tests/test_portal_pwa.py`. If the caching rules change but no static file does, bump `SW_REVISION` in `pwa.py`.
+
 ## Operator workflow (no duplicate entry)
 
 1. Create the organisation, invite members (roles: viewer, contributor, approver, authorised signatory).
@@ -70,7 +103,9 @@ refuses to run in production or without `DEBUG`. `--reset` rebuilds only the syn
 
 Implemented: everything above, the first-release journey end to end (invitation, set password, sign in, challenge, brief, milestones,
 answer a question, review a deliverable, request changes or approve a specific version, recorded decision visible on both sides),
-six assistant activities with deterministic fallbacks, notification preferences, delivery records, files with validation.
+six assistant activities with deterministic fallbacks, notification preferences, delivery records, files with validation, and
+the installable app (Phase 1: manifest, privacy-first service worker, offline page, mobile tab bar, install guidance).
 
-Later phases: live monitoring integrations, contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation
-administration, inbound email into discussions.
+Later phases: Web Push (VAPID keys and a dependency decision), native apps (paid store accounts the owner buys), live monitoring
+integrations, contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation administration, inbound
+email into discussions.
