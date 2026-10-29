@@ -68,6 +68,21 @@ Outside this implementation's scope:
 
 ## Log
 
+- **29 Oct 23:55: client portal Phase 1, the installable app (W11; branch `worktree-agent-aec1d46aca8f6a2d8`, not merged).**
+  - **Built:** the portal installs from the browser (no app store). It has:
+    - a manifest, service worker and offline page at the portal root, absent on the admin host and in staff preview;
+    - icons generated from the Vitalos symbol;
+    - a bottom tab bar at 52rem or narrower and in the installed app (Home, Challenges, Questions, Notifications with the unread badge, More);
+    - an "Install the app" card on the Account page.
+  - **Privacy:** the service worker caches only public static files and the offline page, never workspace pages, partials, downloads or exports, so signing out needs no purge. The rules are in ADR-056, "Phase 1: installable app".
+  - **Evidence:**
+    - `tests/test_portal_pwa.py` passes, as do the full Super Admin gates.
+    - Playwright on synthetic seed data (26 checks): the worker registers and controls the page, and offline navigation, even to visited pages, shows the offline page. The cache holds only `/static/` files and `/portal/offline/`. There is no horizontal overflow at 320, 390 or 768, and desktop at 1440 is unchanged.
+    - Screenshots are in the W11 scratchpad (`shots/w11-pwa/`).
+  - **Deferred:**
+    - Web Push needs VAPID keys and a dependency decision.
+    - Native apps need paid store accounts, which the owner must buy.
+
 - **29 Oct 00:05: merged and verified in production.**
   - **Merge:** the owner said "Merge"; #106 was squash-merged as `dd61f63` with all 19 checks green on head `6f544cb`.
   - **Website (Vercel):** `/ai-data` serves the redesign ("AI that takes work off your team's hands"). `/ai-data`, `/ai-data/demonstrator`, `/ai-data/contact` (guided brief), `/ai-data/solutions`, `/ai-data/approach` and `/pay` return 200.

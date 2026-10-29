@@ -98,3 +98,49 @@ Live monitoring integrations (service status is manual only, labelled with sourc
 - New owner steps: the DNS record and Azure custom-domain binding for `portal.vitalos.co.uk`; a private bucket and `PORTAL_FILES_BUCKET` before customers upload production files; the `PORTAL_HOST`/`PORTAL_ENABLED`/`PORTAL_FILES_BUCKET` repository variables only if the defaults need changing.
 - Customer email links, invitations and password resets are absolute `https://portal.vitalos.co.uk/...` links in production.
 - `apps.portal` adds the admin area "Client portal" and a panel in the opportunity workspace (`templates/aidata/_opportunity_extensions.html`).
+
+## Phase 1: installable app (29 Oct 2026)
+
+**Owner decision:** a mobile app for the portal starts as an installable web app (PWA) on `portal.vitalos.co.uk`, with no app store. Native apps and Web Push are later phases.
+
+### Decision
+
+- **Routes.** `manifest.webmanifest`, `sw.js` and `offline/` sit at the portal root (`/portal/...` in local preview) and exist only in the portal URL configuration (`pwa_patterns` in `apps/portal/urls.py`). They are public and rendered without a request context, so every visitor gets the same bytes and no personal data. Staff "Preview as customer" mounts only the workspace routes, so a preview page has no manifest link and registers no worker. The admin host answers 404 for all three, and the portal host still answers 404 for every admin route.
+- **Manifest.** "Vitalos Client Portal" (short name "Vitalos"). `id`, `start_url` and `scope` are the portal root. `display: standalone`, theme colour `--aid-ink-950` (the portal header), background `--aid-bg`. Icons: 192, 512 and a maskable 512, with shortcuts to Questions and Notifications. `tooling/scripts/generate-portal-icons.mjs` generates the icons from the Vitalos symbol raster: Chromium screenshots a tile and the mark is not redrawn.
+- **Service worker privacy rule.** The portal holds customers' private project data, and customers may use shared devices.
+  - The worker caches only two things: public static files (same-origin `GET` under `/static/`) and the offline page.
+  - Navigations are network-only. When the network fails, the worker shows the cached offline page.
+  - It never stores a page, an HTMX partial, a file download, an export, a POST or API response, or anything else from the workspace.
+  - It does not intercept other requests or other origins.
+  - Static files are cache-first when content-hashed (production's manifest storage) and network-first otherwise (development).
+  - The cache name is versioned from the precached URLs, and activating a new worker deletes every other cache.
+
+  Nothing private is cached, so **signing out needs no cache purge**. Signed-in pages keep `Cache-Control: private, no-store`. `tests/test_portal_pwa.py` checks the precache list and the worker's source.
+
+- **CSP unchanged.** The worker is a same-origin script (`script-src 'self'`; without `worker-src` the policy falls back to it), `portal.js` registers it (no inline script) and the manifest loads under `manifest-src 'self'`.
+- **Mobile app shell.** At 52rem or narrower, and always in `display-mode: standalone`, a fixed bottom tab bar replaces the header menu. Its five tabs are Home, Challenges, Questions, Notifications (with the unread badge) and More. More opens the existing menu as a sheet with Files, Search, Account and Sign out. The shell also has:
+  - 44px targets, `aria-current` on the active tab and the landmark `nav aria-label="Primary"`;
+  - safe-area insets, and scroll padding so the bar never hides keyboard focus;
+  - the 52rem breakpoint, which is unchanged.
+
+  Desktop in a browser tab keeps the current layout.
+
+- **Install guidance.** The Account page has an "Install the app" card instead of a popup:
+  - The server HTML shows the manual steps.
+  - When Chromium fires its deferred `beforeinstallprompt`, the steps become an Install button.
+  - On iOS Safari the card says "Tap Share, then Add to Home Screen".
+  - In the installed app it says "Installed on this device".
+
+  The browser's automatic install banner is held back on portal pages.
+
+### Deferred (not built)
+
+- **Web Push.** Needs:
+  - a VAPID key pair in the provider's secret store;
+  - a subscription model with consent and unsubscribe;
+  - a push library (a dependency and licence decision).
+
+  On iOS it works only for an app added to the Home Screen (iOS 16.4 or later). Email and in-app notifications cover it until then.
+
+- **Native apps (Expo).** Need Apple Developer Program and Google Play developer accounts, which are paid and which the owner must buy, plus store review and privacy labels.
+- **Offline reading of project data.** Left out on purpose because it would put private data on devices. It would first need encryption at rest and a wipe-on-sign-out design.
