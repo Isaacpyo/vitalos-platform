@@ -453,11 +453,13 @@
   }
 }
 
-/* Sign-out confirmation dialog: dimmed, blurred backdrop. */
-.logout-dialog {
+/* Sign-out and confirmation dialogs: centred, over a dimmed, blurred backdrop. */
+.logout-dialog,
+.confirm-dialog {
   margin: auto;
 }
-.logout-dialog::backdrop {
+.logout-dialog::backdrop,
+.confirm-dialog::backdrop {
   background: rgb(15 23 42 / 0.6);
   backdrop-filter: blur(4px);
 }
