@@ -405,6 +405,7 @@ def test_pipeline_lists_every_product(client_for, superadmin, askbridge, seeded)
         assert f"/products/{key}/" in body
     assert "Answerd" in body and "Vitalos Workforce" in body and "TipSignal" in body and "Pitline" in body
     assert "Autofix" not in body
+    assert "Online booking, reminders and AI front desk tools for independent garages." in body
 
 
 def test_products_without_a_status_endpoint_make_no_request(client_for, superadmin, askbridge, seeded):
