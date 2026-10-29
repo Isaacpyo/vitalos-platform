@@ -4,9 +4,11 @@ Adding a product:
 
 1. Add a ``Product`` below.
 2. Add its settings (status URL, status token, superadmin URL) to ``config/settings/base.py``,
-   ``config/settings/prod.py`` (https check) and ``.env.example``.
+   ``config/settings/prod.py`` and ``config/settings/test.py`` (https check), ``.env.example`` and
+   ``deploy/azure/deploy.sh``; document them in ``docs/DEPLOY.md`` section 10.
 3. Add its open permission to ``models.ProductAccess.Meta.permissions`` and run
    ``python manage.py makemigrations products``.
+4. Add ``static/products/<key>-mark.svg`` and ``<key>-app-icon.svg``, and extend ``tests/test_products.py``.
 
 The status endpoint must follow the contract in ADR-044 (``status.py`` validates it).
 """
@@ -120,6 +122,18 @@ PRODUCTS: tuple[Product, ...] = (
         status_token_setting="TIPSIGNAL_STATUS_TOKEN",  # noqa: S106  # nosec B106
         superadmin_url_setting="TIPSIGNAL_SUPERADMIN_URL",
         open_permission="products.open_tipsignal_superadmin",
+    ),
+    Product(
+        key="autofix",
+        name="Autofix",
+        endorsement="by Vitalos",
+        summary="Online booking and garage management for independent garages.",
+        mark="products/autofix-mark.svg",
+        app_icon="products/autofix-app-icon.svg",
+        status_url_setting="AUTOFIX_STATUS_URL",
+        status_token_setting="AUTOFIX_STATUS_TOKEN",  # noqa: S106  # nosec B106
+        superadmin_url_setting="AUTOFIX_SUPERADMIN_URL",
+        open_permission="products.open_autofix_superadmin",
     ),
 )
 

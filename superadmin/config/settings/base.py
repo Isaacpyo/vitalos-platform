@@ -236,6 +236,14 @@ TIPSIGNAL_STATUS_URL = env("TIPSIGNAL_STATUS_URL", default="").strip()
 TIPSIGNAL_STATUS_TOKEN = env("TIPSIGNAL_STATUS_TOKEN", default="")
 # The TipSignal admin is reachable only over Tailscale; set an https address here if one is published.
 TIPSIGNAL_SUPERADMIN_URL = env("TIPSIGNAL_SUPERADMIN_URL", default="").strip()
+# Autofix serves the ADR-044 contract from its own superadmin (DECISIONS A403 in the autofix repo).
+AUTOFIX_STATUS_URL = env(
+    "AUTOFIX_STATUS_URL", default="https://autofix.vitalos.co.uk/superadmin/api/platform/v1/status"
+).strip()
+AUTOFIX_STATUS_TOKEN = env("AUTOFIX_STATUS_TOKEN", default="")
+AUTOFIX_SUPERADMIN_URL = env(
+    "AUTOFIX_SUPERADMIN_URL", default="https://autofix.vitalos.co.uk/superadmin/"
+).strip()
 # Forgot-password emails only make sense when mail can actually be delivered (or locally).
 PASSWORD_RESET_ENABLED = env.bool(
     "PASSWORD_RESET_ENABLED", default=EMAIL_TRANSPORT != "log" or APP_ENVIRONMENT == "development"
