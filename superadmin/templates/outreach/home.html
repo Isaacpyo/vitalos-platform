@@ -56,7 +56,7 @@
 
       <div class="mt-4 flex flex-wrap items-center gap-2">
         {% if current.paused %}
-          <form method="post" action="{% url 'outreach:start' %}" data-confirm="Start sending? Up to {{ current.daily_cap }} emails a day go to the queue, one at a time.">{% csrf_token %}
+          <form method="post" action="{% url 'outreach:start' %}" data-confirm="Start sending? Up to {{ current.daily_cap }} emails a day go to the queue, one at a time, on weekdays from 09:00 to 17:00. You can pause at any time." data-confirm-label="Start sending">{% csrf_token %}
             <button type="submit" class="btn btn-primary" data-testid="outreach-start" {% if problems %}disabled{% endif %}>{% icon "send" "h-4 w-4" %} Start</button>
           </form>
         {% else %}
@@ -90,7 +90,7 @@
   <section class="mt-6" aria-labelledby="queue-heading">
     <div class="flex flex-wrap items-end justify-between gap-2">
       <h2 id="queue-heading" class="font-semibold">Queue <span class="muted text-sm font-normal">(next {{ queued|length }} of {{ counts.queued }})</span></h2>
-      {% if counts.queued %}<form method="post" action="{% url 'outreach:clear' %}" data-confirm="Remove all {{ counts.queued }} from the queue? They will not be emailed, and loading them again skips them.">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove all</button></form>{% endif %}
+      {% if counts.queued %}<form method="post" action="{% url 'outreach:clear' %}" data-confirm="Remove all {{ counts.queued }} from the queue? They will not be emailed, and loading them again skips them." data-confirm-label="Remove all" data-confirm-danger>{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove all</button></form>{% endif %}
     </div>
     <div class="card mt-2 overflow-x-auto">
       <table class="table-base">

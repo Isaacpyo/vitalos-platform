@@ -1083,3 +1083,14 @@ def test_outreach_connection_is_smtp_over_tls_when_configured(settings):
     settings.OUTREACH_SMTP_PORT = 587
     starttls = outreach_connection()
     assert starttls.use_tls and not starttls.use_ssl
+
+
+def test_send_asks_in_the_confirm_dialog_with_subject_and_draft_note(client_for, owner, library):
+    template = _template("invoice-sent")
+    page = client_for(owner).get(_use_url(template)).content.decode()
+    assert 'id="confirm-dialog"' in page and 'data-testid="confirm-ok"' in page
+    button = page.split('data-testid="send-email"')[1].split(">")[0]
+    assert "data-use-subject=" in button and "data-use-draft" in button  # seeded templates start as drafts
+    services.update_template(template, content=template.content(), status=Status.ACTIVE, user=owner)
+    button = client_for(owner).get(_use_url(template)).content.decode().split('data-testid="send-email"')[1]
+    assert "data-use-draft" not in button.split(">")[0]

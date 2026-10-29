@@ -79,6 +79,7 @@
       {% include "partials/palette.html" %}
     {% endif %}
     <div id="modal"></div>
+    {% include "partials/confirm_dialog.html" %}
     {# Busy feedback driven by app.js: blurred overlay for full-page submissions, slim bar for HTMX navigations. #}
     <div id="submit-overlay" hidden class="fixed inset-0 z-[80] flex items-center justify-center bg-midnight/50 backdrop-blur-sm" data-testid="submit-overlay">
       <div class="card flex items-center gap-3 px-5 py-4 shadow-xl" role="status" aria-live="polite">
