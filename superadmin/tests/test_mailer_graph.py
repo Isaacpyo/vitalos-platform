@@ -4,6 +4,7 @@ import base64
 import email
 import io
 import json
+import re
 import urllib.error
 import urllib.parse
 from datetime import datetime
@@ -143,6 +144,43 @@ def test_signs_in_with_client_credentials_and_sends_mime(graph, microsoft):
     assert mime["Subject"] == "A free one-page plan for your business"
     assert mime["List-Unsubscribe"] == "<https://admin.vitalos.co.uk/mail/unsubscribe/x/>"
     assert "Hi Ada," in mime.get_body(("plain",)).get_content()
+
+
+def test_the_mime_uses_crlf_so_graph_decodes_the_body_exactly(graph, microsoft):
+    # Long lines force quoted-printable soft line breaks. With bare LF ("=\n") Graph dropped a character at
+    # every wrap and mangled entities such as &#847; in the first live send (29 Oct 2026).
+    line = "I am getting in touch about technology, and an easy way to start with it. "
+    rendered = render_email(
+        {
+            "title": "Hello",
+            "preheader": "A free one-page plan for your business",
+            "blocks": [{"type": "text", "text": "Hi Ada, " + line * 8}],
+            "footer": {},
+        }
+    )
+    assert "&#847;" in rendered.html and rendered.inline_images
+    message = build_message(
+        rendered,
+        subject="A free one-page plan for your business",
+        to=["ada@example.test"],
+        from_email=f"Temitope Agbola <{MAILBOX}>",
+        headers={"List-Unsubscribe": "<https://admin.vitalos.co.uk/mail/unsubscribe/x/>"},
+    )
+    backends.outreach_connection().send_messages([message])
+    raw = base64.b64decode(microsoft.sends[0].data)
+    assert re.search(rb"(?<!\r)\n", raw) is None and re.search(rb"\r(?!\n)", raw) is None
+    assert b"=\r\n" in raw  # the soft line breaks Graph misread, now in canonical form
+    mime = email.message_from_bytes(raw, policy=policy.default)
+    # CRLF is the canonical form of a line break in a text part, so it decodes back to the original text
+    # (a MIME text part always ends with a line break, added when the message is built).
+    assert mime.get_body(("html",)).get_content().replace("\r\n", "\n") == rendered.html
+    assert mime.get_body(("plain",)).get_content().replace("\r\n", "\n") == rendered.text.rstrip("\n") + "\n"
+    [image] = [part for part in mime.walk() if part.get_content_maintype() == "image"]
+    expected = rendered.inline_images[0]
+    assert image["Content-ID"] == f"<{expected['contentId']}>"
+    assert image.get_content() == base64.b64decode(expected["base64"])
+    assert mime["List-Unsubscribe"] == "<https://admin.vitalos.co.uk/mail/unsubscribe/x/>"
+    assert mime["Message-ID"]
 
 
 def test_the_token_is_reused_until_it_expires(graph, microsoft):
