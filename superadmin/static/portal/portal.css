@@ -168,10 +168,11 @@ a:hover {
   color: var(--aid-heading);
   padding: 0.6rem 1rem;
   border-radius: var(--portal-radius);
-  box-shadow: var(--portal-shadow-lg);
 }
+/* The shadow only while focused: hidden at -4rem, it would bleed into the top of the page. */
 .skip-link:focus {
   top: 1rem;
+  box-shadow: var(--portal-shadow-lg);
 }
 .muted {
   color: var(--aid-muted);

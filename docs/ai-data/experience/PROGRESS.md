@@ -4,8 +4,8 @@ Newest entries first. Each entry gives the time (UTC), what changed, and the evi
 
 ## Current state
 
-- **M0 to M8 done.** Every lane (W5 to W10) is merged into `claude/amazing-cray-miqs1x`, the independent review findings are fixed, every local gate is green, and the full CI is green on #106.
-- **Next:** the owner's review and merge decision (see HANDOFF.md, "Merge and deploy"). After that, the model key and the live evaluation.
+- **M0 to M8 done, live in production.** #106 was merged on the owner's instruction (`dd61f63`, 28 Oct 23:40) and deployed: the website on Vercel, the Super Admin on Azure with its migrations, and `portal.vitalos.co.uk` bound with a managed certificate. The AI switches are off and no customer has been invited.
+- **Next:** the model key and the live evaluation (HANDOFF.md, "Known issues and configuration blockers"), then the first invited customer.
 
 ## Facts established (28 Oct 2026, before implementation)
 
@@ -67,6 +67,22 @@ Outside this implementation's scope:
 | 28 Oct 2026 | At most three implementation agents at a time; W6 paused until W5 finishes                                                                                                                                     | Owner instruction                                                                                                                        |
 
 ## Log
+
+- **29 Oct 00:05: merged and verified in production.**
+  - **Merge:** the owner said "Merge"; #106 was squash-merged as `dd61f63` with all 19 checks green on head `6f544cb`.
+  - **Website (Vercel):** `/ai-data` serves the redesign ("AI that takes work off your team's hands"). `/ai-data`, `/ai-data/demonstrator`, `/ai-data/contact` (guided brief), `/ai-data/solutions`, `/ai-data/approach` and `/pay` return 200.
+  - **Super Admin (Azure, run 40789960766):**
+    - Super Admin CI on `main` was green, and the pre-migration backup succeeded.
+    - The release job applied the migrations before the new image took traffic, and the post-deploy check reports healthy on `dd61f63`.
+    - The admin answers `/healthz/` 200. `/ai-data/`, `/client-portal/` and `/billing/` redirect to login. An unsigned `POST /api/ai-data/brief-assist/` gets 401.
+  - **Portal:**
+    - `deploy.sh` wrote the Cloudflare record for `portal.vitalos.co.uk` (DNS only) and bound the free managed certificate ("Portal host live").
+    - `/healthz/` and `/sign-in/` return 200, and `/` redirects to sign-in.
+    - `/login/`, `/ai-data/`, `/client-portal/`, `/admin/` and the brief-assist API all return 404 on the portal host.
+    - The CSRF cookie is host-only (no `Domain`). CSP, HSTS and `X-Frame-Options: DENY` are present.
+    - There is no horizontal overflow at 1440 or 390 px.
+  - **Found in production and fixed:** the hidden "Skip to content" link cast its shadow into the top-left corner of every portal page. The shadow now shows only while the link is focused. Checked against the live page with the patched stylesheet.
+  - **Screenshots:** lead scratchpad `shots/prod2/` (the website pages and the portal sign-in at 1440 and 390, plus the focused skip link).
 
 - **28 Oct 20:35: #106 ready for review; the full CI is green on `2fa8db6`** (all jobs, including e2e and axe, e2e-draft, SEO and Lighthouse, storybook-a11y, visual, pgTAP and the Super Admin container smoke test). M8 is done apart from the merge, which is held for the owner's review (see HANDOFF.md).
 
