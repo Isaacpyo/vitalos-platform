@@ -1,10 +1,10 @@
 # Handoff: AI & Data connected experience
 
-_Lead handoff, overnight run of 28 October 2026 (final tree `f3c26c6` plus docs). Change set: vitalos-technologies/vitalos-platform#106 (branch `claude/amazing-cray-miqs1x`). Detail and evidence: [SCOPE.md](SCOPE.md) (acceptance criteria), [MILESTONES.md](MILESTONES.md) (lanes), [PROGRESS.md](PROGRESS.md) (log, decisions, blockers), [DEMO.md](DEMO.md) (click-through)._
+_Lead handoff, overnight run of 28 October 2026. Change set: vitalos-technologies/vitalos-platform#106, merged as `dd61f63` and deployed on 28–29 October. Detail and evidence: [SCOPE.md](SCOPE.md) (acceptance criteria), [MILESTONES.md](MILESTONES.md) (lanes), [PROGRESS.md](PROGRESS.md) (log, decisions, blockers), [DEMO.md](DEMO.md) (click-through)._
 
 ## What works now
 
-Everything below is implemented and tested on the branch. Nothing has been deployed: see "Merge and deploy" at the end.
+Everything below is merged and live in production (see "Merge and deploy" at the end). The AI switches are off, and no customer has been invited.
 
 - **Marketing (`/ai-data`, ADR-054).**
   - **Hero:** a split layout with a walkthrough you step through yourself (input → read → check → review → what still needs a person). It is labelled "Synthetic data" and "Scripted example, not live AI", every check expands to its source line, and there are no fake timers.
@@ -95,7 +95,6 @@ Folder: `/tmp/claude-0/-home-user/c4f095cc-360d-5d23-a143-c311cf5ef6e4/scratchpa
   2. Re-run "AI & Data live evaluation" (`confirm=LIVE`).
   3. Then turn on "Live model path", and "Website brief assist" if wanted, in Super Admin › AI settings.
 - **Portal files.** A private bucket and `PORTAL_FILES_BUCKET` are needed. Without them, uploads are refused with an honest message.
-- **Portal domain.** `deploy.sh` creates the Cloudflare records (DNS only) and the free Azure certificate on the first deploy after merge. A portal-domain problem is only a warning for the admin deploy.
 - **Payments.** These are carried over from #104: the Vitalos Stripe key and webhook, and the Super Admin `TURNSTILE_SECRET_KEY`.
 - **Limits accepted for now:**
   - The website's brief-assist limiter is per instance; the Super Admin limits are the real backstop.
@@ -113,13 +112,12 @@ Folder: `/tmp/claude-0/-home-user/c4f095cc-360d-5d23-a143-c311cf5ef6e4/scratchpa
 
 ## Merge and deploy
 
-- **Pre-authorisation.** AGENTS.md pre-authorises merging and deploying AI & Data work once checks are green.
-- **Why it is held.** The owner asked for a reviewable change set and preview, and this change publishes a redesigned public page and opens a customer sign-in at `portal.vitalos.co.uk`. So #106 is left ready but unmerged for the owner's review.
-- **On merge:**
-  - Vercel deploys the website.
-  - The Super Admin deploy workflow migrates, deploys, and binds `portal.vitalos.co.uk`.
-  - The AI switches stay off.
-  - No customer is invited until staff invite one.
+- **Merged** on the owner's instruction ("Merge"): squash commit `dd61f63`, with all 19 checks green on the final head.
+- **Website:** Vercel deployed it; the redesigned `/ai-data`, the demonstrator, the guided brief and `/pay` all return 200.
+- **Super Admin:** the guarded deploy workflow backed up the database, ran the migrations in the release job, and switched to the new image. It is healthy on `dd61f63`.
+- **Portal:** `portal.vitalos.co.uk` is live. Its Cloudflare record is DNS only and it has a free managed certificate. It serves only the portal: sign-in returns 200, and every admin route returns 404 on that host.
+- **Still off or empty:** the AI switches stay off, nothing is seeded, and no customer is invited until staff invite one.
+- **Evidence:** PROGRESS.md (29 Oct 00:05) has the probes and screenshots.
 
 ## Next highest-value task
 

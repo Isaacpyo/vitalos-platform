@@ -40,7 +40,7 @@ Customer-dependent tasks (VAD-011 onward) are never marked done without real evi
 
 ## Client portal register (ADR-056)
 
-Internal delivery tasks for the client portal (W8). They are Vitalos's own platform work, not customer-dependent VAD tasks. Status as of 28 Oct 2026: implemented and tested locally on the feature branch; **not deployed**.
+Internal delivery tasks for the client portal (W8). They are Vitalos's own platform work, not customer-dependent VAD tasks. Status as of 29 Oct 2026: merged (`dd61f63`) and **live** on `portal.vitalos.co.uk`; no customer invited yet.
 
 | ID        | Work item                                                                                 | Status                                                                             | Evidence / next step                                                                                                      |
 | --------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
