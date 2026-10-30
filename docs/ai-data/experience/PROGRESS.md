@@ -68,6 +68,13 @@ Outside this implementation's scope:
 
 ## Log
 
+- **30 Oct 10:55: Super Admin navigation, Settings menu, and user and member management (W15; branch `worktree-agent-aaf22ce927108cff0`, not merged).**
+  - **Sidebar:** Client portal is a child of an AI & Data dropdown (Overview, Client portal). Every `/client-portal/` page highlights it. Role gating is unchanged: SuperAdmin and ServiceLead see it, Viewers see neither.
+  - **Demonstrator:** its pages keep the AI & Data tab bar, with Demonstrator current, and show their own menu beneath it as pills.
+  - **Settings:** a grouped, sticky section menu of real links (`aria-current`) beside the panel from `lg`, and a scrollable row on phones. The HTMX swaps and every permission condition are kept.
+  - **Staff users:** icon actions for Edit, Send a set-password link, Reset two-step sign-in, Suspend or Reactivate, and Delete. Suspend revokes API tokens and ends sessions. Delete is refused for yourself, the primary owner, the last active SuperAdmin, and accounts that own live work or wrote protected project records; the refusal offers Suspend instead. Rules are in `apps/accounts/lifecycle.py`.
+  - **Portal members:** state badges (Invited, Invitation expired, Active, Suspended) and organisation-scoped icon actions: role, resend, suspend or restore, cancel invitation, remove. Removal deletes the account when it left no trace, or erases it ("Former member") when it wrote project records (ADR-056, "Member management"). Settings › Users & roles › Client portal users lists customers across organisations, with the same actions.
+  - **No migration.** Tests: `test_admin_navigation.py`, `test_user_lifecycle.py` and `test_portal_member_management.py`. Synthetic data only; no email was sent outside the test outbox.
 - **30 Oct 07:50: client portal Phase 2, push notifications (W12; branch `worktree-agent-a16a875ec3d1a6a2a`, not merged).**
   - **Built:** standard Web Push (RFC 8030) with VAPID (RFC 8292) and `aes128gcm` encryption (RFC 8291), on `cryptography` 50.0.2 primitives only. It has:
     - devices per member (`PushSubscription`, at most ten active, a coarse label such as "Chrome on Android") and durable `PushDelivery` records with bounded retries; migration `portal` 0005 is additive;

@@ -1,7 +1,7 @@
 {% extends "settings/_shell.html" %}
 {% load ui %}
 {% block settings_panel %}
-  <div class="grid gap-6 lg:grid-cols-3">
+  <div class="grid gap-6 *:min-w-0 lg:grid-cols-3">
     <section class="card p-6">
       <h2 class="font-semibold">Create a token</h2>
       <p class="muted mb-4 text-sm">Tokens give read-only access to <a class="underline" href="{% url 'api:docs' %}">/api/v1/</a> with your permissions. Send <code>Authorization: Bearer &lt;token&gt;</code>.</p>

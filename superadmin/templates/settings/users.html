@@ -1,22 +1,84 @@
 {% extends "settings/_shell.html" %}
 {% load ui %}
 {% block settings_panel %}
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <p class="muted text-sm">SuperAdmin: everything. ServiceLead: edits lines they own or belong to. Viewer: read-only, Public and Internal records.</p>
-    <button type="button" class="btn btn-primary" hx-get="{% url 'accounts:user_create' %}" hx-target="#modal">{% icon "plus" "h-4 w-4" %} Add user</button>
-  </div>
-  <div class="card mt-4 overflow-x-auto">
-    <table class="table-base" data-testid="users-table">
-      <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Last sign-in</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  {% include "settings/_users_header.html" %}
+
+  {% if refusal %}
+    <section class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-100" role="alert" aria-labelledby="refusal-title" data-testid="user-refusal">
+      <div class="flex items-start gap-3">
+        {% icon "alert" "mt-0.5 h-5 w-5 shrink-0 text-amber-700 dark:text-amber-300" %}
+        <div class="min-w-0 flex-1">
+          <h3 id="refusal-title" class="font-semibold">{{ refusal.target.get_full_name }} can't be {% if refusal.action == "delete" %}deleted{% else %}suspended{% endif %}</h3>
+          <ul class="mt-2 space-y-1.5">
+            {% for reason in refusal.reasons %}
+              <li><span class="font-medium">{{ reason.text }}</span>{% if reason.action %} <span class="text-amber-900/80 dark:text-amber-100/80">{{ reason.action }}</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% if refusal.offer_suspend %}
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <form method="post" action="{% url 'accounts:user_action' refusal.target.pk 'suspend' %}" data-submit-label="Suspending…" data-confirm="They are signed out at once and their API tokens are revoked. Their records keep them as the author. You can reactivate them later." data-confirm-title="Suspend {{ refusal.target.get_full_name }}?" data-confirm-label="Suspend">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm" data-testid="suspend-instead">{% icon "ban" "h-4 w-4" %} Suspend instead</button>
+              </form>
+              <p class="text-xs text-amber-900/80 dark:text-amber-100/80">Suspending ends their access straight away and keeps everything they own or wrote.</p>
+            </div>
+          {% endif %}
+        </div>
+        <a href="{% url 'accounts:settings_users' %}" class="icon-btn -my-1 shrink-0" aria-label="Dismiss">{% icon "x" "h-4 w-4" %}</a>
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="card stack-wrap relative mt-4 overflow-x-auto">
+    <table class="table-base stack-table" data-testid="users-table">
+      <caption class="sr-only">Staff accounts</caption>
+      <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col" class="whitespace-nowrap">Last sign-in</th><th scope="col" class="text-right"><span class="sr-only">Actions</span></th></tr></thead>
       <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         {% for row in rows %}
-          <tr>
-            <td><span class="font-medium">{{ row.user.get_full_name }}</span>{% if row.user.is_primary_owner %} <span class="{{ 'active'|badge_class }}">Primary owner</span>{% endif %}{% if row.user.full_name %}<br><span class="muted text-xs">{{ row.user.email }}</span>{% endif %}</td>
-            <td>{% if row.role %}<span class="{% if row.role == 'SuperAdmin' %}{{ 'confidential'|badge_class }}{% elif row.role == 'ServiceLead' %}{{ 'ADVISE'|badge_class }}{% else %}{{ 'slate'|badge_class }}{% endif %}">{{ row.role }}</span>{% else %}<span class="muted">No role</span>{% endif %}{% if row.user.is_superuser %} <span class="muted text-xs">(superuser)</span>{% endif %}</td>
-            <td>{% if row.user.is_active %}Active{% else %}<span class="muted">Deactivated</span>{% endif %}</td>
-            <td class="text-xs">{{ row.user.last_login|date:"j M Y H:i"|default:"Never" }}</td>
-            <td class="text-right"><button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'accounts:user_edit' row.user.pk %}" hx-target="#modal" aria-label="Edit {{ row.user.email }}">{% icon "edit" "h-4 w-4" %} Edit</button></td>
+          {% with u=row.user name=row.user.get_full_name %}
+          <tr data-user="{{ u.pk }}">
+            <td class="min-w-52 align-middle" data-cell="primary">
+              <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1"><span class="font-medium">{{ name }}</span>{% if row.is_self %}<span class="{{ 'blue'|badge_class }}">You</span>{% endif %}{% if u.is_primary_owner %}<span class="{{ 'active'|badge_class }}">Primary owner</span>{% endif %}</div>
+              {% if u.full_name %}<span class="muted block text-xs">{{ u.email }}</span>{% endif %}
+            </td>
+            <td class="align-middle">{% if row.role %}<span class="{% if row.role == 'SuperAdmin' %}{{ 'confidential'|badge_class }}{% elif row.role == 'ServiceLead' %}{{ 'ADVISE'|badge_class }}{% else %}{{ 'slate'|badge_class }}{% endif %}">{{ row.role }}</span>{% else %}<span class="muted">No role</span>{% endif %}{% if u.is_superuser %} <span class="muted text-xs">(superuser)</span>{% endif %}</td>
+            <td class="align-middle whitespace-nowrap">
+              {% if u.is_active %}<span class="{{ 'active'|badge_class }}">Active</span>{% else %}<span class="{{ 'suspended'|badge_class }}">{% icon "ban" "h-3 w-3" %}Suspended</span>{% endif %}
+              <span class="muted mt-1 flex items-center gap-1 text-xs" data-testid="two-step">{% if row.has_device %}{% icon "shield" "h-3.5 w-3.5 text-mineral-700 dark:text-mineral-300" %}Two-step on{% else %}Two-step off{% endif %}</span>
+            </td>
+            <td class="align-middle text-xs whitespace-nowrap" data-cell="secondary">{% if u.last_login %}<time datetime="{{ u.last_login|date:'c' }}">{{ u.last_login|date:"j M Y, H:i" }}</time>{% else %}Never{% endif %}</td>
+            <td class="align-middle" data-cell="actions">
+              <div class="icon-cluster" role="group" aria-label="Actions for {{ name }}">
+                <button type="button" class="icon-btn" hx-get="{% url 'accounts:user_edit' u.pk %}" hx-target="#modal" aria-label="Edit {{ name }}" data-testid="user-edit">{% icon "edit" "h-[18px] w-[18px]" %}<span class="icon-tip" aria-hidden="true">Edit</span></button>
+                {% if row.can_send_link %}
+                  {% url 'accounts:user_action' u.pk 'send_link' as send_url %}
+                  {% with send_title="Send "|add:name|add:" a set-password link?" send_body="An email goes to "|add:u.email|add:" with a link that works once, for 30 minutes. Their current password keeps working until they use it." %}
+                    {% include "partials/icon_action.html" with url=send_url icon_name="send" label="Send a set-password link" aria="Send a set-password link to "|add:name testid="user-send-link" confirm=send_body confirm_title=send_title confirm_label="Send link" busy="Sending…" %}
+                  {% endwith %}
+                {% else %}<span class="icon-btn-spacer" aria-hidden="true"></span>{% endif %}
+                {% if row.can_reset_two_step %}
+                  {% url 'accounts:user_action' u.pk 'reset_2fa' as reset_url %}
+                  {% with reset_title="Reset two-step sign-in for "|add:name|add:"?" %}
+                    {% include "partials/icon_action.html" with url=reset_url icon_name="key-reset" label="Reset two-step sign-in" aria="Reset two-step sign-in for "|add:name testid="user-reset-2fa" confirm="Their authenticator app is removed and they are signed out. At their next sign-in they set up a new one." confirm_title=reset_title confirm_label="Reset" busy="Resetting…" %}
+                  {% endwith %}
+                {% else %}<span class="icon-btn-spacer" aria-hidden="true"></span>{% endif %}
+                {% if u.is_active %}
+                  {% url 'accounts:user_action' u.pk 'suspend' as suspend_url %}
+                  {% with suspend_title="Suspend "|add:name|add:"?" %}
+                    {% include "partials/icon_action.html" with url=suspend_url icon_name="ban" label="Suspend" aria="Suspend "|add:name testid="user-suspend" blocked=row.suspend_block confirm="They are signed out at once, their API tokens are revoked and they can't sign in until you reactivate them. Everything they own or wrote stays." confirm_title=suspend_title confirm_label="Suspend" busy="Suspending…" %}
+                  {% endwith %}
+                {% else %}
+                  {% url 'accounts:user_action' u.pk 'reactivate' as reactivate_url %}
+                  {% include "partials/icon_action.html" with url=reactivate_url icon_name="user-check" label="Reactivate" aria="Reactivate "|add:name testid="user-reactivate" busy="Reactivating…" %}
+                {% endif %}
+                {% url 'accounts:user_action' u.pk 'delete' as delete_url %}
+                {% with delete_title="Delete "|add:name|add:"?" %}
+                  {% include "partials/icon_action.html" with url=delete_url icon_name="trash" label="Delete" aria="Delete "|add:name testid="user-delete" blocked=row.delete_block danger=True confirm="This permanently deletes the account and its personal data: profile, API tokens, authenticator and preferences. The audit trail keeps its history. This cannot be undone." confirm_note="If they still own work or wrote client portal records, deletion is refused and you can suspend them instead." confirm_title=delete_title confirm_label="Delete user" busy="Deleting…" %}
+                {% endwith %}
+              </div>
+            </td>
           </tr>
+          {% endwith %}
         {% endfor %}
       </tbody>
     </table>
