@@ -314,7 +314,7 @@ def test_key_setting_format_and_system_check(settings):
         "A" * 43,  # the zero scalar is not a private key
         "_" * 43,  # larger than the curve order
         "a" * 44,
-        "-----BEGIN PRIVATE KEY-----",
+        "-----BEGIN EC PARAMETERS-----",  # PEM is not the accepted format
     ):
         settings.PORTAL_PUSH_VAPID_PRIVATE_KEY = bad
         assert not push.enabled(), bad
