@@ -574,6 +574,17 @@ def test_a_shared_browser_moves_to_the_person_signed_in(world, vapid):
     assert moved.member == world.approver and not PushSubscription.objects.filter(pk=sub.pk).exists()
 
 
+def test_another_persons_endpoint_with_different_keys_cannot_take_the_device(world, vapid):
+    # A shared browser presents the same endpoint with the same keys. Someone who has only learnt the endpoint
+    # (their own keys) must not be able to move the device to their account.
+    sub, receiver = add_device(world.contrib)
+    impostor = Receiver(receiver.endpoint).subscription()
+    response = post_json(client_for(world.approver.user), "/portal/push/subscribe/", impostor)
+    assert response.status_code == 400 and "someone else" in response.json()["message"]
+    kept = PushSubscription.objects.get(endpoint=receiver.endpoint)
+    assert kept.pk == sub.pk and kept.member == world.contrib and kept.p256dh == sub.p256dh
+
+
 def test_a_simultaneous_registration_is_a_polite_refusal_not_an_error(world, vapid, monkeypatch):
     from django.db import IntegrityError
 

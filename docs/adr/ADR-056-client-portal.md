@@ -181,7 +181,7 @@ Live monitoring integrations (service status is manual only, labelled with sourc
 - **Routes** (customer surface only; staff preview and the admin host answer 404):
   - `push/subscribe/`, `push/unsubscribe/` and `push/test/`: member auth, CSRF, POST only and per-member hourly limits from the audit trail (20, 30 and 5). A member reaches only their own devices; anything else is a 404.
   - `push/renew/`: the service worker calls it when the browser rotates a subscription. It is CSRF-exempt because a worker has no session or token. It is authenticated by the old subscription's endpoint and authentication secret, known only to that browser and this server, and answers 204 whatever happened.
-  - Signing out removes the device that signed out (`portal.js` sends its endpoint with the sign-out form). An endpoint posted by a different person moves to them: the browser belongs to whoever is signed in on it.
+  - Signing out removes the device that signed out (`portal.js` sends its endpoint with the sign-out form). An endpoint posted by a different person moves to them only when it comes with the same keys (the same browser, for example a shared computer whose last user did not sign out). Knowing another person's endpoint is not enough; with different keys the request is refused.
 - **Service worker** (`SW_REVISION` 2). The Phase 1 caching rule is unchanged.
   - `push` shows the notification with `icon-192` and a monochrome `badge-96`, even for an unreadable payload.
   - `notificationclick` focuses or opens only a same-origin path inside the portal scope. Anything else opens the portal home.

@@ -381,7 +381,8 @@ def subscribe(member: Membership, data: SubscriptionData, *, user_agent: str = "
     """Store (or refresh) this browser's subscription for ``member``. Returns ``(subscription, created)``.
 
     An endpoint belongs to one browser profile. If another person registered it before (a shared computer), the
-    person signed in now holds that browser, so the older row is removed and this one takes its place."""
+    person signed in now holds that browser, so the older row is removed and this one takes its place. The browser
+    proves it is the same one by presenting the same keys: knowing only another person's endpoint is not enough."""
     if not enabled():
         raise PushError("Notifications on this device aren't available yet.")
     now = timezone.now()
@@ -394,6 +395,13 @@ def subscribe(member: Membership, data: SubscriptionData, *, user_agent: str = "
                 .first()
             )
             if existing is not None and existing.member.user_id != member.user_id:
+                same_browser = hmac.compare_digest(
+                    existing.auth.encode(), data.auth.encode()
+                ) and hmac.compare_digest(existing.p256dh.encode(), data.p256dh.encode())
+                if not same_browser:
+                    raise PushError(
+                        "This device is set up for someone else. Sign out of the portal there, then try again."
+                    )
                 existing.delete()
                 existing = None
             created = existing is None
