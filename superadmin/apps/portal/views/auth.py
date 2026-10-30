@@ -230,5 +230,10 @@ def otp_setup(request, ctx):
         request,
         ctx,
         "portal/auth/otp_setup.html",
-        {"form": form, "qr_svg": otp.qr_svg(device), "secret": otp.base32_secret(device)},
+        {
+            "form": form,
+            "qr_svg": otp.qr_svg(device),
+            "secret": otp.base32_secret(device),
+            "settings_section": "security",
+        },
     )

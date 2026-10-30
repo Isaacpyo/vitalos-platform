@@ -935,7 +935,7 @@ def test_email_gallery_renders_every_email_without_storing_anything(library, tmp
     manifest = __import__("json").loads((tmp_path / "manifest.json").read_text())
     slugs = {entry["slug"] for entry in manifest}
     assert {"enquiry-alert-single", "enquiry-digest", "inbox-reply", "account-password-link"} <= slugs
-    assert {"careers-hiring-alert", "relay-digest", "library-client-welcome"} <= slugs
+    assert {"careers-hiring-alert", "relay-digest", "library-client-welcome", "portal-invitation"} <= slugs
     assert all(entry["state"] == "layout" for entry in manifest)
     assert not Enquiry.objects.exists()  # fixtures were rolled back
     page = (tmp_path / "emails" / "enquiry-alert-single.html").read_text()

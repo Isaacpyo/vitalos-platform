@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 import { inlineImages } from "./images";
 import { COMPANY_PLACEHOLDERS, checkDocument, renderEmail } from "./render";
 import type { EmailDocument } from "./render";
+import { snippets } from "./snippets";
 import { layoutSpec } from "./spec";
-import { emailTheme } from "./theme";
+import { FONT, emailTheme } from "./theme";
 
 const company = {
   legalName: "Vitalos Technologies Limited",
@@ -179,6 +180,34 @@ const fixtures: Record<string, EmailDocument> = {
       company,
       notice: "You get this because you created an Askbridge account.",
       product: "Askbridge by Vitalos",
+    },
+  },
+  links: {
+    title: "You are invited to the Vitalos client portal",
+    preheader: "Set your password to open the portal.",
+    headerLabel: "Client portal",
+    blocks: [
+      { type: "heading", text: "Your Vitalos portal" },
+      {
+        type: "button",
+        label: "Set your password",
+        url: "https://portal.vitalos.co.uk/invitation/EXAMPLE/",
+      },
+      {
+        type: "text",
+        tone: "muted",
+        text: "If the button does not work, copy this link into your browser: https://portal.vitalos.co.uk/invitation/EXAMPLE/",
+      },
+      {
+        type: "text",
+        text: "Read https://vitalos.co.uk/privacy. See (https://vitalos.co.uk/a_(b)) and https://vitalos.co.uk/q?x=1&y=2, then reply.\n- Docs: https://vitalos.co.uk/docs/\n- Not linked: http://plain.example, javascript:alert(1), https:// and https://.",
+      },
+      { type: "text", text: 'Hostile: https://evil.example/"onmouseover="alert(1)<b>x</b>' },
+    ],
+    footer: {
+      social,
+      company,
+      unsubscribe: { reason: "Because you asked.", url: "https://vitalos.co.uk/unsubscribe?t=abc" },
     },
   },
   correspondence: {
@@ -356,6 +385,82 @@ describe("new blocks and correspondence mode", () => {
   });
 });
 
+describe("links: one readable style, never the client's default blue", () => {
+  const links = renderEmail(fixtures.links!);
+  const L = emailTheme.light;
+  const D = emailTheme.dark;
+  const anchor = (href: string, text = href) =>
+    `<a href="${href}" class="v-link" style="color:${L.link};text-decoration:underline;word-break:break-word;overflow-wrap:anywhere;">${text}</a>`;
+
+  it("links the fallback address under a button, in the link colour with an underline", () => {
+    const url = "https://portal.vitalos.co.uk/invitation/EXAMPLE/";
+    expect(links.html).toContain(
+      `If the button does not work, copy this link into your browser: ${anchor(url)}</p>`,
+    );
+    expect(links.text).toContain(
+      `If the button does not work, copy this link into your browser: ${url}`,
+    );
+  });
+
+  it("keeps trailing punctuation and unopened brackets as text; escapes the address", () => {
+    expect(links.html).toContain(`Read ${anchor("https://vitalos.co.uk/privacy")}. See (`);
+    expect(links.html).toContain(`(${anchor("https://vitalos.co.uk/a_(b)")}) and`);
+    expect(links.html).toContain(`${anchor("https://vitalos.co.uk/q?x=1&amp;y=2")}, then reply.`);
+    expect(links.html).toContain(
+      `<li style="margin:0 0 4px;">Docs: ${anchor("https://vitalos.co.uk/docs/")}</li>`,
+    );
+  });
+
+  it("links https only: other schemes and a bare scheme stay text, quotes end an address", () => {
+    expect(links.html).toContain(
+      "Not linked: http://plain.example, javascript:alert(1), https:// and https://.</li>",
+    );
+    expect(links.html).toContain(
+      `Hostile: ${anchor("https://evil.example/")}&quot;onmouseover=&quot;alert(1)&lt;b&gt;x&lt;/b&gt;`,
+    );
+    const hrefs = [...links.html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]!);
+    for (const href of hrefs) expect(href).toMatch(/^(https:\/\/|mailto:)[^\s"'<>`]+$/);
+  });
+
+  it("every link is the button, a social icon or a v-link with the colour inline and an underline", () => {
+    for (const doc of Object.values(fixtures)) {
+      const { html } = renderEmail(doc);
+      for (const [tag] of html.matchAll(/<a [^>]*>/g)) {
+        if (tag.includes('class="v-btn-a"') || tag.includes('text-decoration:none;">')) continue;
+        expect(tag).toContain('class="v-link"');
+        expect(tag).toContain(`color:${L.link};text-decoration:underline;`);
+      }
+    }
+  });
+
+  it("footer website, support and unsubscribe links use the link colour", () => {
+    expect(links.html).toContain(
+      `<a href="https://vitalos.co.uk" class="v-link" style="color:${L.link};text-decoration:underline;">vitalos.co.uk</a>`,
+    );
+    expect(links.html).toContain(
+      `<a href="mailto:support@vitalos.co.uk" class="v-link" style="color:${L.link};text-decoration:underline;">support@vitalos.co.uk</a>`,
+    );
+    expect(links.html).toContain(
+      `<a href="https://vitalos.co.uk/unsubscribe?t=abc" class="v-link" style="color:${L.link};text-decoration:underline;">Unsubscribe</a>`,
+    );
+  });
+
+  it("dark mode and Outlook.com recolour links; client-made links get the same colour", () => {
+    expect(links.html).toContain(`.v-link{color:${D.link} !important}`);
+    expect(links.html).toContain(`[data-ogsc] .v-link{color:${D.link} !important}`);
+    expect(links.html).toContain(`a{color:${L.link};text-decoration:underline}`);
+    expect(links.html).toContain(`@media (prefers-color-scheme:dark){a{color:${D.link}}`);
+  });
+
+  it("the button is unchanged: filled, no underline, its own text colour in both themes", () => {
+    expect(snippets.button).toContain(
+      `style="display:block;padding:14px 20px;font-family:${FONT};font-size:16px;line-height:20px;font-weight:700;color:${L.actionText};text-decoration:none;border-radius:8px;"`,
+    );
+    expect(links.html).toContain(`.v-btn-a{color:${D.actionText} !important}`);
+    expect(links.html).toContain(`.v-btn{background-color:${D.action} !important}`);
+  });
+});
+
 describe("inline images", () => {
   it("match the PNG files in ../assets at twice the display size", () => {
     for (const img of Object.values(inlineImages)) {
@@ -376,6 +481,8 @@ describe("contrast (WCAG AA, 4.5:1 for text) in both themes", () => {
     ["muted", "surface"],
     ["muted", "page"],
     ["link", "surface"],
+    // Footer links (website, support, unsubscribe) sit on the page colour.
+    ["link", "page"],
     ["actionText", "action"],
     ["intentText", "intentBg"],
     ["timeText", "timeBg"],

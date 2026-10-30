@@ -1,0 +1,24 @@
+VITALOS · CLIENT PORTAL
+
+Your Vitalos portal
+
+Set your password: https://portal.vitalos.co.uk/invitation/EXAMPLE/
+
+If the button does not work, copy this link into your browser: https://portal.vitalos.co.uk/invitation/EXAMPLE/
+
+Read https://vitalos.co.uk/privacy. See (https://vitalos.co.uk/a_(b)) and https://vitalos.co.uk/q?x=1&y=2, then reply.
+- Docs: https://vitalos.co.uk/docs/
+- Not linked: http://plain.example, javascript:alert(1), https:// and https://.
+
+Hostile: https://evil.example/"onmouseover="alert(1)<b>x</b>
+
+--
+LinkedIn: https://www.linkedin.com/company/vitalos
+X: https://x.com/vitalos
+
+Vitalos Technologies Limited, company number 16696895
+Registered office: 114 High Street, Bentley, Doncaster, England, DN5 0AT
+vitalos.co.uk · support@vitalos.co.uk
+
+Because you asked.
+Unsubscribe: https://vitalos.co.uk/unsubscribe?t=abc

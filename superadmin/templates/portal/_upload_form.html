@@ -1,0 +1,63 @@
+{% load portal_ui %}{# The "Upload a file" dialog's form. HTMX swaps this whole form back in with inline errors; without JavaScript the Files page renders again with the dialog open. Every check (type, content, size, one file, challenge and project) runs on the server. #}
+<form id="upload-form" class="dialog__body upload-form" method="post" action="{% purl 'file_upload' %}" enctype="multipart/form-data" hx-post="{% purl 'file_upload' %}" hx-encoding="multipart/form-data" hx-target="this" hx-swap="outerHTML" hx-disabled-elt="find button[type='submit']" novalidate data-testid="upload-form">
+  {% csrf_token %}
+  <div class="upload-form__head">
+    <h2 id="upload-title">Upload a file</h2>
+    <p class="muted small">Share a document with Vitalos for one of your challenges.</p>
+  </div>
+  {% if upload_form.errors %}
+    <div class="form-errors" role="alert" data-testid="upload-errors">
+      <p>The file was not uploaded.{% if upload_form.file.errors %} Choose the file again after fixing the problem.{% endif %}</p>
+    </div>
+  {% endif %}
+  {% if not storage_enabled %}
+    <p class="notice notice--warn" role="note">File storage is not set up yet. You can still record a file, but its contents will not be kept until storage is configured.</p>
+  {% endif %}
+
+  <div class="field">
+    <label for="up-file">File</label>
+    <input class="p-file" type="file" id="up-file" name="file" required accept="{{ upload_accept }}" data-names="up-file-name" data-autofocus aria-describedby="up-file-help{% if upload_form.file.errors %} up-file-error{% endif %}"{% if upload_form.file.errors %} aria-invalid="true"{% endif %}>
+    <span id="up-file-name" class="small muted upload-form__name"></span>
+    <p class="help" id="up-file-help">{{ upload_accepted }}. Up to {{ max_mb }} MB, one file at a time. {{ upload_legacy_note }}</p>
+    {% if upload_form.file.errors %}<p class="error" id="up-file-error">{{ upload_form.file.errors|join:" " }}</p>{% endif %}
+  </div>
+
+  <div class="field">
+    <label for="up-challenge">Challenge</label>
+    <select class="p-input" id="up-challenge" name="challenge" required{% if upload_form.challenge.errors %} aria-invalid="true" aria-describedby="up-challenge-error"{% endif %}>
+      {% if upload_challenges|length != 1 %}<option value="">Choose a challenge</option>{% endif %}
+      {% for c in upload_challenges %}<option value="{{ c.pk }}"{% if c.pk|stringformat:"s" == upload_selected_challenge %} selected{% endif %}>{{ c.title }}</option>{% endfor %}
+    </select>
+    {% if upload_form.challenge.errors %}<p class="error" id="up-challenge-error">{{ upload_form.challenge.errors|join:" " }}</p>{% endif %}
+  </div>
+
+  {% if upload_project_groups %}
+    <div class="field">
+      <label for="up-project">Project (optional)</label>
+      <select class="p-input" id="up-project" name="project" data-filter-by="up-challenge" aria-describedby="up-project-help{% if upload_form.project.errors %} up-project-error{% endif %}"{% if upload_form.project.errors %} aria-invalid="true"{% endif %}>
+        <option value="">No specific project</option>
+        {% for g in upload_project_groups %}
+          <optgroup label="{{ g.challenge.title }}" data-challenge="{{ g.challenge.pk }}">
+            {% for p in g.projects %}<option value="{{ p.pk }}"{% if p.pk|stringformat:"s" == upload_selected_project %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+      <p class="help" id="up-project-help">Projects are listed under their challenge.</p>
+      {% if upload_form.project.errors %}<p class="error" id="up-project-error">{{ upload_form.project.errors|join:" " }}</p>{% endif %}
+    </div>
+  {% endif %}
+
+  <div class="field">
+    <label for="up-title">Title (optional)</label>
+    <input class="p-input" id="up-title" name="title" maxlength="200" value="{{ upload_form.title.value|default:'' }}" aria-describedby="up-title-help{% if upload_form.title.errors %} up-title-error{% endif %}"{% if upload_form.title.errors %} aria-invalid="true"{% endif %}>
+    <p class="help" id="up-title-help">Shown in the file list. Leave it blank to use the file name.</p>
+    {% if upload_form.title.errors %}<p class="error" id="up-title-error">{{ upload_form.title.errors|join:" " }}</p>{% endif %}
+  </div>
+
+  <p class="upload-form__privacy" data-testid="upload-privacy">Only people in {{ organisation.name }} who use this portal, and the Vitalos team, can see files you upload here. Files are checked by content before they are kept, and every version is kept.</p>
+
+  <div class="dialog__actions">
+    <button type="button" class="btn btn--secondary" data-dialog-close>Cancel</button>
+    <button class="btn" type="submit" data-htmx-busy>Upload</button>
+  </div>
+</form>

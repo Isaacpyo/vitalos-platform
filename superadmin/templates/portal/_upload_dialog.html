@@ -1,0 +1,4 @@
+{# The "Upload a file" dialog. Server-rendered open (after a refused upload, or ?upload=1) it shows without JavaScript; portal.js turns it into a modal on load. #}
+{% load portal_ui %}<dialog id="upload-dialog" class="upload-dialog" aria-labelledby="upload-title"{% if upload_open %} open data-modal-on-load data-page-url="{% purl 'files' %}"{% endif %} data-testid="upload-dialog">
+  {% include "portal/_upload_form.html" %}
+</dialog>

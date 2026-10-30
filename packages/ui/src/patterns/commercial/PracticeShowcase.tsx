@@ -218,6 +218,8 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
                 </div>
               );
             }
+            // Lazy, the first image too: the stage is hidden below lg (an eager image still downloads
+            // there, competing with the hero photograph, the LCP element) and below the fold from lg.
             return (
               <img
                 key={item.href}
@@ -227,7 +229,7 @@ function PracticeShowcaseInner({ items, headingLevel = 3, className }: PracticeS
                 width={item.image.width}
                 height={item.image.height}
                 alt=""
-                loading={index === 0 ? "eager" : "lazy"}
+                loading="lazy"
                 decoding="async"
                 className={cx(look, "size-full object-cover")}
               />

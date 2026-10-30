@@ -1,15 +1,21 @@
-{% extends "portal/base.html" %}
+{% extends "portal/settings_base.html" %}
+{% load portal_ui %}
 {% block title %}Two-step sign-in · Vitalos client portal{% endblock %}
-{% block content %}
-  <div class="page-head"><div><h1>Turn on two-step sign-in</h1><p class="lede">Optional, and recommended. After your password you will enter a 6-digit code from an authenticator app.</p></div></div>
-  <div class="card stack">
-    <div class="qr" aria-label="QR code for your authenticator app">{{ qr_svg }}</div>
+{% block settings %}
+  <section class="card stack" aria-labelledby="otp-title">
+    <div>
+      <h2 id="otp-title">Turn on two-step sign-in</h2>
+      <p class="settings__intro">Optional, and recommended. After your password you will enter a 6-digit code from an authenticator app.</p>
+    </div>
+    <div class="qr" role="img" aria-label="QR code for your authenticator app">{{ qr_svg }}</div>
     <p class="small">Can't scan? Enter this key by hand: <code>{{ secret }}</code></p>
     <form method="post" novalidate>
       {% csrf_token %}
       {% include "portal/_fields.html" %}
-      <button type="submit" class="btn">Turn on</button>
-      <a class="btn btn--ghost" href="{% url 'portal:account' %}">Cancel</a>
+      <div class="row">
+        <button type="submit" class="btn">Turn on</button>
+        <a class="btn btn--ghost" href="{% purl 'account' %}#security">Cancel</a>
+      </div>
     </form>
-  </div>
+  </section>
 {% endblock %}

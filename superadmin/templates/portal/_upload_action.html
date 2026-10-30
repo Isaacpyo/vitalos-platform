@@ -1,0 +1,9 @@
+{% load portal_ui %}{# "Upload a file". Context: upload_refusal, where (top or empty, for unique ids). Enabled, it is a link that portal.js turns into the dialog opener; without JavaScript the link opens the page with the dialog shown. When the member cannot upload, the button stays visible, disabled, with the reason under it. #}
+<div class="upload-action upload-action--{{ where }}">
+  {% if upload_refusal %}
+    <button type="button" class="btn" disabled aria-describedby="upload-reason-{{ where }}" data-testid="upload-button-{{ where }}"><svg class="btn__icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15.5V4.5"/><path d="m7.5 9 4.5-4.5L16.5 9"/><path d="M4.5 14.5v3.75c0 .7.55 1.25 1.25 1.25h12.5c.7 0 1.25-.55 1.25-1.25V14.5"/></svg>Upload a file</button>
+    <p class="upload-action__reason" id="upload-reason-{{ where }}" data-testid="upload-reason-{{ where }}">{{ upload_refusal }}</p>
+  {% else %}
+    <a class="btn" href="{% purl 'files' %}?upload=1" data-dialog-open="upload-dialog" aria-haspopup="dialog" data-testid="upload-button-{{ where }}"><svg class="btn__icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 15.5V4.5"/><path d="m7.5 9 4.5-4.5L16.5 9"/><path d="M4.5 14.5v3.75c0 .7.55 1.25 1.25 1.25h12.5c.7 0 1.25-.55 1.25-1.25V14.5"/></svg>Upload a file</a>
+  {% endif %}
+</div>
