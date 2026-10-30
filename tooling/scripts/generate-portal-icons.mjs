@@ -62,7 +62,10 @@ try {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0);
     const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let x0 = width, y0 = height, x1 = 0, y1 = 0;
+    let x0 = width,
+      y0 = height,
+      x1 = 0,
+      y1 = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (data[(y * width + x) * 4 + 3] > 8) {
