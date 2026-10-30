@@ -1,14 +1,15 @@
-{% load static django_htmx portal_ui %}<!doctype html>
-<html lang="en-GB">
+{% load static django_htmx portal_ui %}{% portal_pwa as pwa %}<!doctype html>
+<html lang="en-GB"{% if pwa %} data-sw="{{ pwa.sw }}" data-sw-scope="{{ pwa.scope }}"{% endif %}>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1{% if pwa %}, viewport-fit=cover{% endif %}">
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
     <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false, "historyCacheSize": 0, "refreshOnHistoryMiss": true, "selfRequestsOnly": true, "disableInheritance": true}'>
     <title>{% block title %}Vitalos client portal{% endblock %}</title>
     <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
     <link rel="icon" href="{% static 'brand/favicon-32.png' %}" type="image/png" sizes="32x32">
+    {% if pwa %}{% include "portal/_pwa_head.html" %}{% endif %}
     <link rel="preload" href="{% static 'fonts/inter.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
     {% htmx_script %}
@@ -31,13 +32,12 @@
           <img src="{% static 'brand/vitalos-wordmark-reversed.png' %}" alt="Vitalos" width="94" height="28">
           <span class="portal-brand__org">{{ organisation.name }}</span>
         </a>
-        <button type="button" class="nav-toggle" popovertarget="portal-nav" aria-controls="portal-nav" aria-label="Menu">Menu</button>
         <nav class="portal-nav" id="portal-nav" popover aria-label="Main">
-          <a href="{% purl 'home' %}" {% if nav == 'home' %}aria-current="page"{% endif %}>Dashboard</a>
-          <a href="{% purl 'challenges' %}" {% if nav == 'challenges' %}aria-current="page"{% endif %}>Challenges</a>
-          <a href="{% purl 'questions' %}" {% if nav == 'questions' %}aria-current="page"{% endif %}>Questions</a>
+          <a href="{% purl 'home' %}" data-tab {% if nav == 'home' %}aria-current="page"{% endif %}>Dashboard</a>
+          <a href="{% purl 'challenges' %}" data-tab {% if nav == 'challenges' %}aria-current="page"{% endif %}>Challenges</a>
+          <a href="{% purl 'questions' %}" data-tab {% if nav == 'questions' %}aria-current="page"{% endif %}>Questions</a>
           <a href="{% purl 'files' %}" {% if nav == 'files' %}aria-current="page"{% endif %}>Files</a>
-          <a href="{% purl 'notifications' %}" {% if nav == 'notifications' %}aria-current="page"{% endif %}>Notifications{% if unread %} <span class="count" aria-label="{{ unread }} unread">{{ unread }}</span>{% endif %}</a>
+          <a href="{% purl 'notifications' %}" data-tab {% if nav == 'notifications' %}aria-current="page"{% endif %}>Notifications{% if unread %} <span class="count" aria-label="{{ unread }} unread">{{ unread }}</span>{% endif %}</a>
           <span class="spacer"></span>
           <form class="portal-search" action="{% purl 'search' %}" method="get" role="search">
             <label for="portal-q" class="sr-only">Search your portal</label>
@@ -53,6 +53,7 @@
     <main id="main" class="portal-main" tabindex="-1">
       {% block content %}{% endblock %}
     </main>
+    {% include "portal/_tabbar.html" %}
     <div class="toasts" role="status" aria-live="polite" aria-atomic="false" id="toasts">
       {% for message in messages %}
         <div class="toast toast--{{ message.level_tag }}"><span>{{ message }}</span><button type="button" data-toast-close aria-label="Dismiss">&times;</button></div>

@@ -337,7 +337,7 @@ class AnthropicProvider:
         except anthropic.RateLimitError:
             raise ProviderUnavailable("HTTP 429") from None
         except anthropic.APIStatusError as exc:
-            raise _status_error(exc.status_code) from None
+            raise _status_error(exc.status_code, _api_error_reason(exc)) from None
         latency_ms = int((time.monotonic() - started) * 1000)
         if response.stop_reason == "refusal":
             raise ProviderRejected("the model declined the request (refusal)")
@@ -378,12 +378,22 @@ def build_live_provider(*, provider: str, api_key: str, model: str, base_url: st
     raise ValueError("AI_DATA_LLM_PROVIDER must be anthropic or openai-compatible")
 
 
-def _status_error(status: int) -> ProviderError:
+def _api_error_reason(exc) -> str:
+    """The API's own error type and message on one line (it holds no key and no request text)."""
+    body = exc.body if isinstance(exc.body, dict) else {}
+    error = body.get("error") if isinstance(body.get("error"), dict) else {}
+    kind = str(error.get("type") or "")
+    message = " ".join(str(error.get("message") or "").split())
+    return f"{kind}: {message}" if kind and message else kind or message
+
+
+def _status_error(status: int, reason: str = "") -> ProviderError:
+    detail = f"HTTP {status}: {reason}" if reason else f"HTTP {status}"
     if status == 408:
-        return ProviderTimeout("HTTP 408")
+        return ProviderTimeout(detail)
     if status == 429 or status >= 500:
-        return ProviderUnavailable(f"HTTP {status}")
-    return ProviderRejected(f"HTTP {status}")
+        return ProviderUnavailable(detail)
+    return ProviderRejected(detail)
 
 
 # --- Simulated (hand-written test doubles) ---------------------------------------------------------

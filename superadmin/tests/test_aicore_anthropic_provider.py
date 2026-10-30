@@ -170,6 +170,30 @@ def test_error_mapping(error, expected):
     assert "sk-" not in str(caught.value)
 
 
+def test_status_error_keeps_the_api_reason_on_one_line():
+    body = {
+        "type": "error",
+        "error": {
+            "type": "invalid_request_error",
+            "message": "Your credit balance is too low\n to access the Anthropic API.",
+        },
+    }
+    error = anthropic.BadRequestError("error", response=httpx2.Response(400, request=_request()), body=body)
+    client = FakeClient(error=error)
+    with pytest.raises(ProviderRejected) as caught:
+        AnthropicProvider(model="m", api_key="", client=client).complete(REQUEST)
+    assert caught.value.detail == (
+        "HTTP 400: invalid_request_error: Your credit balance is too low to access the Anthropic API."
+    )
+
+
+def test_status_error_without_a_body_keeps_the_status():
+    client = FakeClient(error=_status(anthropic.BadRequestError, 400))
+    with pytest.raises(ProviderRejected) as caught:
+        AnthropicProvider(model="m", api_key="", client=client).complete(REQUEST)
+    assert caught.value.detail == "HTTP 400"
+
+
 def test_key_never_in_repr():
     provider = AnthropicProvider(model="claude-sonnet-5-5", api_key="sk-ant-NEVER-SHOWN-1234567890")
     assert "NEVER-SHOWN" not in repr(provider)
