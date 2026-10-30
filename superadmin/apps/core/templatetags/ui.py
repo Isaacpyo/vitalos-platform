@@ -89,6 +89,18 @@ _ICON_SHAPES = {
     "link": '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>'
     '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
     "copy": '<rect width="13" height="13" x="9" y="9" rx="1"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+    # Lucide (ISC licence): Client portal and the user and member row actions.
+    "building": '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>'
+    '<path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2M10 6h4M10 10h4M10 14h4M10 18h4"/>',
+    "trash": '<path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>',
+    "user-check": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
+    "user-minus": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/>',
+    "mail-x": '<path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"/>'
+    '<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7M17 17l4 4M21 17l-4 4"/>',
+    "eye": '<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/>'
+    '<circle cx="12" cy="12" r="3"/>',
+    "key-reset": '<path d="m14.5 9.5 1 1M15.5 8.5l-4 4M3 12a9 9 0 1 0 9-9 9.74 9.74 0 0 0-6.74 2.74L3 8M3 3v5h5"/>'
+    '<circle cx="10" cy="14" r="2"/>',
 }
 # Static, trusted SVG markup defined above; never built from user input.
 ICONS = {name: mark_safe(shape) for name, shape in _ICON_SHAPES.items()}  # noqa: S308  # nosec B308 B703
@@ -202,6 +214,10 @@ _TONES = {
     "internal": "sky",
     "confidential": "amber",
     "restricted": "red",
+    # account and portal membership states
+    "invited": "blue",
+    "expired": "amber",
+    "suspended": "slate",
     # enquiry status and priority
     "new": "blue",
     "open": "sky",
@@ -255,6 +271,16 @@ def initials(user_or_email) -> str:
     )
     words = text.split("@")[0].replace(".", " ").replace("_", " ").split()
     return "".join(word[0] for word in words[:2]).upper() or "?"
+
+
+@register.filter
+def person_email(user) -> str:
+    """A person's email for staff pages, or "Former member" once their account was erased (ADR-056)."""
+    from apps.accounts.erasure import FORMER_MEMBER, is_erased
+
+    if user is None:
+        return FORMER_MEMBER
+    return FORMER_MEMBER if is_erased(user) else user.email
 
 
 @register.filter

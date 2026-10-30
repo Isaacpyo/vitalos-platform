@@ -68,7 +68,7 @@ Outside this implementation's scope:
 
 ## Log
 
-- **30 Oct 11:05: Files upload, Account settings layout, readable email links (W14; branch `worktree-agent-a07b00b230b317a7c`, not merged).**
+- **30 Oct 11:05: Files upload, Account settings layout, readable email links (W14; merged as vitalos-technologies/vitalos-platform#116).**
   - **Push, confirmed on a real phone:** the owner's own test after the Phase 2 deploy passed on 30 Oct 2026 (Android Chrome or desktop; the owner said "test notification worked"). This closes the "Next" step of the Phase 2 entry below.
   - **Files, "Upload a file":** a primary button at the top right of Files (and in the empty state) opens a native `<dialog>` with the file, the challenge (only this organisation's shared challenges), an optional project (published, grouped by challenge, filtered by the chosen challenge) and an optional title.
     - Before upload it states the accepted types and the 10 MB limit, both built from `files.py`, and the privacy line.
@@ -84,6 +84,14 @@ Outside this implementation's scope:
     - `tests/test_portal_files_upload_ui.py` (35 tests), the email layout package (63 tests) and its golden fixtures, the dependants (web, Relay) and the full Super Admin suite (1728 tests on PostgreSQL) all pass.
     - Playwright on synthetic seed data: 32 Files checks and 22 Account checks pass. axe WCAG 2.2 AA finds 0 violations on Files, the open dialog, the dialog with an error, Account and Notification preferences, in light and dark. There is no horizontal overflow at 320, 390 or 768.
     - Screenshots are in the W14 scratchpad (`shots/w14/`).
+
+- **30 Oct 10:55: Super Admin navigation, Settings menu, and user and member management (W15).**
+  - **Sidebar:** Client portal is a child of an AI & Data dropdown (Overview, Client portal). Every `/client-portal/` page highlights it. Role gating is unchanged: SuperAdmin and ServiceLead see it, Viewers see neither.
+  - **Demonstrator:** its pages keep the AI & Data tab bar, with Demonstrator current, and show their own menu beneath it as pills.
+  - **Settings:** a grouped, sticky section menu of real links (`aria-current`) beside the panel from `lg`, and a scrollable row on phones. The HTMX swaps and every permission condition are kept.
+  - **Staff users:** icon actions for Edit, Send a set-password link, Reset two-step sign-in, Suspend or Reactivate, and Delete. Suspend revokes API tokens and ends sessions. Delete is refused for yourself, the primary owner, the last active SuperAdmin, and accounts that own live work or wrote protected project records; the refusal offers Suspend instead. Rules are in `apps/accounts/lifecycle.py`.
+  - **Portal members:** state badges (Invited, Invitation expired, Active, Suspended) and organisation-scoped icon actions: role, resend, suspend or restore, cancel invitation, remove. Removal deletes the account when it left no trace, or erases it ("Former member") when it wrote project records (ADR-056, "Member management"). Settings › Users & roles › Client portal users lists customers across organisations, with the same actions.
+  - **No migration.** Tests: `test_admin_navigation.py`, `test_user_lifecycle.py` and `test_portal_member_management.py`. Synthetic data only; no email was sent outside the test outbox.
 
 - **30 Oct 10:15: client portal notification delivery status and delivery-record retention (W13; merged as vitalos-technologies/vitalos-platform#115).**
   - **Built:** Client portal › **Notification deliveries** (`/client-portal/deliveries/`, replacing the email-only page at the same address):

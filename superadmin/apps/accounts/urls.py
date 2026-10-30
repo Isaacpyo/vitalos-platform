@@ -16,6 +16,7 @@ urlpatterns = [
     path("settings/users/", views.settings_users, name="settings_users"),
     path("settings/users/new/", views.user_create, name="user_create"),
     path("settings/users/<int:pk>/edit/", views.user_edit, name="user_edit"),
+    path("settings/users/<int:pk>/<str:action>/", views.user_action, name="user_action"),
     path("settings/tokens/", views.settings_tokens, name="settings_tokens"),
     path("settings/tokens/<int:pk>/revoke/", views.token_revoke, name="token_revoke"),
 ]

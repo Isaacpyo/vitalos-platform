@@ -1,7 +1,7 @@
 {% extends "settings/_shell.html" %}
 {% load ui %}
 {% block settings_panel %}
-  <div class="grid gap-6 lg:grid-cols-2">
+  <div class="grid gap-6 *:min-w-0 lg:grid-cols-2">
     <section class="card p-6">
       <h2 class="font-semibold">Export</h2>
       <p class="muted mb-4 text-sm">CSV of every record you can see, including archived rows. Text cells that look like spreadsheet formulas are prefixed with an apostrophe.</p>

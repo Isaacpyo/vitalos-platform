@@ -1,4 +1,4 @@
-{# One confirmation dialog for the whole admin (static/js/app.js, "Confirmations"): Send email, data-confirm forms and hx-confirm buttons. Text is set with textContent, never as HTML. Clicking outside the box, Escape or Cancel all mean no. #}
+{# One confirmation dialog for the whole admin (static/js/app.js, "Confirmations"): Send email, data-confirm forms and hx-confirm buttons. Text is set with textContent, never as HTML. Clicking outside the box, Escape or Cancel all mean no. data-confirm-title, -label, -note (the amber line) and -danger tune it. #}
 <dialog id="confirm-dialog" class="confirm-dialog card w-[min(28rem,calc(100vw-2rem))] p-0 text-slate-900 dark:text-slate-100" aria-labelledby="confirm-title" aria-describedby="confirm-body" data-testid="confirm-dialog">
   <div class="p-6">
     <h2 id="confirm-title" class="text-lg font-semibold" data-confirm-title></h2>

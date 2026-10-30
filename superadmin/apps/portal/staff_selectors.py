@@ -73,18 +73,90 @@ def members(organisation):
     return Membership.objects.select_related("user").filter(organisation=organisation).order_by("-created_at")
 
 
-def invitation_state(member) -> str:
-    inv = Invitation.objects.filter(membership=member).order_by("-created_at").first()
+# State shown on the Members table and the Client portal users list: key (badge tone) and label.
+STATE_LABELS = {
+    "invited": "Invited",
+    "expired": "Invitation expired",
+    "active": "Active",
+    "suspended": "Suspended",
+}
+
+
+def member_state(member, latest_invitation=None) -> str:
+    """invited, expired, active or suspended. ``latest_invitation`` saves a query when already loaded."""
+    if member.revoked_at is not None or not member.is_active:
+        return "suspended"
     if member.accepted_at:
-        return "Active" if member.is_active and not member.revoked_at else "Revoked"
-    if member.revoked_at:
-        return "Revoked"
-    return {
-        "pending": "Invited",
-        "expired": "Invitation expired",
-        "used": "Accepted",
-        "revoked": "Invitation replaced",
-    }.get(inv.state if inv else "", "Not invited")
+        return "active"
+    inv = latest_invitation
+    if inv is None:
+        inv = Invitation.objects.filter(membership=member).order_by("-created_at").first()
+    return "invited" if inv is not None and inv.is_usable else "expired"
+
+
+def member_rows(organisation) -> list[dict]:
+    """The Members table: each membership with its state and the actions that apply to it."""
+    rows = []
+    for m in members(organisation).prefetch_related("invitations"):
+        invitations = sorted(m.invitations.all(), key=lambda inv: inv.created_at, reverse=True)
+        state = member_state(m, invitations[0] if invitations else None)
+        rows.append(
+            {
+                "member": m,
+                "state": state,
+                "state_label": STATE_LABELS[state],
+                "pending": not m.accepted_at and state in ("invited", "expired"),
+                "can_preview": state == "active",
+                "can_suspend": state == "active",
+                "can_restore": state == "suspended",
+                "can_resend": not m.accepted_at and state != "suspended",
+                "can_cancel": not m.accepted_at,
+                "can_remove": bool(m.accepted_at),
+            }
+        )
+    return rows
+
+
+def customer_accounts() -> list[dict]:
+    """Client portal accounts across organisations (no staff role, at least one membership), for the
+    SuperAdmin list in Settings. Erased accounts have no membership, so they never appear."""
+    from django.contrib.auth import get_user_model
+
+    from apps.accounts.roles import ROLES
+
+    User = get_user_model()
+    users = (
+        User.objects.filter(portal_memberships__isnull=False, is_superuser=False)
+        .exclude(groups__name__in=ROLES)
+        .distinct()
+        .order_by("email")
+        .prefetch_related("portal_memberships__organisation", "portal_memberships__invitations")
+    )
+    rows = []
+    for user in users:
+        memberships = []
+        for m in sorted(user.portal_memberships.all(), key=lambda m: m.organisation.name):
+            invitations = sorted(m.invitations.all(), key=lambda inv: inv.created_at, reverse=True)
+            state = member_state(m, invitations[0] if invitations else None)
+            memberships.append({"member": m, "state": state, "state_label": STATE_LABELS[state]})
+        states = {row["state"] for row in memberships}
+        if "active" in states:
+            overall = "active"
+        elif states & {"invited", "expired"}:
+            overall = "invited" if "invited" in states else "expired"
+        else:
+            overall = "suspended"
+        rows.append(
+            {
+                "user": user,
+                "memberships": memberships,
+                "state": overall,
+                "state_label": STATE_LABELS[overall],
+                "can_suspend": bool(states - {"suspended"}),
+                "can_restore": "suspended" in states,
+            }
+        )
+    return rows
 
 
 def challenge_for_opportunity(opportunity):

@@ -64,6 +64,12 @@ def has_any_role(user) -> bool:
     return bool(user_roles(user))
 
 
+def holds_staff_role(user) -> bool:
+    """Whether the account holds a staff role, even while suspended (``user_roles`` is empty for inactive
+    accounts, so it cannot answer this)."""
+    return bool(user.is_superuser or user.groups.filter(name__in=ROLES).exists())
+
+
 def accessible_service_line_ids(user) -> set[int] | None:
     """Service line IDs the user may change. ``None`` means every service line."""
     if is_superadmin(user):

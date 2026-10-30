@@ -40,11 +40,25 @@ Stack: Python 3.12, Django 5.2 LTS, HTMX 2 (django-htmx), Tailwind CSS v4 (stand
 | `/s/<slug>/`                                                | Service dashboard with HTMX tabs: Overview, Structure, Team, Projects, KPIs. Modals, inline edits, archive and restore      |
 | `/architecture/`                                            | Whole-company tree. Reorder, add, retire, archive and restore service lines; company-wide decisions                       |
 | `/team/`, `/activity/`, `/search/?q=`                       | Team directory, filterable activity feed (from history), full-text search (live in the top bar)                            |
-| `/settings/`                                                | Company profile, users and roles, API tokens, CSV import and export with dry run                                           |
+| `/settings/`                                                | Section menu (Organisation, Communication, Website, Developer): company profile, users and roles (Staff, and Client portal users), email, website content, notifications, API tokens, CSV import and export with dry run |
 | `/notifications/`                                           | In-app notifications. The bell polls every 60 seconds                                                                      |
 | `/api/v1/`, `/api/schema/`, `/api/docs/`                    | Read-only REST API (per-user Bearer tokens), OpenAPI schema, Swagger UI                                                    |
 | `/django-admin/`                                            | Verified Django superusers only. The only place a hard delete is possible                                                  |
 | `/healthz/`                                                 | Liveness and database probe                                                                                                |
+
+## Staff accounts
+
+Settings › Users & roles (SuperAdmin only) lists staff. Each row has icon actions; the rules live in `apps/accounts/lifecycle.py`, and every action is a CSRF-protected POST, audited, with the styled confirmation for anything destructive.
+
+- **Suspend** sets `is_active=False`. It also revokes the person's API tokens and ends their sessions immediately, so their next request is signed out and API calls are refused. **Reactivate** restores sign-in but not the old tokens. The Active box in the edit form follows the same rules.
+- **Reset two-step sign-in** removes their authenticator and signs them out, so they enrol a new one at their next sign-in. You reset your own from Account & security, which asks for your password.
+- **Send a set-password link** emails a single-use, 30-minute link through `apps.mailer`, at most three an hour per person, to active accounts only.
+- **Delete** removes the account and its personal data: profile, API tokens, authenticators, preferences and inbox. Records that pointed at the person keep their row and lose the link. The audit trail keeps its own email snapshot, and the deletion is recorded as "Deleted user #<id>".
+  - Delete is refused, with what to do instead, while the person still owns live work: service lines, open opportunities, enquiries, job applications, careers roles or customer questions. Reassign the work first.
+  - It is also refused while the person wrote records that are part of a customer project (client portal messages) or has Django admin history. Suspend instead.
+- **Refused for everyone:** acting on your own account, the primary owner, or the last active SuperAdmin. Deleting a Django superuser is refused too (remove the flag in Django admin first). Once a primary owner exists, only they can delete another SuperAdmin.
+
+Client portal customers are listed separately under **Client portal users**. Removing one follows ADR-056, "Member management": the account is deleted, or erased when the person wrote project records, which then show "Former member".
 
 ## Layout
 

@@ -1,7 +1,7 @@
 {% extends "settings/_shell.html" %}
 {% load ui %}
 {% block settings_panel %}
-  <div class="grid gap-6 lg:grid-cols-2">
+  <div class="grid gap-6 *:min-w-0 lg:grid-cols-2">
     <section class="card p-5" aria-labelledby="inbound-heading">
       <h2 id="inbound-heading" class="font-semibold">Inbound mail</h2>
       <dl class="mt-3 divide-y divide-slate-200 text-sm dark:divide-slate-800">

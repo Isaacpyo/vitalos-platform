@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from apps.accounts.roles import is_superadmin
 
-from .navigation import is_visible, leaf_items
+from .navigation import crumb_label, is_visible, leaf_items
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ def register(provider: Provider) -> Provider:
 
 def _static_entries(user) -> list[PaletteResult]:
     entries = [
-        PaletteResult("Pages", item.label, item.url, item.group, item.icon)
+        PaletteResult("Pages", item.palette_label or item.label, item.url, crumb_label(item), item.icon)
         for item in leaf_items()
         if is_visible(item, user)
     ]

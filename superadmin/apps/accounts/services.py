@@ -90,19 +90,16 @@ def create_user(*, email: str, full_name: str, role: str, password: str, actor, 
     return user
 
 
-@transaction.atomic
 def set_active(user, active: bool, actor, request=None) -> None:
-    if not is_superadmin(actor):
-        raise PermissionDenied
-    if user.pk == actor.pk and not active:
-        raise ValidationError("You cannot deactivate yourself.")
-    if user.is_primary_owner and not active:
-        raise ValidationError("The primary owner cannot be deactivated.")
-    if user.is_active != active:
-        user.is_active = active
-        user.save(update_fields=["is_active"])
-        action = "users.activated" if active else "users.deactivated"
-        record(action, request=request, actor=actor, entity=user, summary=user.email)
+    """The Active checkbox in the user form: the same suspend and reactivate rules as the row actions."""
+    from . import lifecycle
+
+    if active:
+        lifecycle.reactivate_user(user, actor, request=request)
+    elif user.is_active:
+        lifecycle.suspend_user(user, actor, request=request)
+    else:
+        lifecycle.check_can_suspend(user, actor)
 
 
 # --- Primary owner and one-time set-password links ---------------------------------------------
@@ -174,21 +171,25 @@ def setup_link(user, base_url: str, *, request=None, actor=None, reason="setup_l
 RESET_LIMIT_PER_HOUR = 3
 
 
-def password_email(link: str) -> tuple[str, dict]:
-    """Subject and layout document for the set-a-password email (also used by the email gallery)."""
+def password_email(link: str, *, sent_by_admin: bool = False) -> tuple[str, dict]:
+    """Subject and layout document for the set-a-password email (also used by the email gallery).
+
+    ``sent_by_admin``: a SuperAdmin sent it from Settings > Users & roles rather than the person asking."""
     from apps.mailer import system
 
     subject = "Set your Vitalos Super Admin password"
+    intro = (
+        "A Vitalos Super Admin administrator sent you this link to set the password for your account."
+        if sent_by_admin
+        else "Someone asked to set a new password for this Vitalos Super Admin account."
+    )
     doc = {
         "title": subject,
         "preheader": "Use the link within 30 minutes. It works once.",
         "headerLabel": "Account",
         "blocks": [
             {"type": "heading", "text": "Set your password"},
-            {
-                "type": "text",
-                "text": "Someone asked to set a new password for this Vitalos Super Admin account.",
-            },
+            {"type": "text", "text": intro},
             {"type": "button", "label": "Set a new password", "url": link},
             system.link_fallback(link),
             {"type": "details", "rows": [{"label": "Link expires", "value": "30 minutes, works once"}]},

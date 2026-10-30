@@ -1,0 +1,49 @@
+{% extends "settings/_shell.html" %}
+{% load ui %}
+{% block settings_panel %}
+  {% include "settings/_users_header.html" %}
+
+  <div class="card stack-wrap relative mt-4 overflow-x-auto">
+    <table class="table-base stack-table" data-testid="portal-users-table">
+      <caption class="sr-only">Client portal users</caption>
+      <thead><tr><th scope="col">Person</th><th scope="col">Organisations</th><th scope="col">State</th><th scope="col" class="whitespace-nowrap">Last sign-in</th><th scope="col" class="text-right"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for row in rows %}
+          {% with u=row.user name=row.user.get_full_name %}
+          <tr data-user="{{ u.pk }}">
+            <td class="min-w-56 align-middle" data-cell="primary"><span class="font-medium">{{ name }}</span>{% if u.full_name %}<br><span class="muted text-xs">{{ u.email }}</span>{% endif %}</td>
+            <td class="align-middle" data-cell="primary">
+              <ul class="flex flex-col gap-1.5">
+                {% for m in row.memberships %}
+                  <li><a class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300" href="{% url 'portaladmin:org' m.member.organisation_id %}">{{ m.member.organisation.name }}</a><span class="muted block text-xs">{{ m.member.get_role_display }}{% if m.state != row.state %} · {{ m.state_label }}{% endif %}</span></li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td class="align-middle"><span class="{{ row.state|badge_class }}">{{ row.state_label }}</span></td>
+            <td class="align-middle text-xs whitespace-nowrap" data-cell="secondary">{{ u.last_login|date:"j M Y H:i"|default:"Never" }}</td>
+            <td class="align-middle" data-cell="actions">
+              <div class="icon-cluster" role="group" aria-label="Actions for {{ name }}">
+                {% if row.can_suspend %}
+                  {% url 'portal_settings:user_action' u.pk 'suspend' as suspend_url %}
+                  {% with suspend_title="Suspend "|add:name|add:"'s portal access?" %}
+                    {% include "partials/icon_action.html" with url=suspend_url icon_name="ban" label="Suspend access" aria="Suspend portal access for "|add:name testid="customer-suspend" confirm="Access to every organisation ends at once, and pending invitations stop working. Their records stay, and you can restore access later." confirm_title=suspend_title confirm_label="Suspend access" busy="Suspending…" %}
+                  {% endwith %}
+                {% elif row.can_restore %}
+                  {% url 'portal_settings:user_action' u.pk 'restore' as restore_url %}
+                  {% include "partials/icon_action.html" with url=restore_url icon_name="user-check" label="Restore access" aria="Restore portal access for "|add:name testid="customer-restore" busy="Restoring…" %}
+                {% else %}<span class="icon-btn-spacer" aria-hidden="true"></span>{% endif %}
+                {% url 'portal_settings:user_action' u.pk 'remove' as remove_url %}
+                {% with remove_title="Remove "|add:name|add:" from every organisation?" %}
+                  {% include "partials/icon_action.html" with url=remove_url icon_name="user-minus" label="Remove" aria="Remove "|add:name|add:" from every organisation" testid="customer-remove" danger=True confirm="Their memberships are deleted and their portal account is deleted with its personal data. Anything they wrote in a project stays, shown as Former member. The audit trail keeps its history." confirm_title=remove_title confirm_label="Remove" busy="Removing…" %}
+                {% endwith %}
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr><td colspan="5" class="muted py-6 text-center">No client portal users yet. Invite people from an organisation's page under AI &amp; Data › Client portal.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

@@ -16,8 +16,8 @@
         {% for entry in group.items %}
           <li>
             {% if entry.children %}
-              {# A dropdown (Mail). Open by default; the collapsed rail always shows the children as icons. #}
-              <button type="button" class="nav-item w-full md:collapsed:hidden" aria-expanded="true" aria-controls="nav-sub-{{ entry.item.key }}" data-nav-toggle data-nav-parent="{{ entry.item.key }}">
+              {# A dropdown (Mail, AI & Data, Billing). Open by default; the collapsed rail always shows the children as icons. #}
+              <button type="button" class="nav-item w-full md:collapsed:hidden" aria-expanded="true" aria-controls="nav-sub-{{ entry.item.key }}" data-nav-toggle data-nav-parent="{{ entry.item.key }}"{% if entry.active %} data-active{% endif %}>
                 {% icon entry.item.icon "h-[18px] w-[18px] shrink-0" %}
                 <span class="nav-label">{{ entry.item.label }}</span>
                 <span class="nav-chevron ml-auto" aria-hidden="true">{% icon "down" "h-4 w-4" %}</span>

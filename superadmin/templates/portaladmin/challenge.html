@@ -44,7 +44,7 @@
               <div class="flex flex-wrap items-center justify-between gap-2"><strong>Version {{ b.number }}</strong><span class="muted">{{ b.get_status_display }}</span></div>
               {% if b.summary %}<p class="muted">{{ b.summary }}</p>{% endif %}
               <ul class="mt-2 space-y-1">{% for seg in b.segments %}<li><span class="mono-label muted">{{ seg.provenance|provenance_label }}</span> {{ seg.text|truncatechars:160 }}</li>{% endfor %}</ul>
-              {% for r in b.reviews.all %}<p class="mt-1 text-xs">{{ r.get_decision_display }} by {{ r.user.email }}, {{ r.created_at|date:"j M Y, H:i" }}{% if r.comment %}: {{ r.comment }}{% endif %}</p>{% endfor %}
+              {% for r in b.reviews.all %}<p class="mt-1 text-xs">{{ r.get_decision_display }} by {{ r.user|person_email }}, {{ r.created_at|date:"j M Y, H:i" }}{% if r.comment %}: {{ r.comment }}{% endif %}</p>{% endfor %}
               <div class="mt-2 flex flex-wrap gap-1">
                 <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_item' 'brief' b.pk %}">Preview as customer</a>
                 {% if b.status == "draft" %}
@@ -87,7 +87,7 @@
           {% for q in questions %}
             <li>
               <strong>{{ q.question }}</strong> <span class="muted">{{ q.get_status_display }}{% if q.due_date %} · due {{ q.due_date|date:"j M Y" }}{% endif %}{% if not q.published_at %} · not sent{% endif %}</span>
-              {% for r in q.responses.all %}<p class="mt-1 rounded-md bg-slate-50 p-2 dark:bg-slate-800"><span class="muted">{{ r.user.email }}, {{ r.created_at|date:"j M Y, H:i" }}:</span> {{ r.body }}</p>{% endfor %}
+              {% for r in q.responses.all %}<p class="mt-1 rounded-md bg-slate-50 p-2 dark:bg-slate-800"><span class="muted">{{ r.user|person_email }}, {{ r.created_at|date:"j M Y, H:i" }}:</span> {{ r.body }}</p>{% endfor %}
               {% if q.status != "closed" %}{% url 'portaladmin:question_close' q.pk as close_url %}{% include "portaladmin/_post.html" with url=close_url label="Close" %}{% endif %}
             </li>
           {% empty %}<li class="muted">None.</li>{% endfor %}
@@ -99,7 +99,7 @@
         <ul class="mt-3 space-y-2 text-sm" data-testid="threads">
           {% for t in threads %}
             <li><span class="mono-label muted">{{ t.title }}{% if t.is_internal %} · INTERNAL, never shown{% endif %}</span>
-              <ul class="mt-1 space-y-1">{% for m in t.messages.all %}<li><strong>{{ m.author.email }}</strong> <span class="muted">{{ m.created_at|date:"j M, H:i" }}</span> {{ m.body }}</li>{% endfor %}</ul></li>
+              <ul class="mt-1 space-y-1">{% for m in t.messages.all %}<li><strong>{{ m.author|person_email }}</strong> <span class="muted">{{ m.created_at|date:"j M, H:i" }}</span> {{ m.body }}</li>{% endfor %}</ul></li>
           {% empty %}<li class="muted">No messages.</li>{% endfor %}
         </ul>
         <form method="post" action="{% url 'portaladmin:staff_message' ch.pk %}" class="mt-3" novalidate>

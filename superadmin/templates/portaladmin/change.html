@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}{{ change.title }} · Client portal · Vitalos Super Admin{% endblock %}
 {% block main_width %}max-w-4xl{% endblock %}
 {% block content %}
   <p class="mono-label muted"><a href="{% url 'portaladmin:project' change.project_id %}" class="hover:underline">Client portal / {{ change.project.challenge.organisation.name }} / {{ change.project.name }}</a></p>
   <h1 class="mt-1 text-2xl font-semibold">{{ change.title }}</h1>
-  <p class="muted mt-1 text-sm">{{ change.get_status_display }} · raised by {{ change.raised_by.email }} on {{ change.created_at|date:"j M Y" }} · affects {{ change.affects|default:"not stated" }}</p>
+  <p class="muted mt-1 text-sm">{{ change.get_status_display }} · raised by {{ change.raised_by|person_email }} on {{ change.created_at|date:"j M Y" }} · affects {{ change.affects|default:"not stated" }}</p>
   <section class="card mt-5 p-5"><h2 class="font-semibold">Request</h2><p class="mt-2 whitespace-pre-wrap break-words text-sm">{{ change.description }}</p></section>
   <section class="card mt-5 p-5" aria-labelledby="trail-h"><h2 id="trail-h" class="font-semibold">Review trail</h2>
     <ol class="mt-2 space-y-2 text-sm">{% for t in trail %}<li><strong>{{ t.get_to_status_display }}</strong>{% if t.from_status %} (from {{ t.from_status }}){% endif %} by {{ t.actor_email|default:"system" }}, {{ t.created_at|date:"j M Y, H:i" }}{% if t.note %}: {{ t.note }}{% endif %}</li>{% endfor %}</ol>
