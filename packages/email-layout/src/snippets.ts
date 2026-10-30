@@ -113,6 +113,10 @@ export const snippets = {
   // inline-block with 12px vertical padding: a tap target of at least 44px.
   link: `<a href="[[href]]" class="v-link" style="display:inline-block;padding:12px 0;color:${L.link};text-decoration:underline;${WRAP}">[[text]]</a>`,
 
+  // An https address written in a text block (for example the fallback line under a button). It is
+  // linked here, in the layout's colour, so no client paints it in its own default blue.
+  text_link: `<a href="[[href]]" class="v-link" style="color:${L.link};text-decoration:underline;${WRAP}">[[text]]</a>`,
+
   note: ` <span class="v-m" style="color:${L.muted};font-family:${MONO};font-size:13px;">([[text]])</span>`,
 
   subvalue: `<br><span class="v-m" style="color:${L.muted};font-family:${MONO};font-size:13px;line-height:20px;">[[text]]</span>`,
@@ -179,7 +183,7 @@ export const snippets = {
 
   footer_social_link: `<a href="[[href]]" style="display:inline-block;padding:6px;text-decoration:none;">[[image]]</a>`,
 
-  footer_link: `<a href="[[href]]" class="v-m" style="color:${L.muted};text-decoration:underline;">[[text]]</a>`,
+  footer_link: `<a href="[[href]]" class="v-link" style="color:${L.link};text-decoration:underline;">[[text]]</a>`,
 } as const;
 
 export type SnippetName = keyof typeof snippets;

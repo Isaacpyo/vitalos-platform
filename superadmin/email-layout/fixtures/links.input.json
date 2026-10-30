@@ -1,0 +1,54 @@
+{
+  "title": "You are invited to the Vitalos client portal",
+  "preheader": "Set your password to open the portal.",
+  "headerLabel": "Client portal",
+  "blocks": [
+    {
+      "type": "heading",
+      "text": "Your Vitalos portal"
+    },
+    {
+      "type": "button",
+      "label": "Set your password",
+      "url": "https://portal.vitalos.co.uk/invitation/EXAMPLE/"
+    },
+    {
+      "type": "text",
+      "tone": "muted",
+      "text": "If the button does not work, copy this link into your browser: https://portal.vitalos.co.uk/invitation/EXAMPLE/"
+    },
+    {
+      "type": "text",
+      "text": "Read https://vitalos.co.uk/privacy. See (https://vitalos.co.uk/a_(b)) and https://vitalos.co.uk/q?x=1&y=2, then reply.\n- Docs: https://vitalos.co.uk/docs/\n- Not linked: http://plain.example, javascript:alert(1), https:// and https://."
+    },
+    {
+      "type": "text",
+      "text": "Hostile: https://evil.example/\"onmouseover=\"alert(1)<b>x</b>"
+    }
+  ],
+  "footer": {
+    "social": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/company/vitalos",
+        "contentId": "social-linkedin"
+      },
+      {
+        "label": "X",
+        "url": "https://x.com/vitalos",
+        "contentId": "social-x"
+      }
+    ],
+    "company": {
+      "legalName": "Vitalos Technologies Limited",
+      "companyNumber": "16696895",
+      "registeredOffice": "114 High Street, Bentley, Doncaster, England, DN5 0AT",
+      "website": "https://vitalos.co.uk",
+      "supportEmail": "support@vitalos.co.uk"
+    },
+    "unsubscribe": {
+      "reason": "Because you asked.",
+      "url": "https://vitalos.co.uk/unsubscribe?t=abc"
+    }
+  }
+}

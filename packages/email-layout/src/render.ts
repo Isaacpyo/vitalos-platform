@@ -184,18 +184,59 @@ function textGroups(text: string): { list: boolean; lines: string[] }[] {
   return groups;
 }
 
+// An https address in a text block runs to whitespace, a quote, a backtick or an angle bracket.
+const TEXT_URL = /https:\/\/[^\s"'<>`]+/g;
+const HTTPS = "https://";
+const TRAILING = ".,;:!?";
+
+const count = (value: string, ch: string) => value.split(ch).length - 1;
+
+/** Sentence punctuation after an address, and a ")" it did not open, stay text. */
+function trimUrl(url: string): string {
+  let out = url;
+  for (;;) {
+    const last = out.slice(-1);
+    if (last && TRAILING.includes(last)) {
+      out = out.slice(0, -1);
+    } else if (last === ")" && count(out, "(") < count(out, ")")) {
+      out = out.slice(0, -1);
+    } else {
+      return out;
+    }
+  }
+}
+
+/**
+ * Escapes a line of a text block and links each https address in it with the layout's link style,
+ * so an email client never shows it in its own default colour (for example the fallback line under
+ * a button). Other schemes stay text.
+ */
+function linkedText(line: string): string {
+  let html = "";
+  let last = 0;
+  for (const match of line.matchAll(TEXT_URL)) {
+    const url = trimUrl(match[0]);
+    if (url.length <= HTTPS.length) continue;
+    html += e(line.slice(last, match.index)) + fill("text_link", { href: e(url), text: e(url) });
+    last = match.index + url.length;
+  }
+  return html + e(line.slice(last));
+}
+
 function textHtml(text: string, muted: boolean): string {
   const groups = textGroups(text);
   return groups
     .map((group, index) => {
       const margin = index === groups.length - 1 ? "0" : "0 0 12px";
       if (group.list) {
-        const items = group.lines.map((line) => fill("list_item", { text: e(line) })).join("");
+        const items = group.lines
+          .map((line) => fill("list_item", { text: linkedText(line) }))
+          .join("");
         return fill("list", { margin, items });
       }
       return fill(muted ? "paragraph_muted" : "paragraph", {
         margin,
-        text: group.lines.map(e).join("<br>\n"),
+        text: group.lines.map(linkedText).join("<br>\n"),
       });
     })
     .join("\n");

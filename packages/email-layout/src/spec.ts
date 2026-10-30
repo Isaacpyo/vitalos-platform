@@ -8,7 +8,7 @@ import { DARK_MEDIA_QUERY, PREHEADER_PAD, STYLE_BLOCKS, emailTheme } from "./the
  * The tests write it to `superadmin/email-layout/email-layout.json` and fail if the committed copy
  * differs, so the Super Admin always renders with exactly the same markup, colours and images.
  */
-export const SPEC_VERSION = 2;
+export const SPEC_VERSION = 3;
 
 export function layoutSpec() {
   return {

@@ -152,12 +152,10 @@ def _issue_invitation(member: Membership, actor, request=None) -> str:
     return token
 
 
-def _send_invitation(member: Membership, token: str) -> None:
+def invitation_email(member: Membership, link: str) -> tuple[str, dict]:
+    """The invitation's subject and layout document (the email gallery renders it with synthetic values)."""
     from apps.mailer import system
 
-    from .access import portal_absolute
-
-    link = portal_absolute("invitation", {"token": token})
     org = member.organisation.name
     subject = f"You are invited to the Vitalos client portal for {org}"
     doc = {
@@ -191,6 +189,15 @@ def _send_invitation(member: Membership, token: str) -> None:
         ],
         "footer": system.footer(),
     }
+    return subject, doc
+
+
+def _send_invitation(member: Membership, token: str) -> None:
+    from apps.mailer import system
+
+    from .access import portal_absolute
+
+    subject, doc = invitation_email(member, portal_absolute("invitation", {"token": token}))
     system.send(
         doc,
         kind="portal.invitation",
