@@ -38,6 +38,7 @@ urlpatterns = [
     path("api/", include("apps.relay.api_urls")),
     path("settings/", include("apps.enquiries.settings_urls")),
     path("settings/", include("apps.content_sync.settings_urls")),
+    path("settings/", include("apps.portal.settings_urls")),
     path("api/", include("apps.api.urls")),
     path("", include("apps.architecture.urls")),
 ]

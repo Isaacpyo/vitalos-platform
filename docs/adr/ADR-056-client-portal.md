@@ -81,7 +81,7 @@ Six assistant activities (summarise my project, what changed since my last visit
 
 ### 10. Retention (proposal, not enforced)
 
-Organisation, membership, approval and audit records are decision evidence and are kept for the life of the engagement. Approvals are protected from cascade deletion. Customer files carry a `retention_note`. The only automatic deletion is of delivery records and turned-off push devices (see "Delivery status and retention" below); any other job needs a documented policy (ADR) and a dry run first, per AGENTS.md. Offboarding an organisation today means revoking its members and deactivating the organisation, which closes every surface and keeps the records.
+Organisation, membership, approval and audit records are decision evidence and are kept for the life of the engagement. Approvals are protected from cascade deletion. Customer files carry a `retention_note`. The only automatic deletion is of delivery records and turned-off push devices (see "Delivery status and retention" below); any other job needs a documented policy (ADR) and a dry run first, per AGENTS.md. Offboarding an organisation today means revoking its members and deactivating the organisation, which closes every surface and keeps the records. Removing one person is described under "Member management" below.
 
 ### 11. Later phases (not built)
 
@@ -245,3 +245,49 @@ Live monitoring integrations (service status is manual only, labelled with sourc
 
 - A per-attempt history for push (only the latest attempt's category and count are kept).
 - A work-queue entry for failed pushes. The work queue lists failed portal emails only, because a device going away is routine; the summary on the delivery page shows push failures.
+
+## Member management (30 Oct 2026)
+
+Staff could invite, re-send, revoke and restore a member, but could not withdraw a mistyped invitation or take a person out of an organisation for good. The owner asked for both, plus an account-level view of every customer.
+
+### Constraints
+
+- The schema keeps customer-authored rows with `on_delete=PROTECT`: `Message.author`, `Approval.user`, `BriefReview.user`, `ChangeRequest.raised_by` and `InformationResponse.user`. The migration policy for this change is additive only, so those cannot become `SET_NULL`.
+- §10 treats approvals, memberships and the audit trail as decision evidence.
+
+### Decision
+
+- **Actions on the Members table.** Every action is a CSRF-protected POST, needs `staff_can_manage` (SuperAdmin or ServiceLead) and is audited. Each is scoped to the organisation in the URL, `/client-portal/orgs/<org>/members/<member>/<action>/`: a member of another organisation answers 404.
+  - **Change role.**
+  - **Resend invitation**, while invited.
+  - **Suspend access** (the existing revoke: the membership stays and access ends on the next request) and **Restore access**.
+  - **Cancel invitation**, for an invitation nobody accepted: the membership and its invitation links are deleted.
+  - **Remove from organisation**, for an accepted member: the membership is deleted.
+- **Settling the account** (`apps/portal/members.py`). After a cancel or a removal, the person's account is:
+  1. **Kept** while it has another membership or holds a staff role. Roles are read from the groups, so a suspended staff account still counts.
+  2. **Deleted** when it left no footprint in any project. Its notifications, preferences, email-delivery rows and authenticators go with it.
+  3. **Erased** when it did leave one. A footprint is any of: a message, an answer, a brief review, an approval, a change request, an uploaded file or file version, a change-review step, an agreed brief, or an activity event.
+- **What erasing does.** The account row stays, because the record needs its author and the schema protects it. Everything personal on the row goes:
+  - the email becomes `former-member-<id>@erased.invalid` (the reserved `.invalid` domain, which can never receive mail);
+  - the name becomes "Former member";
+  - the password is made unusable, the account is inactive and the last sign-in is cleared;
+  - groups, sessions, authenticators and API tokens are removed;
+  - the person's portal notifications, preferences and email-delivery rows are deleted;
+  - their name and email are replaced with "Former member" in the activity-feed summaries they caused.
+
+  Every message, answer, review, approval, change request and file stays, and customers and staff see the author as "Former member". `accounts.erasure.is_erased` recognises the account. It appears in neither user list.
+
+- **What is kept on purpose:**
+  - `Approval.user_name` and `user_email`, the name and email captured at the moment of the decision, as contractual evidence (§10);
+  - `ChangeReview.actor_email`;
+  - the audit trail, which is append-only and never edited. It keeps its own actor email. The new events (`portal.invitation_cancelled`, `portal.member_removed`, `portal.account_deleted`, `portal.account_erased`) name records by id, for example "Deleted portal user #12";
+  - django-axes sign-in records, which are a security log.
+- **Why erase rather than refuse.** Refusing would leave staff unable to remove anyone who had ever written a message, and that person would keep a live account. Reassigning their rows to one shared "Former member" account would rewrite who did what, and would update a dozen tables. A per-person tombstone keeps the project record exactly as it happened, and still removes the personal data from the account.
+- **Account level.** Settings › Users & roles › Client portal users (SuperAdmin only) lists customers across organisations. A customer is an account with a membership and no staff role. The list shows name, email, organisations with role, state and last sign-in. Suspend, Restore and Remove call the same services for every membership. Staff and customers are separate lists, and the customer list has no role select.
+- **No migration.**
+
+### Consequences
+
+- A removed person who is invited again gets a new account. Their earlier contributions stay with the erased one.
+- Erased accounts are visible only in Django admin, as `former-member-<id>@erased.invalid`.
+- No job deletes member or project records. The only automatic deletion is the delivery-record clean-up above (§10).

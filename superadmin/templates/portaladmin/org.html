@@ -9,37 +9,64 @@
   <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
     <div class="min-w-0 space-y-6">
       <section class="card p-5" aria-labelledby="members-h">
-        <h2 id="members-h" class="font-semibold">Members</h2>
-        <p class="muted text-xs">Access follows the membership on every request. Revoking removes access immediately.</p>
-        <div class="mt-3 overflow-x-auto">
-          <table class="w-full text-sm" data-testid="members">
-            <thead><tr class="text-left"><th class="py-2 pr-3">Person</th><th class="py-2 pr-3">Role</th><th class="py-2 pr-3">State</th><th class="py-2">Actions</th></tr></thead>
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="members-h" class="font-semibold">Members</h2>
+          <p class="muted text-xs">{{ members|length }} {% if members|length == 1 %}person{% else %}people{% endif %}</p>
+        </div>
+        <p class="muted text-xs">Access follows the membership on every request: suspending ends it at once. Removing someone keeps what they wrote in the project, shown as Former member.</p>
+        <div class="stack-wrap relative -mx-5 mt-3 overflow-x-auto px-5">
+          <table class="stack-narrow w-full text-sm" data-testid="members">
+            <caption class="sr-only">Members of {{ org.name }}</caption>
+            <thead><tr class="text-left text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"><th scope="col" class="py-2 pr-3">Person</th><th scope="col" class="@min-[38rem]:w-px py-2 pr-3">Role</th><th scope="col" class="@min-[38rem]:w-px py-2 pr-3">State</th><th scope="col" class="@min-[38rem]:w-px py-2 text-right"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
               {% for row in members %}
-                <tr class="border-t border-slate-100 dark:border-slate-800">
-                  <td class="py-2 pr-3">{{ row.member.user.full_name|default:"" }}<br><span class="muted">{{ row.member.user.email }}</span></td>
-                  <td class="py-2 pr-3">{{ row.member.get_role_display }}</td>
-                  <td class="py-2 pr-3">{{ row.state }}</td>
-                  <td class="py-2">
-                    <div class="flex flex-wrap gap-1">
-                      {% if row.member.accepted_at and row.member.is_active %}
-                        <a class="btn btn-secondary btn-sm" href="{% url 'portaladmin:preview_start' row.member.pk %}">Preview as customer</a>
-                        {% url 'portaladmin:member_action' row.member.pk 'revoke' as revoke_url %}{% include "portaladmin/_post.html" with url=revoke_url label="Revoke access" %}
-                      {% elif row.member.revoked_at %}
-                        {% url 'portaladmin:member_action' row.member.pk 'restore' as restore_url %}{% include "portaladmin/_post.html" with url=restore_url label="Restore access" %}
-                      {% else %}
-                        {% url 'portaladmin:member_action' row.member.pk 'resend' as resend_url %}{% include "portaladmin/_post.html" with url=resend_url label="Send a new invitation" %}
-                      {% endif %}
-                    </div>
-                    <form method="post" action="{% url 'portaladmin:member_action' row.member.pk 'role' %}" class="mt-2 flex items-center gap-1">{% csrf_token %}
-                      <label class="sr-only" for="role-{{ row.member.pk }}">Role for {{ row.member.user.email }}</label>
-                      <select name="role" id="role-{{ row.member.pk }}" class="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900">
-                        {% for value, label in role_form.fields.role.choices %}<option value="{{ value }}" {% if value == row.member.role %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                {% with m=row.member name=row.member.name %}
+                <tr class="border-t border-slate-100 dark:border-slate-800" data-member="{{ m.pk }}" data-state="{{ row.state }}">
+                  <td class="min-w-44 py-2 pr-3 align-middle" data-cell="primary"><span class="font-medium">{{ m.user.full_name|default:m.user.email }}</span>{% if m.user.full_name %}<br><span class="muted text-xs">{{ m.user.email }}</span>{% endif %}</td>
+                  <td class="@min-[38rem]:w-px py-2 pr-3 align-middle">
+                    <form method="post" action="{% url 'portaladmin:member_action' org.pk m.pk 'role' %}" class="flex items-center gap-1" data-submit-label="Saving…">{% csrf_token %}
+                      <label class="sr-only" for="role-{{ m.pk }}">Role for {{ name }}</label>
+                      <select name="role" id="role-{{ m.pk }}" class="h-9 w-44 rounded-md border border-slate-300 bg-white py-1 pr-7 pl-2 text-sm dark:border-slate-600 dark:bg-slate-900">
+                        {% for value, label in role_form.fields.role.choices %}<option value="{{ value }}" {% if value == m.role %}selected{% endif %}>{{ label }}</option>{% endfor %}
                       </select>
-                      <button class="btn btn-secondary btn-sm" type="submit">Set role</button>
+                      <button class="icon-btn" type="submit" aria-label="Save the role for {{ name }}" data-testid="member-role-save">{% icon "check" "h-[18px] w-[18px]" %}<span class="icon-tip" aria-hidden="true">Save role</span></button>
                     </form>
                   </td>
+                  <td class="@min-[38rem]:w-px py-2 pr-3 align-middle whitespace-nowrap"><span class="{{ row.state|badge_class }}" data-testid="member-state">{% if row.state == "suspended" %}{% icon "ban" "h-3 w-3" %}{% elif row.state == "invited" or row.state == "expired" %}{% icon "clock" "h-3 w-3" %}{% elif row.state == "active" %}{% icon "check" "h-3 w-3" %}{% endif %}{{ row.state_label }}</span></td>
+                  <td class="@min-[38rem]:w-px py-2 align-middle" data-cell="actions">
+                    <div class="icon-cluster" role="group" aria-label="Actions for {{ name }}">
+                      {% if row.can_preview %}
+                        <a class="icon-btn" href="{% url 'portaladmin:preview_start' m.pk %}" aria-label="Preview the portal as {{ name }}" data-testid="member-preview">{% icon "eye" "h-[18px] w-[18px]" %}<span class="icon-tip" aria-hidden="true">Preview as customer</span></a>
+                      {% elif row.can_resend %}
+                        {% url 'portaladmin:member_action' org.pk m.pk 'resend' as resend_url %}
+                        {% with resend_title="Send a new invitation to "|add:m.user.email|add:"?" %}
+                          {% include "partials/icon_action.html" with url=resend_url icon_name="send" label="Resend invitation" aria="Resend the invitation to "|add:name testid="member-resend" confirm="A new single-use link is emailed now. Earlier links stop working." confirm_title=resend_title confirm_label="Send invitation" busy="Sending…" %}
+                        {% endwith %}
+                      {% else %}<span class="icon-btn-spacer" aria-hidden="true"></span>{% endif %}
+                      {% if row.can_suspend %}
+                        {% url 'portaladmin:member_action' org.pk m.pk 'revoke' as revoke_url %}
+                        {% with suspend_title="Suspend access for "|add:name|add:"?" suspend_body="They are locked out of "|add:org.name|add:"'s portal at once. Their records stay, and you can restore access later." %}
+                          {% include "partials/icon_action.html" with url=revoke_url icon_name="ban" label="Suspend access" aria="Suspend access for "|add:name testid="member-suspend" confirm=suspend_body confirm_title=suspend_title confirm_label="Suspend access" busy="Suspending…" %}
+                        {% endwith %}
+                      {% elif row.can_restore %}
+                        {% url 'portaladmin:member_action' org.pk m.pk 'restore' as restore_url %}
+                        {% include "partials/icon_action.html" with url=restore_url icon_name="user-check" label="Restore access" aria="Restore access for "|add:name testid="member-restore" busy="Restoring…" %}
+                      {% else %}<span class="icon-btn-spacer" aria-hidden="true"></span>{% endif %}
+                      {% if row.can_cancel %}
+                        {% url 'portaladmin:member_action' org.pk m.pk 'cancel' as cancel_url %}
+                        {% with cancel_title="Cancel the invitation for "|add:m.user.email|add:"?" %}
+                          {% include "partials/icon_action.html" with url=cancel_url icon_name="mail-x" label="Cancel invitation" aria="Cancel the invitation for "|add:name testid="member-cancel" danger=True confirm="The link stops working and the pending membership is deleted. If the address has no other membership, its portal account is deleted too." confirm_title=cancel_title confirm_label="Cancel invitation" busy="Cancelling…" %}
+                        {% endwith %}
+                      {% elif row.can_remove %}
+                        {% url 'portaladmin:member_action' org.pk m.pk 'remove' as remove_url %}
+                        {% with remove_title="Remove "|add:name|add:" from "|add:org.name|add:"?" %}
+                          {% include "partials/icon_action.html" with url=remove_url icon_name="user-minus" label="Remove from organisation" aria="Remove "|add:name|add:" from the organisation" testid="member-remove" danger=True confirm="Their membership is deleted. If they have no other organisation, their portal account and its personal data are deleted too. Anything they wrote stays in the project, shown as Former member." confirm_title=remove_title confirm_label="Remove" busy="Removing…" %}
+                        {% endwith %}
+                      {% endif %}
+                    </div>
+                  </td>
                 </tr>
+                {% endwith %}
               {% empty %}
                 <tr><td colspan="4" class="muted py-3">No members yet. Invite someone below.</td></tr>
               {% endfor %}
@@ -56,8 +83,11 @@
           {% include "partials/form_fields.html" with form=invite_form %}
           <div class="mt-4 flex justify-end"><button class="btn btn-primary" type="submit">Send invitation</button></div>
         </form>
-        <dl class="muted mt-4 grid gap-1 text-xs">
-          <div><strong>Viewer:</strong> read-only. <strong>Contributor:</strong> comment and answer. <strong>Approver:</strong> approve deliverable versions. <strong>Authorised signatory:</strong> contractual acceptance.</div>
+        <dl class="muted mt-4 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
+          <dt class="font-semibold">Viewer</dt><dd>Read-only.</dd>
+          <dt class="font-semibold">Contributor</dt><dd>Comment and answer.</dd>
+          <dt class="font-semibold">Approver</dt><dd>Approve deliverable versions.</dd>
+          <dt class="font-semibold">Authorised signatory</dt><dd>Contractual acceptance.</dd>
         </dl>
       </section>
 

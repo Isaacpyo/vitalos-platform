@@ -22,6 +22,7 @@ from apps.audit.services import record
 from .. import continuity, selectors, services, staff_selectors
 from .. import deliveries as deliveries_svc
 from .. import files as portal_files
+from .. import members as portal_members
 from .. import retention as portal_retention
 from ..access import staff_required
 from ..forms import (
@@ -164,16 +165,12 @@ def org_new(request):
 @require_GET
 def org(request, pk):
     organisation = get_object_or_404(Organisation, pk=pk)
-    members = [
-        {"member": m, "state": staff_selectors.invitation_state(m)}
-        for m in staff_selectors.members(organisation)
-    ]
     return render(
         request,
         "portaladmin/org.html",
         {
             "org": organisation,
-            "members": members,
+            "members": staff_selectors.member_rows(organisation),
             "invite_form": InviteForm(),
             "challenges": organisation.challenges.all(),
             "services": organisation.services.all(),
@@ -209,27 +206,57 @@ def member_invite(request, pk):
     return redirect("portaladmin:org", pk=organisation.pk)
 
 
+MEMBER_ACTIONS = {"resend", "revoke", "restore", "role", "cancel", "remove"}
+
+ACCOUNT_OUTCOME = {
+    portal_members.KEPT: "",
+    portal_members.DELETED: " Their portal account had no other membership, so it was deleted.",
+    portal_members.ERASED: " Their portal account was erased; their messages and other project records stay, "
+    "shown as Former member.",
+}
+
+
 @staff_required
 @require_POST
-def member_action(request, pk, action):
-    member = get_object_or_404(Membership.objects.select_related("organisation", "user"), pk=pk)
+def member_action(request, org_pk, pk, action):
+    """Every member action is scoped to the organisation in the URL: a member of another organisation is a 404."""
+    if action not in MEMBER_ACTIONS:
+        raise Http404
+    member = get_object_or_404(
+        Membership.objects.select_related("organisation", "user"), pk=pk, organisation_id=org_pk
+    )
+    who = member.name
     if action == "resend":
-        _guard(request, lambda: services.resend_invitation(member, actor=request.user, request=request))
-        messages.success(request, "A new invitation was sent. Earlier links no longer work.")
+        if _guard(request, lambda: services.resend_invitation(member, actor=request.user, request=request)):
+            messages.success(request, f"A new invitation was sent to {who}. Earlier links no longer work.")
     elif action == "revoke":
         services.revoke_member(member, actor=request.user, request=request)
-        messages.success(request, f"{member.user.email} no longer has access, effective immediately.")
+        messages.success(request, f"{who} no longer has access, effective immediately.")
     elif action == "restore":
         services.restore_member(member, actor=request.user, request=request)
-        messages.success(request, "Access restored.")
+        messages.success(request, f"Access restored for {who}.")
     elif action == "role":
         form = RoleForm(request.POST)
         if form.is_valid():
             services.change_role(member, form.cleaned_data["role"], actor=request.user, request=request)
-            messages.success(request, "Role changed.")
-    else:
-        raise Http404
-    return redirect("portaladmin:org", pk=member.organisation_id)
+            messages.success(request, f"{who} is now {member.get_role_display()}.")
+        else:
+            messages.error(request, "Choose a role.")
+    elif action == "cancel":
+        outcome = _guard(
+            request, lambda: portal_members.cancel_invitation(member, actor=request.user, request=request)
+        )
+        if outcome:
+            messages.success(request, f"Invitation for {who} cancelled.{ACCOUNT_OUTCOME[outcome]}")
+    elif action == "remove":
+        outcome = _guard(
+            request, lambda: portal_members.remove_member(member, actor=request.user, request=request)
+        )
+        if outcome:
+            messages.success(
+                request, f"{who} was removed from {member.organisation.name}.{ACCOUNT_OUTCOME[outcome]}"
+            )
+    return redirect("portaladmin:org", pk=org_pk)
 
 
 # --- Link an opportunity (from the AI & Data opportunity workspace) ---------------------------------------------------------------

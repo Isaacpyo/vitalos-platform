@@ -8,10 +8,8 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
-from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -26,7 +24,7 @@ from apps.audit.services import record
 from apps.core.forms import StyledFormMixin
 from apps.core.htmx import changed_response, close_modal_response
 
-from . import otp, services
+from . import lifecycle, otp, selectors, services
 from .forms import (
     ApiTokenForm,
     ConfirmPasswordForm,
@@ -38,7 +36,7 @@ from .forms import (
     UserEditForm,
 )
 from .models import ApiToken
-from .roles import ROLES, SUPERADMIN, is_superadmin, primary_role, role_required
+from .roles import SUPERADMIN, is_superadmin, primary_role, role_required
 from .tokens import set_password_token
 
 
@@ -249,10 +247,83 @@ def settings_index(request):
 
 @role_required(SUPERADMIN)
 def settings_users(request):
-    User = get_user_model()
-    users = User.objects.prefetch_related(Prefetch("groups", queryset=Group.objects.filter(name__in=ROLES)))
-    rows = [{"user": user, "role": primary_role(user)} for user in users]
-    return render(request, "settings/users.html", {"rows": rows, "tab": "users"})
+    rows = selectors.staff_rows(request.user)
+    context = {
+        "rows": rows,
+        "tab": "users",
+        "users_view": "staff",
+        "staff_count": len(rows),
+        "customer_count": selectors.customer_count(),
+        "refusal": _refusal(request),
+    }
+    return render(request, "settings/users.html", context)
+
+
+def _refusal(request) -> dict | None:
+    """After a refused Suspend or Delete (``?refused=<id>&action=``): why, recomputed now, and whether
+    suspending is the way forward."""
+    action = request.GET.get("action", "")
+    pk = request.GET.get("refused", "")
+    if action not in ("suspend", "delete") or not pk.isdigit():
+        return None
+    target = selectors.staff_accounts().filter(pk=int(pk)).first()
+    if target is None:
+        return None
+    reasons = lifecycle.refusal(target, request.user, action)
+    if not reasons:
+        return None
+    return {
+        "target": target,
+        "action": action,
+        "reasons": reasons,
+        "offer_suspend": action == "delete"
+        and target.is_active
+        and lifecycle.can_suspend(target, request.user),
+    }
+
+
+STAFF_ACTIONS = ("suspend", "reactivate", "reset_2fa", "send_link", "delete")
+
+
+@role_required(SUPERADMIN)
+@require_POST
+def user_action(request, pk, action):
+    """Row actions on a staff account. Every rule lives in ``lifecycle``; a refused Suspend or Delete comes back
+    to the list with the reasons and, for Delete, the offer to suspend instead."""
+    if action not in STAFF_ACTIONS:
+        raise Http404
+    target = get_object_or_404(selectors.staff_accounts(), pk=pk)
+    name = target.get_full_name()
+    users_url = reverse("accounts:settings_users")
+    try:
+        if action == "suspend":
+            changed = lifecycle.suspend_user(target, request.user, request=request)
+            message = (
+                f"{name} is suspended. Their sessions and API tokens stopped working."
+                if changed
+                else f"{name} was already suspended."
+            )
+        elif action == "reactivate":
+            lifecycle.reactivate_user(target, request.user, request=request)
+            message = f"{name} can sign in again. Earlier API tokens stay revoked."
+        elif action == "reset_2fa":
+            lifecycle.reset_two_step(target, request.user, request=request)
+            message = (
+                f"Two-step sign-in reset for {name}. They set up a new authenticator at their next sign-in."
+            )
+        elif action == "send_link":
+            lifecycle.send_password_link(target, request.user, request=request)
+            message = f"A set-password link was emailed to {target.email}. It works once, for 30 minutes."
+        else:
+            lifecycle.delete_user(target, request.user, request=request)
+            message = f"{name}'s account was deleted. The audit trail keeps its history."
+    except ValidationError as exc:
+        if action in ("suspend", "delete"):
+            return HttpResponseRedirect(f"{users_url}?{urlencode({'refused': target.pk, 'action': action})}")
+        messages.error(request, " ".join(exc.messages))
+        return HttpResponseRedirect(users_url)
+    messages.success(request, message)
+    return HttpResponseRedirect(users_url)
 
 
 @role_required(SUPERADMIN)
@@ -293,7 +364,7 @@ def user_create(request):
 @role_required(SUPERADMIN)
 @require_http_methods(["GET", "POST"])
 def user_edit(request, pk):
-    target = get_object_or_404(get_user_model(), pk=pk)
+    target = get_object_or_404(selectors.staff_accounts(), pk=pk)  # customers are managed as portal users
     initial = {
         "full_name": target.full_name,
         "role": primary_role(target) or "",

@@ -95,13 +95,13 @@ def test_org_invite_revoke_restore_role_flow(world, staff, mailoutbox):
     assert len(mailoutbox) == 1
     member = org.memberships.get()
     assert b"Invited" in staff.get(f"/client-portal/orgs/{org.pk}/").content
-    staff.post(f"/client-portal/members/{member.pk}/role/", {"role": "approver"})
+    staff.post(f"/client-portal/orgs/{org.pk}/members/{member.pk}/role/", {"role": "approver"})
     member.refresh_from_db()
     assert member.role == "approver"
-    staff.post(f"/client-portal/members/{member.pk}/revoke/")
+    staff.post(f"/client-portal/orgs/{org.pk}/members/{member.pk}/revoke/")
     member.refresh_from_db()
     assert member.revoked_at and not member.is_active
-    staff.post(f"/client-portal/members/{member.pk}/restore/")
+    staff.post(f"/client-portal/orgs/{org.pk}/members/{member.pk}/restore/")
     member.refresh_from_db()
     assert member.is_active
     for action in (

@@ -1,8 +1,12 @@
 """Primary navigation: one definition shared by the sidebar, breadcrumbs and the command palette.
 
-An item either links to a page or, with ``children``, is a dropdown (Mail, Billing). Each child has its own
-permission; a dropdown is shown when at least one child is visible. Hiding an item is only a
+An item either links to a page or, with ``children``, is a dropdown (Mail, AI & Data, Billing). Each child has
+its own permission; a dropdown is shown when at least one child is visible. Hiding an item is only a
 convenience: every view enforces its own role on the server.
+
+The Client portal is a child of AI & Data: its staff pages (organisations, members, email delivery and any
+later sub-page under ``/client-portal/``) all highlight that one entry, and their own sections are the tab
+strip in ``portaladmin/_nav.html``.
 """
 
 from collections.abc import Iterator
@@ -24,6 +28,8 @@ class NavItem:
     # Dotted path to ``fn(user) -> bool`` when only some roles may see the item.
     permission: str = ""
     children: tuple["NavItem", ...] = ()
+    # Command palette label when the sidebar label only makes sense under its dropdown ("Overview").
+    palette_label: str = ""
 
     @property
     def url(self) -> str:
@@ -115,22 +121,33 @@ NAV_ITEMS = (
         permission="apps.products.access.can_view",
     ),
     NavItem(
-        "aidata",
+        "ai_data",
         "AI & Data",
-        "aidata:overview",
+        "",
         "sparkles",
         "Operate",
-        ("/ai-data",),
-        permission="apps.aidata.selectors.can_access",
-    ),
-    NavItem(
-        "portal",
-        "Client portal",
-        "portaladmin:home",
-        "users",
-        "Operate",
-        ("/client-portal",),
-        permission="apps.portal.access.staff_can_manage",
+        (),
+        children=(
+            NavItem(
+                "aidata",
+                "Overview",
+                "aidata:overview",
+                "sparkles",
+                "Operate",
+                ("/ai-data",),
+                permission="apps.aidata.selectors.can_access",
+                palette_label="AI & Data overview",
+            ),
+            NavItem(
+                "portal",
+                "Client portal",
+                "portaladmin:home",
+                "building",
+                "Operate",
+                ("/client-portal",),
+                permission="apps.portal.access.staff_can_manage",
+            ),
+        ),
     ),
     NavItem(
         "billing",

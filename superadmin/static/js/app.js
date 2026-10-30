@@ -567,6 +567,7 @@
       body: source.getAttribute("data-confirm-title") ? text : parts.body,
       confirmLabel: source.getAttribute("data-confirm-label") || "Confirm",
       danger: source.hasAttribute("data-confirm-danger"),
+      note: source.getAttribute("data-confirm-note") || "",
     };
   }
 
