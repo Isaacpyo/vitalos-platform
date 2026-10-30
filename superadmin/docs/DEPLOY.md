@@ -89,6 +89,7 @@ All secrets are **Container Apps secrets**, referenced by environment variables 
 | -------------------------- | -------------------------- | -------------------------------------------------------------------------- |
 | `django-secret-key`        | `DJANGO_SECRET_KEY`        | `openssl rand` in the workflow on first deploy; kept afterwards             |
 | `bootstrap-admin-password` | `BOOTSTRAP_ADMIN_PASSWORD` | `openssl rand` on first deploy; kept. Env var only on the release job      |
+| `portal-push-vapid-private-key` | `PORTAL_PUSH_VAPID_PRIVATE_KEY` | `openssl ecparam` (P-256) in the workflow on first deploy; kept. Client portal push (ADR-056 Phase 2) |
 | `database-url`             | `DATABASE_URL`             | GitHub `production` secret `SUPERADMIN_DATABASE_URL` (Supabase session pooler, or Neon pooled); re-applied every deploy |
 | `sentry-dsn` (optional)    | `SENTRY_DSN`               | GitHub `production` secret                                                 |
 
@@ -405,6 +406,7 @@ az containerapp job execution list -n superadmin-release -g rg-vitalos-superadmi
 - **Rotating secrets:**
   - Database: reset the password (Supabase: **Project Settings → Database**; Neon: the role's settings), update `SUPERADMIN_DATABASE_URL` (and the `backup` secret), and redeploy.
   - Django key: `az containerapp secret set ... --secrets django-secret-key=<new>` on both the app and the job. This signs everyone out.
+  - Client portal push key: remove the env var and the secret `portal-push-vapid-private-key` from the app and the job, then deploy; the workflow generates a new one. Every customer has to turn notifications on again (commands in `superadmin/apps/portal/README.md`, "Rotate the push key").
 - **Staying at £0:**
   - Do not add an external uptime monitor. `/healthz/` touches the database, so a monitor would keep the app (and Neon) awake and use up the free grant. On Supabase, the nightly backup already keeps the project active.
   - The image is public, so cold-start pulls have no transfer quota and need no token. Keep it public: if it is made private again, deploys stop at the pull check, and running replicas fail their next cold start.

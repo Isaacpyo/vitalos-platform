@@ -68,6 +68,23 @@ Outside this implementation's scope:
 
 ## Log
 
+- **30 Oct 07:50: client portal Phase 2, push notifications (W12; branch `worktree-agent-a16a875ec3d1a6a2a`, not merged).**
+  - **Built:** standard Web Push (RFC 8030) with VAPID (RFC 8292) and `aes128gcm` encryption (RFC 8291), on `cryptography` 50.0.2 primitives only. It has:
+    - devices per member (`PushSubscription`, at most ten active, a coarse label such as "Chrome on Android") and durable `PushDelivery` records with bounded retries; migration `portal` 0005 is additive;
+    - push toggles per kind beside email on Notification preferences;
+    - a "Notifications on this device" card on Account (unavailable, iOS not installed, off, on, blocked), a device list and "Send a test notification";
+    - service worker handlers for `push`, `notificationclick` (same-origin portal paths only) and `pushsubscriptionchange`. It still caches no workspace data.
+  - **Privacy and safety:**
+    - A lock screen shows a generic line per kind and nothing else: no names, titles or message text.
+    - Endpoints must be real push services (an SSRF allowlist), checked when stored and before every send, and redirects are never followed.
+    - Signing out turns notifications off on that browser.
+  - **Keys:** the deploy workflow generates the VAPID key once and `deploy.sh` keeps it (`portal-push-vapid-private-key`). With no key, push is off everywhere and the card says so. The owner sets nothing.
+  - **Evidence:**
+    - `tests/test_portal_push.py` passes (82 tests), including the RFC 8291 Appendix A vector byte for byte and real HTTP to a fake push service on 127.0.0.1. The full Super Admin gates pass too.
+    - Playwright on synthetic seed data (49 checks): headless Chromium cannot register with Google's push service, so the browser's subscription was stubbed in the page and pointed at the local fake service. The card states, test sends, a staff question reaching the device, decryption, VAPID verification, the worker's notification (via CDP), the click guard, axe (light and dark) and overflow at 320, 390 and 768 were all checked.
+    - Screenshots are in the W12 scratchpad (`shots/w12-push/`).
+  - **Next:** after merge and deploy, the owner turns notifications on from Account on a real phone and presses "Send a test notification" (iPhone: install the app first).
+
 - **29 Oct 23:55: client portal Phase 1, the installable app (W11; branch `worktree-agent-aec1d46aca8f6a2d8`, not merged).**
   - **Built:** the portal installs from the browser (no app store). It has:
     - a manifest, service worker and offline page at the portal root, absent on the admin host and in staff preview;
