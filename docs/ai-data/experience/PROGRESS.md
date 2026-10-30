@@ -84,6 +84,7 @@ Outside this implementation's scope:
     - `tests/test_portal_files_upload_ui.py` (35 tests), the email layout package (63 tests) and its golden fixtures, the dependants (web, Relay) and the full Super Admin suite (1728 tests on PostgreSQL) all pass.
     - Playwright on synthetic seed data: 32 Files checks and 22 Account checks pass. axe WCAG 2.2 AA finds 0 violations on Files, the open dialog, the dialog with an error, Account and Notification preferences, in light and dark. There is no horizontal overflow at 320, 390 or 768.
     - Screenshots are in the W14 scratchpad (`shots/w14/`).
+  - **Website, fixed in the same PR:** the `seo` check had been red on `main` since the #113 push: `/what-we-do` simulated mobile LCP was 4008 to 4069 ms against a 4000 ms budget. The first image of the practice stage and of the solution panel was eager, so phones downloaded it although both are hidden below `lg`, beside the hero photograph (the LCP element). Both are lazy now (`packages/ui`); in CI `/what-we-do` reads 3738 ms and the other templates 3174 to 3720 ms.
 
 - **30 Oct 10:55: Super Admin navigation, Settings menu, and user and member management (W15).**
   - **Sidebar:** Client portal is a child of an AI & Data dropdown (Overview, Client portal). Every `/client-portal/` page highlights it. Role gating is unchanged: SuperAdmin and ServiceLead see it, Viewers see neither.
