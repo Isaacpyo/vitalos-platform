@@ -25,6 +25,10 @@ botocore==1.43.111
     #   s3transfer
 certifi==2026.10.19
     # via sentry-sdk
+cffi==2.1.1
+    # via cryptography
+cryptography==50.0.2
+    # via -r requirements.in
 defusedxml==0.7.1
     # via -r requirements.in
 django==6.1.2
@@ -101,6 +105,8 @@ psycopg==3.3.6
     # via -r requirements.in
 psycopg-binary==3.3.6
     # via psycopg
+pycparser==3.11
+    # via cffi
 pydantic==2.14.1
     # via anthropic
 pydantic-core==2.50.1

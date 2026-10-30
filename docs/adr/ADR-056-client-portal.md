@@ -135,12 +135,74 @@ Live monitoring integrations (service status is manual only, labelled with sourc
 
 ### Deferred (not built)
 
-- **Web Push.** Needs:
-  - a VAPID key pair in the provider's secret store;
-  - a subscription model with consent and unsubscribe;
-  - a push library (a dependency and licence decision).
-
-  On iOS it works only for an app added to the Home Screen (iOS 16.4 or later). Email and in-app notifications cover it until then.
-
+- **Web Push.** Built in Phase 2 (below).
 - **Native apps (Expo).** Need Apple Developer Program and Google Play developer accounts, which are paid and which the owner must buy, plus store review and privacy labels.
 - **Offline reading of project data.** Left out on purpose because it would put private data on devices. It would first need encryption at rest and a wipe-on-sign-out design.
+
+## Phase 2: push notifications (30 Oct 2026)
+
+**Owner request:** notifications on the customer's phone or computer, from the installed portal, at no cost and with nothing for the owner to buy or paste.
+
+### Decision
+
+- **Standards.**
+  - Standard Web Push: an HTTP POST to the push service the browser chose (RFC 8030), with `TTL: 86400` (a day-old notification is not worth showing), `Urgency: normal` and a `Topic` per kind, so a device that was offline gets only the latest message of each kind.
+  - VAPID (RFC 8292): an ES256 JWT with `aud` set to the endpoint's origin, `exp` 12 hours ahead (24 at most) and `sub` from `PORTAL_PUSH_SUBJECT` (default `mailto:support@vitalos.co.uk`), plus the public key in `Authorization: vapid t=..., k=...`.
+  - Payload encryption with `aes128gcm` (RFC 8291 and RFC 8188): ECDH on P-256 with the browser's key, HKDF-SHA256 with its authentication secret, and AES-128-GCM in one 4096-octet record.
+  - A test reproduces the RFC 8291 Appendix A example byte for byte.
+- **Library.** `cryptography` (Apache-2.0 OR BSD-3-Clause), pinned exactly (50.0.2), provides the primitives: ECDH, ECDSA, HKDF and AES-GCM. No elliptic-curve maths is written here. `pywebpush` and `http_ece` were not used because they are MPL-licensed and add layers we do not need; encryption, VAPID signing and the POST take about 150 lines of `apps/portal/push.py`. HTTP is `urllib` in the house style of `apps/aicore/core/providers.py`: 5-second timeouts, no redirects and bounded response reads.
+- **Key lifecycle.**
+  - The secret `PORTAL_PUSH_VAPID_PRIVATE_KEY` is the raw 32-byte P-256 private scalar, base64url without padding (43 characters, one line, so it passes cleanly through the workflow and `az`). The public key, a 65-byte uncompressed point, is derived at runtime and handed to the page and the service worker.
+  - Generated once: the deploy workflow makes it with `openssl ecparam -name prime256v1 -genkey -noout`, extracts the scalar and masks it. `deploy.sh` `resolve`s it into the Container Apps secret `portal-push-vapid-private-key` on the app and the release job, exactly like `django-secret-key`: an existing value is always kept, so a deploy never rotates it.
+  - Rotation: delete the secret (the README gives the commands) and deploy. The next deploy generates a new key. Every existing subscription is then invalid. Each subscription records the fingerprint of the key it was made with, so old ones are switched off and never sent to, and customers see "Turn on" again.
+  - With no key (or an invalid one, reported by system check `portal.W001`), push is off everywhere: nothing is queued, the routes refuse politely, and the card says notifications on this device aren't available yet.
+- **Lock-screen privacy (default the owner can change later).** Phones are shared and lock screens are visible.
+  - A push carries only a generic line per kind ("A new question needs your answer", "A deliverable is ready for your review", "There's an update on your project"), a tag that collapses repeats of a kind, and the path of the notification's open route (`/notifications/<id>/open/`), which reveals nothing and re-checks access when followed.
+  - It never carries project, item or organisation names, or message text.
+  - The strings are one mapping (`push.MESSAGES`), so a later per-member "detailed text" option is a small change.
+  - Pushes come only from `notifications.notify`, which services call for customer-visible, published records only. Internal notes, drafts and unpublished items never push.
+- **SSRF.** The server POSTs to a URL a browser supplied, so an endpoint must:
+  - be `https`, with no credentials, no port other than 443 and no fragment;
+  - name a host, not an IP literal;
+  - be on the allowlist: `fcm.googleapis.com`, `updates.push.services.mozilla.com`, `push.services.mozilla.com`, `web.push.apple.com`, `*.push.apple.com` or `*.notify.windows.com`. The wider `*.googleapis.com` is not needed and not allowed.
+
+  It is checked when the subscription is stored and again before every send; a stored endpoint that no longer passes is switched off. Redirects are never followed. `PORTAL_PUSH_DEV_ORIGINS` admits exact local origins for a fake push server in development and tests, and production refuses to start with it set.
+
+- **Records.** Migration `portal` 0005 is additive:
+  - `PushSubscription`: the member, the endpoint (unique), `p256dh` and `auth` (validated: a point on the curve and 16 bytes), a coarse device label from the user agent (the raw user agent is never stored), the key fingerprint, and the last success, failure count and disabled time with a reason.
+  - At most ten active devices per person; the oldest beyond that are switched off.
+  - `PushDelivery`: the notification, the device, status, attempts, next attempt and an error category, never a response body. It works like `EmailDelivery`.
+  - `NotificationPreference` gains `push_*` per kind, on by default. Nothing is pushed until the member turns a device on, so the default means "on once a device is added".
+- **Delivery.**
+  - `notify` queues a push per active device when the member's push preference for that kind allows it, under the same `send_email` and seed-suppression rules as email, and sends them once the transaction commits (at most 20 and 10 seconds per action; the rest wait).
+  - `send_pending` (the content tick and `portal_send_pending`) retries 429, 5xx, timeouts and network errors at 1 and 5 minutes, honouring `Retry-After` up to an hour, for at most three attempts.
+  - 404 and 410 switch the device off. 400, 401, 403, 413 and redirects are permanent, and five final failures in a row switch a device off.
+  - Each send re-checks that the recipient is still a live member. Nothing in this path can break the email or the action that caused it.
+- **Routes** (customer surface only; staff preview and the admin host answer 404):
+  - `push/subscribe/`, `push/unsubscribe/` and `push/test/`: member auth, CSRF, POST only and per-member hourly limits from the audit trail (20, 30 and 5). A member reaches only their own devices; anything else is a 404.
+  - `push/renew/`: the service worker calls it when the browser rotates a subscription. It is CSRF-exempt because a worker has no session or token. It is authenticated by the old subscription's endpoint and authentication secret, known only to that browser and this server, and answers 204 whatever happened.
+  - Signing out removes the device that signed out (`portal.js` sends its endpoint with the sign-out form). An endpoint posted by a different person moves to them only when it comes with the same keys (the same browser, for example a shared computer whose last user did not sign out). Knowing another person's endpoint is not enough; with different keys the request is refused.
+- **Service worker** (`SW_REVISION` 2). The Phase 1 caching rule is unchanged.
+  - `push` shows the notification with `icon-192` and a monochrome `badge-96`, even for an unreadable payload.
+  - `notificationclick` focuses or opens only a same-origin path inside the portal scope. Anything else opens the portal home.
+  - `pushsubscriptionchange` re-subscribes and posts to `push/renew/`, best effort. Failing that, the next portal visit re-registers a rotated subscription quietly, and only in a browser where the member turned notifications on.
+- **UI.**
+  - The Account card is "Notifications on this device", with these states: unavailable; iOS not installed ("Install the app first: tap Share, then Add to Home Screen, then turn notifications on from the app"); off; on (Turn off, Send a test notification); blocked (how to allow it).
+  - The permission prompt only ever follows a click on "Turn on".
+  - A device list (label, date added, "This device", Remove).
+  - Push toggles beside email on Notification preferences.
+  - No inline script, and the CSP is unchanged.
+- **iOS limits.** Safari supports Web Push only for a portal added to the Home Screen, on iOS or iPadOS 16.4 or later. In Safari itself the card asks the customer to install the app first.
+
+### Consequences
+
+- No new service, account or cost: push services are free to senders and the key lives in the existing secret store.
+- After a deploy the owner turns notifications on from Account on a real phone and presses "Send a test notification". On an iPhone, install the app first.
+- Headless browsers cannot register with real push services. The automated checks use a fake push service on 127.0.0.1 and a stubbed browser subscription, so the first real-device test is the proof that each push service accepts our messages.
+
+### Deferred (not built)
+
+- A per-member "detailed text" option (titles on the lock screen), behind an explicit choice.
+- Push for staff or the Super Admin.
+- Operator views of push deliveries (they are recorded; there is no admin page yet) and a retention job for delivery rows.
+- Quiet hours and digesting several events into one notification.

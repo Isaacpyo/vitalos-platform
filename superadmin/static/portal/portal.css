@@ -1294,6 +1294,75 @@ code,
   }
 }
 
+/*
+ * Push notifications (ADR-056, Phase 2): the "Notifications on this device" card on Account, its device list, and
+ * the two channels on Notification preferences.
+ */
+/* portal.js shows one state at a time with [hidden]; badges and rows set their own display, so hidden must win. */
+.push [hidden] {
+  display: none;
+}
+.push__actions {
+  margin-top: 0.75rem;
+}
+.push__status:empty {
+  display: none;
+}
+.push__status {
+  margin: 0.75rem 0 0;
+  font-weight: 600;
+  color: var(--aid-heading);
+}
+.push__heading {
+  font-size: 1rem;
+  margin: 1.25rem 0 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--aid-border);
+}
+.push__device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.push__device-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.push__device-date {
+  display: block;
+  margin-top: 0.1rem;
+}
+.prefs__channels {
+  display: grid;
+  gap: 1.25rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  margin-bottom: 1rem;
+}
+.prefs__channel {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.prefs__channel legend {
+  padding: 0;
+  margin-bottom: 0.75rem;
+  font-family: var(--portal-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  color: var(--aid-heading);
+}
+.prefs__channel .field--check label {
+  min-height: 44px;
+  align-items: center;
+  margin-bottom: 0;
+}
+.prefs__channel .field {
+  margin-bottom: 0.25rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

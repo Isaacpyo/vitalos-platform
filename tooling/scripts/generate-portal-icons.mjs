@@ -9,9 +9,12 @@
  *   icon-192.png, icon-512.png   rounded tile, transparent corners ("any" purpose: desktop, launchers)
  *   maskable-512.png             full-bleed tile, mark inside the 80% safe zone (Android adaptive icons)
  *   apple-touch-icon-180.png     full-bleed square, no transparency (iOS applies its own mask)
+ *   badge-96.png                 the mark alone as a white silhouette on transparency: the push notification badge
+ *                                (Android draws only its alpha in the status bar; ADR-056, Phase 2)
  *
  * Regenerate from the repository root after the symbol or the tile colour changes, then commit the PNGs:
- *   node tooling/scripts/generate-portal-icons.mjs
+ *   node tooling/scripts/generate-portal-icons.mjs                 # every icon
+ *   node tooling/scripts/generate-portal-icons.mjs badge-96.png    # only the named files
  * Needs Playwright's Chromium (the root devDependency @playwright/test after `pnpm install`, or a global
  * `playwright` on NODE_PATH). No other packages.
  */
@@ -25,13 +28,19 @@ const SOURCE = join(repoRoot, "apps/web/public/brand/vitalos-symbol-512.png");
 const OUT_DIR = join(repoRoot, "superadmin/static/portal/icons");
 const TILE = "#0a0c0f"; // --aid-ink-950 in superadmin/static/portal/portal.css (the portal header)
 
-// size: output pixels; mark: the mark's width as a share of the tile; radius: corner radius as a share (0 = square).
-const ICONS = [
+// size: output pixels; mark: the mark's width as a share of the tile; radius: corner radius as a share (0 = square);
+// badge: no tile, the mark drawn as a white silhouette.
+const ALL_ICONS = [
   { file: "icon-192.png", size: 192, mark: 0.62, radius: 0.22 },
   { file: "icon-512.png", size: 512, mark: 0.62, radius: 0.22 },
   { file: "maskable-512.png", size: 512, mark: 0.54, radius: 0 },
   { file: "apple-touch-icon-180.png", size: 180, mark: 0.62, radius: 0 },
+  { file: "badge-96.png", size: 96, mark: 0.78, radius: 0, badge: true },
 ];
+const only = process.argv.slice(2);
+const unknown = only.filter((name) => !ALL_ICONS.some((icon) => icon.file === name));
+if (unknown.length) throw new Error(`Unknown icon: ${unknown.join(", ")}`);
+const ICONS = only.length ? ALL_ICONS.filter((icon) => only.includes(icon.file)) : ALL_ICONS;
 
 function loadChromium() {
   const require = createRequire(join(repoRoot, "package.json"));
@@ -85,11 +94,13 @@ try {
     const left = icon.size / 2 - (bounds.x0 + bounds.w / 2) * scale;
     const top = icon.size / 2 - (bounds.y0 + bounds.h / 2) * scale;
     const radius = icon.radius ? `${icon.size * icon.radius}px` : "0";
+    const tile = icon.badge ? "transparent" : TILE;
+    const silhouette = icon.badge ? "filter:brightness(0) invert(1);" : "";
     await page.setViewportSize({ width: icon.size, height: icon.size });
     await page.setContent(`<!doctype html>
       <body style="margin:0;background:transparent">
-        <div id="tile" style="position:relative;overflow:hidden;width:${icon.size}px;height:${icon.size}px;background:${TILE};border-radius:${radius}">
-          <img src="${symbol}" alt="" style="position:absolute;left:${left}px;top:${top}px;width:${bounds.width * scale}px;height:${bounds.height * scale}px">
+        <div id="tile" style="position:relative;overflow:hidden;width:${icon.size}px;height:${icon.size}px;background:${tile};border-radius:${radius}">
+          <img src="${symbol}" alt="" style="position:absolute;left:${left}px;top:${top}px;width:${bounds.width * scale}px;height:${bounds.height * scale}px;${silhouette}">
         </div>
       </body>`);
     await page.evaluate(() => document.querySelector("img").decode());

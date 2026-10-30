@@ -89,6 +89,29 @@ def client_for(db):
     return _client
 
 
+@pytest.fixture(autouse=True)
+def no_real_push_service(monkeypatch):
+    """Safety net: no test may POST a push to a real push service. Only a fake server on this machine is
+    reachable through the real transport; a test that fakes the transport itself replaces this guard."""
+    from urllib.parse import urlsplit
+
+    from apps.portal import push
+
+    real = push._send_http
+    refused: list[str] = []
+
+    def guarded(endpoint, body, headers, timeout):
+        host = urlsplit(endpoint).hostname or ""
+        if host not in ("127.0.0.1", "localhost", "::1"):
+            refused.append(host)
+            raise OSError("tests never send pushes off this machine")
+        return real(endpoint, body, headers, timeout)
+
+    monkeypatch.setattr(push, "_send_http", guarded)
+    yield
+    assert not refused, f"a test tried to send a push to {refused}"
+
+
 HX = {"HTTP_HX_REQUEST": "true"}
 
 RELAY_WEBHOOK_SECRET = "test-relay-webhook-secret-0123456789"

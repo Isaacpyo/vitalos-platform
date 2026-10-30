@@ -803,6 +803,12 @@ class NotificationPreference(models.Model):
     email_questions = models.BooleanField(default=True)
     email_deliverables = models.BooleanField(default=True)
     email_approvals = models.BooleanField(default=True)
+    # Push to the member's devices (ADR-056, Phase 2), per kind like email. On by default, but nothing is pushed
+    # until the member turns notifications on for a device, so the default means "on once a device is added".
+    push_updates = models.BooleanField(default=True)
+    push_questions = models.BooleanField(default=True)
+    push_deliverables = models.BooleanField(default=True)
+    push_approvals = models.BooleanField(default=True)
 
     KIND_FIELD = {
         "update": "email_updates",
@@ -820,6 +826,10 @@ class NotificationPreference(models.Model):
 
     def wants_email(self, kind: str) -> bool:
         return bool(getattr(self, self.KIND_FIELD.get(kind, "email_updates")))
+
+    def wants_push(self, kind: str) -> bool:
+        field = self.KIND_FIELD.get(kind, "email_updates").replace("email_", "push_", 1)
+        return bool(getattr(self, field))
 
 
 class EmailDelivery(models.Model):
@@ -853,3 +863,80 @@ class EmailDelivery(models.Model):
 
     def __str__(self):
         return f"{self.kind} to {self.to_email}: {self.status}"
+
+
+# --- Push notifications (ADR-056, Phase 2) -------------------------------------------------------------------------
+
+
+class PushSubscription(models.Model):
+    """One browser's Web Push subscription for a member (RFC 8030). The endpoint is a capability URL at a push
+    service, checked against an allowlist of real push services when stored and again before every send; the
+    keys encrypt the payload for that browser only (RFC 8291). The raw user agent is never stored, only a short
+    label such as "Chrome on Android". Removing a device deletes its row; ``disabled_at`` marks one the push
+    service ended (404/410), one beyond the per-member cap, one made with an earlier server key, or one that
+    keeps failing."""
+
+    class Reason(models.TextChoices):
+        GONE = "gone", "The browser ended the subscription"
+        LIMIT = "limit", "Replaced by a newer device"
+        KEY = "key", "Made with an earlier server key"
+        FAILING = "failing", "Repeated delivery failures"
+        BLOCKED = "blocked", "Endpoint no longer allowed"
+
+    member = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="push_subscriptions")
+    endpoint = models.CharField(max_length=2048, unique=True)
+    p256dh = models.CharField(max_length=88, help_text="Browser public key, base64url (65 bytes).")
+    auth = models.CharField(max_length=24, help_text="Browser authentication secret, base64url (16 bytes).")
+    vapid_key_id = models.CharField(
+        max_length=16, help_text="Fingerprint of the server key the subscription was made with."
+    )
+    label = models.CharField(max_length=60, help_text="From the user agent, e.g. Chrome on Android.")
+    created_at = models.DateTimeField(default=timezone.now)
+    last_success_at = models.DateTimeField(null=True, blank=True)
+    failure_count = models.PositiveSmallIntegerField(default=0)
+    disabled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    disabled_reason = models.CharField(max_length=12, choices=Reason.choices, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.label} for member {self.member_id}"
+
+    @property
+    def is_active(self) -> bool:
+        return self.disabled_at is None
+
+
+class PushDelivery(models.Model):
+    """Durable record of one push to one device: queued, sent or failed, with attempts and a retry time, like
+    ``EmailDelivery``. ``last_error`` is a short category (``gone``, ``rate_limited``, ``timeout``...), never a
+    push-service response body. ``notification`` is empty for a member's own test push."""
+
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        SENT = "sent", "Sent"
+        FAILED = "failed", "Failed"
+
+    MAX_ATTEMPTS = 3
+
+    notification = models.ForeignKey(
+        Notification, null=True, blank=True, on_delete=models.CASCADE, related_name="push_deliveries"
+    )
+    subscription = models.ForeignKey(PushSubscription, on_delete=models.CASCADE, related_name="deliveries")
+    kind = models.CharField(max_length=24)
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.QUEUED, db_index=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.CharField(max_length=40, blank=True)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(fields=["notification", "subscription"], name="portal_push_once")
+        ]
+
+    def __str__(self):
+        return f"{self.kind} push to subscription {self.subscription_id}: {self.status}"
