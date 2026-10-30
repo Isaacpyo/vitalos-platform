@@ -472,7 +472,7 @@ Add preview origins only for the bucket a preview deployment uses. The access ke
 
 ### Content tick job (prepared; do not create without owner approval)
 
-The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention (a dry run until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-042). A per-minute Container Apps job would be:
+The tick (`manage.py content_tick`) promotes scheduled posts, closes roles past their closing date, retries website sync and sends held-back application alerts; once a day it also runs application retention and client portal delivery-record retention (both dry runs until `RETENTION_ENFORCE=true`) and purges unused CV uploads older than 24 hours (always for real: they are not retention-policy data). Today it runs opportunistically inside the app and from the website's signed `POST /api/content/v1/tick` (ADR-042). A per-minute Container Apps job would be:
 
 ```sh
 RG=rg-vitalos-superadmin

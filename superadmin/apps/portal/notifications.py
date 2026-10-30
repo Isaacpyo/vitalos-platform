@@ -32,6 +32,9 @@ from .models import EmailDelivery, Membership, Notification, NotificationPrefere
 logger = logging.getLogger(__name__)
 
 RETRY_BACKOFF_MINUTES = 5
+#: ``last_error`` when a re-check refuses an email (no provider was called). Shown to staff, never to customers.
+NOT_MEMBER_ERROR = "recipient is no longer a live member"
+PREFERENCE_OFF_ERROR = "recipient turned these emails off"
 
 # The demo seed command (and nothing else) turns email (and push) off for its synthetic people.
 _email_suppressed: ContextVar[bool] = ContextVar("portal_email_suppressed", default=False)
@@ -157,8 +160,20 @@ def _email_doc(note: Notification, org_name: str) -> dict:
     }
 
 
+def _refuse(d: EmailDelivery, reason: str) -> EmailDelivery:
+    """A re-check said no: the delivery fails for good without calling the provider."""
+    d.status = EmailDelivery.Status.FAILED
+    d.attempts = max(d.attempts, EmailDelivery.MAX_ATTEMPTS)
+    d.last_error = reason
+    d.save()
+    return d
+
+
 def deliver(delivery_id: int, *, manual: bool = False) -> EmailDelivery | None:
-    """Attempt one send. Idempotent: a sent delivery is returned untouched. Never raises."""
+    """Attempt one send. Idempotent: a sent (or cancelled) delivery is returned untouched. Never raises.
+
+    ``manual`` (staff "Retry now") may try once more after the automatic attempts ran out. Every attempt re-checks
+    that the recipient is still a live member at the same address and still wants this kind of email."""
     from apps.mailer import system
 
     try:
@@ -168,18 +183,17 @@ def deliver(delivery_id: int, *, manual: bool = False) -> EmailDelivery | None:
                 .select_related("notification", "organisation", "recipient")
                 .get(pk=delivery_id)
             )
-            if d.status == EmailDelivery.Status.SENT:
+            if d.status == EmailDelivery.Status.SENT or d.last_error == EmailDelivery.CANCELLED_ERROR:
                 return d
             if not manual and d.attempts >= EmailDelivery.MAX_ATTEMPTS:
                 return d
             member = selectors.get_membership(d.recipient, d.organisation_id)
             note = d.notification
             if member is None or note is None or d.to_email.lower() != d.recipient.email.lower():
-                d.status = EmailDelivery.Status.FAILED
-                d.attempts = max(d.attempts, EmailDelivery.MAX_ATTEMPTS)
-                d.last_error = "recipient is no longer a live member"
-                d.save()
-                return d
+                return _refuse(d, NOT_MEMBER_ERROR)
+            pref = NotificationPreference.objects.filter(user_id=d.recipient_id).first()
+            if pref is not None and not pref.wants_email(d.kind):
+                return _refuse(d, PREFERENCE_OFF_ERROR)
             d.attempts += 1
             try:
                 system.send(

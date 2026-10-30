@@ -3,9 +3,13 @@ is a CSRF-protected POST that goes through ``services`` (and is audited there). 
 
 from __future__ import annotations
 
+import json
+import logging
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.db import DatabaseError
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -15,8 +19,10 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from apps.aidata import selectors as aidata_selectors
 from apps.audit.services import record
 
-from .. import continuity, notifications, selectors, services, staff_selectors
+from .. import continuity, selectors, services, staff_selectors
+from .. import deliveries as deliveries_svc
 from .. import files as portal_files
+from .. import retention as portal_retention
 from ..access import staff_required
 from ..forms import (
     BriefForm,
@@ -60,6 +66,8 @@ from ..models import (
     ServiceStatusReport,
     Update,
 )
+
+logger = logging.getLogger(__name__)
 
 PUBLISHABLE = {
     "project": Project,
@@ -939,27 +947,123 @@ def service_report(request, pk):
 @staff_required
 @require_GET
 def deliveries(request):
-    qs = EmailDelivery.objects.select_related("organisation", "recipient")
-    status = request.GET.get("status", "")
-    if status in EmailDelivery.Status.values:
-        qs = qs.filter(status=status)
+    """Notification deliveries: email and push in one list, with a summary, filters and staff actions."""
+    filters = deliveries_svc.Filters.from_query(request.GET)
+    context = {
+        "filters": filters,
+        "channel_choices": list(deliveries_svc.CHANNELS.items()),
+        "status_choices": [(value, label) for value, (label, _) in deliveries_svc.STATUS_FILTERS.items()],
+        "kind_choices": deliveries_svc.kind_choices(),
+        "day_choices": list(deliveries_svc.DAY_FILTERS.items()),
+        "bulk_cap": deliveries_svc.BULK_RETRY_CAP,
+        "max_attempts": EmailDelivery.MAX_ATTEMPTS,
+    }
+    try:
+        listing = deliveries_svc.listing(filters, request.GET.get("page"))
+        page = listing.page
+        context.update(
+            listing=listing,
+            prev_query=filters.query(page=page.previous_page_number()) if page.has_previous() else "",
+            next_query=filters.query(page=page.next_page_number()) if page.has_next() else "",
+            summary=deliveries_svc.summary(),
+            organisations=list(deliveries_svc.organisations()),
+            retention=portal_retention.policy(),
+        )
+    except DatabaseError:
+        logger.exception("Portal deliveries page could not load its records")
+        context["error"] = (
+            "The delivery records could not be loaded just now. Reload the page; if it keeps happening, "
+            "check the error log."
+        )
+    return render(request, "portaladmin/deliveries.html", context)
+
+
+def _delivery_channel(channel: str) -> str:
+    if channel not in deliveries_svc.CHANNELS:
+        raise Http404
+    return channel
+
+
+def _delivery_done(request, outcome, default: str):
+    """HTMX: no content, a toast and a refresh of the delivery list. Otherwise a message and a redirect back."""
+    if getattr(request, "htmx", False):
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = json.dumps(
+            {
+                "vsa-changed": True,
+                "vsa-toast": {"message": outcome.message, "tone": "" if outcome.ok else "error"},
+            }
+        )
+        return response
+    (messages.success if outcome.ok else messages.error)(request, outcome.message)
+    return _back(request, default)
+
+
+def _safe_back(request, default: str) -> str:
+    target = request.GET.get("back") or ""
+    if target.startswith(reverse("portaladmin:deliveries")) and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return target
+    return default
+
+
+@staff_required
+@require_GET
+def delivery(request, channel, pk):
+    item = deliveries_svc.detail(_delivery_channel(channel), pk)
+    if item is None:
+        raise Http404
     return render(
         request,
-        "portaladmin/deliveries.html",
-        {"deliveries": qs[:200], "status": status, "max_attempts": EmailDelivery.MAX_ATTEMPTS},
+        "portaladmin/delivery.html",
+        {"item": item, "row": item.row, "back": _safe_back(request, reverse("portaladmin:deliveries"))},
     )
+
+
+def _retry(request, channel, pk):
+    outcome = deliveries_svc.retry(channel, pk, actor=request.user, request=request)
+    if outcome is None:
+        raise Http404
+    return _delivery_done(request, outcome, reverse("portaladmin:deliveries"))
 
 
 @staff_required
 @require_POST
-def delivery_retry(request, pk):
-    delivery = get_object_or_404(EmailDelivery, pk=pk)
-    result = notifications.deliver(delivery.pk, manual=True)
-    if result and result.status == EmailDelivery.Status.SENT:
-        messages.success(request, "Sent.")
+def delivery_retry(request, channel, pk):
+    return _retry(request, _delivery_channel(channel), pk)
+
+
+@staff_required
+@require_POST
+def delivery_retry_email(request, pk):
+    """The original email-only "Retry now" address, kept so existing links and bookmarks keep working."""
+    return _retry(request, deliveries_svc.EMAIL, pk)
+
+
+@staff_required
+@require_POST
+def delivery_cancel(request, channel, pk):
+    outcome = deliveries_svc.cancel(_delivery_channel(channel), pk, actor=request.user, request=request)
+    if outcome is None:
+        raise Http404
+    return _delivery_done(request, outcome, reverse("portaladmin:deliveries"))
+
+
+@staff_required
+@require_POST
+def deliveries_bulk_retry(request):
+    """Retry every failed delivery in the posted filter (capped; the button asks first)."""
+    filters = deliveries_svc.Filters.from_query(request.POST)
+    result = deliveries_svc.bulk_retry(filters, actor=request.user, request=request)
+    if result.attempted and not (result.failing or result.refused):
+        messages.success(request, result.message)
+    elif result.attempted:
+        messages.warning(request, result.message)
     else:
-        messages.error(request, "Still failing. The record shows the last error category.")
-    return redirect("portaladmin:deliveries")
+        messages.info(request, result.message)
+    query = filters.query()
+    return redirect(reverse("portaladmin:deliveries") + (f"?{query}" if query else ""))
 
 
 # --- Preview ------------------------------------------------------------------------------------------------------------------------

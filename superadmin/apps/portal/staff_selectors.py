@@ -59,7 +59,10 @@ def recent_customer_activity(limit=15):
 
 
 def failed_deliveries():
-    return EmailDelivery.objects.filter(status=EmailDelivery.Status.FAILED)
+    """Emails whose last attempt failed (retrying or failed for good); not those staff cancelled."""
+    return EmailDelivery.objects.filter(status=EmailDelivery.Status.FAILED).exclude(
+        last_error=EmailDelivery.CANCELLED_ERROR
+    )
 
 
 def organisations():

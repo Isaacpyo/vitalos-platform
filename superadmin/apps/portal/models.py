@@ -842,6 +842,8 @@ class EmailDelivery(models.Model):
         FAILED = "failed", "Failed"
 
     MAX_ATTEMPTS = 3
+    #: ``last_error`` of a delivery staff cancelled (status ``failed``, no attempts left): it is never sent.
+    CANCELLED_ERROR = "cancelled"
 
     notification = models.OneToOneField(
         Notification, null=True, blank=True, on_delete=models.SET_NULL, related_name="delivery"
@@ -919,6 +921,8 @@ class PushDelivery(models.Model):
         FAILED = "failed", "Failed"
 
     MAX_ATTEMPTS = 3
+    #: ``last_error`` of a delivery staff cancelled (status ``failed``, no attempts left): it is never sent.
+    CANCELLED_ERROR = "cancelled"
 
     notification = models.ForeignKey(
         Notification, null=True, blank=True, on_delete=models.CASCADE, related_name="push_deliveries"

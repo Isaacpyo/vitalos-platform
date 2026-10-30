@@ -48,7 +48,11 @@ urlpatterns = [
     path("services/<int:pk>/edit/", staff.service_edit, name="service_edit"),
     path("services/<int:pk>/report/", staff.service_report, name="service_report"),
     path("deliveries/", staff.deliveries, name="deliveries"),
-    path("deliveries/<int:pk>/retry/", staff.delivery_retry, name="delivery_retry"),
+    path("deliveries/retry-failed/", staff.deliveries_bulk_retry, name="deliveries_bulk_retry"),
+    path("deliveries/<int:pk>/retry/", staff.delivery_retry_email, name="delivery_retry_email"),
+    path("deliveries/<str:channel>/<int:pk>/", staff.delivery, name="delivery"),
+    path("deliveries/<str:channel>/<int:pk>/retry/", staff.delivery_retry, name="delivery_retry"),
+    path("deliveries/<str:channel>/<int:pk>/cancel/", staff.delivery_cancel, name="delivery_cancel"),
     path("preview-draft/<str:kind>/<int:pk>/", staff.preview_item, name="preview_item"),
     path("preview/<int:pk>/", staff.preview_start, name="preview_start"),
 ]

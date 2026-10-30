@@ -69,7 +69,7 @@ Operators can preview content before publishing ("Preview: not published" banner
 
 ### 7. Notifications and delivery
 
-In-app notifications are per user, unique per event (`dedupe_key`), and scoped to organisations the user is still a live member of. Email goes through `apps.mailer.system.send` only (the email-sender guard needs no exception), to live members only, respecting per-kind preferences. Each email has a durable `EmailDelivery` (queued, sent, failed; attempts; last error category, never message text). A failed send never blocks or loses the action: it is recorded, retried at most three times by `portal_send_pending`, never duplicated (a sent record is terminal and rows are locked), and visible to operators under Client portal > Email delivery with a manual retry. A retry re-checks that the recipient is still a member.
+In-app notifications are per user, unique per event (`dedupe_key`), and scoped to organisations the user is still a live member of. Email goes through `apps.mailer.system.send` only (the email-sender guard needs no exception), to live members only, respecting per-kind preferences. Each email has a durable `EmailDelivery` (queued, sent, failed; attempts; last error category, never message text). A failed send never blocks or loses the action: it is recorded, retried at most three times by `portal_send_pending`, never duplicated (a sent record is terminal and rows are locked), and visible to operators under Client portal > Notification deliveries with a manual retry (see "Delivery status and retention" below). A retry re-checks that the recipient is still a member and still wants that kind of email.
 
 ### 8. Files
 
@@ -81,7 +81,7 @@ Six assistant activities (summarise my project, what changed since my last visit
 
 ### 10. Retention (proposal, not enforced)
 
-Organisation, membership, approval and audit records are decision evidence and are kept for the life of the engagement. Approvals are protected from cascade deletion. Customer files carry a `retention_note`. No automatic deletion job exists yet; one needs a documented policy (ADR) and a dry run first, per AGENTS.md. Offboarding an organisation today means revoking its members and deactivating the organisation, which closes every surface and keeps the records.
+Organisation, membership, approval and audit records are decision evidence and are kept for the life of the engagement. Approvals are protected from cascade deletion. Customer files carry a `retention_note`. The only automatic deletion is of delivery records and turned-off push devices (see "Delivery status and retention" below); any other job needs a documented policy (ADR) and a dry run first, per AGENTS.md. Offboarding an organisation today means revoking its members and deactivating the organisation, which closes every surface and keeps the records.
 
 ### 11. Later phases (not built)
 
@@ -204,5 +204,44 @@ Live monitoring integrations (service status is manual only, labelled with sourc
 
 - A per-member "detailed text" option (titles on the lock screen), behind an explicit choice.
 - Push for staff or the Super Admin.
-- Operator views of push deliveries (they are recorded; there is no admin page yet) and a retention job for delivery rows.
+- Operator views of push deliveries and a retention job for delivery rows. Built on 30 Oct 2026: see "Delivery status and retention" below.
 - Quiet hours and digesting several events into one notification.
+
+## Delivery status and retention (30 Oct 2026)
+
+**Owner request:** an admin page that shows the delivery status of portal notifications, and the clean-up of old delivery rows that Phase 2 deferred.
+
+### Decision
+
+- **One page for both channels.** Client portal › Notification deliveries (`/client-portal/deliveries/`, which replaces the email-only "Email delivery" page at the same address) lists email and push deliveries together, newest first. The list is one `UNION ALL` of the two tables, so the page is a fixed number of queries whatever its length.
+  - **Summary:** per channel, for rows queued in the last 24 hours and 7 days, the number sent, pending or retrying, and failed for good (and how many staff cancelled). It also shows the active push devices, and the devices turned off in the last 7 days by reason.
+  - **Columns:** time queued, notification kind and channel (with the push device's coarse label), organisation, member (with the address for email), status and attempts, last error category, and the send time or the next automatic attempt.
+  - **Filters:** channel, status, organisation, kind and "queued in the last N days", with 50 rows a page.
+  - **Status filter:** "Last attempt failed" (`status=failed`) keeps the meaning the Client portal overview and the work queue already link to: retrying and failed for good together. "Failed for good" (`final`) is the narrower one.
+  - **Row detail:** the error category in plain English (for example, `gone`: "The browser removed this subscription; the device has been turned off"), the device's state and reason, a link to the record in the staff UI, and the history from the audit trail. Each failed email attempt is audited; a push attempt is not recorded separately, and the page says so.
+- **What staff never see.** Push endpoints, browser keys, authentication secrets, push-service responses (never stored) and the push payload. Rows reach the templates as view models built from an allow-list of fields, and the queries do not load the subscription's endpoint or keys at all. Email rows show the address and the subject; no email body is stored. A test asserts none of those values appears on any of the pages.
+- **States.** Queued, retrying (the last attempt failed and an automatic attempt remains), sent, failed (for good) and cancelled. Neither model has a "cancelled" status, and adding one would alter a column, which the migration guard forbids. So a cancelled row is `failed` with the error category `cancelled` and no attempts left, and both `deliver` functions refuse it. No migration was needed.
+- **Actions** (CSRF-protected POSTs, staff only, audited as `portal.delivery_retried`, `portal.delivery_cancelled` and `portal.delivery_bulk_retried`):
+  - **Retry now** on a queued, retrying or failed delivery. It goes through `notifications.deliver` or `push.deliver` with `manual=True`, which may try once more after the automatic attempts have run out. Every re-check still applies: live membership, the member's current preference for that kind, the device being on, the server key's fingerprint, the push's one-day expiry and the endpoint allowlist.
+  - The preference re-check is new: it now applies to automatic retries as well, so a member who turns a kind off is not emailed or pushed by a later retry.
+  - A refused retry says why ("Not sent: the member has since turned this kind of notification off"). On the list the answer is a toast and the list refreshes; without JavaScript it is a message after a redirect.
+  - **Cancel** a queued or retrying delivery. The row is locked, so a send already in progress finishes first.
+  - **Retry all failed in this filter:** at most 100 rows, newest first, and no new attempt after 20 seconds. It asks first in the admin's styled confirmation dialog. Whatever is left is reported, and pressing again continues.
+- **Permissions and hosts.** The page is staff-only (`staff_required`: SuperAdmin and ServiceLead), like every Client portal staff page. A Viewer, a user with no role and a portal customer are refused. The portal host serves none of these routes, and the customer URLconf has no equivalent.
+- **Retention** (policy: [`docs/ai-data/operations/portal-delivery-retention.md`](../ai-data/operations/portal-delivery-retention.md)). Once a day the content tick's daily step (`portal_deliveries`, beside recruitment retention) deletes:
+  - sent delivery rows 90 days after sending (`PORTAL_DELIVERY_SENT_RETENTION_DAYS`);
+  - failed-for-good and cancelled rows 180 days after queueing (`PORTAL_DELIVERY_FAILED_RETENTION_DAYS`);
+  - turned-off push devices 90 days after they were turned off (`PORTAL_PUSH_DISABLED_RETENTION_DAYS`), but only once none of their delivery records is kept, because deleting a device deletes its records.
+
+  It never deletes queued or retrying rows, active devices, notifications or audit events. A setting below 7 days counts as 7. Like the enquiry and recruitment jobs it is a **dry run that logs the counts per category until `RETENTION_ENFORCE=true`**. Enforced, it writes one `portal.delivery_retention` audit event with the counts. `manage.py portal_delivery_retention` prints the same dry run by hand.
+
+### Consequences
+
+- No new dependency, service or cost. No migration: the existing indexes (status, and the foreign keys) are enough at portal volumes, and retention keeps the tables small.
+- `/client-portal/deliveries/<pk>/retry/` (the email-only retry address) still works, so existing links keep working.
+- **Owner step:** read the first dry run (zero in every category until late January 2027) before setting `RETENTION_ENFORCE=true`. That switch also enforces the enquiry and recruitment policies.
+
+### Deferred (not built)
+
+- A per-attempt history for push (only the latest attempt's category and count are kept).
+- A work-queue entry for failed pushes. The work queue lists failed portal emails only, because a device going away is routine; the summary on the delivery page shows push failures.

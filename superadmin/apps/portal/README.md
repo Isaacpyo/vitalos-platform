@@ -17,10 +17,13 @@ systems. Architecture, visibility model, auth, AI boundaries and retention: [ADR
 | `ai.py`                                    | Six assistant activities: scoped context, deterministic answers, gateway path, validation, replay.         |
 | `pwa.py`, `views/pwa.py`                   | Installable app: manifest values, the service worker's precache list and cache version, the three public routes. |
 | `push.py`, `views/push.py`                 | Push notifications: keys, endpoint allowlist, RFC 8291 encryption, VAPID, queueing, delivery and retries; the four push routes. |
+| `deliveries.py`                            | Staff delivery status: email and push in one list, summary, detail, Retry now, Cancel, capped bulk retry. Never exposes endpoints, keys or payloads. |
+| `retention.py`                             | Daily deletion of old delivery records and turned-off devices (content tick; a dry run until `RETENTION_ENFORCE=true`). |
 | `views/`                                   | `auth.py` (sign-in, invitation, reset, TOTP), `customer.py` (workspace), `staff.py` (Super Admin tools).   |
 | `urls.py`, `preview_urls.py`, `admin_urls.py` | Customer routes; the same routes for staff preview; staff routes at `/client-portal/`.                  |
 | `management/commands/portal_seed_demo.py`  | Synthetic data for local screenshots. Refuses to run unless DEBUG is on outside production.                |
 | `management/commands/portal_send_pending.py` | Bounded retry of queued and failed portal emails and pushes (run from a scheduler).                     |
+| `management/commands/portal_delivery_retention.py` | The delivery retention by hand: prints what would be deleted; deletes only with `RETENTION_ENFORCE=true`. |
 | `fixtures/ai_replay/`                      | Hand-written, labelled "simulated" assistant answers for local demonstrations.                             |
 | `static/portal/`, `templates/portal/`      | Customer UI (own stylesheet using the `--aid-*` token names; no framework). `templates/portaladmin/` is the staff UI. |
 
@@ -30,7 +33,7 @@ Prompts live with the gateway: `apps/aicore/core/prompt_configs/portal_<activity
 
 - Customer, production: `https://portal.vitalos.co.uk/` (only portal URLs are served on that host).
 - Customer, local: `http://localhost:8000/portal/` (when `PORTAL_HOST` is empty).
-- Staff: `/client-portal/` (organisations, members, challenges, projects, deliverables, updates, questions, files, change requests, services, email delivery). "Preview as customer" is on each member row.
+- Staff: `/client-portal/` (organisations, members, challenges, projects, deliverables, updates, questions, files, change requests, services, notification deliveries). "Preview as customer" is on each member row.
 - Opportunity workspace: a "Client portal" panel (`templates/aidata/_opportunity_extensions.html`) links an opportunity to an organisation.
 
 ## Run it locally
@@ -148,6 +151,41 @@ gh workflow run superadmin-deploy.yml -f confirm=DEPLOY
 The env var goes first because Container Apps refuses to remove a secret an env var still references. Subscriptions
 made with the old key are switched off the next time something would be sent to them.
 
+## Notification deliveries (staff)
+
+Client portal › **Notification deliveries** (`/client-portal/deliveries/`) shows every portal email and push. The
+decision and its rules are in [ADR-056, "Delivery status and retention"](../../../docs/adr/ADR-056-client-portal.md#delivery-status-and-retention-30-oct-2026).
+
+- **Summary:** per channel, for the last 24 hours and 7 days: sent, pending or retrying, failed for good. Push devices:
+  active, and turned off in the last 7 days by reason. Each number opens the matching list.
+- **List:** both channels, newest first, 50 a page. Filters: channel, status, organisation, kind, queued in the last N
+  days. Status "Last attempt failed" (`?status=failed`, where the overview and the work queue link) covers retrying and
+  failed for good; "Failed for good" (`final`) only the latter.
+- **Detail** (`deliveries/<email|push>/<id>/`): the error category in plain English, the device's state, a link to the
+  record, and the history from the audit trail.
+- **Actions:** Retry now (queued, retrying or failed), Cancel (queued or retrying), and Retry all failed in this
+  filter: at most `deliveries.BULK_RETRY_CAP` (100), newest first, no new attempt after 20 seconds, behind the styled
+  confirmation dialog. Retries go through `notifications.deliver` / `push.deliver` with `manual=True` and every
+  re-check still applies: membership, the member's current preference, the device, the server key, the one-day push
+  expiry and the allowlist. Each action is audited (`portal.delivery_*`).
+- **Never shown:** push endpoints, keys, auth secrets, push-service responses or payloads; no email body is stored.
+- **Cancelled** is stored as status `failed` with the error category `cancelled` (no migration). Both `deliver`
+  functions refuse it, and the overview banner and the work queue leave it out.
+
+### Retention of delivery records
+
+Policy: [`docs/ai-data/operations/portal-delivery-retention.md`](../../../docs/ai-data/operations/portal-delivery-retention.md).
+The content tick's daily step `portal_deliveries` runs `retention.run`. It is a dry run that logs the counts until
+`RETENTION_ENFORCE=true`; `manage.py portal_delivery_retention` prints the same by hand.
+
+| Setting                                  | Default | Deletes                                                                                   |
+| ---------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `PORTAL_DELIVERY_SENT_RETENTION_DAYS`    | 90      | Sent email and push records, counted from sending.                                        |
+| `PORTAL_DELIVERY_FAILED_RETENTION_DAYS`  | 180     | Failed-for-good and cancelled records, counted from queueing.                             |
+| `PORTAL_PUSH_DISABLED_RETENTION_DAYS`    | 90      | Turned-off devices, counted from turning off, once none of their records is still kept.   |
+
+Never deleted: queued or retrying records, active devices, notifications, audit events. Values below 7 count as 7.
+
 ## Operator workflow (no duplicate entry)
 
 1. Create the organisation, invite members (roles: viewer, contributor, approver, authorised signatory).
@@ -159,7 +197,7 @@ made with the old key are switched off the next time something would be sent to 
 7. **Ask a question** (owner, due date); answers appear on the challenge page.
 8. Review **change requests** (submitted, under review, accepted, declined, with a response the customer sees).
 9. Report **managed service** status by hand; it is labelled manual with its time and goes stale after 72 hours.
-10. **Outstanding customer decisions** and **Email delivery** are on the Client portal overview.
+10. **Outstanding customer decisions** are on the Client portal overview; **Notification deliveries** is its second tab.
 
 ## Configuration still needed before customers use it
 
@@ -170,6 +208,7 @@ made with the old key are switched off the next time something would be sent to 
 | `PORTAL_ENABLED`                       | repo variable (optional)                 | Defaults on in production when a host is set. Set `false` to take the portal host back to 404.                       |
 | File storage                           | `PORTAL_FILES_BUCKET` (+ `OBJECT_STORAGE_*`) | A private bucket. Without it production keeps no file bytes and tells the customer so.                           |
 | Retry of failed emails                 | none needed                              | The content tick (ADR-042) retries due portal emails (at most three attempts each). `manage.py portal_send_pending` does the same by hand. |
+| Delivery retention                     | `RETENTION_ENFORCE` (owner)              | A dry run until set. Read the first dry run (`manage.py portal_delivery_retention`) first; the switch also enforces the enquiry and recruitment policies. |
 
 ## Implemented and later
 
@@ -177,8 +216,9 @@ Implemented: everything above, the first-release journey end to end (invitation,
 answer a question, review a deliverable, request changes or approve a specific version, recorded decision visible on both sides),
 six assistant activities with deterministic fallbacks, notification preferences, delivery records, files with validation,
 the installable app (Phase 1: manifest, privacy-first service worker, offline page, mobile tab bar, install guidance) and
-push notifications (Phase 2: Web Push with VAPID, generic lock-screen text, per-kind preferences, a test button).
+push notifications (Phase 2: Web Push with VAPID, generic lock-screen text, per-kind preferences, a test button), and the
+staff delivery status page with retention of delivery records (below).
 
 Later phases: native apps (paid store accounts the owner buys), a "detailed text" push option, staff push, live monitoring
-integrations, contractual e-signature, email OTP and customer SSO, retention jobs, customer-side organisation administration, inbound
+integrations, contractual e-signature, email OTP and customer SSO, retention jobs for anything but delivery records, customer-side organisation administration, inbound
 email into discussions.

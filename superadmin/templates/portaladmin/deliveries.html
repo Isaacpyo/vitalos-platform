@@ -1,24 +1,193 @@
 {% extends "base.html" %}
-{% block title %}Email delivery · Client portal · Vitalos Super Admin{% endblock %}
+{% load ui portal_ui %}
+{% block title %}Notification deliveries · Client portal · Vitalos Super Admin{% endblock %}
 {% block content %}
   <p class="mono-label muted">Client portal</p>
-  <h1 class="mt-1 text-2xl font-semibold">Email delivery</h1>
-  <p class="muted mt-1 max-w-2xl text-sm">Every portal email has a durable record. A failed email never blocks or loses the underlying action. Automatic retries stop after {{ max_attempts }} attempts; a manual retry sends at most once, because a sent record is never sent again. Records hold no message text.</p>
+  <h1 class="mt-1 text-2xl font-semibold">Notification deliveries</h1>
+  <p class="muted mt-1 max-w-3xl text-sm">Every portal email and push notification has a delivery record. A failed delivery never blocks or loses the action that caused it. Automatic retries stop after {{ max_attempts }} attempts; <strong class="font-medium">Retry now</strong> tries once more and still re-checks membership, preferences and the device. A sent delivery is never sent twice. Records hold no email body, and device addresses and keys are never shown.</p>
   {% include "portaladmin/_nav.html" with section="deliveries" %}
-  <p class="mt-4 text-sm">Show:
-    <a class="underline" href="?">all</a> · <a class="underline" href="?status=queued">queued</a> · <a class="underline" href="?status=sent">sent</a> · <a class="underline" href="?status=failed">failed</a></p>
-  <div class="card mt-3 overflow-x-auto p-0">
-    <table class="w-full text-sm" data-testid="deliveries">
-      <thead><tr class="text-left"><th class="p-3">When</th><th class="p-3">Organisation</th><th class="p-3">To</th><th class="p-3">Kind</th><th class="p-3">Status</th><th class="p-3">Attempts</th><th class="p-3">Last error</th><th class="p-3"></th></tr></thead>
-      <tbody>
-        {% for d in deliveries %}
-          <tr class="border-t border-slate-100 dark:border-slate-800">
-            <td class="p-3">{{ d.created_at|date:"j M, H:i" }}</td><td class="p-3">{{ d.organisation.name }}</td><td class="p-3">{{ d.to_email }}</td><td class="p-3">{{ d.kind }}</td>
-            <td class="p-3">{{ d.get_status_display }}{% if d.sent_at %} {{ d.sent_at|date:"H:i" }}{% endif %}</td><td class="p-3">{{ d.attempts }}</td><td class="p-3">{{ d.last_error|default:"" }}</td>
-            <td class="p-3">{% if d.status != "sent" %}{% url 'portaladmin:delivery_retry' d.pk as retry_url %}{% include "portaladmin/_post.html" with url=retry_url label="Retry now" %}{% endif %}</td>
-          </tr>
-        {% empty %}<tr><td colspan="8" class="p-3 muted">No emails yet.</td></tr>{% endfor %}
-      </tbody>
-    </table>
-  </div>
+
+  {% if error %}
+    <div class="card mt-4 flex items-start gap-3 p-4 text-sm" role="alert" data-testid="deliveries-error">
+      {% icon "alert" "mt-0.5 h-5 w-5 shrink-0 text-rose-700 dark:text-rose-300" %}
+      <p>{{ error }}</p>
+    </div>
+  {% else %}
+    <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-labelledby="summary-h" data-testid="delivery-summary">
+      <h2 id="summary-h" class="sr-only">Summary</h2>
+      {% for ch in summary.channels %}
+        <div class="card p-4" data-testid="summary-{{ ch.channel }}">
+          <h3 class="font-semibold">{{ ch.label }}</h3>
+          <table class="mt-2 w-full text-sm">
+            <caption class="sr-only">{{ ch.label }} deliveries queued in the last 24 hours and the last 7 days</caption>
+            <thead>
+              <tr class="text-left align-bottom text-xs text-slate-600 dark:text-slate-300">
+                <th scope="col" class="pb-1 pr-2 font-medium">Queued</th>
+                <th scope="col" class="pb-1 pr-2 text-right font-medium">Sent</th>
+                <th scope="col" class="pb-1 pr-2 text-right font-medium">Pending or retrying</th>
+                <th scope="col" class="pb-1 text-right font-medium">Failed for good</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for window, days, counts in ch.rows %}
+                <tr>
+                  <th scope="row" class="py-1.5 pr-2 text-left font-medium">{{ window }}</th>
+                  <td class="py-1.5 pr-2 text-right tabular-nums"><a class="underline-offset-2 hover:underline" href="?channel={{ ch.channel }}&amp;status=sent&amp;days={{ days }}" data-testid="count-{{ ch.channel }}-{{ days }}-sent">{{ counts.sent }}<span class="sr-only"> {{ ch.label|lower }} sent, {{ window|lower }}</span></a></td>
+                  <td class="py-1.5 pr-2 text-right tabular-nums"><a class="underline-offset-2 hover:underline" href="?channel={{ ch.channel }}&amp;status=pending&amp;days={{ days }}" data-testid="count-{{ ch.channel }}-{{ days }}-pending">{{ counts.pending }}<span class="sr-only"> {{ ch.label|lower }} pending or retrying, {{ window|lower }}</span></a></td>
+                  <td class="py-1.5 text-right tabular-nums"><a class="underline-offset-2 hover:underline {% if counts.failed %}font-semibold text-rose-700 dark:text-rose-300{% endif %}" href="?channel={{ ch.channel }}&amp;status=final&amp;days={{ days }}" data-testid="count-{{ ch.channel }}-{{ days }}-failed">{{ counts.failed }}<span class="sr-only"> {{ ch.label|lower }} failed for good, {{ window|lower }}</span></a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% if ch.week.cancelled %}<p class="muted mt-2 text-xs">{{ ch.week.cancelled }} cancelled by staff in the last 7 days.</p>{% endif %}
+        </div>
+      {% endfor %}
+      <div class="card p-4" data-testid="summary-devices">
+        <h3 class="font-semibold">Push devices</h3>
+        <p class="mt-2 text-sm"><span class="text-2xl font-semibold tabular-nums" data-testid="devices-active">{{ summary.devices_active }}</span> active</p>
+        {% if not summary.push_enabled %}<p class="mt-2 rounded-md bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200" data-testid="push-off">Push is off on this server (no key is configured), so nothing is pushed.</p>{% endif %}
+        <h4 class="mt-3 text-xs font-medium text-slate-600 dark:text-slate-300">Turned off in the last 7 days</h4>
+        <ul class="mt-1 space-y-1 text-sm" data-testid="devices-disabled">
+          {% for item in summary.devices_disabled %}<li data-reason="{{ item.reason }}">{{ item.label }}: <span class="font-medium tabular-nums">{{ item.count }}</span></li>{% empty %}<li class="muted">None.</li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    {% url 'portaladmin:deliveries' as list_url %}
+    <form method="get" action="{{ list_url }}" role="search" aria-label="Filter deliveries" class="card mt-4 grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-6 lg:items-end"
+          hx-get="{{ list_url }}" hx-target="#deliveries-region" hx-select="#deliveries-region" hx-swap="outerHTML" hx-push-url="true" data-testid="delivery-filters">
+      <div>
+        <label for="f-channel" class="field-label">Channel</label>
+        <select id="f-channel" name="channel" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+          <option value="">Email and push</option>
+          {% for value, label in channel_choices %}<option value="{{ value }}" {% if value == filters.channel %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-status" class="field-label">Status</label>
+        <select id="f-status" name="status" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+          <option value="">Any status</option>
+          {% for value, label in status_choices %}<option value="{{ value }}" {% if value == filters.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-org" class="field-label">Organisation</label>
+        <select id="f-org" name="org" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+          <option value="">All organisations</option>
+          {% for o in organisations %}<option value="{{ o.pk }}" {% if o.pk == filters.organisation %}selected{% endif %}>{{ o.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-kind" class="field-label">Notification</label>
+        <select id="f-kind" name="kind" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+          <option value="">Every kind</option>
+          {% for value, label in kind_choices %}<option value="{{ value }}" {% if value == filters.kind %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-days" class="field-label">Queued</label>
+        <select id="f-days" name="days" class="block w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-800">
+          <option value="">Any time</option>
+          {% for value, label in day_choices %}<option value="{{ value }}" {% if value == filters.days %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{{ list_url }}" class="btn btn-ghost">Clear</a>
+      </div>
+    </form>
+
+    <div id="deliveries-region" class="mt-4" hx-get="{{ request.get_full_path }}" hx-trigger="vsa-changed from:body" hx-select="#deliveries-region" hx-target="this" hx-swap="outerHTML" data-testid="deliveries-region">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="muted text-sm" data-testid="deliveries-count">{% if listing.total %}Showing {{ listing.page.start_index }}–{{ listing.page.end_index }} of {{ listing.total }}, newest first{% else %}Showing 0 of 0{% endif %}</p>
+        {% if listing.retryable %}
+          <form method="post" action="{% url 'portaladmin:deliveries_bulk_retry' %}" data-testid="bulk-retry-form"
+                data-confirm-title="Retry {{ listing.bulk_count }} failed deliver{{ listing.bulk_count|pluralize:'y,ies' }} now?"
+                data-confirm="{% if listing.retryable > bulk_cap %}The newest {{ bulk_cap }} of the {{ listing.retryable }} in this filter are retried now; press again for the rest. {% endif %}Each one is re-checked first (membership, preferences, device and age), so some may not be sent. A sent delivery is never sent twice."
+                data-confirm-label="Retry now">
+            {% csrf_token %}
+            {% if filters.channel %}<input type="hidden" name="channel" value="{{ filters.channel }}">{% endif %}
+            {% if filters.status %}<input type="hidden" name="status" value="{{ filters.status }}">{% endif %}
+            {% if filters.organisation %}<input type="hidden" name="org" value="{{ filters.organisation }}">{% endif %}
+            {% if filters.kind %}<input type="hidden" name="kind" value="{{ filters.kind }}">{% endif %}
+            {% if filters.days %}<input type="hidden" name="days" value="{{ filters.days }}">{% endif %}
+            <button type="submit" class="btn btn-secondary btn-sm" data-testid="bulk-retry">{% icon "refresh" "h-4 w-4" %} Retry all failed in this filter ({{ listing.bulk_count }}{% if listing.retryable > bulk_cap %} of {{ listing.retryable }}{% endif %})</button>
+          </form>
+        {% endif %}
+      </div>
+
+      {% if listing.rows %}
+        {% with back=request.get_full_path|urlencode %}
+        <div class="card mt-2 hidden overflow-x-auto lg:block">
+          <table class="table-base [&_td]:px-2 [&_th]:px-2" data-testid="deliveries">
+            <caption class="sr-only">Notification deliveries, newest first</caption>
+            <thead>
+              <tr>
+                <th scope="col">Queued</th><th scope="col">Notification and channel</th><th scope="col">Organisation</th><th scope="col">Member</th>
+                <th scope="col">Status and attempts</th><th scope="col">Last error</th><th scope="col">Sent or next attempt</th><th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for row in listing.rows %}
+                <tr data-delivery="{{ row.key }}">
+                  <td class="whitespace-nowrap"><time datetime="{{ row.queued_at|date:'c' }}">{{ row.queued_at|date:"j M, H:i" }}</time></td>
+                  <td class="min-w-36 max-w-52"><a href="{{ row.detail_url }}?back={{ back }}" class="font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ row.kind_label }}<span class="sr-only">: {{ row.channel_label|lower }} delivery {{ row.pk }} details</span></a><span class="muted block text-xs">{{ row.channel_label }}{% if row.device %} · {{ row.device }}{% endif %}</span></td>
+                  <td class="max-w-36">{{ row.organisation_name }}</td>
+                  <td class="max-w-48">{{ row.member_name }}{% if row.email %}<span class="muted block truncate text-xs" title="{{ row.email }}">{{ row.email }}</span>{% endif %}</td>
+                  <td class="whitespace-nowrap"><span class="{{ row.state_tone|admin_badge }}">{{ row.state_label }}</span><span class="muted block pt-0.5 text-xs tabular-nums">{{ row.attempts }} of {{ row.max_attempts }} attempts</span></td>
+                  <td class="max-w-36">{% if row.error_label %}{{ row.error_label }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                  <td class="whitespace-nowrap">{% if row.sent_at %}<span class="muted text-xs">Sent</span> <time datetime="{{ row.sent_at|date:'c' }}">{{ row.sent_at|date:"j M, H:i" }}</time>{% elif row.due_at %}<span class="muted text-xs">Next</span> <time datetime="{{ row.due_at|date:'c' }}">{{ row.due_at|date:"j M, H:i" }}</time>{% else %}<span class="muted">—</span>{% endif %}</td>
+                  <td class="whitespace-nowrap text-right">{% include "portaladmin/_delivery_actions.html" with next=request.get_full_path hx=True %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="mt-2 space-y-2 lg:hidden" data-testid="deliveries-cards">
+          {% for row in listing.rows %}
+            <li class="card p-4" data-delivery="{{ row.key }}">
+              <div class="flex items-start justify-between gap-2">
+                <a href="{{ row.detail_url }}?back={{ back }}" class="min-w-0 font-medium text-cobalt-600 hover:underline dark:text-cobalt-300">{{ row.kind_label }}<span class="sr-only">: {{ row.channel_label|lower }} delivery {{ row.pk }} details</span></a>
+                <span class="{{ row.state_tone|admin_badge }} shrink-0 whitespace-nowrap">{{ row.state_label }}</span>
+              </div>
+              <p class="muted mt-0.5 text-xs">{{ row.channel_label }} · {{ row.organisation_name }} · <time datetime="{{ row.queued_at|date:'c' }}">{{ row.queued_at|date:"j M, H:i" }}</time></p>
+              <dl class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+                <div class="col-span-2 min-w-0"><dt class="muted text-xs">Member</dt><dd class="break-words">{{ row.member_name }}{% if row.email %} <span class="muted break-all">{{ row.email }}</span>{% endif %}{% if row.device %} <span class="muted">· {{ row.device }}</span>{% endif %}</dd></div>
+                <div><dt class="muted text-xs">Attempts</dt><dd class="tabular-nums">{{ row.attempts }} of {{ row.max_attempts }}</dd></div>
+                <div><dt class="muted text-xs">Next attempt</dt><dd>{% if row.due_at %}{{ row.due_at|date:"j M, H:i" }}{% else %}—{% endif %}</dd></div>
+                <div><dt class="muted text-xs">Last error</dt><dd>{{ row.error_label|default:"—" }}</dd></div>
+                <div><dt class="muted text-xs">Sent</dt><dd>{% if row.sent_at %}{{ row.sent_at|date:"j M, H:i" }}{% else %}—{% endif %}</dd></div>
+              </dl>
+              {% if row.can_retry or row.can_cancel %}<div class="mt-3 flex flex-wrap gap-2">{% include "portaladmin/_delivery_actions.html" with next=request.get_full_path hx=True %}</div>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        {% endwith %}
+
+        {% if listing.page.paginator.num_pages > 1 %}
+          <nav class="mt-3 flex flex-wrap items-center justify-between gap-2" aria-label="Pagination">
+            <p class="muted text-sm">Page {{ listing.page.number }} of {{ listing.page.paginator.num_pages }}</p>
+            <div class="flex gap-2">
+              {% if prev_query %}<a href="?{{ prev_query }}" rel="prev" class="btn btn-secondary btn-sm" hx-get="?{{ prev_query }}" hx-target="#deliveries-region" hx-select="#deliveries-region" hx-swap="outerHTML" hx-push-url="true">Previous</a>{% endif %}
+              {% if next_query %}<a href="?{{ next_query }}" rel="next" class="btn btn-secondary btn-sm" hx-get="?{{ next_query }}" hx-target="#deliveries-region" hx-select="#deliveries-region" hx-swap="outerHTML" hx-push-url="true">Next</a>{% endif %}
+            </div>
+          </nav>
+        {% endif %}
+      {% elif filters.active %}
+        <div class="card mt-2 p-6 text-sm" data-testid="deliveries-empty">
+          <p class="font-medium">No deliveries match these filters.</p>
+          <p class="muted mt-1">Try a longer period, another status or every organisation. <a class="underline" href="{{ list_url }}">Clear the filters</a>.</p>
+        </div>
+      {% else %}
+        <div class="card mt-2 p-6 text-sm" data-testid="deliveries-empty">
+          {% icon "inbox" "h-6 w-6 text-slate-500 dark:text-slate-400" %}
+          <p class="mt-2 font-medium">No portal email or push has been sent yet.</p>
+          <p class="muted mt-1 max-w-prose">A delivery appears here as soon as the portal notifies a member: when you publish an update, ask a question, share a deliverable or post in a discussion, or when a member sends themselves a test notification.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="muted mt-6 max-w-3xl text-xs" data-testid="retention-note">Retention: sent records are deleted {{ retention.sent_days }} days after sending, failed or cancelled ones {{ retention.failed_days }} days after queueing, and turned-off devices {{ retention.device_days }} days after they were turned off (once their records are gone). Queued and retrying deliveries and active devices are never deleted. {% if retention.enforce %}The daily job deletes them.{% else %}The daily job is a dry run that only counts them until <code>RETENTION_ENFORCE</code> is on.{% endif %}</p>
+  {% endif %}
 {% endblock %}

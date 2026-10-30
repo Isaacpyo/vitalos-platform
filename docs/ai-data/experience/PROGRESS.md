@@ -68,6 +68,23 @@ Outside this implementation's scope:
 
 ## Log
 
+- **30 Oct 10:15: client portal notification delivery status and delivery-record retention (W13; branch `worktree-agent-a52f11dd626f3ff95`, not merged).**
+  - **Built:** Client portal › **Notification deliveries** (`/client-portal/deliveries/`, replacing the email-only page at the same address):
+    - a summary per channel for 24 hours and 7 days (sent, pending or retrying, failed for good), active push devices and devices turned off in the last 7 days by reason;
+    - email and push in one list, newest first, with filters (channel, status, organisation, kind, last N days) and 50 rows a page;
+    - a detail page per delivery: the error in plain English, the device's state, a link to the record, and the audit history;
+    - Retry now, Cancel and "Retry all failed in this filter" (capped at 100, behind the styled confirmation dialog), all audited.
+  - **Rules:**
+    - Retries go through `notifications.deliver` / `push.deliver` (`manual=True`) and keep every re-check. The member's current preference is now re-checked at send time too, for automatic retries as well.
+    - Push endpoints, keys, payloads and email bodies never reach the page; a test asserts it.
+    - No migration: a cancelled delivery is `failed` with the category `cancelled`.
+  - **Retention** (policy `docs/ai-data/operations/portal-delivery-retention.md`, ADR-056): sent records go after 90 days, failed or cancelled ones after 180, turned-off devices after 90 once their records are gone. It never touches queued or retrying rows, active devices, notifications or audit. It runs daily in the content tick and is a dry run until `RETENTION_ENFORCE=true`; `manage.py portal_delivery_retention` prints the counts.
+  - **Evidence:**
+    - `tests/test_portal_deliveries.py` passes (38 tests: counts, filters, pagination, hidden fields, retry and every re-check, cancel, bulk cap, permissions, hosts, query count, retention). The full Super Admin gates pass.
+    - Playwright on synthetic seed data (35 checks) covers the list, filters, a gone push device, a failed email, the confirmation dialog, the "Sent." toast and the empty states. axe WCAG 2.2 AA shows no violations (light, and dark for the list and a detail page), and there is no horizontal overflow at 390.
+    - Screenshots are in the W13 scratchpad (`shots/w13-deliveries/`).
+  - **Owner step:** after deploy, read the first dry run (it should be zero in every category until late January 2027) before setting `RETENTION_ENFORCE=true`, which also enforces the enquiry and recruitment policies.
+
 - **30 Oct 07:50: client portal Phase 2, push notifications (W12; branch `worktree-agent-a16a875ec3d1a6a2a`, not merged).**
   - **Built:** standard Web Push (RFC 8030) with VAPID (RFC 8292) and `aes128gcm` encryption (RFC 8291), on `cryptography` 50.0.2 primitives only. It has:
     - devices per member (`PushSubscription`, at most ten active, a coarse label such as "Chrome on Android") and durable `PushDelivery` records with bounded retries; migration `portal` 0005 is additive;

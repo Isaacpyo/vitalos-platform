@@ -119,6 +119,7 @@ CI also builds the image, runs the release job twice, checks a backup, and drive
 - `issue_setup_link --email admin@vitalos.co.uk` prints a single-use set-password link, valid for 30 minutes, to the terminal only.
 - `send_enquiry_notifications` flushes pending enquiry notifications and sends the 08:00 digest. Schedule it every 5 minutes (a Container Apps job, [docs/email-setup.md](docs/email-setup.md) section 8).
 - `enforce_enquiry_retention` applies the 24-month retention. It is a dry run unless `RETENTION_ENFORCE=true`.
+- `portal_delivery_retention` applies the client portal delivery-record retention (sent records after 90 days, failed or cancelled after 180, turned-off push devices after 90; ADR-056). The content tick runs it daily. It is a dry run unless `RETENTION_ENFORCE=true`.
 - `aidata_retention [--apply]` anonymises AI & Data opportunities closed more than 24 months ago (dry run without `--apply`; not scheduled).
 - `import_repo_content <file.json> [--apply]` imports Insights and roles exported from the repo content source as drafts (dry run by default; idempotent by source path; placeholders refused).
 - `product_access --email EMAIL [--grant CODENAME | --revoke CODENAME]` shows, grants or revokes a user's Product Pipeline permissions (`view_product_pipeline`, `open_askbridge_superadmin`, `open_answerd_superadmin`, `open_workforce_superadmin`, `open_tipsignal_superadmin`, `open_autofix_superadmin`) and audits each change. Granting a product permission also grants `view_product_pipeline`. SuperAdmins already hold them all.

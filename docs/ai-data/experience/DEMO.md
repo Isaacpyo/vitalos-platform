@@ -72,7 +72,7 @@ with mock.patch("apps.mailer.system.send", side_effect=RuntimeError("provider do
     services.ask_question(ch, question="Who signs off the exceptions list?", actor=staff)
 ```
 
-Admin work queue (Blocked) and **Client portal, Email delivery, failed** show it. **Retry now** sends it once; a second press cannot send it again. Automatic retries stop after three attempts.
+Admin work queue (Blocked) and **Client portal, Notification deliveries** (status "Last attempt failed") show it, and the row's detail explains the error. **Retry now** sends it once; a second press cannot send it again. Automatic retries stop after three attempts.
 
 ## Configuration-blocked in production
 
