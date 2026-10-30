@@ -41,6 +41,44 @@ _LEGACY_MESSAGE = (
 )
 
 
+# What the upload form says before a file is chosen. Built from ALLOWED and the legacy refusal above, so the text
+# cannot promise a type the checks refuse (a new allowed type needs a label here, or the Files page fails loudly).
+_TYPE_LABELS = {
+    "pdf": "PDF",
+    "png": "PNG",
+    "jpg": "JPEG",
+    "gif": "GIF",
+    "webp": "WebP",
+    "docx": "Word (.docx)",
+    "xlsx": "Excel (.xlsx)",
+    "pptx": "PowerPoint (.pptx)",
+    "txt": "plain text (.txt)",
+    "csv": "CSV",
+}
+LEGACY_NOTE = "Older .doc and .xls files are not accepted: save them as .docx or .xlsx, or as a PDF."
+
+
+def accepted_extensions() -> list[str]:
+    """The canonical extension of every type a customer may upload, in allow-list order."""
+    return [ext for content_type, (ext, _magic) in ALLOWED.items() if content_type not in _LEGACY_TYPES]
+
+
+def accepted_summary() -> str:
+    """For example "PDF, PNG, ... or CSV"."""
+    labels = [_TYPE_LABELS[ext] for ext in accepted_extensions()]
+    return f"{', '.join(labels[:-1])} or {labels[-1]}"
+
+
+def accept_attribute() -> str:
+    """The file input's ``accept`` hint for the device's file picker. Only a hint: ``check`` decides."""
+    out = []
+    for ext in accepted_extensions():
+        out.append(f".{ext}")
+        if ext == "jpg":
+            out.append(".jpeg")
+    return ",".join(out)
+
+
 @dataclass
 class Checked:
     filename: str

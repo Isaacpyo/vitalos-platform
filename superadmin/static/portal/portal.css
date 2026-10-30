@@ -1037,12 +1037,17 @@ table.table {
   border-bottom: 1px solid var(--aid-border);
   vertical-align: top;
 }
-.table th {
+.table thead th {
   color: var(--aid-muted);
   font-weight: 600;
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+/* A row header (the file name on Files) reads as the row's title, not as a column label. */
+.table tbody th {
+  color: var(--aid-heading);
+  font-weight: 600;
 }
 
 /* Assistant */
@@ -1361,6 +1366,265 @@ code,
 }
 .prefs__channel .field {
   margin-bottom: 0.25rem;
+}
+
+/*
+ * Files: "Upload a file". The button sits at the top right of the page head (and in the empty state); when the
+ * member cannot upload it stays visible, disabled, with the reason under it. The form opens in a dialog.
+ */
+.btn__icon {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-left: -0.2rem;
+}
+.upload-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  max-width: 19rem;
+}
+.upload-action__reason {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--aid-muted);
+  text-align: right;
+}
+.upload-action--empty {
+  align-items: center;
+  max-width: none;
+  margin-top: 1.25rem;
+}
+.upload-action--empty .upload-action__reason {
+  text-align: center;
+}
+@media (max-width: 40rem) {
+  .upload-action--top {
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+  }
+  .upload-action--top .upload-action__reason {
+    text-align: left;
+  }
+}
+.empty--action {
+  padding: 2.5rem 1.25rem;
+}
+.empty__title {
+  font-size: 1.125rem;
+  color: var(--aid-heading);
+  margin-bottom: 0.35rem;
+}
+.empty--action p {
+  max-width: 32rem;
+  margin: 0 auto;
+}
+.p-file::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--aid-control-border);
+  border-radius: 6px;
+  background: var(--aid-surface);
+  color: var(--aid-link);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.upload-dialog {
+  max-width: min(36rem, calc(100vw - 2rem));
+}
+.upload-form__head {
+  margin-bottom: 1.25rem;
+}
+.upload-form__head p {
+  margin: 0.3rem 0 0;
+}
+.upload-form .form-errors p {
+  margin: 0;
+}
+.upload-form .notice {
+  margin-bottom: 1rem;
+}
+.upload-form__name:not(:empty) {
+  display: block;
+  margin-top: 0.35rem;
+  overflow-wrap: anywhere;
+}
+.upload-form__privacy {
+  margin: 0.25rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--aid-link);
+  border-radius: 0 var(--portal-radius) var(--portal-radius) 0;
+  background: var(--aid-bg);
+  font-size: 0.875rem;
+  color: var(--aid-text);
+}
+
+/*
+ * Account settings: a section menu beside the content. Real links with aria-current (the Account page's sections
+ * are anchors; Notification preferences is its own page). At 52rem or narrower the menu becomes a scrollable chip
+ * row that stays at the top of the screen, above the content and well clear of the bottom tab bar.
+ */
+.settings {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+.settings__nav {
+  position: sticky;
+  top: 1.5rem;
+}
+.settings__menu {
+  list-style: none;
+  margin: 0;
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  background: var(--aid-surface);
+  border: 1px solid var(--aid-border);
+  border-radius: var(--portal-radius-lg);
+  box-shadow: var(--portal-shadow);
+}
+.settings__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--portal-radius);
+  color: var(--aid-text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-decoration: none;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.settings__link svg {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--aid-muted);
+}
+.settings__link:hover {
+  background: var(--aid-bg);
+  color: var(--aid-heading);
+}
+.settings__link[aria-current="page"] {
+  background: var(--aid-chip-bg);
+  color: var(--aid-chip-text);
+  font-weight: 650;
+}
+.settings__link[aria-current="page"] svg {
+  color: currentColor;
+}
+/* The current item is marked by shape as well as colour. */
+.settings__link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -0.375rem;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--aid-action);
+}
+.settings__content {
+  min-width: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+.settings__content > .card {
+  scroll-margin-top: 1.5rem;
+}
+.settings__intro {
+  margin: 0.3rem 0 1rem;
+  color: var(--aid-muted);
+  max-width: 40rem;
+}
+.settings__rows {
+  margin-top: 0.85rem;
+}
+.settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+.settings__row .help {
+  margin: 0.15rem 0 0;
+}
+.settings__row-title {
+  font-family: var(--portal-font);
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+.settings__row-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+@media (max-width: 52rem) {
+  .settings {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+  /* A full-width band behind the chips (painted by the shadow, clipped to the band), so content scrolls under it. */
+  .settings__nav {
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    padding: 0.5rem 0;
+    background: var(--aid-bg);
+    box-shadow: 0 0 0 100vmax var(--aid-bg), 0 1px 0 100vmax var(--aid-border);
+    clip-path: inset(0 -100vmax -1px);
+  }
+  .settings__menu {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.25rem 0.125rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .settings__menu::-webkit-scrollbar {
+    display: none;
+  }
+  .settings__menu li {
+    flex: none;
+    scroll-snap-align: start;
+  }
+  .settings__link {
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--aid-control-border);
+    border-radius: 999px;
+    background: var(--aid-surface);
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  .settings__link svg,
+  .settings__link[aria-current="page"]::before {
+    display: none;
+  }
+  .settings__link[aria-current="page"] {
+    background: var(--aid-action);
+    border-color: var(--aid-action);
+    color: var(--aid-action-text);
+  }
+  .settings__content > .card {
+    scroll-margin-top: 4.75rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -68,6 +68,23 @@ Outside this implementation's scope:
 
 ## Log
 
+- **30 Oct 11:05: Files upload, Account settings layout, readable email links (W14; branch `worktree-agent-a07b00b230b317a7c`, not merged).**
+  - **Push, confirmed on a real phone:** the owner's own test after the Phase 2 deploy passed on 30 Oct 2026 (Android Chrome or desktop; the owner said "test notification worked"). This closes the "Next" step of the Phase 2 entry below.
+  - **Files, "Upload a file":** a primary button at the top right of Files (and in the empty state) opens a native `<dialog>` with the file, the challenge (only this organisation's shared challenges), an optional project (published, grouped by challenge, filtered by the chosen challenge) and an optional title.
+    - Before upload it states the accepted types and the 10 MB limit, both built from `files.py`, and the privacy line.
+    - Validation stays on the server. A refusal comes back inline in the open dialog, by HTMX or, without JavaScript, as a full page. Success redirects to the file with a toast.
+    - Viewers, members with no shared challenge and staff preview see the button disabled with the reason under it.
+    - A project from another challenge is now refused by the service, not only by the form.
+  - **Account settings:** a section menu beside the content (a sticky chip row at 52rem or narrower). It holds Profile, Sign-in & security, Notifications on this device, Notification preferences and Install the app.
+    - The Account sections are anchors on `/account/`, so existing URLs and the push and install hooks are unchanged.
+    - Notification preferences keeps its own URL inside the same shell.
+    - Two-step setup uses the shell too.
+  - **Email links:** the shared layout now links https addresses in text blocks (the invitation's fallback line) and footer links in the link colour, underlined. Dark mode uses `blue100`: 10.47:1 on the card, where a client's default blue was 1.41:1. See ADR-030 (30 Oct note) and `docs/email/README.md`.
+  - **Evidence:**
+    - `tests/test_portal_files_upload_ui.py` (35 tests), the email layout package (63 tests) and its golden fixtures, the dependants (web, Relay) and the full Super Admin suite (1728 tests on PostgreSQL) all pass.
+    - Playwright on synthetic seed data: 32 Files checks and 22 Account checks pass. axe WCAG 2.2 AA finds 0 violations on Files, the open dialog, the dialog with an error, Account and Notification preferences, in light and dark. There is no horizontal overflow at 320, 390 or 768.
+    - Screenshots are in the W14 scratchpad (`shots/w14/`).
+
 - **30 Oct 07:50: client portal Phase 2, push notifications (W12; branch `worktree-agent-a16a875ec3d1a6a2a`, not merged).**
   - **Built:** standard Web Push (RFC 8030) with VAPID (RFC 8292) and `aes128gcm` encryption (RFC 8291), on `cryptography` 50.0.2 primitives only. It has:
     - devices per member (`PushSubscription`, at most ten active, a coarse label such as "Chrome on Android") and durable `PushDelivery` records with bounded retries; migration `portal` 0005 is additive;

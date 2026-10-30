@@ -13,6 +13,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django_htmx.http import HttpResponseClientRedirect
 
 from apps.audit.services import record
 
@@ -26,6 +27,7 @@ from ..forms import (
     AnswerForm,
     ChangeRequestForm,
     CommentForm,
+    FileUploadForm,
     MessageForm,
     PreferencesForm,
     RequiredCommentForm,
@@ -50,8 +52,9 @@ NAV = {
     "files": "files",
     "file": "files",
     "notifications": "notifications",
-    "notification_preferences": "notifications",
+    "notification_preferences": "account",
     "account": "account",
+    "otp_setup": "account",
 }
 
 
@@ -566,13 +569,41 @@ def change(request, ctx, pk):
 # --- Files -------------------------------------------------------------------------------------------------------------------
 
 
-@portal_view()
-@require_GET
-def files(request, ctx):
+def _upload_context(ctx, challenges, projects, form=None, *, open_dialog=False) -> dict:
+    """Everything the "Upload a file" button and dialog need. Business rules come from ``services``; the type and
+    size wording from ``files``, so what the page promises is what the checks accept."""
+    refusal = services.customer_upload_refusal(
+        ctx.member, preview=ctx.preview, has_challenge=bool(challenges)
+    )
+    if form is None and not refusal:
+        initial = {"challenge": challenges[0].pk} if len(challenges) == 1 else {}
+        form = FileUploadForm(challenges=challenges, projects=projects, initial=initial)
+    groups: dict = {}
+    for p in projects:
+        groups.setdefault(p.challenge_id, {"challenge": p.challenge, "projects": []})["projects"].append(p)
+    return {
+        "upload_refusal": refusal,
+        "upload_form": None if refusal else form,
+        "upload_open": open_dialog and not refusal,
+        "upload_challenges": challenges,
+        "upload_project_groups": list(groups.values()),
+        "upload_selected_challenge": str(form["challenge"].value() or "") if form else "",
+        "upload_selected_project": str(form["project"].value() or "") if form else "",
+        "upload_accepted": portal_files.accepted_summary(),
+        "upload_accept": portal_files.accept_attribute(),
+        "upload_legacy_note": portal_files.LEGACY_NOTE,
+        "max_mb": portal_files.MAX_BYTES // (1024 * 1024),
+        "storage_enabled": portal_files.storage_enabled(),
+    }
+
+
+def _files_page(request, ctx, form=None, *, open_dialog=False):
     m = ctx.member
+    challenges = list(selectors.challenges(m))
+    projects = list(selectors.projects(m))
     groups = []
-    for ch in selectors.challenges(m):
-        fs = (
+    for ch in challenges:
+        fs = list(
             selectors.files(m, ch)
             .prefetch_related(
                 Prefetch(
@@ -583,58 +614,89 @@ def files(request, ctx):
             )
             .select_related("project")
         )
-        groups.append({"challenge": ch, "files": fs, "upload_form": UploadForm(initial={"challenge": ch.pk})})
-    return show(
-        request,
-        ctx,
-        "portal/files.html",
-        {
-            "groups": groups,
-            "max_mb": portal_files.MAX_BYTES // (1024 * 1024),
-            "storage_enabled": portal_files.storage_enabled(),
-        },
-    )
+        groups.append({"challenge": ch, "files": fs})
+    context = {"groups": groups, "has_files": any(g["files"] for g in groups)}
+    context.update(_upload_context(ctx, challenges, projects, form, open_dialog=open_dialog))
+    return show(request, ctx, "portal/files.html", context)
+
+
+@portal_view()
+@require_GET
+def files(request, ctx):
+    # ?upload=1 opens the dialog from the server, so the button also works as a plain link without JavaScript.
+    return _files_page(request, ctx, open_dialog=request.GET.get("upload") == "1")
 
 
 @portal_view(min_role="can_comment", write=True)
 @require_POST
 def file_upload(request, ctx):
+    """The "Upload a file" dialog (a new file), or a new version from a file's page (``file_id``)."""
+    if request.POST.get("file_id"):
+        return _file_version_upload(request, ctx)
+    m = ctx.member
+    # Ids from another organisation, or not shared or published, are a 404, exactly like a record that does not exist.
+    challenge = (
+        selectors.get_challenge(m, request.POST["challenge"]) if request.POST.get("challenge") else None
+    )
+    project = selectors.get_project(m, request.POST["project"]) if request.POST.get("project") else None
+    challenges = list(selectors.challenges(m))
+    projects = list(selectors.projects(m))
+    form = FileUploadForm(request.POST, request.FILES, challenges=challenges, projects=projects)
+    if form.is_valid():
+        try:
+            version = services.upload_customer_file(
+                m,
+                challenge,
+                form.cleaned_data["file"],
+                project=project,
+                title=form.cleaned_data["title"],
+                request=request,
+            )
+        except services.PortalError as exc:
+            form.add_error("file", str(exc))
+        else:
+            _upload_message(request, version)
+            target = portal_path(request, "file", {"pk": version.file_id})
+            if request.htmx:
+                return HttpResponseClientRedirect(target)
+            return HttpResponseRedirect(target)
+    if request.htmx:
+        # The dialog swaps in the form with its errors; the chosen file has to be picked again.
+        context = _upload_context(ctx, challenges, projects, form, open_dialog=True)
+        return show(request, ctx, "portal/_upload_form.html", context)
+    return _files_page(request, ctx, form, open_dialog=True)
+
+
+def _upload_message(request, version) -> None:
+    if version.upload_status == FileVersion.Status.UNAVAILABLE:
+        messages.warning(
+            request,
+            "Vitalos has recorded your file, but file storage is not set up yet, so its contents were not kept.",
+        )
+    else:
+        messages.success(request, f"File uploaded: {version.file.title}.")
+
+
+def _file_version_upload(request, ctx):
+    """A new version from a file's page. A customer adds versions only to a file a customer uploaded (M3)."""
+    existing = selectors.get_file(ctx.member, request.POST["file_id"])
     form = UploadForm(request.POST, request.FILES)
     if not form.is_valid():
         messages.error(request, "Choose a file to upload.")
-        return go(request, "files")
-    ch = selectors.get_challenge(ctx.member, form.cleaned_data["challenge"])
-    project = (
-        selectors.get_project(ctx.member, form.cleaned_data["project"])
-        if form.cleaned_data.get("project")
-        else None
-    )
-    existing = (
-        selectors.get_file(ctx.member, form.cleaned_data["file_id"])
-        if form.cleaned_data.get("file_id")
-        else None
-    )
+        return go(request, "file", pk=existing.pk)
     try:
         version = services.upload_customer_file(
             ctx.member,
-            ch,
+            selectors.get_challenge(ctx.member, form.cleaned_data["challenge"]),
             form.cleaned_data["file"],
-            project=project,
             file=existing,
-            title=form.cleaned_data.get("title", ""),
             request=request,
         )
-        if version.upload_status == FileVersion.Status.UNAVAILABLE:
-            messages.warning(
-                request,
-                "Vitalos has recorded your file, but file storage is not set up yet, so its contents were not kept.",
-            )
-        else:
-            messages.success(request, "File uploaded.")
-        return go(request, "file", pk=version.file_id)
     except services.PortalError as exc:
         _refuse(request, exc)
-        return go(request, "files")
+        return go(request, "file", pk=existing.pk)
+    _upload_message(request, version)
+    return go(request, "file", pk=version.file_id)
 
 
 @portal_view()
@@ -751,7 +813,13 @@ def notification_preferences(request, ctx):
         request,
         ctx,
         "portal/preferences.html",
-        {"form": form, "pref": pref, "push_devices": devices, "push_available": portal_push.enabled()},
+        {
+            "form": form,
+            "pref": pref,
+            "push_devices": devices,
+            "push_available": portal_push.enabled(),
+            "settings_section": "preferences",
+        },
     )
 
 
@@ -769,6 +837,8 @@ def account(request, ctx):
             "role_help": ctx.member.get_role_display(),
             # Push notifications (ADR-056, Phase 2): the member's own devices; never shown in staff preview.
             "push": None if ctx.preview else portal_push.page_context(ctx.user),
+            # The account settings menu (settings_base.html): sections are anchors on this page.
+            "settings_section": "profile",
         },
     )
 

@@ -1280,6 +1280,27 @@ def _add_file_version(
     )
 
 
+UPLOAD_ROLE_READ_ONLY = "Your role can view files but not upload them."
+UPLOAD_NEEDS_CHALLENGE = "You can upload once Vitalos shares a challenge with you."
+UPLOAD_PREVIEW = "Preview as customer is read-only, so uploading is turned off here."
+
+
+def customer_upload_refusal(
+    member: Membership, *, preview: bool = False, has_challenge: bool | None = None
+) -> str:
+    """Why this member cannot upload a file right now, or "" when they can. The role comes first (a viewer never
+    can, whatever is shared), then a shared challenge to upload to; staff preview is read-only whatever the role."""
+    if not member.can_comment:
+        return UPLOAD_ROLE_READ_ONLY
+    if has_challenge is None:
+        has_challenge = selectors.challenges(member).exists()
+    if not has_challenge:
+        return UPLOAD_NEEDS_CHALLENGE
+    if preview:
+        return UPLOAD_PREVIEW
+    return ""
+
+
 def upload_customer_file(
     member: Membership,
     challenge: Challenge,
@@ -1295,6 +1316,10 @@ def upload_customer_file(
         raise PortalError("Your role is read-only.")
     if challenge.organisation_id != member.organisation_id or not challenge.is_shared:
         raise PortalError("Not available.")
+    if project is not None and project.challenge_id != challenge.pk:
+        raise PortalError(
+            "That project belongs to another challenge. Choose one from this challenge, or none."
+        )
     data = upload.read(portal_files.MAX_BYTES + 1)
     checked = portal_files.check(upload.name, getattr(upload, "content_type", ""), data)
     if checked.refused_reason:

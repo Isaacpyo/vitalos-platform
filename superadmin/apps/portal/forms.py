@@ -147,6 +147,55 @@ class UploadForm(PortalFormMixin, forms.Form):
     file_id = forms.IntegerField(widget=forms.HiddenInput, required=False)
 
 
+class FileUploadForm(PortalFormMixin, forms.Form):
+    """The Files page "Upload a file" dialog. The choices are the member's own shared challenges and published projects
+    (from ``selectors``); the view resolves posted ids through ``selectors`` first, so another organisation's id is a
+    404, never a choice error. Type, size and content checks stay in ``files.check`` (run by the upload service)."""
+
+    file = forms.FileField(label="File", error_messages={"required": "Choose a file to upload."})
+    challenge = forms.TypedChoiceField(
+        label="Challenge",
+        coerce=int,
+        empty_value=None,
+        error_messages={
+            "required": "Choose the challenge this file is for.",
+            "invalid_choice": "Choose one of your challenges.",
+        },
+    )
+    project = forms.TypedChoiceField(
+        label="Project (optional)",
+        coerce=int,
+        empty_value=None,
+        required=False,
+        error_messages={"invalid_choice": "Choose a project from the list, or none."},
+    )
+    title = forms.CharField(label="Title (optional)", max_length=200, required=False)
+
+    def __init__(self, *args, challenges=(), projects=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["challenge"].choices = [
+            ("", "Choose a challenge"),
+            *((c.pk, c.title) for c in challenges),
+        ]
+        self.fields["project"].choices = [("", "No specific project"), *((p.pk, p.name) for p in projects)]
+        self._project_challenge = {p.pk: p.challenge_id for p in projects}
+
+    def clean_file(self):
+        if len(self.files.getlist(self.add_prefix("file"))) > 1:
+            raise forms.ValidationError("Upload one file at a time.")
+        return self.cleaned_data["file"]
+
+    def clean(self):
+        data = super().clean()
+        challenge, project = data.get("challenge"), data.get("project")
+        if challenge and project and self._project_challenge.get(project) != challenge:
+            self.add_error(
+                "project",
+                "That project belongs to another challenge. Choose one from this challenge, or none.",
+            )
+        return data
+
+
 class PreferencesForm(PortalFormMixin, forms.Form):
     email_updates = forms.BooleanField(label="Published updates, messages and decisions", required=False)
     email_questions = forms.BooleanField(label="Questions for me", required=False)
