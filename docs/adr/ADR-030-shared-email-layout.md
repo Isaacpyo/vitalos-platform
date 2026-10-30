@@ -46,3 +46,13 @@ The email audit (`docs/email/`) added four blocks and one mode, each in `render.
 - **Correspondence mode** (`mode: "correspondence"`): a person writing to a person (inbox replies). No header band, label, logo or badges; only text, quote, divider and signature blocks; a compact footer with the company facts and no social icons, notice or unsubscribe line. The shell's card corners come from a new `[[card_edge]]` slot, so every existing fixture is unchanged.
 
 The Super Admin editor offers all four blocks (Steps, Item list, Figures, Code) with validation: steps 1 to 4, figures 2 to 4 with value and label, items each with a title, and a code that is never in the subject or preheader.
+
+## Status note (30 October 2026): readable links, spec version 3
+
+The owner found the portal invitation's fallback link ("If the button does not work, copy this link into your browser: …") in the client's default blue on the dark card, which is hard to read. The URL was plain text that the client linked itself. Now:
+
+- A text block links each `https://` address with a new `text_link` snippet: the link colour inline, an underline and the `v-link` class. Trailing punctuation and an unopened `)` stay text; other schemes stay text. `layout.py` mirrors it; a new golden fixture (`links`) covers it.
+- Footer links (website, support, unsubscribe) use the link colour and `v-link` instead of the muted colour.
+- The dark link colour is `blue100` (was white): the light accent the layout already uses on dark surfaces. Light stays `blue700`.
+- A plain `a` rule in the style blocks (and in the dark query) colours links a client makes itself.
+- The button is unchanged. Contrast pairs and numbers are in `docs/email/README.md` (Links).

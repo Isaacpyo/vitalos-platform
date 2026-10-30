@@ -13,9 +13,14 @@ NAMES = sorted(path.name.removesuffix(".input.json") for path in FIXTURES.glob("
 
 
 def test_fixtures_exist():
-    assert {"all-blocks", "hostile-and-missing", "internal-notice", "new-blocks", "correspondence"} <= set(
-        NAMES
-    )
+    assert {
+        "all-blocks",
+        "hostile-and-missing",
+        "internal-notice",
+        "new-blocks",
+        "correspondence",
+        "links",
+    } <= set(NAMES)
 
 
 @pytest.mark.parametrize("name", NAMES)
@@ -67,3 +72,47 @@ def test_code_never_in_subject_or_preheader():
 def test_correspondence_refuses_other_blocks(block):
     with pytest.raises(ValueError, match="Correspondence email cannot use"):
         layout.render_email({**_fixture("correspondence"), "blocks": [block]})
+
+
+# --- Links in text blocks (the fallback line under a button) --------------------------------------------------
+
+
+def _text_html(text: str) -> str:
+    doc = {**_fixture("links"), "blocks": [{"type": "text", "text": text}]}
+    return layout.render_email(doc).html
+
+
+def test_text_links_use_the_layout_link_style():
+    link = layout.spec()["theme"]["light"]["link"]
+    html = _text_html("Copy this link: https://portal.example.test/invitation/abc/.")
+    assert (
+        '<a href="https://portal.example.test/invitation/abc/" class="v-link" '
+        f'style="color:{link};text-decoration:underline;word-break:break-word;overflow-wrap:anywhere;">'
+        "https://portal.example.test/invitation/abc/</a>.</p>"
+    ) in html
+
+
+def test_text_links_stop_at_javascript_whitespace_and_skip_other_schemes():
+    #   and ﻿ end an address in JavaScript's \s, so they must here too.
+    html = _text_html("See https://a.example/x then https://b.example/y﻿end")
+    assert ">https://a.example/x</a> then" in html and ">https://b.example/y</a>﻿end" in html
+    plain = _text_html("Not http://a.example, mailto:x@a.example or javascript:alert(1)")
+    assert ">Not http://a.example, mailto:x@a.example or javascript:alert(1)</p>" in plain
+
+
+def test_portal_invitation_fallback_link_is_readable(db):
+    from types import SimpleNamespace
+
+    from apps.portal.services import invitation_email
+
+    member = SimpleNamespace(
+        organisation=SimpleNamespace(name="Example Ledger Ltd (synthetic)"),
+        get_role_display=lambda: "Contributor",
+    )
+    url = "https://portal.example.test/invitation/EXAMPLE/"
+    _subject, doc = invitation_email(member, url)
+    rendered = layout.render_email(doc)
+    theme = layout.spec()["theme"]
+    assert f'browser: <a href="{url}" class="v-link" style="color:{theme["light"]["link"]};' in rendered.html
+    assert f".v-link{{color:{theme['dark']['link']} !important}}" in rendered.html
+    assert f"copy this link into your browser: {url}" in rendered.text

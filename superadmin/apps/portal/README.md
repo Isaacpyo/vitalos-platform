@@ -48,6 +48,45 @@ DJANGO_SETTINGS_MODULE=config.settings.dev python manage.py portal_seed_demo --s
 The seed creates Northwind Synthetic Ltd and Contoso Synthetic plc (flagged synthetic; a banner shows), sends no email, and
 refuses to run in production or without `DEBUG`. `--reset` rebuilds only the synthetic data.
 
+## Files: uploading
+
+The entry point is **Upload a file**, at the top right of Files (`templates/portal/files.html`) and in its empty state. It
+opens the dialog in `_upload_dialog.html` / `_upload_form.html` and posts to `files/upload/` (`customer.file_upload`,
+POST only, CSRF).
+
+- **Fields:** the file, the challenge (`selectors.challenges`: this organisation's shared challenges), an optional
+  project (`selectors.projects`, grouped by challenge; `portal.js` hides the other challenges' projects) and an optional
+  title. A posted challenge or project id from another organisation is a 404.
+- **Before upload:** the accepted types, the size limit and the legacy-type note come from `files.py`
+  (`accepted_summary`, `accept_attribute`, `MAX_BYTES`, `LEGACY_NOTE`), so the page cannot promise a type the checks
+  refuse. The privacy line says who can see the file.
+- **Validation:** unchanged and server-side: `files.check` decides on type, content, size and `.doc`/`.xls`; the form
+  allows one file at a time; the service refuses a project from another challenge.
+  - A refusal comes back inline in the open dialog: HTMX swaps the form, or without JavaScript the page renders again
+    with the dialog open.
+  - Success redirects to the file's page with a toast.
+- **Who can upload:** `services.customer_upload_refusal` decides, and the button stays visible, disabled, with the
+  reason under it:
+  - a viewer gets "Your role can view files but not upload them";
+  - a member with no shared challenge gets "You can upload once Vitalos shares a challenge with you";
+  - staff preview is read-only.
+- **Without storage:** the page says file storage is not set up, and an upload is recorded as "Not stored".
+- **Staff:** they see the upload on the challenge page and under recent customer activity; it is audited as
+  `portal.file_uploaded`.
+- **New versions:** a new version of a customer-uploaded file is added from that file's page (`file_id`).
+
+## Account settings
+
+`settings_base.html` gives Account a section menu beside the content (`_settings_nav.html`); at 52rem or narrower it is
+a sticky, scrollable chip row above the content.
+
+- **Profile, Sign-in & security, Notifications on this device and Install the app** are anchors on `/account/`
+  (`#profile`, `#security`, `#device`, `#install`), so the existing URL, redirects and the push and install hooks are
+  unchanged. `portal.js` marks the section in view with `aria-current="page"`; the server marks Profile.
+- **Notification preferences** (`/notifications/preferences/`) and two-step setup (`/account/security/`) render inside
+  the same shell, with their own item marked current.
+- **Staff preview:** the device and install items and cards are hidden, as before.
+
 ## Installable app (Phase 1)
 
 The portal installs as an app from the browser (no app store). The decision and the privacy rule are in [ADR-056, Phase 1](../../../docs/adr/ADR-056-client-portal.md#phase-1-installable-app-29-oct-2026).

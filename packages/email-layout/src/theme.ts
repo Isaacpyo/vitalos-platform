@@ -40,7 +40,9 @@ export const emailTheme = {
     heading: palette.white,
     text: palette.cloud50,
     muted: palette.border,
-    link: palette.white,
+    // The light accent used on dark surfaces (as the intent badge text): 10.47:1 on the card and
+    // 13.92:1 on the page. Links are underlined too, so colour is never the only cue.
+    link: palette.blue100,
     // Blue on midnight is about 3.3:1, so the dark primary is a light fill (as on the site).
     action: palette.white,
     actionText: palette.midnight950,
@@ -109,7 +111,8 @@ function darkCss(): { media: string; outlook: string } {
     }
   }
   return {
-    media: `@media (prefers-color-scheme:dark){${media.join("")}}`,
+    // `a` first: a link the email client made itself (see STYLE_BLOCKS) takes the dark link colour.
+    media: `@media (prefers-color-scheme:dark){a{color:${emailTheme.dark.link}}${media.join("")}}`,
     outlook: outlook.join("\n"),
   };
 }
@@ -119,11 +122,16 @@ const dark = darkCss();
 /**
  * Three style blocks: Gmail discards a whole block when it meets a rule it does not support, so
  * the layout rules are kept apart from the dark-mode query and from attribute selectors.
+ *
+ * The `a` rule is a fallback for links the email client makes itself (an address it detects in
+ * text): they get the layout's link colour and underline instead of the client's default blue.
+ * Every link the layout writes carries the same colour inline, which wins over this rule.
  */
 export const STYLE_BLOCKS: readonly string[] = [
   [
     "body{margin:0;padding:0;width:100% !important;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}",
     "table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt}",
+    `a{color:${emailTheme.light.link};text-decoration:underline}`,
     "@media (max-width:480px){.v-pad{padding-left:16px !important;padding-right:16px !important}.v-name{font-size:22px !important;line-height:28px !important}.v-label{width:104px !important}}",
   ].join("\n"),
   dark.media,

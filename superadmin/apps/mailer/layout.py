@@ -129,19 +129,53 @@ def _text_groups(text: str) -> list[tuple[bool, list[str]]]:
     return groups
 
 
+# An https address in a text block runs to whitespace, a quote, a backtick or an angle bracket.
+_TEXT_URL = re.compile(f"https://[^{_JS_WS}\"'<>`]+")
+_HTTPS = "https://"
+_TRAILING = ".,;:!?"
+
+
+def _trim_url(url: str) -> str:
+    """Sentence punctuation after an address, and a ")" it did not open, stay text."""
+    while True:
+        last = url[-1:]
+        if last and last in _TRAILING:
+            url = url[:-1]
+        elif last == ")" and url.count("(") < url.count(")"):
+            url = url[:-1]
+        else:
+            return url
+
+
+def _linked_text(line: str) -> str:
+    """Escapes a line of a text block and links each https address in it with the layout's link style, so an
+    email client never shows it in its own default colour (for example the fallback line under a button)."""
+    html = []
+    last = 0
+    for match in _TEXT_URL.finditer(line):
+        url = _trim_url(match.group(0))
+        if len(url) <= len(_HTTPS):
+            continue
+        html.append(e(line[last : match.start()]))
+        html.append(fill("text_link", {"href": e(url), "text": e(url)}))
+        last = match.start() + len(url)
+    html.append(e(line[last:]))
+    return "".join(html)
+
+
 def _text_html(text: str, muted: bool) -> str:
     groups = _text_groups(text)
     parts = []
     for index, (is_list, lines) in enumerate(groups):
         margin = "0" if index == len(groups) - 1 else "0 0 12px"
         if is_list:
-            items = "".join(fill("list_item", {"text": e(line)}) for line in lines)
+            items = "".join(fill("list_item", {"text": _linked_text(line)}) for line in lines)
             parts.append(fill("list", {"margin": margin, "items": items}))
         else:
             parts.append(
                 fill(
                     "paragraph_muted" if muted else "paragraph",
-                    {"margin": margin, "text": "<br>\n".join(e(line) for line in lines)},
+                    {"margin": margin, "text": "<br>\n".join(_linked_text(line) for line in lines)},
                 )
             )
     return "\n".join(parts)

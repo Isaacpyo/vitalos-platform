@@ -2,15 +2,25 @@
 (function () {
   "use strict";
 
-  // Native <dialog>: open buttons, close buttons, close on backdrop click, return focus to the opener.
+  // Native <dialog>: open buttons, close buttons, close on backdrop click, return focus to the opener. An opener may
+  // be a link to a page that shows the dialog without JavaScript; here it opens in place instead.
+  function firstField(dialog) {
+    return (
+      dialog.querySelector("[aria-invalid='true']") ||
+      dialog.querySelector("[data-autofocus]") ||
+      dialog.querySelector("textarea, input:not([type=hidden]), select, button")
+    );
+  }
   document.addEventListener("click", function (event) {
     var opener = event.target.closest("[data-dialog-open]");
     if (opener) {
       var dialog = document.getElementById(opener.getAttribute("data-dialog-open"));
       if (dialog && typeof dialog.showModal === "function") {
+        event.preventDefault();
         dialog._opener = opener;
+        if (dialog.open) dialog.close();
         dialog.showModal();
-        var focus = dialog.querySelector("[data-autofocus]") || dialog.querySelector("textarea, input, button");
+        var focus = firstField(dialog);
         if (focus) focus.focus();
       }
       return;
@@ -35,6 +45,39 @@
     },
     true
   );
+  // A dialog the server rendered open (a refused upload, or ?upload=1 without JavaScript) becomes a modal here. The
+  // address goes back to the page itself, so a reload neither posts again nor reopens the dialog.
+  document.querySelectorAll("dialog[open][data-modal-on-load]").forEach(function (dialog) {
+    if (typeof dialog.showModal !== "function") return;
+    dialog.close();
+    dialog.showModal();
+    var focus = firstField(dialog);
+    if (focus) focus.focus();
+    var page = dialog.getAttribute("data-page-url");
+    if (page && window.history && window.history.replaceState) window.history.replaceState(null, "", page);
+  });
+
+  // Upload dialog: the project list shows only the chosen challenge's projects. The server checks the pair anyway.
+  function filterProjects(select) {
+    var source = document.getElementById(select.getAttribute("data-filter-by"));
+    if (!source) return;
+    select.querySelectorAll("optgroup[data-challenge]").forEach(function (group) {
+      var match = !source.value || group.getAttribute("data-challenge") === source.value;
+      group.hidden = !match;
+      group.disabled = !match;
+    });
+    var chosen = select.options[select.selectedIndex];
+    if (chosen && chosen.parentNode.disabled) select.value = "";
+  }
+  function filterAllProjects() {
+    document.querySelectorAll("select[data-filter-by]").forEach(filterProjects);
+  }
+  document.addEventListener("change", function (event) {
+    if (!event.target.id) return;
+    var id = window.CSS && CSS.escape ? CSS.escape(event.target.id) : event.target.id;
+    document.querySelectorAll('select[data-filter-by="' + id + '"]').forEach(filterProjects);
+  });
+  filterAllProjects();
 
   // Toasts: server messages are rendered inside the aria-live region; allow dismissal, auto-hide the calm ones.
   function wireToast(toast) {
@@ -80,13 +123,34 @@
   });
 
   // HTMX: mark the answer region busy while loading; announce errors in plain words.
+  function htmxBusy(event, on) {
+    var elt = event.detail.elt;
+    if (!elt || !elt.querySelectorAll) return;
+    elt.querySelectorAll("[data-htmx-busy]").forEach(function (button) {
+      button.classList.toggle("is-busy", on);
+      if (on) button.setAttribute("aria-busy", "true");
+      else button.removeAttribute("aria-busy");
+    });
+  }
   document.body.addEventListener("htmx:beforeRequest", function (event) {
     var target = event.detail.target;
     if (target) target.setAttribute("aria-busy", "true");
+    htmxBusy(event, true);
   });
   document.body.addEventListener("htmx:afterRequest", function (event) {
     var target = event.detail.target;
     if (target) target.removeAttribute("aria-busy");
+    htmxBusy(event, false);
+  });
+  // A form swapped back into an open dialog (a refused upload): keep its project filter and move focus to the
+  // first field with an error, so the inline message is read out where the problem is.
+  document.body.addEventListener("htmx:afterSettle", function (event) {
+    filterAllProjects();
+    var elt = event.detail.elt;
+    var dialog = (elt && elt.isConnected && elt.closest && elt.closest("dialog[open]")) || document.querySelector("dialog[open]");
+    if (!dialog) return;
+    var invalid = dialog.querySelector("[aria-invalid='true']");
+    if (invalid) invalid.focus();
   });
   document.body.addEventListener("htmx:responseError", function (event) {
     var target = event.detail.target;
@@ -111,6 +175,87 @@
       if (out) out.textContent = input.files.length ? input.files[0].name : "";
     }
   });
+
+  // Account settings menu: on the Account page its links are anchors to the sections, so the item for the section in
+  // view carries aria-current (the server marks Profile, the top one). A section reached from the menu stays marked
+  // until the reader scrolls, even when it is too short to reach the top of the screen.
+  var settingsNav = document.querySelector("[data-settings-nav]");
+  var spy = [];
+  if (settingsNav) {
+    settingsNav.querySelectorAll("a[data-section]").forEach(function (link) {
+      if (!link.hash || link.pathname !== window.location.pathname) return;
+      var section = document.getElementById(link.hash.slice(1));
+      if (section) spy.push({ link: link, section: section });
+    });
+  }
+  if (spy.length > 1) {
+    var settingsMenu = settingsNav.querySelector(".settings__menu");
+    var held = null;
+    var markSection = function (entry) {
+      spy.forEach(function (item) {
+        if (item === entry) item.link.setAttribute("aria-current", "page");
+        else item.link.removeAttribute("aria-current");
+      });
+      // In the chip row, bring the marked chip into view without moving the page.
+      if (settingsMenu && settingsMenu.scrollWidth > settingsMenu.clientWidth) {
+        var left = entry.link.parentNode.offsetLeft - settingsMenu.offsetLeft;
+        var right = left + entry.link.offsetWidth;
+        if (left < settingsMenu.scrollLeft || right > settingsMenu.scrollLeft + settingsMenu.clientWidth) {
+          settingsMenu.scrollLeft = Math.max(0, left - 16);
+        }
+      }
+    };
+    var byHash = function () {
+      for (var i = 0; i < spy.length; i++) if ("#" + spy[i].section.id === window.location.hash) return spy[i];
+      return null;
+    };
+    var inView = function () {
+      var line = Math.min(window.innerHeight * 0.35, 260);
+      var pick = spy[0];
+      spy.forEach(function (item) {
+        if (item.section.getBoundingClientRect().top <= line) pick = item;
+      });
+      var bottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      return bottom ? spy[spy.length - 1] : pick;
+    };
+    var queued = false;
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (held || queued) return;
+        queued = true;
+        window.requestAnimationFrame(function () {
+          queued = false;
+          markSection(inView());
+        });
+      },
+      { passive: true }
+    );
+    // The reader's own scrolling releases a section chosen from the menu.
+    ["wheel", "touchstart", "keydown"].forEach(function (name) {
+      window.addEventListener(
+        name,
+        function (event) {
+          if (name === "keydown" && event.target.closest && event.target.closest("[data-settings-nav]")) return;
+          held = null;
+        },
+        { passive: true }
+      );
+    });
+    window.addEventListener("hashchange", function () {
+      held = byHash();
+      if (held) markSection(held);
+    });
+    spy.forEach(function (item) {
+      // The same anchor again fires no hashchange.
+      item.link.addEventListener("click", function () {
+        held = item;
+        markSection(item);
+      });
+    });
+    held = byHash();
+    markSection(held || inView());
+  }
 
   // Installable app (ADR-056, Phase 1). The server sets data-sw on <html> only on the customer surface (the portal
   // host or the local /portal/ mount), never in staff preview. The worker caches public static files and the

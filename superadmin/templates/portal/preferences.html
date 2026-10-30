@@ -1,37 +1,39 @@
-{% extends "portal/base.html" %}
+{% extends "portal/settings_base.html" %}
 {% load portal_ui %}
 {% block title %}Notification preferences · Vitalos client portal{% endblock %}
-{% block content %}
-  <p class="crumbs"><a href="{% purl 'notifications' %}">Notifications</a></p>
-  <div class="page-head"><div><h1>Notification preferences</h1><p class="lede">Choose what Vitalos emails you about, and what your devices notify you about. In-app notifications always appear here. Only members of your organisation are notified.</p></div></div>
-  {% if preview %}
-    <p class="notice">Preview is read-only.</p>
-  {% else %}
-    <form class="card prefs" method="post" novalidate data-testid="preferences-form">
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-        <div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
-      {% endif %}
-      <div class="prefs__channels">
-        <fieldset class="prefs__channel">
-          <legend>Email</legend>
-          {% for field in form.email_fields %}
-            <div class="field field--check"><label for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}</span></label></div>
-          {% endfor %}
-        </fieldset>
-        <fieldset class="prefs__channel" aria-describedby="push-prefs-help" data-testid="push-preferences">
-          <legend>Notifications on your devices</legend>
-          {% for field in form.push_fields %}
-            <div class="field field--check"><label for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}</span></label></div>
-          {% endfor %}
-          <p class="help" id="push-prefs-help">
-            {% if not push_available %}Notifications on devices aren't available yet. These choices apply once they are.
-            {% elif push_devices %}These apply to {{ push_devices }} device{{ push_devices|pluralize }} where you turned notifications on. A notification says only what kind of thing happened, never names or details.
-            {% else %}Turn notifications on for a device from <a href="{% purl 'account' %}#push-title">your account</a>. A notification says only what kind of thing happened, never names or details.{% endif %}
-          </p>
-        </fieldset>
-      </div>
-      <button class="btn" type="submit">Save preferences</button>
-    </form>
-  {% endif %}
+{% block settings %}
+  <section class="card" id="preferences" aria-labelledby="prefs-title" data-testid="settings-preferences">
+    <h2 id="prefs-title">Notification preferences</h2>
+    <p class="settings__intro">Choose what Vitalos emails you about, and what your devices notify you about. Everything also appears under <a href="{% purl 'notifications' %}">Notifications</a> in the portal. Only members of your organisation are notified.</p>
+    {% if preview %}
+      <p class="notice">Preview is read-only.</p>
+    {% else %}
+      <form class="prefs" method="post" novalidate data-testid="preferences-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        {% endif %}
+        <div class="prefs__channels">
+          <fieldset class="prefs__channel">
+            <legend>Email</legend>
+            {% for field in form.email_fields %}
+              <div class="field field--check"><label for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}</span></label></div>
+            {% endfor %}
+          </fieldset>
+          <fieldset class="prefs__channel" aria-describedby="push-prefs-help" data-testid="push-preferences">
+            <legend>Notifications on your devices</legend>
+            {% for field in form.push_fields %}
+              <div class="field field--check"><label for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}</span></label></div>
+            {% endfor %}
+            <p class="help" id="push-prefs-help">
+              {% if not push_available %}Notifications on devices aren't available yet. These choices apply once they are.
+              {% elif push_devices %}These apply to {{ push_devices }} device{{ push_devices|pluralize }} where you turned notifications on. A notification says only what kind of thing happened, never names or details.
+              {% else %}Turn notifications on for a device from <a href="{% purl 'account' %}#device">Notifications on this device</a>. A notification says only what kind of thing happened, never names or details.{% endif %}
+            </p>
+          </fieldset>
+        </div>
+        <button class="btn" type="submit">Save preferences</button>
+      </form>
+    {% endif %}
+  </section>
 {% endblock %}
