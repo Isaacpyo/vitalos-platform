@@ -13,9 +13,14 @@ NAMES = sorted(path.name.removesuffix(".input.json") for path in FIXTURES.glob("
 
 
 def test_fixtures_exist():
-    assert {"all-blocks", "hostile-and-missing", "internal-notice", "new-blocks", "correspondence", "links"} <= set(
-        NAMES
-    )
+    assert {
+        "all-blocks",
+        "hostile-and-missing",
+        "internal-notice",
+        "new-blocks",
+        "correspondence",
+        "links",
+    } <= set(NAMES)
 
 
 @pytest.mark.parametrize("name", NAMES)

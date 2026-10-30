@@ -188,9 +188,7 @@ def _code_entries() -> list[dict]:
         get_role_display=lambda: "Contributor",
     )
     subject, doc = invitation_email(member, "https://portal.vitalos.co.uk/invitation/EXAMPLE-TOKEN/")
-    entries.append(
-        _entry("portal-invitation", "Client portal invitation", "portal", subject, render(doc))
-    )
+    entries.append(_entry("portal-invitation", "Client portal invitation", "portal", subject, render(doc)))
 
     applications = [
         SimpleNamespace(pk=uuid.uuid4(), name="Alex Example", created_at=now, duplicate_of_id=None),
