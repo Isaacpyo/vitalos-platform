@@ -7,9 +7,9 @@
 #   superadmin/deploy/azure/deploy.sh --dry-run   # print the plan and expected cost; calls nothing
 #   superadmin/deploy/azure/deploy.sh             # deploy (normally run by the "Super Admin deploy" workflow)
 #
-# Idempotent and resumable: existing resources are updated, never deleted, and the Django secret key
-# and bootstrap password are generated once and then kept. Secret values are never printed (and are
-# registered with the GitHub Actions log masker when running in Actions).
+# Idempotent and resumable: existing resources are updated, never deleted, and the Django secret key,
+# the bootstrap password and the client portal's push (VAPID) key are generated once and then kept. Secret
+# values are never printed (and are registered with the GitHub Actions log masker when running in Actions).
 #
 # Prerequisites (DEPLOY.md §2.1, done once by the subscription Owner): resource group, consumption-only
 # Container Apps environment and Log Analytics workspace already exist; the deploying identity has
@@ -21,7 +21,8 @@
 #                              (a public ghcr.io package: pulled anonymously, no registry credentials)
 #   DATABASE_URL               Supabase session pooler (port 5432) or Neon pooled connection string,
 #                              with sslmode=require
-#   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD   used only when the app has none yet
+#   NEW_DJANGO_SECRET_KEY, NEW_BOOTSTRAP_ADMIN_PASSWORD, NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY
+#                              used only when the app has none yet
 # Optional: CLOUDFLARE_API_TOKEN (zone-scoped DNS:Edit; without it the DNS records are printed and the
 # run stops before binding the domain), DNS_OVERWRITE=1, SENTRY_DSN.
 # Required: BOOTSTRAP_ADMIN_EMAIL (bootstrap admin sign-in; a secret so it stays out of public logs).
@@ -107,7 +108,7 @@ Will create or update:
        external ingress :8000; min replicas 0, max replicas 1 (scale to zero); $CPU vCPU / $MEMORY
        scale rule: HTTP concurrency $HTTP_CONCURRENCY
   3. Container Apps secrets on both (values never printed):
-       django-secret-key, bootstrap-admin-password (generated once, then kept),
+       django-secret-key, bootstrap-admin-password, portal-push-vapid-private-key (generated once, then kept),
        database-url (Supabase session pooler or Neon pooled, from the GitHub production environment);
        no registry credentials
        Optional, added only when the workflow provides a non-empty value (an existing secret is never
@@ -237,18 +238,25 @@ resolve() {  # target variable, secret name, newly generated fallback (assigned,
 }
 SECRET_KEY=""
 ADMIN_PASSWORD=""
+PUSH_KEY=""
 resolve SECRET_KEY django-secret-key "${NEW_DJANGO_SECRET_KEY:-}"
 resolve ADMIN_PASSWORD bootstrap-admin-password "${NEW_BOOTSTRAP_ADMIN_PASSWORD:-}"
+# Client portal push (ADR-056 Phase 2): the VAPID private key (raw P-256 scalar, base64url). Generated once by the
+# workflow and kept; deleting the secret (README "Rotate the push key") makes the next deploy generate a new one.
+resolve PUSH_KEY portal-push-vapid-private-key "${NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY:-}"
 [ "${#SECRET_KEY}" -ge 50 ] || die "django-secret-key must be at least 50 characters"
+[[ "$PUSH_KEY" =~ ^[A-Za-z0-9_-]{43}$ ]] || die "portal-push-vapid-private-key must be a base64url P-256 private key (43 characters)"
 
 SECRETS=(
   "django-secret-key=$SECRET_KEY"
   "database-url=$DATABASE_URL"
   "bootstrap-admin-password=$ADMIN_PASSWORD"
+  "portal-push-vapid-private-key=$PUSH_KEY"
 )
 ENV_VARS=(
   DJANGO_SETTINGS_MODULE=config.settings.prod
   DJANGO_SECRET_KEY=secretref:django-secret-key
+  PORTAL_PUSH_VAPID_PRIVATE_KEY=secretref:portal-push-vapid-private-key
   DATABASE_URL=secretref:database-url
   "ALLOWED_HOSTS=$DOMAIN,$PORTAL_HOST_NAME"
   "CSRF_TRUSTED_ORIGINS=https://$DOMAIN,https://$PORTAL_HOST_NAME"

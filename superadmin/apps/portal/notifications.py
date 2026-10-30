@@ -8,6 +8,9 @@
   action: it is recorded and retried a bounded number of times by ``portal_send_pending``. A sent delivery is
   terminal, so a retry can never duplicate it.
 * Titles and bodies are composed by the services from customer-visible fields only; this module adds nothing.
+* Push to the member's devices (ADR-056, Phase 2; ``push.py``) follows the same rules: queued per device when the
+  member's push preference for the kind allows it, sent after the action commits, retried by ``send_pending``,
+  and never able to break the email path or the action. A push carries only a generic line per kind.
 """
 
 from __future__ import annotations
@@ -30,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 RETRY_BACKOFF_MINUTES = 5
 
-# The demo seed command (and nothing else) turns email off for its synthetic people.
+# The demo seed command (and nothing else) turns email (and push) off for its synthetic people.
 _email_suppressed: ContextVar[bool] = ContextVar("portal_email_suppressed", default=False)
 
 
@@ -62,12 +65,14 @@ def notify(
     exclude_user=None,
     send_email: bool = True,
 ) -> int:
-    """Notify live members (optionally a subset, at least ``min_level``). Returns notifications created."""
+    """Notify live members (optionally a subset, at least ``min_level``). Returns notifications created.
+    ``send_email`` covers the outside channels: email and push to the member's devices."""
     live = {m.user_id: m for m in selectors.live_member_users(organisation)}
     if recipients is not None:
         allowed = {m.user_id for m in recipients}
         live = {uid: m for uid, m in live.items() if uid in allowed}
     created = 0
+    pushes: list[int] = []
     for user_id, member in live.items():
         if member.level < min_level or (exclude_user is not None and user_id == exclude_user.pk):
             continue
@@ -86,7 +91,10 @@ def notify(
         except IntegrityError:
             continue  # already notified for this event
         created += 1
-        if send_email and not _email_suppressed.get() and preferences(member.user).wants_email(kind):
+        if not send_email or _email_suppressed.get():
+            continue
+        pref = preferences(member.user)
+        if pref.wants_email(kind):
             delivery = EmailDelivery.objects.create(
                 notification=note,
                 organisation=organisation,
@@ -96,7 +104,29 @@ def notify(
                 subject=f"{organisation.name}: {title}"[:200],
             )
             deliver(delivery.pk)
+        pushes += _queue_push(note, pref)
+    _schedule_push(pushes)
     return created
+
+
+def _queue_push(note: Notification, pref: NotificationPreference) -> list[int]:
+    from . import push
+
+    try:
+        with transaction.atomic():
+            return push.queue(note, pref)
+    except Exception:  # noqa: BLE001 - push must never break the notification, the email or the action
+        logger.exception("portal push queueing failed", extra={"notification": note.pk})
+        return []
+
+
+def _schedule_push(ids: list[int]) -> None:
+    from . import push
+
+    try:
+        push.schedule(ids)
+    except Exception:  # noqa: BLE001 - the queued rows stay for send_pending
+        logger.exception("portal push scheduling failed")
 
 
 def _email_doc(note: Notification, org_name: str) -> dict:
@@ -184,7 +214,20 @@ def deliver(delivery_id: int, *, manual: bool = False) -> EmailDelivery | None:
 
 
 def send_pending(limit: int = 100) -> dict:
-    """Bounded retry of queued and failed deliveries that are due and under the attempt cap."""
+    """Bounded retry of queued and failed deliveries that are due and under the attempt cap: email, and, when push
+    is configured, pushes too (their counts under ``push``)."""
+    result = _send_pending_email(limit)
+    from . import push
+
+    if push.enabled():
+        try:
+            result["push"] = push.send_pending(limit)
+        except Exception:  # noqa: BLE001 - a push problem must not hide the email result
+            logger.exception("portal push retry failed")
+    return result
+
+
+def _send_pending_email(limit: int) -> dict:
     now = timezone.now()
     due = list(
         EmailDelivery.objects.filter(

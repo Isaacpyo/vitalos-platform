@@ -152,6 +152,22 @@ class PreferencesForm(PortalFormMixin, forms.Form):
     email_questions = forms.BooleanField(label="Questions for me", required=False)
     email_deliverables = forms.BooleanField(label="New deliverables", required=False)
     email_approvals = forms.BooleanField(label="Approval requests", required=False)
+    # Push to the member's devices (ADR-056, Phase 2): the same groups as email.
+    push_updates = forms.BooleanField(label="Published updates, messages and decisions", required=False)
+    push_questions = forms.BooleanField(label="Questions for me", required=False)
+    push_deliverables = forms.BooleanField(label="New deliverables", required=False)
+    push_approvals = forms.BooleanField(label="Approval requests", required=False)
+
+    def channel(self, prefix: str):
+        return [self[name] for name in self.fields if name.startswith(prefix)]
+
+    @property
+    def email_fields(self):
+        return self.channel("email_")
+
+    @property
+    def push_fields(self):
+        return self.channel("push_")
 
 
 # ---------------------------------------------------------------------------------------------------------------------

@@ -510,3 +510,13 @@ PORTAL_FILES_STORAGE_ENABLED = bool(PORTAL_FILES_BUCKET) or APP_ENVIRONMENT == "
 # Demonstration only: replay hand-written, labelled AI answers through the gateway's simulated provider so the
 # citation UI can be shown without a live model. Never on in production (prod.py forces it off).
 PORTAL_AI_REPLAY = env.bool("PORTAL_AI_REPLAY", default=False)
+# Push notifications for the installable portal (ADR-056, Phase 2; apps/portal/push.py). The VAPID private key is
+# a SECRET: the raw 32-byte P-256 private scalar, base64url without padding (43 characters). The production deploy
+# generates it once and keeps it (Container Apps secret portal-push-vapid-private-key); the public key is derived
+# from it at runtime. Empty: push is off everywhere and the Account page says so.
+PORTAL_PUSH_VAPID_PRIVATE_KEY = env("PORTAL_PUSH_VAPID_PRIVATE_KEY", default="").strip()
+# The VAPID "sub" claim: how a push service can reach the sender (RFC 8292).
+PORTAL_PUSH_SUBJECT = env("PORTAL_PUSH_SUBJECT", default="mailto:support@vitalos.co.uk").strip()
+# Local development and tests only: exact origins (scheme://host:port) of a fake push server on this machine that
+# are accepted besides the push-service allowlist. Production refuses any value (prod.py).
+PORTAL_PUSH_DEV_ORIGINS = env.list("PORTAL_PUSH_DEV_ORIGINS", default=[])

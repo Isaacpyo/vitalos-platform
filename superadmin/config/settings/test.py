@@ -21,6 +21,10 @@ STORAGES = {
 PORTAL_FILES_STORAGE_ENABLED = True
 PORTAL_HOST = ""  # tests that need a portal host override the setting
 PORTAL_ENABLED = True
+# Push is off unless a test generates a key; no fake push server unless a test starts one.
+PORTAL_PUSH_VAPID_PRIVATE_KEY = ""
+PORTAL_PUSH_SUBJECT = "mailto:support@vitalos.co.uk"
+PORTAL_PUSH_DEV_ORIGINS = []
 ATTACHMENTS_STORAGE_ENABLED = True
 CONTENT_MEDIA_STORAGE_ENABLED = True
 CAREERS_CV_STORAGE_ENABLED = True

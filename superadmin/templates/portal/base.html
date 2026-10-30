@@ -1,5 +1,5 @@
 {% load static django_htmx portal_ui %}{% portal_pwa as pwa %}<!doctype html>
-<html lang="en-GB"{% if pwa %} data-sw="{{ pwa.sw }}" data-sw-scope="{{ pwa.scope }}"{% endif %}>
+<html lang="en-GB"{% if pwa %} data-sw="{{ pwa.sw }}" data-sw-scope="{{ pwa.scope }}"{% if pwa.push_subscribe %} data-push-sync="{{ pwa.push_subscribe }}"{% endif %}{% endif %}>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1{% if pwa %}, viewport-fit=cover{% endif %}">
@@ -45,7 +45,7 @@
           </form>
           <a href="{% purl 'account' %}" {% if nav == 'account' %}aria-current="page"{% endif %}>Account</a>
           {% if not preview %}
-            <form method="post" action="{% purl 'logout' %}">{% csrf_token %}<button type="submit" data-no-busy>Sign out</button></form>
+            <form method="post" action="{% purl 'logout' %}" data-sign-out>{% csrf_token %}{% if pwa %}<input type="hidden" name="push_endpoint" value="" data-push-endpoint>{% endif %}<button type="submit" data-no-busy>Sign out</button></form>
           {% endif %}
         </nav>
       </div>

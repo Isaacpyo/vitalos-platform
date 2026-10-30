@@ -362,9 +362,14 @@ jobs:
           # Used only if the app has no such secret yet; existing values are always kept.
           NEW_DJANGO_SECRET_KEY="$(openssl rand -base64 64 | tr -d '\n')"
           NEW_BOOTSTRAP_ADMIN_PASSWORD="$(openssl rand -base64 30 | tr -d '\n/+=')"
+          # Client portal push (ADR-056 Phase 2): a P-256 VAPID private key as its raw 32-byte scalar, base64url
+          # (the SEC1 DER private key starts at byte 8). The public key is derived by the app.
+          NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY="$(openssl ecparam -name prime256v1 -genkey -noout | openssl ec -outform DER 2>/dev/null | tail -c +8 | head -c 32 | base64 -w0 | tr '+/' '-_' | tr -d '=')"
           echo "::add-mask::$NEW_DJANGO_SECRET_KEY"
           echo "::add-mask::$NEW_BOOTSTRAP_ADMIN_PASSWORD"
-          export NEW_DJANGO_SECRET_KEY NEW_BOOTSTRAP_ADMIN_PASSWORD
+          echo "::add-mask::$NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY"
+          [ "${#NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY}" -eq 43 ] || { echo "::error::could not generate the portal push key"; exit 1; }
+          export NEW_DJANGO_SECRET_KEY NEW_BOOTSTRAP_ADMIN_PASSWORD NEW_PORTAL_PUSH_VAPID_PRIVATE_KEY
           superadmin/deploy/azure/deploy.sh
       - name: Post-deploy check (live health and served image)
         env:
