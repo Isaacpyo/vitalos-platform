@@ -75,6 +75,7 @@ Alerts: the existing Super Admin notifications and Sentry (when `SENTRY_DSN` is 
 
 - Website enquiries: 24 months after last contact (existing retention job).
 - Opportunities: contact details anonymised 24 months after closing — `python manage.py aidata_retention` (dry run) / `--apply`. Not scheduled yet; schedule it as a documented retention job when the owner confirms the period.
+- Client portal delivery records: sent ones 90 days after sending, failed or cancelled ones after 180 days, turned-off push devices after 90 days; never queued or retrying ones, notifications or audit. Daily in the content tick, a dry run until `RETENTION_ENFORCE=true`; `python manage.py portal_delivery_retention` prints the counts. Policy: [`portal-delivery-retention.md`](portal-delivery-retention.md).
 - Demonstrator runs hold synthetic text only. The new-run form requires confirming the data is synthetic or explicitly authorised. Client data must not be pasted into the demonstrator.
 
 ## 7. Costs at launch

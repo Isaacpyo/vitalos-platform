@@ -63,7 +63,7 @@ from django.utils import timezone
 from apps.audit.services import record
 
 from . import selectors
-from .models import Membership, Notification, PushDelivery, PushSubscription
+from .models import Membership, Notification, NotificationPreference, PushDelivery, PushSubscription
 
 logger = logging.getLogger(__name__)
 
@@ -719,6 +719,9 @@ def _refusal(d: PushDelivery, sub: PushSubscription, now) -> str:
         note = d.notification
         if note.user_id != user.pk or selectors.get_membership(user, note.organisation_id) is None:
             return "not_member"
+        pref = NotificationPreference.objects.filter(user_id=user.pk).first()
+        if pref is not None and not pref.wants_push(d.kind):
+            return "preference_off"
     elif d.kind != TEST_KIND or selectors.get_membership(user) is None:
         return "not_member"
     if (now - d.created_at).total_seconds() > TTL_SECONDS:
@@ -740,8 +743,11 @@ def _final_failure(d: PushDelivery, sub: PushSubscription, category: str) -> Non
         _disable(sub, PushSubscription.Reason.FAILING)
 
 
-def deliver(delivery_id: int) -> PushDelivery | None:
-    """Attempt one push. Idempotent (a sent delivery is returned untouched) and never raises."""
+def deliver(delivery_id: int, *, manual: bool = False) -> PushDelivery | None:
+    """Attempt one push. Idempotent (a sent or cancelled delivery is returned untouched) and never raises.
+
+    ``manual`` (staff "Retry now") may try once more after the automatic attempts ran out; every re-check in
+    ``_refusal`` still applies (membership, preference, device state, key, one-day expiry, allowlist)."""
     try:
         with transaction.atomic():
             d = (
@@ -749,7 +755,9 @@ def deliver(delivery_id: int) -> PushDelivery | None:
                 .select_related("subscription__member__user", "notification")
                 .get(pk=delivery_id)
             )
-            if d.status == PushDelivery.Status.SENT or d.attempts >= PushDelivery.MAX_ATTEMPTS:
+            if d.status == PushDelivery.Status.SENT or d.last_error == PushDelivery.CANCELLED_ERROR:
+                return d
+            if not manual and d.attempts >= PushDelivery.MAX_ATTEMPTS:
                 return d
             sub = d.subscription
             now = timezone.now()

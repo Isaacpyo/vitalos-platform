@@ -56,4 +56,8 @@ PORTAL_ACTIONS = {
     "portal.push_test": "Sent a test portal notification to their own device",
     "portal.push_renewed": "A browser renewed its portal notification subscription",
     "portal.push_disabled": "A push service ended a portal notification subscription",
+    "portal.delivery_retried": "Retried a portal notification delivery",
+    "portal.delivery_cancelled": "Cancelled a portal notification delivery",
+    "portal.delivery_bulk_retried": "Retried failed portal notification deliveries in bulk",
+    "portal.delivery_retention": "Deleted old portal delivery records under the retention policy",
 }

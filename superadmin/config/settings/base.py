@@ -519,3 +519,8 @@ PORTAL_PUSH_SUBJECT = env("PORTAL_PUSH_SUBJECT", default="mailto:support@vitalos
 # Local development and tests only: exact origins (scheme://host:port) of a fake push server on this machine that
 # are accepted besides the push-service allowlist. Production refuses any value (prod.py).
 PORTAL_PUSH_DEV_ORIGINS = env.list("PORTAL_PUSH_DEV_ORIGINS", default=[])
+# Retention of portal delivery records (ADR-056, "Delivery status and retention"; apps/portal/retention.py), run
+# daily by the content tick and a dry run until RETENTION_ENFORCE=true. Days; anything below 7 counts as 7.
+PORTAL_DELIVERY_SENT_RETENTION_DAYS = env.int("PORTAL_DELIVERY_SENT_RETENTION_DAYS", default=90)
+PORTAL_DELIVERY_FAILED_RETENTION_DAYS = env.int("PORTAL_DELIVERY_FAILED_RETENTION_DAYS", default=180)
+PORTAL_PUSH_DISABLED_RETENTION_DAYS = env.int("PORTAL_PUSH_DISABLED_RETENTION_DAYS", default=90)

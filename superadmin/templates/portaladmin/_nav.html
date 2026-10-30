@@ -3,7 +3,7 @@
   <nav aria-label="Client portal sections" class="flex gap-1 overflow-x-auto overflow-y-hidden">
     {% url 'portaladmin:home' as home_url %}{% url 'portaladmin:deliveries' as deliveries_url %}
     <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'home' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ home_url }}" {% if section == 'home' %}aria-current="page"{% endif %}>Overview</a>
-    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'deliveries' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ deliveries_url }}" {% if section == 'deliveries' %}aria-current="page"{% endif %}>Email delivery</a>
+    <a class="-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium {% if section == 'deliveries' %}border-cobalt-600 text-slate-900 dark:text-white{% else %}border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white{% endif %}" href="{{ deliveries_url }}" {% if section == 'deliveries' %}aria-current="page"{% endif %}>Notification deliveries</a>
     <a class="-mb-px whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" href="/ai-data/pipeline/">AI &amp; Data pipeline</a>
   </nav>
 </div>

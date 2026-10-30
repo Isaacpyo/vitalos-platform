@@ -131,6 +131,14 @@ def admin_url(name, *args):
     return reverse(f"portaladmin:{name}", args=args)
 
 
+@register.filter
+def admin_badge(tone):
+    """Super Admin badge classes for a tone (slate, green, amber, red, blue...), for the staff delivery pages."""
+    from apps.core.templatetags.ui import _BADGE, _STYLES
+
+    return _BADGE + _STYLES.get(str(tone), _STYLES["slate"])
+
+
 @register.simple_tag
 def portal_panel(opportunity):
     """Staff-only summary for the opportunity workspace: the linked challenge and what is awaiting the customer."""

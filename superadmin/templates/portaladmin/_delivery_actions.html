@@ -1,0 +1,7 @@
+{# Retry now / Cancel for one delivery. Context: row (deliveries.DeliveryRow), next (where a plain post returns), hx (true on the list: HTMX post, toast and list refresh). #}
+{% if row.can_retry %}{% url 'portaladmin:delivery_retry' row.channel row.pk as retry_url %}
+  <form method="post" action="{{ retry_url }}" class="inline"{% if hx %} hx-post="{{ retry_url }}" hx-swap="none"{% endif %}>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><button type="submit" class="btn btn-secondary btn-sm" data-testid="retry-{{ row.key }}">Retry now<span class="sr-only">: {{ row.channel_label|lower }} to {{ row.member_name }}, queued {{ row.queued_at|date:"j M, H:i" }}</span></button></form>
+{% endif %}
+{% if row.can_cancel %}{% url 'portaladmin:delivery_cancel' row.channel row.pk as cancel_url %}
+  <form method="post" action="{{ cancel_url }}" class="inline"{% if hx %} hx-post="{{ cancel_url }}" hx-swap="none" hx-confirm="It will not be sent, and automatic retries stop. This cannot be undone."{% else %} data-confirm="It will not be sent, and automatic retries stop. This cannot be undone."{% endif %} data-confirm-title="Cancel this delivery?" data-confirm-label="Cancel delivery" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ next }}"><button type="submit" class="btn btn-danger btn-sm" data-testid="cancel-{{ row.key }}">Cancel<span class="sr-only">: {{ row.channel_label|lower }} to {{ row.member_name }}, queued {{ row.queued_at|date:"j M, H:i" }}</span></button></form>
+{% endif %}

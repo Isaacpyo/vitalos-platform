@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load ui portal_ui %}
+{% block title %}{{ row.channel_label }} delivery {{ row.pk }} · Client portal · Vitalos Super Admin{% endblock %}
+{% block content %}
+  <p class="mono-label muted"><a href="{{ back }}" class="hover:underline">Client portal / Notification deliveries</a></p>
+  <div class="mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold">{{ row.kind_label }}</h1>
+      <p class="muted mt-1 text-sm">{{ row.channel_label }} delivery {{ row.pk }} · queued <time datetime="{{ row.queued_at|date:'c' }}">{{ row.queued_at|date:"j M Y, H:i" }}</time></p>
+    </div>
+    <span class="{{ row.state_tone|admin_badge }} mt-1 text-sm" data-testid="delivery-state">{{ row.state_label }}</span>
+  </div>
+  {% include "portaladmin/_nav.html" with section="deliveries" %}
+
+  {% if row.error_label %}
+    <section class="card mt-4 border-l-4 {% if row.state == 'retrying' %}border-l-amber-500{% elif row.state == 'cancelled' %}border-l-slate-400{% else %}border-l-rose-600{% endif %} p-4" aria-labelledby="error-h" data-testid="delivery-error">
+      <h2 id="error-h" class="font-semibold">{{ row.error_label }}</h2>
+      <p class="mt-1 max-w-prose text-sm">{{ row.error_help }}</p>
+      <p class="muted mt-2 text-xs">Recorded category: <code class="font-mono">{{ row.last_error }}</code>{% if row.state == "retrying" and row.due_at %} · next automatic attempt <time datetime="{{ row.due_at|date:'c' }}">{{ row.due_at|date:"j M, H:i" }}</time>{% elif row.state == "failed" and not row.is_refusal %} · no automatic attempts are left{% endif %}</p>
+    </section>
+  {% endif %}
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-3">
+    <section class="card p-5 lg:col-span-2" aria-labelledby="facts-h">
+      <h2 id="facts-h" class="font-semibold">Delivery</h2>
+      <dl class="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2" data-testid="delivery-facts">
+        <div><dt class="muted text-xs">Organisation</dt><dd>{% if item.organisation_url %}<a class="underline" href="{{ item.organisation_url }}">{{ row.organisation_name }}</a>{% else %}{{ row.organisation_name }}{% endif %}</dd></div>
+        <div class="min-w-0"><dt class="muted text-xs">Member</dt><dd>{{ row.member_name }}{% if row.email %}<span class="muted block break-all">{{ row.email }}</span>{% endif %}</dd></div>
+        <div><dt class="muted text-xs">Channel</dt><dd>{{ row.channel_label }}</dd></div>
+        <div><dt class="muted text-xs">Notification</dt><dd>{{ row.kind_label }}</dd></div>
+        {% if row.channel == "email" %}<div class="sm:col-span-2 min-w-0"><dt class="muted text-xs">Subject</dt><dd class="break-words">{{ row.subject }}</dd></div>{% endif %}
+        {% if row.device %}<div><dt class="muted text-xs">Device</dt><dd>{{ row.device }}</dd></div>{% endif %}
+        <div><dt class="muted text-xs">Attempts</dt><dd class="tabular-nums">{{ row.attempts }} of {{ row.max_attempts }} automatic</dd></div>
+        <div><dt class="muted text-xs">Next automatic attempt</dt><dd>{% if row.due_at %}<time datetime="{{ row.due_at|date:'c' }}">{{ row.due_at|date:"j M Y, H:i" }}</time>{% else %}None{% endif %}</dd></div>
+        <div><dt class="muted text-xs">Sent</dt><dd>{% if row.sent_at %}<time datetime="{{ row.sent_at|date:'c' }}">{{ row.sent_at|date:"j M Y, H:i" }}</time>{% else %}Not sent{% endif %}</dd></div>
+      </dl>
+      {% if row.can_retry or row.can_cancel %}
+        <div class="mt-4 flex flex-wrap gap-2">{% include "portaladmin/_delivery_actions.html" with next=request.get_full_path %}</div>
+        <p class="muted mt-2 text-xs">Retry now re-checks first: the member must still belong to the organisation and want this kind of notification{% if row.channel == "push" %}, the device must still be on with the current server key and an allowed address, and a push older than a day is not sent{% endif %}.</p>
+      {% elif row.state == "sent" %}
+        <p class="muted mt-4 text-xs">Sent deliveries are never sent again.</p>
+      {% endif %}
+    </section>
+
+    <div class="space-y-4">
+      <section class="card p-5" aria-labelledby="record-h">
+        <h2 id="record-h" class="font-semibold">What it was about</h2>
+        {% if item.record_url %}
+          <p class="mt-3"><a class="btn btn-secondary btn-sm" href="{{ item.record_url }}" data-testid="delivery-record">{{ item.record_label }} {% icon "arrow-right" "h-4 w-4" %}</a></p>
+        {% else %}
+          <p class="muted mt-2 text-sm" data-testid="delivery-record-note">{{ item.record_note }}</p>
+        {% endif %}
+      </section>
+      {% if item.device %}
+        <section class="card p-5" aria-labelledby="device-h" data-testid="delivery-device">
+          <h2 id="device-h" class="font-semibold">The device</h2>
+          <p class="mt-2 text-sm">{{ item.device.label }}<span class="muted"> · added {{ item.device.added|date:"j M Y" }}</span></p>
+          {% if item.device.active %}
+            <p class="mt-2"><span class="{{ 'green'|admin_badge }}">On</span></p>
+          {% else %}
+            <p class="mt-2"><span class="{{ 'slate'|admin_badge }}">Turned off</span> <span class="text-sm">{{ item.device.disabled_at|date:"j M Y, H:i" }}</span></p>
+            {% if item.device.reason %}<p class="mt-1 text-sm" data-testid="device-reason">{{ item.device.reason }}.</p>{% endif %}
+          {% endif %}
+          <p class="muted mt-2 text-xs">Only the member can turn a device on, from Account in the portal.</p>
+        </section>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="card mt-4 p-5" aria-labelledby="history-h" data-testid="delivery-history">
+    <h2 id="history-h" class="font-semibold">History</h2>
+    <p class="muted mt-1 text-xs">{% if row.channel == "email" %}Each failed email attempt is recorded, with every staff retry and cancellation.{% else %}Each push attempt is not recorded separately: the fields above show the latest one. Staff retries and cancellations are recorded, and so are changes to the device.{% endif %}</p>
+    <ol class="mt-3 space-y-2 text-sm">
+      {% for e in item.history %}
+        <li><time class="muted tabular-nums" datetime="{{ e.at|date:'c' }}">{{ e.at|date:"j M, H:i" }}</time> · <span class="font-medium">{{ e.action }}</span>{% if e.summary %}: {{ e.summary }}{% endif %}{% if e.by %} <span class="muted">by {{ e.by }}</span>{% endif %}</li>
+      {% empty %}
+        <li class="muted">Nothing recorded for this delivery beyond the fields above.</li>
+      {% endfor %}
+    </ol>
+    {% if item.device %}
+      <h3 class="mt-4 text-xs font-medium text-slate-600 dark:text-slate-300">The device</h3>
+      <ol class="mt-2 space-y-2 text-sm">
+        {% for e in item.device.history %}
+          <li><time class="muted tabular-nums" datetime="{{ e.at|date:'c' }}">{{ e.at|date:"j M, H:i" }}</time> · <span class="font-medium">{{ e.action }}</span>{% if e.summary %}: {{ e.summary }}{% endif %}</li>
+        {% empty %}
+          <li class="muted">Nothing recorded.</li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </section>
+{% endblock %}

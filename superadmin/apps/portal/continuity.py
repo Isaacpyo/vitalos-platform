@@ -464,9 +464,11 @@ def _blocked(challenge: Challenge, today) -> list[str]:
         due_date__lt=today,
     ):
         blocked.append(f"Overdue customer answer: {q.question}")
-    failed = EmailDelivery.objects.filter(
-        organisation=challenge.organisation, status=EmailDelivery.Status.FAILED
-    ).count()
+    failed = (
+        EmailDelivery.objects.filter(organisation=challenge.organisation, status=EmailDelivery.Status.FAILED)
+        .exclude(last_error=EmailDelivery.CANCELLED_ERROR)
+        .count()
+    )
     if failed:
         blocked.append(f"{failed} portal email(s) failed to send")
     return blocked
@@ -636,6 +638,7 @@ def queue_items(today=None, now=None) -> PortalQueue:
     for d in (
         EmailDelivery.objects.select_related("organisation")
         .filter(status=EmailDelivery.Status.FAILED)
+        .exclude(last_error=EmailDelivery.CANCELLED_ERROR)  # staff cancelled it on purpose
         .order_by("-created_at")
     ):
         q.blocked.append(

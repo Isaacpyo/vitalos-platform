@@ -1,7 +1,7 @@
 """The content tick (ADR-042): promote due scheduled posts, close expired roles, deliver pending sync
 events and held-back application alerts, send one paced outreach email when one is due, reconcile Stripe
-payments (billing, at most every 10 minutes, only with a key), and once a day run retention and purge
-orphaned uploads.
+payments (billing, at most every 10 minutes, only with a key), and once a day run retention (recruitment and
+client portal delivery records) and purge orphaned uploads.
 
 Run by ``manage.py content_tick`` (``--loop`` every 60 s for local development), by the signed
 ``POST /api/content/v1/tick`` and opportunistically, at most once a minute, in a background thread.
@@ -133,8 +133,14 @@ def run(now=None) -> dict:
 def run_daily(now) -> dict:
     """Retention and the upload purge, each on its own: one failing never skips the other."""
     from apps.careers import services as careers_services
+    from apps.portal import retention as portal_retention
 
-    steps = {"retention": careers_services.run_retention, "orphans": careers_services.purge_orphan_uploads}
+    steps = {
+        "retention": careers_services.run_retention,
+        "orphans": careers_services.purge_orphan_uploads,
+        # Client portal delivery records (ADR-056); a dry run until RETENTION_ENFORCE=true, like "retention".
+        "portal_deliveries": portal_retention.run,
+    }
     result = {}
     for name, step in steps.items():
         try:
