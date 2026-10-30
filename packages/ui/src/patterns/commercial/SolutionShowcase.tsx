@@ -227,6 +227,8 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
                 "transition-[opacity,scale,rotate] duration-(--duration-diagram) ease-(--ease-emphasis)",
                 on ? "scale-100 rotate-0 opacity-100" : "scale-90 -rotate-6 opacity-0",
               );
+              // Lazy, the first image too: the panel is hidden below lg (an eager image still downloads
+              // there, competing with the hero photograph, the LCP element) and below the fold from lg.
               return item.image ? (
                 <img
                   key={item.href}
@@ -236,7 +238,7 @@ function SolutionShowcaseInner({ items, headingLevel = 3, className }: SolutionS
                   width={item.image.width}
                   height={item.image.height}
                   alt=""
-                  loading={index === 0 ? "eager" : "lazy"}
+                  loading="lazy"
                   decoding="async"
                   className={look}
                 />
