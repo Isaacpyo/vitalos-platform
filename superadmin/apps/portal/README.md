@@ -76,6 +76,14 @@ node tooling/scripts/generate-portal-icons.mjs
 3. In the Network panel, choose Offline, then open any portal page, including one you visited before. You should get the offline page, never a cached copy of the workspace.
 4. Automated checks are in `tests/test_portal_pwa.py`. If the caching rules change but no static file does, bump `SW_REVISION` in `pwa.py`.
 
+### Remove the worker (rollback)
+
+Reverting the change makes `sw.js` answer 404. Browsers then stop updating the worker, but an installed worker keeps
+serving the offline page when the network fails. It only ever holds public files, so this is safe, but to remove it
+everywhere, deploy a `sw.js` that unregisters itself:
+`self.addEventListener("install", () => self.skipWaiting()); self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((k) => Promise.all(k.map((n) => caches.delete(n)))).then(() => self.registration.unregister())));`
+Keep it in place until every customer has opened the portal at least once.
+
 ## Operator workflow (no duplicate entry)
 
 1. Create the organisation, invite members (roles: viewer, contributor, approver, authorised signatory).
