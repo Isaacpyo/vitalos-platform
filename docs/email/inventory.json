@@ -1682,7 +1682,7 @@
     "notes": "M1 captures only; the portal email is a mock. In scope once it sends from workforce.vitalos.co.uk."
   },
   {
-    "repo": "autofix",
+    "repo": "pitline",
     "file": "src/lib/email/resend.ts and callers",
     "email": "Booking confirmations, staff booking alerts, enquiry receipts, invoices, MFA recovery",
     "trigger": "Bookings, enquiries, invoices",
@@ -1695,7 +1695,7 @@
     "state_after": "own-design (unchanged)",
     "in_scope": false,
     "defects": [],
-    "notes": "Inherited from the SOB Autofix fork; nothing sends from a vitalos.co.uk address yet. Garage-customer email will be under each garage's brand (out of scope); platform email to garages from autofix.vitalos.co.uk must use the vendored layout when BUILD-PLAN P2.10 builds it."
+    "notes": "Inherited from the SOB Autofix fork; nothing sends from a vitalos.co.uk address yet. Garage-customer email will be under each garage's brand (out of scope); platform email to garages from pitline.co.uk must use the vendored layout when BUILD-PLAN P2.10 builds it."
   },
   {
     "repo": "answerd",
