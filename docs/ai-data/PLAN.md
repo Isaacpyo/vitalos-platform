@@ -101,10 +101,20 @@ _Workspace update, 28 Oct 2026:_ the admin is now an AI-assisted delivery worksp
   - `/billing/` redirects to sign-in.
   - `GET /pay/checkout/` and `GET /api/webhooks/stripe/` return 405.
   - A POST with an unknown invoice returns 303 to `vitalos.co.uk/pay?...&error=not-found`.
-- **AC-14 (live provider) passed with the owner's Vitalos key; the CI secret still has to be replaced.**
-  - **29 Oct 2026, 23:14 UTC:** the lead ran the same live evaluation through the `apps.aicore` gateway, with the key the owner provided for AI & Data (`claude-sonnet-5-5`, effort `low`, cap 40 calls). Results: 7/7 model-path calls answered (HTTP 200), model-path field accuracy 100%, unsafe accepts 0, estimated £0.0028 per model-path case (threshold £0.01), about £0.02 in total. The rules-only gate passed. The data is synthetic (dataset v1).
-  - **CI run 40968966484** used the `AI_DATA_LLM_API_KEY` then stored in the `production` environment. All 7 calls were refused with HTTP 400, so that stored key is not usable. Owner step: replace the secret with the working key, then re-run the workflow with `confirm=LIVE` so the evidence comes from CI too.
+- **AC-14 (live provider) passes, in CI too.**
+  - **Owner's key:** after the owner replaced `AI_DATA_LLM_API_KEY` in the `production` environment, live evaluation run 40972825725 (29 Oct 2026, 23:24 UTC) passed AC-14. Results: 7/7 model-path calls answered, model-path field accuracy 100%, unsafe accepts 0, about £0.0028 per model-path case (threshold £0.01). The data is synthetic (dataset v1).
+  - **Earlier runs:** a lead run through the gateway gave the same result. Run 40968966484 failed with HTTP 400 on the previously stored key. Run 40735552845 had no key at all.
+  - **Spend:** about £0.04 across both passing runs.
   - **Provider change:** the provider now keeps the API's error type and message, so a refused call names its cause.
+  - **Owner step:** turn on "Live model path" (and "Website brief assist" if wanted) in Super Admin › AI settings, and record the spend in AI & Data › Budget.
+- **Production settings (deploy run 40974031499, 29 Oct 2026):** these are now set:
+  - `AI_DATA_LLM_API_KEY`;
+  - `BILLING_STRIPE_SECRET_KEY` (Stripe **test mode**, Vitalos account);
+  - `BILLING_STRIPE_WEBHOOK_SECRET`, for the test-mode endpoint `https://admin.vitalos.co.uk/api/webhooks/stripe/` (created 29 Oct with `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`). An unsigned POST gets 400 "Invalid signature";
+  - `PORTAL_FILES_BUCKET=vitalos-portal-files`.
+
+  Still empty: `TURNSTILE_SECRET_KEY`. Before real payments, switch to a live restricted Stripe key and a live-mode webhook.
+
 - **Billing owner steps** (ADR-053; `superadmin/apps/billing/README.md`):
   - Create a restricted key in Vitalos's own Stripe account and store it as `BILLING_STRIPE_SECRET_KEY`.
   - Add a webhook to `https://admin.vitalos.co.uk/api/webhooks/stripe/` for `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`, and store its signing secret as `BILLING_STRIPE_WEBHOOK_SECRET`.

@@ -56,6 +56,24 @@ def purl(context, name, **kwargs):
 
 
 @register.simple_tag(takes_context=True)
+def portal_pwa(context):
+    """Installable-app links (manifest, worker, scope) for a page on the customer surface: the portal host or the
+    local /portal/ mount. None in staff preview, without a request (the 500 page) and when a view passes
+    ``pwa_skip``, so those pages carry no manifest and register no service worker."""
+    request = context.get("request")
+    if request is None or context.get("pwa_skip"):
+        return None
+    if not getattr(request, "portal_surface", False) or getattr(request, "portal_ns", "portal") != "portal":
+        return None
+    from .. import pwa
+
+    try:
+        return pwa.links()
+    except NoReverseMatch:
+        return None
+
+
+@register.simple_tag(takes_context=True)
 def purl_kw(context, name, kwargs=None):
     """Like ``purl`` but with the arguments in a dict (used for stored targets); a stale target goes home."""
     try:

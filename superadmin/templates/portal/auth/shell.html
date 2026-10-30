@@ -1,12 +1,13 @@
-{% load static %}<!doctype html>
-<html lang="en-GB">
+{% load static portal_ui %}{% portal_pwa as pwa %}<!doctype html>
+<html lang="en-GB"{% if pwa %} data-sw="{{ pwa.sw }}" data-sw-scope="{{ pwa.scope }}"{% endif %}>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1{% if pwa %}, viewport-fit=cover{% endif %}">
     <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light dark">
     <title>{% block title %}Vitalos client portal{% endblock %}</title>
     <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    {% if pwa %}{% include "portal/_pwa_head.html" %}{% endif %}
     <link rel="stylesheet" href="{% static 'portal/portal.css' %}">
     <script src="{% static 'portal/portal.js' %}" nonce="{{ csp_nonce }}" defer></script>
   </head>
