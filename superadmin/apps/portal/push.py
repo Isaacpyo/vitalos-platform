@@ -57,7 +57,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from django.conf import settings
 from django.core import checks
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from apps.audit.services import record
@@ -385,28 +385,31 @@ def subscribe(member: Membership, data: SubscriptionData, *, user_agent: str = "
     if not enabled():
         raise PushError("Notifications on this device aren't available yet.")
     now = timezone.now()
-    with transaction.atomic():
-        existing = (
-            PushSubscription.objects.select_for_update()
-            .select_related("member")
-            .filter(endpoint=data.endpoint)
-            .first()
-        )
-        if existing is not None and existing.member.user_id != member.user_id:
-            existing.delete()
-            existing = None
-        created = existing is None
-        sub = existing or PushSubscription(endpoint=data.endpoint, created_at=now)
-        sub.member = member
-        sub.p256dh = data.p256dh
-        sub.auth = data.auth
-        sub.vapid_key_id = key_id()
-        sub.label = device_label(user_agent)[:60]
-        sub.failure_count = 0
-        sub.disabled_at = None
-        sub.disabled_reason = ""
-        sub.save()
-        _enforce_device_cap(member.user)
+    try:
+        with transaction.atomic():
+            existing = (
+                PushSubscription.objects.select_for_update(of=("self",))
+                .select_related("member")
+                .filter(endpoint=data.endpoint)
+                .first()
+            )
+            if existing is not None and existing.member.user_id != member.user_id:
+                existing.delete()
+                existing = None
+            created = existing is None
+            sub = existing or PushSubscription(endpoint=data.endpoint, created_at=now)
+            sub.member = member
+            sub.p256dh = data.p256dh
+            sub.auth = data.auth
+            sub.vapid_key_id = key_id()
+            sub.label = device_label(user_agent)[:60]
+            sub.failure_count = 0
+            sub.disabled_at = None
+            sub.disabled_reason = ""
+            sub.save()
+            _enforce_device_cap(member.user)
+    except IntegrityError:  # the same endpoint registered by a simultaneous request
+        raise PushError("This device was registered a moment ago. Reload the page.") from None
     record(
         "portal.push_subscribed",
         request=request,
@@ -457,9 +460,16 @@ def renew(old_endpoint, old_auth, data: SubscriptionData, *, request=None) -> bo
         presented = b64url(b64url_decode(old_auth))
     except ValueError:
         return False
+    try:
+        return _renew(old_endpoint, presented, data, request=request)
+    except IntegrityError:  # the new endpoint was registered by a simultaneous request
+        return False
+
+
+def _renew(old_endpoint: str, presented: str, data: SubscriptionData, *, request=None) -> bool:
     with transaction.atomic():
         sub = (
-            PushSubscription.objects.select_for_update()
+            PushSubscription.objects.select_for_update(of=("self",))
             .select_related("member__user")
             .filter(endpoint=old_endpoint)
             .first()

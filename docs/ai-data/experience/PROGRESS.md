@@ -80,7 +80,7 @@ Outside this implementation's scope:
     - Signing out turns notifications off on that browser.
   - **Keys:** the deploy workflow generates the VAPID key once and `deploy.sh` keeps it (`portal-push-vapid-private-key`). With no key, push is off everywhere and the card says so. The owner sets nothing.
   - **Evidence:**
-    - `tests/test_portal_push.py` passes (82 tests), including the RFC 8291 Appendix A vector byte for byte and real HTTP to a fake push service on 127.0.0.1. The full Super Admin gates pass too.
+    - `tests/test_portal_push.py` passes (83 tests), including the RFC 8291 Appendix A vector byte for byte and real HTTP to a fake push service on 127.0.0.1. The full Super Admin gates pass too.
     - Playwright on synthetic seed data (49 checks): headless Chromium cannot register with Google's push service, so the browser's subscription was stubbed in the page and pointed at the local fake service. The card states, test sends, a staff question reaching the device, decryption, VAPID verification, the worker's notification (via CDP), the click guard, axe (light and dark) and overflow at 320, 390 and 768 were all checked.
     - Screenshots are in the W12 scratchpad (`shots/w12-push/`).
   - **Next:** after merge and deploy, the owner turns notifications on from Account on a real phone and presses "Send a test notification" (iPhone: install the app first).

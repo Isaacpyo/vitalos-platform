@@ -574,6 +574,21 @@ def test_a_shared_browser_moves_to_the_person_signed_in(world, vapid):
     assert moved.member == world.approver and not PushSubscription.objects.filter(pk=sub.pk).exists()
 
 
+def test_a_simultaneous_registration_is_a_polite_refusal_not_an_error(world, vapid, monkeypatch):
+    from django.db import IntegrityError
+
+    def clash(*args, **kwargs):
+        raise IntegrityError("duplicate key value violates unique constraint")
+
+    monkeypatch.setattr(PushSubscription, "save", clash)
+    response = post_json(
+        client_for(world.approver.user), "/portal/push/subscribe/", Receiver(fcm()).subscription()
+    )
+    assert response.status_code == 400 and "Reload the page" in response.json()["message"]
+    sub_data = push.parse_subscription(Receiver(fcm()).subscription())
+    assert push.renew(fcm(), b64(secrets.token_bytes(16)), sub_data) is False
+
+
 def test_at_most_ten_active_devices(world, vapid):
     subs = []
     for index in range(push.MAX_DEVICES_PER_MEMBER + 2):
