@@ -20,7 +20,7 @@ from apps.accounts import otp
 from apps.accounts.roles import has_any_role
 from apps.audit.services import record
 
-from .. import passwords, selectors, services
+from .. import passwords, push, selectors, services
 from ..access import portal_view
 from ..forms import (
     ConfirmExistingPasswordForm,
@@ -108,6 +108,11 @@ def logout_view(request):
         record(
             "portal.sign_out", request=request, actor=user, entity=user, summary="Signed out of the portal"
         )
+        # Shared devices: signing out turns notifications off for this browser (portal.js sends its endpoint).
+        try:
+            push.forget_device(user, request.POST.get("push_endpoint", ""), request=request)
+        except Exception:  # noqa: BLE001 - signing out must always work
+            logger.exception("portal push: could not forget the device on sign-out")
     auth_logout(request)
     messages.info(request, "You have signed out.")
     return redirect("portal:login")

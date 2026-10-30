@@ -11,10 +11,11 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.template.loader import render_to_string
+from django.templatetags.static import static
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 
-from .. import pwa
+from .. import push, pwa
 
 
 @require_GET
@@ -38,6 +39,11 @@ def service_worker(request):
             "static_prefix": json.dumps(pwa.static_prefix()),
             "offline_url": json.dumps(offline_url),
             "precache": json.dumps(precache, indent=2),
+            # Push (Phase 2): public values only, the same for every visitor.
+            "icon": json.dumps(static(pwa.ICON_192)),
+            "badge": json.dumps(static(pwa.BADGE)),
+            "push_key": json.dumps(push.public_key()),
+            "push_renew_url": json.dumps(reverse("portal:push_renew")),
         },
     )
     response = HttpResponse(body, content_type="application/javascript; charset=utf-8")

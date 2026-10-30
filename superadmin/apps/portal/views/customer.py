@@ -19,6 +19,7 @@ from apps.audit.services import record
 from .. import ai, selectors, services
 from .. import files as portal_files
 from .. import notifications as portal_notifications
+from .. import push as portal_push
 from ..access import portal_path, portal_view
 from ..forms import (
     AcceptContractForm,
@@ -743,9 +744,15 @@ def notification_preferences(request, ctx):
             for name, value in form.cleaned_data.items():
                 setattr(pref, name, value)
             pref.save()
-            messages.success(request, "Your email preferences were saved.")
+            messages.success(request, "Your notification preferences were saved.")
             return go(request, "notification_preferences")
-    return show(request, ctx, "portal/preferences.html", {"form": form, "pref": pref})
+    devices = 0 if ctx.preview else portal_push.devices(ctx.user).count()
+    return show(
+        request,
+        ctx,
+        "portal/preferences.html",
+        {"form": form, "pref": pref, "push_devices": devices, "push_available": portal_push.enabled()},
+    )
 
 
 @portal_view()
@@ -760,6 +767,8 @@ def account(request, ctx):
         {
             "mfa": confirmed_devices(ctx.user).exists() if not ctx.preview else False,
             "role_help": ctx.member.get_role_display(),
+            # Push notifications (ADR-056, Phase 2): the member's own devices; never shown in staff preview.
+            "push": None if ctx.preview else portal_push.page_context(ctx.user),
         },
     )
 

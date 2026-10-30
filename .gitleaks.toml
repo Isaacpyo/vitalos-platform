@@ -23,4 +23,7 @@ regexes = [
   '''^sk-secret-NEVER-RENDER-123456$''',
   # sessionStorage key names for the AI & Data guided brief draft and receipt (not credentials).
   '''^vitalos\.aid\.brief(\.shared)?\.v1$''',
+  # RFC 8291 Appendix A: the published example authentication secret, used by the client portal push test vector
+  # (superadmin/tests/test_portal_push.py). A public test value, not a credential.
+  '''^BTBZMqHH6r4Tts7J_aSIgg$''',
 ]

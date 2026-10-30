@@ -20,3 +20,6 @@ django-storages[s3]
 openpyxl
 defusedxml
 anthropic>=2.3,<3
+# Web Push for the client portal (ADR-056 Phase 2): VAPID (ES256) and aes128gcm payload encryption.
+# Apache-2.0 OR BSD-3-Clause. Pinned to a release at least two weeks old; pywebpush/http_ece are not used.
+cryptography==50.0.2

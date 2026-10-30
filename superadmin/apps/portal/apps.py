@@ -7,8 +7,12 @@ class PortalConfig(AppConfig):
     verbose_name = "Client portal"
 
     def ready(self):
+        from django.core import checks
+
         from apps.audit.services import ACTIONS
 
+        from . import push
         from .audit_actions import PORTAL_ACTIONS
 
         ACTIONS.update(PORTAL_ACTIONS)
+        checks.register(push.check_vapid_key)

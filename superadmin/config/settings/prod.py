@@ -22,6 +22,8 @@ from .base import (
     OBJECT_STORAGE_BUCKET,
     PORTAL_FILES_BUCKET,
     PORTAL_FILES_STORAGE,
+    PORTAL_PUSH_DEV_ORIGINS,
+    PORTAL_PUSH_SUBJECT,
     RELAY_ADMIN_API_SECRET,
     RELAY_API_BASE_URL,
     RELAY_CLIENT,
@@ -55,6 +57,11 @@ PORTAL_HOST = env("PORTAL_HOST", default="portal.vitalos.co.uk").strip().lower()
 PORTAL_ENABLED = env.bool("PORTAL_ENABLED", default=bool(PORTAL_HOST))
 # Simulated assistant answers are for local demonstrations only.
 PORTAL_AI_REPLAY = False
+# Push (ADR-056, Phase 2): only real push services, never a local fake server, and only an https or mailto contact.
+if PORTAL_PUSH_DEV_ORIGINS:
+    raise ImproperlyConfigured("PORTAL_PUSH_DEV_ORIGINS is for local development and tests only.")
+if not PORTAL_PUSH_SUBJECT.startswith(("mailto:", "https://")):
+    raise ImproperlyConfigured("PORTAL_PUSH_SUBJECT must be a mailto: or https:// address.")
 if PORTAL_ENABLED and not PORTAL_HOST:
     raise ImproperlyConfigured(
         "PORTAL_ENABLED needs PORTAL_HOST in production: /portal/ path mounting is for local preview only."

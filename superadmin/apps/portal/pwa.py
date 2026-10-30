@@ -33,6 +33,9 @@ ICON_192 = "portal/icons/icon-192.png"
 ICON_512 = "portal/icons/icon-512.png"
 ICON_MASKABLE = "portal/icons/maskable-512.png"
 APPLE_TOUCH_ICON = "portal/icons/apple-touch-icon-180.png"
+# Monochrome silhouette for the Android status bar (push notifications, Phase 2). Not precached: a push needs the
+# network anyway.
+BADGE = "portal/icons/badge-96.png"
 
 # Public, versioned static files only. Never a workspace URL: the worker would otherwise store customer data.
 PRECACHE = (
@@ -51,7 +54,8 @@ PRECACHE = (
 )
 
 # Bump when the worker's caching rules change without any precached file changing.
-SW_REVISION = "1"
+# 2: push notifications (Phase 2): push, notificationclick and pushsubscriptionchange handlers.
+SW_REVISION = "2"
 
 
 def portal_root() -> str:
@@ -75,6 +79,8 @@ def cache_version(urls: list[str], offline_url: str) -> str:
 
 def links() -> dict:
     """Head tags and worker registration values for a customer page."""
+    from . import push
+
     return {
         "manifest": reverse("portal:manifest"),
         "sw": reverse("portal:service_worker"),
@@ -83,6 +89,8 @@ def links() -> dict:
         "theme_color": THEME_COLOR,
         "theme_color_dark": THEME_COLOR_DARK,
         "title": SHORT_NAME,
+        # Push (Phase 2): where portal.js re-registers a subscription the browser rotated; empty while push is off.
+        "push_subscribe": reverse("portal:push_subscribe") if push.enabled() else "",
     }
 
 

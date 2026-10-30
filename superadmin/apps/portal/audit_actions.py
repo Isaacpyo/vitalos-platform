@@ -51,4 +51,9 @@ PORTAL_ACTIONS = {
     "portal.ai_answered": "Customer used a portal assistant action",
     "portal.preview": "Previewed the client portal as a customer",
     "portal.email_failed": "A portal email could not be sent",
+    "portal.push_subscribed": "Turned on portal notifications for a device",
+    "portal.push_removed": "Removed a device from portal notifications",
+    "portal.push_test": "Sent a test portal notification to their own device",
+    "portal.push_renewed": "A browser renewed its portal notification subscription",
+    "portal.push_disabled": "A push service ended a portal notification subscription",
 }
